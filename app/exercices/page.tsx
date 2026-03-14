@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 
 export default function ExercicesPage() {
   // REMPLACE LES DEUX LIGNES CI-DESSOUS PAR TES VRAIES CLÉS SUPABASE
-  const [supabase] = useState(() => createBrowserClient(
-    "https://llyphcfltjbvbxbdvdik.supabase.co", 
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxseXBoY2ZsdGpidmJ4YmR2ZGlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzk2MzQsImV4cCI6MjA4ODcxNTYzNH0.1ZbhDA-fW69rz6QMn-nNaxoKIShDWaXe_HpuBHPd0mY"
-  ))
+const [supabase] = useState(() => createBrowserClient(
+  "https://njlzossopgknanhkzcbk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qbHpvc3NvcGdrbmFuaGt6Y2JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDczMDMsImV4cCI6MjA4ODEyMzMwM30.22cQCoBdbIek3IU0GPkRUKlPYj19jiYwac0K8sRJM1w"
+))
 
   const [exercices, setExercices] = useState<any[]>([])
 

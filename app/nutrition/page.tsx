@@ -1,301 +1,172 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, useMemo } from 'react'
-import Link from 'next/link'
+import { Auth } from '@supabase/auth-ui-react'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
 import dynamic from 'next/dynamic'
-import { 
-  Plus, Trash2, Beef, Wheat, Droplet,
-  Utensils, X, ChevronDown, Search, Activity 
-} from 'lucide-react'
+import { Plus, Camera, Trash2, LogOut, TrendingDown, Scale, Target, Flame } from 'lucide-react'
 
-// --- TYPES ---
-type FoodItem = {
-  id: number
-  nom: string
-  calories: any
-  proteines: any
-  glucides: any
-  lipides: any
-}
-
-type AddedFood = FoodItem & {
-  uniqueId: string
-  weight: number
-}
-
-type Meal = {
-  id: string
-  name: string
-  foods: AddedFood[]
-}
-
-const parseVal = (v: any) => {
-  if (typeof v === 'number') return v
-  if (typeof v === 'string') return parseFloat(v.replace(',', '.')) || 0
-  return 0
-}
-
-const generateId = () => Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
-
-// On importe le graphique de manière dynamique pour éviter le crash Safari/iPhone
-const NutritionDashboard = dynamic(() => import('./NutritionDashboard'), { 
-  ssr: false,
-  loading: () => <div className="w-32 h-32 rounded-full border-4 border-zinc-800 animate-pulse" />
-})
+// Imports Dynamiques pour éviter les erreurs d'hydratation
+const CalorieChart = dynamic(() => import('./NutritionDashboard').then(mod => mod.CalorieChart), { ssr: false })
+const WeightChart = dynamic(() => import('./NutritionDashboard').then(mod => mod.WeightChart), { ssr: false })
 
 export default function NutritionPage() {
   const [mounted, setMounted] = useState(false)
+  const [session, setSession] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [weightHistory, setWeightHistory] = useState<any[]>([])
   
+ const [supabase] = useState(() => createBrowserClient(
+  "https://njlzossopgknanhkzcbk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qbHpvc3NvcGdrbmFuaGt6Y2JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDczMDMsImV4cCI6MjA4ODEyMzMwM30.22cQCoBdbIek3IU0GPkRUKlPYj19jiYwac0K8sRJM1w"
+))
+
   useEffect(() => {
     setMounted(true)
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
+    return () => subscription.unsubscribe()
   }, [])
 
-  const [supabase] = useState(() => createBrowserClient(
-    "https://njlzossopgknanhkzcbk.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qbHpvc3NvcGdrbmFuaGt6Y2JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDczMDMsImV4cCI6MjA4ODEyMzMwM30.22cQCoBdbIek3IU0GPkRUKlPYj19jiYwac0K8sRJM1w"
-  ))
-
-  const [meals, setMeals] = useState<Meal[]>([
-    { id: 'breakfast', name: 'Petit-déjeuner', foods: [] },
-    { id: 'lunch', name: 'Déjeuner', foods: [] },
-    { id: 'snack', name: 'Collation', foods: [] },
-    { id: 'dinner', name: 'Dîner', foods: [] },
-  ])
-
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [targetMealId, setTargetMealId] = useState<string>('breakfast')
-  const [searchResults, setSearchResults] = useState<FoodItem[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [search, setSearch] = useState('')
-  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null)
-  const [weight, setWeight] = useState<string>('100')
-
-  const CALORIE_GOAL = 2500
-
   useEffect(() => {
-    const searchAliments = async () => {
-      const term = search.trim()
-      if (term.length > 1) {
-        setIsSearching(true)
-        try {
-          const { data, error } = await supabase
-            .from('food_items') 
-            .select('*')
-            .ilike('nom', `%${term}%`)
-            .limit(15)
-          if (error) throw error
-          setSearchResults(data || [])
-        } catch (error) {
-          console.error("Erreur Supabase:", error)
-        } finally {
-          setIsSearching(false)
-        }
-      } else {
-        setSearchResults([])
+    if (session) fetchUserData()
+  }, [session])
+
+  async function fetchUserData() {
+    // 1. Charger Profil
+    const { data: prof } = await supabase.from('profiles').select('*').single()
+    if (prof) setProfile(prof)
+
+    // 2. Charger Historique Poids (7 derniers points)
+    const { data: weights } = await supabase
+      .from('weight_logs')
+      .select('date, poids')
+      .eq('user_id', session?.user.id)
+      .order('date', { ascending: true })
+      .limit(10)
+    
+    // Formater la date pour le graphique
+    const formattedWeights = weights?.map(w => ({
+      ...w,
+      date: new Date(w.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+    }))
+    setWeightHistory(formattedWeights || [])
+  }
+
+  async function handleAddWeight() {
+    const p = prompt("Entrez votre poids actuel (kg) :")
+    if (p && !isNaN(parseFloat(p))) {
+      const val = parseFloat(p)
+      const { error } = await supabase.from('weight_logs').insert({ 
+        user_id: session.user.id, 
+        poids: val 
+      })
+      if (!error) {
+        await supabase.from('profiles').upsert({ id: session.user.id, current_weight: val })
+        fetchUserData()
       }
     }
-    const timer = setTimeout(searchAliments, 300)
-    return () => clearTimeout(timer)
-  }, [search, supabase])
-
-  const openSearchForMeal = (mealId: string) => {
-    setTargetMealId(mealId)
-    setSelectedFood(null)
-    setSearch('')
-    setIsModalOpen(true)
   }
 
-  const addFoodToMeal = () => {
-    if (!selectedFood) return
-    const newFood: AddedFood = {
-      ...selectedFood,
-      weight: parseFloat(weight) || 100,
-      uniqueId: generateId()
-    }
-    setMeals(prev => prev.map(meal => {
-      if (meal.id === targetMealId) return { ...meal, foods: [...meal.foods, newFood] }
-      return meal
-    }))
-    setIsModalOpen(false)
-  }
-
-  const removeFood = (mealId: string, foodId: string) => {
-    setMeals(prev => prev.map(meal => {
-      if (meal.id === mealId) return { ...meal, foods: meal.foods.filter(f => f.uniqueId !== foodId) }
-      return meal
-    }))
-  }
-
-  const dailyTotals = useMemo(() => {
-    return meals.reduce((acc, meal) => {
-      const mealTotals = meal.foods.reduce((mAcc, food) => {
-        const ratio = food.weight / 100
-        return {
-          calories: mAcc.calories + (parseVal(food.calories) * ratio),
-          protein: mAcc.protein + (parseVal(food.proteines) * ratio),
-          carbs: mAcc.carbs + (parseVal(food.glucides) * ratio),
-          fat: mAcc.fat + (parseVal(food.lipides) * ratio),
-        }
-      }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
-      
-      return {
-        calories: acc.calories + mealTotals.calories,
-        protein: acc.protein + mealTotals.protein,
-        carbs: acc.carbs + mealTotals.carbs,
-        fat: acc.fat + mealTotals.fat,
-      }
-    }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
-  }, [meals])
+  // Calcul de la progression
+  const weightProgress = useMemo(() => {
+    if (!profile?.current_weight || weightHistory.length < 2) return 0
+    const startWeight = weightHistory[0].poids
+    return (profile.current_weight - startWeight).toFixed(1)
+  }, [profile, weightHistory])
 
   if (!mounted) return null
 
-  return (
-    <div className="min-h-screen bg-black text-white p-6 pb-24 font-sans">
-      <header className="mb-6">
-        <h1 className="text-4xl font-black text-orange-500 italic uppercase tracking-tighter">Nutrition</h1>
-        <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest">Base de données CoachPlatform</p>
-      </header>
-
-      {/* DASHBOARD GLOBAL */}
-      <div className="bg-zinc-900/50 rounded-[30px] p-6 border border-zinc-800 mb-8 shadow-2xl relative overflow-hidden">
-        <div className="flex items-center justify-between">
-          
-          {/* Appel au composant dynamique Recharts */}
-          <NutritionDashboard 
-            data={[
-              { name: 'Consommé', value: dailyTotals.calories },
-              { name: 'Restant', value: Math.max(0, CALORIE_GOAL - dailyTotals.calories) }
-            ]}
-            colors={['#f97316', '#27272a']}
-            calories={dailyTotals.calories}
-          />
-
-          <div className="flex-1 ml-6 space-y-3">
-            <MacroRow label="Protéines" val={dailyTotals.protein} color="bg-blue-500" icon={<Beef size={10}/>} max={180} />
-            <MacroRow label="Glucides" val={dailyTotals.carbs} color="bg-yellow-500" icon={<Wheat size={10}/>} max={250} />
-            <MacroRow label="Lipides" val={dailyTotals.fat} color="bg-red-500" icon={<Droplet size={10}/>} max={80} />
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-zinc-900 p-8 rounded-[40px] border border-zinc-800 shadow-2xl">
+          <div className="flex justify-center mb-6">
+            <div className="bg-orange-500 p-4 rounded-3xl rotate-12"><Flame size={32} fill="white" /></div>
           </div>
+          <h1 className="text-3xl font-black text-white mb-2 text-center italic uppercase">Coach Platform</h1>
+          <p className="text-zinc-500 text-center text-sm mb-8">Connecte-toi pour suivre tes perfs</p>
+          <Auth 
+            supabaseClient={supabase} 
+            appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#f97316', brandAccent: '#ea580c' } } } }} 
+            theme="dark" 
+            providers={['google']}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6 pb-32">
+      {/* HEADER */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-3xl font-black italic text-white uppercase tracking-tighter">Dashboard</h1>
+          <p className="text-orange-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Compte Actif
+          </p>
+        </div>
+        <button onClick={() => supabase.auth.signOut()} className="bg-zinc-900 p-3 rounded-2xl border border-zinc-800 text-zinc-500 active:scale-95 transition-all">
+          <LogOut size={20}/>
+        </button>
+      </div>
+
+      {/* STATS RAPIDES (POIDS) */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-[32px] p-5">
+          <Scale className="text-zinc-500 mb-2" size={18}/>
+          <div className="text-2xl font-black">{profile?.current_weight || '--'}<span className="text-xs text-zinc-500 ml-1">kg</span></div>
+          <div className="text-[10px] font-bold text-zinc-500 uppercase">Poids Actuel</div>
+        </div>
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-[32px] p-5">
+          <TrendingDown className="text-orange-500 mb-2" size={18}/>
+          <div className="text-2xl font-black text-orange-500">{weightProgress > 0 ? `+${weightProgress}` : weightProgress}<span className="text-xs ml-1">kg</span></div>
+          <div className="text-[10px] font-bold text-zinc-500 uppercase">Progression</div>
         </div>
       </div>
 
-      <div className="space-y-6 mb-20">
-        {meals.map((meal) => (
-          <div key={meal.id} className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
-            <div className="p-5 flex justify-between items-center bg-zinc-900/80 border-b border-zinc-800/50">
-              <div className="flex items-center gap-3">
-                <Utensils size={16} className="text-orange-500" />
-                <h3 className="font-bold text-white text-sm">{meal.name}</h3>
-              </div>
-              <button 
-                type="button"
-                onClick={() => openSearchForMeal(meal.id)}
-                className="bg-orange-500 p-3 rounded-xl active:scale-95 transition-transform"
-              >
-                <Plus size={18} strokeWidth={3} />
-              </button>
-            </div>
+      {/* GRAPHIQUE POIDS */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-[32px] p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic">Analyse 7 derniers logs</h2>
+          <button onClick={handleAddWeight} className="bg-white text-black text-[10px] font-black px-4 py-2 rounded-full uppercase active:scale-95 transition-all">
+            + Nouveau Log
+          </button>
+        </div>
+        <WeightChart data={weightHistory} />
+      </div>
 
-            <div className="p-2">
-              {meal.foods.length === 0 ? (
-                <div className="text-center py-6 text-zinc-700 text-xs italic">Aucun aliment</div>
-              ) : (
-                meal.foods.map((food) => (
-                  <div key={food.uniqueId} className="flex justify-between items-center p-3 hover:bg-zinc-800/30 rounded-2xl transition-colors">
-                    <div className="truncate">
-                      <div className="text-xs font-bold text-zinc-200 truncate">{food.nom}</div>
-                      <div className="text-[10px] text-zinc-500">{food.weight}g — {Math.round(parseVal(food.calories) * food.weight / 100)} kcal</div>
-                    </div>
-                    <button 
-                      type="button"
-                      onClick={() => removeFood(meal.id, food.uniqueId)}
-                      className="text-zinc-600 hover:text-red-500 p-3"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))
-              )}
+      {/* DASHBOARD CALORIES */}
+      <div className="bg-orange-500 rounded-[32px] p-6 mb-8 flex items-center shadow-[0_20px_40px_rgba(249,115,22,0.2)]">
+        <CalorieChart 
+          data={[{value: 1750}, {value: 750}]} 
+          colors={['#fff', 'rgba(255,255,255,0.2)']} 
+          calories={1750} 
+        />
+        <div className="ml-6 flex-1">
+            <div className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Objectif Quotidien</div>
+            <div className="text-2xl font-black text-white mb-2">2,500 <span className="text-sm font-medium">kcal</span></div>
+            <div className="h-2 w-full bg-black/10 rounded-full overflow-hidden">
+                <div className="h-full bg-white rounded-full" style={{width: '70%'}}></div>
             </div>
+        </div>
+      </div>
+
+      {/* BOUTON ACTION RAPIDE */}
+      <div className="space-y-4">
+        <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic ml-2">Repas du jour</h3>
+        {['Petit-déjeuner', 'Déjeuner', 'Dîner'].map((meal, i) => (
+          <div key={i} className="bg-zinc-900 border border-zinc-800 p-5 rounded-[28px] flex justify-between items-center active:bg-zinc-800 transition-colors">
+            <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-zinc-800 rounded-2xl flex items-center justify-center text-orange-500">
+                    <Plus size={20} />
+                </div>
+                <span className="font-bold text-sm">{meal}</span>
+            </div>
+            <Camera size={18} className="text-zinc-600" />
           </div>
         ))}
-      </div>
-
-      {/* MODALE D'AJOUT */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex flex-col p-6 overflow-y-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl font-black italic uppercase">Ajouter</h2>
-            <button type="button" onClick={() => setIsModalOpen(false)} className="bg-zinc-800 p-3 rounded-full"><X size={24}/></button>
-          </div>
-
-          {!selectedFood ? (
-            <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-4 text-zinc-500" size={20} />
-                <input 
-                  type="text" 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Rechercher..."
-                  className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-orange-500"
-                />
-              </div>
-              <div className="space-y-2">
-                {searchResults.map(alim => (
-                  <button 
-                    type="button"
-                    key={alim.id} 
-                    onClick={() => setSelectedFood(alim)}
-                    className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex justify-between items-center"
-                  >
-                    <span className="font-bold text-sm">{alim.nom}</span>
-                    <span className="text-orange-500 text-xs">{alim.calories} kcal</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-8 py-10">
-              <h3 className="text-2xl font-black text-center">{selectedFood.nom}</h3>
-              <div className="flex items-end gap-2">
-                <input 
-                  type="number" 
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  className="bg-transparent text-white text-7xl font-black w-40 text-center border-b-2 border-zinc-800 focus:border-orange-500 outline-none"
-                />
-                <span className="text-zinc-500 font-bold text-xl mb-4">g</span>
-              </div>
-              <button 
-                type="button"
-                onClick={addFoodToMeal} 
-                className="w-full bg-orange-500 text-white font-black py-5 rounded-3xl uppercase shadow-lg shadow-orange-500/20"
-              >
-                Confirmer
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      <nav className="fixed bottom-6 left-6 right-6 bg-zinc-900/95 border-2 border-zinc-800 h-16 rounded-[25px] flex justify-around items-center z-40 px-6 shadow-2xl">
-        <Link href="/nutrition" className="text-orange-500 text-[10px] font-black uppercase italic underline decoration-2 underline-offset-4">Nutrition</Link>
-        <Link href="/exercices" className="text-zinc-600 text-[10px] font-black uppercase italic">Workouts</Link>
-        <Link href="/" className="text-zinc-600 text-[10px] font-black uppercase italic">Profil</Link>
-      </nav>
-    </div>
-  )
-}
-
-function MacroRow({ label, val, color, icon, max }: any) {
-  return (
-    <div>
-      <div className="flex justify-between text-[10px] font-bold mb-1 uppercase">
-        <span className="flex items-center gap-1 text-zinc-400">{icon} {label}</span>
-        <span>{Math.round(val)}g</span>
-      </div>
-      <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-        <div className={`h-full ${color}`} style={{ width: `${Math.min((val / max) * 100, 100)}%` }} />
       </div>
     </div>
   )
