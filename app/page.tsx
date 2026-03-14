@@ -343,7 +343,7 @@ export default function CoachApp() {
   const currentWeight = profile?.current_weight
   const latestMeasure = measurements[0]
   const weightProgress = weightHistory.length >= 2
-    ? (weightHistory[weightHistory.length - 1].poids - weightHistory[0].poids).toFixed(1) : '0'
+    ? parseFloat((weightHistory[weightHistory.length - 1].poids - weightHistory[0].poids).toFixed(1)) : 0
   const progressPct = profile?.start_weight && currentWeight
     ? Math.max(0, Math.min(100, ((profile.start_weight - currentWeight) / (profile.start_weight - goalWeight)) * 100)) : 0
   const completedSessions = wSessions.filter(s => s.completed).length
@@ -735,8 +735,10 @@ export default function CoachApp() {
                   <div className="text-[8px] text-white/25 uppercase tracking-widest">kg objectif</div>
                 </div>
                 <div className="bg-[#1a1a1a] border border-white/5 rounded-[20px] p-4">
-                  <TrendingDown size={15} className={`mb-2 ${Number(weightProgress) <= 0 ? 'text-green-400' : 'text-red-400'}`} />
-                  <div className={`fd text-2xl tracking-wider ${Number(weightProgress) <= 0 ? 'text-green-400' : 'text-red-400'}`}>{Number(weightProgress) > 0 ? '+' : ''}{weightProgress}</div>
+                  <TrendingDown size={15} className={`mb-2 ${weightProgress <= 0 ? 'text-green-400' : 'text-red-400'}`} />
+<div className={`fd text-2xl tracking-wider ${weightProgress <= 0 ? 'text-green-400' : 'text-red-400'}`}>
+  {weightProgress > 0 ? '+' : ''}{weightProgress}
+</div>
                   <div className="text-[8px] text-white/25 uppercase tracking-widest">évolution</div>
                 </div>
               </div>

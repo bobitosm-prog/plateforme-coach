@@ -72,7 +72,7 @@ export default function NutritionPage() {
   const weightProgress = useMemo(() => {
     if (!profile?.current_weight || weightHistory.length < 2) return 0
     const startWeight = weightHistory[0].poids
-    return (profile.current_weight - startWeight).toFixed(1)
+    return parseFloat((profile.current_weight - startWeight).toFixed(1))
   }, [profile, weightHistory])
 
   if (!mounted) return null
