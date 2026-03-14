@@ -120,80 +120,30 @@ export default function WorkoutSession({ sessionName, exercises: rawExercises, o
     return () => { if (restRef.current) clearTimeout(restRef.current) }
   }, [restActive, restSeconds])
 
-  // Wake Lock — empêche la mise en veille
-  useEffect(() => {
-    let wakeLock: any = null
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) wakeLock = await (navigator as any).wakeLock.request('screen')
-      } catch (err) { console.log('Wake Lock non supporté') }
+  // NoSleep — fonctionne sur iPhone Safari
+useEffect(() => {
+  let noSleep: any = null
+
+  async function enableNoSleep() {
+    try {
+      const NoSleep = (await import('nosleep.js')).default
+      noSleep = new NoSleep()
+      // Doit être appelé sur une interaction utilisateur
+      document.addEventListener('touchstart', async function enable() {
+        await noSleep.enable()
+        document.removeEventListener('touchstart', enable)
+      }, { once: true })
+    } catch (err) {
+      console.log('NoSleep non supporté')
     }
-    requestWakeLock()
-    const handleVisibility = async () => { if (document.visibilityState === 'visible') await requestWakeLock() }
-    document.addEventListener('visibilitychange', handleVisibility)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility)
-      if (wakeLock) wakeLock.release()
-    }
-  }, [])
-
-  function startRest(seconds: number) {
-    if (restRef.current) clearTimeout(restRef.current)
-    setRestMax(seconds); setRestSeconds(seconds); setRestActive(true)
-  }
-  function skipRest() { setRestActive(false); setRestSeconds(0) }
-  function toggleExpand(exoId: string) {
-    setExercises(prev => prev.map(e => e.id === exoId ? { ...e, expanded: !e.expanded } : e))
-  }
-  function updateSetField(exoId: string, setId: string, field: 'weight' | 'reps', value: string) {
-    setExercises(prev => prev.map(e => e.id !== exoId ? e : {
-      ...e, sets: e.sets.map(s => s.id !== setId ? s : { ...s, [field]: value === '' ? '' : Number(value) })
-    }))
-  }
-  function validateSet(exoId: string, setId: string) {
-    let restSec = 90
-    setExercises(prev => prev.map(e => {
-      if (e.id !== exoId) return e
-      restSec = e.restSeconds
-      return { ...e, sets: e.sets.map(s => s.id !== setId ? s : { ...s, completed: true, timestamp: Date.now() }) }
-    }))
-    startRest(restSec)
-  }
-  function unvalidateSet(exoId: string, setId: string) {
-    skipRest()
-    setExercises(prev => prev.map(e => e.id !== exoId ? e : {
-      ...e, sets: e.sets.map(s => s.id !== setId ? s : { ...s, completed: false, timestamp: undefined })
-    }))
-  }
-  function addSet(exoId: string) {
-    setExercises(prev => prev.map(e => e.id !== exoId ? e : {
-      ...e, sets: [...e.sets, {
-        id: generateId(), setNumber: e.sets.length + 1,
-        weight: e.sets[e.sets.length - 1]?.weight ?? '',
-        reps: e.sets[e.sets.length - 1]?.reps ?? '', completed: false
-      }]
-    }))
   }
 
-  const totalSets = exercises.reduce((s, e) => s + e.sets.length, 0)
-  const completedSets = exercises.reduce((s, e) => s + e.sets.filter((s: ExerciseSet) => s.completed).length, 0)
-  const totalVolume = exercises.reduce((vol, e) =>
-    vol + e.sets.filter((s: ExerciseSet) => s.completed && s.weight && s.reps)
-      .reduce((sv: number, s: ExerciseSet) => sv + (Number(s.weight) * Number(s.reps)), 0), 0)
-  const progressPct = totalSets > 0 ? (completedSets / totalSets) * 100 : 0
-  const allDone = completedSets === totalSets && totalSets > 0
+  enableNoSleep()
 
-  function finishWorkout() {
-    if (elapsedRef.current) clearInterval(elapsedRef.current)
-    setFinished(true)
-    onFinish({
-      duration: elapsed, completedSets, totalSets, totalVolume,
-      exercises: exercises.map(e => ({
-        name: e.name,
-        sets: e.sets.filter((s: ExerciseSet) => s.completed).map((s: ExerciseSet) => ({ weight: s.weight, reps: s.reps }))
-      }))
-    })
+  return () => {
+    if (noSleep) noSleep.disable()
   }
+}, [])
 
   // ÉCRAN RÉSUMÉ
   if (finished) return (
