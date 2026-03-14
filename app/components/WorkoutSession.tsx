@@ -551,3 +551,31 @@ export default function WorkoutSession({ sessionName, exercises: rawExercises, o
     </div>
   )
 }
+// Empêcher la mise en veille pendant la séance
+useEffect(() => {
+  let wakeLock: any = null
+
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await (navigator as any).wakeLock.request('screen')
+      }
+    } catch (err) {
+      console.log('Wake Lock non supporté')
+    }
+  }
+
+  requestWakeLock()
+
+  // Réactiver si l'app revient au premier plan
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible') {
+      await requestWakeLock()
+    }
+  })
+
+  // Libérer quand la séance se termine
+  return () => {
+    if (wakeLock) wakeLock.release()
+  }
+}, [])
