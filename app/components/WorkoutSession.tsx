@@ -428,7 +428,7 @@ export default function WorkoutSession({ sessionName, exercises: rawExercises, o
                   )}
 
                   {/* Column headers */}
-                  <div className="grid grid-cols-[36px_1fr_1fr_52px] gap-2 px-1 mb-2">
+                  <div grid-cols-[28px_1fr_1fr_44px] gap-1.5>
                     <span className="text-[8px] text-white/20 font-bold uppercase text-center">Set</span>
                     <span className="text-[8px] text-white/20 font-bold uppercase text-center">Poids (kg)</span>
                     <span className="text-[8px] text-white/20 font-bold uppercase text-center">Reps</span>
