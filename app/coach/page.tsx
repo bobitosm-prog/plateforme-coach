@@ -80,6 +80,9 @@ export default function CoachPage() {
       .select('id, client_id, created_at, profiles!coach_clients_client_id_fkey(id, full_name, avatar_url, current_weight, calorie_goal)')
       .eq('coach_id', coachId)
       .order('created_at', { ascending: false })
+    console.log('[fetchClients] coachId:', coachId)
+    console.log('[fetchClients] data:', data)
+    console.error('[fetchClients] error:', error)
     if (!error && data) setClients(data as unknown as ClientRow[])
     setLoading(false)
   }
