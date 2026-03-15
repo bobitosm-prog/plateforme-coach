@@ -118,19 +118,27 @@ export default function CoachApp() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Role-based redirect — runs immediately when session is established, before fetchAll
+  // Role-based redirect — always fetches fresh role, no browser cache
   useEffect(() => {
     if (!session) return
-    supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.role === 'super_admin') router.replace('/admin')
-        else if (data?.role === 'coach')  router.replace('/coach')
+    // Append a timestamp so the browser never serves a cached response
+    const url = `${SUPABASE_URL}/rest/v1/profiles?select=role&id=eq.${session.user.id}&limit=1&_t=${Date.now()}`
+    fetch(url, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${session.access_token}`,
+        'Cache-Control': 'no-cache, no-store',
+      },
+      cache: 'no-store',
+    })
+      .then(r => r.json())
+      .then((rows: { role: string }[]) => {
+        const role = rows?.[0]?.role
+        if (role === 'super_admin') router.replace('/admin')
+        else if (role === 'coach')  router.replace('/coach')
         // 'client' or null → stay on /
       })
+      .catch(() => {/* stay on / on error */})
   }, [session])
 
   useEffect(() => { if (session) fetchAll() }, [session])
