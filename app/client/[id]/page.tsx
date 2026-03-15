@@ -256,12 +256,13 @@ export default function ClientProfilePage() {
     if (!coachId) return
     setMealPlanSaving(true)
     const payload = { coach_id: coachId, client_id: id, week_start: currentMonday(), calorie_target: calorieTarget, protein_target: protTarget, carb_target: carbTarget, fat_target: fatTarget, plan: mealPlan, updated_at: new Date().toISOString() }
-    if (mealPlanId) {
-      await supabase.from('client_meal_plans').update(payload).eq('id', mealPlanId)
-    } else {
-      const { data } = await supabase.from('client_meal_plans').insert(payload).select('id').single()
-      if (data?.id) setMealPlanId(data.id)
-    }
+    await Promise.all([
+      mealPlanId
+        ? supabase.from('client_meal_plans').update(payload).eq('id', mealPlanId)
+        : supabase.from('client_meal_plans').insert(payload).select('id').single().then(({ data }) => { if (data?.id) setMealPlanId(data.id) }),
+      supabase.from('profiles').update({ calorie_goal: calorieTarget }).eq('id', id),
+    ])
+    setProfile(p => p ? { ...p, calorie_goal: calorieTarget } : p)
     setMealPlanSaving(false); setMealPlanSaved(true)
     showToast('Plan alimentaire sauvegardé')
     setTimeout(() => setMealPlanSaved(false), 2000)
