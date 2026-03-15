@@ -11,7 +11,7 @@ import {
   User, UtensilsCrossed, X, Check, Camera, Ruler,
   Users, Crown, Trash2, ChevronRight, Upload,
   Activity, Heart, Search, Filter, ChevronDown, ChevronUp,
-  Timer, Play, Pause, RotateCcw, Info, Sparkles
+  Timer, Play, Pause, RotateCcw, Info, Sparkles, Utensils
 } from 'lucide-react'
 
 // ── CHANGEMENT 1 : Import WorkoutSession ──────────────────
@@ -1175,6 +1175,14 @@ export default function CoachApp() {
             <span className={`text-[8px] font-bold uppercase tracking-wider ${activeTab === id ? 'gold' : 'text-white/18'}`}>{label}</span>
           </button>
         ))}
+        <button onClick={() => router.push('/programme')} className="flex flex-col items-center gap-1 px-3 active:scale-90 transition-all">
+          <Dumbbell size={20} style={{ color: '#F97316' }} />
+          <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: '#F97316' }}>Programme</span>
+        </button>
+        <button onClick={() => router.push('/nutrition-plan')} className="flex flex-col items-center gap-1 px-3 active:scale-90 transition-all">
+          <Utensils size={20} style={{ color: '#22C55E' }} />
+          <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: '#22C55E' }}>Plan nutri</span>
+        </button>
       </nav>
     </div>
   )
