@@ -75,15 +75,33 @@ export default function CoachPage() {
 
   async function fetchClients(coachId: string) {
     setLoading(true)
-    const { data, error } = await supabase
+
+    const { data: links, error: linksError } = await supabase
       .from('coach_clients')
-      .select('id, client_id, created_at, profiles!coach_clients_client_id_fkey(id, full_name, avatar_url, current_weight, calorie_goal)')
+      .select('id, client_id, created_at')
       .eq('coach_id', coachId)
       .order('created_at', { ascending: false })
-    console.log('[fetchClients] coachId:', coachId)
-    console.log('[fetchClients] data:', data)
-    console.error('[fetchClients] error:', error)
-    if (!error && data) setClients(data as unknown as ClientRow[])
+
+    if (linksError || !links?.length) {
+      setClients([])
+      setLoading(false)
+      return
+    }
+
+    const clientIds = links.map(l => l.client_id)
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, current_weight, calorie_goal')
+      .in('id', clientIds)
+
+    const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+    const rows: ClientRow[] = links.map(l => ({
+      id: l.id,
+      client_id: l.client_id,
+      created_at: l.created_at,
+      profiles: profileMap[l.client_id] ?? null,
+    }))
+    setClients(rows)
     setLoading(false)
   }
 
