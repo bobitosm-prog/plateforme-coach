@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
       .select('role')
       .eq('id', session.user.id)
       .single()
-    role = profile?.role ?? 'client'
+    role = (profile?.role ?? 'client') as string
     // Cache for 1 hour; httpOnly so JS can't tamper
     response.cookies.set('fitpro-role', role, {
       maxAge: 3600,
