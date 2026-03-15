@@ -19,7 +19,7 @@ type Profile = {
   email: string | null
   current_weight: number | null
   goal_weight: number | null
-  goal: string | null
+  calorie_goal: number | null
   created_at: string
 }
 
@@ -100,7 +100,7 @@ export default function ClientProfilePage() {
     setError(null)
 
     const [profileRes, sessionsRes, weightRes, notesRes] = await Promise.all([
-      supabase.from('profiles').select('id,full_name,email,current_weight,goal_weight,goal,created_at').eq('id', id).single(),
+      supabase.from('profiles').select('id,full_name,email,current_weight,goal_weight,calorie_goal,created_at').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,date,session_type,duration_min,notes').eq('user_id', id).order('date', { ascending: false }).limit(20),
       supabase.from('weight_logs').select('id,weight,recorded_at').eq('user_id', id).order('recorded_at', { ascending: false }).limit(30),
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
@@ -336,7 +336,7 @@ export default function ClientProfilePage() {
                     </div>
                   </div>
                   <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '1.1rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1.2 }}>
-                    {profile.goal ?? (profile.goal_weight ? `${profile.goal_weight} kg` : '—')}
+                    {profile.goal_weight ? `Objectif : ${profile.goal_weight} kg` : (profile.calorie_goal ? `${profile.calorie_goal} kcal/j` : '—')}
                   </div>
                   {goalProgress !== null && (
                     <>
