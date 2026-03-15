@@ -20,6 +20,9 @@ type Profile = {
   id: string; full_name: string | null; email: string | null
   current_weight: number | null; goal_weight: number | null
   calorie_goal: number | null; created_at: string
+  phone: string | null; birth_date: string | null; gender: string | null
+  height: number | null; target_weight: number | null
+  body_fat_pct: number | null; objective: string | null; status: string | null
 }
 type WorkoutSession = {
   id: string; date: string; session_type: string | null
@@ -108,6 +111,16 @@ const targetInput: React.CSSProperties = {
   width:'100%', textAlign:'center',
 }
 
+/* ── EditField helper ──────────────────────────────────────── */
+function EditField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label style={{display:'block',fontSize:'0.75rem',fontWeight:700,color:'#9CA3AF',marginBottom:6,letterSpacing:'0.06em',textTransform:'uppercase',fontFamily:"'Barlow Condensed',sans-serif"}}>{label}</label>
+      {children}
+    </div>
+  )
+}
+
 /* ══════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════ */
@@ -127,8 +140,18 @@ export default function ClientProfilePage() {
   const [error,       setError]       = useState<string | null>(null)
   const [toast,       setToast]       = useState<string | null>(null)
   const [editOpen,    setEditOpen]    = useState(false)
+  const [editTab,     setEditTab]     = useState<'info'|'metrics'|'status'>('info')
   const [editName,    setEditName]    = useState('')
   const [editEmail,   setEditEmail]   = useState('')
+  const [editPhone,   setEditPhone]   = useState('')
+  const [editBirth,   setEditBirth]   = useState('')
+  const [editGender,  setEditGender]  = useState('')
+  const [editWeight,  setEditWeight]  = useState('')
+  const [editHeight,  setEditHeight]  = useState('')
+  const [editTargetW, setEditTargetW] = useState('')
+  const [editBodyFat, setEditBodyFat] = useState('')
+  const [editStatus,  setEditStatus]  = useState('active')
+  const [editObj,     setEditObj]     = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Programme
@@ -166,7 +189,7 @@ export default function ClientProfilePage() {
     setLoading(true); setError(null)
 
     const [profileRes, sessionsRes, weightRes, notesRes, programRes, mealPlanRes] = await Promise.all([
-      supabase.from('profiles').select('id,full_name,email,current_weight,goal_weight,calorie_goal,created_at').eq('id', id).single(),
+      supabase.from('profiles').select('id,full_name,email,current_weight,goal_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,date,session_type,duration_min,notes').eq('user_id', id).order('date', { ascending: false }).limit(20),
       supabase.from('weight_logs').select('id,weight,recorded_at').eq('user_id', id).order('recorded_at', { ascending: false }).limit(30),
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
@@ -175,9 +198,19 @@ export default function ClientProfilePage() {
     ])
 
     if (profileRes.error) { setError(profileRes.error.message); setLoading(false); return }
-    setProfile(profileRes.data as Profile)
-    setEditName(profileRes.data?.full_name ?? '')
-    setEditEmail(profileRes.data?.email ?? '')
+    const p = profileRes.data as Profile
+    setProfile(p)
+    setEditName(p.full_name ?? '')
+    setEditEmail(p.email ?? '')
+    setEditPhone(p.phone ?? '')
+    setEditBirth(p.birth_date ?? '')
+    setEditGender(p.gender ?? '')
+    setEditWeight(p.current_weight != null ? String(p.current_weight) : '')
+    setEditHeight(p.height != null ? String(p.height) : '')
+    setEditTargetW(p.target_weight != null ? String(p.target_weight) : '')
+    setEditBodyFat(p.body_fat_pct != null ? String(p.body_fat_pct) : '')
+    setEditStatus(p.status ?? 'active')
+    setEditObj(p.objective ?? '')
     setSessions((sessionsRes.data ?? []) as WorkoutSession[])
     setWeightLogs((weightRes.data ?? []) as WeightLog[])
     setNotes(notesRes.data?.content ?? '')
@@ -278,8 +311,17 @@ export default function ClientProfilePage() {
 
   /* ── Edit profile save ──────────────────────────────────────── */
   const saveEdit = async () => {
-    await supabase.from('profiles').update({ full_name: editName, email: editEmail }).eq('id', id)
-    setProfile(p => p ? { ...p, full_name: editName, email: editEmail } : p)
+    const updates = {
+      full_name: editName, email: editEmail, phone: editPhone || null,
+      birth_date: editBirth || null, gender: editGender || null,
+      current_weight: editWeight ? parseFloat(editWeight) : null,
+      height: editHeight ? parseFloat(editHeight) : null,
+      target_weight: editTargetW ? parseFloat(editTargetW) : null,
+      body_fat_pct: editBodyFat ? parseFloat(editBodyFat) : null,
+      status: editStatus, objective: editObj || null,
+    }
+    await supabase.from('profiles').update(updates).eq('id', id)
+    setProfile(p => p ? { ...p, ...updates } : p)
     setEditOpen(false); showToast('Profil mis à jour')
   }
 
@@ -343,6 +385,8 @@ export default function ClientProfilePage() {
         .btn-ghost:hover{background:#374151;color:#F8FAFC;}
         .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
         .badge-active{background:rgba(34,197,94,.15);color:#22C55E;}
+        .badge-warning{background:rgba(249,115,22,.15);color:#F97316;}
+        .badge-inactive{background:rgba(156,163,175,.12);color:#9CA3AF;}
         .data-table{width:100%;border-collapse:collapse;}
         .data-table thead th{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#6B7280;padding:10px 16px;text-align:left;border-bottom:1px solid #374151;}
         .data-table tbody tr{border-bottom:1px solid #1F2937;transition:background 150ms ease;}
@@ -399,14 +443,22 @@ export default function ClientProfilePage() {
             <div style={{flex:1,minWidth:0}}>
               <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:12,marginBottom:4}}>
                 <h1 style={{fontSize:'1.75rem',fontWeight:700,color:'#F8FAFC',margin:0}}>{profile.full_name ?? 'Client'}</h1>
-                <span className="badge badge-active">Actif</span>
+                {(() => {
+                  const s = profile.status ?? 'active'
+                  const cfg = s==='warning' ? {cls:'badge-warning',label:'À relancer'} : s==='inactive' ? {cls:'badge-inactive',label:'Inactif'} : {cls:'badge-active',label:'Actif'}
+                  return <span className={`badge ${cfg.cls}`}>{cfg.label}</span>
+                })()}
+                {profile.objective && (() => {
+                  const labels: Record<string,string> = {perte_poids:'📉 Perte de poids',prise_masse:'💪 Prise de masse',maintien:'⚖️ Maintien',performance:'🏆 Performance'}
+                  return <span style={{fontSize:'0.78rem',color:'#6B7280',background:'rgba(255,255,255,.05)',border:'1px solid #374151',borderRadius:6,padding:'2px 8px'}}>{labels[profile.objective] ?? profile.objective}</span>
+                })()}
               </div>
               <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:'4px 20px',marginTop:4}}>
                 {profile.email && <span style={{fontSize:'0.85rem',color:'#6B7280',display:'flex',alignItems:'center',gap:5}}><Mail size={13} strokeWidth={2}/>{profile.email}</span>}
                 <span style={{fontSize:'0.85rem',color:'#6B7280',display:'flex',alignItems:'center',gap:5}}><Calendar size={13} strokeWidth={2}/>Client depuis {formatMonthYear(profile.created_at)}</span>
               </div>
             </div>
-            <button className="btn-secondary" onClick={()=>setEditOpen(true)}>Modifier</button>
+            <button className="btn-secondary" onClick={()=>{ setEditTab('info'); setEditOpen(true) }}>Modifier</button>
           </div>
         </div>
 
@@ -803,28 +855,113 @@ export default function ClientProfilePage() {
 
       {/* EDIT MODAL */}
       <div className={`modal-overlay${editOpen?' open':''}`} onClick={()=>setEditOpen(false)}>
-        <div className="modal" onClick={e=>e.stopPropagation()}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}}>
-            <h2 style={{fontSize:'1.4rem',fontWeight:700,margin:0,color:'#F8FAFC'}}>Modifier le profil</h2>
+        <div className="modal" style={{maxWidth:560,padding:0,overflow:'hidden'}} onClick={e=>e.stopPropagation()}>
+
+          {/* Modal header */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 24px',borderBottom:'1px solid #374151'}}>
+            <h2 style={{fontSize:'1.4rem',fontWeight:700,margin:0,color:'#F8FAFC',fontFamily:"'Barlow Condensed',sans-serif"}}>Modifier le profil</h2>
             <button style={{background:'#374151',border:'none',borderRadius:8,width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}} onClick={()=>setEditOpen(false)}>
               <X size={16} color="#9CA3AF" strokeWidth={2}/>
             </button>
           </div>
-          <div style={{display:'flex',flexDirection:'column',gap:16}}>
-            <div>
-              <label style={{display:'block',fontSize:'0.8rem',fontWeight:600,color:'#9CA3AF',marginBottom:6,letterSpacing:'0.05em',textTransform:'uppercase',fontFamily:"'Barlow Condensed',sans-serif"}}>Nom complet</label>
-              <input value={editName} onChange={e=>setEditName(e.target.value)} style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
-            </div>
-            <div>
-              <label style={{display:'block',fontSize:'0.8rem',fontWeight:600,color:'#9CA3AF',marginBottom:6,letterSpacing:'0.05em',textTransform:'uppercase',fontFamily:"'Barlow Condensed',sans-serif"}}>Email</label>
-              <input type="email" value={editEmail} onChange={e=>setEditEmail(e.target.value)} style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
-            </div>
-            <div style={{display:'flex',gap:10,marginTop:8}}>
-              <button className="btn-secondary" style={{flex:1,justifyContent:'center'}} onClick={()=>setEditOpen(false)}>Annuler</button>
-              <button className="btn-primary" style={{flex:1,justifyContent:'center'}} onClick={saveEdit}>
-                <Check size={14} strokeWidth={2.5}/>Enregistrer
-              </button>
-            </div>
+
+          {/* Tabs */}
+          <div style={{display:'flex',gap:0,borderBottom:'1px solid #374151',background:'#111827'}}>
+            {(['info','metrics','status'] as const).map(tab => {
+              const labels = { info:'Informations', metrics:'Métriques', status:'Statut & Objectif' }
+              return (
+                <button key={tab} onClick={()=>setEditTab(tab)} style={{flex:1,padding:'12px 8px',border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.82rem',fontWeight:700,letterSpacing:'0.04em',textTransform:'uppercase',transition:'all 150ms ease',background:'transparent',color:editTab===tab?'#F97316':'#6B7280',borderBottom:editTab===tab?'2px solid #F97316':'2px solid transparent',marginBottom:-1}}>
+                  {labels[tab]}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Tab content */}
+          <div style={{padding:'20px 24px',display:'flex',flexDirection:'column',gap:14,maxHeight:'60vh',overflowY:'auto'}}>
+
+            {editTab === 'info' && (<>
+              <EditField label="Nom complet">
+                <input value={editName} onChange={e=>setEditName(e.target.value)} style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
+              </EditField>
+              <EditField label="Email">
+                <input type="email" value={editEmail} onChange={e=>setEditEmail(e.target.value)} style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
+              </EditField>
+              <EditField label="Téléphone">
+                <input type="tel" value={editPhone} onChange={e=>setEditPhone(e.target.value)} placeholder="+33 6 00 00 00 00" style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
+              </EditField>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <EditField label="Date de naissance">
+                  <input type="date" value={editBirth} onChange={e=>setEditBirth(e.target.value)} style={{...inputStyle,colorScheme:'dark'} as React.CSSProperties} onFocus={e=>{e.target.style.borderColor='#F97316'}} onBlur={e=>{e.target.style.borderColor='#374151'}}/>
+                </EditField>
+                <EditField label="Genre">
+                  <select value={editGender} onChange={e=>setEditGender(e.target.value)} style={{...inputStyle,appearance:'none',cursor:'pointer'} as React.CSSProperties} onFocus={e=>{e.target.style.borderColor='#F97316'}} onBlur={e=>{e.target.style.borderColor='#374151'}}>
+                    <option value="">Non précisé</option>
+                    <option value="homme">Homme</option>
+                    <option value="femme">Femme</option>
+                    <option value="autre">Autre</option>
+                  </select>
+                </EditField>
+              </div>
+            </>)}
+
+            {editTab === 'metrics' && (<>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <EditField label="Poids actuel (kg)">
+                  <input type="number" step="0.1" value={editWeight} onChange={e=>setEditWeight(e.target.value)} placeholder="70" style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
+                </EditField>
+                <EditField label="Taille (cm)">
+                  <input type="number" step="1" value={editHeight} onChange={e=>setEditHeight(e.target.value)} placeholder="175" style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
+                </EditField>
+                <EditField label="Poids cible (kg)">
+                  <input type="number" step="0.1" value={editTargetW} onChange={e=>setEditTargetW(e.target.value)} placeholder="65" style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
+                </EditField>
+                <EditField label="% Graisse corporelle">
+                  <input type="number" step="0.1" value={editBodyFat} onChange={e=>setEditBodyFat(e.target.value)} placeholder="20" style={inputStyle} onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}} onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
+                </EditField>
+              </div>
+              {/* BMI preview */}
+              {editWeight && editHeight && (() => {
+                const bmi = (parseFloat(editWeight) / ((parseFloat(editHeight)/100)**2)).toFixed(1)
+                const bmiNum = parseFloat(bmi)
+                const cat = bmiNum < 18.5 ? {label:'Insuffisance pondérale',color:'#60A5FA'} : bmiNum < 25 ? {label:'Poids normal',color:'#22C55E'} : bmiNum < 30 ? {label:'Surpoids',color:'#FBBF24'} : {label:'Obésité',color:'#EF4444'}
+                return (
+                  <div style={{background:'#111827',border:'1px solid #374151',borderRadius:8,padding:'10px 14px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                    <span style={{fontSize:'0.8rem',color:'#6B7280',fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>IMC calculé</span>
+                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.1rem',fontWeight:700,color:cat.color}}>{bmi} <span style={{fontSize:'0.75rem',color:'#6B7280',fontWeight:500}}>— {cat.label}</span></span>
+                  </div>
+                )
+              })()}
+            </>)}
+
+            {editTab === 'status' && (<>
+              <EditField label="Statut">
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+                  {[{val:'active',label:'Actif',color:'#22C55E'},{val:'warning',label:'À relancer',color:'#F97316'},{val:'inactive',label:'Inactif',color:'#9CA3AF'}].map(({val,label,color})=>(
+                    <button key={val} onClick={()=>setEditStatus(val)} style={{padding:'10px 8px',borderRadius:8,border:`2px solid ${editStatus===val?color:'#374151'}`,cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.85rem',fontWeight:700,background:editStatus===val?`${color}20`:'transparent',color:editStatus===val?color:'#6B7280',transition:'all 150ms ease'}}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </EditField>
+              <EditField label="Objectif">
+                <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
+                  {[{val:'perte_poids',label:'Perte de poids',icon:'📉'},{val:'prise_masse',label:'Prise de masse',icon:'💪'},{val:'maintien',label:'Maintien',icon:'⚖️'},{val:'performance',label:'Performance',icon:'🏆'}].map(({val,label,icon})=>(
+                    <button key={val} onClick={()=>setEditObj(val)} style={{padding:'12px 10px',borderRadius:8,border:`2px solid ${editObj===val?'#F97316':'#374151'}`,cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.85rem',fontWeight:700,background:editObj===val?'rgba(249,115,22,.12)':'transparent',color:editObj===val?'#F97316':'#6B7280',transition:'all 150ms ease',display:'flex',alignItems:'center',gap:8}}>
+                      <span>{icon}</span>{label}
+                    </button>
+                  ))}
+                </div>
+              </EditField>
+            </>)}
+          </div>
+
+          {/* Footer */}
+          <div style={{display:'flex',gap:10,padding:'16px 24px',borderTop:'1px solid #374151'}}>
+            <button className="btn-secondary" style={{flex:1,justifyContent:'center'}} onClick={()=>setEditOpen(false)}>Annuler</button>
+            <button className="btn-primary" style={{flex:1,justifyContent:'center'}} onClick={saveEdit}>
+              <Check size={14} strokeWidth={2.5}/>Enregistrer
+            </button>
           </div>
         </div>
       </div>
