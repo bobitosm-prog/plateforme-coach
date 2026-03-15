@@ -1,6 +1,7 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import {
@@ -49,6 +50,7 @@ const STATUS_META = {
 }
 
 export default function CoachPage() {
+  const router = useRouter()
   const [mounted, setMounted]   = useState(false)
   const [session, setSession]   = useState<any>(null)
   const [clients, setClients]   = useState<ClientRow[]>([])
@@ -70,7 +72,21 @@ export default function CoachPage() {
 
   useEffect(() => {
     if (!session) { setLoading(false); return }
-    fetchClients(session.user.id)
+
+    // Role guard — redirect non-coaches away before loading any data
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => {
+        const role = data?.role
+        if (role !== 'coach' && role !== 'super_admin') {
+          router.replace('/')
+        } else {
+          fetchClients(session.user.id)
+        }
+      })
   }, [session])
 
   async function fetchClients(coachId: string) {
