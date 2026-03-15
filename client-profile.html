@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FITPRO — Profil client</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary:   '#F97316',
+            secondary: '#FB923C',
+            cta:       '#22C55E',
+            surface:   '#1F2937',
+            bg:        '#111827',
+            textBase:  '#F8FAFC',
+          },
+          fontFamily: {
+            heading: ['"Barlow Condensed"', 'sans-serif'],
+            body:    ['Barlow', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+
+  <style>
+    /* ── Reset / Base ────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background-color: #111827;
+      color: #F8FAFC;
+      margin: 0;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Barlow Condensed', sans-serif;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #1F2937; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+    /* ── Focus ───────────────────────────────────────────────── */
+    :focus-visible {
+      outline: 2px solid #F97316;
+      outline-offset: 2px;
+    }
+
+    /* ── Reduced motion ──────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+
+    /* ── Navbar ──────────────────────────────────────────────── */
+    .navbar {
+      background: #1F2937;
+      border-bottom: 1px solid #374151;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    /* ── Cards ───────────────────────────────────────────────── */
+    .card {
+      background: #1F2937;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    /* ── Metric card ─────────────────────────────────────────── */
+    .metric-card {
+      background: #1F2937;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: box-shadow 200ms ease;
+    }
+    .metric-card:hover {
+      box-shadow: 0 10px 15px rgba(0,0,0,0.15);
+    }
+
+    /* ── Section title ───────────────────────────────────────── */
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #6B7280;
+      margin-bottom: 16px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #22C55E;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border: none;
+      cursor: pointer;
+      transition: opacity 200ms ease, transform 200ms ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: #F97316;
+      border: 2px solid #F97316;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 200ms ease, color 200ms ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-secondary:hover { background: #F97316; color: #fff; }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      color: #9CA3AF;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 150ms ease, color 150ms ease;
+      white-space: nowrap;
+    }
+    .btn-ghost:hover { background: #374151; color: #F8FAFC; }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #374151;
+      border: none;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      transition: background 150ms ease;
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: #4B5563; }
+
+    /* ── Badge ───────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .badge-active   { background: rgba(34,197,94,0.15);   color: #22C55E; }
+    .badge-warning  { background: rgba(249,115,22,0.15);  color: #F97316; }
+    .badge-inactive { background: rgba(156,163,175,0.12); color: #9CA3AF; }
+
+    /* ── Avatar large ────────────────────────────────────────── */
+    .avatar-lg {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #F97316;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      border: 3px solid #1F2937;
+      box-shadow: 0 0 0 2px #F97316;
+    }
+
+    /* ── Avatar sm ───────────────────────────────────────────── */
+    .avatar-sm {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F97316, #FB923C);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ── Table ───────────────────────────────────────────────── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .data-table thead th {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #6B7280;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid #374151;
+    }
+    .data-table tbody tr {
+      border-bottom: 1px solid #1F2937;
+      transition: background 150ms ease;
+    }
+    .data-table tbody tr:last-child { border-bottom: none; }
+    .data-table tbody tr:hover { background: #374151; cursor: pointer; }
+    .data-table tbody td {
+      padding: 13px 16px;
+      font-size: 0.875rem;
+      color: #F8FAFC;
+    }
+
+    /* ── Textarea ────────────────────────────────────────────── */
+    .coach-notes {
+      width: 100%;
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.9rem;
+      color: #F8FAFC;
+      resize: vertical;
+      min-height: 120px;
+      transition: border-color 200ms ease, box-shadow 200ms ease;
+      line-height: 1.6;
+    }
+    .coach-notes:focus {
+      border-color: #F97316;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+    }
+    .coach-notes::placeholder { color: #4B5563; }
+
+    /* ── Streak flame ────────────────────────────────────────── */
+    .streak-number {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #F97316;
+      line-height: 1;
+    }
+
+    /* ── Progress bar ────────────────────────────────────────── */
+    .progress-track {
+      background: #374151;
+      border-radius: 999px;
+      height: 6px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 600ms ease;
+    }
+
+    /* ── Divider ─────────────────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid #374151; margin: 20px 0; }
+
+    /* ── Next RDV block ──────────────────────────────────────── */
+    .rdv-block {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #111827;
+      border-radius: 10px;
+      padding: 16px;
+      border-left: 3px solid #F97316;
+    }
+
+    /* ── Modal ───────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: #1F2937;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 20px 25px rgba(0,0,0,0.4);
+      max-width: 480px;
+      width: 92%;
+      transform: translateY(12px);
+      transition: transform 200ms ease;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1F2937;
+      border: 1px solid #374151;
+      border-left: 3px solid #22C55E;
+      color: #F8FAFC;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 200ms ease, transform 200ms ease;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════════════════════ -->
+<nav class="navbar px-4 sm:px-6" aria-label="Navigation principale">
+  <div class="max-w-6xl mx-auto flex items-center justify-between h-16">
+
+    <!-- Back + Logo -->
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="btn-ghost" style="padding:7px 10px;" aria-label="Retour au tableau de bord">
+        <i data-lucide="arrow-left" style="width:16px;height:16px;stroke-width:2.5;"></i>
+        <span class="hidden sm:inline">Dashboard</span>
+      </a>
+      <div style="width:1px;height:20px;background:#374151;" class="hidden sm:block"></div>
+      <a href="#" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <div style="width:28px;height:28px;background:#F97316;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="zap" style="width:15px;height:15px;color:#fff;stroke-width:2.5;"></i>
+        </div>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:#F8FAFC;letter-spacing:0.08em;">FITPRO</span>
+      </a>
+    </div>
+
+    <!-- Coach avatar -->
+    <div class="flex items-center gap-2">
+      <div class="avatar-sm" id="nav-avatar" aria-hidden="true">MA</div>
+      <span id="nav-coach-name" class="hidden sm:block" style="font-size:0.875rem;color:#9CA3AF;font-weight:500;">Marc Antoine</span>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════════════════ -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+  <!-- ── CLIENT HEADER ──────────────────────────────────────── -->
+  <div class="card mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+
+      <!-- Avatar -->
+      <div class="relative" style="width:72px;flex-shrink:0;">
+        <div class="avatar-lg" id="client-avatar" aria-hidden="true">SM</div>
+        <!-- Online dot -->
+        <div style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;background:#22C55E;border-radius:50%;border:2px solid #1F2937;" title="Actif récemment"></div>
+      </div>
+
+      <!-- Info -->
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+          <h1 id="client-name" style="font-size:1.75rem;font-weight:700;color:#F8FAFC;margin:0;">Sophie Martin</h1>
+          <span class="badge badge-active" id="client-status-badge">Actif</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-1" style="margin-top:4px;">
+          <span id="client-email" style="font-size:0.85rem;color:#6B7280;display:flex;align-items:center;gap:5px;">
+            <i data-lucide="mail" style="width:13px;height:13px;stroke-width:2;"></i>
+            sophie.martin@email.fr
+          </span>
+          <span id="client-phone" style="font-size:0.85rem;color:#6B7280;display:flex;align-items:center;gap:5px;">
+            <i data-lucide="phone" style="width:13px;height:13px;stroke-width:2;"></i>
+            +33 6 12 34 56 78
+          </span>
+          <span id="client-since" style="font-size:0.85rem;color:#6B7280;display:flex;align-items:center;gap:5px;">
+            <i data-lucide="calendar" style="width:13px;height:13px;stroke-width:2;"></i>
+            Client depuis janv. 2025
+          </span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button class="btn-secondary" onclick="openEditModal()" aria-label="Modifier le profil">
+          <i data-lucide="pencil" style="width:14px;height:14px;stroke-width:2.5;"></i>
+          Modifier
+        </button>
+        <button class="btn-icon" onclick="openMoreMenu()" aria-label="Plus d'options">
+          <i data-lucide="more-vertical" style="width:16px;height:16px;color:#9CA3AF;stroke-width:2;"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── TWO-COLUMN LAYOUT ───────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- LEFT COL (2/3) -->
+    <div class="lg:col-span-2 flex flex-col gap-6">
+
+      <!-- ── MÉTRIQUES CLÉS ────────────────────────────────── -->
+      <section aria-label="Métriques clés">
+        <p class="section-title">Métriques clés</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+
+          <!-- Poids -->
+          <div class="metric-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;">Poids</span>
+              <div style="width:30px;height:30px;background:rgba(249,115,22,0.12);border-radius:7px;display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="scale" style="width:14px;height:14px;color:#F97316;stroke-width:2;"></i>
+              </div>
+            </div>
+            <div id="metric-weight" style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;color:#F8FAFC;line-height:1;">68<span style="font-size:1rem;color:#6B7280;font-weight:500;margin-left:2px;">kg</span></div>
+            <div style="display:flex;align-items:center;gap:3px;margin-top:8px;">
+              <i data-lucide="trending-down" style="width:12px;height:12px;color:#22C55E;stroke-width:2.5;"></i>
+              <span style="font-size:0.72rem;color:#22C55E;font-weight:500;">−2 kg ce mois</span>
+            </div>
+          </div>
+
+          <!-- Objectif -->
+          <div class="metric-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;">Objectif</span>
+              <div style="width:30px;height:30px;background:rgba(34,197,94,0.1);border-radius:7px;display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="target" style="width:14px;height:14px;color:#22C55E;stroke-width:2;"></i>
+              </div>
+            </div>
+            <div id="metric-goal" style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:#F8FAFC;line-height:1.2;">Perte de poids</div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:62%;background:#22C55E;" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" aria-label="62% de l'objectif atteint"></div>
+            </div>
+            <span style="font-size:0.72rem;color:#6B7280;margin-top:4px;display:block;">62 % atteint</span>
+          </div>
+
+          <!-- Séances -->
+          <div class="metric-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;">Séances</span>
+              <div style="width:30px;height:30px;background:rgba(249,115,22,0.12);border-radius:7px;display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="dumbbell" style="width:14px;height:14px;color:#F97316;stroke-width:2;"></i>
+              </div>
+            </div>
+            <div id="metric-sessions" style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;color:#F8FAFC;line-height:1;">47</div>
+            <div style="display:flex;align-items:center;gap:3px;margin-top:8px;">
+              <i data-lucide="check-circle" style="width:12px;height:12px;color:#22C55E;stroke-width:2.5;"></i>
+              <span style="font-size:0.72rem;color:#22C55E;font-weight:500;">complétées</span>
+            </div>
+          </div>
+
+          <!-- Streak -->
+          <div class="metric-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;">Streak</span>
+              <div style="width:30px;height:30px;background:rgba(249,115,22,0.12);border-radius:7px;display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="flame" style="width:14px;height:14px;color:#F97316;stroke-width:2;"></i>
+              </div>
+            </div>
+            <div class="streak-number" id="metric-streak">12</div>
+            <div style="display:flex;align-items:center;gap:3px;margin-top:8px;">
+              <span style="font-size:0.72rem;color:#F97316;font-weight:500;">jours consécutifs</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── HISTORIQUE DES SÉANCES ─────────────────────────── -->
+      <section aria-label="Historique des séances">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <p class="section-title" style="margin-bottom:0;">Historique des séances</p>
+          <button class="btn-ghost" style="font-size:0.78rem;" onclick="showToast('Export CSV à implémenter')">
+            <i data-lucide="download" style="width:13px;height:13px;stroke-width:2;"></i>
+            Exporter
+          </button>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="session-table" aria-label="Historique des séances">
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Durée</th>
+                  <th scope="col">Notes</th>
+                  <th scope="col"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="session-tbody">
+                <!-- JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Footer -->
+          <div style="padding:12px 16px;border-top:1px solid #374151;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:0.78rem;color:#6B7280;" id="session-count">8 séances</span>
+            <button class="btn-ghost" style="font-size:0.78rem;" onclick="showToast('Voir toutes les séances')">
+              Voir tout
+              <i data-lucide="chevron-right" style="width:13px;height:13px;"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /left col -->
+
+
+    <!-- RIGHT COL (1/3) -->
+    <div class="flex flex-col gap-6">
+
+      <!-- ── PROCHAIN RDV ────────────────────────────────────── -->
+      <section class="card" aria-label="Prochain rendez-vous">
+        <p class="section-title">Prochain RDV</p>
+
+        <div class="rdv-block" id="rdv-block">
+          <div style="width:40px;height:40px;background:rgba(249,115,22,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="calendar-clock" style="width:18px;height:18px;color:#F97316;stroke-width:2;"></i>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div id="rdv-date" style="font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;color:#F8FAFC;">Lundi 17 mars 2026</div>
+            <div id="rdv-time" style="font-size:0.82rem;color:#9CA3AF;margin-top:2px;">10h00 — 11h00 · Présentiel</div>
+          </div>
+        </div>
+
+        <div id="rdv-empty" style="display:none;text-align:center;padding:20px 0;">
+          <i data-lucide="calendar-x" style="width:28px;height:28px;color:#4B5563;stroke-width:1.5;margin:0 auto 8px;display:block;"></i>
+          <span style="font-size:0.85rem;color:#6B7280;">Aucun RDV planifié</span>
+        </div>
+
+        <button class="btn-primary" style="width:100%;justify-content:center;margin-top:16px;" onclick="openRdvModal()" aria-label="Planifier un rendez-vous">
+          <i data-lucide="plus" style="width:15px;height:15px;stroke-width:2.5;"></i>
+          Planifier un RDV
+        </button>
+      </section>
+
+      <!-- ── NOTES COACH ─────────────────────────────────────── -->
+      <section class="card" aria-label="Notes du coach">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <p class="section-title" style="margin-bottom:0;">Notes coach</p>
+          <div id="notes-save-status" style="font-size:0.75rem;color:#6B7280;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity 300ms ease;">
+            <i data-lucide="check" style="width:12px;height:12px;color:#22C55E;stroke-width:2.5;"></i>
+            Sauvegardé
+          </div>
+        </div>
+
+        <textarea
+          class="coach-notes"
+          id="coach-notes"
+          placeholder="Ajoutez vos observations, programmes, remarques sur la progression de ce client…"
+          oninput="onNotesChange()"
+          aria-label="Zone de notes pour le coach"
+        >Sophie progresse très bien sur les exercices de force. Augmenter la charge sur le squat la semaine prochaine (+5 kg). Travailler davantage la mobilité des hanches avant les séances. Objectif : atteindre 65 kg d'ici fin avril.</textarea>
+
+        <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:10px;">
+          <button class="btn-secondary" style="padding:8px 16px;font-size:0.85rem;" onclick="saveNotes()" aria-label="Sauvegarder les notes">
+            <i data-lucide="save" style="width:13px;height:13px;stroke-width:2.5;"></i>
+            Sauvegarder
+          </button>
+        </div>
+      </section>
+
+      <!-- ── DANGER ZONE ─────────────────────────────────────── -->
+      <section class="card" aria-label="Actions avancées" style="border:1px solid #374151;">
+        <p class="section-title" style="color:#EF4444;">Zone avancée</p>
+        <div class="flex flex-col gap-2">
+          <button class="btn-ghost" style="justify-content:flex-start;color:#9CA3AF;" onclick="showToast('Archivage à implémenter')">
+            <i data-lucide="archive" style="width:14px;height:14px;stroke-width:2;"></i>
+            Archiver le client
+          </button>
+          <button class="btn-ghost" style="justify-content:flex-start;color:#EF4444;" onclick="confirmDelete()">
+            <i data-lucide="trash-2" style="width:14px;height:14px;stroke-width:2;"></i>
+            Supprimer le client
+          </button>
+        </div>
+      </section>
+
+    </div><!-- /right col -->
+  </div><!-- /grid -->
+</main>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL — EDIT CLIENT
+════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" onclick="closeEditModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h2 id="edit-modal-title" style="font-size:1.4rem;font-weight:700;margin:0;color:#F8FAFC;">Modifier le profil</h2>
+      <button class="btn-icon" onclick="closeEditModal()" aria-label="Fermer">
+        <i data-lucide="x" style="width:16px;height:16px;color:#9CA3AF;stroke-width:2;"></i>
+      </button>
+    </div>
+
+    <form onsubmit="submitEdit(event)" novalidate>
+      <div class="flex flex-col gap-4">
+
+        <div>
+          <label for="edit-name" style="display:block;font-size:0.8rem;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;">Nom complet</label>
+          <input type="text" id="edit-name" value="Sophie Martin"
+            style="width:100%;background:#111827;border:1px solid #374151;border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:#F8FAFC;transition:border-color 200ms ease;"
+            onfocus="this.style.borderColor='#F97316';this.style.boxShadow='0 0 0 3px rgba(249,115,22,0.15)'"
+            onblur="this.style.borderColor='#374151';this.style.boxShadow='none'"
+            required aria-required="true" />
+        </div>
+
+        <div>
+          <label for="edit-email" style="display:block;font-size:0.8rem;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;">Email</label>
+          <input type="email" id="edit-email" value="sophie.martin@email.fr"
+            style="width:100%;background:#111827;border:1px solid #374151;border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:#F8FAFC;transition:border-color 200ms ease;"
+            onfocus="this.style.borderColor='#F97316';this.style.boxShadow='0 0 0 3px rgba(249,115,22,0.15)'"
+            onblur="this.style.borderColor='#374151';this.style.boxShadow='none'" />
+        </div>
+
+        <div>
+          <label for="edit-phone" style="display:block;font-size:0.8rem;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;">Téléphone</label>
+          <input type="tel" id="edit-phone" value="+33 6 12 34 56 78"
+            style="width:100%;background:#111827;border:1px solid #374151;border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:#F8FAFC;transition:border-color 200ms ease;"
+            onfocus="this.style.borderColor='#F97316';this.style.boxShadow='0 0 0 3px rgba(249,115,22,0.15)'"
+            onblur="this.style.borderColor='#374151';this.style.boxShadow='none'" />
+        </div>
+
+        <div>
+          <label for="edit-status" style="display:block;font-size:0.8rem;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;">Statut</label>
+          <select id="edit-status"
+            style="width:100%;background:#111827;border:1px solid #374151;border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:#F8FAFC;cursor:pointer;transition:border-color 200ms ease;appearance:none;"
+            onfocus="this.style.borderColor='#F97316'" onblur="this.style.borderColor='#374151'">
+            <option value="active" selected>Actif</option>
+            <option value="warning">À relancer</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="button" class="btn-secondary" style="flex:1;justify-content:center;" onclick="closeEditModal()">Annuler</button>
+          <button type="submit" class="btn-primary" style="flex:1;justify-content:center;">
+            <i data-lucide="check" style="width:14px;height:14px;stroke-width:2.5;"></i>
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL — PLANIFIER RDV
+════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="rdv-modal" role="dialog" aria-modal="true" aria-labelledby="rdv-modal-title" onclick="closeRdvModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h2 id="rdv-modal-title" style="font-size:1.4rem;font-weight:700;margin:0;color:#F8FAFC;">Planifier un RDV</h2>
+      <button class="btn-icon" onclick="closeRdvModal()" aria-label="Fermer">
+        <i data-lucide="x" style="width:16px;height:16px;color:#9CA3AF;stroke-width:2;"></i>
+      </button>
+    </div>
+
+    <form onsubmit="submitRdv(event)" novalidate>
+      <div class="flex flex-col gap-4">
+
+        <div>
+          <label for="rdv-date-input" style="display:block;font-size:0.8rem;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;">Date</label>
+          <input type="date" id="rdv-date-input"
+            style="width:100%;background:#111827;border:1px solid #374151;border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:#F8FAFC;cursor:pointer;transition:border-color 200ms ease;color-scheme:dark;"
+            onfocus="this.style.borderColor='#F97316'" onblur="this.style.borderColor='#374151'"
+            required aria-required="true" />
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label for="rdv-start" style="display:block;font-size:0.8rem;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;">Début</label>
+            <input type="time" id="rdv-start" value="10:00"
+              style="width:100%;background:#111827;border:1px solid #374151;border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:#F8FAFC;cursor:pointer;transition:border-color 200ms ease;color-scheme:dark;"
+              onfocus="this.style.borderColor='#F97316'" onblur="this.style.borderColor='#374151'" />
+          </div>
+          <div>
+            <label for="rdv-end" style="display:block;font-size:0.8rem;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;">Fin</label>
+            <input type="time" id="rdv-end" value="11:00"
+              style="width:100%;background:#111827;border:1px solid #374151;border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:#F8FAFC;cursor:pointer;transition:border-color 200ms ease;color-scheme:dark;"
+              onfocus="this.style.borderColor='#F97316'" onblur="this.style.borderColor='#374151'" />
+          </div>
+        </div>
+
+        <div>
+          <label for="rdv-type" style="display:block;font-size:0.8rem;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;">Type</label>
+          <select id="rdv-type"
+            style="width:100%;background:#111827;border:1px solid #374151;border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:#F8FAFC;cursor:pointer;transition:border-color 200ms ease;appearance:none;"
+            onfocus="this.style.borderColor='#F97316'" onblur="this.style.borderColor='#374151'">
+            <option value="presentiel">Présentiel</option>
+            <option value="visio">Visioconférence</option>
+            <option value="appel">Appel téléphonique</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="button" class="btn-secondary" style="flex:1;justify-content:center;" onclick="closeRdvModal()">Annuler</button>
+          <button type="submit" class="btn-primary" style="flex:1;justify-content:center;">
+            <i data-lucide="calendar-plus" style="width:14px;height:14px;stroke-width:2.5;"></i>
+            Confirmer
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ── TOAST ───────────────────────────────────────────────── -->
+<div class="toast" id="toast" role="alert" aria-live="polite">
+  <i data-lucide="check-circle" style="width:15px;height:15px;color:#22C55E;stroke-width:2;flex-shrink:0;"></i>
+  <span id="toast-msg">Action réalisée</span>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════ -->
+<script>
+/* ─── Mock data ──────────────────────────────────────────────── */
+const DEFAULT_CLIENT = {
+  id: 'client-001',
+  name: 'Sophie Martin',
+  initials: 'SM',
+  email: 'sophie.martin@email.fr',
+  phone: '+33 6 12 34 56 78',
+  since: 'janv. 2025',
+  status: 'active',
+  metrics: {
+    weight: 68,
+    weightTrend: '−2 kg ce mois',
+    goalLabel: 'Perte de poids',
+    goalPct: 62,
+    sessions: 47,
+    streak: 12,
+  },
+  nextRdv: {
+    date: 'Lundi 17 mars 2026',
+    time: '10h00 — 11h00 · Présentiel',
+  },
+  notes: 'Sophie progresse très bien sur les exercices de force. Augmenter la charge sur le squat la semaine prochaine (+5 kg). Travailler davantage la mobilité des hanches avant les séances. Objectif : atteindre 65 kg d\'ici fin avril.',
+};
+
+const SESSION_HISTORY = [
+  { date: '14 mars 2026',  type: 'Force',      duration: '55 min', badge: 'force',    notes: 'PR squat à 80 kg'         },
+  { date: '12 mars 2026',  type: 'Cardio',     duration: '40 min', badge: 'cardio',   notes: 'Bonne endurance'           },
+  { date: '10 mars 2026',  type: 'Mobilité',   duration: '30 min', badge: 'mobility', notes: 'Hanches + dorsaux'         },
+  { date: '7 mars 2026',   type: 'Force',      duration: '60 min', badge: 'force',    notes: 'Travail sur le deadlift'   },
+  { date: '5 mars 2026',   type: 'HIIT',       duration: '35 min', badge: 'hiit',     notes: 'Tabata circuits'           },
+  { date: '3 mars 2026',   type: 'Force',      duration: '50 min', badge: 'force',    notes: 'Bench press progression'   },
+  { date: '28 févr. 2026', type: 'Cardio',     duration: '45 min', badge: 'cardio',   notes: 'Course fractionnée'        },
+  { date: '26 févr. 2026', type: 'Récupération',duration: '25 min',badge: 'recovery', notes: 'Stretching post-effort'   },
+];
+
+const TYPE_COLORS = {
+  force:    { bg: 'rgba(249,115,22,0.15)', color: '#F97316' },
+  cardio:   { bg: 'rgba(34,197,94,0.12)',  color: '#22C55E' },
+  mobility: { bg: 'rgba(96,165,250,0.12)', color: '#60A5FA' },
+  hiit:     { bg: 'rgba(251,146,60,0.15)', color: '#FB923C' },
+  recovery: { bg: 'rgba(156,163,175,0.12)',color: '#9CA3AF' },
+};
+
+const STATUS_META = {
+  active:   { label: 'Actif',      cls: 'badge-active'   },
+  warning:  { label: 'À relancer', cls: 'badge-warning'  },
+  inactive: { label: 'Inactif',    cls: 'badge-inactive' },
+};
+
+/* ─── Get client from Firebase context or fallback ───────────── */
+function getClient() {
+  return window.currentClient || DEFAULT_CLIENT;
+}
+
+/* ─── Init page ──────────────────────────────────────────────── */
+function initPage() {
+  const c = getClient();
+  const meta = STATUS_META[c.status] || STATUS_META.inactive;
+
+  // Avatar + name
+  document.getElementById('client-avatar').textContent = c.initials || c.name.slice(0,2).toUpperCase();
+  document.getElementById('client-name').textContent = c.name;
+
+  // Status badge
+  const badge = document.getElementById('client-status-badge');
+  badge.textContent = meta.label;
+  badge.className = 'badge ' + meta.cls;
+
+  // Contact
+  if (c.email) {
+    const el = document.getElementById('client-email');
+    if (el) el.innerHTML = `<i data-lucide="mail" style="width:13px;height:13px;stroke-width:2;"></i>${c.email}`;
+  }
+  if (c.phone) {
+    const el = document.getElementById('client-phone');
+    if (el) el.innerHTML = `<i data-lucide="phone" style="width:13px;height:13px;stroke-width:2;"></i>${c.phone}`;
+  }
+
+  // Notes
+  if (c.notes) {
+    const ta = document.getElementById('coach-notes');
+    if (ta) ta.value = c.notes;
+  }
+
+  // Next RDV
+  if (c.nextRdv) {
+    document.getElementById('rdv-date').textContent = c.nextRdv.date;
+    document.getElementById('rdv-time').textContent = c.nextRdv.time;
+  } else {
+    document.getElementById('rdv-block').style.display = 'none';
+    document.getElementById('rdv-empty').style.display = 'block';
+  }
+
+  // Nav coach name
+  const coach = window.currentCoach || { displayName: 'Marc Antoine' };
+  const coachName = coach.displayName || 'Coach';
+  const parts = coachName.trim().split(' ');
+  const initials = parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : coachName.slice(0,2).toUpperCase();
+  document.getElementById('nav-avatar').textContent = initials;
+  document.getElementById('nav-coach-name').textContent = coachName;
+
+  renderSessions();
+  lucide.createIcons();
+}
+
+/* ─── Render sessions ────────────────────────────────────────── */
+function renderSessions() {
+  const tbody = document.getElementById('session-tbody');
+  tbody.innerHTML = SESSION_HISTORY.map(s => {
+    const tc = TYPE_COLORS[s.badge] || TYPE_COLORS.recovery;
+    return `
+      <tr>
+        <td style="white-space:nowrap;color:#9CA3AF;">${s.date}</td>
+        <td>
+          <span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:${tc.bg};color:${tc.color};">${s.type}</span>
+        </td>
+        <td style="white-space:nowrap;">
+          <div style="display:flex;align-items:center;gap:5px;">
+            <i data-lucide="clock" style="width:12px;height:12px;color:#6B7280;stroke-width:2;flex-shrink:0;"></i>
+            ${s.duration}
+          </div>
+        </td>
+        <td style="color:#9CA3AF;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.notes}">${s.notes}</td>
+        <td style="text-align:right;">
+          <button class="btn-ghost" style="padding:4px 8px;" onclick="showToast('Détails séance à implémenter')" aria-label="Voir les détails">
+            <i data-lucide="eye" style="width:13px;height:13px;"></i>
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('session-count').textContent = `${SESSION_HISTORY.length} séances`;
+  lucide.createIcons();
+}
+
+/* ─── Modal: Edit ────────────────────────────────────────────── */
+function openEditModal() {
+  document.getElementById('edit-modal').classList.add('open');
+  document.getElementById('edit-name').focus();
+}
+function closeEditModal(e) {
+  if (e && e.target !== document.getElementById('edit-modal')) return;
+  document.getElementById('edit-modal').classList.remove('open');
+}
+function submitEdit(e) {
+  e.preventDefault();
+  const name   = document.getElementById('edit-name').value.trim();
+  const status = document.getElementById('edit-status').value;
+
+  if (!name) { document.getElementById('edit-name').focus(); return; }
+
+  document.getElementById('client-name').textContent = name;
+  document.getElementById('client-avatar').textContent = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+  const meta = STATUS_META[status] || STATUS_META.inactive;
+  const badge = document.getElementById('client-status-badge');
+  badge.textContent = meta.label;
+  badge.className = 'badge ' + meta.cls;
+
+  document.getElementById('edit-modal').classList.remove('open');
+  showToast('Profil mis à jour');
+}
+
+/* ─── Modal: RDV ─────────────────────────────────────────────── */
+function openRdvModal() {
+  // Set default date to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('rdv-date-input').value = tomorrow.toISOString().slice(0,10);
+  document.getElementById('rdv-modal').classList.add('open');
+  document.getElementById('rdv-date-input').focus();
+}
+function closeRdvModal(e) {
+  if (e && e.target !== document.getElementById('rdv-modal')) return;
+  document.getElementById('rdv-modal').classList.remove('open');
+}
+function submitRdv(e) {
+  e.preventDefault();
+  const dateVal = document.getElementById('rdv-date-input').value;
+  const start   = document.getElementById('rdv-start').value;
+  const end     = document.getElementById('rdv-end').value;
+  const type    = document.getElementById('rdv-type');
+  const typeLabel = type.options[type.selectedIndex].text;
+
+  if (!dateVal) { document.getElementById('rdv-date-input').focus(); return; }
+
+  const d = new Date(dateVal + 'T12:00:00');
+  const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+  const formatted = d.toLocaleDateString('fr-FR', opts);
+
+  document.getElementById('rdv-date').textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  document.getElementById('rdv-time').textContent = `${start.replace(':','h')} — ${end.replace(':','h')} · ${typeLabel}`;
+
+  document.getElementById('rdv-block').style.display = 'flex';
+  document.getElementById('rdv-empty').style.display = 'none';
+
+  document.getElementById('rdv-modal').classList.remove('open');
+  showToast('RDV planifié avec succès');
+}
+
+/* ─── Notes ──────────────────────────────────────────────────── */
+let notesTimer = null;
+function onNotesChange() {
+  clearTimeout(notesTimer);
+  notesTimer = setTimeout(saveNotes, 3000); // autosave after 3s idle
+}
+function saveNotes() {
+  clearTimeout(notesTimer);
+  const status = document.getElementById('notes-save-status');
+  status.style.opacity = '1';
+  setTimeout(() => { status.style.opacity = '0'; }, 2500);
+  // In production: write to Firebase here
+}
+
+/* ─── Toast ──────────────────────────────────────────────────── */
+let toastTimer = null;
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.style.borderLeftColor = isError ? '#EF4444' : '#22C55E';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+/* ─── Danger actions ─────────────────────────────────────────── */
+function confirmDelete() {
+  if (confirm('Supprimer définitivement ce client ? Cette action est irréversible.')) {
+    showToast('Suppression à connecter à Firebase');
+  }
+}
+function openMoreMenu() {
+  showToast('Menu contextuel à implémenter');
+}
+
+/* ─── Keyboard trap for modals ───────────────────────────────── */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.getElementById('edit-modal').classList.remove('open');
+    document.getElementById('rdv-modal').classList.remove('open');
+  }
+});
+
+/* ─── Boot ───────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', initPage);
+</script>
+
+</body>
+</html>
