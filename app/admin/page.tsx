@@ -1,7 +1,7 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState } from 'react'
-import { Zap, Users, Shield, LogOut, RefreshCw, Check, ChevronDown } from 'lucide-react'
+import { Zap, Users, Shield, LogOut, RefreshCw, Check, ChevronDown, Home, Crown, Dumbbell, Utensils, UserPlus, ExternalLink } from 'lucide-react'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -76,6 +76,7 @@ export default function AdminPage() {
   const [loading, setLoading]     = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [tab, setTab]             = useState<'all' | 'coaches' | 'clients'>('all')
+  const [navOpen, setNavOpen]     = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -116,6 +117,11 @@ export default function AdminPage() {
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .nav-dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: #1F2937; border: 1px solid #374151; border-radius: 10px; padding: 6px; min-width: 220px; box-shadow: 0 16px 32px rgba(0,0,0,0.4); z-index: 100; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; text-decoration: none; color: #D1D5DB; font-family: Barlow, sans-serif; font-size: 0.875rem; font-weight: 500; transition: background 150ms, color 150ms; cursor: pointer; border: none; background: transparent; width: 100%; }
+        .nav-item:hover { background: #374151; color: #F8FAFC; }
+        .nav-card { background: #1F2937; border: 1px solid #374151; border-radius: 12px; padding: 20px; text-decoration: none; color: #F8FAFC; display: flex; flex-direction: column; gap: 10px; transition: background 150ms, border-color 150ms, transform 150ms; cursor: pointer; }
+        .nav-card:hover { background: #374151; border-color: #4B5563; transform: translateY(-2px); }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table thead th { font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #9CA3AF; padding: 10px 16px; text-align: left; border-bottom: 1px solid #374151; }
         .data-table tbody tr { border-bottom: 1px solid #1F2937; transition: background 150ms; }
@@ -129,10 +135,36 @@ export default function AdminPage() {
       <nav style={{ background: '#1F2937', borderBottom: '1px solid #374151', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '32px', height: '32px', background: '#F97316', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Zap size={18} color="#fff" strokeWidth={2.5} />
+            {/* Logo + dropdown trigger */}
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setNavOpen(v => !v)}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 8px 4px 0', borderRadius: '8px' }}>
+                <div style={{ width: '32px', height: '32px', background: '#F97316', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Zap size={18} color="#fff" strokeWidth={2.5} />
+                </div>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.35rem', fontWeight: 700, letterSpacing: '0.08em', color: '#F8FAFC' }}>FITPRO</span>
+                <ChevronDown size={14} color="#9CA3AF" style={{ transition: 'transform 150ms', transform: navOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              </button>
+
+              {navOpen && (
+                <div className="nav-dropdown" onClick={() => setNavOpen(false)}>
+                  {[
+                    { href: '/',        label: 'Dashboard Client', icon: <Home size={15} color="#9CA3AF" /> },
+                    { href: '/coach',   label: 'Coach Panel',      icon: <Crown size={15} color="#F97316" /> },
+                    { href: '/exercices', label: 'Exercices',      icon: <Dumbbell size={15} color="#9CA3AF" /> },
+                    { href: '/nutrition', label: 'Nutrition',      icon: <Utensils size={15} color="#9CA3AF" /> },
+                    { href: `/join?coach=${session?.user?.id ?? ''}`, label: 'Page Invitation', icon: <UserPlus size={15} color="#22C55E" /> },
+                  ].map(item => (
+                    <a key={item.href} href={item.href} className="nav-item">
+                      {item.icon}
+                      {item.label}
+                      <ExternalLink size={11} color="#4B5563" style={{ marginLeft: 'auto' }} />
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.35rem', fontWeight: 700, letterSpacing: '0.08em' }}>FITPRO</span>
+
             <div style={{ width: '1px', height: '20px', background: '#374151' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Shield size={14} color="#F97316" />
@@ -245,6 +277,31 @@ export default function AdminPage() {
             {!loading && `${filtered.length} utilisateur${filtered.length !== 1 ? 's' : ''} affiché${filtered.length !== 1 ? 's' : ''}`}
           </div>
         </div>
+
+        {/* Navigation rapide */}
+        <div style={{ marginTop: '32px' }}>
+          <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.15rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '16px' }}>Navigation rapide</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+            {[
+              { href: '/',          label: 'Dashboard Client', sub: 'Vue client',       icon: <Home size={22} color="#9CA3AF" strokeWidth={1.75} />,    accent: 'rgba(156,163,175,0.1)' },
+              { href: '/coach',     label: 'Coach Panel',      sub: 'Gestion clients',  icon: <Crown size={22} color="#F97316" strokeWidth={1.75} />,   accent: 'rgba(249,115,22,0.1)'  },
+              { href: '/exercices', label: 'Exercices',        sub: 'Base d\'exercices', icon: <Dumbbell size={22} color="#60A5FA" strokeWidth={1.75} />, accent: 'rgba(96,165,250,0.1)'  },
+              { href: '/nutrition', label: 'Nutrition',        sub: 'Suivi calories',   icon: <Utensils size={22} color="#34D399" strokeWidth={1.75} />, accent: 'rgba(52,211,153,0.1)'  },
+              { href: `/join?coach=${session?.user?.id ?? ''}`, label: 'Invitation', sub: 'Lien client', icon: <UserPlus size={22} color="#A78BFA" strokeWidth={1.75} />, accent: 'rgba(167,139,250,0.1)' },
+            ].map(item => (
+              <a key={item.href} href={item.href} className="nav-card">
+                <div style={{ width: '40px', height: '40px', background: item.accent, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {item.icon}
+                </div>
+                <div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.02em' }}>{item.label}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '2px' }}>{item.sub}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   )
