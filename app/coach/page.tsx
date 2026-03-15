@@ -1,16 +1,20 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { Users, LogOut, Copy, Check, UserPlus, Mail, Dumbbell, Scale, Crown } from 'lucide-react'
+import {
+  Zap, Users, CalendarCheck, Euro, TrendingUp, Minus,
+  Search, ChevronRight, UserPlus, Dumbbell, Calendar,
+  LogOut, Copy, Check, ExternalLink
+} from 'lucide-react'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-interface Client {
+interface ClientRow {
   id: string
   client_id: string
   created_at: string
@@ -23,12 +27,35 @@ interface Client {
   } | null
 }
 
+function initials(name: string | null | undefined) {
+  if (!name) return '?'
+  const parts = name.trim().split(' ')
+  return parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase()
+}
+
+function statusFor(createdAt: string): 'active' | 'warning' | 'inactive' {
+  const days = (Date.now() - new Date(createdAt).getTime()) / 86400000
+  if (days < 30) return 'active'
+  if (days < 60) return 'warning'
+  return 'inactive'
+}
+
+const STATUS_META = {
+  active:   { label: 'Actif',       cls: 'badge-active'   },
+  warning:  { label: 'À relancer',  cls: 'badge-warning'  },
+  inactive: { label: 'Inactif',     cls: 'badge-inactive' },
+}
+
 export default function CoachPage() {
-  const [mounted, setMounted] = useState(false)
-  const [session, setSession] = useState<any>(null)
-  const [clients, setClients] = useState<Client[]>([])
-  const [loading, setLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
+  const [mounted, setMounted]   = useState(false)
+  const [session, setSession]   = useState<any>(null)
+  const [clients, setClients]   = useState<ClientRow[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [search, setSearch]     = useState('')
+  const [copied, setCopied]     = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
 
   const inviteLink = session && typeof window !== 'undefined'
     ? `${window.location.origin}/join?coach=${session.user.id}`
@@ -36,27 +63,14 @@ export default function CoachPage() {
 
   useEffect(() => {
     setMounted(true)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setSession(session)
-    })
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
     return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
     if (!session) { setLoading(false); return }
     fetchClients(session.user.id)
-
-    // Handle invite link: if this coach just landed via ?coach=xxx, ignore (that's the client flow)
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      const coachId = params.get('coach')
-      if (coachId && coachId !== session.user.id) {
-        linkClientToCoach(coachId, session.user.id)
-      }
-    }
   }, [session])
 
   async function fetchClients(coachId: string) {
@@ -66,19 +80,17 @@ export default function CoachPage() {
       .select('id, client_id, created_at, profiles!coach_clients_client_id_fkey(id, full_name, avatar_url, current_weight, calorie_goal)')
       .eq('coach_id', coachId)
       .order('created_at', { ascending: false })
-    if (!error && data) setClients(data as unknown as Client[])
+    if (!error && data) setClients(data as unknown as ClientRow[])
     setLoading(false)
   }
 
-  async function linkClientToCoach(coachId: string, clientId: string) {
-    const { error } = await supabase
-      .from('coach_clients')
-      .upsert({ coach_id: coachId, client_id: clientId }, { onConflict: 'coach_id,client_id' })
-    if (!error) {
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    if (!q) return clients
+    return clients.filter(c =>
+      (c.profiles?.full_name ?? '').toLowerCase().includes(q)
+    )
+  }, [clients, search])
 
   function copyInviteLink() {
     if (!inviteLink) return
@@ -94,11 +106,9 @@ export default function CoachPage() {
   function fallbackCopy(text: string) {
     const el = document.createElement('textarea')
     el.value = text
-    el.style.position = 'fixed'
-    el.style.opacity = '0'
+    el.style.cssText = 'position:fixed;opacity:0'
     document.body.appendChild(el)
-    el.focus()
-    el.select()
+    el.focus(); el.select()
     document.execCommand('copy')
     document.body.removeChild(el)
   }
@@ -107,18 +117,19 @@ export default function CoachPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-zinc-900 p-8 rounded-[40px] border border-zinc-800 shadow-2xl">
-          <div className="flex justify-center mb-6">
-            <div className="bg-orange-500 p-4 rounded-3xl">
-              <Crown size={32} className="text-white" />
+      <div style={{ minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: 'Barlow, sans-serif' }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');`}</style>
+        <div style={{ width: '100%', maxWidth: '440px', background: '#1F2937', padding: '40px', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <div style={{ width: '48px', height: '48px', background: '#F97316', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={24} color="#fff" strokeWidth={2.5} />
             </div>
           </div>
-          <h1 className="text-3xl font-black text-white mb-2 text-center italic uppercase">Coach Panel</h1>
-          <p className="text-zinc-500 text-center text-sm mb-8">Connecte-toi pour gérer tes clients</p>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: '#F8FAFC', textAlign: 'center', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '8px' }}>FITPRO Coach</h1>
+          <p style={{ color: '#9CA3AF', textAlign: 'center', fontSize: '0.9rem', marginBottom: '32px' }}>Connecte-toi pour accéder au tableau de bord</p>
           <Auth
             supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#f97316', brandAccent: '#ea580c' } } } }}
+            appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#F97316', brandAccent: '#EA580C' } } } }}
             theme="dark"
             providers={['google']}
           />
@@ -127,135 +138,272 @@ export default function CoachPage() {
     )
   }
 
+  const coachName = session.user.user_metadata?.full_name || session.user.email || 'Coach'
+  const coachInitials = initials(coachName)
+  const activeCount = clients.filter(c => statusFor(c.created_at) === 'active').length
+
   return (
-    <div className="min-h-screen bg-black text-white pb-24" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700;900&display=swap');`}</style>
+    <div style={{ minHeight: '100vh', background: '#111827', color: '#F8FAFC', fontFamily: 'Barlow, sans-serif' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
+        *, *::before, *::after { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1F2937; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        .stat-card { background: #1F2937; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: box-shadow 200ms ease; cursor: default; }
+        .stat-card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.15); }
+        .sidebar-card { background: #1F2937; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #F8FAFC; margin: 0 0 16px 0; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table thead th { font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #9CA3AF; padding: 10px 16px; text-align: left; border-bottom: 1px solid #374151; }
+        .data-table tbody tr { border-bottom: 1px solid #1F2937; transition: background 150ms ease; cursor: pointer; }
+        .data-table tbody tr:hover { background: #374151; }
+        .data-table tbody td { padding: 14px 16px; font-size: 0.9rem; color: #F8FAFC; }
+        .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .badge-active   { background: rgba(34,197,94,0.15);   color: #22C55E; }
+        .badge-warning  { background: rgba(249,115,22,0.15);  color: #F97316; }
+        .badge-inactive { background: rgba(156,163,175,0.12); color: #9CA3AF; }
+        .avatar-circle { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #F97316, #FB923C); display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.85rem; color: #fff; flex-shrink: 0; }
+        .btn-primary { display: flex; align-items: center; gap: 8px; background: #22C55E; color: #fff; padding: 11px 20px; border-radius: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.04em; border: none; cursor: pointer; transition: opacity 200ms ease, transform 200ms ease; width: 100%; justify-content: center; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary-orange { background: #F97316; }
+        .btn-secondary { display: flex; align-items: center; gap: 8px; background: transparent; color: #F97316; border: 2px solid #F97316; padding: 9px 20px; border-radius: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; transition: background 200ms ease, color 200ms ease; width: 100%; justify-content: center; }
+        .btn-secondary:hover { background: #F97316; color: #fff; }
+        .btn-ghost { display: flex; align-items: center; gap: 6px; background: transparent; color: #9CA3AF; border: none; padding: 8px 12px; border-radius: 8px; font-family: 'Barlow', sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 150ms ease, color 150ms ease; white-space: nowrap; }
+        .btn-ghost:hover { background: #374151; color: #F8FAFC; }
+        .divider { border: none; border-top: 1px solid #374151; margin: 16px 0; }
+        .search-input { background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 7px 12px 7px 32px; font-family: 'Barlow', sans-serif; font-size: 0.85rem; color: #F8FAFC; width: 180px; transition: border-color 200ms ease; outline: none; }
+        .search-input:focus { border-color: #F97316; }
+        .invite-panel { background: rgba(249,115,22,0.07); border: 1px solid rgba(249,115,22,0.25); border-radius: 12px; padding: 16px; margin-top: 12px; }
+        @media (max-width: 640px) { .hide-sm { display: none !important; } }
+        @media (max-width: 1024px) { .lg-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
 
-      {/* HEADER */}
-      <div className="sticky top-0 z-10 bg-black/95 backdrop-blur-xl border-b border-zinc-800 px-5 pt-12 pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center">
-              <Crown size={20} className="text-white" />
+      {/* ── NAVBAR ── */}
+      <nav style={{ background: '#1F2937', borderBottom: '1px solid #374151', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+            <div style={{ width: '32px', height: '32px', background: '#F97316', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={18} color="#fff" strokeWidth={2.5} />
             </div>
-            <div>
-              <h1 className="text-xl font-black uppercase tracking-tight text-white">Coach Panel</h1>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{session.user.email}</p>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.35rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.08em' }}>FITPRO</span>
+          </a>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="hide-sm" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="avatar-circle">{coachInitials}</div>
+              <span style={{ fontFamily: 'Barlow, sans-serif', fontSize: '0.875rem', fontWeight: 500, color: '#D1D5DB' }}>{coachName}</span>
             </div>
-          </div>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 active:scale-95 transition-all"
-          >
-            <LogOut size={18} />
-          </button>
-        </div>
-      </div>
-
-      <div className="px-5 pt-6 space-y-5">
-
-        {/* STATS */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-[24px] p-5">
-            <Users size={18} className="text-orange-500 mb-2" />
-            <div className="text-3xl font-black" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{clients.length}</div>
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Clients actifs</div>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-[24px] p-5">
-            <UserPlus size={18} className="text-zinc-500 mb-2" />
-            <div className="text-3xl font-black text-zinc-400" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>∞</div>
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Capacité</div>
+            <div className="hide-sm" style={{ width: '1px', height: '24px', background: '#374151' }} />
+            <button className="btn-ghost" onClick={() => supabase.auth.signOut()} aria-label="Se déconnecter">
+              <LogOut size={15} strokeWidth={2} />
+              <span className="hide-sm">Déconnexion</span>
+            </button>
           </div>
         </div>
+      </nav>
 
-        {/* INVITE CARD */}
-        <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/30 rounded-[28px] p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <UserPlus size={16} className="text-orange-500" />
-            <h2 className="text-sm font-black uppercase tracking-widest text-orange-500">Inviter un client</h2>
-          </div>
-          <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
-            Partage ce lien avec ton client. Quand il crée un compte, il sera automatiquement lié à ton profil coach.
+      {/* ── MAIN ── */}
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+
+        {/* Page header */}
+        <div style={{ marginBottom: '32px' }}>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.02em', margin: 0 }}>Tableau de bord</h1>
+          <p style={{ fontFamily: 'Barlow, sans-serif', fontSize: '0.9rem', color: '#9CA3AF', marginTop: '4px' }}>
+            Bonjour, {coachName} — voici votre activité du jour.
           </p>
-          <div className="bg-black/40 border border-zinc-700 rounded-2xl px-4 py-3 flex items-center gap-3 mb-3">
-            <Mail size={14} className="text-zinc-500 flex-shrink-0" />
-            <span className="text-xs text-zinc-400 flex-1 truncate font-mono">{inviteLink || 'Chargement…'}</span>
-          </div>
-          <button
-            onClick={copyInviteLink}
-            className="w-full py-3.5 rounded-2xl font-black text-sm uppercase tracking-wider active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            style={{ background: copied ? '#22c55e' : '#f97316', color: '#000' }}
-          >
-            {copied ? <><Check size={16} /> Copié !</> : <><Copy size={16} /> Copier le lien</>}
-          </button>
         </div>
 
-        {/* CLIENT LIST */}
-        <div>
-          <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3 ml-1">
-            Mes clients ({clients.length})
-          </h2>
+        {/* ── STATS ROW ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
 
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-[20px] p-4 h-20 animate-pulse" />
-              ))}
+          <div className="stat-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Clients actifs</span>
+              <div style={{ width: '36px', height: '36px', background: 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Users size={18} color="#F97316" strokeWidth={2} />
+              </div>
             </div>
-          ) : clients.length === 0 ? (
-            <div className="bg-zinc-900/50 border-2 border-dashed border-zinc-800 rounded-[24px] p-10 text-center">
-              <Users size={32} className="text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-500 text-sm font-bold">Aucun client pour l'instant</p>
-              <p className="text-zinc-700 text-xs mt-1">Partage ton lien d'invitation pour commencer</p>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
+              {loading ? '—' : clients.length}
             </div>
-          ) : (
-            <div className="space-y-3">
-              {clients.map((c) => {
-                const p = c.profiles
-                const initials = p?.full_name
-                  ? p.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-                  : '?'
-                return (
-                  <div key={c.id} className="bg-zinc-900 border border-zinc-800 rounded-[20px] p-4 flex items-center gap-4 active:bg-zinc-800 transition-colors">
-                    {/* Avatar */}
-                    {p?.avatar_url ? (
-                      <img src={p.avatar_url} alt={p.full_name ?? ''} className="w-12 h-12 rounded-2xl object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-orange-500 font-black text-sm">{initials}</span>
-                      </div>
-                    )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+              <TrendingUp size={13} color="#22C55E" strokeWidth={2.5} />
+              <span style={{ fontSize: '0.78rem', color: '#22C55E', fontWeight: 500 }}>{activeCount} actifs ce mois</span>
+            </div>
+          </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black text-sm text-white truncate">
-                        {p?.full_name ?? 'Client sans nom'}
-                      </div>
-                      <div className="text-[10px] text-zinc-500 mt-0.5">
-                        Depuis le {new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </div>
-                    </div>
+          <div className="stat-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Séances / semaine</span>
+              <div style={{ width: '36px', height: '36px', background: 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CalendarCheck size={18} color="#F97316" strokeWidth={2} />
+              </div>
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+              <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
+              <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>À connecter</span>
+            </div>
+          </div>
 
-                    {/* Stats */}
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      {p?.current_weight && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-400">
-                          <Scale size={10} />
-                          {p.current_weight} kg
-                        </div>
-                      )}
-                      {p?.calorie_goal && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-400">
-                          <Dumbbell size={10} />
-                          {p.calorie_goal} kcal
-                        </div>
-                      )}
+          <div className="stat-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Revenus du mois</span>
+              <div style={{ width: '36px', height: '36px', background: 'rgba(34,197,94,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Euro size={18} color="#22C55E" strokeWidth={2} />
+              </div>
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+              <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
+              <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>À connecter</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── CONTENT GRID ── */}
+        <div className="lg-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', alignItems: 'start' }}>
+
+          {/* Client table */}
+          <div className="sidebar-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h2 className="section-title">Clients</h2>
+              <div style={{ position: 'relative' }}>
+                <Search size={14} color="#6B7280" strokeWidth={2} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input
+                  type="search"
+                  className="search-input"
+                  placeholder="Rechercher…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  aria-label="Rechercher un client"
+                />
+              </div>
+            </div>
+
+            <div style={{ overflowX: 'auto', borderRadius: '8px', background: '#111827' }}>
+              <table className="data-table" aria-label="Liste des clients">
+                <thead>
+                  <tr>
+                    <th scope="col">Client</th>
+                    <th scope="col">Membre depuis</th>
+                    <th scope="col">Poids</th>
+                    <th scope="col">Statut</th>
+                    <th scope="col"><span style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden' }}>Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <tr key={i}>
+                        <td colSpan={5}>
+                          <div style={{ height: '20px', background: '#374151', borderRadius: '4px', opacity: 0.5, animation: 'pulse 1.5s ease-in-out infinite' }} />
+                        </td>
+                      </tr>
+                    ))
+                  ) : filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', color: '#6B7280', padding: '40px 16px' }}>
+                        {search ? 'Aucun client trouvé.' : 'Aucun client pour l\'instant.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filtered.map(c => {
+                      const p = c.profiles
+                      const name = p?.full_name ?? 'Sans nom'
+                      const ini = initials(p?.full_name)
+                      const status = statusFor(c.created_at)
+                      const meta = STATUS_META[status]
+                      const since = new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                      return (
+                        <tr key={c.id} onClick={() => window.location.href = `/client/${c.client_id}`} tabIndex={0}
+                          onKeyDown={e => { if (e.key === 'Enter') window.location.href = `/client/${c.client_id}` }}
+                          aria-label={`Voir le profil de ${name}`}>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              {p?.avatar_url
+                                ? <img src={p.avatar_url} alt="" style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                                : <div className="avatar-circle">{ini}</div>
+                              }
+                              <span style={{ fontWeight: 500 }}>{name}</span>
+                            </div>
+                          </td>
+                          <td style={{ color: '#9CA3AF' }}>{since}</td>
+                          <td>{p?.current_weight ? `${p.current_weight} kg` : '—'}</td>
+                          <td><span className={`badge ${meta.cls}`}>{meta.label}</span></td>
+                          <td style={{ textAlign: 'right' }}>
+                            <button className="btn-ghost" style={{ padding: '5px 8px', fontSize: '0.78rem' }}
+                              onClick={e => { e.stopPropagation(); window.location.href = `/client/${c.client_id}` }}
+                              aria-label={`Ouvrir le profil de ${name}`}>
+                              <ChevronRight size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>
+                {loading ? '…' : `Affichage de ${filtered.length} client${filtered.length !== 1 ? 's' : ''}`}
+              </span>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* Quick actions */}
+            <div className="sidebar-card">
+              <h2 className="section-title">Actions rapides</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                <button className="btn-primary" onClick={() => setShowInvite(v => !v)} aria-label="Inviter un nouveau client">
+                  <UserPlus size={16} strokeWidth={2.5} />
+                  Nouveau client
+                </button>
+
+                {showInvite && (
+                  <div className="invite-panel">
+                    <p style={{ fontSize: '0.78rem', color: '#9CA3AF', marginBottom: '10px', lineHeight: 1.5 }}>
+                      Partage ce lien — le client sera lié à ton profil automatiquement.
+                    </p>
+                    <div style={{ background: '#111827', border: '1px solid #374151', borderRadius: '6px', padding: '8px 10px', fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: '10px' }}>
+                      {inviteLink || 'Chargement…'}
                     </div>
+                    <button className="btn-primary btn-primary-orange" onClick={copyInviteLink} style={{ fontSize: '0.85rem', padding: '8px 16px' }}>
+                      {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier le lien</>}
+                    </button>
                   </div>
-                )
-              })}
+                )}
+
+                <button className="btn-primary btn-primary-orange" aria-label="Planifier une séance">
+                  <Dumbbell size={16} strokeWidth={2.5} />
+                  Nouvelle séance
+                </button>
+
+                <hr className="divider" />
+
+                <button className="btn-secondary" aria-label="Voir le calendrier">
+                  <Calendar size={16} strokeWidth={2} />
+                  Voir le calendrier
+                </button>
+
+              </div>
             </div>
-          )}
+
+            {/* Today */}
+            <div className="sidebar-card">
+              <h2 className="section-title">Aujourd'hui</h2>
+              <p style={{ fontSize: '0.85rem', color: '#6B7280' }}>Aucune séance planifiée.</p>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
