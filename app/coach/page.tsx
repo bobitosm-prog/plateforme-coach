@@ -29,7 +29,10 @@ export default function CoachPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
-  const [inviteLink, setInviteLink] = useState('')
+
+  const inviteLink = session && typeof window !== 'undefined'
+    ? `${window.location.origin}/join?coach=${session.user.id}`
+    : ''
 
   useEffect(() => {
     setMounted(true)
@@ -44,8 +47,6 @@ export default function CoachPage() {
 
   useEffect(() => {
     if (!session) { setLoading(false); return }
-    const base = typeof window !== 'undefined' ? window.location.origin : ''
-    setInviteLink(`${base}/join?coach=${session.user.id}`)
     fetchClients(session.user.id)
 
     // Handle invite link: if this coach just landed via ?coach=xxx, ignore (that's the client flow)
@@ -80,9 +81,26 @@ export default function CoachPage() {
   }
 
   function copyInviteLink() {
-    navigator.clipboard.writeText(inviteLink)
+    if (!inviteLink) return
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(inviteLink).catch(() => fallbackCopy(inviteLink))
+    } else {
+      fallbackCopy(inviteLink)
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function fallbackCopy(text: string) {
+    const el = document.createElement('textarea')
+    el.value = text
+    el.style.position = 'fixed'
+    el.style.opacity = '0'
+    document.body.appendChild(el)
+    el.focus()
+    el.select()
+    document.execCommand('copy')
+    document.body.removeChild(el)
   }
 
   if (!mounted) return null
