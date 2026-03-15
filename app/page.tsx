@@ -1,6 +1,7 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import dynamic from 'next/dynamic'
@@ -55,6 +56,7 @@ function calcHarrisBenedict(weight: number, height: number, age: number, gender:
 }
 
 export default function CoachApp() {
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [session, setSession] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
@@ -116,6 +118,21 @@ export default function CoachApp() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Role-based redirect — runs immediately when session is established, before fetchAll
+  useEffect(() => {
+    if (!session) return
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.role === 'super_admin') router.replace('/admin')
+        else if (data?.role === 'coach')  router.replace('/coach')
+        // 'client' or null → stay on /
+      })
+  }, [session])
+
   useEffect(() => { if (session) fetchAll() }, [session])
 
   useEffect(() => {
@@ -160,12 +177,7 @@ export default function CoachApp() {
       supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).single(),
     ])
 
-    if (profRes.data) {
-      setProfile(profRes.data)
-      // Role-based redirect: coaches and admins don't belong on the client dashboard
-      if (profRes.data.role === 'super_admin') { window.location.href = '/admin'; return }
-      if (profRes.data.role === 'coach')        { window.location.href = '/coach'; return }
-    }
+    if (profRes.data) setProfile(profRes.data)
     setWeightHistory(weightsRes.data?.map(w => ({ ...w, date: new Date(w.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) })) || [])
     setTodayMeals(mealsRes.data || [])
     setWSessions(sessRes.data || [])
