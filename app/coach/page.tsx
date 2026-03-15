@@ -65,7 +65,7 @@ export default function CoachPage() {
       .select('id, client_id, created_at, profiles!coach_clients_client_id_fkey(id, full_name, avatar_url, current_weight, calorie_goal)')
       .eq('coach_id', coachId)
       .order('created_at', { ascending: false })
-    if (!error && data) setClients(data as Client[])
+    if (!error && data) setClients(data as unknown as Client[])
     setLoading(false)
   }
 
