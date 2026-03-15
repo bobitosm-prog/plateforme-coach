@@ -74,6 +74,7 @@ export default function AdminPage() {
   const [session, setSession]     = useState<any>(null)
   const [profiles, setProfiles]   = useState<Profile[]>([])
   const [loading, setLoading]     = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [tab, setTab]             = useState<'all' | 'coaches' | 'clients'>('all')
 
   useEffect(() => {
@@ -87,11 +88,16 @@ export default function AdminPage() {
 
   async function fetchProfiles() {
     setLoading(true)
-    const { data } = await supabase
+    setFetchError(null)
+    const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, role, current_weight, created_at')
       .order('created_at', { ascending: false })
-    if (data) setProfiles(data as Profile[])
+    if (error) {
+      console.error('fetchProfiles error:', error)
+      setFetchError(error.message)
+    }
+    setProfiles((data ?? []) as Profile[])
     setLoading(false)
   }
 
@@ -198,6 +204,8 @@ export default function AdminPage() {
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}><td colSpan={4}><div style={{ height: '18px', background: '#374151', borderRadius: '4px', opacity: 0.4 }} /></td></tr>
                   ))
+                ) : fetchError ? (
+                  <tr><td colSpan={4} style={{ textAlign: 'center', color: '#EF4444', padding: '40px', fontFamily: 'monospace', fontSize: '0.8rem' }}>Erreur RLS : {fetchError}</td></tr>
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={4} style={{ textAlign: 'center', color: '#6B7280', padding: '40px' }}>Aucun utilisateur.</td></tr>
                 ) : (
