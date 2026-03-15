@@ -11,7 +11,7 @@ import {
   User, UtensilsCrossed, X, Check, Camera, Ruler,
   Users, Crown, Trash2, ChevronRight, Upload,
   Activity, Heart, Search, Filter, ChevronDown, ChevronUp,
-  Timer, Play, Pause, RotateCcw, Info, Sparkles, Utensils
+  Timer, Play, Pause, RotateCcw, Info, Sparkles, Utensils, Moon
 } from 'lucide-react'
 
 // ── CHANGEMENT 1 : Import WorkoutSession ──────────────────
@@ -68,6 +68,9 @@ export default function CoachApp() {
   const [clients, setClients] = useState<any[]>([])
   const [programs, setPrograms] = useState<any[]>([])
   const [userProgram, setUserProgram] = useState<any>(null)
+  const [coachProgram, setCoachProgram] = useState<any>(null)
+  const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
+  const [weightHistory30, setWeightHistory30] = useState<{ date: string; poids: number }[]>([])
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [loading, setLoading] = useState(true)
 
@@ -174,15 +177,17 @@ export default function CoachApp() {
     if (!uid) return
     const today = new Date().toISOString().split('T')[0]
 
-    const [profRes, weightsRes, mealsRes, sessRes, measureRes, photosRes, progsRes, userProgRes] = await Promise.all([
+    const [profRes, weightsRes, mealsRes, sessRes, measureRes, photosRes, progsRes, userProgRes, coachProgRes, coachMealRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
-      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(12),
+      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('meal_logs').select('*').eq('user_id', uid).eq('date', today),
       supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(10),
       supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
       supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
       supabase.from('training_programs').select('*').eq('is_template', true),
       supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).single(),
+      supabase.from('client_programs').select('program').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
 
     if (profRes.data) setProfile(profRes.data)
@@ -193,6 +198,9 @@ export default function CoachApp() {
     setProgressPhotos(photosRes.data || [])
     setPrograms(progsRes.data || [])
     if (userProgRes.data) setUserProgram(userProgRes.data)
+    setWeightHistory30((weightsRes.data || []).map(w => ({ date: w.date, poids: w.poids })))
+    if (coachProgRes.data?.program) setCoachProgram(coachProgRes.data.program)
+    if (coachMealRes.data?.plan) setCoachMealPlan(coachMealRes.data.plan)
 
     if (session?.user?.email === COACH_EMAIL) {
       const { data } = await supabase.from('coach_clients').select('*, profiles!coach_clients_client_id_fkey(*)').eq('coach_id', uid)
@@ -372,6 +380,11 @@ export default function CoachApp() {
   const progressPct = profile?.start_weight && currentWeight
     ? Math.max(0, Math.min(100, ((profile.start_weight - currentWeight) / (profile.start_weight - goalWeight)) * 100)) : 0
   const completedSessions = wSessions.filter(s => s.completed).length
+  const JS_DAYS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+  const todayKey = JS_DAYS_FR[new Date().getDay()]
+  const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
+  const chartMin = weightHistory30.length > 0 ? Math.min(...weightHistory30.map(p => p.poids)) - 1 : 0
+  const chartMax = weightHistory30.length > 0 ? Math.max(...weightHistory30.map(p => p.poids)) + 1 : 1
   const isCoach = session?.user?.email === COACH_EMAIL
   const filteredPrograms = programs.filter(p =>
     (!programFilter.level || p.level === programFilter.level) &&
@@ -727,109 +740,170 @@ export default function CoachApp() {
 
       {/* ═══════════════════ HOME TAB ═══════════════════ */}
       {activeTab === 'home' && (
-        <div>
-          <div className="relative overflow-hidden bg-gradient-to-b from-[#111] to-[#080808] pb-6">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A84C]/4 rounded-full blur-[60px] pointer-events-none" />
-            <div className="p-5 pt-10">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <p className="text-white/25 text-[10px] uppercase tracking-[0.2em] mb-1">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                  <h1 className="fd text-4xl text-white tracking-wider">BON RETOUR,</h1>
-                  <h1 className="fd text-4xl gold tracking-wider">{userName.toUpperCase()}</h1>
-                </div>
-                <button onClick={() => avatarRef.current?.click()} className="relative">
-                  {displayAvatar
-                    ? <img src={displayAvatar} className="w-14 h-14 rounded-2xl border-2 border-[#C9A84C]/20 object-cover" />
-                    : <div className="w-14 h-14 bg-[#C9A84C]/8 border border-[#C9A84C]/15 rounded-2xl flex items-center justify-center"><User size={24} className="gold" /></div>
-                  }
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 gold-bg rounded-full flex items-center justify-center border-2 border-[#080808]">
-                    {avatarUploading ? <div className="w-2.5 h-2.5 border border-black border-t-transparent rounded-full animate-spin" /> : <Camera size={8} className="text-black" />}
-                  </div>
-                  <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
-                </button>
+        <div style={{ background: '#111827', minHeight: '100vh', paddingBottom: 40 }}>
+          <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap');`}</style>
+
+          {/* HEADER */}
+          <div style={{ background: '#1F2937', borderBottom: '1px solid #374151', padding: '20px 20px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ fontSize: '0.72rem', color: '#6B7280', margin: '0 0 4px', textTransform: 'capitalize', letterSpacing: '0.04em' }}>
+                  {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', margin: 0, letterSpacing: '0.05em' }}>
+                  Bonjour, {userName}
+                </h1>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <button onClick={() => setModal('weight')} className="bg-[#1a1a1a] border border-white/5 rounded-[20px] p-4 text-left active:border-[#C9A84C]/25">
-                  <Scale size={15} className="gold mb-2" />
-                  <div className="fd text-2xl text-white tracking-wider">{currentWeight || '—'}</div>
-                  <div className="text-[8px] text-white/25 uppercase tracking-widest">kg actuel</div>
-                </button>
-                <div className="bg-[#1a1a1a] border border-white/5 rounded-[20px] p-4">
-                  <Target size={15} className="text-white/30 mb-2" />
-                  <div className="fd text-2xl text-white tracking-wider">{goalWeight}</div>
-                  <div className="text-[8px] text-white/25 uppercase tracking-widest">kg objectif</div>
-                </div>
-                <div className="bg-[#1a1a1a] border border-white/5 rounded-[20px] p-4">
-                  <TrendingDown size={15} className={`mb-2 ${weightProgress <= 0 ? 'text-green-400' : 'text-red-400'}`} />
-<div className={`fd text-2xl tracking-wider ${weightProgress <= 0 ? 'text-green-400' : 'text-red-400'}`}>
-  {weightProgress > 0 ? '+' : ''}{weightProgress}
-</div>
-                  <div className="text-[8px] text-white/25 uppercase tracking-widest">évolution</div>
-                </div>
-              </div>
+              <button onClick={() => avatarRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: displayAvatar ? 'transparent' : '#F97316', border: 'none', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
+                {displayAvatar
+                  ? <img src={displayAvatar} style={{ width: 48, height: 48, objectFit: 'cover' }} alt="" />
+                  : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>{userName.charAt(0).toUpperCase()}</span>
+                }
+              </button>
+              <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
             </div>
           </div>
-          <div className="p-5 space-y-4">
-            <div className="bg-[#111] border border-white/5 rounded-[20px] p-5">
-              <div className="flex justify-between mb-3">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Objectif Poids</span>
-                <span className="gold text-[10px] font-bold">{Math.round(progressPct)}%</span>
+
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* 4 STAT CARDS */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+              <button onClick={() => setModal('weight')} style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px', textAlign: 'left', cursor: 'pointer' }}>
+                <Scale size={16} color="#F97316" style={{ marginBottom: 8 }} />
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
+                  {currentWeight || '—'}<span style={{ fontSize: '0.9rem', color: '#6B7280', marginLeft: 4 }}>kg</span>
+                </div>
+                <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>Poids actuel</div>
+              </button>
+              <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
+                <Target size={16} color="#6B7280" style={{ marginBottom: 8 }} />
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
+                  {goalWeight}<span style={{ fontSize: '0.9rem', color: '#6B7280', marginLeft: 4 }}>kg</span>
+                </div>
+                <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>Objectif</div>
               </div>
-              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full gold-bg rounded-full shadow-[0_0_8px_rgba(201,168,76,0.4)]" style={{ width: `${progressPct}%`, transition: 'width 0.7s ease' }} />
+              <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
+                <Dumbbell size={16} color="#6B7280" style={{ marginBottom: 8 }} />
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>{completedSessions}</div>
+                <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>Séances totales</div>
+              </div>
+              <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
+                <Flame size={16} color="#F97316" style={{ marginBottom: 8 }} />
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>{calorieGoal}</div>
+                <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>Kcal objectif</div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setActiveTab('nutrition')} className="bg-[#111] border border-white/5 rounded-[20px] p-5 text-left active:border-[#C9A84C]/20">
-                <UtensilsCrossed size={17} className="gold mb-3" />
-                <div className="fd text-3xl text-white tracking-wider">{totalCals}</div>
-                <div className="text-[8px] text-white/25 uppercase tracking-wider">kcal aujourd'hui</div>
-                <div className="h-1 bg-white/5 rounded-full mt-3 overflow-hidden">
-                  <div className="h-full gold-bg rounded-full" style={{ width: `${Math.min(100, (totalCals / calorieGoal) * 100)}%` }} />
+
+            {/* WEIGHT CHART */}
+            {weightHistory30.length > 1 && (
+              <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B7280' }}>Évolution du poids</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.9rem', color: '#F97316' }}>
+                    {weightHistory30[weightHistory30.length - 1]?.poids} kg
+                  </span>
                 </div>
-              </button>
-              <button onClick={() => setActiveTab('training')} className="bg-[#111] border border-white/5 rounded-[20px] p-5 text-left active:border-[#C9A84C]/20">
-                <Dumbbell size={17} className="text-white/30 mb-3" />
-                <div className="fd text-3xl text-white tracking-wider">{completedSessions}</div>
-                <div className="text-[8px] text-white/25 uppercase tracking-wider">séances totales</div>
-                <div className="flex gap-1 mt-3">
-                  {[...Array(5)].map((_, i) => <div key={i} className={`flex-1 h-1 rounded-full ${i < Math.min(5, completedSessions) ? 'gold-bg' : 'bg-white/5'}`} />)}
+                <svg viewBox="0 0 300 72" style={{ width: '100%', height: 72, overflow: 'visible' }} preserveAspectRatio="none">
+                  <polyline
+                    points={weightHistory30.map((p, i) => {
+                      const x = (i / (weightHistory30.length - 1)) * 300
+                      const y = 72 - ((p.poids - chartMin) / ((chartMax - chartMin) || 1)) * 68
+                      return `${x.toFixed(1)},${y.toFixed(1)}`
+                    }).join(' ')}
+                    fill="none" stroke="#F97316" strokeWidth="2.5"
+                    strokeLinejoin="round" strokeLinecap="round"
+                  />
+                  <circle
+                    cx={300}
+                    cy={72 - ((weightHistory30[weightHistory30.length - 1]?.poids - chartMin) / ((chartMax - chartMin) || 1)) * 68}
+                    r="4" fill="#F97316"
+                  />
+                </svg>
+              </div>
+            )}
+
+            {/* TODAY'S PROGRAM */}
+            <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B7280' }}>Programme du jour</span>
+                <button onClick={() => router.push('/programme')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#F97316', background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Voir tout</button>
+              </div>
+              {!coachProgram ? (
+                <p style={{ fontSize: '0.85rem', color: '#4B5563', margin: 0, fontStyle: 'italic' }}>Ton coach n&apos;a pas encore créé ton programme.</p>
+              ) : todayCoachDay?.repos ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', background: '#111827', borderRadius: 10 }}>
+                  <Moon size={20} color="#4B5563" />
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: '#6B7280', fontSize: '1rem' }}>Jour de repos — récupère bien !</span>
                 </div>
-              </button>
+              ) : !todayCoachDay?.exercises?.length ? (
+                <p style={{ fontSize: '0.85rem', color: '#4B5563', margin: 0, fontStyle: 'italic' }}>Aucun exercice prévu aujourd&apos;hui.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(todayCoachDay.exercises as any[]).slice(0, 3).map((ex: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#111827', borderRadius: 10 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(249,115,22,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.85rem', color: '#F97316', flexShrink: 0 }}>{i + 1}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: '#F8FAFC', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ex.name}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#6B7280', marginTop: 2 }}>{ex.sets} séries × {ex.reps} reps</div>
+                      </div>
+                    </div>
+                  ))}
+                  {(todayCoachDay.exercises as any[]).length > 3 && (
+                    <button onClick={() => router.push('/programme')} style={{ fontSize: '0.78rem', color: '#F97316', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 0', textAlign: 'left' }}>
+                      +{(todayCoachDay.exercises as any[]).length - 3} autres exercices
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            <button onClick={() => setModal('bmr')} className="w-full bg-[#111] border border-[#C9A84C]/15 rounded-[20px] p-5 flex items-center gap-4 active:border-[#C9A84C]/30 transition-all">
-              <div className="w-11 h-11 bg-[#C9A84C]/10 border border-[#C9A84C]/20 rounded-2xl flex items-center justify-center"><Sparkles size={20} className="gold" /></div>
-              <div className="text-left flex-1">
-                <div className="font-bold text-sm text-white">Calculateur BMR / TDEE</div>
-                <div className="text-[9px] text-white/25 mt-0.5">Mifflin-St Jeor · Katch-McArdle · Macros optimaux</div>
+
+            {/* TODAY'S NUTRITION */}
+            <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B7280' }}>Nutrition du jour</span>
+                <button onClick={() => router.push('/nutrition-plan')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#22C55E', background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Voir plan</button>
               </div>
-              <ChevronRight size={16} className="text-white/20" />
-            </button>
-            {userProgram && (
-              <div className="bg-[#111] border border-white/5 rounded-[20px] p-5">
-                <div className="text-[9px] text-white/25 uppercase tracking-widest mb-2">Programme Actuel</div>
-                <div className="font-bold text-sm text-white">{userProgram.training_programs?.name}</div>
-                <div className="text-[9px] text-white/25 mt-1">Semaine {userProgram.current_week} · Jour {userProgram.current_day}</div>
-              </div>
-            )}
-            {weightHistory.length > 1 && (
-              <div className="bg-[#111] border border-white/5 rounded-[20px] p-5">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Courbe de Poids</span>
-                  <button onClick={() => setModal('weight')} className="text-[9px] gold font-bold uppercase">+ Log</button>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Calories</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.85rem', color: '#F8FAFC' }}>{totalCals} <span style={{ color: '#6B7280' }}>/ {calorieGoal} kcal</span></span>
                 </div>
-                <WeightChart data={weightHistory} />
+                <div style={{ height: 8, background: '#111827', borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: '#F97316', borderRadius: 999, width: `${Math.min(100, (totalCals / (calorieGoal || 1)) * 100)}%`, transition: 'width 0.5s ease' }} />
+                </div>
               </div>
-            )}
-            <div className="grid grid-cols-3 gap-3">
-              {[{ icon: Scale, label: 'Poids', action: () => setModal('weight') }, { icon: Ruler, label: 'Mesures', action: () => setModal('measure') }, { icon: Camera, label: 'Photo', action: () => photoRef.current?.click() }].map(({ icon: Icon, label, action }) => (
-                <button key={label} onClick={action} className="bg-[#111] border border-white/5 rounded-[20px] p-4 flex flex-col items-center gap-2 active:border-[#C9A84C]/20">
-                  <Icon size={20} className="gold" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-white/30">{label}</span>
+              {[
+                { label: 'Protéines', consumed: Math.round(totalProteins), target: coachMealPlan?.protein_target || 0, color: '#3B82F6' },
+                { label: 'Glucides', consumed: Math.round(todayMeals.reduce((s: number, m: any) => s + (m.carbs || 0), 0)), target: coachMealPlan?.carb_target || 0, color: '#F59E0B' },
+                { label: 'Lipides', consumed: Math.round(todayMeals.reduce((s: number, m: any) => s + (m.fats || 0), 0)), target: coachMealPlan?.fat_target || 0, color: '#EF4444' },
+              ].map(({ label, consumed, target, color }) => (
+                <div key={label} style={{ marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.78rem', color: '#F8FAFC' }}>{consumed}<span style={{ color: '#6B7280' }}>{target ? ` / ${target}g` : 'g'}</span></span>
+                  </div>
+                  <div style={{ height: 5, background: '#111827', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', background: color, borderRadius: 999, width: `${target ? Math.min(100, (consumed / target) * 100) : 0}%`, transition: 'width 0.5s ease' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* QUICK ACTIONS */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              {[
+                { icon: Scale, label: 'Poids', action: () => setModal('weight') },
+                { icon: Ruler, label: 'Mesures', action: () => setModal('measure') },
+                { icon: Camera, label: 'Photo', action: () => photoRef.current?.click() },
+              ].map(({ icon: Icon, label, action }) => (
+                <button key={label} onClick={action} style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <Icon size={20} color="#6B7280" />
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6B7280' }}>{label}</span>
                 </button>
               ))}
-              <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={uploadProgressPhoto} />
+              <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
             </div>
+
           </div>
         </div>
       )}
