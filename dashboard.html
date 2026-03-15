@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FITPRO — Dashboard Coach</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary:    '#F97316',
+            secondary:  '#FB923C',
+            cta:        '#22C55E',
+            surface:    '#1F2937',
+            bg:         '#111827',
+            textBase:   '#F8FAFC',
+          },
+          fontFamily: {
+            heading: ['"Barlow Condensed"', 'sans-serif'],
+            body:    ['Barlow', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+
+  <style>
+    /* ── Base ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background-color: #111827;
+      color: #F8FAFC;
+      margin: 0;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #1F2937; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+    /* ── Focus visible ───────────────────────────────────────── */
+    :focus-visible {
+      outline: 2px solid #F97316;
+      outline-offset: 2px;
+    }
+
+    /* ── Reduced motion ──────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+
+    /* ── Typography ──────────────────────────────────────────── */
+    h1, h2, h3, h4 {
+      font-family: 'Barlow Condensed', sans-serif;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Navbar ──────────────────────────────────────────────── */
+    .navbar {
+      background: #1F2937;
+      border-bottom: 1px solid #374151;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    /* ── Stat Card ───────────────────────────────────────────── */
+    .stat-card {
+      background: #1F2937;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: box-shadow 200ms ease, transform 200ms ease;
+      cursor: pointer;
+    }
+    .stat-card:hover {
+      box-shadow: 0 10px 15px rgba(0,0,0,0.15);
+    }
+
+    /* ── Table ───────────────────────────────────────────────── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .data-table thead th {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9CA3AF;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid #374151;
+    }
+    .data-table tbody tr {
+      border-bottom: 1px solid #1F2937;
+      transition: background 150ms ease;
+      cursor: pointer;
+    }
+    .data-table tbody tr:hover {
+      background: #374151;
+    }
+    .data-table tbody td {
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      color: #F8FAFC;
+    }
+
+    /* ── Badge ───────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge-active   { background: rgba(34,197,94,0.15);  color: #22C55E; }
+    .badge-warning  { background: rgba(249,115,22,0.15); color: #F97316; }
+    .badge-inactive { background: rgba(156,163,175,0.12); color: #9CA3AF; }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #22C55E;
+      color: #fff;
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border: none;
+      cursor: pointer;
+      transition: opacity 200ms ease, transform 200ms ease;
+      width: 100%;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: #F97316;
+      border: 2px solid #F97316;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 200ms ease, color 200ms ease;
+      width: 100%;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .btn-secondary:hover {
+      background: #F97316;
+      color: #fff;
+    }
+
+    .btn-ghost {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      color: #9CA3AF;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 150ms ease, color 150ms ease;
+      white-space: nowrap;
+    }
+    .btn-ghost:hover {
+      background: #374151;
+      color: #F8FAFC;
+    }
+
+    /* ── Sidebar card ────────────────────────────────────────── */
+    .sidebar-card {
+      background: #1F2937;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    /* ── Section title ───────────────────────────────────────── */
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #F8FAFC;
+      margin-bottom: 16px;
+    }
+
+    /* ── Avatar ──────────────────────────────────────────────── */
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F97316, #FB923C);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ── Divider ─────────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid #374151;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════════════════════ -->
+<nav class="navbar px-6 py-0" aria-label="Navigation principale">
+  <div class="max-w-7xl mx-auto flex items-center justify-between h-16">
+
+    <!-- Logo -->
+    <a href="#" class="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md" style="text-decoration:none;">
+      <div style="width:32px;height:32px;background:#F97316;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+        <i data-lucide="zap" style="width:18px;height:18px;color:#fff;stroke-width:2.5;"></i>
+      </div>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:1.35rem;font-weight:700;color:#F8FAFC;letter-spacing:0.08em;">FITPRO</span>
+    </a>
+
+    <!-- Right side -->
+    <div class="flex items-center gap-3">
+      <!-- Coach name -->
+      <div class="hidden sm:flex items-center gap-2">
+        <div class="avatar" id="nav-avatar" aria-hidden="true">MA</div>
+        <span id="nav-coach-name" style="font-family:'Barlow',sans-serif;font-size:0.875rem;font-weight:500;color:#D1D5DB;">
+          Marc Antoine
+        </span>
+      </div>
+
+      <!-- Divider -->
+      <div class="hidden sm:block" style="width:1px;height:24px;background:#374151;"></div>
+
+      <!-- Logout -->
+      <button id="btn-logout" class="btn-ghost" onclick="handleLogout()" aria-label="Se déconnecter">
+        <i data-lucide="log-out" style="width:15px;height:15px;stroke-width:2;"></i>
+        <span class="hidden sm:inline">Déconnexion</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN LAYOUT
+════════════════════════════════════════════════════════════ -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+  <!-- Page header -->
+  <div class="mb-8">
+    <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;color:#F8FAFC;letter-spacing:0.02em;">
+      Tableau de bord
+    </h1>
+    <p id="greeting-line" style="font-family:'Barlow',sans-serif;font-size:0.9rem;color:#9CA3AF;margin-top:4px;">
+      Bonjour, Marc Antoine — voici votre activité du jour.
+    </p>
+  </div>
+
+  <!-- ── STATS ROW ───────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+
+    <!-- Clients actifs -->
+    <div class="stat-card" role="region" aria-label="Clients actifs">
+      <div class="flex items-center justify-between mb-4">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">Clients actifs</span>
+        <div style="width:36px;height:36px;background:rgba(249,115,22,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="users" style="width:18px;height:18px;color:#F97316;stroke-width:2;"></i>
+        </div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:2.75rem;font-weight:700;color:#F8FAFC;line-height:1;" id="stat-clients">24</div>
+      <div style="display:flex;align-items:center;gap:4px;margin-top:8px;">
+        <i data-lucide="trending-up" style="width:13px;height:13px;color:#22C55E;stroke-width:2.5;"></i>
+        <span style="font-size:0.78rem;color:#22C55E;font-weight:500;">+3 ce mois</span>
+      </div>
+    </div>
+
+    <!-- Séances cette semaine -->
+    <div class="stat-card" role="region" aria-label="Séances cette semaine">
+      <div class="flex items-center justify-between mb-4">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">Séances / semaine</span>
+        <div style="width:36px;height:36px;background:rgba(249,115,22,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="calendar-check" style="width:18px;height:18px;color:#F97316;stroke-width:2;"></i>
+        </div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:2.75rem;font-weight:700;color:#F8FAFC;line-height:1;" id="stat-sessions">18</div>
+      <div style="display:flex;align-items:center;gap:4px;margin-top:8px;">
+        <i data-lucide="minus" style="width:13px;height:13px;color:#9CA3AF;stroke-width:2.5;"></i>
+        <span style="font-size:0.78rem;color:#9CA3AF;font-weight:500;">Stable vs semaine passée</span>
+      </div>
+    </div>
+
+    <!-- Revenus du mois -->
+    <div class="stat-card" role="region" aria-label="Revenus du mois">
+      <div class="flex items-center justify-between mb-4">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">Revenus du mois</span>
+        <div style="width:36px;height:36px;background:rgba(34,197,94,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="euro" style="width:18px;height:18px;color:#22C55E;stroke-width:2;"></i>
+        </div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:2.75rem;font-weight:700;color:#F8FAFC;line-height:1;" id="stat-revenue">3 840 €</div>
+      <div style="display:flex;align-items:center;gap:4px;margin-top:8px;">
+        <i data-lucide="trending-up" style="width:13px;height:13px;color:#22C55E;stroke-width:2.5;"></i>
+        <span style="font-size:0.78rem;color:#22C55E;font-weight:500;">+12 % vs mars dernier</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── CONTENT: TABLE + SIDEBAR ───────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Client list (2/3) -->
+    <div class="lg:col-span-2">
+      <div class="sidebar-card">
+
+        <!-- Table header -->
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="section-title" style="margin-bottom:0;">Clients</h2>
+          <div class="flex items-center gap-2">
+            <!-- Search -->
+            <div style="position:relative;">
+              <i data-lucide="search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#6B7280;stroke-width:2;pointer-events:none;"></i>
+              <input
+                type="search"
+                id="client-search"
+                placeholder="Rechercher…"
+                oninput="filterClients(this.value)"
+                style="background:#111827;border:1px solid #374151;border-radius:8px;padding:7px 12px 7px 32px;font-family:'Barlow',sans-serif;font-size:0.85rem;color:#F8FAFC;width:180px;transition:border-color 200ms ease;"
+                onfocus="this.style.borderColor='#F97316'"
+                onblur="this.style.borderColor='#374151'"
+                aria-label="Rechercher un client"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div style="overflow-x:auto;border-radius:8px;background:#111827;">
+          <table class="data-table" id="client-table" aria-label="Liste des clients">
+            <thead>
+              <tr>
+                <th scope="col">Client</th>
+                <th scope="col">Dernier check-in</th>
+                <th scope="col">Prochain RDV</th>
+                <th scope="col">Statut</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="client-tbody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination hint -->
+        <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.78rem;color:#6B7280;" id="table-count">Affichage de 8 clients</span>
+          <button class="btn-ghost" style="font-size:0.8rem;" onclick="alert('Voir tous les clients')">
+            Voir tous
+            <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sidebar (1/3) -->
+    <div class="flex flex-col gap-4">
+
+      <!-- Quick actions -->
+      <div class="sidebar-card">
+        <h2 class="section-title">Actions rapides</h2>
+        <div class="flex flex-col gap-3">
+
+          <button class="btn-primary" onclick="handleAction('nouveau-client')" aria-label="Ajouter un nouveau client">
+            <i data-lucide="user-plus" style="width:16px;height:16px;stroke-width:2.5;"></i>
+            Nouveau client
+          </button>
+
+          <button class="btn-primary" onclick="handleAction('nouvelle-seance')" style="background:#F97316;" aria-label="Planifier une séance">
+            <i data-lucide="dumbbell" style="width:16px;height:16px;stroke-width:2.5;"></i>
+            Nouvelle séance
+          </button>
+
+          <hr class="divider" />
+
+          <button class="btn-secondary" onclick="handleAction('calendrier')" aria-label="Voir le calendrier">
+            <i data-lucide="calendar" style="width:16px;height:16px;stroke-width:2;"></i>
+            Voir le calendrier
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Upcoming sessions mini-list -->
+      <div class="sidebar-card">
+        <h2 class="section-title">Aujourd'hui</h2>
+        <ul id="today-list" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;">
+          <!-- Populated by JS -->
+        </ul>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /grid -->
+</div><!-- /main -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════ -->
+<script>
+/* ─── Mock data ──────────────────────────────────────────────── */
+const CLIENTS = [
+  { id: 1, name: 'Sophie Martin',    initials: 'SM', lastCheckin: '14 mars 2026',  nextAppt: '17 mars 2026',  status: 'active'   },
+  { id: 2, name: 'Lucas Bernard',    initials: 'LB', lastCheckin: '12 mars 2026',  nextAppt: '16 mars 2026',  status: 'warning'  },
+  { id: 3, name: 'Camille Dubois',   initials: 'CD', lastCheckin: '10 mars 2026',  nextAppt: '18 mars 2026',  status: 'active'   },
+  { id: 4, name: 'Antoine Petit',    initials: 'AP', lastCheckin: '8 mars 2026',   nextAppt: '—',             status: 'inactive' },
+  { id: 5, name: 'Julie Moreau',     initials: 'JM', lastCheckin: '14 mars 2026',  nextAppt: '15 mars 2026',  status: 'active'   },
+  { id: 6, name: 'Romain Girard',    initials: 'RG', lastCheckin: '13 mars 2026',  nextAppt: '19 mars 2026',  status: 'active'   },
+  { id: 7, name: 'Émilie Fontaine',  initials: 'EF', lastCheckin: '5 mars 2026',   nextAppt: '—',             status: 'warning'  },
+  { id: 8, name: 'Thomas Lefebvre',  initials: 'TL', lastCheckin: '14 mars 2026',  nextAppt: '16 mars 2026',  status: 'active'   },
+];
+
+const TODAY_SESSIONS = [
+  { time: '09:00', client: 'Julie Moreau' },
+  { time: '11:00', client: 'Sophie Martin' },
+  { time: '14:30', client: 'Romain Girard' },
+  { time: '17:00', client: 'Thomas Lefebvre' },
+];
+
+const STATUS_META = {
+  active:   { label: 'Actif',    cls: 'badge-active'   },
+  warning:  { label: 'À relancer', cls: 'badge-warning' },
+  inactive: { label: 'Inactif',  cls: 'badge-inactive' },
+};
+
+/* ─── Coach context (Firebase Auth / window.currentCoach) ───── */
+function getCoach() {
+  if (window.currentCoach) return window.currentCoach;
+  // Fallback for standalone preview
+  return { displayName: 'Marc Antoine', email: 'coach@fitpro.fr' };
+}
+
+function initCoachUI() {
+  const coach = getCoach();
+  const name  = coach.displayName || coach.email || 'Coach';
+  const parts = name.trim().split(' ');
+  const initials = parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+
+  const el = document.getElementById('nav-coach-name');
+  if (el) el.textContent = name;
+
+  const av = document.getElementById('nav-avatar');
+  if (av) av.textContent = initials;
+
+  const gr = document.getElementById('greeting-line');
+  if (gr) gr.textContent = `Bonjour, ${name} — voici votre activité du jour.`;
+}
+
+/* ─── Render clients table ───────────────────────────────────── */
+function renderClients(list) {
+  const tbody = document.getElementById('client-tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = list.map(c => {
+    const meta = STATUS_META[c.status] || STATUS_META.inactive;
+    return `
+      <tr tabindex="0" onclick="openClient(${c.id})" onkeydown="if(event.key==='Enter')openClient(${c.id})" aria-label="Voir le profil de ${c.name}">
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="avatar" aria-hidden="true">${c.initials}</div>
+            <span style="font-weight:500;">${c.name}</span>
+          </div>
+        </td>
+        <td style="color:#9CA3AF;">${c.lastCheckin}</td>
+        <td>${c.nextAppt}</td>
+        <td><span class="badge ${meta.cls}">${meta.label}</span></td>
+        <td style="text-align:right;">
+          <button
+            class="btn-ghost"
+            style="padding:5px 8px;font-size:0.78rem;"
+            onclick="event.stopPropagation();openClient(${c.id})"
+            aria-label="Ouvrir le profil de ${c.name}"
+          >
+            <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('table-count').textContent =
+    `Affichage de ${list.length} client${list.length !== 1 ? 's' : ''}`;
+
+  // Re-render icons inside new DOM nodes
+  lucide.createIcons();
+}
+
+/* ─── Filter ─────────────────────────────────────────────────── */
+function filterClients(query) {
+  const q = query.toLowerCase().trim();
+  const filtered = q
+    ? CLIENTS.filter(c => c.name.toLowerCase().includes(q))
+    : CLIENTS;
+  renderClients(filtered);
+}
+
+/* ─── Today sidebar ──────────────────────────────────────────── */
+function renderTodaySessions() {
+  const ul = document.getElementById('today-list');
+  if (!ul) return;
+
+  if (TODAY_SESSIONS.length === 0) {
+    ul.innerHTML = `<li style="font-size:0.85rem;color:#6B7280;">Aucune séance aujourd'hui.</li>`;
+    return;
+  }
+
+  ul.innerHTML = TODAY_SESSIONS.map((s, i) => `
+    <li style="display:flex;align-items:center;gap:10px;" ${i < TODAY_SESSIONS.length - 1 ? 'style="padding-bottom:12px;border-bottom:1px solid #374151;"' : ''}>
+      <div style="min-width:46px;text-align:center;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:#F97316;">${s.time}</span>
+      </div>
+      <div style="flex:1;">
+        <span style="font-size:0.875rem;color:#F8FAFC;font-weight:500;">${s.client}</span>
+      </div>
+      <button class="btn-ghost" style="padding:4px 6px;" aria-label="Voir la séance de ${s.client}">
+        <i data-lucide="external-link" style="width:13px;height:13px;"></i>
+      </button>
+    </li>`).join('');
+}
+
+/* ─── Actions ────────────────────────────────────────────────── */
+function openClient(id) {
+  const c = CLIENTS.find(x => x.id === id);
+  if (c) alert(`Ouvrir le profil : ${c.name}`);
+}
+
+function handleAction(action) {
+  const labels = {
+    'nouveau-client':  'Nouveau client — modal à implémenter',
+    'nouvelle-seance': 'Nouvelle séance — modal à implémenter',
+    'calendrier':      'Redirection calendrier à implémenter',
+  };
+  alert(labels[action] || action);
+}
+
+function handleLogout() {
+  if (window.firebase && firebase.auth) {
+    firebase.auth().signOut().then(() => window.location.href = '/login.html');
+  } else {
+    alert('Déconnexion — Firebase non initialisé dans ce contexte.');
+  }
+}
+
+/* ─── Boot ───────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  initCoachUI();
+  renderClients(CLIENTS);
+  renderTodaySessions();
+  lucide.createIcons();
+});
+</script>
+
+</body>
+</html>
