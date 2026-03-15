@@ -19,6 +19,7 @@ interface Profile {
   created_at: string
 }
 
+
 const ROLE_META: Record<Role, { label: string; color: string; bg: string }> = {
   super_admin: { label: 'Super Admin', color: '#F97316', bg: 'rgba(249,115,22,0.15)' },
   coach:       { label: 'Coach',       color: '#22C55E', bg: 'rgba(34,197,94,0.15)'  },
@@ -88,7 +89,7 @@ export default function AdminPage() {
     setLoading(true)
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, role, current_weight, created_at')
+      .select('id, full_name, email, role, current_weight, created_at')
       .order('created_at', { ascending: false })
     if (data) setProfiles(data as Profile[])
     setLoading(false)
@@ -202,6 +203,7 @@ export default function AdminPage() {
                 ) : (
                   filtered.map(p => {
                     const name = p.full_name ?? p.email ?? p.id.slice(0, 8)
+                    const displayEmail = p.email ?? '—'
                     const parts = name.trim().split(' ')
                     const ini = parts.length >= 2
                       ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
@@ -216,7 +218,7 @@ export default function AdminPage() {
                             </div>
                             <div>
                               <div style={{ fontWeight: 500, color: '#F8FAFC' }}>{name}</div>
-                              <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{p.id.slice(0, 12)}…</div>
+                              <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{displayEmail}</div>
                             </div>
                           </div>
                         </td>
