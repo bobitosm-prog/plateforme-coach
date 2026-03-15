@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeft, Zap, Mail, Calendar, Scale, Target, Dumbbell,
   Flame, TrendingDown, CheckCircle, CalendarClock, Save,
-  Archive, Trash2, Check, X,
+  Archive, Trash2, Check, X, Plus, Minus, Moon,
 } from 'lucide-react'
 
 const supabase = createBrowserClient(
@@ -13,6 +13,7 @@ const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+/* ── Types ─────────────────────────────────────────────────── */
 type Profile = {
   id: string
   full_name: string | null
@@ -37,17 +38,56 @@ type WeightLog = {
   recorded_at: string
 }
 
-const inputStyle = {
-  width: '100%',
-  background: '#111827',
-  border: '1px solid #374151',
-  borderRadius: '8px',
-  padding: '11px 14px',
-  fontFamily: 'Barlow, sans-serif',
-  fontSize: '0.9rem',
-  color: '#F8FAFC',
-  outline: 'none',
+type Exercise = {
+  name: string
+  sets: number
+  reps: number
+  rest: string
+  notes: string
+}
+
+type DayData = {
+  repos: boolean
+  exercises: Exercise[]
+}
+
+type WeekProgram = Record<string, DayData>
+
+/* ── Constants ─────────────────────────────────────────────── */
+const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+const DAY_LABELS: Record<string, string> = {
+  lundi: 'Lun', mardi: 'Mar', mercredi: 'Mer', jeudi: 'Jeu',
+  vendredi: 'Ven', samedi: 'Sam', dimanche: 'Dim',
+}
+const DAY_FULL: Record<string, string> = {
+  lundi: 'Lundi', mardi: 'Mardi', mercredi: 'Mercredi', jeudi: 'Jeudi',
+  vendredi: 'Vendredi', samedi: 'Samedi', dimanche: 'Dimanche',
+}
+
+function defaultProgram(): WeekProgram {
+  return Object.fromEntries(DAYS.map(d => [d, { repos: false, exercises: [] }]))
+}
+
+function currentMonday(): string {
+  const d = new Date()
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  d.setDate(d.getDate() + diff)
+  return d.toISOString().split('T')[0]
+}
+
+/* ── Helpers ───────────────────────────────────────────────── */
+const inputStyle: React.CSSProperties = {
+  width: '100%', background: '#111827', border: '1px solid #374151',
+  borderRadius: 8, padding: '11px 14px', fontFamily: 'Barlow, sans-serif',
+  fontSize: '0.9rem', color: '#F8FAFC', outline: 'none',
   transition: 'border-color 200ms ease, box-shadow 200ms ease',
+}
+
+const smallInputStyle: React.CSSProperties = {
+  background: '#111827', border: '1px solid #2D3748', borderRadius: 6,
+  padding: '6px 8px', fontFamily: 'Barlow, sans-serif', fontSize: '0.82rem',
+  color: '#F8FAFC', outline: 'none', width: '100%',
 }
 
 function initials(name: string | null) {
@@ -63,10 +103,12 @@ function formatMonthYear(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
 }
 
+/* ═══════════════════════════════════════════════════════════ */
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
 
+  // Core state
   const [profile, setProfile] = useState<Profile | null>(null)
   const [sessions, setSessions] = useState<WorkoutSession[]>([])
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([])
@@ -82,11 +124,20 @@ export default function ClientProfilePage() {
   const [editEmail, setEditEmail] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Program state
+  const [program, setProgram] = useState<WeekProgram>(defaultProgram())
+  const [programId, setProgramId] = useState<string | null>(null)
+  const [programSaving, setProgramSaving] = useState(false)
+  const [programSaved, setProgramSaved] = useState(false)
+  const [expandedDay, setExpandedDay] = useState<string | null>('lundi')
+
+  /* ── Toast ──────────────────────────────────────────────── */
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 2500)
   }
 
+  /* ── Auth ───────────────────────────────────────────────── */
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.replace('/'); return }
@@ -94,16 +145,18 @@ export default function ClientProfilePage() {
     })
   }, [router])
 
+  /* ── Fetch all data ─────────────────────────────────────── */
   const fetchData = useCallback(async () => {
     if (!coachId) return
     setLoading(true)
     setError(null)
 
-    const [profileRes, sessionsRes, weightRes, notesRes] = await Promise.all([
+    const [profileRes, sessionsRes, weightRes, notesRes, programRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,goal_weight,calorie_goal,created_at').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,date,session_type,duration_min,notes').eq('user_id', id).order('date', { ascending: false }).limit(20),
       supabase.from('weight_logs').select('id,weight,recorded_at').eq('user_id', id).order('recorded_at', { ascending: false }).limit(30),
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
+      supabase.from('client_programs').select('id,program').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
 
     if (profileRes.error) { setError(profileRes.error.message); setLoading(false); return }
@@ -113,11 +166,16 @@ export default function ClientProfilePage() {
     setSessions((sessionsRes.data ?? []) as WorkoutSession[])
     setWeightLogs((weightRes.data ?? []) as WeightLog[])
     setNotes(notesRes.data?.content ?? '')
+    if (programRes.data) {
+      setProgramId(programRes.data.id)
+      setProgram({ ...defaultProgram(), ...(programRes.data.program as WeekProgram) })
+    }
     setLoading(false)
   }, [coachId, id])
 
   useEffect(() => { fetchData() }, [fetchData])
 
+  /* ── Save notes ─────────────────────────────────────────── */
   const saveNotes = async () => {
     if (!coachId) return
     setNotesSaving(true)
@@ -137,6 +195,52 @@ export default function ClientProfilePage() {
     saveTimer.current = setTimeout(() => saveNotes(), 3000)
   }
 
+  /* ── Save program ───────────────────────────────────────── */
+  const saveProgram = async () => {
+    if (!coachId) return
+    setProgramSaving(true)
+    if (programId) {
+      await supabase.from('client_programs')
+        .update({ program, updated_at: new Date().toISOString() })
+        .eq('id', programId)
+    } else {
+      const { data } = await supabase.from('client_programs')
+        .insert({ coach_id: coachId, client_id: id, week_start: currentMonday(), program })
+        .select('id').single()
+      if (data?.id) setProgramId(data.id)
+    }
+    setProgramSaving(false)
+    setProgramSaved(true)
+    showToast('Programme sauvegardé')
+    setTimeout(() => setProgramSaved(false), 2000)
+  }
+
+  /* ── Program helpers ────────────────────────────────────── */
+  const toggleRepos = (day: string) => {
+    setProgram(p => ({ ...p, [day]: { ...p[day], repos: !p[day].repos, exercises: [] } }))
+  }
+
+  const addExercise = (day: string) => {
+    const ex: Exercise = { name: '', sets: 3, reps: 10, rest: '60s', notes: '' }
+    setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...p[day].exercises, ex] } }))
+  }
+
+  const removeExercise = (day: string, idx: number) => {
+    setProgram(p => ({
+      ...p,
+      [day]: { ...p[day], exercises: p[day].exercises.filter((_, i) => i !== idx) },
+    }))
+  }
+
+  const updateExercise = (day: string, idx: number, field: keyof Exercise, value: string | number) => {
+    setProgram(p => {
+      const exs = [...p[day].exercises]
+      exs[idx] = { ...exs[idx], [field]: value }
+      return { ...p, [day]: { ...p[day], exercises: exs } }
+    })
+  }
+
+  /* ── Save edit ──────────────────────────────────────────── */
   const saveEdit = async () => {
     await supabase.from('profiles').update({ full_name: editName, email: editEmail }).eq('id', id)
     setProfile(p => p ? { ...p, full_name: editName, email: editEmail } : p)
@@ -144,7 +248,7 @@ export default function ClientProfilePage() {
     showToast('Profil mis à jour')
   }
 
-  // Derived metrics
+  /* ── Derived metrics ────────────────────────────────────── */
   const currentWeight = weightLogs[0]?.weight ?? profile?.current_weight ?? null
   const prevMonthWeight = weightLogs.find(w => {
     const d = new Date(w.recorded_at)
@@ -158,27 +262,23 @@ export default function ClientProfilePage() {
     const start = profile.current_weight
     const target = profile.goal_weight
     if (start === target) return 100
-    const progress = Math.round(((start - currentWeight) / (start - target)) * 100)
-    return Math.max(0, Math.min(100, progress))
+    return Math.max(0, Math.min(100, Math.round(((start - currentWeight) / (start - target)) * 100)))
   })()
 
-  // Streak: count consecutive days with sessions from today backwards
   const streak = (() => {
     if (!sessions.length) return 0
     const dates = [...new Set(sessions.map(s => s.date))].sort((a, b) => b.localeCompare(a))
     let count = 0
-    let cursor = new Date()
-    cursor.setHours(0, 0, 0, 0)
+    let cursor = new Date(); cursor.setHours(0, 0, 0, 0)
     for (const d of dates) {
-      const sd = new Date(d)
-      sd.setHours(0, 0, 0, 0)
-      const diff = Math.round((cursor.getTime() - sd.getTime()) / 86400000)
-      if (diff <= 1) { count++; cursor = sd }
+      const sd = new Date(d); sd.setHours(0, 0, 0, 0)
+      if (Math.round((cursor.getTime() - sd.getTime()) / 86400000) <= 1) { count++; cursor = sd }
       else break
     }
     return count
   })()
 
+  /* ── Loading / error ────────────────────────────────────── */
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -199,6 +299,7 @@ export default function ClientProfilePage() {
     )
   }
 
+  /* ── Render ─────────────────────────────────────────────── */
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -231,6 +332,12 @@ export default function ClientProfilePage() {
         .modal{background:#1F2937;border-radius:16px;padding:32px;max-width:480px;width:92%;transform:translateY(12px);transition:transform 200ms ease;}
         .modal-overlay.open .modal{transform:translateY(0);}
         .toast-el{position:fixed;bottom:24px;right:24px;background:#1F2937;border:1px solid #374151;border-left:3px solid #22C55E;color:#F8FAFC;padding:12px 18px;border-radius:8px;font-size:0.875rem;font-weight:500;display:flex;align-items:center;gap:8px;z-index:200;animation:fadeIn 200ms ease;box-shadow:0 10px 15px rgba(0,0,0,0.3);}
+        .day-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;border-radius:10px;transition:background 150ms ease;}
+        .day-header:hover{background:#2D3748;}
+        .ex-row{display:grid;grid-template-columns:1fr 56px 56px 64px 1fr 28px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #1F2937;}
+        .ex-row:last-child{border-bottom:none;}
+        .ex-label{font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;margin-bottom:3px;}
+        input[type=number]::-webkit-inner-spin-button{opacity:0.4;}
       `}</style>
 
       {/* NAVBAR */}
@@ -239,20 +346,18 @@ export default function ClientProfilePage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button onClick={() => router.push('/coach')} className="btn-ghost" style={{ padding: '7px 10px' }}>
               <ArrowLeft size={16} strokeWidth={2.5} />
-              <span style={{ display: 'none' }} className="sm-inline">Dashboard</span>
+              <span>Dashboard</span>
             </button>
             <div style={{ width: 1, height: 20, background: '#374151' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 28, height: 28, background: '#F97316', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Zap size={15} color="#fff" strokeWidth={2.5} />
               </div>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.08em' }}>FITPRO</span>
+              <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '1.2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.08em' }}>FITPRO</span>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#F97316,#FB923C)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: '0.8rem', color: '#fff' }}>
-              {initials(profile.full_name)}
-            </div>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#F97316,#FB923C)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: '0.8rem', color: '#fff' }}>
+            {initials(profile.full_name)}
           </div>
         </div>
       </nav>
@@ -269,7 +374,6 @@ export default function ClientProfilePage() {
               </div>
               <div style={{ position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, background: '#22C55E', borderRadius: '50%', border: '2px solid #1F2937' }} />
             </div>
-
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 4 }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#F8FAFC', margin: 0 }}>{profile.full_name ?? 'Client'}</h1>
@@ -286,27 +390,21 @@ export default function ClientProfilePage() {
                 </span>
               </div>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <button className="btn-secondary" onClick={() => setEditOpen(true)}>
-                Modifier
-              </button>
-            </div>
+            <button className="btn-secondary" onClick={() => setEditOpen(true)}>Modifier</button>
           </div>
         </div>
 
         {/* TWO-COLUMN LAYOUT */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
 
           {/* LEFT (2/3) */}
-          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* METRIC CARDS */}
             <section>
               <p className="section-title">Métriques clés</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
 
-                {/* Poids */}
                 <div className="metric-card">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B7280' }}>Poids</span>
@@ -327,7 +425,6 @@ export default function ClientProfilePage() {
                   )}
                 </div>
 
-                {/* Objectif */}
                 <div className="metric-card">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B7280' }}>Objectif</span>
@@ -348,7 +445,6 @@ export default function ClientProfilePage() {
                   )}
                 </div>
 
-                {/* Séances */}
                 <div className="metric-card">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B7280' }}>Séances</span>
@@ -356,16 +452,13 @@ export default function ClientProfilePage() {
                       <Dumbbell size={14} color="#F97316" strokeWidth={2} />
                     </div>
                   </div>
-                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
-                    {totalSessions}
-                  </div>
+                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>{totalSessions}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 8 }}>
                     <CheckCircle size={12} color="#22C55E" strokeWidth={2.5} />
                     <span style={{ fontSize: '0.72rem', color: '#22C55E', fontWeight: 500 }}>complétées</span>
                   </div>
                 </div>
 
-                {/* Streak */}
                 <div className="metric-card">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B7280' }}>Streak</span>
@@ -373,9 +466,7 @@ export default function ClientProfilePage() {
                       <Flame size={14} color="#F97316" strokeWidth={2} />
                     </div>
                   </div>
-                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '2.5rem', fontWeight: 700, color: '#F97316', lineHeight: 1 }}>
-                    {streak}
-                  </div>
+                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '2.5rem', fontWeight: 700, color: '#F97316', lineHeight: 1 }}>{streak}</div>
                   <div style={{ marginTop: 8 }}>
                     <span style={{ fontSize: '0.72rem', color: '#F97316', fontWeight: 500 }}>jours consécutifs</span>
                   </div>
@@ -385,27 +476,18 @@ export default function ClientProfilePage() {
 
             {/* SESSIONS TABLE */}
             <section>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <p className="section-title" style={{ marginBottom: 0 }}>Historique des séances</p>
-              </div>
+              <p className="section-title">Historique des séances</p>
               <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <div style={{ overflowX: 'auto' }}>
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Durée</th>
-                        <th>Notes</th>
+                        <th>Date</th><th>Type</th><th>Durée</th><th>Notes</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sessions.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} style={{ textAlign: 'center', color: '#6B7280', padding: '32px 16px' }}>
-                            Aucune séance enregistrée
-                          </td>
-                        </tr>
+                        <tr><td colSpan={4} style={{ textAlign: 'center', color: '#6B7280', padding: '32px 16px' }}>Aucune séance enregistrée</td></tr>
                       ) : sessions.map(s => (
                         <tr key={s.id}>
                           <td style={{ color: '#9CA3AF', whiteSpace: 'nowrap' }}>{formatDate(s.date)}</td>
@@ -417,14 +499,193 @@ export default function ClientProfilePage() {
                     </tbody>
                   </table>
                 </div>
-                <div style={{ padding: '12px 16px', borderTop: '1px solid #374151', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ padding: '12px 16px', borderTop: '1px solid #374151' }}>
                   <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>{sessions.length} séance{sessions.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             </section>
+
+            {/* ── PROGRAMME HEBDOMADAIRE ─────────────────────────── */}
+            <section>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <p className="section-title" style={{ marginBottom: 0 }}>Programme hebdomadaire</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: '0.75rem', color: '#22C55E', display: 'flex', alignItems: 'center', gap: 4, opacity: programSaved ? 1 : 0, transition: 'opacity 300ms ease' }}>
+                    <Check size={12} strokeWidth={2.5} />Sauvegardé
+                  </span>
+                  <button className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.85rem' }} onClick={saveProgram} disabled={programSaving}>
+                    <Save size={13} strokeWidth={2.5} />
+                    {programSaving ? 'Sauvegarde…' : 'Sauvegarder'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Day tabs overview */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+                {DAYS.map(day => {
+                  const d = program[day]
+                  const isActive = expandedDay === day
+                  const hasExercises = !d.repos && d.exercises.length > 0
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => setExpandedDay(isActive ? null : day)}
+                      style={{
+                        padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                        fontFamily: "'Barlow Condensed',sans-serif", fontSize: '0.8rem', fontWeight: 700,
+                        letterSpacing: '0.05em', transition: 'all 150ms ease',
+                        background: d.repos ? 'rgba(107,114,128,0.15)'
+                          : isActive ? '#F97316'
+                          : hasExercises ? 'rgba(249,115,22,0.15)'
+                          : '#2D3748',
+                        color: d.repos ? '#6B7280'
+                          : isActive ? '#fff'
+                          : hasExercises ? '#F97316'
+                          : '#9CA3AF',
+                        boxShadow: isActive ? '0 0 0 2px #F97316' : 'none',
+                      }}
+                    >
+                      {DAY_LABELS[day]}
+                      {d.repos && <Moon size={10} style={{ marginLeft: 4, verticalAlign: 'middle' }} />}
+                      {hasExercises && !d.repos && (
+                        <span style={{ marginLeft: 5, background: 'rgba(249,115,22,0.25)', borderRadius: 999, padding: '0 5px', fontSize: '0.7rem' }}>
+                          {d.exercises.length}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Expanded day editor */}
+              {expandedDay && (
+                <div className="card" style={{ padding: 0, overflow: 'hidden', animation: 'fadeIn 150ms ease' }}>
+                  {/* Day header */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #374151' }}>
+                    <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC' }}>
+                      {DAY_FULL[expandedDay]}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button
+                        onClick={() => toggleRepos(expandedDay)}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                          fontFamily: "'Barlow Condensed',sans-serif", fontSize: '0.8rem', fontWeight: 700,
+                          background: program[expandedDay].repos ? 'rgba(107,114,128,0.2)' : 'rgba(107,114,128,0.1)',
+                          color: program[expandedDay].repos ? '#9CA3AF' : '#6B7280',
+                          transition: 'all 150ms ease',
+                        }}
+                      >
+                        <Moon size={12} strokeWidth={2} />
+                        {program[expandedDay].repos ? 'Repos ✓' : 'Marquer repos'}
+                      </button>
+                      {!program[expandedDay].repos && (
+                        <button
+                          onClick={() => addExercise(expandedDay)}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                            fontFamily: "'Barlow Condensed',sans-serif", fontSize: '0.8rem', fontWeight: 700,
+                            background: 'rgba(249,115,22,0.15)', color: '#F97316', transition: 'all 150ms ease',
+                          }}
+                        >
+                          <Plus size={12} strokeWidth={2.5} />Ajouter exercice
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Repos state */}
+                  {program[expandedDay].repos ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '32px 16px', color: '#6B7280' }}>
+                      <Moon size={20} strokeWidth={1.5} />
+                      <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: '1rem', fontWeight: 600 }}>Jour de repos</span>
+                    </div>
+                  ) : program[expandedDay].exercises.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '32px 16px', color: '#6B7280', fontSize: '0.875rem' }}>
+                      Aucun exercice — cliquez sur &quot;Ajouter exercice&quot;
+                    </div>
+                  ) : (
+                    <div style={{ padding: '0 16px' }}>
+                      {/* Column headers */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 56px 64px 1fr 28px', gap: 6, padding: '10px 0 4px' }}>
+                        {['Exercice', 'Séries', 'Reps', 'Repos', 'Notes', ''].map((h, i) => (
+                          <div key={i} className="ex-label">{h}</div>
+                        ))}
+                      </div>
+                      {program[expandedDay].exercises.map((ex, idx) => (
+                        <div key={idx} className="ex-row">
+                          <input
+                            placeholder="Nom de l'exercice"
+                            value={ex.name}
+                            onChange={e => updateExercise(expandedDay, idx, 'name', e.target.value)}
+                            style={smallInputStyle}
+                            onFocus={e => { e.target.style.borderColor = '#F97316' }}
+                            onBlur={e => { e.target.style.borderColor = '#2D3748' }}
+                          />
+                          <input
+                            type="number"
+                            min={1}
+                            value={ex.sets}
+                            onChange={e => updateExercise(expandedDay, idx, 'sets', parseInt(e.target.value) || 1)}
+                            style={{ ...smallInputStyle, textAlign: 'center' }}
+                            onFocus={e => { e.target.style.borderColor = '#F97316' }}
+                            onBlur={e => { e.target.style.borderColor = '#2D3748' }}
+                          />
+                          <input
+                            type="number"
+                            min={1}
+                            value={ex.reps}
+                            onChange={e => updateExercise(expandedDay, idx, 'reps', parseInt(e.target.value) || 1)}
+                            style={{ ...smallInputStyle, textAlign: 'center' }}
+                            onFocus={e => { e.target.style.borderColor = '#F97316' }}
+                            onBlur={e => { e.target.style.borderColor = '#2D3748' }}
+                          />
+                          <input
+                            placeholder="60s"
+                            value={ex.rest}
+                            onChange={e => updateExercise(expandedDay, idx, 'rest', e.target.value)}
+                            style={{ ...smallInputStyle, textAlign: 'center' }}
+                            onFocus={e => { e.target.style.borderColor = '#F97316' }}
+                            onBlur={e => { e.target.style.borderColor = '#2D3748' }}
+                          />
+                          <input
+                            placeholder="Notes optionnelles"
+                            value={ex.notes}
+                            onChange={e => updateExercise(expandedDay, idx, 'notes', e.target.value)}
+                            style={smallInputStyle}
+                            onFocus={e => { e.target.style.borderColor = '#F97316' }}
+                            onBlur={e => { e.target.style.borderColor = '#2D3748' }}
+                          />
+                          <button
+                            onClick={() => removeExercise(expandedDay, idx)}
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#4B5563', padding: 4, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 150ms ease' }}
+                            onMouseEnter={e => (e.currentTarget.style.color = '#EF4444')}
+                            onMouseLeave={e => (e.currentTarget.style.color = '#4B5563')}
+                          >
+                            <Minus size={14} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      ))}
+                      <div style={{ padding: '12px 0' }}>
+                        <button
+                          onClick={() => addExercise(expandedDay)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: '1px dashed #374151', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', color: '#6B7280', fontFamily: 'Barlow, sans-serif', fontSize: '0.82rem', transition: 'all 150ms ease', width: '100%', justifyContent: 'center' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#374151'; e.currentTarget.style.color = '#6B7280' }}
+                        >
+                          <Plus size={13} strokeWidth={2.5} />Ajouter un exercice
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
           </div>
 
-          {/* RIGHT COL (1/3) */}
+          {/* RIGHT COL */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* PROCHAIN RDV */}
@@ -455,12 +716,12 @@ export default function ClientProfilePage() {
               <textarea
                 value={notes}
                 onChange={e => onNotesChange(e.target.value)}
-                placeholder="Ajoutez vos observations, programmes, remarques sur la progression de ce client…"
+                placeholder="Ajoutez vos observations, programmes, remarques…"
                 style={{ width: '100%', background: '#111827', border: '1px solid #374151', borderRadius: 8, padding: '14px 16px', fontFamily: 'Barlow, sans-serif', fontSize: '0.9rem', color: '#F8FAFC', resize: 'vertical', minHeight: 120, lineHeight: 1.6, outline: 'none', transition: 'border-color 200ms ease' }}
                 onFocus={e => { e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.15)' }}
                 onBlur={e => { e.target.style.borderColor = '#374151'; e.target.style.boxShadow = 'none' }}
               />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
                 <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={saveNotes} disabled={notesSaving}>
                   <Save size={13} strokeWidth={2.5} />
                   {notesSaving ? 'Sauvegarde…' : 'Sauvegarder'}
@@ -496,24 +757,15 @@ export default function ClientProfilePage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#9CA3AF', marginBottom: 6, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: "'Barlow Condensed',sans-serif" }}>Nom complet</label>
-              <input
-                value={editName}
-                onChange={e => setEditName(e.target.value)}
-                style={inputStyle}
+              <input value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle}
                 onFocus={e => { e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.15)' }}
-                onBlur={e => { e.target.style.borderColor = '#374151'; e.target.style.boxShadow = 'none' }}
-              />
+                onBlur={e => { e.target.style.borderColor = '#374151'; e.target.style.boxShadow = 'none' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#9CA3AF', marginBottom: 6, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: "'Barlow Condensed',sans-serif" }}>Email</label>
-              <input
-                type="email"
-                value={editEmail}
-                onChange={e => setEditEmail(e.target.value)}
-                style={inputStyle}
+              <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} style={inputStyle}
                 onFocus={e => { e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.15)' }}
-                onBlur={e => { e.target.style.borderColor = '#374151'; e.target.style.boxShadow = 'none' }}
-              />
+                onBlur={e => { e.target.style.borderColor = '#374151'; e.target.style.boxShadow = 'none' }} />
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               <button className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setEditOpen(false)}>Annuler</button>
