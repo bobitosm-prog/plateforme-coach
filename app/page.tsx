@@ -19,8 +19,8 @@ import WorkoutSession from './components/WorkoutSession'
 const WeightChart = dynamic(() => import('./nutrition/NutritionDashboard').then(m => m.WeightChart), { ssr: false })
 const CalorieChart = dynamic(() => import('./nutrition/NutritionDashboard').then(m => m.CalorieChart), { ssr: false })
 
-const SUPABASE_URL = "https://njlzossopgknanhkzcbk.supabase.co"
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qbHpvc3NvcGdrbmFuaGt6Y2JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDczMDMsImV4cCI6MjA4ODEyMzMwM30.22cQCoBdbIek3IU0GPkRUKlPYj19jiYwac0K8sRJM1w"
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const COACH_EMAIL = "bobitosm@gmail.com" // ← TON EMAIL ICI
 
 type Tab = 'home' | 'body' | 'nutrition' | 'training' | 'coach'
