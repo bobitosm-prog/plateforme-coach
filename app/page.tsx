@@ -160,7 +160,12 @@ export default function CoachApp() {
       supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).single(),
     ])
 
-    if (profRes.data) setProfile(profRes.data)
+    if (profRes.data) {
+      setProfile(profRes.data)
+      // Role-based redirect: coaches and admins don't belong on the client dashboard
+      if (profRes.data.role === 'super_admin') { window.location.href = '/admin'; return }
+      if (profRes.data.role === 'coach')        { window.location.href = '/coach'; return }
+    }
     setWeightHistory(weightsRes.data?.map(w => ({ ...w, date: new Date(w.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) })) || [])
     setTodayMeals(mealsRes.data || [])
     setWSessions(sessRes.data || [])
