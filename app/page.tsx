@@ -74,6 +74,7 @@ export default function CoachApp() {
   const [weightHistory30, setWeightHistory30] = useState<{ date: string; poids: number }[]>([])
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [loading, setLoading] = useState(true)
+  const [roleChecked, setRoleChecked] = useState(false)
 
   // ── CHANGEMENT 2 : État WorkoutSession ────────────────────
   const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[] } | null>(null)
@@ -127,9 +128,9 @@ export default function CoachApp() {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
       console.log('[page] role received:', role, '| user:', session.user.id)
-      if (role === 'super_admin') { console.log('[page] redirecting → /admin'); router.replace('/admin') }
-      else if (role === 'coach')  { console.log('[page] redirecting → /coach'); router.replace('/coach') }
-      else console.log('[page] staying on /, role is:', role)
+      if (role === 'super_admin') { router.replace('/admin') }
+      else if (role === 'coach')  { router.replace('/coach') }
+      else setRoleChecked(true)
     })
   }, [session])
 
@@ -386,6 +387,19 @@ export default function CoachApp() {
   if (!mounted || loading) return (
     <div className="min-h-screen bg-[#080808] flex items-center justify-center">
       <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+
+  if (session && !roleChecked) return (
+    <div style={{ minHeight: '100vh', background: '#111827', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 36, height: 36, background: '#F97316', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Zap size={20} color="#fff" strokeWidth={2.5} />
+        </div>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.1em' }}>FITPRO</span>
+      </div>
+      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid #374151', borderTopColor: '#F97316', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap');`}</style>
     </div>
   )
 
