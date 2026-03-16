@@ -126,9 +126,10 @@ export default function CoachApp() {
   useEffect(() => {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
-      if (role === 'super_admin') router.replace('/admin')
-      else if (role === 'coach')  router.replace('/coach')
-      // 'client' or null → stay on /
+      console.log('[page] role received:', role, '| user:', session.user.id)
+      if (role === 'super_admin') { console.log('[page] redirecting → /admin'); router.replace('/admin') }
+      else if (role === 'coach')  { console.log('[page] redirecting → /coach'); router.replace('/coach') }
+      else console.log('[page] staying on /, role is:', role)
     })
   }, [session])
 
