@@ -201,7 +201,9 @@ export default function CoachApp() {
     if (userProgRes.data) setUserProgram(userProgRes.data)
     setWeightHistory30((weightsRes.data || []).map(w => ({ date: w.date, poids: w.poids })))
     if (coachProgRes.data?.program) setCoachProgram(coachProgRes.data.program)
+    console.log('[fetchAll] coachMealRes raw:', JSON.stringify(coachMealRes))
     if (coachMealRes.data?.plan) setCoachMealPlan(coachMealRes.data.plan)
+    else console.warn('[fetchAll] No coach meal plan found for client_id:', uid, '| error:', coachMealRes.error)
 
     if (session?.user?.email === COACH_EMAIL) {
       const { data } = await supabase.from('coach_clients').select('*, profiles!coach_clients_client_id_fkey(*)').eq('coach_id', uid)
@@ -367,9 +369,10 @@ export default function CoachApp() {
     const file = e.target.files?.[0]; if (!file) return
     setPhotoUploading(true)
     const path = `${session.user.id}/${Date.now()}.${file.name.split('.').pop()}`
-    await supabase.storage.from('progress-photos').upload(path, file)
-    const { data: { publicUrl } } = supabase.storage.from('progress-photos').getPublicUrl(path)
-    await supabase.from('progress_photos').insert({ user_id: session.user.id, photo_url: publicUrl, view_type: 'front' })
+    const { error: uploadError } = await supabase.storage.from('progress-photos').upload(path, file)
+    if (uploadError) { console.error('[uploadProgressPhoto] upload error:', uploadError); setPhotoUploading(false); return }
+    // Save the storage path — public URL is derived at render time
+    await supabase.from('progress_photos').insert({ user_id: session.user.id, photo_url: path, view_type: 'front' })
     setPhotoUploading(false); fetchAll()
   }
 
@@ -1181,11 +1184,17 @@ export default function CoachApp() {
               <button onClick={() => photoRef.current?.click()} style={{ aspectRatio: '1', border: `2px dashed ${BORDER}`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: BG_CARD, cursor: 'pointer' }}>
                 {photoUploading ? <div style={{ width: 24, height: 24, border: `2px solid ${ORANGE}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> : <Plus size={22} color={TEXT_MUTED} />}
               </button>
-              {progressPhotos.map(p => (
-                <div key={p.id} style={{ aspectRatio: '1', borderRadius: 14, overflow: 'hidden' }}>
-                  <img src={p.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                </div>
-              ))}
+              {progressPhotos.map(p => {
+                // photo_url may be a storage path or a full URL (legacy)
+                const imgSrc = p.photo_url?.startsWith('http')
+                  ? p.photo_url
+                  : supabase.storage.from('progress-photos').getPublicUrl(p.photo_url).data.publicUrl
+                return (
+                  <div key={p.id} style={{ aspectRatio: '1', borderRadius: 14, overflow: 'hidden' }}>
+                    <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  </div>
+                )
+              })}
             </div>
           </div>
 
