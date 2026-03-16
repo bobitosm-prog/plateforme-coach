@@ -45,8 +45,6 @@ function RoleSelect({ profileId, current, onChanged }: { profileId: string; curr
   async function assign(role: Role) {
     setSaving(true)
     await supabase.from('profiles').update({ role }).eq('id', profileId)
-    // Clear the role cookie so middleware re-fetches on next request
-    document.cookie = 'fitpro-role=; Max-Age=0; path=/'
     setSaving(false)
     setSaved(true)
     setTimeout(() => { setSaved(false); onChanged() }, 1200)
