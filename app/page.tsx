@@ -1,6 +1,6 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
@@ -12,26 +12,22 @@ import {
   User, UtensilsCrossed, X, Check, Camera, Ruler,
   Users, Crown, Trash2, ChevronRight, Upload,
   Activity, Heart, Search, Filter, ChevronDown, ChevronUp,
-  Timer, Play, Pause, RotateCcw, Info, Sparkles, Utensils, Moon
+  Timer, Play, Pause, RotateCcw, Info, Sparkles, Utensils, Moon, TrendingUp
 } from 'lucide-react'
 
-// ── CHANGEMENT 1 : Import WorkoutSession ──────────────────
 import WorkoutSession from './components/WorkoutSession'
-
-const WeightChart = dynamic(() => import('./nutrition/NutritionDashboard').then(m => m.WeightChart), { ssr: false })
-const CalorieChart = dynamic(() => import('./nutrition/NutritionDashboard').then(m => m.CalorieChart), { ssr: false })
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const COACH_EMAIL = "bobitosm@gmail.com" // ← TON EMAIL ICI
+const COACH_EMAIL = "bobitosm@gmail.com"
 
-type Tab = 'home' | 'body' | 'nutrition' | 'training' | 'coach'
+type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'profil'
 
 const MEAL_TYPES = [
-  { id: 'breakfast', label: 'Petit-déj', emoji: '🥣' },
-  { id: 'lunch', label: 'Déjeuner', emoji: '🍽️' },
-  { id: 'dinner', label: 'Dîner', emoji: '🌙' },
-  { id: 'snack', label: 'Collation', emoji: '🍎' },
+  { id: 'breakfast', label: 'Petit-déj', icon: '🥣' },
+  { id: 'lunch', label: 'Déjeuner', icon: '🍽️' },
+  { id: 'dinner', label: 'Dîner', icon: '🌙' },
+  { id: 'snack', label: 'Collation', icon: '🍎' },
 ]
 
 const ACTIVITY_LEVELS = [
@@ -41,6 +37,19 @@ const ACTIVITY_LEVELS = [
   { id: 'active', label: 'Très actif', sub: '6-7 séances/semaine', mult: 1.725 },
   { id: 'extreme', label: 'Extrêmement actif', sub: 'Athlète / 2x/jour', mult: 1.9 },
 ]
+
+const JS_DAYS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+const WEEK_DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+
+// Design tokens
+const BG_BASE = '#0A0A0A'
+const BG_CARD = '#1A1A1A'
+const BORDER = '#2A2A2A'
+const ORANGE = '#F97316'
+const GREEN = '#22C55E'
+const TEXT_PRIMARY = '#F8FAFC'
+const TEXT_MUTED = '#6B7280'
+const RADIUS_CARD = 20
 
 function calcMifflinStJeor(weight: number, height: number, age: number, gender: string) {
   const base = 10 * weight + 6.25 * height - 5 * age
@@ -76,24 +85,20 @@ export default function CoachApp() {
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
 
-  // ── CHANGEMENT 2 : État WorkoutSession ────────────────────
   const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[] } | null>(null)
 
-  // Workout state (ancien modal — conservé pour compatibilité)
   const [modal, setModal] = useState<string | null>(null)
   const [restTimer, setRestTimer] = useState<number>(0)
   const [restMax, setRestMax] = useState<number>(90)
   const [restRunning, setRestRunning] = useState(false)
   const restIntervalRef = useRef<any>(null)
 
-  // Programs state
   const [programFilter, setProgramFilter] = useState({ level: '', goal: '', gender: '' })
   const [selectedProgram, setSelectedProgram] = useState<any>(null)
   const [programDays, setProgramDays] = useState<any[]>([])
   const [selectedDay, setSelectedDay] = useState<any>(null)
   const [dayExercises, setDayExercises] = useState<any[]>([])
 
-  // Nutrition state
   const [foodSearch, setFoodSearch] = useState('')
   const [foodResults, setFoodResults] = useState<any[]>([])
   const [customFoods, setCustomFoods] = useState<any[]>([])
@@ -103,7 +108,6 @@ export default function CoachApp() {
   const [customFoodForm, setCustomFoodForm] = useState({ name: '', brand: '', calories_per_100g: '', proteins_per_100g: '', carbs_per_100g: '', fats_per_100g: '' })
   const [searchTab, setSearchTab] = useState<'anses' | 'custom'>('anses')
 
-  // Forms
   const [weightForm, setWeightForm] = useState('')
   const [measureForm, setMeasureForm] = useState({ chest: '', waist: '', hips: '', left_arm: '', right_arm: '', left_thigh: '', right_thigh: '', body_fat: '', muscle_mass: '' })
   const [bmrForm, setBmrForm] = useState({ weight: '', height: '', age: '', gender: 'male', activity: 'moderate', body_fat: '' })
@@ -114,6 +118,9 @@ export default function CoachApp() {
   const avatarRef = useRef<HTMLInputElement>(null)
   const searchRef = useRef<any>(null)
 
+  // Training tab: expanded day
+  const [activeDay, setActiveDay] = useState<string | null>(null)
+
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
 
   useEffect(() => {
@@ -123,13 +130,12 @@ export default function CoachApp() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Role-based redirect — always fetches fresh role, no browser cache
   useEffect(() => {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
       console.log('[page] role received:', role, '| user:', session.user.id)
       if (role === 'super_admin') { router.replace('/admin') }
-      else if (role === 'coach')  { router.replace('/coach') }
+      else if (role === 'coach') { router.replace('/coach') }
       else setRoleChecked(true)
     })
   }, [session])
@@ -224,12 +230,10 @@ export default function CoachApp() {
     setDayExercises(exos || [])
   }
 
-  // ── CHANGEMENT 3 : startProgramWorkout → ouvre WorkoutSession ──
   async function startProgramWorkout(day: any, exercises: any[]) {
     setWorkoutSession({ name: day.day_name, exercises })
   }
 
-  // ── CHANGEMENT 4 : onFinishWorkout → sauvegarde dans Supabase ──
   async function onFinishWorkout(data: any) {
     const { data: sess } = await supabase.from('workout_sessions').insert({
       user_id: session.user.id,
@@ -361,16 +365,13 @@ export default function CoachApp() {
 
   const totalCals = useMemo(() => todayMeals.reduce((s, m) => s + (m.calories || 0), 0), [todayMeals])
   const totalProteins = useMemo(() => todayMeals.reduce((s, m) => s + (m.proteins || 0), 0), [todayMeals])
+  const totalCarbs = useMemo(() => todayMeals.reduce((s: number, m: any) => s + (m.carbs || 0), 0), [todayMeals])
+  const totalFats = useMemo(() => todayMeals.reduce((s: number, m: any) => s + (m.fats || 0), 0), [todayMeals])
   const calorieGoal = profile?.calorie_goal || 2500
   const goalWeight = profile?.goal_weight || 75
   const currentWeight = profile?.current_weight
   const latestMeasure = measurements[0]
-  const weightProgress = weightHistory.length >= 2
-    ? parseFloat((weightHistory[weightHistory.length - 1].poids - weightHistory[0].poids).toFixed(1)) : 0
-  const progressPct = profile?.start_weight && currentWeight
-    ? Math.max(0, Math.min(100, ((profile.start_weight - currentWeight) / (profile.start_weight - goalWeight)) * 100)) : 0
   const completedSessions = wSessions.filter(s => s.completed).length
-  const JS_DAYS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
   const chartMin = weightHistory30.length > 0 ? Math.min(...weightHistory30.map(p => p.poids)) - 1 : 0
@@ -381,24 +382,27 @@ export default function CoachApp() {
     (!programFilter.goal || p.goal === programFilter.goal) &&
     (!programFilter.gender || p.gender === programFilter.gender || p.gender === 'both')
   )
-  const restPct = restMax > 0 ? (restTimer / restMax) * 100 : 0
-  const restCirc = 2 * Math.PI * 36
+  const calPct = Math.min(100, (totalCals / (calorieGoal || 1)) * 100)
+  const donutR = 52
+  const donutCirc = 2 * Math.PI * donutR
+  const donutOffset = donutCirc * (1 - calPct / 100)
 
   if (!mounted || loading) return (
-    <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-      <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+    <div style={{ minHeight: '100vh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 40, height: 40, border: `3px solid ${ORANGE}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
   if (session && !roleChecked) return (
     <div style={{ minHeight: '100vh', background: '#111827', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 36, height: 36, background: '#F97316', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 36, height: 36, background: ORANGE, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Zap size={20} color="#fff" strokeWidth={2.5} />
         </div>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.1em' }}>FITPRO</span>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>FITPRO</span>
       </div>
-      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid #374151', borderTopColor: '#F97316', animation: 'spin 0.7s linear infinite' }} />
+      <div style={{ width: 28, height: 28, borderRadius: '50%', border: `3px solid #374151`, borderTopColor: ORANGE, animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap');`}</style>
     </div>
   )
@@ -432,19 +436,18 @@ export default function CoachApp() {
 
   const displayAvatar = profile?.avatar_url || session.user.user_metadata?.avatar_url
   const userName = session.user.user_metadata?.full_name?.split(' ')[0] || 'Athlete'
+  const firstName = userName
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pb-28" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif", paddingBottom: 88 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');
-        .fd { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; }
-        .gold { color: #C9A84C; }
-        .gold-bg { background: #C9A84C; }
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
+        @keyframes spin { to { transform: rotate(360deg) } }
+        * { box-sizing: border-box; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-        .rest-ring { transition: stroke-dashoffset 1s linear; }
       `}</style>
 
-      {/* ── CHANGEMENT 5 : WorkoutSession plein écran ─────────── */}
+      {/* ── WorkoutSession fullscreen ── */}
       {workoutSession && (
         <WorkoutSession
           sessionName={workoutSession.name}
@@ -456,142 +459,137 @@ export default function CoachApp() {
 
       {/* ═══════════════════ MODAL POIDS ═══════════════════ */}
       {modal === 'weight' && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end">
-          <div className="bg-[#111] border border-white/5 rounded-t-[32px] p-6 w-full pb-10">
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="fd text-2xl tracking-wider">LOG POIDS</h3>
-              <button onClick={() => setModal(null)} className="w-8 h-8 bg-[#1a1a1a] rounded-full flex items-center justify-center"><X size={14} className="text-white/30" /></button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, borderRadius: '24px 24px 0 0', padding: '24px 20px 40px', width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>LOG POIDS</h3>
+              <button onClick={() => setModal(null)} style={{ width: 32, height: 32, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
             </div>
-            <div className="relative mb-4">
+            <div style={{ position: 'relative', marginBottom: 16 }}>
               <input type="number" step="0.1" value={weightForm} onChange={e => setWeightForm(e.target.value)} placeholder="0.0"
-                className="w-full bg-[#1a1a1a] border border-white/8 rounded-2xl px-5 py-5 text-white text-5xl fd tracking-widest text-center outline-none focus:border-[#C9A84C]/40 placeholder:text-white/10" />
-              <span className="absolute right-5 top-1/2 -translate-y-1/2 gold text-sm font-bold">kg</span>
+                style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: '20px 48px 20px 20px', color: TEXT_PRIMARY, fontSize: '3rem', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textAlign: 'center', outline: 'none' }} />
+              <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 600 }}>kg</span>
             </div>
-            {currentWeight && <p className="text-center text-white/20 text-xs mb-4">Précédent : {currentWeight} kg</p>}
-            <button onClick={saveWeight} className="w-full gold-bg text-black font-bold py-4 rounded-2xl uppercase tracking-widest text-sm active:scale-[0.98]">Enregistrer</button>
+            {currentWeight && <p style={{ textAlign: 'center', color: TEXT_MUTED, fontSize: '0.75rem', marginBottom: 16 }}>Précédent : {currentWeight} kg</p>}
+            <button onClick={saveWeight} style={{ width: '100%', background: GREEN, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Enregistrer</button>
           </div>
         </div>
       )}
 
       {/* ═══════════════════ MODAL MESURES ═══════════════════ */}
       {modal === 'measure' && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 overflow-y-auto">
-          <div className="bg-[#111] border border-white/5 rounded-t-[32px] p-6 pb-10 mt-16 min-h-screen">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="fd text-2xl tracking-wider">MENSURATIONS</h3>
-              <button onClick={() => setModal(null)} className="w-8 h-8 bg-[#1a1a1a] rounded-full flex items-center justify-center"><X size={14} className="text-white/30" /></button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 50, overflowY: 'auto' }}>
+          <div style={{ background: BG_CARD, borderRadius: '24px 24px 0 0', padding: '24px 20px 40px', marginTop: 64, minHeight: '90vh' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>MENSURATIONS</h3>
+              <button onClick={() => setModal(null)} style={{ width: 32, height: 32, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
             </div>
-            <div className="space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
-                { key: 'chest', label: 'Poitrine', icon: '📐', unit: 'cm' },
-                { key: 'waist', label: 'Taille', icon: '📏', unit: 'cm' },
-                { key: 'hips', label: 'Hanches', icon: '📐', unit: 'cm' },
-                { key: 'left_arm', label: 'Bras gauche', icon: '💪', unit: 'cm' },
-                { key: 'right_arm', label: 'Bras droit', icon: '💪', unit: 'cm' },
-                { key: 'left_thigh', label: 'Cuisse gauche', icon: '🦵', unit: 'cm' },
-                { key: 'right_thigh', label: 'Cuisse droite', icon: '🦵', unit: 'cm' },
-                { key: 'body_fat', label: '% Masse grasse', icon: '📊', unit: '%' },
-                { key: 'muscle_mass', label: 'Masse musculaire', icon: '⚡', unit: 'kg' },
-              ].map(({ key, label, icon, unit }) => (
-                <div key={key} className="flex items-center gap-3 bg-[#1a1a1a] border border-white/5 rounded-xl px-4 py-3">
-                  <span className="text-base w-6">{icon}</span>
-                  <span className="text-sm font-medium text-white/50 flex-1">{label}</span>
+                { key: 'chest', label: 'Poitrine', unit: 'cm' },
+                { key: 'waist', label: 'Taille', unit: 'cm' },
+                { key: 'hips', label: 'Hanches', unit: 'cm' },
+                { key: 'left_arm', label: 'Bras gauche', unit: 'cm' },
+                { key: 'right_arm', label: 'Bras droit', unit: 'cm' },
+                { key: 'left_thigh', label: 'Cuisse gauche', unit: 'cm' },
+                { key: 'right_thigh', label: 'Cuisse droite', unit: 'cm' },
+                { key: 'body_fat', label: '% Masse grasse', unit: '%' },
+                { key: 'muscle_mass', label: 'Masse musculaire', unit: 'kg' },
+              ].map(({ key, label, unit }) => (
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px' }}>
+                  <span style={{ fontSize: '0.85rem', color: TEXT_MUTED, flex: 1 }}>{label}</span>
                   <input type="number" step="0.1" value={(measureForm as any)[key]}
                     onChange={e => setMeasureForm(p => ({ ...p, [key]: e.target.value }))}
-                    placeholder="—" className="bg-transparent text-white text-sm font-bold text-right w-16 outline-none placeholder:text-white/15" />
-                  <span className="text-white/25 text-xs w-6">{unit}</span>
+                    placeholder="—" style={{ background: 'transparent', color: TEXT_PRIMARY, fontSize: '0.95rem', fontWeight: 700, textAlign: 'right', width: 64, outline: 'none', border: 'none' }} />
+                  <span style={{ color: TEXT_MUTED, fontSize: '0.75rem', width: 24 }}>{unit}</span>
                 </div>
               ))}
             </div>
-            <button onClick={saveMeasurements} className="w-full gold-bg text-black font-bold py-4 rounded-2xl uppercase tracking-widest text-sm active:scale-[0.98] mt-5">Enregistrer</button>
+            <button onClick={saveMeasurements} style={{ width: '100%', background: GREEN, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 20 }}>Enregistrer</button>
           </div>
         </div>
       )}
 
       {/* ═══════════════════ MODAL BMR ═══════════════════ */}
       {modal === 'bmr' && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 overflow-y-auto">
-          <div className="bg-[#111] border border-white/5 rounded-t-[32px] p-6 pb-10 mt-10 min-h-[90vh]">
-            <div className="flex justify-between items-center mb-6">
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 50, overflowY: 'auto' }}>
+          <div style={{ background: BG_CARD, borderRadius: '24px 24px 0 0', padding: '24px 20px 40px', marginTop: 40, minHeight: '90vh' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <div>
-                <h3 className="fd text-2xl tracking-wider">CALCULATEUR BMR</h3>
-                <p className="text-white/25 text-[10px] mt-0.5">Mifflin-St Jeor · Katch-McArdle · Harris-Benedict</p>
+                <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: '0 0 2px' }}>CALCULATEUR BMR</h3>
+                <p style={{ fontSize: '0.7rem', color: TEXT_MUTED, margin: 0 }}>Mifflin-St Jeor · Katch-McArdle · Harris-Benedict</p>
               </div>
-              <button onClick={() => setModal(null)} className="w-8 h-8 bg-[#1a1a1a] rounded-full flex items-center justify-center"><X size={14} className="text-white/30" /></button>
+              <button onClick={() => setModal(null)} style={{ width: 32, height: 32, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
             </div>
-            <div className="space-y-3 mb-5">
-              <div className="grid grid-cols-2 gap-3">
-                {[['weight', 'Poids', 'kg'], ['height', 'Taille', 'cm'], ['age', 'Âge', 'ans'], ['body_fat', '% Graisse (optionnel)', '%']].map(([key, label, unit]) => (
-                  <div key={key} className="bg-[#1a1a1a] border border-white/5 rounded-xl px-3 py-2.5">
-                    <div className="text-[9px] text-white/25 font-bold uppercase mb-1">{label}</div>
-                    <div className="flex items-center gap-1">
-                      <input type="number" value={(bmrForm as any)[key]} onChange={e => setBmrForm(p => ({ ...p, [key]: e.target.value }))}
-                        placeholder="0" className="bg-transparent text-white text-sm font-bold flex-1 outline-none placeholder:text-white/10 w-full" />
-                      <span className="text-white/20 text-xs">{unit}</span>
-                    </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              {[['weight', 'Poids', 'kg'], ['height', 'Taille', 'cm'], ['age', 'Âge', 'ans'], ['body_fat', '% Graisse (opt.)', '%']].map(([key, label, unit]) => (
+                <div key={key} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px' }}>
+                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <input type="number" value={(bmrForm as any)[key]} onChange={e => setBmrForm(p => ({ ...p, [key]: e.target.value }))}
+                      placeholder="0" style={{ background: 'transparent', color: TEXT_PRIMARY, fontSize: '0.95rem', fontWeight: 700, flex: 1, outline: 'none', border: 'none', width: '100%' }} />
+                    <span style={{ color: TEXT_MUTED, fontSize: '0.75rem' }}>{unit}</span>
                   </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {[['male', '♂ Homme'], ['female', '♀ Femme']].map(([val, label]) => (
-                  <button key={val} onClick={() => setBmrForm(p => ({ ...p, gender: val }))}
-                    className={`border rounded-xl py-3 text-sm font-bold transition-all ${bmrForm.gender === val ? 'border-[#C9A84C] bg-[#C9A84C]/10 gold' : 'border-white/8 bg-[#1a1a1a] text-white/30'}`}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <div className="space-y-2">
-                <div className="text-[9px] text-white/25 font-bold uppercase tracking-widest ml-1">Niveau d'activité</div>
-                {ACTIVITY_LEVELS.map(l => (
-                  <button key={l.id} onClick={() => setBmrForm(p => ({ ...p, activity: l.id }))}
-                    className={`w-full border rounded-xl px-4 py-3 flex justify-between items-center transition-all ${bmrForm.activity === l.id ? 'border-[#C9A84C]/50 bg-[#C9A84C]/8' : 'border-white/5 bg-[#1a1a1a]'}`}>
-                    <div className="text-left">
-                      <div className={`text-sm font-bold ${bmrForm.activity === l.id ? 'gold' : 'text-white/60'}`}>{l.label}</div>
-                      <div className="text-[9px] text-white/25">{l.sub}</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-white/20">×{l.mult}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button onClick={calculateBMR} className="w-full gold-bg text-black font-bold py-4 rounded-2xl uppercase tracking-widest text-sm active:scale-[0.98] mb-5">Calculer mon TDEE</button>
-            {bmrResult && (
-              <div className="space-y-3">
-                <div className="bg-gradient-to-br from-[#1a1500] to-[#111] border border-[#C9A84C]/20 rounded-[20px] p-5">
-                  <div className="text-[10px] text-white/30 uppercase tracking-widest mb-1">TDEE (Dépense Totale)</div>
-                  <div className="fd text-5xl gold tracking-wider">{bmrResult.tdee}</div>
-                  <div className="text-white/30 text-xs">kcal / jour · Sauvegardé comme objectif</div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {[['Mifflin', bmrResult.mifflin, false], ['Harris', bmrResult.harris, false], ['Katch', bmrResult.katch || '—', !!bmrResult.katch]].map(([n, v, highlight]) => (
-                    <div key={n as string} className={`bg-[#111] border rounded-[16px] p-3 text-center ${highlight ? 'border-[#C9A84C]/20' : 'border-white/5'}`}>
-                      <div className="text-[8px] text-white/25 uppercase tracking-wider mb-1">{n}</div>
-                      <div className={`fd text-xl tracking-wider ${highlight ? 'gold' : 'text-white'}`}>{v}</div>
-                      <div className="text-[8px] text-white/20">{n === 'Katch' ? '+ précis' : 'BMR base'}</div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+              {[['male', 'Homme'], ['female', 'Femme']].map(([val, label]) => (
+                <button key={val} onClick={() => setBmrForm(p => ({ ...p, gender: val }))}
+                  style={{ border: `1px solid ${bmrForm.gender === val ? ORANGE : BORDER}`, background: bmrForm.gender === val ? `${ORANGE}18` : BG_BASE, borderRadius: 12, padding: '12px', fontSize: '0.85rem', fontWeight: 700, color: bmrForm.gender === val ? ORANGE : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Niveau d'activité</div>
+              {ACTIVITY_LEVELS.map(l => (
+                <button key={l.id} onClick={() => setBmrForm(p => ({ ...p, activity: l.id }))}
+                  style={{ width: '100%', border: `1px solid ${bmrForm.activity === l.id ? ORANGE + '80' : BORDER}`, background: bmrForm.activity === l.id ? `${ORANGE}10` : BG_BASE, borderRadius: 12, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, cursor: 'pointer', transition: 'all 200ms' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: bmrForm.activity === l.id ? ORANGE : TEXT_PRIMARY }}>{l.label}</div>
+                    <div style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>{l.sub}</div>
+                  </div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: TEXT_MUTED }}>×{l.mult}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={calculateBMR} style={{ width: '100%', background: ORANGE, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20 }}>Calculer mon TDEE</button>
+            {bmrResult && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ background: BG_BASE, border: `1px solid ${ORANGE}30`, borderRadius: 16, padding: 20 }}>
+                  <div style={{ fontSize: '0.7rem', color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>TDEE (Dépense Totale)</div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '3rem', fontWeight: 700, color: ORANGE, letterSpacing: '0.05em' }}>{bmrResult.tdee}</div>
+                  <div style={{ fontSize: '0.75rem', color: TEXT_MUTED }}>kcal / jour · Sauvegardé comme objectif</div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {[['Mifflin', bmrResult.mifflin, false], ['Harris', bmrResult.harris, false], ['Katch', bmrResult.katch || '—', !!bmrResult.katch]].map(([n, v, hi]) => (
+                    <div key={n as string} style={{ background: BG_BASE, border: `1px solid ${hi ? ORANGE + '30' : BORDER}`, borderRadius: 14, padding: 12, textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', marginBottom: 4 }}>{n}</div>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: hi ? ORANGE : TEXT_PRIMARY }}>{v}</div>
                     </div>
                   ))}
                 </div>
-                <div className="bg-[#111] border border-white/5 rounded-[20px] p-5">
-                  <div className="text-[9px] text-white/25 uppercase tracking-widest mb-3">Objectifs Caloriques</div>
-                  {[['🔥 Perte de graisse', bmrResult.fatLoss, '-20%'], ['⚖️ Maintenance', bmrResult.tdee, '0%'], ['💪 Prise de masse', bmrResult.massGain, '+10%']].map(([label, val, pct]) => (
-                    <div key={label as string} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
-                      <span className="text-sm text-white/60">{label}</span>
-                      <div className="text-right">
-                        <span className="fd text-xl text-white tracking-wider">{val}</span>
-                        <span className="text-white/25 text-xs ml-1">kcal</span>
-                        <span className="text-white/20 text-[9px] ml-2">{pct}</span>
+                <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
+                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Objectifs Caloriques</div>
+                  {[['Perte de graisse', bmrResult.fatLoss, '-20%'], ['Maintenance', bmrResult.tdee, '0%'], ['Prise de masse', bmrResult.massGain, '+10%']].map(([label, val, pct]) => (
+                    <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
+                      <span style={{ fontSize: '0.85rem', color: TEXT_MUTED }}>{label}</span>
+                      <div>
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: TEXT_PRIMARY }}>{val}</span>
+                        <span style={{ fontSize: '0.75rem', color: TEXT_MUTED, marginLeft: 4 }}>kcal</span>
+                        <span style={{ fontSize: '0.7rem', color: TEXT_MUTED, marginLeft: 8 }}>{pct}</span>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="bg-[#111] border border-white/5 rounded-[20px] p-5">
-                  <div className="text-[9px] text-white/25 uppercase tracking-widest mb-3">Macros ({bmrResult.tdee} kcal)</div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[['Protéines', bmrResult.protein, 'g', '#3b82f6'], ['Glucides', bmrResult.carbs, 'g', '#C9A84C'], ['Lipides', bmrResult.fat, 'g', '#10b981']].map(([n, v, u, c]) => (
-                      <div key={n as string} className="text-center">
-                        <div className="fd text-3xl text-white tracking-wider">{v}</div>
-                        <div className="text-[9px] text-white/25 mt-0.5">{u}</div>
-                        <div style={{ color: c as string }} className="text-[8px] font-bold uppercase mt-0.5">{n}</div>
+                <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
+                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Macros ({bmrResult.tdee} kcal)</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                    {[['Protéines', bmrResult.protein, 'g', '#3b82f6'], ['Glucides', bmrResult.carbs, 'g', ORANGE], ['Lipides', bmrResult.fat, 'g', '#10b981']].map(([n, v, u, c]) => (
+                      <div key={n as string} style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY }}>{v}</div>
+                        <div style={{ fontSize: '0.65rem', color: c as string, fontWeight: 700, textTransform: 'uppercase' }}>{n}</div>
                       </div>
                     ))}
                   </div>
@@ -604,106 +602,106 @@ export default function CoachApp() {
 
       {/* ═══════════════════ MODAL FOOD ═══════════════════ */}
       {modal === 'food' && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 overflow-y-auto">
-          <div className="bg-[#111] border border-white/5 rounded-t-[32px] p-5 pb-10 mt-10 min-h-[90vh]">
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="fd text-2xl tracking-wider">AJOUTER ALIMENT</h3>
-              <button onClick={() => { setModal(null); setSelectedFood(null); setFoodSearch('') }} className="w-8 h-8 bg-[#1a1a1a] rounded-full flex items-center justify-center"><X size={14} className="text-white/30" /></button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 50, overflowY: 'auto' }}>
+          <div style={{ background: BG_CARD, borderRadius: '24px 24px 0 0', padding: '20px 20px 40px', marginTop: 40, minHeight: '90vh' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>AJOUTER ALIMENT</h3>
+              <button onClick={() => { setModal(null); setSelectedFood(null); setFoodSearch('') }} style={{ width: 32, height: 32, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
             </div>
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
               {MEAL_TYPES.map(m => (
                 <button key={m.id} onClick={() => setMealType(m.id)}
-                  className={`border rounded-xl p-2 flex flex-col items-center gap-1 transition-all ${mealType === m.id ? 'border-[#C9A84C] bg-[#C9A84C]/10' : 'border-white/8 bg-[#1a1a1a]'}`}>
-                  <span className="text-lg">{m.emoji}</span>
-                  <span className={`text-[8px] font-bold uppercase ${mealType === m.id ? 'gold' : 'text-white/30'}`}>{m.label}</span>
+                  style={{ border: `1px solid ${mealType === m.id ? ORANGE : BORDER}`, background: mealType === m.id ? `${ORANGE}15` : BG_BASE, borderRadius: 12, padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', transition: 'all 200ms' }}>
+                  <span style={{ fontSize: '1.2rem' }}>{m.icon}</span>
+                  <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: mealType === m.id ? ORANGE : TEXT_MUTED }}>{m.label}</span>
                 </button>
               ))}
             </div>
-            <div className="flex gap-2 mb-4">
-              {[['anses', '🏛️ Base ANSES'], ['custom', '⭐ Mes aliments']].map(([id, label]) => (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              {[['anses', 'Base ANSES'], ['custom', 'Mes aliments']].map(([id, label]) => (
                 <button key={id} onClick={() => { setSearchTab(id as any); setFoodSearch(''); setFoodResults([]) }}
-                  className={`flex-1 border rounded-xl py-2.5 text-xs font-bold transition-all ${searchTab === id ? 'border-[#C9A84C] bg-[#C9A84C]/10 gold' : 'border-white/8 bg-[#1a1a1a] text-white/30'}`}>
+                  style={{ flex: 1, border: `1px solid ${searchTab === id ? ORANGE : BORDER}`, background: searchTab === id ? `${ORANGE}15` : BG_BASE, borderRadius: 12, padding: '10px', fontSize: '0.75rem', fontWeight: 700, color: searchTab === id ? ORANGE : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>
                   {label}
                 </button>
               ))}
             </div>
             {!selectedFood ? (
               <>
-                <div className="relative mb-4">
-                  <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/20" />
+                <div style={{ position: 'relative', marginBottom: 16 }}>
+                  <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED }} />
                   <input value={foodSearch} onChange={e => setFoodSearch(e.target.value)}
-                    placeholder={searchTab === 'anses' ? 'Rechercher dans la base ANSES (3484 aliments)...' : 'Rechercher mes aliments...'}
-                    className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-white text-sm outline-none focus:border-[#C9A84C]/40 placeholder:text-white/15" />
+                    placeholder={searchTab === 'anses' ? 'Rechercher dans la base ANSES...' : 'Rechercher mes aliments...'}
+                    style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, paddingLeft: 40, paddingRight: 16, paddingTop: 12, paddingBottom: 12, color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
                 </div>
                 {searchTab === 'custom' && (
-                  <button onClick={() => setModal('custom_food')} className="w-full border-2 border-dashed border-white/10 rounded-xl py-3 flex items-center justify-center gap-2 text-white/30 text-xs font-bold mb-3">
+                  <button onClick={() => setModal('custom_food')} style={{ width: '100%', border: `2px dashed ${BORDER}`, borderRadius: 12, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: TEXT_MUTED, fontSize: '0.8rem', fontWeight: 700, background: 'transparent', cursor: 'pointer', marginBottom: 12 }}>
                     <Plus size={14} /> Créer un aliment personnalisé
                   </button>
                 )}
-                <div className="space-y-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {foodResults.map((food: any) => {
                     const cals = searchTab === 'anses' ? (food.energy_kcal || food.calories || 0) : food.calories_per_100g
                     const prot = searchTab === 'anses' ? (food.proteins || 0) : food.proteins_per_100g
                     return (
                       <button key={food.id} onClick={() => setSelectedFood(food)}
-                        className="w-full bg-[#1a1a1a] border border-white/5 rounded-[16px] px-4 py-3 flex items-center gap-3 active:border-[#C9A84C]/20 text-left">
-                        <div className="flex-1">
-                          <div className="font-medium text-sm text-white">{food.name}</div>
-                          {food.brand && <div className="text-[9px] text-white/25 mt-0.5">{food.brand}</div>}
+                        style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left', transition: 'border-color 200ms' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: TEXT_PRIMARY }}>{food.name}</div>
+                          {food.brand && <div style={{ fontSize: '0.7rem', color: TEXT_MUTED, marginTop: 2 }}>{food.brand}</div>}
                         </div>
-                        <div className="text-right">
-                          <div className="text-xs font-bold gold">{Math.round(cals)} kcal</div>
-                          <div className="text-[9px] text-white/25">P:{Math.round(prot)}g · /100g</div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: ORANGE }}>{Math.round(cals)} kcal</div>
+                          <div style={{ fontSize: '0.65rem', color: TEXT_MUTED }}>P:{Math.round(prot)}g/100g</div>
                         </div>
-                        <ChevronRight size={14} className="text-white/15" />
+                        <ChevronRight size={14} color={TEXT_MUTED} />
                       </button>
                     )
                   })}
-                  {foodSearch.length >= 2 && foodResults.length === 0 && <p className="text-center text-white/20 text-sm py-5">Aucun résultat</p>}
-                  {foodSearch.length < 2 && <p className="text-center text-white/15 text-xs py-4">Saisir au moins 2 caractères</p>}
+                  {foodSearch.length >= 2 && foodResults.length === 0 && <p style={{ textAlign: 'center', color: TEXT_MUTED, fontSize: '0.85rem', padding: '20px 0' }}>Aucun résultat</p>}
+                  {foodSearch.length < 2 && <p style={{ textAlign: 'center', color: TEXT_MUTED, fontSize: '0.75rem', padding: '16px 0' }}>Saisir au moins 2 caractères</p>}
                 </div>
               </>
             ) : (
               <div>
-                <button onClick={() => setSelectedFood(null)} className="flex items-center gap-1.5 text-white/30 text-xs font-bold mb-4">← Retour</button>
-                <div className="bg-[#1a1a1a] border border-white/5 rounded-[20px] p-5 mb-4">
-                  <div className="font-bold text-white text-base mb-3">{selectedFood.name}</div>
-                  <div className="grid grid-cols-4 gap-2">
+                <button onClick={() => setSelectedFood(null)} style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', fontWeight: 700, background: 'transparent', border: 'none', cursor: 'pointer', marginBottom: 16 }}>← Retour</button>
+                <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
+                  <div style={{ fontWeight: 700, color: TEXT_PRIMARY, fontSize: '1rem', marginBottom: 12 }}>{selectedFood.name}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {[
-                      ['Calories', searchTab === 'anses' ? (selectedFood.energy_kcal || 0) : selectedFood.calories_per_100g, 'kcal', '#C9A84C'],
+                      ['Calories', searchTab === 'anses' ? (selectedFood.energy_kcal || 0) : selectedFood.calories_per_100g, 'kcal', ORANGE],
                       ['Protéines', searchTab === 'anses' ? (selectedFood.proteins || 0) : selectedFood.proteins_per_100g, 'g', '#3b82f6'],
-                      ['Glucides', searchTab === 'anses' ? (selectedFood.carbohydrates || selectedFood.carbs || 0) : selectedFood.carbs_per_100g, 'g', '#f97316'],
+                      ['Glucides', searchTab === 'anses' ? (selectedFood.carbohydrates || selectedFood.carbs || 0) : selectedFood.carbs_per_100g, 'g', '#f59e0b'],
                       ['Lipides', searchTab === 'anses' ? (selectedFood.fat || selectedFood.fats || 0) : selectedFood.fats_per_100g, 'g', '#10b981'],
                     ].map(([n, v, u, c]) => (
-                      <div key={n as string} className="text-center">
-                        <div className="fd text-xl tracking-wider" style={{ color: c as string }}>{Math.round(v as number)}</div>
-                        <div className="text-[8px] text-white/25">{u}/100g</div>
+                      <div key={n as string} style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: c as string }}>{Math.round(v as number)}</div>
+                        <div style={{ fontSize: '0.6rem', color: TEXT_MUTED }}>{u}/100g</div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="bg-[#1a1a1a] border border-white/5 rounded-[16px] px-4 py-3 flex items-center gap-3 mb-4">
-                  <span className="text-white/30 text-sm flex-1">Quantité</span>
-                  <input type="number" value={foodQty} onChange={e => setFoodQty(e.target.value)} className="bg-transparent text-white text-xl font-bold text-right w-20 outline-none" />
-                  <span className="gold font-bold text-sm">g</span>
+                <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <span style={{ color: TEXT_MUTED, fontSize: '0.9rem', flex: 1 }}>Quantité</span>
+                  <input type="number" value={foodQty} onChange={e => setFoodQty(e.target.value)} style={{ background: 'transparent', color: TEXT_PRIMARY, fontSize: '1.4rem', fontWeight: 700, textAlign: 'right', width: 80, outline: 'none', border: 'none' }} />
+                  <span style={{ color: ORANGE, fontWeight: 700 }}>g</span>
                 </div>
-                <div className="bg-[#1a1500] border border-[#C9A84C]/10 rounded-[16px] px-4 py-3 mb-4">
-                  <div className="text-[9px] text-white/25 uppercase tracking-widest mb-2">Pour {foodQty}g :</div>
-                  <div className="flex justify-around">
+                <div style={{ background: `${ORANGE}10`, border: `1px solid ${ORANGE}20`, borderRadius: 14, padding: '12px 16px', marginBottom: 16 }}>
+                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Pour {foodQty}g :</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                     {[
                       ['Kcal', Math.round((searchTab === 'anses' ? (selectedFood.energy_kcal || 0) : selectedFood.calories_per_100g) * parseFloat(foodQty) / 100)],
                       ['Prot', Math.round((searchTab === 'anses' ? (selectedFood.proteins || 0) : selectedFood.proteins_per_100g) * parseFloat(foodQty) / 100 * 10) / 10],
                       ['Gluc', Math.round((searchTab === 'anses' ? (selectedFood.carbohydrates || selectedFood.carbs || 0) : selectedFood.carbs_per_100g) * parseFloat(foodQty) / 100 * 10) / 10],
                       ['Lip', Math.round((searchTab === 'anses' ? (selectedFood.fat || selectedFood.fats || 0) : selectedFood.fats_per_100g) * parseFloat(foodQty) / 100 * 10) / 10],
                     ].map(([n, v]) => (
-                      <div key={n as string} className="text-center">
-                        <div className="fd text-2xl gold tracking-wider">{v}</div>
-                        <div className="text-[8px] text-white/25 uppercase">{n}</div>
+                      <div key={n as string} style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: ORANGE }}>{v}</div>
+                        <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase' }}>{n}</div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <button onClick={addFoodToMeal} className="w-full gold-bg text-black font-bold py-4 rounded-2xl uppercase tracking-widest text-sm active:scale-[0.98]">Ajouter au repas</button>
+                <button onClick={addFoodToMeal} style={{ width: '100%', background: GREEN, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Ajouter au repas</button>
               </div>
             )}
           </div>
@@ -712,255 +710,264 @@ export default function CoachApp() {
 
       {/* ═══════════════════ MODAL CUSTOM FOOD ═══════════════════ */}
       {modal === 'custom_food' && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end">
-          <div className="bg-[#111] border border-white/5 rounded-t-[32px] p-5 w-full pb-10">
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="fd text-xl tracking-wider">NOUVEL ALIMENT</h3>
-              <button onClick={() => setModal('food')} className="w-8 h-8 bg-[#1a1a1a] rounded-full flex items-center justify-center"><X size={14} className="text-white/30" /></button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, borderRadius: '24px 24px 0 0', padding: '20px 20px 40px', width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.3rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>NOUVEL ALIMENT</h3>
+              <button onClick={() => setModal('food')} style={{ width: 32, height: 32, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
             </div>
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <input value={customFoodForm.name} onChange={e => setCustomFoodForm(p => ({ ...p, name: e.target.value }))}
-                placeholder="Nom de l'aliment *" className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[#C9A84C]/40 placeholder:text-white/20" />
+                placeholder="Nom de l'aliment *" style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
               <input value={customFoodForm.brand} onChange={e => setCustomFoodForm(p => ({ ...p, brand: e.target.value }))}
-                placeholder="Marque (optionnel)" className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[#C9A84C]/40 placeholder:text-white/20" />
-              <div className="grid grid-cols-2 gap-3">
+                placeholder="Marque (optionnel)" style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {[['calories_per_100g', 'Calories *', 'kcal'], ['proteins_per_100g', 'Protéines', 'g'], ['carbs_per_100g', 'Glucides', 'g'], ['fats_per_100g', 'Lipides', 'g']].map(([k, l, u]) => (
-                  <div key={k} className="bg-[#1a1a1a] border border-white/5 rounded-xl px-3 py-2.5">
-                    <div className="text-[8px] text-white/20 uppercase mb-1">{l} /100g</div>
-                    <div className="flex gap-1 items-center">
+                  <div key={k} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px' }}>
+                    <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', marginBottom: 4 }}>{l} /100g</div>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <input type="number" value={(customFoodForm as any)[k]} onChange={e => setCustomFoodForm(p => ({ ...p, [k]: e.target.value }))}
-                        placeholder="0" className="bg-transparent text-white text-sm font-bold flex-1 outline-none placeholder:text-white/10 w-full" />
-                      <span className="text-white/20 text-xs">{u}</span>
+                        placeholder="0" style={{ background: 'transparent', color: TEXT_PRIMARY, fontSize: '0.9rem', fontWeight: 700, flex: 1, outline: 'none', border: 'none', width: '100%' }} />
+                      <span style={{ color: TEXT_MUTED, fontSize: '0.75rem' }}>{u}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <button onClick={addCustomFood} className="w-full gold-bg text-black font-bold py-4 rounded-2xl uppercase tracking-widest text-sm active:scale-[0.98] mt-4">Créer l'aliment</button>
+            <button onClick={addCustomFood} style={{ width: '100%', background: ORANGE, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 16 }}>Créer l'aliment</button>
           </div>
         </div>
       )}
 
       {/* ═══════════════════ HOME TAB ═══════════════════ */}
       {activeTab === 'home' && (
-        <div style={{ background: '#111827', minHeight: '100vh', paddingBottom: 40 }}>
-          <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap');`}</style>
+        <div style={{ background: BG_BASE, minHeight: '100vh' }}>
 
-          {/* HEADER */}
-          <div style={{ background: '#1F2937', borderBottom: '1px solid #374151', padding: '20px 20px 16px' }}>
+          {/* Hero header */}
+          <div style={{ background: BG_CARD, padding: '20px 20px 16px', borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ fontSize: '0.72rem', color: '#6B7280', margin: '0 0 4px', textTransform: 'capitalize', letterSpacing: '0.04em' }}>
+                <p style={{ fontSize: '0.72rem', color: TEXT_MUTED, margin: '0 0 4px', textTransform: 'capitalize', letterSpacing: '0.04em' }}>
                   {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
-                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', margin: 0, letterSpacing: '0.05em' }}>
-                  Bonjour, {userName}
+                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '0.03em' }}>
+                  Bonjour, {firstName}
                 </h1>
               </div>
-              <button onClick={() => avatarRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: displayAvatar ? 'transparent' : '#F97316', border: 'none', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
+              <button onClick={() => avatarRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: displayAvatar ? 'transparent' : ORANGE, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
                 {displayAvatar
                   ? <img src={displayAvatar} style={{ width: 48, height: 48, objectFit: 'cover' }} alt="" />
-                  : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>{userName.charAt(0).toUpperCase()}</span>
+                  : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>{firstName.charAt(0).toUpperCase()}</span>
                 }
               </button>
               <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
             </div>
           </div>
 
-          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* 4 STAT CARDS */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-              <button onClick={() => setModal('weight')} style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px', textAlign: 'left', cursor: 'pointer' }}>
-                <Scale size={16} color="#F97316" style={{ marginBottom: 8 }} />
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
-                  {currentWeight || '—'}<span style={{ fontSize: '0.9rem', color: '#6B7280', marginLeft: 4 }}>kg</span>
-                </div>
-                <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>Poids actuel</div>
-              </button>
-              <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
-                <Target size={16} color="#6B7280" style={{ marginBottom: 8 }} />
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
-                  {goalWeight}<span style={{ fontSize: '0.9rem', color: '#6B7280', marginLeft: 4 }}>kg</span>
-                </div>
-                <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>Objectif</div>
-              </div>
-              <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
-                <Dumbbell size={16} color="#6B7280" style={{ marginBottom: 8 }} />
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>{completedSessions}</div>
-                <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>Séances totales</div>
-              </div>
-              <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
-                <Flame size={16} color="#F97316" style={{ marginBottom: 8 }} />
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>{calorieGoal}</div>
-                <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>Kcal objectif</div>
+          {/* Calorie donut + stat pills */}
+          <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: 20 }}>
+            {/* SVG Donut ring */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="60" cy="60" r={donutR} fill="none" stroke={BORDER} strokeWidth="10" />
+                <circle cx="60" cy="60" r={donutR} fill="none" stroke={ORANGE} strokeWidth="10"
+                  strokeLinecap="round" strokeDasharray={donutCirc} strokeDashoffset={donutOffset}
+                  style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
+              </svg>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.5rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>{totalCals}</span>
+                <span style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2 }}>kcal</span>
               </div>
             </div>
-
-            {/* WEIGHT CHART */}
-            {weightHistory30.length > 1 && (
-              <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B7280' }}>Évolution du poids</span>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.9rem', color: '#F97316' }}>
-                    {weightHistory30[weightHistory30.length - 1]?.poids} kg
-                  </span>
+            {/* Stat pills */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+              {[
+                { label: 'Poids', value: currentWeight ? `${currentWeight} kg` : '—', color: ORANGE },
+                { label: 'Objectif', value: `${goalWeight} kg`, color: TEXT_MUTED },
+                { label: 'Séances', value: `${completedSessions}`, color: TEXT_MUTED },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: TEXT_MUTED }}>{label}</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, color }}>{value}</span>
                 </div>
-                <svg viewBox="0 0 300 72" style={{ width: '100%', height: 72, overflow: 'visible' }} preserveAspectRatio="none">
-                  <polyline
-                    points={weightHistory30.map((p, i) => {
-                      const x = (i / (weightHistory30.length - 1)) * 300
-                      const y = 72 - ((p.poids - chartMin) / ((chartMax - chartMin) || 1)) * 68
-                      return `${x.toFixed(1)},${y.toFixed(1)}`
-                    }).join(' ')}
-                    fill="none" stroke="#F97316" strokeWidth="2.5"
-                    strokeLinejoin="round" strokeLinecap="round"
-                  />
-                  <circle
-                    cx={300}
-                    cy={72 - ((weightHistory30[weightHistory30.length - 1]?.poids - chartMin) / ((chartMax - chartMin) || 1)) * 68}
-                    r="4" fill="#F97316"
-                  />
-                </svg>
-              </div>
-            )}
+              ))}
+            </div>
+          </div>
 
-            {/* TODAY'S PROGRAM */}
-            <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B7280' }}>Programme du jour</span>
-                <button onClick={() => router.push('/programme')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#F97316', background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Voir tout</button>
+          {/* Today's workout card */}
+          <div style={{ margin: '16px 20px 0', background: `linear-gradient(135deg, ${BG_CARD} 0%, #0F0F0F 100%)`, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: ORANGE }}>AUJOURD'HUI</span>
+              <span style={{ fontSize: '0.75rem', color: TEXT_MUTED, textTransform: 'capitalize' }}>{todayKey}</span>
+            </div>
+            {!coachProgram ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 0' }}>
+                <Dumbbell size={28} color={TEXT_MUTED} />
+                <span style={{ fontSize: '0.85rem', color: TEXT_MUTED, fontStyle: 'italic' }}>Programme en attente</span>
               </div>
-              {!coachProgram ? (
-                <p style={{ fontSize: '0.85rem', color: '#4B5563', margin: 0, fontStyle: 'italic' }}>Ton coach n&apos;a pas encore créé ton programme.</p>
-              ) : todayCoachDay?.repos ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', background: '#111827', borderRadius: 10 }}>
-                  <Moon size={20} color="#4B5563" />
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: '#6B7280', fontSize: '1rem' }}>Jour de repos — récupère bien !</span>
+            ) : todayCoachDay?.repos ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: BG_BASE, borderRadius: 12, padding: '14px 16px' }}>
+                <Moon size={22} color={TEXT_MUTED} />
+                <div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: TEXT_PRIMARY, fontSize: '1rem' }}>Jour de repos</div>
+                  <div style={{ fontSize: '0.75rem', color: TEXT_MUTED }}>Récupère bien aujourd'hui</div>
                 </div>
-              ) : !todayCoachDay?.exercises?.length ? (
-                <p style={{ fontSize: '0.85rem', color: '#4B5563', margin: 0, fontStyle: 'italic' }}>Aucun exercice prévu aujourd&apos;hui.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              </div>
+            ) : !todayCoachDay?.exercises?.length ? (
+              <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Aucun exercice prévu aujourd'hui.</p>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
                   {(todayCoachDay.exercises as any[]).slice(0, 3).map((ex: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#111827', borderRadius: 10 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(249,115,22,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.85rem', color: '#F97316', flexShrink: 0 }}>{i + 1}</div>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, background: BG_BASE, borderRadius: 10, padding: '10px 12px' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: `${ORANGE}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.85rem', color: ORANGE, flexShrink: 0 }}>{i + 1}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: '#F8FAFC', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ex.name}</div>
-                        <div style={{ fontSize: '0.72rem', color: '#6B7280', marginTop: 2 }}>{ex.sets} séries × {ex.reps} reps</div>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: TEXT_PRIMARY, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ex.name}</div>
+                        <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginTop: 2 }}>{ex.sets} séries × {ex.reps} reps</div>
                       </div>
                     </div>
                   ))}
                   {(todayCoachDay.exercises as any[]).length > 3 && (
-                    <button onClick={() => router.push('/programme')} style={{ fontSize: '0.78rem', color: '#F97316', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 0', textAlign: 'left' }}>
+                    <span style={{ fontSize: '0.78rem', color: ORANGE, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', paddingLeft: 4 }}>
                       +{(todayCoachDay.exercises as any[]).length - 3} autres exercices
-                    </button>
+                    </span>
                   )}
                 </div>
-              )}
-            </div>
-
-            {/* TODAY'S NUTRITION */}
-            <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B7280' }}>Nutrition du jour</span>
-                <button onClick={() => router.push('/nutrition-plan')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#22C55E', background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Voir plan</button>
-              </div>
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Calories</span>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.85rem', color: '#F8FAFC' }}>{totalCals} <span style={{ color: '#6B7280' }}>/ {calorieGoal} kcal</span></span>
-                </div>
-                <div style={{ height: 8, background: '#111827', borderRadius: 999, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', background: '#F97316', borderRadius: 999, width: `${Math.min(100, (totalCals / (calorieGoal || 1)) * 100)}%`, transition: 'width 0.5s ease' }} />
-                </div>
-              </div>
-              {[
-                { label: 'Protéines', consumed: Math.round(totalProteins), target: coachMealPlan?.protein_target || 0, color: '#3B82F6' },
-                { label: 'Glucides', consumed: Math.round(todayMeals.reduce((s: number, m: any) => s + (m.carbs || 0), 0)), target: coachMealPlan?.carb_target || 0, color: '#F59E0B' },
-                { label: 'Lipides', consumed: Math.round(todayMeals.reduce((s: number, m: any) => s + (m.fats || 0), 0)), target: coachMealPlan?.fat_target || 0, color: '#EF4444' },
-              ].map(({ label, consumed, target, color }) => (
-                <div key={label} style={{ marginBottom: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.78rem', color: '#F8FAFC' }}>{consumed}<span style={{ color: '#6B7280' }}>{target ? ` / ${target}g` : 'g'}</span></span>
-                  </div>
-                  <div style={{ height: 5, background: '#111827', borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', background: color, borderRadius: 999, width: `${target ? Math.min(100, (consumed / target) * 100) : 0}%`, transition: 'width 0.5s ease' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* QUICK ACTIONS */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-              {[
-                { icon: Scale, label: 'Poids', action: () => setModal('weight') },
-                { icon: Ruler, label: 'Mesures', action: () => setModal('measure') },
-                { icon: Camera, label: 'Photo', action: () => photoRef.current?.click() },
-              ].map(({ icon: Icon, label, action }) => (
-                <button key={label} onClick={action} style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: '16px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                  <Icon size={20} color="#6B7280" />
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6B7280' }}>{label}</span>
+                <button
+                  onClick={() => todayCoachDay?.exercises?.length && startProgramWorkout({ day_name: todayKey }, todayCoachDay.exercises)}
+                  style={{ width: '100%', background: GREEN, color: '#000', fontWeight: 700, padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Commencer la séance
                 </button>
-              ))}
-              <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
-            </div>
-
+              </div>
+            )}
+            {coachProgram && todayCoachDay?.repos && (
+              <button disabled style={{ width: '100%', background: BORDER, color: TEXT_MUTED, fontWeight: 700, padding: '14px', borderRadius: 12, border: 'none', cursor: 'not-allowed', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 12 }}>
+                Commencer la séance
+              </button>
+            )}
           </div>
+
+          {/* Today's nutrition card */}
+          <div style={{ margin: '16px 20px 0', background: `linear-gradient(135deg, ${BG_CARD} 0%, #0F0F0F 100%)`, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: TEXT_MUTED }}>NUTRITION</span>
+              <button onClick={() => router.push('/nutrition-plan')} style={{ fontSize: '0.72rem', fontWeight: 700, color: ORANGE, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', letterSpacing: '0.06em' }}>Voir plan</button>
+            </div>
+            {/* Calorie bar */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase' }}>Calories</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.85rem', color: TEXT_PRIMARY }}>{totalCals} <span style={{ color: TEXT_MUTED }}>/ {calorieGoal} kcal</span></span>
+              </div>
+              <div style={{ height: 8, background: BG_BASE, borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: ORANGE, borderRadius: 999, width: `${calPct}%`, transition: 'width 0.5s ease' }} />
+              </div>
+            </div>
+            {/* Macro bars */}
+            {[
+              { label: 'Protéines', consumed: Math.round(totalProteins), target: coachMealPlan?.protein_target || 0, color: '#3B82F6' },
+              { label: 'Glucides', consumed: Math.round(totalCarbs), target: coachMealPlan?.carb_target || 0, color: '#F59E0B' },
+              { label: 'Lipides', consumed: Math.round(totalFats), target: coachMealPlan?.fat_target || 0, color: '#EF4444' },
+            ].map(({ label, consumed, target, color }) => (
+              <div key={label} style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.78rem', color: TEXT_PRIMARY }}>{consumed}<span style={{ color: TEXT_MUTED }}>{target ? ` / ${target}g` : 'g'}</span></span>
+                </div>
+                <div style={{ height: 5, background: BG_BASE, borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: color, borderRadius: 999, width: `${target ? Math.min(100, (consumed / target) * 100) : 0}%`, transition: 'width 0.5s ease' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick actions */}
+          <div style={{ padding: '16px 20px 0', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            {[
+              { icon: Scale, label: '+ Poids', action: () => setModal('weight') },
+              { icon: Ruler, label: '+ Mesure', action: () => setModal('measure') },
+              { icon: Camera, label: '+ Photo', action: () => photoRef.current?.click() },
+            ].map(({ icon: Icon, label, action }) => (
+              <button key={label} onClick={action} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', transition: 'border-color 200ms' }}>
+                <Icon size={20} color={TEXT_MUTED} />
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: TEXT_MUTED }}>{label}</span>
+              </button>
+            ))}
+            <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
+          </div>
+
         </div>
       )}
 
-      {/* ═══════════════════ BODY TAB ═══════════════════ */}
-      {activeTab === 'body' && (
-        <div className="p-5 pt-10">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="fd text-3xl tracking-wider">CORPS</h1>
-            <div className="flex gap-2">
-              <button onClick={() => setModal('measure')} className="gold-bg text-black text-[9px] font-bold px-3 py-2 rounded-xl uppercase">+ Mesure</button>
-              <button onClick={() => photoRef.current?.click()} className="bg-[#1a1a1a] border border-white/8 text-white/30 text-[9px] font-bold px-3 py-2 rounded-xl flex items-center gap-1"><Camera size={11} /> Photo</button>
-              <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={uploadProgressPhoto} />
-            </div>
+      {/* ═══════════════════ TRAINING TAB ═══════════════════ */}
+      {activeTab === 'training' && (
+        <div style={{ padding: '20px 20px 20px', minHeight: '100vh' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>PROGRAMME</h1>
+            <span style={{ fontSize: '0.75rem', color: TEXT_MUTED, textTransform: 'capitalize' }}>
+              Semaine du {new Date(Date.now() - new Date().getDay() * 86400000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            </span>
           </div>
-          {latestMeasure ? (
-            <div className="bg-[#111] border border-white/5 rounded-[24px] p-5 mb-4">
-              <div className="flex justify-between mb-4">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Dernières Mesures</span>
-                <span className="text-[9px] text-white/15">{new Date(latestMeasure.date).toLocaleDateString('fr-FR')}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {[['Poitrine', latestMeasure.chest, 'cm'], ['Taille', latestMeasure.waist, 'cm'], ['Hanches', latestMeasure.hips, 'cm'], ['Bras G', latestMeasure.left_arm, 'cm'], ['Bras D', latestMeasure.right_arm, 'cm'], ['Cuisse G', latestMeasure.left_thigh, 'cm'], ['% Graisse', latestMeasure.body_fat, '%'], ['Masse Musc', latestMeasure.muscle_mass, 'kg']].map(([l, v, u]) => v && (
-                  <div key={l as string} className="bg-[#1a1a1a] rounded-xl px-3 py-2 flex justify-between items-center">
-                    <span className="text-[9px] text-white/30">{l}</span>
-                    <span className="fd text-lg text-white tracking-wider">{v}<span className="text-[9px] text-white/20 ml-1">{u}</span></span>
+
+          {!coachProgram ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '60px 0' }}>
+              <Dumbbell size={40} color={TEXT_MUTED} />
+              <p style={{ fontSize: '0.95rem', color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>Ton coach n'a pas encore créé ton programme.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {WEEK_DAYS.map(day => {
+                const dayData = coachProgram[day] ?? { repos: false, exercises: [] }
+                const isToday = day === todayKey
+                const isExpanded = activeDay === day
+                const exCount = dayData.exercises?.length || 0
+                return (
+                  <div key={day} style={{ background: BG_CARD, border: `1px solid ${isToday ? ORANGE : BORDER}`, borderRadius: 16, overflow: 'hidden', borderLeft: isToday ? `3px solid ${ORANGE}` : `1px solid ${BORDER}` }}>
+                    <button
+                      onClick={() => setActiveDay(isExpanded ? null : day)}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, textTransform: 'capitalize', color: isToday ? ORANGE : TEXT_PRIMARY }}>{day}</span>
+                          {isToday && <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: ORANGE, background: `${ORANGE}20`, borderRadius: 6, padding: '2px 6px' }}>Aujourd'hui</span>}
+                        </div>
+                      </div>
+                      {dayData.repos ? (
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: TEXT_MUTED, background: `${BORDER}`, borderRadius: 8, padding: '4px 10px' }}>Repos</span>
+                      ) : (
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: ORANGE, background: `${ORANGE}15`, borderRadius: 8, padding: '4px 10px' }}>{exCount} exo{exCount > 1 ? 's' : ''}</span>
+                      )}
+                      {isExpanded ? <ChevronUp size={16} color={TEXT_MUTED} /> : <ChevronDown size={16} color={TEXT_MUTED} />}
+                    </button>
+                    {isExpanded && !dayData.repos && exCount > 0 && (
+                      <div style={{ borderTop: `1px solid ${BORDER}`, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {(dayData.exercises as any[]).map((ex: any, i: number) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: BG_BASE, borderRadius: 10 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: 8, background: `${ORANGE}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.8rem', color: ORANGE, flexShrink: 0 }}>{i + 1}</div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: TEXT_PRIMARY, fontSize: '0.9rem' }}>{ex.name}</div>
+                              <div style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>{ex.sets} × {ex.reps}</div>
+                            </div>
+                          </div>
+                        ))}
+                        {isToday && (
+                          <button
+                            onClick={() => startProgramWorkout({ day_name: day }, dayData.exercises)}
+                            style={{ width: '100%', background: GREEN, color: '#000', fontWeight: 700, padding: '12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 4 }}>
+                            Commencer la séance
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {isExpanded && dayData.repos && (
+                      <div style={{ borderTop: `1px solid ${BORDER}`, padding: '16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Moon size={18} color={TEXT_MUTED} />
+                        <span style={{ fontSize: '0.85rem', color: TEXT_MUTED }}>Récupération active — marche, étirements</span>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <button onClick={() => setModal('measure')} className="w-full border-2 border-dashed border-white/8 rounded-[20px] p-8 flex flex-col items-center gap-2 mb-4">
-              <Ruler size={28} className="text-white/15" />
-              <span className="text-white/25 text-sm font-medium">Prendre mes premières mesures</span>
-            </button>
-          )}
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Photos Progression</span>
-          </div>
-          {progressPhotos.length === 0 ? (
-            <button onClick={() => photoRef.current?.click()} className="w-full border-2 border-dashed border-white/8 rounded-[20px] p-10 flex flex-col items-center gap-2">
-              <Camera size={28} className="text-white/15" />
-              <span className="text-white/20 text-sm font-medium">Ajouter une photo</span>
-            </button>
-          ) : (
-            <div className="grid grid-cols-3 gap-2">
-              <button onClick={() => photoRef.current?.click()} className="aspect-square border-2 border-dashed border-white/8 rounded-[16px] flex items-center justify-center">
-                {photoUploading ? <div className="w-6 h-6 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" /> : <Plus size={22} className="text-white/15" />}
-              </button>
-              {progressPhotos.map(p => (
-                <div key={p.id} className="aspect-square rounded-[16px] overflow-hidden">
-                  <img src={p.photo_url} className="w-full h-full object-cover" />
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -968,306 +975,276 @@ export default function CoachApp() {
 
       {/* ═══════════════════ NUTRITION TAB ═══════════════════ */}
       {activeTab === 'nutrition' && (
-        <div className="p-5 pt-10">
-          <div className="flex justify-between items-center mb-5">
-            <h1 className="fd text-3xl tracking-wider">NUTRITION</h1>
-            <div className="flex gap-2">
-              <button onClick={() => setModal('bmr')} className="bg-[#1a1a1a] border border-[#C9A84C]/20 text-[9px] gold font-bold px-3 py-2 rounded-xl uppercase flex items-center gap-1"><Sparkles size={10} /> BMR</button>
-              <button onClick={() => setModal('food')} className="gold-bg text-black text-[9px] font-bold px-3 py-2 rounded-xl uppercase flex items-center gap-1"><Plus size={11} strokeWidth={3} /> Repas</button>
-            </div>
+        <div style={{ padding: '20px 20px 20px', minHeight: '100vh' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>NUTRITION</h1>
+            <span style={{ fontSize: '0.75rem', color: TEXT_MUTED }}>
+              {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+            </span>
           </div>
-          <div className="bg-gradient-to-br from-[#1a1500] to-[#111] border border-[#C9A84C]/15 rounded-[24px] p-5 mb-4 flex items-center gap-4">
-            <CalorieChart data={[{ value: totalCals || 1 }, { value: Math.max(0, calorieGoal - totalCals) }]} colors={['#C9A84C', 'rgba(201,168,76,0.08)']} calories={totalCals} />
-            <div className="flex-1">
-              <div className="text-white/25 text-[9px] uppercase tracking-widest mb-1">Aujourd'hui</div>
-              <div className="fd text-4xl gold tracking-wider">{totalCals}</div>
-              <div className="text-white/25 text-xs">/ {calorieGoal} kcal</div>
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                {[['P', totalProteins.toFixed(0), '#3b82f6'], ['G', todayMeals.reduce((s, m) => s + (m.carbs || 0), 0).toFixed(0), '#C9A84C'], ['L', todayMeals.reduce((s, m) => s + (m.fats || 0), 0).toFixed(0), '#10b981']].map(([k, v, c]) => (
-                  <div key={k as string} className="text-center">
-                    <div className="font-bold text-sm text-white">{v}<span className="text-[9px] text-white/25 ml-0.5">g</span></div>
-                    <div className="text-[8px] uppercase font-bold" style={{ color: c as string }}>{k === 'P' ? 'Prot' : k === 'G' ? 'Gluc' : 'Lip'}</div>
-                  </div>
-                ))}
+
+          {/* Big calorie donut */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ position: 'relative' }}>
+              <svg width="150" height="150" viewBox="0 0 150 150" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="75" cy="75" r="65" fill="none" stroke={BORDER} strokeWidth="12" />
+                <circle cx="75" cy="75" r="65" fill="none" stroke={ORANGE} strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 65}
+                  strokeDashoffset={2 * Math.PI * 65 * (1 - calPct / 100)}
+                  style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
+              </svg>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>{totalCals}</span>
+                <span style={{ fontSize: '0.75rem', color: TEXT_MUTED }}>/ {calorieGoal} kcal</span>
               </div>
             </div>
           </div>
+
+          {/* Macro summary pills */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 20 }}>
+            {[
+              { label: 'Kcal', value: totalCals, color: ORANGE },
+              { label: 'Prot', value: `${Math.round(totalProteins)}g`, color: '#3B82F6' },
+              { label: 'Gluc', value: `${Math.round(totalCarbs)}g`, color: '#F59E0B' },
+              { label: 'Lip', value: `${Math.round(totalFats)}g`, color: '#EF4444' },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 8px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color }}>{value}</div>
+                <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Meal sections */}
           {MEAL_TYPES.map(type => {
             const meals = todayMeals.filter(m => m.meal_type === type.id)
             return (
-              <div key={type.id} className="mb-3">
-                <div className="flex items-center gap-2 px-1 mb-2">
-                  <span>{type.emoji}</span>
-                  <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{type.label}</span>
-                  {meals.length > 0 && <span className="ml-auto gold text-[9px] font-bold">{meals.reduce((s, m) => s + m.calories, 0)} kcal</span>}
+              <div key={type.id} style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, paddingLeft: 4 }}>
+                  <span style={{ fontSize: '1rem' }}>{type.icon}</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{type.label}</span>
+                  {meals.length > 0 && <span style={{ marginLeft: 'auto', fontSize: '0.72rem', fontWeight: 700, color: ORANGE }}>{meals.reduce((s, m) => s + m.calories, 0)} kcal</span>}
                 </div>
                 {meals.length === 0 ? (
-                  <button onClick={() => { setMealType(type.id); setModal('food') }} className="w-full bg-[#111] border border-dashed border-white/5 rounded-[14px] py-3 flex items-center justify-center gap-2 text-white/15 text-xs active:border-[#C9A84C]/15">
-                    <Plus size={13} /> Ajouter
+                  <button onClick={() => { setMealType(type.id); setModal('food') }} style={{ width: '100%', background: BG_CARD, border: `1px dashed ${BORDER}`, borderRadius: 12, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: TEXT_MUTED, fontSize: '0.8rem', cursor: 'pointer', transition: 'border-color 200ms' }}>
+                    <Plus size={14} /> Ajouter
                   </button>
                 ) : (
-                  <div className="bg-[#111] border border-white/5 rounded-[16px] overflow-hidden">
+                  <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
                     {meals.map((meal, i) => (
-                      <div key={meal.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-white/5' : ''}`}>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-white">{meal.name}</div>
-                          <div className="text-[9px] text-white/20 mt-0.5">P:{meal.proteins}g · G:{meal.carbs}g · L:{meal.fats}g</div>
+                      <div key={meal.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 500, color: TEXT_PRIMARY, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meal.name}</div>
+                          <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2 }}>P:{meal.proteins}g · G:{meal.carbs}g · L:{meal.fats}g</div>
                         </div>
-                        <span className="text-xs font-bold text-white/30">{meal.calories} kcal</span>
-                        <button onClick={async () => { await supabase.from('meal_logs').delete().eq('id', meal.id); fetchAll() }} className="text-white/10 active:text-red-500"><Trash2 size={12} /></button>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: TEXT_MUTED }}>{meal.calories} kcal</span>
+                        <button onClick={async () => { await supabase.from('meal_logs').delete().eq('id', meal.id); fetchAll() }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}><Trash2 size={12} color={TEXT_MUTED} /></button>
                       </div>
                     ))}
-                    <button onClick={() => { setMealType(type.id); setModal('food') }} className="w-full py-2.5 border-t border-white/5 text-[9px] gold font-bold uppercase tracking-widest">+ Ajouter</button>
+                    <button onClick={() => { setMealType(type.id); setModal('food') }} style={{ width: '100%', padding: '10px', borderTop: `1px solid ${BORDER}`, background: 'transparent', border: 'none', fontSize: '0.72rem', fontWeight: 700, color: ORANGE, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', letterSpacing: '0.06em' }}>+ Ajouter</button>
                   </div>
                 )}
               </div>
             )
           })}
+
+          {/* Floating + button */}
+          <button onClick={() => setModal('food')} style={{ position: 'fixed', bottom: 96, right: 20, width: 52, height: 52, borderRadius: '50%', background: ORANGE, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px ${ORANGE}50`, zIndex: 30 }}>
+            <Plus size={24} color="#000" strokeWidth={2.5} />
+          </button>
         </div>
       )}
 
-      {/* ═══════════════════ TRAINING TAB ═══════════════════ */}
-      {activeTab === 'training' && !selectedProgram && (
-        <div className="p-5 pt-10">
-          <div className="flex justify-between items-center mb-5">
-            <h1 className="fd text-3xl tracking-wider">TRAINING</h1>
+      {/* ═══════════════════ PROGRESS TAB ═══════════════════ */}
+      {activeTab === 'progress' && (
+        <div style={{ padding: '20px 20px 20px', minHeight: '100vh' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>PROGRESSION</h1>
           </div>
-          <div className="space-y-2 mb-5">
-            <div className="grid grid-cols-3 gap-2">
-              {[['', 'Tous niveaux'], ['beginner', '🌱 Débutant'], ['intermediate', '⚡ Intermédiaire'], ['advanced', '🔥 Avancé']].map(([val, label]) => (
-                <button key={val as string} onClick={() => setProgramFilter(p => ({ ...p, level: val as string }))}
-                  className={`border rounded-xl py-2 text-[9px] font-bold uppercase tracking-wider transition-all ${programFilter.level === val ? 'border-[#C9A84C] bg-[#C9A84C]/10 gold' : 'border-white/8 bg-[#1a1a1a] text-white/30'} ${val === '' ? 'col-span-3' : ''}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[['', 'Tous objectifs'], ['fat_loss', '🔥 Sèche'], ['muscle_gain', '💪 Masse'], ['hypertrophy', '📈 Hypertrophie']].map(([val, label]) => (
-                <button key={val as string} onClick={() => setProgramFilter(p => ({ ...p, goal: val as string }))}
-                  className={`border rounded-xl py-2 text-[9px] font-bold uppercase tracking-wider transition-all ${programFilter.goal === val ? 'border-[#C9A84C] bg-[#C9A84C]/10 gold' : 'border-white/8 bg-[#1a1a1a] text-white/30'} ${val === '' ? 'col-span-3' : ''}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[['', 'Tous'], ['male', '♂ Homme'], ['female', '♀ Femme']].map(([val, label]) => (
-                <button key={val as string} onClick={() => setProgramFilter(p => ({ ...p, gender: val as string }))}
-                  className={`border rounded-xl py-2 text-[9px] font-bold uppercase tracking-wider transition-all ${programFilter.gender === val ? 'border-[#C9A84C] bg-[#C9A84C]/10 gold' : 'border-white/8 bg-[#1a1a1a] text-white/30'}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-3">
-            {filteredPrograms.length === 0 ? (
-              <div className="border-2 border-dashed border-white/5 rounded-[20px] p-10 text-center">
-                <p className="text-white/20 text-sm">Aucun programme pour ces filtres</p>
-              </div>
-            ) : filteredPrograms.map(prog => (
-              <button key={prog.id} onClick={() => loadProgram(prog)} className="w-full bg-[#111] border border-white/5 rounded-[20px] p-5 text-left active:border-[#C9A84C]/20 transition-all">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="bg-[#C9A84C]/10 border border-[#C9A84C]/15 rounded-xl px-2 py-1 mt-0.5">
-                    <span className="fd text-xs gold">{prog.level === 'beginner' ? '🌱' : prog.level === 'intermediate' ? '⚡' : '🔥'}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-sm text-white">{prog.name}</div>
-                    <div className="text-[9px] text-white/25 mt-0.5">{prog.description}</div>
-                  </div>
-                  <ChevronRight size={16} className="text-white/15 mt-0.5" />
-                </div>
-                <div className="flex gap-2">
-                  <span className={`text-[8px] font-bold px-2 py-1 rounded-lg uppercase border ${prog.goal === 'fat_loss' ? 'border-orange-500/30 text-orange-400 bg-orange-500/5' : prog.goal === 'muscle_gain' ? 'border-blue-500/30 text-blue-400 bg-blue-500/5' : 'border-purple-500/30 text-purple-400 bg-purple-500/5'}`}>
-                    {prog.goal === 'fat_loss' ? '🔥 Sèche' : prog.goal === 'muscle_gain' ? '💪 Masse' : '📈 Hypertrophie'}
-                  </span>
-                  <span className="text-[8px] font-bold px-2 py-1 rounded-lg uppercase border border-white/8 text-white/25">{prog.gender === 'both' ? '♂♀' : prog.gender === 'male' ? '♂ Homme' : '♀ Femme'}</span>
-                  <span className="text-[8px] font-bold px-2 py-1 rounded-lg uppercase border border-white/8 text-white/25">{prog.days_per_week}j/sem</span>
-                </div>
-              </button>
-            ))}
-          </div>
-          {wSessions.length > 0 && (
-            <div className="mt-6">
-              <div className="text-[9px] font-bold uppercase tracking-widest text-white/25 mb-3 ml-1">Séances Récentes</div>
-              <div className="space-y-2">
-                {wSessions.slice(0, 4).map((s: any) => (
-                  <div key={s.id} className="bg-[#111] border border-white/5 rounded-[14px] px-4 py-3 flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${s.completed ? 'bg-[#C9A84C]/10' : 'bg-white/5'}`}>
-                      {s.completed ? <Check size={14} className="gold" strokeWidth={3} /> : <Zap size={14} className="text-white/20" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-white">{s.name}</div>
-                      <div className="text-[9px] text-white/20 mt-0.5">{new Date(s.date).toLocaleDateString('fr-FR')} · {s.duration_minutes ? `${s.duration_minutes} min` : '—'}</div>
-                    </div>
-                    {s.completed && <span className="text-[8px] gold font-bold uppercase bg-[#C9A84C]/8 px-2 py-1 rounded-lg">Done</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* ═══════════════════ PROGRAM DETAIL ═══════════════════ */}
-      {activeTab === 'training' && selectedProgram && (
-        <div className="p-5 pt-8">
-          <button onClick={() => { setSelectedProgram(null); setProgramDays([]); setSelectedDay(null); setDayExercises([]) }}
-            className="flex items-center gap-1.5 text-white/25 text-xs font-bold mb-5 active:text-white/50">← Programmes</button>
-          <h1 className="fd text-3xl tracking-wider text-white mb-1">{selectedProgram.name}</h1>
-          <p className="text-white/25 text-xs mb-5">{selectedProgram.description}</p>
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-            {programDays.map(day => (
-              <button key={day.id} onClick={() => loadDayExercises(day)}
-                className={`flex-shrink-0 border rounded-xl px-4 py-2 text-[9px] font-bold uppercase tracking-wider transition-all ${selectedDay?.id === day.id ? 'border-[#C9A84C] bg-[#C9A84C]/10 gold' : 'border-white/8 bg-[#1a1a1a] text-white/30'}`}>
-                {day.is_rest ? '😴 Repos' : `J${day.day_number}`}
-              </button>
-            ))}
-          </div>
-          {selectedDay && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h2 className="font-bold text-white">{selectedDay.day_name}</h2>
-                  <p className="text-[9px] text-white/25 mt-0.5">{selectedDay.focus}</p>
-                </div>
-                {!selectedDay.is_rest && dayExercises.length > 0 && (
-                  <button onClick={() => startProgramWorkout(selectedDay, dayExercises)}
-                    className="gold-bg text-black text-[10px] font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider active:scale-95">
-                    ▶ Commencer
-                  </button>
-                )}
+          {/* Weight chart */}
+          {weightHistory30.length > 1 ? (
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT_MUTED }}>Évolution du poids (30j)</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.9rem', color: ORANGE }}>
+                  {weightHistory30[weightHistory30.length - 1]?.poids} kg
+                </span>
               </div>
-              {selectedDay.is_rest ? (
-                <div className="bg-[#111] border border-white/5 rounded-[20px] p-8 text-center">
-                  <div className="text-4xl mb-3">😴</div>
-                  <p className="text-white/30 font-medium">Jour de repos — Récupération active</p>
-                  <p className="text-white/15 text-xs mt-1">Marche légère, stretching, mobilité</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {dayExercises.map((exo, i) => (
-                    <div key={exo.id} className="bg-[#111] border border-white/5 rounded-[18px] p-4">
-                      <div className="flex items-start gap-3 mb-2">
-                        <div className="w-7 h-7 bg-[#C9A84C]/10 border border-[#C9A84C]/15 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="fd text-xs gold">{i + 1}</span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-bold text-sm text-white">{exo.exercise_name}</div>
-                          <div className="text-[9px] text-white/25 mt-0.5">{exo.muscle_group}</div>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5 ml-10">
-                        <span className="text-[8px] bg-white/5 text-white/30 px-2 py-1 rounded-lg font-bold">{exo.sets} × {exo.reps}</span>
-                        <span className="text-[8px] bg-[#C9A84C]/8 gold px-2 py-1 rounded-lg font-bold">⏱ {exo.rest_seconds}s repos</span>
-                        {exo.tempo && <span className="text-[8px] bg-white/5 text-white/25 px-2 py-1 rounded-lg font-bold">Tempo {exo.tempo}</span>}
-                        {exo.rir != null && <span className="text-[8px] bg-white/5 text-white/25 px-2 py-1 rounded-lg font-bold">RIR {exo.rir}</span>}
-                      </div>
-                      {exo.notes && <p className="text-[8px] text-white/20 italic ml-10 mt-1.5">{exo.notes}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <svg viewBox="0 0 300 90" style={{ width: '100%', height: 90, overflow: 'visible' }} preserveAspectRatio="none">
+                <polyline
+                  points={weightHistory30.map((p, i) => {
+                    const x = (i / (weightHistory30.length - 1)) * 300
+                    const y = 90 - ((p.poids - chartMin) / ((chartMax - chartMin) || 1)) * 86
+                    return `${x.toFixed(1)},${y.toFixed(1)}`
+                  }).join(' ')}
+                  fill="none" stroke={ORANGE} strokeWidth="2.5"
+                  strokeLinejoin="round" strokeLinecap="round"
+                />
+                <circle
+                  cx={300}
+                  cy={90 - ((weightHistory30[weightHistory30.length - 1]?.poids - chartMin) / ((chartMax - chartMin) || 1)) * 86}
+                  r="5" fill={ORANGE}
+                />
+              </svg>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* ═══════════════════ COACH / PROFIL TAB ═══════════════════ */}
-      {activeTab === 'coach' && (
-        <div className="p-5 pt-10">
-          {isCoach ? (
-            <>
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h1 className="fd text-3xl tracking-wider">COACH PANEL</h1>
-                  <p className="text-[#C9A84C]/40 text-[9px] uppercase tracking-widest mt-0.5">Accès Privé</p>
-                </div>
-                <button onClick={() => supabase.auth.signOut()} className="bg-[#1a1a1a] border border-white/5 p-2.5 rounded-xl text-white/25"><LogOut size={16} /></button>
-              </div>
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                {[['Clients', clients.length, Crown], ['Actifs', clients.filter((c: any) => c.status === 'active').length, Zap], ['Séances', completedSessions, Dumbbell]].map(([l, v, Icon]: any) => (
-                  <div key={l} className="bg-[#111] border border-white/5 rounded-[20px] p-4 text-center">
-                    <Icon size={15} className="gold mx-auto mb-2" />
-                    <div className="fd text-3xl text-white tracking-wider">{v}</div>
-                    <div className="text-[8px] text-white/20 uppercase tracking-wider">{l}</div>
-                  </div>
-                ))}
-              </div>
-              {clients.length === 0 ? (
-                <div className="border-2 border-dashed border-white/5 rounded-[20px] p-10 text-center">
-                  <Users size={28} className="text-white/10 mx-auto mb-3" />
-                  <p className="text-white/15 text-sm">Aucun client — Ajoute via Supabase</p>
-                </div>
-              ) : clients.map((c: any) => (
-                <div key={c.id} className="bg-[#111] border border-white/5 rounded-[20px] p-5 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#C9A84C]/8 border border-[#C9A84C]/15 rounded-2xl flex items-center justify-center"><User size={17} className="gold" /></div>
-                    <div className="flex-1">
-                      <div className="font-bold text-sm text-white">{c.profiles?.full_name || 'Client'}</div>
-                      <div className={`text-[8px] font-bold uppercase mt-0.5 ${c.status === 'active' ? 'text-green-400' : 'text-white/20'}`}>{c.status}</div>
-                    </div>
-                    <div className="gold text-sm fd tracking-wider">{c.profiles?.current_weight || '—'} kg</div>
-                  </div>
-                </div>
-              ))}
-            </>
           ) : (
-            <>
-              <div className="flex justify-between items-center mb-6">
-                <h1 className="fd text-3xl tracking-wider">PROFIL</h1>
-                <button onClick={() => supabase.auth.signOut()} className="flex items-center gap-1.5 bg-[#1a1a1a] border border-white/5 px-3 py-2 rounded-xl text-white/25 text-[9px] font-bold uppercase">
-                  <LogOut size={12} /> Déco
-                </button>
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '32px 20px', textAlign: 'center', marginBottom: 16 }}>
+              <TrendingUp size={32} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
+              <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0 }}>Pas encore assez de données poids.</p>
+            </div>
+          )}
+
+          {/* Latest measurements */}
+          {latestMeasure && (
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT_MUTED }}>Dernières mesures</span>
+                <span style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>{new Date(latestMeasure.date).toLocaleDateString('fr-FR')}</span>
               </div>
-              <div className="bg-[#111] border border-white/5 rounded-[24px] p-5 mb-4 flex items-center gap-4">
-                <button onClick={() => avatarRef.current?.click()} className="relative">
-                  {displayAvatar
-                    ? <img src={displayAvatar} className="w-16 h-16 rounded-2xl object-cover border border-[#C9A84C]/15" />
-                    : <div className="w-16 h-16 bg-[#C9A84C]/8 rounded-2xl flex items-center justify-center"><User size={26} className="gold" /></div>
-                  }
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 gold-bg rounded-full flex items-center justify-center border-2 border-[#080808]"><Camera size={7} className="text-black" /></div>
-                  <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
-                </button>
-                <div>
-                  <div className="fd text-2xl text-white tracking-wider">{session.user.user_metadata?.full_name || userName}</div>
-                  <div className="text-white/25 text-xs">{session.user.email}</div>
-                  <div className="flex items-center gap-1 mt-1.5"><Award size={9} className="gold" /><span className="gold text-[8px] font-bold uppercase">Membre Actif</span></div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {[['Poids actuel', `${currentWeight || '—'} kg`, () => setModal('weight')], ['Objectif', `${goalWeight} kg`], ['Calories/jour', `${calorieGoal} kcal`, () => setModal('bmr')], ['Séances', `${completedSessions} total`]].map(([label, val, action]: any) => (
-                  <button key={label} onClick={action} className="w-full bg-[#111] border border-white/5 rounded-[14px] px-4 py-3.5 flex justify-between items-center active:border-[#C9A84C]/15">
-                    <span className="text-sm text-white/40 font-medium">{label}</span>
-                    <span className="gold text-sm font-bold">{val}</span>
-                  </button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {[
+                  ['Poitrine', latestMeasure.chest, 'cm'],
+                  ['Taille', latestMeasure.waist, 'cm'],
+                  ['Hanches', latestMeasure.hips, 'cm'],
+                  ['Bras G', latestMeasure.left_arm, 'cm'],
+                  ['Bras D', latestMeasure.right_arm, 'cm'],
+                  ['% Graisse', latestMeasure.body_fat, '%'],
+                  ['Masse Musc', latestMeasure.muscle_mass, 'kg'],
+                ].map(([l, v, u]) => v && (
+                  <div key={l as string} style={{ background: BG_BASE, borderRadius: 10, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>{l}</span>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY }}>{v}<span style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginLeft: 2 }}>{u}</span></span>
+                  </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
+
+          {/* Progress photos grid */}
+          <div style={{ marginBottom: 16 }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT_MUTED, display: 'block', marginBottom: 10 }}>Photos progression</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <button onClick={() => photoRef.current?.click()} style={{ aspectRatio: '1', border: `2px dashed ${BORDER}`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: BG_CARD, cursor: 'pointer' }}>
+                {photoUploading ? <div style={{ width: 24, height: 24, border: `2px solid ${ORANGE}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> : <Plus size={22} color={TEXT_MUTED} />}
+              </button>
+              {progressPhotos.map(p => (
+                <div key={p.id} style={{ aspectRatio: '1', borderRadius: 14, overflow: 'hidden' }}>
+                  <img src={p.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick log row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            {[
+              { icon: Scale, label: '+ Poids', action: () => setModal('weight') },
+              { icon: Ruler, label: '+ Mesure', action: () => setModal('measure') },
+              { icon: Camera, label: '+ Photo', action: () => photoRef.current?.click() },
+            ].map(({ icon: Icon, label, action }) => (
+              <button key={label} onClick={action} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <Icon size={20} color={TEXT_MUTED} />
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: TEXT_MUTED }}>{label}</span>
+              </button>
+            ))}
+          </div>
+          <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
+        </div>
+      )}
+
+      {/* ═══════════════════ PROFIL TAB ═══════════════════ */}
+      {activeTab === 'profil' && (
+        <div style={{ padding: '20px 20px 20px', minHeight: '100vh' }}>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 24px' }}>PROFIL</h1>
+
+          {/* Avatar + name */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24, gap: 12 }}>
+            <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: '50%', background: displayAvatar ? 'transparent' : ORANGE, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative' }}>
+              {displayAvatar
+                ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt="" />
+                : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '2rem', color: '#fff' }}>{firstName.charAt(0).toUpperCase()}</span>
+              }
+            </button>
+            <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: TEXT_PRIMARY }}>{session.user.user_metadata?.full_name || userName}</div>
+              <div style={{ fontSize: '0.8rem', color: TEXT_MUTED }}>{session.user.email}</div>
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 24 }}>
+            {[
+              { label: 'Poids', value: currentWeight ? `${currentWeight}kg` : '—', color: ORANGE },
+              { label: 'Objectif', value: `${goalWeight}kg`, color: TEXT_MUTED },
+              { label: 'Kcal/j', value: `${calorieGoal}`, color: TEXT_MUTED },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 8px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color }}>{value}</div>
+                <div style={{ fontSize: '0.62rem', color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700, marginTop: 4 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Menu items */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            <button onClick={() => setModal('weight')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'border-color 200ms' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Scale size={18} color={TEXT_MUTED} />
+                <span style={{ fontSize: '0.9rem', color: TEXT_PRIMARY }}>Enregistrer le poids</span>
+              </div>
+              <ChevronRight size={16} color={TEXT_MUTED} />
+            </button>
+            <button onClick={() => setModal('bmr')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'border-color 200ms' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Zap size={18} color={TEXT_MUTED} />
+                <span style={{ fontSize: '0.9rem', color: TEXT_PRIMARY }}>Calculateur BMR</span>
+              </div>
+              <ChevronRight size={16} color={TEXT_MUTED} />
+            </button>
+          </div>
+
+          {/* Coach section */}
+          {coachProgram && (
+            <div style={{ background: BG_CARD, border: `1px solid ${ORANGE}30`, borderRadius: 14, padding: 16, marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Crown size={18} color={ORANGE} />
+                <div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, color: TEXT_PRIMARY }}>Mon coach</div>
+                  <div style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>Programme actif</div>
+                </div>
+                <span style={{ marginLeft: 'auto', fontSize: '0.65rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 8, padding: '4px 8px' }}>Actif</span>
+              </div>
+            </div>
+          )}
+
+          {/* Sign out */}
+          <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', background: 'transparent', border: `1px solid #EF4444`, borderRadius: 14, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms' }}>
+            <LogOut size={18} color="#EF4444" />
+            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#EF4444' }}>Déconnexion</span>
+          </button>
         </div>
       )}
 
       {/* ═══════════════════ BOTTOM NAV ═══════════════════ */}
-      <nav className="fixed bottom-5 left-5 right-5 bg-[#111]/96 backdrop-blur-xl border border-white/5 h-16 rounded-[22px] flex justify-around items-center shadow-[0_10px_40px_rgba(0,0,0,0.7)] z-40">
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, height: 72, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 40, paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {([
           { id: 'home', icon: BarChart2, label: 'Home' },
-          { id: 'body', icon: Ruler, label: 'Corps' },
-          { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
           { id: 'training', icon: Dumbbell, label: 'Training' },
-          { id: 'coach', icon: isCoach ? Crown : User, label: isCoach ? 'Coach' : 'Profil' },
-        ] as const).map(({ id, icon: Icon, label }) => (
-          <button key={id} onClick={() => { setActiveTab(id as Tab); if (id === 'training' && selectedProgram) setSelectedProgram(null) }} className="flex flex-col items-center gap-1 px-3 active:scale-90 transition-all">
-            <Icon size={20} className={activeTab === id ? 'gold' : 'text-white/18'} />
-            <span className={`text-[8px] font-bold uppercase tracking-wider ${activeTab === id ? 'gold' : 'text-white/18'}`}>{label}</span>
-          </button>
-        ))}
-        <button onClick={() => router.push('/programme')} className="flex flex-col items-center gap-1 px-3 active:scale-90 transition-all">
-          <Dumbbell size={20} style={{ color: '#F97316' }} />
-          <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: '#F97316' }}>Programme</span>
-        </button>
-        <button onClick={() => router.push('/nutrition-plan')} className="flex flex-col items-center gap-1 px-3 active:scale-90 transition-all">
-          <Utensils size={20} style={{ color: '#22C55E' }} />
-          <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: '#22C55E' }}>Plan nutri</span>
-        </button>
+          { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
+          { id: 'progress', icon: TrendingUp, label: 'Progress' },
+          { id: 'profil', icon: User, label: 'Profil' },
+        ] as const).map(({ id, icon: Icon, label }) => {
+          const active = activeTab === id
+          return (
+            <button key={id} onClick={() => setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', transition: 'all 150ms' }}>
+              <Icon size={22} color={active ? ORANGE : '#4B5563'} />
+              <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: active ? ORANGE : '#4B5563', fontFamily: "'Barlow Condensed', sans-serif" }}>{label}</span>
+            </button>
+          )
+        })}
       </nav>
     </div>
   )
