@@ -1,7 +1,9 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Zap, Users, Shield, LogOut, RefreshCw, Check, ChevronDown, Home, Crown, Dumbbell, Utensils, UserPlus, ExternalLink } from 'lucide-react'
+import { getRole } from '../../lib/getRole'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -70,6 +72,7 @@ function RoleSelect({ profileId, current, onChanged }: { profileId: string; curr
 }
 
 export default function AdminPage() {
+  const router = useRouter()
   const [mounted, setMounted]     = useState(false)
   const [session, setSession]     = useState<any>(null)
   const [profiles, setProfiles]   = useState<Profile[]>([])
@@ -85,7 +88,17 @@ export default function AdminPage() {
     return () => subscription.unsubscribe()
   }, [])
 
-  useEffect(() => { if (session) fetchProfiles() }, [session])
+  useEffect(() => {
+    if (!session) { setLoading(false); return }
+    // Role guard — only super_admin may access this page
+    getRole(session.user.id, session.access_token).then(role => {
+      if (role !== 'super_admin') {
+        router.replace('/')
+      } else {
+        fetchProfiles()
+      }
+    })
+  }, [session])
 
   async function fetchProfiles() {
     setLoading(true)

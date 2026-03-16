@@ -9,6 +9,7 @@ import {
   Search, ChevronRight, UserPlus, Dumbbell, Calendar,
   LogOut, Copy, Check, ExternalLink
 } from 'lucide-react'
+import { getRole } from '../../lib/getRole'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,19 +75,13 @@ export default function CoachPage() {
     if (!session) { setLoading(false); return }
 
     // Role guard — redirect non-coaches away before loading any data
-    supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        const role = data?.role
-        if (role !== 'coach' && role !== 'super_admin') {
-          router.replace('/')
-        } else {
-          fetchClients(session.user.id)
-        }
-      })
+    getRole(session.user.id, session.access_token).then(role => {
+      if (role !== 'coach' && role !== 'super_admin') {
+        router.replace('/')
+      } else {
+        fetchClients(session.user.id)
+      }
+    })
   }, [session])
 
   async function fetchClients(coachId: string) {

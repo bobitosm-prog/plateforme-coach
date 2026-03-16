@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import dynamic from 'next/dynamic'
+import { getRole } from '../lib/getRole'
 import {
   Flame, LogOut, Scale, TrendingDown, Target, Dumbbell,
   Plus, CheckCircle2, Zap, Award, Calendar, BarChart2,
@@ -124,24 +125,11 @@ export default function CoachApp() {
   // Role-based redirect — always fetches fresh role, no browser cache
   useEffect(() => {
     if (!session) return
-    // Append a timestamp so the browser never serves a cached response
-    const url = `${SUPABASE_URL}/rest/v1/profiles?select=role&id=eq.${session.user.id}&limit=1&_t=${Date.now()}`
-    fetch(url, {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${session.access_token}`,
-        'Cache-Control': 'no-cache, no-store',
-      },
-      cache: 'no-store',
+    getRole(session.user.id, session.access_token).then(role => {
+      if (role === 'super_admin') router.replace('/admin')
+      else if (role === 'coach')  router.replace('/coach')
+      // 'client' or null → stay on /
     })
-      .then(r => r.json())
-      .then((rows: { role: string }[]) => {
-        const role = rows?.[0]?.role
-        if (role === 'super_admin') router.replace('/admin')
-        else if (role === 'coach')  router.replace('/coach')
-        // 'client' or null → stay on /
-      })
-      .catch(() => {/* stay on / on error */})
   }, [session])
 
   useEffect(() => { if (session) fetchAll() }, [session])
