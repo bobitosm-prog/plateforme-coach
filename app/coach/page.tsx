@@ -122,7 +122,8 @@ export default function CoachPage() {
       const { data } = await supabase
         .from('messages')
         .select('*')
-        .or(`and(sender_id.eq.${coachId},receiver_id.eq.${client.client_id}),and(sender_id.eq.${client.client_id},receiver_id.eq.${coachId})`)
+        .or(`sender_id.eq.${coachId},receiver_id.eq.${coachId}`)
+        .or(`sender_id.eq.${client.client_id},receiver_id.eq.${client.client_id}`)
         .gt('created_at', since)
         .order('created_at', { ascending: true })
       if (data?.length) {
@@ -182,7 +183,8 @@ export default function CoachPage() {
     const { data } = await supabase
       .from('messages')
       .select('*')
-      .or(`and(sender_id.eq.${coachId},receiver_id.eq.${clientId}),and(sender_id.eq.${clientId},receiver_id.eq.${coachId})`)
+      .or(`sender_id.eq.${coachId},receiver_id.eq.${coachId}`)
+      .or(`sender_id.eq.${clientId},receiver_id.eq.${clientId}`)
       .order('created_at', { ascending: true })
     setChatMessages(data || [])
   }
