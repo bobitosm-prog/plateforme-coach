@@ -1,15 +1,17 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import {
   Zap, Users, CalendarCheck, Euro, TrendingUp, Minus,
   Search, ChevronRight, UserPlus, Dumbbell, Calendar,
-  LogOut, Copy, Check, ExternalLink
+  LogOut, Copy, Check, ExternalLink, MessageCircle, Send, ArrowLeft
 } from 'lucide-react'
 import { getRole } from '../../lib/getRole'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -59,6 +61,16 @@ export default function CoachPage() {
   const [search, setSearch]     = useState('')
   const [copied, setCopied]     = useState(false)
   const [showInvite, setShowInvite] = useState(false)
+  const [section, setSection]   = useState<'dashboard' | 'messages'>('dashboard')
+
+  // Messaging state
+  const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null)
+  const [chatMessages, setChatMessages]     = useState<any[]>([])
+  const [msgInput, setMsgInput]             = useState('')
+  const [unreadCounts, setUnreadCounts]     = useState<Record<string, number>>({})
+  const msgEndRef = useRef<HTMLDivElement>(null)
+
+  const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
 
   const inviteLink = session && typeof window !== 'undefined'
     ? `${window.location.origin}/join?coach=${session.user.id}`
@@ -73,8 +85,6 @@ export default function CoachPage() {
 
   useEffect(() => {
     if (!session) { setLoading(false); return }
-
-    // Role guard — redirect non-coaches away before loading any data
     getRole(session.user.id, session.access_token).then(role => {
       if (role !== 'coach' && role !== 'super_admin') {
         router.replace('/')
@@ -84,20 +94,33 @@ export default function CoachPage() {
     })
   }, [session])
 
+  // Messages realtime subscription
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const ch = supabase
+      .channel(`coach-messages-${session.user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+        fetchUnreadCounts(session.user.id, clients.map(c => c.client_id))
+        if (selectedClient) loadChat(selectedClient.client_id, session.user.id)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [session?.user?.id, clients, selectedClient])
+
+  // Scroll to bottom when chat messages update
+  useEffect(() => {
+    setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+  }, [chatMessages])
+
   async function fetchClients(coachId: string) {
     setLoading(true)
-
     const { data: links, error: linksError } = await supabase
       .from('coach_clients')
       .select('id, client_id, created_at')
       .eq('coach_id', coachId)
       .order('created_at', { ascending: false })
 
-    if (linksError || !links?.length) {
-      setClients([])
-      setLoading(false)
-      return
-    }
+    if (linksError || !links?.length) { setClients([]); setLoading(false); return }
 
     const clientIds = links.map(l => l.client_id)
     const { data: profiles } = await supabase
@@ -107,42 +130,83 @@ export default function CoachPage() {
 
     const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
     const rows: ClientRow[] = links.map(l => ({
-      id: l.id,
-      client_id: l.client_id,
-      created_at: l.created_at,
+      id: l.id, client_id: l.client_id, created_at: l.created_at,
       profiles: profileMap[l.client_id] ?? null,
     }))
     setClients(rows)
     setLoading(false)
+    fetchUnreadCounts(coachId, clientIds)
+  }
+
+  async function fetchUnreadCounts(coachId: string, clientIds: string[]) {
+    if (!clientIds.length) return
+    const { data } = await supabase
+      .from('messages')
+      .select('sender_id')
+      .eq('receiver_id', coachId)
+      .eq('read', false)
+      .in('sender_id', clientIds)
+    const counts: Record<string, number> = {}
+    for (const msg of data || []) {
+      counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1
+    }
+    setUnreadCounts(counts)
+  }
+
+  async function loadChat(clientId: string, coachId: string) {
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`and(sender_id.eq.${coachId},receiver_id.eq.${clientId}),and(sender_id.eq.${clientId},receiver_id.eq.${coachId})`)
+      .order('created_at', { ascending: true })
+    setChatMessages(data || [])
+  }
+
+  async function openChat(client: ClientRow) {
+    setSelectedClient(client)
+    await loadChat(client.client_id, session.user.id)
+    // Mark messages from this client as read
+    await supabase
+      .from('messages')
+      .update({ read: true })
+      .eq('receiver_id', session.user.id)
+      .eq('sender_id', client.client_id)
+      .eq('read', false)
+    setUnreadCounts(prev => ({ ...prev, [client.client_id]: 0 }))
+  }
+
+  async function sendMessage() {
+    if (!msgInput.trim() || !selectedClient || !session) return
+    const content = msgInput.trim()
+    setMsgInput('')
+    await supabase.from('messages').insert({
+      sender_id: session.user.id,
+      receiver_id: selectedClient.client_id,
+      content,
+    })
+    loadChat(selectedClient.client_id, session.user.id)
   }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     if (!q) return clients
-    return clients.filter(c =>
-      (c.profiles?.full_name ?? '').toLowerCase().includes(q)
-    )
+    return clients.filter(c => (c.profiles?.full_name ?? '').toLowerCase().includes(q))
   }, [clients, search])
 
   function copyInviteLink() {
     if (!inviteLink) return
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(inviteLink).catch(() => fallbackCopy(inviteLink))
-    } else {
-      fallbackCopy(inviteLink)
-    }
+    } else { fallbackCopy(inviteLink) }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   function fallbackCopy(text: string) {
     const el = document.createElement('textarea')
-    el.value = text
-    el.style.cssText = 'position:fixed;opacity:0'
-    document.body.appendChild(el)
-    el.focus(); el.select()
-    document.execCommand('copy')
-    document.body.removeChild(el)
+    el.value = text; el.style.cssText = 'position:fixed;opacity:0'
+    document.body.appendChild(el); el.focus(); el.select()
+    document.execCommand('copy'); document.body.removeChild(el)
   }
 
   if (!mounted) return null
@@ -159,12 +223,9 @@ export default function CoachPage() {
           </div>
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: '#F8FAFC', textAlign: 'center', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '8px' }}>FITPRO Coach</h1>
           <p style={{ color: '#9CA3AF', textAlign: 'center', fontSize: '0.9rem', marginBottom: '32px' }}>Connecte-toi pour accéder au tableau de bord</p>
-          <Auth
-            supabaseClient={supabase}
+          <Auth supabaseClient={supabase}
             appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#F97316', brandAccent: '#EA580C' } } } }}
-            theme="dark"
-            providers={['google']}
-          />
+            theme="dark" providers={['google']} />
         </div>
       </div>
     )
@@ -207,6 +268,11 @@ export default function CoachPage() {
         .search-input { background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 7px 12px 7px 32px; font-family: 'Barlow', sans-serif; font-size: 0.85rem; color: #F8FAFC; width: 180px; transition: border-color 200ms ease; outline: none; }
         .search-input:focus { border-color: #F97316; }
         .invite-panel { background: rgba(249,115,22,0.07); border: 1px solid rgba(249,115,22,0.25); border-radius: 12px; padding: 16px; margin-top: 12px; }
+        .client-chat-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #374151; cursor: pointer; transition: background 150ms; }
+        .client-chat-row:hover { background: #374151; }
+        .client-chat-row.active { background: rgba(249,115,22,0.1); border-left: 3px solid #F97316; }
+        .msg-input { flex: 1; background: #111827; border: 1px solid #374151; border-radius: 24px; padding: 10px 18px; font-family: 'Barlow', sans-serif; font-size: 0.9rem; color: #F8FAFC; outline: none; transition: border-color 200ms; }
+        .msg-input:focus { border-color: #F97316; }
         @media (max-width: 640px) { .hide-sm { display: none !important; } }
         @media (max-width: 1024px) { .lg-grid { grid-template-columns: 1fr !important; } }
       `}</style>
@@ -221,7 +287,22 @@ export default function CoachPage() {
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.35rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.08em' }}>FITPRO</span>
           </a>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Messages toggle */}
+            <button
+              onClick={() => setSection(s => s === 'messages' ? 'dashboard' : 'messages')}
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, background: section === 'messages' ? 'rgba(249,115,22,0.15)' : 'transparent', color: section === 'messages' ? '#F97316' : '#9CA3AF', border: section === 'messages' ? '1px solid rgba(249,115,22,0.3)' : '1px solid transparent', padding: '7px 14px', borderRadius: 8, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 600, letterSpacing: '0.04em', transition: 'all 200ms' }}
+            >
+              <MessageCircle size={16} strokeWidth={2} />
+              <span className="hide-sm">Messages</span>
+              {totalUnread > 0 && (
+                <span style={{ position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, background: '#EF4444', borderRadius: 9, fontSize: '0.65rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                  {totalUnread > 9 ? '9+' : totalUnread}
+                </span>
+              )}
+            </button>
+
+            <div className="hide-sm" style={{ width: '1px', height: '24px', background: '#374151' }} />
             <div className="hide-sm" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div className="avatar-circle">{coachInitials}</div>
               <span style={{ fontFamily: 'Barlow, sans-serif', fontSize: '0.875rem', fontWeight: 500, color: '#D1D5DB' }}>{coachName}</span>
@@ -235,209 +316,342 @@ export default function CoachPage() {
         </div>
       </nav>
 
-      {/* ── MAIN ── */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+      {/* ── MESSAGES SECTION ── */}
+      {section === 'messages' && (
+        <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
 
-        {/* Page header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.02em', margin: 0 }}>Tableau de bord</h1>
-          <p style={{ fontFamily: 'Barlow, sans-serif', fontSize: '0.9rem', color: '#9CA3AF', marginTop: '4px' }}>
-            Bonjour, {coachName} — voici votre activité du jour.
-          </p>
-        </div>
-
-        {/* ── STATS ROW ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-
-          <div className="stat-card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Clients actifs</span>
-              <div style={{ width: '36px', height: '36px', background: 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Users size={18} color="#F97316" strokeWidth={2} />
-              </div>
+          {/* Client list */}
+          <div style={{ width: 300, flexShrink: 0, background: '#1F2937', borderRight: '1px solid #374151', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid #374151' }}>
+              <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#F8FAFC', margin: 0 }}>Clients</h2>
             </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
-              {loading ? '—' : clients.length}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-              <TrendingUp size={13} color="#22C55E" strokeWidth={2.5} />
-              <span style={{ fontSize: '0.78rem', color: '#22C55E', fontWeight: 500 }}>{activeCount} actifs ce mois</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Séances / semaine</span>
-              <div style={{ width: '36px', height: '36px', background: 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CalendarCheck size={18} color="#F97316" strokeWidth={2} />
-              </div>
-            </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-              <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
-              <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>À connecter</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Revenus du mois</span>
-              <div style={{ width: '36px', height: '36px', background: 'rgba(34,197,94,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Euro size={18} color="#22C55E" strokeWidth={2} />
-              </div>
-            </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-              <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
-              <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>À connecter</span>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ── CONTENT GRID ── */}
-        <div className="lg-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', alignItems: 'start' }}>
-
-          {/* Client table */}
-          <div className="sidebar-card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h2 className="section-title">Clients</h2>
-              <div style={{ position: 'relative' }}>
-                <Search size={14} color="#6B7280" strokeWidth={2} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                <input
-                  type="search"
-                  className="search-input"
-                  placeholder="Rechercher…"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  aria-label="Rechercher un client"
-                />
-              </div>
-            </div>
-
-            <div style={{ overflowX: 'auto', borderRadius: '8px', background: '#111827' }}>
-              <table className="data-table" aria-label="Liste des clients">
-                <thead>
-                  <tr>
-                    <th scope="col">Client</th>
-                    <th scope="col">Membre depuis</th>
-                    <th scope="col">Poids</th>
-                    <th scope="col">Statut</th>
-                    <th scope="col"><span style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden' }}>Actions</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    Array.from({ length: 4 }).map((_, i) => (
-                      <tr key={i}>
-                        <td colSpan={5}>
-                          <div style={{ height: '20px', background: '#374151', borderRadius: '4px', opacity: 0.5, animation: 'pulse 1.5s ease-in-out infinite' }} />
-                        </td>
-                      </tr>
-                    ))
-                  ) : filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', color: '#6B7280', padding: '40px 16px' }}>
-                        {search ? 'Aucun client trouvé.' : 'Aucun client pour l\'instant.'}
-                      </td>
-                    </tr>
-                  ) : (
-                    filtered.map(c => {
-                      const p = c.profiles
-                      const name = p?.full_name ?? 'Sans nom'
-                      const ini = initials(p?.full_name)
-                      const status = statusFor(c.created_at)
-                      const meta = STATUS_META[status]
-                      const since = new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-                      return (
-                        <tr key={c.id} onClick={() => window.location.href = `/client/${c.client_id}`} tabIndex={0}
-                          onKeyDown={e => { if (e.key === 'Enter') window.location.href = `/client/${c.client_id}` }}
-                          aria-label={`Voir le profil de ${name}`}>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              {p?.avatar_url
-                                ? <img src={p.avatar_url} alt="" style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                                : <div className="avatar-circle">{ini}</div>
-                              }
-                              <span style={{ fontWeight: 500 }}>{name}</span>
-                            </div>
-                          </td>
-                          <td style={{ color: '#9CA3AF' }}>{since}</td>
-                          <td>{p?.current_weight ? `${p.current_weight} kg` : '—'}</td>
-                          <td><span className={`badge ${meta.cls}`}>{meta.label}</span></td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button className="btn-ghost" style={{ padding: '5px 8px', fontSize: '0.78rem' }}
-                              onClick={e => { e.stopPropagation(); window.location.href = `/client/${c.client_id}` }}
-                              aria-label={`Ouvrir le profil de ${name}`}>
-                              <ChevronRight size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>
-                {loading ? '…' : `Affichage de ${filtered.length} client${filtered.length !== 1 ? 's' : ''}`}
-              </span>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {/* Quick actions */}
-            <div className="sidebar-card">
-              <h2 className="section-title">Actions rapides</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
-                <button className="btn-primary" onClick={() => setShowInvite(v => !v)} aria-label="Inviter un nouveau client">
-                  <UserPlus size={16} strokeWidth={2.5} />
-                  Nouveau client
-                </button>
-
-                {showInvite && (
-                  <div className="invite-panel">
-                    <p style={{ fontSize: '0.78rem', color: '#9CA3AF', marginBottom: '10px', lineHeight: 1.5 }}>
-                      Partage ce lien — le client sera lié à ton profil automatiquement.
-                    </p>
-                    <div style={{ background: '#111827', border: '1px solid #374151', borderRadius: '6px', padding: '8px 10px', fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: '10px' }}>
-                      {inviteLink || 'Chargement…'}
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {clients.length === 0 && (
+                <p style={{ padding: '24px 16px', color: '#6B7280', fontSize: '0.85rem', textAlign: 'center' }}>Aucun client.</p>
+              )}
+              {clients.map(c => {
+                const name = c.profiles?.full_name ?? 'Sans nom'
+                const ini = initials(c.profiles?.full_name)
+                const unread = unreadCounts[c.client_id] || 0
+                const isActive = selectedClient?.client_id === c.client_id
+                return (
+                  <div
+                    key={c.id}
+                    className={`client-chat-row${isActive ? ' active' : ''}`}
+                    onClick={() => openChat(c)}
+                  >
+                    {c.profiles?.avatar_url
+                      ? <img src={c.profiles.avatar_url} alt="" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                      : <div className="avatar-circle" style={{ width: 38, height: 38, fontSize: '0.9rem' }}>{ini}</div>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#F8FAFC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                      <div style={{ fontSize: '0.72rem', color: '#6B7280', marginTop: 2 }}>Cliquer pour ouvrir</div>
                     </div>
-                    <button className="btn-primary btn-primary-orange" onClick={copyInviteLink} style={{ fontSize: '0.85rem', padding: '8px 16px' }}>
-                      {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier le lien</>}
-                    </button>
+                    {unread > 0 && (
+                      <span style={{ minWidth: 20, height: 20, background: '#EF4444', borderRadius: 10, fontSize: '0.65rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', flexShrink: 0 }}>
+                        {unread > 9 ? '9+' : unread}
+                      </span>
+                    )}
                   </div>
-                )}
+                )
+              })}
+            </div>
+          </div>
 
-                <button className="btn-primary btn-primary-orange" aria-label="Planifier une séance">
-                  <Dumbbell size={16} strokeWidth={2.5} />
-                  Nouvelle séance
-                </button>
+          {/* Chat panel */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#111827', overflow: 'hidden' }}>
+            {!selectedClient ? (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                <MessageCircle size={48} color="#374151" />
+                <p style={{ color: '#6B7280', fontSize: '0.9rem' }}>Sélectionnez un client pour démarrer une conversation.</p>
+              </div>
+            ) : (
+              <>
+                {/* Chat header */}
+                <div style={{ padding: '14px 20px', background: '#1F2937', borderBottom: '1px solid #374151', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                  {selectedClient.profiles?.avatar_url
+                    ? <img src={selectedClient.profiles.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                    : <div className="avatar-circle">{initials(selectedClient.profiles?.full_name)}</div>
+                  }
+                  <div>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: '#F8FAFC' }}>
+                      {selectedClient.profiles?.full_name ?? 'Sans nom'}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#6B7280' }}>Client</div>
+                  </div>
+                </div>
 
-                <hr className="divider" />
+                {/* Messages */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {chatMessages.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                      <p style={{ color: '#6B7280', fontSize: '0.85rem' }}>Aucun message. Commencez la conversation !</p>
+                    </div>
+                  )}
+                  {chatMessages.map(msg => {
+                    const isMine = msg.sender_id === session.user.id
+                    return (
+                      <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
+                        <div style={{
+                          maxWidth: '65%',
+                          background: isMine ? '#F97316' : '#1F2937',
+                          color: isMine ? '#000' : '#F8FAFC',
+                          borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                          padding: '10px 16px',
+                          border: isMine ? 'none' : '1px solid #374151',
+                        }}>
+                          <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45 }}>{msg.content}</p>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.62rem', opacity: 0.6, textAlign: isMine ? 'right' : 'left' }}>
+                            {format(new Date(msg.created_at), 'HH:mm', { locale: fr })}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <div ref={msgEndRef} />
+                </div>
 
-                <button className="btn-secondary" aria-label="Voir le calendrier">
-                  <Calendar size={16} strokeWidth={2} />
-                  Voir le calendrier
-                </button>
+                {/* Input */}
+                <div style={{ padding: '14px 20px', background: '#1F2937', borderTop: '1px solid #374151', display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
+                  <input
+                    className="msg-input"
+                    value={msgInput}
+                    onChange={e => setMsgInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+                    placeholder={`Message à ${selectedClient.profiles?.full_name?.split(' ')[0] ?? 'client'}…`}
+                  />
+                  <button
+                    onClick={sendMessage}
+                    style={{ width: 44, height: 44, borderRadius: '50%', background: msgInput.trim() ? '#F97316' : '#374151', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+                  >
+                    <Send size={17} color={msgInput.trim() ? '#000' : '#6B7280'} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
+      {/* ── DASHBOARD SECTION ── */}
+      {section === 'dashboard' && (
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+
+          {/* Page header */}
+          <div style={{ marginBottom: '32px' }}>
+            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.02em', margin: 0 }}>Tableau de bord</h1>
+            <p style={{ fontFamily: 'Barlow, sans-serif', fontSize: '0.9rem', color: '#9CA3AF', marginTop: '4px' }}>
+              Bonjour, {coachName} — voici votre activité du jour.
+            </p>
+          </div>
+
+          {/* ── STATS ROW ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+
+            <div className="stat-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Clients actifs</span>
+                <div style={{ width: '36px', height: '36px', background: 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Users size={18} color="#F97316" strokeWidth={2} />
+                </div>
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
+                {loading ? '—' : clients.length}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                <TrendingUp size={13} color="#22C55E" strokeWidth={2.5} />
+                <span style={{ fontSize: '0.78rem', color: '#22C55E', fontWeight: 500 }}>{activeCount} actifs ce mois</span>
               </div>
             </div>
 
-            {/* Today */}
-            <div className="sidebar-card">
-              <h2 className="section-title">Aujourd'hui</h2>
-              <p style={{ fontSize: '0.85rem', color: '#6B7280' }}>Aucune séance planifiée.</p>
+            <div className="stat-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Séances / semaine</span>
+                <div style={{ width: '36px', height: '36px', background: 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CalendarCheck size={18} color="#F97316" strokeWidth={2} />
+                </div>
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
+                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>À connecter</span>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Revenus du mois</span>
+                <div style={{ width: '36px', height: '36px', background: 'rgba(34,197,94,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Euro size={18} color="#22C55E" strokeWidth={2} />
+                </div>
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
+                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>À connecter</span>
+              </div>
+            </div>
+
+            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => setSection('messages')}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Messages non lus</span>
+                <div style={{ width: '36px', height: '36px', background: totalUnread > 0 ? 'rgba(239,68,68,0.12)' : 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MessageCircle size={18} color={totalUnread > 0 ? '#EF4444' : '#F97316'} strokeWidth={2} />
+                </div>
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: totalUnread > 0 ? '#EF4444' : '#F8FAFC', lineHeight: 1 }}>
+                {totalUnread}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>Cliquer pour voir les messages</span>
+              </div>
             </div>
 
           </div>
+
+          {/* ── CONTENT GRID ── */}
+          <div className="lg-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', alignItems: 'start' }}>
+
+            {/* Client table */}
+            <div className="sidebar-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h2 className="section-title">Clients</h2>
+                <div style={{ position: 'relative' }}>
+                  <Search size={14} color="#6B7280" strokeWidth={2} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                  <input type="search" className="search-input" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} aria-label="Rechercher un client" />
+                </div>
+              </div>
+
+              <div style={{ overflowX: 'auto', borderRadius: '8px', background: '#111827' }}>
+                <table className="data-table" aria-label="Liste des clients">
+                  <thead>
+                    <tr>
+                      <th scope="col">Client</th>
+                      <th scope="col">Membre depuis</th>
+                      <th scope="col">Poids</th>
+                      <th scope="col">Statut</th>
+                      <th scope="col">Messages</th>
+                      <th scope="col"><span style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden' }}>Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <tr key={i}><td colSpan={6}><div style={{ height: '20px', background: '#374151', borderRadius: '4px', opacity: 0.5 }} /></td></tr>
+                      ))
+                    ) : filtered.length === 0 ? (
+                      <tr><td colSpan={6} style={{ textAlign: 'center', color: '#6B7280', padding: '40px 16px' }}>
+                        {search ? 'Aucun client trouvé.' : "Aucun client pour l'instant."}
+                      </td></tr>
+                    ) : (
+                      filtered.map(c => {
+                        const p = c.profiles
+                        const name = p?.full_name ?? 'Sans nom'
+                        const ini = initials(p?.full_name)
+                        const status = statusFor(c.created_at)
+                        const meta = STATUS_META[status]
+                        const since = new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                        const unread = unreadCounts[c.client_id] || 0
+                        return (
+                          <tr key={c.id} tabIndex={0}
+                            onKeyDown={e => { if (e.key === 'Enter') window.location.href = `/client/${c.client_id}` }}
+                            aria-label={`Voir le profil de ${name}`}>
+                            <td onClick={() => window.location.href = `/client/${c.client_id}`}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                {p?.avatar_url
+                                  ? <img src={p.avatar_url} alt="" style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                                  : <div className="avatar-circle">{ini}</div>
+                                }
+                                <span style={{ fontWeight: 500 }}>{name}</span>
+                              </div>
+                            </td>
+                            <td style={{ color: '#9CA3AF' }} onClick={() => window.location.href = `/client/${c.client_id}`}>{since}</td>
+                            <td onClick={() => window.location.href = `/client/${c.client_id}`}>{p?.current_weight ? `${p.current_weight} kg` : '—'}</td>
+                            <td onClick={() => window.location.href = `/client/${c.client_id}`}><span className={`badge ${meta.cls}`}>{meta.label}</span></td>
+                            <td>
+                              <button
+                                onClick={() => { setSection('messages'); openChat(c) }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: unread > 0 ? '#EF4444' : '#6B7280', padding: '4px 8px', borderRadius: 6 }}
+                              >
+                                <MessageCircle size={15} />
+                                {unread > 0 && <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>{unread}</span>}
+                              </button>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="btn-ghost" style={{ padding: '5px 8px', fontSize: '0.78rem' }}
+                                onClick={e => { e.stopPropagation(); window.location.href = `/client/${c.client_id}` }}
+                                aria-label={`Ouvrir le profil de ${name}`}>
+                                <ChevronRight size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>
+                  {loading ? '…' : `Affichage de ${filtered.length} client${filtered.length !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* Quick actions */}
+              <div className="sidebar-card">
+                <h2 className="section-title">Actions rapides</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                  <button className="btn-primary" onClick={() => setShowInvite(v => !v)} aria-label="Inviter un nouveau client">
+                    <UserPlus size={16} strokeWidth={2.5} />
+                    Nouveau client
+                  </button>
+
+                  {showInvite && (
+                    <div className="invite-panel">
+                      <p style={{ fontSize: '0.78rem', color: '#9CA3AF', marginBottom: '10px', lineHeight: 1.5 }}>
+                        Partage ce lien — le client sera lié à ton profil automatiquement.
+                      </p>
+                      <div style={{ background: '#111827', border: '1px solid #374151', borderRadius: '6px', padding: '8px 10px', fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: '10px' }}>
+                        {inviteLink || 'Chargement…'}
+                      </div>
+                      <button className="btn-primary btn-primary-orange" onClick={copyInviteLink} style={{ fontSize: '0.85rem', padding: '8px 16px' }}>
+                        {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier le lien</>}
+                      </button>
+                    </div>
+                  )}
+
+                  <button className="btn-primary btn-primary-orange" aria-label="Planifier une séance">
+                    <Dumbbell size={16} strokeWidth={2.5} />
+                    Nouvelle séance
+                  </button>
+
+                  <hr className="divider" />
+
+                  <button className="btn-secondary" aria-label="Voir le calendrier">
+                    <Calendar size={16} strokeWidth={2} />
+                    Voir le calendrier
+                  </button>
+
+                </div>
+              </div>
+
+              {/* Today */}
+              <div className="sidebar-card">
+                <h2 className="section-title">Aujourd'hui</h2>
+                <p style={{ fontSize: '0.85rem', color: '#6B7280' }}>Aucune séance planifiée.</p>
+              </div>
+
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

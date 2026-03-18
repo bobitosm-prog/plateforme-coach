@@ -16,7 +16,8 @@ import {
   User, UtensilsCrossed, X, Check, Camera, Ruler,
   Users, Crown, Trash2, ChevronRight, Upload,
   Activity, Heart, Search, Filter, ChevronDown, ChevronUp,
-  Timer, Play, Pause, RotateCcw, Info, Sparkles, Utensils, Moon, TrendingUp
+  Timer, Play, Pause, RotateCcw, Info, Sparkles, Utensils, Moon, TrendingUp,
+  MessageCircle, Send
 } from 'lucide-react'
 
 import WorkoutSession from './components/WorkoutSession'
@@ -25,7 +26,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const COACH_EMAIL = "bobitosm@gmail.com"
 
-type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'profil'
+type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'profil' | 'messages'
 
 const MEAL_TYPES = [
   { id: 'breakfast', label: 'Petit-déj', icon: '🥣' },
@@ -146,6 +147,12 @@ export default function CoachApp() {
   // Profil tab: phone editing
   const [phoneForm, setPhoneForm] = useState('')
   const [phoneEditing, setPhoneEditing] = useState(false)
+  // Messages tab
+  const [coachId, setCoachId] = useState<string | null>(null)
+  const [messages, setMessages] = useState<any[]>([])
+  const [msgInput, setMsgInput] = useState('')
+  const [unreadCount, setUnreadCount] = useState(0)
+  const msgEndRef = useRef<HTMLDivElement>(null)
 
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -193,6 +200,29 @@ export default function CoachApp() {
     }, 300)
   }, [foodSearch, searchTab])
 
+  // Messages: realtime subscription
+  useEffect(() => {
+    if (!session?.user?.id || !coachId) return
+    loadMessages(coachId)
+    const ch = supabase
+      .channel(`messages-${session.user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => loadMessages(coachId))
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [session?.user?.id, coachId])
+
+  // Messages: scroll to bottom on new messages
+  useEffect(() => {
+    if (activeTab === 'messages') {
+      setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    }
+  }, [messages, activeTab])
+
+  // Messages: mark as read when tab is opened
+  useEffect(() => {
+    if (activeTab === 'messages' && coachId) markMessagesRead()
+  }, [activeTab, coachId])
+
   async function fetchAll() {
     const uid = session?.user?.id
     if (!uid) return
@@ -227,6 +257,14 @@ export default function CoachApp() {
       const { data } = await supabase.from('coach_clients').select('*, profiles!coach_clients_client_id_fkey(*)').eq('coach_id', uid)
       setClients(data || [])
     }
+
+    // Find this client's coach
+    const { data: coachLink } = await supabase
+      .from('coach_clients')
+      .select('coach_id')
+      .eq('client_id', uid)
+      .maybeSingle()
+    if (coachLink?.coach_id) setCoachId(coachLink.coach_id)
 
     if (profRes.data) {
       const age = profRes.data.birth_date ? Math.floor((Date.now() - new Date(profRes.data.birth_date).getTime()) / 31557600000) : ''
@@ -404,6 +442,36 @@ export default function CoachApp() {
     await supabase.storage.from('progress-photos').remove([photo.photo_url])
     await supabase.from('progress_photos').delete().eq('id', photo.id)
     setProgressPhotos(prev => prev.filter(p => p.id !== photo.id))
+  }
+
+  async function loadMessages(cId: string) {
+    const uid = session?.user?.id
+    if (!uid || !cId) return
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`and(sender_id.eq.${uid},receiver_id.eq.${cId}),and(sender_id.eq.${cId},receiver_id.eq.${uid})`)
+      .order('created_at', { ascending: true })
+    setMessages(data || [])
+    setUnreadCount((data || []).filter((m: any) => m.sender_id === cId && !m.read).length)
+  }
+
+  async function sendMessage() {
+    if (!msgInput.trim() || !coachId || !session) return
+    const content = msgInput.trim()
+    setMsgInput('')
+    await supabase.from('messages').insert({ sender_id: session.user.id, receiver_id: coachId, content })
+  }
+
+  async function markMessagesRead() {
+    if (!session || !coachId) return
+    await supabase
+      .from('messages')
+      .update({ read: true })
+      .eq('receiver_id', session.user.id)
+      .eq('sender_id', coachId)
+      .eq('read', false)
+    setUnreadCount(0)
   }
 
   const totalCals = useMemo(() => todayMeals.reduce((s, m) => s + (m.calories || 0), 0), [todayMeals])
@@ -1357,30 +1425,106 @@ export default function CoachApp() {
         </div>
       )}
 
+      {/* ═══════════════════ MESSAGES TAB ═══════════════════ */}
+      {activeTab === 'messages' && (
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 72px)' }}>
+
+          {/* Header */}
+          <div style={{ background: BG_CARD, padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>MON COACH</h1>
+          </div>
+
+          {!coachId ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <MessageCircle size={40} color={TEXT_MUTED} />
+              <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', margin: 0 }}>Aucun coach assigné pour l'instant.</p>
+            </div>
+          ) : (
+            <>
+              {/* Message bubbles */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {messages.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <p style={{ color: TEXT_MUTED, fontSize: '0.85rem' }}>Commencez la conversation avec votre coach !</p>
+                  </div>
+                )}
+                {messages.map(msg => {
+                  const isMine = msg.sender_id === session.user.id
+                  return (
+                    <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
+                      <div style={{
+                        maxWidth: '75%',
+                        background: isMine ? ORANGE : BG_CARD,
+                        color: isMine ? '#000' : TEXT_PRIMARY,
+                        borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                        padding: '10px 14px',
+                        border: isMine ? 'none' : `1px solid ${BORDER}`,
+                      }}>
+                        <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45 }}>{msg.content}</p>
+                        <p style={{ margin: '4px 0 0', fontSize: '0.62rem', opacity: 0.6, textAlign: isMine ? 'right' : 'left' }}>
+                          {format(new Date(msg.created_at), 'HH:mm', { locale: fr })}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+                <div ref={msgEndRef} />
+              </div>
+
+              {/* Input */}
+              <div style={{ padding: '12px 16px', background: BG_CARD, borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
+                <input
+                  value={msgInput}
+                  onChange={e => setMsgInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+                  placeholder="Écrire un message…"
+                  style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 24, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }}
+                />
+                <button
+                  onClick={sendMessage}
+                  style={{ width: 42, height: 42, borderRadius: '50%', background: msgInput.trim() ? ORANGE : BORDER, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+                >
+                  <Send size={16} color={msgInput.trim() ? '#000' : TEXT_MUTED} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       </motion.div>
       </AnimatePresence>
 
       {/* ═══════════════════ BOTTOM NAV ═══════════════════ */}
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, height: 72, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 40, paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {([
-          { id: 'home', icon: BarChart2, label: 'Home' },
-          { id: 'training', icon: Dumbbell, label: 'Training' },
+          { id: 'home',      icon: BarChart2,       label: 'Home'      },
+          { id: 'training',  icon: Dumbbell,        label: 'Training'  },
           { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
-          { id: 'progress', icon: TrendingUp, label: 'Progress' },
-          { id: 'profil', icon: User, label: 'Profil' },
+          { id: 'progress',  icon: TrendingUp,      label: 'Progress'  },
+          { id: 'messages',  icon: MessageCircle,   label: 'Messages'  },
+          { id: 'profil',    icon: User,            label: 'Profil'    },
         ] as const).map(({ id, icon: Icon, label }) => {
           const active = activeTab === id
+          const badge = id === 'messages' && unreadCount > 0
           return (
-            <button key={id} onClick={() => setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}>
+            <button key={id} onClick={() => setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 6px', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}>
               {active && (
                 <motion.div
                   layoutId="navIndicator"
-                  style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 3, background: ORANGE, borderRadius: '0 0 4px 4px' }}
+                  style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 24, height: 3, background: ORANGE, borderRadius: '0 0 4px 4px' }}
                   transition={{ type: 'spring', stiffness: 420, damping: 30 }}
                 />
               )}
-              <Icon size={22} color={active ? ORANGE : '#4B5563'} />
-              <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: active ? ORANGE : '#4B5563', fontFamily: "'Barlow Condensed', sans-serif" }}>{label}</span>
+              <div style={{ position: 'relative' }}>
+                <Icon size={20} color={active ? ORANGE : '#4B5563'} />
+                {badge && (
+                  <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 16, height: 16, background: '#EF4444', borderRadius: 8, fontSize: '0.55rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: active ? ORANGE : '#4B5563', fontFamily: "'Barlow Condensed', sans-serif" }}>{label}</span>
             </button>
           )
         })}
