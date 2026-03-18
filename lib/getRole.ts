@@ -11,10 +11,8 @@ export async function getRole(userId: string, accessToken: string): Promise<stri
       .select('role')
       .eq('id', userId)
       .single()
-    console.log('[getRole] data:', data, 'error:', error)
     return data?.role ?? null
-  } catch (err) {
-    console.error('[getRole] error:', err)
+  } catch {
     return null
   }
 }

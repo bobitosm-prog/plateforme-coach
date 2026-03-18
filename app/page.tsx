@@ -159,7 +159,6 @@ export default function CoachApp() {
   useEffect(() => {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
-      console.log('[page] role received:', role, '| user:', session.user.id)
       if (role === 'super_admin') { router.replace('/admin') }
       else if (role === 'coach') { router.replace('/coach') }
       else setRoleChecked(true)
@@ -222,22 +221,7 @@ export default function CoachApp() {
     if (userProgRes.data) setUserProgram(userProgRes.data)
     setWeightHistory30((weightsRes.data || []).map(w => ({ date: w.date, poids: w.poids })))
     if (coachProgRes.data?.program) setCoachProgram(coachProgRes.data.program)
-    // ── MEAL PLAN DEBUG ──────────────────────────────────────────────────────
-    console.log('[mealPlan] uid used as client_id:', uid)
-    console.log('[mealPlan] query result — data:', JSON.stringify(coachMealRes.data), '| error:', JSON.stringify(coachMealRes.error))
-
-    // Extra probe: select * to check if row exists regardless of 'plan' column
-    const mealPlanProbe = await supabase
-      .from('client_meal_plans')
-      .select('*')
-      .eq('client_id', uid)
-      .order('created_at', { ascending: false })
-      .limit(1)
-    console.log('[mealPlan] probe select(*) — data:', JSON.stringify(mealPlanProbe.data), '| error:', JSON.stringify(mealPlanProbe.error))
-    // ─────────────────────────────────────────────────────────────────────────
-
     if (coachMealRes.data?.plan) setCoachMealPlan(coachMealRes.data.plan)
-    else console.warn('[mealPlan] plan not set — data?.plan is:', coachMealRes.data?.plan)
 
     if (session?.user?.email === COACH_EMAIL) {
       const { data } = await supabase.from('coach_clients').select('*, profiles!coach_clients_client_id_fkey(*)').eq('coach_id', uid)
