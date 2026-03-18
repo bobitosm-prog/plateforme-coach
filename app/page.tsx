@@ -46,7 +46,7 @@ const JS_DAYS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi
 const WEEK_DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
 // Explicit tab→key mapping for the nutrition day tabs
-// Tab index 0=lundi … 6=dimanche, matching coachMealPlan.days keys
+// Tab index 0=lundi … 6=dimanche, matching coachMealPlan[key] directly
 const NUTRITION_DAYS: { key: string; label: string }[] = [
   { key: 'lundi',    label: 'Lun' },
   { key: 'mardi',    label: 'Mar' },
@@ -929,7 +929,7 @@ export default function CoachApp() {
                   </div>
                   {/* Today's meals from plan */}
                   {(() => {
-                    const dayPlan = coachMealPlan.days?.[todayKey]
+                    const dayPlan = coachMealPlan[todayKey]
                     const meals: any[] = dayPlan?.meals ?? []
                     if (!meals.length) return <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: 0 }}>Aucun repas planifié aujourd'hui.</p>
                     return (
@@ -1081,12 +1081,12 @@ export default function CoachApp() {
                 ))}
               </div>
 
-              {/* Day tabs — index 0=lundi … 6=dimanche, keys match coachMealPlan.days */}
+              {/* Day tabs — index 0=lundi … 6=dimanche, keys match coachMealPlan[key] directly */}
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16 }}>
                 {NUTRITION_DAYS.map(({ key, label }) => {
                   const isActive = nutritionDay === key
                   const isToday = key === todayKey
-                  const dayMeals: any[] = coachMealPlan.days?.[key]?.meals ?? []
+                  const dayMeals: any[] = coachMealPlan[key]?.meals ?? []
                   const dayKcal = dayMeals.reduce((s: number, m: any) => s + (m.foods || []).reduce((fs: number, f: any) => fs + (f.kcal || 0), 0), 0)
                   return (
                     <button key={key} onClick={() => setNutritionDay(key)} style={{
@@ -1105,7 +1105,7 @@ export default function CoachApp() {
 
               {/* Selected day meals */}
               {(() => {
-                const dayPlan = coachMealPlan.days?.[nutritionDay]
+                const dayPlan = coachMealPlan[nutritionDay]
                 const meals: any[] = dayPlan?.meals ?? []
                 if (!meals.length) return (
                   <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 20px', textAlign: 'center' }}>
