@@ -1241,10 +1241,7 @@ export default function CoachApp() {
                 {photoUploading ? <div style={{ width: 24, height: 24, border: `2px solid ${ORANGE}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> : <Plus size={22} color={TEXT_MUTED} />}
               </button>
               {progressPhotos.map(p => {
-                // photo_url may be a storage path or a full URL (legacy)
-                const imgSrc = p.photo_url?.startsWith('http')
-                  ? p.photo_url
-                  : supabase.storage.from('progress-photos').getPublicUrl(p.photo_url).data.publicUrl
+                const imgSrc = supabase.storage.from('progress-photos').getPublicUrl(p.photo_url).data.publicUrl
                 return (
                   <div key={p.id} style={{ aspectRatio: '1', borderRadius: 14, overflow: 'hidden' }}>
                     <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
