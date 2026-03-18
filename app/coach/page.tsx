@@ -69,6 +69,10 @@ export default function CoachPage() {
   const [msgInput, setMsgInput]             = useState('')
   const [unreadCounts, setUnreadCounts]     = useState<Record<string, number>>({})
   const msgEndRef = useRef<HTMLDivElement>(null)
+  // Refs for polling — avoids stale closures inside setInterval
+  const selectedClientRef    = useRef<ClientRow | null>(null)
+  const clientsRef           = useRef<ClientRow[]>([])
+  const lastChatTimestampRef = useRef<string | null>(null)
 
   const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
 
@@ -94,18 +98,39 @@ export default function CoachPage() {
     })
   }, [session])
 
-  // Messages realtime subscription
+  // Keep refs in sync with state so polling interval has fresh values
+  useEffect(() => { selectedClientRef.current = selectedClient }, [selectedClient])
+  useEffect(() => { clientsRef.current = clients }, [clients])
+  useEffect(() => {
+    const real = chatMessages.filter(m => !String(m.id).startsWith('opt-'))
+    if (real.length > 0) lastChatTimestampRef.current = real[real.length - 1].created_at
+  }, [chatMessages])
+
+  // Poll every 3s — unread counts + new chat messages (replaces WebSocket)
   useEffect(() => {
     if (!session?.user?.id) return
-    const ch = supabase
-      .channel(`coach-messages-${session.user.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
-        fetchUnreadCounts(session.user.id, clients.map(c => c.client_id))
-        if (selectedClient) loadChat(selectedClient.client_id, session.user.id)
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(ch) }
-  }, [session?.user?.id, clients, selectedClient])
+    const coachId = session.user.id
+    const id = setInterval(async () => {
+      // Always refresh unread counts
+      const clientIds = clientsRef.current.map(c => c.client_id)
+      if (clientIds.length) fetchUnreadCounts(coachId, clientIds)
+
+      // Fetch new chat messages for the open conversation
+      const client = selectedClientRef.current
+      const since  = lastChatTimestampRef.current
+      if (!client || !since) return
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${coachId},receiver_id.eq.${client.client_id}),and(sender_id.eq.${client.client_id},receiver_id.eq.${coachId})`)
+        .gt('created_at', since)
+        .order('created_at', { ascending: true })
+      if (data?.length) {
+        setChatMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
+      }
+    }, 3000)
+    return () => clearInterval(id)
+  }, [session?.user?.id])
 
   // Scroll to bottom when chat messages update
   useEffect(() => {
@@ -179,11 +204,22 @@ export default function CoachPage() {
     if (!msgInput.trim() || !selectedClient || !session) return
     const content = msgInput.trim()
     setMsgInput('')
+    // Optimistic update — show immediately
+    const optimistic = {
+      id: `opt-${Date.now()}`,
+      sender_id: session.user.id,
+      receiver_id: selectedClient.client_id,
+      content,
+      read: false,
+      created_at: new Date().toISOString(),
+    }
+    setChatMessages(prev => [...prev, optimistic])
     await supabase.from('messages').insert({
       sender_id: session.user.id,
       receiver_id: selectedClient.client_id,
       content,
     })
+    // Replace optimistic with real server row
     loadChat(selectedClient.client_id, session.user.id)
   }
 

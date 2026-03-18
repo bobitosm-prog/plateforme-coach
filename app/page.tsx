@@ -153,6 +153,7 @@ export default function CoachApp() {
   const [msgInput, setMsgInput] = useState('')
   const [unreadCount, setUnreadCount] = useState(0)
   const msgEndRef = useRef<HTMLDivElement>(null)
+  const lastMsgTimestampRef = useRef<string | null>(null)
 
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -200,21 +201,31 @@ export default function CoachApp() {
     }, 300)
   }, [foodSearch, searchTab])
 
-  // Messages: realtime subscription — filter on receiver_id so we catch coach replies
+  // Messages: keep timestamp ref pointing at latest real message
+  useEffect(() => {
+    const real = messages.filter(m => !String(m.id).startsWith('opt-'))
+    if (real.length > 0) lastMsgTimestampRef.current = real[real.length - 1].created_at
+  }, [messages])
+
+  // Messages: poll every 3s for new messages (more reliable than WebSocket on free tier)
   useEffect(() => {
     if (!session?.user?.id || !coachId) return
     const uid = session.user.id
-    loadMessages(coachId)
-    const ch = supabase
-      .channel(`messages-${uid}-${coachId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `receiver_id=eq.${uid}`,
-      }, () => loadMessages(coachId))
-      .subscribe()
-    return () => { supabase.removeChannel(ch) }
+    loadMessages(coachId) // initial full load
+    const id = setInterval(async () => {
+      const since = lastMsgTimestampRef.current
+      if (!since) return
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${uid},receiver_id.eq.${coachId}),and(sender_id.eq.${coachId},receiver_id.eq.${uid})`)
+        .gt('created_at', since)
+        .order('created_at', { ascending: true })
+      if (data?.length) {
+        setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
+      }
+    }, 3000)
+    return () => clearInterval(id)
   }, [session?.user?.id, coachId])
 
   // Messages: scroll to bottom on new messages
