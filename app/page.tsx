@@ -207,7 +207,7 @@ export default function CoachApp() {
       supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
       supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
       supabase.from('training_programs').select('*').eq('is_template', true),
-      supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).single(),
+      supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).maybeSingle(),
       supabase.from('client_programs').select('program').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
@@ -411,10 +411,15 @@ export default function CoachApp() {
     const path = `${session.user.id}/${Date.now()}.${file.name.split('.').pop()}`
     const { error: uploadError } = await supabase.storage.from('progress-photos').upload(path, file)
     if (uploadError) { toast.error('Erreur lors de l\'upload'); setPhotoUploading(false); return }
-    // Save the storage path — public URL is derived at render time
     await supabase.from('progress_photos').insert({ user_id: session.user.id, photo_url: path, view_type: 'front' })
     toast.success('Photo ajoutée !')
     setPhotoUploading(false); fetchAll()
+  }
+
+  async function deletePhoto(photo: any) {
+    await supabase.storage.from('progress-photos').remove([photo.photo_url])
+    await supabase.from('progress_photos').delete().eq('id', photo.id)
+    setProgressPhotos(prev => prev.filter(p => p.id !== photo.id))
   }
 
   const totalCals = useMemo(() => todayMeals.reduce((s, m) => s + (m.calories || 0), 0), [todayMeals])
@@ -506,6 +511,7 @@ export default function CoachApp() {
         @keyframes spin { to { transform: rotate(360deg) } }
         * { box-sizing: border-box; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .photo-cell:hover .photo-delete-btn { opacity: 1 !important; }
       `}</style>
 
       {/* ── WorkoutSession fullscreen ── */}
@@ -1243,8 +1249,17 @@ export default function CoachApp() {
               {progressPhotos.map(p => {
                 const imgSrc = supabase.storage.from('progress-photos').getPublicUrl(p.photo_url).data.publicUrl
                 return (
-                  <div key={p.id} style={{ aspectRatio: '1', borderRadius: 14, overflow: 'hidden' }}>
+                  <div key={p.id} style={{ aspectRatio: '1', borderRadius: 14, overflow: 'hidden', position: 'relative' }}
+                    className="photo-cell"
+                  >
                     <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                    <button
+                      onClick={() => deletePhoto(p)}
+                      className="photo-delete-btn"
+                      style={{ position: 'absolute', top: 6, right: 6, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 200ms' }}
+                    >
+                      <Trash2 size={13} color="#fff" />
+                    </button>
                   </div>
                 )
               })}
