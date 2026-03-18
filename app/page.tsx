@@ -45,6 +45,23 @@ const ACTIVITY_LEVELS = [
 const JS_DAYS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
 const WEEK_DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
+// Explicit tab→key mapping for the nutrition day tabs
+// Tab index 0=lundi … 6=dimanche, matching coachMealPlan.days keys
+const NUTRITION_DAYS: { key: string; label: string }[] = [
+  { key: 'lundi',    label: 'Lun' },
+  { key: 'mardi',    label: 'Mar' },
+  { key: 'mercredi', label: 'Mer' },
+  { key: 'jeudi',    label: 'Jeu' },
+  { key: 'vendredi', label: 'Ven' },
+  { key: 'samedi',   label: 'Sam' },
+  { key: 'dimanche', label: 'Dim' },
+]
+// Map JS getDay() (0=Sun … 6=Sat) to the French key used in coachMealPlan
+function todayNutritionKey(): string {
+  const jsDay = new Date().getDay() // 0=Sun, 1=Mon, …, 6=Sat
+  return jsDay === 0 ? 'dimanche' : NUTRITION_DAYS[jsDay - 1].key
+}
+
 // Design tokens
 const BG_BASE = '#0A0A0A'
 const BG_CARD = '#1A1A1A'
@@ -125,7 +142,7 @@ export default function CoachApp() {
   // Training tab: expanded day
   const [activeDay, setActiveDay] = useState<string | null>(null)
   // Nutrition tab: selected day for coach plan
-  const [nutritionDay, setNutritionDay] = useState<string>(JS_DAYS_FR[new Date().getDay()])
+  const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
   // Profil tab: phone editing
   const [phoneForm, setPhoneForm] = useState('')
   const [phoneEditing, setPhoneEditing] = useState(false)
@@ -205,9 +222,22 @@ export default function CoachApp() {
     if (userProgRes.data) setUserProgram(userProgRes.data)
     setWeightHistory30((weightsRes.data || []).map(w => ({ date: w.date, poids: w.poids })))
     if (coachProgRes.data?.program) setCoachProgram(coachProgRes.data.program)
-    console.log('[fetchAll] coachMealRes raw:', JSON.stringify(coachMealRes))
+    // ── MEAL PLAN DEBUG ──────────────────────────────────────────────────────
+    console.log('[mealPlan] uid used as client_id:', uid)
+    console.log('[mealPlan] query result — data:', JSON.stringify(coachMealRes.data), '| error:', JSON.stringify(coachMealRes.error))
+
+    // Extra probe: select * to check if row exists regardless of 'plan' column
+    const mealPlanProbe = await supabase
+      .from('client_meal_plans')
+      .select('*')
+      .eq('client_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(1)
+    console.log('[mealPlan] probe select(*) — data:', JSON.stringify(mealPlanProbe.data), '| error:', JSON.stringify(mealPlanProbe.error))
+    // ─────────────────────────────────────────────────────────────────────────
+
     if (coachMealRes.data?.plan) setCoachMealPlan(coachMealRes.data.plan)
-    else console.warn('[fetchAll] No coach meal plan found for client_id:', uid, '| error:', coachMealRes.error)
+    else console.warn('[mealPlan] plan not set — data?.plan is:', coachMealRes.data?.plan)
 
     if (session?.user?.email === COACH_EMAIL) {
       const { data } = await supabase.from('coach_clients').select('*, profiles!coach_clients_client_id_fkey(*)').eq('coach_id', uid)
@@ -1051,22 +1081,22 @@ export default function CoachApp() {
                 ))}
               </div>
 
-              {/* Day tabs */}
+              {/* Day tabs — index 0=lundi … 6=dimanche, keys match coachMealPlan.days */}
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16 }}>
-                {WEEK_DAYS.map(day => {
-                  const isActive = nutritionDay === day
-                  const isToday = day === todayKey
-                  const dayMeals: any[] = coachMealPlan.days?.[day]?.meals ?? []
+                {NUTRITION_DAYS.map(({ key, label }) => {
+                  const isActive = nutritionDay === key
+                  const isToday = key === todayKey
+                  const dayMeals: any[] = coachMealPlan.days?.[key]?.meals ?? []
                   const dayKcal = dayMeals.reduce((s: number, m: any) => s + (m.foods || []).reduce((fs: number, f: any) => fs + (f.kcal || 0), 0), 0)
                   return (
-                    <button key={day} onClick={() => setNutritionDay(day)} style={{
+                    <button key={key} onClick={() => setNutritionDay(key)} style={{
                       flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                      fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, textTransform: 'capitalize',
+                      fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700,
                       background: isActive ? GREEN : BG_CARD,
                       color: isActive ? '#000' : isToday ? GREEN : TEXT_MUTED,
                       outline: isToday && !isActive ? `2px solid ${GREEN}` : 'none',
                     }}>
-                      {day.slice(0, 3)}
+                      {label}
                       {dayKcal > 0 && <span style={{ display: 'block', fontSize: '0.55rem', fontWeight: 700, opacity: 0.8 }}>{dayKcal}</span>}
                     </button>
                   )
