@@ -6,6 +6,10 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import dynamic from 'next/dynamic'
 import { getRole } from '../lib/getRole'
+import { AnimatePresence, motion } from 'framer-motion'
+import { toast } from 'sonner'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import {
   Flame, LogOut, Scale, TrendingDown, Target, Dumbbell,
   Plus, CheckCircle2, Zap, Award, Calendar, BarChart2,
@@ -192,7 +196,7 @@ export default function CoachApp() {
     ])
 
     if (profRes.data) { setProfile(profRes.data); if (profRes.data.phone) setPhoneForm(profRes.data.phone) }
-    setWeightHistory(weightsRes.data?.map(w => ({ ...w, date: new Date(w.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) })) || [])
+    setWeightHistory(weightsRes.data?.map(w => ({ ...w, date: format(new Date(w.date), 'dd/MM', { locale: fr }) })) || [])
     setTodayMeals(mealsRes.data || [])
     setWSessions(sessRes.data || [])
     setMeasurements(measureRes.data || [])
@@ -269,6 +273,7 @@ export default function CoachApp() {
         await supabase.from('workout_sets').insert(setsToInsert)
       }
     }
+    toast.success('Séance terminée ! Bien joué 💪')
     fetchAll()
   }
 
@@ -316,6 +321,7 @@ export default function CoachApp() {
       ...(isCustom ? { custom_food_id: selectedFood.id } : { food_id: selectedFood.id }),
     })
     setSelectedFood(null); setFoodSearch(''); setFoodResults([])
+    toast.success('Aliment ajouté !')
     setModal(null); fetchAll()
   }
 
@@ -330,6 +336,7 @@ export default function CoachApp() {
       fats_per_100g: parseFloat(f.fats_per_100g) || 0,
     })
     setCustomFoodForm({ name: '', brand: '', calories_per_100g: '', proteins_per_100g: '', carbs_per_100g: '', fats_per_100g: '' })
+    toast.success('Aliment créé !')
     setModal(null); fetchAll()
   }
 
@@ -339,6 +346,7 @@ export default function CoachApp() {
     await supabase.from('weight_logs').insert({ user_id: session.user.id, poids: val })
     await supabase.from('profiles').upsert({ id: session.user.id, current_weight: val })
     if (!profile?.start_weight) await supabase.from('profiles').update({ start_weight: val }).eq('id', session.user.id)
+    toast.success('Poids enregistré !')
     setWeightForm(''); setModal(null); fetchAll()
   }
 
@@ -347,6 +355,7 @@ export default function CoachApp() {
     Object.entries(measureForm).forEach(([k, v]) => { if (v) data[k] = parseFloat(v as string) })
     await supabase.from('body_measurements').insert(data)
     setMeasureForm({ chest: '', waist: '', hips: '', left_arm: '', right_arm: '', left_thigh: '', right_thigh: '', body_fat: '', muscle_mass: '' })
+    toast.success('Mensurations enregistrées !')
     setModal(null); fetchAll()
   }
 
@@ -362,6 +371,7 @@ export default function CoachApp() {
 
   async function savePhone() {
     await supabase.from('profiles').update({ phone: phoneForm }).eq('id', session.user.id)
+    toast.success('Numéro enregistré !')
     setPhoneEditing(false); fetchAll()
   }
 
@@ -370,9 +380,10 @@ export default function CoachApp() {
     setPhotoUploading(true)
     const path = `${session.user.id}/${Date.now()}.${file.name.split('.').pop()}`
     const { error: uploadError } = await supabase.storage.from('progress-photos').upload(path, file)
-    if (uploadError) { console.error('[uploadProgressPhoto] upload error:', uploadError); setPhotoUploading(false); return }
+    if (uploadError) { toast.error('Erreur lors de l\'upload'); setPhotoUploading(false); return }
     // Save the storage path — public URL is derived at render time
     await supabase.from('progress_photos').insert({ user_id: session.user.id, photo_url: path, view_type: 'front' })
+    toast.success('Photo ajoutée !')
     setPhotoUploading(false); fetchAll()
   }
 
@@ -759,6 +770,15 @@ export default function CoachApp() {
         </div>
       )}
 
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, x: 16 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -16 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
+      >
+
       {/* ═══════════════════ HOME TAB ═══════════════════ */}
       {activeTab === 'home' && (
         <div style={{ background: BG_BASE, minHeight: '100vh' }}>
@@ -768,7 +788,7 @@ export default function CoachApp() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <p style={{ fontSize: '0.72rem', color: TEXT_MUTED, margin: '0 0 4px', textTransform: 'capitalize' }}>
-                  {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  {format(new Date(), 'EEEE d MMMM', { locale: fr })}
                 </p>
                 <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '0.03em' }}>
                   Bonjour, {firstName}
@@ -793,12 +813,18 @@ export default function CoachApp() {
                 { label: 'Objectif', value: `${profile?.target_weight || goalWeight} kg`, sub: 'cible', color: TEXT_MUTED, icon: Target },
                 { label: 'Séances', value: String(completedSessions), sub: 'total complétées', color: TEXT_MUTED, icon: Dumbbell },
                 { label: 'Streak', value: streak > 0 ? `${streak}j` : '—', sub: 'jours consécutifs', color: streak > 0 ? ORANGE : TEXT_MUTED, icon: Flame },
-              ].map(({ label, value, sub, color, icon: Icon }) => (
-                <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px' }}>
+              ].map(({ label, value, sub, color, icon: Icon }, i) => (
+                <motion.div
+                  key={label}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 22, delay: i * 0.07 }}
+                  style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px' }}
+                >
                   <Icon size={15} color={color} style={{ marginBottom: 8 }} />
                   <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
                   <div style={{ fontSize: '0.62rem', color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginTop: 4 }}>{label}</div>
-                </div>
+                </motion.div>
               ))}
             </div>
 
@@ -928,7 +954,7 @@ export default function CoachApp() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>PROGRAMME</h1>
             <span style={{ fontSize: '0.75rem', color: TEXT_MUTED, textTransform: 'capitalize' }}>
-              Semaine du {new Date(Date.now() - new Date().getDay() * 86400000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              Semaine du {format(new Date(Date.now() - new Date().getDay() * 86400000), 'd MMM', { locale: fr })}
             </span>
           </div>
 
@@ -1156,7 +1182,7 @@ export default function CoachApp() {
             <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT_MUTED }}>Dernières mesures</span>
-                <span style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>{new Date(latestMeasure.date).toLocaleDateString('fr-FR')}</span>
+                <span style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>{format(new Date(latestMeasure.date), 'd MMMM yyyy', { locale: fr })}</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {[
@@ -1305,6 +1331,9 @@ export default function CoachApp() {
         </div>
       )}
 
+      </motion.div>
+      </AnimatePresence>
+
       {/* ═══════════════════ BOTTOM NAV ═══════════════════ */}
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, height: 72, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 40, paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {([
@@ -1316,7 +1345,14 @@ export default function CoachApp() {
         ] as const).map(({ id, icon: Icon, label }) => {
           const active = activeTab === id
           return (
-            <button key={id} onClick={() => setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', transition: 'all 150ms' }}>
+            <button key={id} onClick={() => setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}>
+              {active && (
+                <motion.div
+                  layoutId="navIndicator"
+                  style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 3, background: ORANGE, borderRadius: '0 0 4px 4px' }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                />
+              )}
               <Icon size={22} color={active ? ORANGE : '#4B5563'} />
               <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: active ? ORANGE : '#4B5563', fontFamily: "'Barlow Condensed', sans-serif" }}>{label}</span>
             </button>
