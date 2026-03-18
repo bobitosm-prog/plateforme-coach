@@ -200,13 +200,19 @@ export default function CoachApp() {
     }, 300)
   }, [foodSearch, searchTab])
 
-  // Messages: realtime subscription
+  // Messages: realtime subscription — filter on receiver_id so we catch coach replies
   useEffect(() => {
     if (!session?.user?.id || !coachId) return
+    const uid = session.user.id
     loadMessages(coachId)
     const ch = supabase
-      .channel(`messages-${session.user.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => loadMessages(coachId))
+      .channel(`messages-${uid}-${coachId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${uid}`,
+      }, () => loadMessages(coachId))
       .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [session?.user?.id, coachId])
@@ -460,7 +466,22 @@ export default function CoachApp() {
     if (!msgInput.trim() || !coachId || !session) return
     const content = msgInput.trim()
     setMsgInput('')
+
+    // Optimistic update — show immediately without waiting for realtime
+    const optimistic = {
+      id: `opt-${Date.now()}`,
+      sender_id: session.user.id,
+      receiver_id: coachId,
+      content,
+      read: false,
+      created_at: new Date().toISOString(),
+    }
+    setMessages(prev => [...prev, optimistic])
+
     await supabase.from('messages').insert({ sender_id: session.user.id, receiver_id: coachId, content })
+
+    // Replace optimistic with real row from server
+    loadMessages(coachId)
   }
 
   async function markMessagesRead() {
