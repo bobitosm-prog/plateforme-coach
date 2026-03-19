@@ -5,8 +5,9 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeft, Zap, Mail, Calendar, Scale, Target, Dumbbell,
   Flame, TrendingDown, CheckCircle, CalendarClock, Save,
-  Archive, Trash2, Check, X, Plus, Minus, Moon, Utensils,
+  Archive, Trash2, Check, X, Plus, Minus, Moon, Utensils, Search,
 } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,6 +51,13 @@ const DAY_FULL:   Record<string,string> = { lundi:'Lundi', mardi:'Mardi', mercre
 const MEAL_TYPES = ['Petit-déjeuner','Déjeuner','Dîner','Collation']
 const MEAL_ICONS: Record<string,string> = { 'Petit-déjeuner':'☀️', 'Déjeuner':'🍽️', 'Dîner':'🌙', 'Collation':'🍎' }
 const MACRO_COLORS = { kcal:'#F97316', prot:'#818CF8', carb:'#22C55E', fat:'#FBBF24' }
+
+const MUSCLE_COLORS: Record<string, string> = {
+  'Poitrine': '#EF4444', 'Dos': '#3B82F6', 'Épaules': '#8B5CF6',
+  'Bras': '#F97316', 'Jambes': '#22C55E', 'Abdos': '#EAB308',
+  'Fessiers': '#EC4899', 'Cardio': '#06B6D4',
+}
+const MUSCLE_FILTERS = ['Tous', 'Poitrine', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Abdos', 'Fessiers', 'Cardio']
 
 /* ══════════════════════════════════════════════════════════════
    DEFAULTS
@@ -172,6 +180,15 @@ export default function ClientProfilePage() {
   const [mealPlanSaved,  setMealPlanSaved]  = useState(false)
   const [expandedMealDay,setExpandedMealDay]= useState<string | null>('lundi')
 
+  // Exercise DB search modal
+  const [showExDbModal,  setShowExDbModal]  = useState(false)
+  const [exDbTargetDay,  setExDbTargetDay]  = useState<string | null>(null)
+  const [exDbSearch,     setExDbSearch]     = useState('')
+  const [exDbResults,    setExDbResults]    = useState<any[]>([])
+  const [exDbAll,        setExDbAll]        = useState<any[]>([])
+  const [exDbFilter,     setExDbFilter]     = useState('Tous')
+  const exDbRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   /* ── Toast ──────────────────────────────────────────────────── */
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500) }
 
@@ -245,6 +262,22 @@ export default function ClientProfilePage() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
+  /* ── Exercise DB modal: load all on open ────────────────────── */
+  useEffect(() => {
+    if (!showExDbModal || exDbAll.length > 0) return
+    supabase.from('exercises_db').select('*').order('name').limit(200).then(({ data }) => setExDbAll(data || []))
+  }, [showExDbModal])
+
+  /* ── Exercise DB modal: debounced search ────────────────────── */
+  useEffect(() => {
+    if (exDbRef.current) clearTimeout(exDbRef.current)
+    if (exDbSearch.length < 2) { setExDbResults([]); return }
+    exDbRef.current = setTimeout(async () => {
+      const { data } = await supabase.from('exercises_db').select('*').ilike('name', `%${exDbSearch}%`).limit(30)
+      setExDbResults(data || [])
+    }, 280)
+  }, [exDbSearch])
+
   /* ── Save notes ─────────────────────────────────────────────── */
   const saveNotes = async () => {
     if (!coachId) return
@@ -281,6 +314,15 @@ export default function ClientProfilePage() {
   const toggleRepos  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], repos: !p[day].repos, exercises: [] } }))
   const addExercise  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...p[day].exercises, { name:'', sets:3, reps:10, rest:'60s', notes:'' }] } }))
   const removeExercise = (day: string, i: number) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: p[day].exercises.filter((_,j) => j !== i) } }))
+
+  const openExDbModal = (day: string) => {
+    setExDbTargetDay(day); setExDbSearch(''); setExDbResults([]); setExDbFilter('Tous'); setShowExDbModal(true)
+  }
+  const selectExercise = (ex: any) => {
+    if (!exDbTargetDay) return
+    setProgram(p => ({ ...p, [exDbTargetDay]: { ...p[exDbTargetDay], exercises: [...p[exDbTargetDay].exercises, { name: ex.name, sets: 3, reps: ex.reps ?? 10, rest: ex.rest ? `${ex.rest}s` : '60s', notes: '' }] } }))
+    setShowExDbModal(false); setExDbSearch(''); setExDbResults([]); setExDbFilter('Tous')
+  }
   const updateExercise = (day: string, i: number, field: keyof Exercise, val: string|number) =>
     setProgram(p => { const ex=[...p[day].exercises]; ex[i]={...ex[i],[field]:val}; return {...p,[day]:{...p[day],exercises:ex}} })
 
@@ -603,7 +645,7 @@ export default function ClientProfilePage() {
                         <Moon size={12} strokeWidth={2}/>{program[expandedDay].repos?'Repos ✓':'Marquer repos'}
                       </button>
                       {!program[expandedDay].repos && (
-                        <button onClick={()=>addExercise(expandedDay)} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.8rem',fontWeight:700,background:'rgba(249,115,22,.15)',color:'#F97316'}}>
+                        <button onClick={()=>openExDbModal(expandedDay)} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.8rem',fontWeight:700,background:'rgba(249,115,22,.15)',color:'#F97316'}}>
                           <Plus size={12} strokeWidth={2.5}/>Ajouter exercice
                         </button>
                       )}
@@ -633,7 +675,7 @@ export default function ClientProfilePage() {
                         </div>
                       ))}
                       <div style={{padding:'12px 0'}}>
-                        <button onClick={()=>addExercise(expandedDay)} style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:'1px dashed #374151',borderRadius:8,padding:'8px 14px',cursor:'pointer',color:'#6B7280',fontFamily:'Barlow,sans-serif',fontSize:'0.82rem',width:'100%',justifyContent:'center',transition:'all 150ms ease'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='#F97316';e.currentTarget.style.color='#F97316'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='#374151';e.currentTarget.style.color='#6B7280'}}>
+                        <button onClick={()=>openExDbModal(expandedDay)} style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:'1px dashed #374151',borderRadius:8,padding:'8px 14px',cursor:'pointer',color:'#6B7280',fontFamily:'Barlow,sans-serif',fontSize:'0.82rem',width:'100%',justifyContent:'center',transition:'all 150ms ease'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='#F97316';e.currentTarget.style.color='#F97316'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='#374151';e.currentTarget.style.color='#6B7280'}}>
                           <Plus size={13} strokeWidth={2.5}/>Ajouter un exercice
                         </button>
                       </div>
@@ -965,6 +1007,137 @@ export default function ClientProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* ── EXERCISE DB SEARCH MODAL ── */}
+      <AnimatePresence>
+        {showExDbModal && (
+          <motion.div
+            key="exdb-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }}
+            onClick={() => setShowExDbModal(false)}
+          >
+            <motion.div
+              key="exdb-sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              style={{ background: '#111827', border: '1px solid #374151', borderRadius: '20px 20px 0 0', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            >
+              {/* Header */}
+              <div style={{ padding: '20px 20px 0', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div>
+                    <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.25rem', fontWeight: 700, color: '#F8FAFC', margin: 0, letterSpacing: '0.05em' }}>
+                      BASE D&apos;EXERCICES
+                    </h3>
+                    {exDbTargetDay && (
+                      <p style={{ fontSize: '0.72rem', color: '#6B7280', margin: '2px 0 0', textTransform: 'capitalize' }}>
+                        Ajouter à · {exDbTargetDay}
+                      </p>
+                    )}
+                  </div>
+                  <button onClick={() => setShowExDbModal(false)} style={{ width: 32, height: 32, borderRadius: '50%', background: '#1F2937', border: '1px solid #374151', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <X size={14} color="#6B7280" />
+                  </button>
+                </div>
+                {/* Search input */}
+                <div style={{ position: 'relative', marginBottom: 10 }}>
+                  <Search size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#6B7280', pointerEvents: 'none' }} />
+                  <input
+                    value={exDbSearch}
+                    onChange={e => setExDbSearch(e.target.value)}
+                    placeholder="Rechercher un exercice..."
+                    autoFocus
+                    style={{ ...inputStyle, paddingLeft: 40, borderRadius: 12, fontSize: '0.88rem' }}
+                  />
+                </div>
+                {/* Muscle group filter chips */}
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 14 }}>
+                  {MUSCLE_FILTERS.map(mg => {
+                    const active = exDbFilter === mg
+                    const color = MUSCLE_COLORS[mg] ?? '#F97316'
+                    return (
+                      <button key={mg} onClick={() => setExDbFilter(mg)} style={{
+                        flexShrink: 0, padding: '5px 12px', borderRadius: 20,
+                        border: `1px solid ${active ? color : '#374151'}`,
+                        background: active ? `${color}22` : '#1F2937',
+                        color: active ? color : '#6B7280',
+                        fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 150ms',
+                        fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.05em',
+                      }}>
+                        {mg}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Exercise grid */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 32px' }}>
+                {(() => {
+                  let list = exDbSearch.length >= 2 ? exDbResults : exDbAll
+                  if (exDbFilter !== 'Tous') list = list.filter(ex => ex.muscle_group === exDbFilter)
+                  if (list.length === 0) return (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '48px 0', color: '#6B7280' }}>
+                      <Dumbbell size={32} strokeWidth={1.5} />
+                      <p style={{ fontSize: '0.85rem', margin: 0 }}>
+                        {exDbSearch.length >= 2 ? 'Aucun résultat' : exDbAll.length === 0 ? 'Chargement...' : 'Aucun exercice pour ce groupe'}
+                      </p>
+                    </div>
+                  )
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      {list.map((ex: any) => {
+                        const mgColor = MUSCLE_COLORS[ex.muscle_group] ?? '#6B7280'
+                        const diffColor = ex.difficulty === 'Avancé' ? '#EF4444' : ex.difficulty === 'Intermédiaire' ? '#F97316' : '#22C55E'
+                        return (
+                          <motion.button
+                            key={ex.id}
+                            whileTap={{ scale: 0.96 }}
+                            onClick={() => selectExercise(ex)}
+                            style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 14, padding: 0, textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'border-color 150ms' }}
+                            onMouseEnter={e => (e.currentTarget.style.borderColor = mgColor)}
+                            onMouseLeave={e => (e.currentTarget.style.borderColor = '#374151')}
+                          >
+                            <div style={{ height: 3, background: mgColor, width: '100%', flexShrink: 0 }} />
+                            <div style={{ padding: '10px 10px 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.88rem', color: '#F8FAFC', textTransform: 'uppercase', letterSpacing: '0.03em', lineHeight: 1.2 }}>
+                                {ex.name}
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                {ex.muscle_group && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: mgColor, background: `${mgColor}20`, borderRadius: 4, padding: '2px 6px', display: 'inline-block', width: 'fit-content' }}>
+                                    {ex.muscle_group}
+                                  </span>
+                                )}
+                                {ex.equipment && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#9CA3AF', background: '#2D3748', borderRadius: 4, padding: '2px 6px', display: 'inline-block', width: 'fit-content' }}>
+                                    {ex.equipment}
+                                  </span>
+                                )}
+                                {ex.difficulty && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 700, color: diffColor, background: `${diffColor}18`, borderRadius: 4, padding: '2px 6px', display: 'inline-block', width: 'fit-content' }}>
+                                    {ex.difficulty}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </motion.button>
+                        )
+                      })}
+                    </div>
+                  )
+                })()}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* TOAST */}
       {toast && (
