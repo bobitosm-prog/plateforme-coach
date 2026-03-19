@@ -73,6 +73,18 @@ const TEXT_PRIMARY = '#F8FAFC'
 const TEXT_MUTED = '#6B7280'
 const RADIUS_CARD = 20
 
+const MUSCLE_COLORS: Record<string, string> = {
+  'Poitrine': '#EF4444',
+  'Dos': '#3B82F6',
+  'Épaules': '#8B5CF6',
+  'Bras': '#F97316',
+  'Jambes': '#22C55E',
+  'Abdos': '#EAB308',
+  'Fessiers': '#EC4899',
+  'Cardio': '#06B6D4',
+}
+const MUSCLE_GROUPS_FILTER = ['Tous', 'Poitrine', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Abdos', 'Fessiers', 'Cardio']
+
 function calcMifflinStJeor(weight: number, height: number, age: number, gender: string) {
   const base = 10 * weight + 6.25 * height - 5 * age
   return gender === 'male' ? base + 5 : base - 161
@@ -148,6 +160,13 @@ export default function CoachApp() {
   const [exSearch, setExSearch] = useState('')
   const [exResults, setExResults] = useState<any[]>([])
   const [showExSearch, setShowExSearch] = useState(false)
+  const [showExDbModal, setShowExDbModal] = useState(false)
+  const [exDbAllResults, setExDbAllResults] = useState<any[]>([])
+  const [exDbMuscleFilter, setExDbMuscleFilter] = useState('Tous')
+  const [selectedExDb, setSelectedExDb] = useState<any>(null)
+  const [exDbAddSets, setExDbAddSets] = useState('3')
+  const [exDbAddReps, setExDbAddReps] = useState('10')
+  const [exDbAddRest, setExDbAddRest] = useState('60')
   const [workoutFinished, setWorkoutFinished] = useState(false)
   const [workoutStarted, setWorkoutStarted] = useState<number | null>(null)
   const [activeRestExName, setActiveRestExName] = useState<string | null>(null)
@@ -235,6 +254,14 @@ export default function CoachApp() {
       setExResults(data || [])
     }, 300)
   }, [exSearch])
+
+  // Training: load all exercises when DB modal opens
+  useEffect(() => {
+    if (!showExDbModal || exDbAllResults.length > 0) return
+    supabase.from('exercises_db').select('*').order('name').limit(200).then(({ data }) => {
+      setExDbAllResults(data || [])
+    })
+  }, [showExDbModal])
 
   // Messages: keep timestamp ref pointing at latest real message
   useEffect(() => {
@@ -699,6 +726,218 @@ export default function CoachApp() {
           onClose={() => { setWorkoutSession(null); fetchAll() }}
         />
       )}
+
+      {/* ═══════════════════ EXERCISE DB MODAL ═══════════════════ */}
+      <AnimatePresence>
+        {showExDbModal && (
+          <motion.div
+            key="exdb-modal"
+            initial={{ opacity: 0, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            style={{ position: 'fixed', inset: 0, background: BG_BASE, zIndex: 70, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+          >
+            {/* Header */}
+            <div style={{ padding: '16px 20px 0', flexShrink: 0, borderBottom: `1px solid ${BORDER}`, paddingBottom: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <button
+                  onClick={() => { setShowExDbModal(false); setExSearch(''); setExResults([]); setExDbMuscleFilter('Tous') }}
+                  style={{ width: 36, height: 36, borderRadius: 10, background: BG_CARD, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                >
+                  <X size={16} color={TEXT_MUTED} />
+                </button>
+                <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>BASE D'EXERCICES</h2>
+              </div>
+              {/* Search bar */}
+              <div style={{ position: 'relative', marginBottom: 12 }}>
+                <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
+                <input
+                  value={exSearch}
+                  onChange={e => setExSearch(e.target.value)}
+                  placeholder="Rechercher un exercice..."
+                  autoFocus
+                  style={{ width: '100%', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '13px 16px 13px 46px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }}
+                />
+              </div>
+              {/* Filter chips */}
+              <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 14 }}>
+                {MUSCLE_GROUPS_FILTER.map(mg => {
+                  const isActive = exDbMuscleFilter === mg
+                  const color = MUSCLE_COLORS[mg] || ORANGE
+                  return (
+                    <button key={mg} onClick={() => setExDbMuscleFilter(mg)} style={{
+                      flexShrink: 0, padding: '6px 14px', borderRadius: 20,
+                      border: `1px solid ${isActive ? color : BORDER}`,
+                      background: isActive ? `${color}22` : BG_CARD,
+                      color: isActive ? color : TEXT_MUTED,
+                      fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 180ms',
+                      fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.05em',
+                    }}>
+                      {mg}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Exercise grid */}
+            {(() => {
+              let list = exSearch.length >= 2 ? exResults : exDbAllResults
+              if (exDbMuscleFilter !== 'Tous') list = list.filter((ex: any) => ex.muscle_group === exDbMuscleFilter)
+              return (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px' }}>
+                  {list.length === 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '60px 0' }}>
+                      <Dumbbell size={36} color={TEXT_MUTED} strokeWidth={1.5} />
+                      <p style={{ color: TEXT_MUTED, fontSize: '0.85rem', margin: 0 }}>
+                        {exSearch.length >= 2 ? 'Aucun exercice trouvé' : exDbAllResults.length === 0 ? 'Chargement...' : 'Aucun exercice pour ce groupe'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      {list.map((ex: any) => {
+                        const mgColor = MUSCLE_COLORS[ex.muscle_group] || TEXT_MUTED
+                        const diffColor = ex.difficulty === 'Avancé' ? '#EF4444' : ex.difficulty === 'Intermédiaire' ? '#F97316' : '#22C55E'
+                        return (
+                          <motion.button
+                            key={ex.id}
+                            whileTap={{ scale: 0.96 }}
+                            onClick={() => { setSelectedExDb(ex); setExDbAddSets('3'); setExDbAddReps(ex.reps ? String(ex.reps) : '10'); setExDbAddRest(ex.rest ? String(ex.rest) : '60') }}
+                            style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: '0', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+                          >
+                            {/* Muscle color top bar */}
+                            <div style={{ height: 4, background: mgColor, width: '100%', flexShrink: 0 }} />
+                            <div style={{ padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.88rem', color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.03em', lineHeight: 1.2 }}>
+                                {ex.name}
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                {ex.muscle_group && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: mgColor, background: `${mgColor}20`, borderRadius: 5, padding: '2px 6px', display: 'inline-block', width: 'fit-content' }}>
+                                    {ex.muscle_group}
+                                  </span>
+                                )}
+                                {ex.equipment && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 700, color: TEXT_MUTED, background: '#252525', borderRadius: 5, padding: '2px 6px', display: 'inline-block', width: 'fit-content' }}>
+                                    {ex.equipment}
+                                  </span>
+                                )}
+                                {ex.difficulty && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 700, color: diffColor, background: `${diffColor}18`, borderRadius: 5, padding: '2px 6px', display: 'inline-block', width: 'fit-content' }}>
+                                    {ex.difficulty}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </motion.button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══════════════════ EXERCISE DETAIL MODAL ═══════════════════ */}
+      <AnimatePresence>
+        {selectedExDb && (
+          <motion.div
+            key="exdb-detail-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(10px)', zIndex: 80, display: 'flex', alignItems: 'flex-end' }}
+            onClick={() => setSelectedExDb(null)}
+          >
+            <motion.div
+              key="exdb-detail-sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              style={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, borderRadius: '24px 24px 0 0', padding: '24px 20px 52px', width: '100%', maxHeight: '88vh', overflowY: 'auto' }}
+            >
+              {/* Detail header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ flex: 1, paddingRight: 12 }}>
+                  {selectedExDb.muscle_group && (
+                    <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: MUSCLE_COLORS[selectedExDb.muscle_group] || ORANGE, background: `${MUSCLE_COLORS[selectedExDb.muscle_group] || ORANGE}20`, borderRadius: 6, padding: '2px 8px', display: 'inline-block' }}>
+                      {selectedExDb.muscle_group}
+                    </span>
+                  )}
+                  <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.04em', margin: '8px 0 0', textTransform: 'uppercase', color: TEXT_PRIMARY }}>
+                    {selectedExDb.name}
+                  </h3>
+                </div>
+                <button onClick={() => setSelectedExDb(null)} style={{ width: 32, height: 32, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <X size={14} color={TEXT_MUTED} />
+                </button>
+              </div>
+
+              {/* Tags */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
+                {selectedExDb.equipment && (
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, background: '#252525', borderRadius: 8, padding: '4px 10px' }}>{selectedExDb.equipment}</span>
+                )}
+                {selectedExDb.difficulty && (() => {
+                  const dc = selectedExDb.difficulty === 'Avancé' ? '#EF4444' : selectedExDb.difficulty === 'Intermédiaire' ? '#F97316' : '#22C55E'
+                  return <span style={{ fontSize: '0.7rem', fontWeight: 700, color: dc, background: `${dc}18`, borderRadius: 8, padding: '4px 10px' }}>{selectedExDb.difficulty}</span>
+                })()}
+              </div>
+
+              {/* Description */}
+              {selectedExDb.description && (
+                <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, lineHeight: 1.65, marginBottom: 20 }}>{selectedExDb.description}</p>
+              )}
+
+              {/* Video link */}
+              {selectedExDb.video_url && (
+                <a href={selectedExDb.video_url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: ORANGE, fontSize: '0.82rem', fontWeight: 700, marginBottom: 22, textDecoration: 'none' }}>
+                  <Play size={15} fill={ORANGE} color={ORANGE} />
+                  Voir la vidéo démo
+                </a>
+              )}
+
+              {/* Sets / Reps / Rest inputs */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
+                {[
+                  { label: 'Séries', value: exDbAddSets, setter: setExDbAddSets },
+                  { label: 'Reps', value: exDbAddReps, setter: setExDbAddReps },
+                  { label: 'Repos (s)', value: exDbAddRest, setter: setExDbAddRest },
+                ].map(({ label, value, setter }) => (
+                  <div key={label} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px' }}>
+                    <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                    <input type="number" value={value} onChange={e => setter(e.target.value)}
+                      style={{ width: '100%', background: 'transparent', color: TEXT_PRIMARY, fontSize: '1.2rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", outline: 'none', border: 'none' }} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Add button */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  toast.success(`${selectedExDb.name} ajouté à la séance 💪`)
+                  setSelectedExDb(null)
+                  setShowExDbModal(false)
+                  setExSearch('')
+                  setExResults([])
+                  setExDbMuscleFilter('Tous')
+                }}
+                style={{ width: '100%', background: ORANGE, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+              >
+                Ajouter à la séance
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════════════════ MODAL POIDS ═══════════════════ */}
       {modal === 'weight' && (
@@ -1363,9 +1602,14 @@ export default function CoachApp() {
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: allDone ? GREEN : TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.04em', transition: 'color 300ms' }}>{ex.name}</div>
-                              {ex.muscle_group && (
-                                <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: ORANGE, background: `${ORANGE}18`, borderRadius: 6, padding: '2px 7px', display: 'inline-block', marginTop: 3 }}>{ex.muscle_group}</span>
-                              )}
+                              <div style={{ display: 'flex', gap: 4, marginTop: 5, flexWrap: 'wrap' }}>
+                                {ex.muscle_group && (
+                                  <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: MUSCLE_COLORS[ex.muscle_group] || ORANGE, background: `${MUSCLE_COLORS[ex.muscle_group] || ORANGE}20`, borderRadius: 6, padding: '2px 7px' }}>{ex.muscle_group}</span>
+                                )}
+                                {ex.equipment && (
+                                  <span style={{ fontSize: '0.6rem', fontWeight: 700, color: TEXT_MUTED, background: '#252525', borderRadius: 6, padding: '2px 7px' }}>{ex.equipment}</span>
+                                )}
+                              </div>
                             </div>
                             <AnimatePresence>
                               {allDone && (
@@ -1428,44 +1672,15 @@ export default function CoachApp() {
                       )
                     })}
 
-                    {/* Add exercise from DB */}
-                    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
-                      {!showExSearch ? (
-                        <button onClick={() => setShowExSearch(true)} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <Plus size={16} color={TEXT_MUTED} />
-                          <span style={{ fontSize: '0.85rem', color: TEXT_MUTED, fontWeight: 600 }}>Ajouter un exercice</span>
-                        </button>
-                      ) : (
-                        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          <div style={{ position: 'relative' }}>
-                            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED }} />
-                            <input
-                              value={exSearch} onChange={e => setExSearch(e.target.value)}
-                              placeholder="Rechercher un exercice..."
-                              autoFocus
-                              style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, paddingLeft: 36, paddingRight: 12, paddingTop: 10, paddingBottom: 10, color: TEXT_PRIMARY, fontSize: '0.85rem', outline: 'none' }}
-                            />
-                          </div>
-                          {exResults.map((ex: any) => (
-                            <button key={ex.id} style={{ width: '100%', padding: '10px 12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left', transition: 'border-color 200ms' }}
-                              onClick={() => {
-                                toast.success(`${ex.name} noté pour ta prochaine séance`)
-                                setShowExSearch(false); setExSearch(''); setExResults([])
-                              }}
-                            >
-                              <div>
-                                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: TEXT_PRIMARY }}>{ex.name}</div>
-                                {(ex.muscle_group || ex.equipment) && (
-                                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2 }}>{[ex.muscle_group, ex.equipment].filter(Boolean).join(' · ')}</div>
-                                )}
-                              </div>
-                              <Plus size={14} color={ORANGE} />
-                            </button>
-                          ))}
-                          <button onClick={() => { setShowExSearch(false); setExSearch(''); setExResults([]) }} style={{ padding: '8px', background: 'transparent', border: 'none', cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.75rem', fontWeight: 600, textAlign: 'center' }}>Annuler</button>
-                        </div>
-                      )}
-                    </div>
+                    {/* Browse exercise DB */}
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setShowExDbModal(true)}
+                      style={{ width: '100%', background: BG_CARD, border: `2px dashed ${BORDER}`, borderRadius: 14, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                    >
+                      <Plus size={18} color={ORANGE} />
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, color: ORANGE, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Parcourir les exercices</span>
+                    </motion.button>
 
                     {/* Finish workout button */}
                     {trainingIsToday && (
