@@ -26,10 +26,10 @@ type Profile = {
   body_fat_pct: number | null; objective: string | null; status: string | null
 }
 type WorkoutSession = {
-  id: string; date: string; session_type: string | null
+  id: string; created_at: string; session_type: string | null
   duration_min: number | null; notes: string | null
 }
-type WeightLog = { id: string; weight: number; recorded_at: string }
+type WeightLog = { id: string; poids: number; date: string }
 
 // Programme types
 type Exercise = { name: string; sets: number; reps: number; rest: string; notes: string }
@@ -207,8 +207,8 @@ export default function ClientProfilePage() {
 
     const [profileRes, sessionsRes, weightRes, notesRes, programRes, mealPlanRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,goal_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status').eq('id', id).single(),
-      supabase.from('workout_sessions').select('id,date,session_type,duration_min,notes').eq('user_id', id).order('date', { ascending: false }).limit(20),
-      supabase.from('weight_logs').select('id,weight,recorded_at').eq('user_id', id).order('recorded_at', { ascending: false }).limit(30),
+      supabase.from('workout_sessions').select('id,created_at,session_type,duration_min,notes').eq('user_id', id).order('created_at', { ascending: false }),
+      supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
       supabase.from('client_programs').select('id,program').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('id,calorie_target,protein_target,carb_target,fat_target,plan').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
@@ -368,8 +368,8 @@ export default function ClientProfilePage() {
   }
 
   /* ── Derived metrics ────────────────────────────────────────── */
-  const currentWeight   = weightLogs[0]?.weight ?? profile?.current_weight ?? null
-  const prevMonthWeight = weightLogs.find(w => { const d=new Date(w.recorded_at),n=new Date(); return d.getMonth()!==n.getMonth()||d.getFullYear()!==n.getFullYear() })?.weight ?? null
+  const currentWeight   = weightLogs[0]?.poids ?? profile?.current_weight ?? null
+  const prevMonthWeight = weightLogs.find(w => { const d=new Date(w.date),n=new Date(); return d.getMonth()!==n.getMonth()||d.getFullYear()!==n.getFullYear() })?.poids ?? null
   const weightDelta     = currentWeight && prevMonthWeight ? currentWeight - prevMonthWeight : null
   const totalSessions   = sessions.length
   const goalProgress = (() => {
@@ -380,7 +380,7 @@ export default function ClientProfilePage() {
   })()
   const streak = (() => {
     if (!sessions.length) return 0
-    const dates=[...new Set(sessions.map(s=>s.date))].sort((a,b)=>b.localeCompare(a))
+    const dates=[...new Set(sessions.map(s=>s.created_at.split('T')[0]))].sort((a,b)=>b.localeCompare(a))
     let count=0; let cursor=new Date(); cursor.setHours(0,0,0,0)
     for (const d of dates) {
       const sd=new Date(d); sd.setHours(0,0,0,0)
@@ -584,7 +584,7 @@ export default function ClientProfilePage() {
                         ? <tr><td colSpan={4} style={{textAlign:'center',color:'#6B7280',padding:'32px 16px'}}>Aucune séance enregistrée</td></tr>
                         : sessions.map(s => (
                           <tr key={s.id}>
-                            <td style={{color:'#9CA3AF',whiteSpace:'nowrap'}}>{formatDate(s.date)}</td>
+                            <td style={{color:'#9CA3AF',whiteSpace:'nowrap'}}>{formatDate(s.created_at)}</td>
                             <td>{s.session_type ?? '—'}</td>
                             <td>{s.duration_min ? `${s.duration_min} min` : '—'}</td>
                             <td style={{color:'#9CA3AF',maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.notes ?? '—'}</td>
