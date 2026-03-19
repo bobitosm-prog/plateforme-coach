@@ -642,6 +642,9 @@ export default function CoachApp() {
   })()
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
+  const todaySessionDone = wSessions.some(s =>
+    s.completed && new Date(s.created_at).toDateString() === new Date().toDateString()
+  )
   const chartMin = weightHistory30.length > 0 ? Math.min(...weightHistory30.map(p => p.poids)) - 1 : 0
   const chartMax = weightHistory30.length > 0 ? Math.max(...weightHistory30.map(p => p.poids)) + 1 : 1
   const isCoach = session?.user?.email === COACH_EMAIL
@@ -904,36 +907,27 @@ export default function CoachApp() {
                 </a>
               )}
 
-              {/* Sets / Reps / Rest inputs */}
+              {/* Reference info: default sets/reps/rest */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
                 {[
-                  { label: 'Séries', value: exDbAddSets, setter: setExDbAddSets },
-                  { label: 'Reps', value: exDbAddReps, setter: setExDbAddReps },
-                  { label: 'Repos (s)', value: exDbAddRest, setter: setExDbAddRest },
-                ].map(({ label, value, setter }) => (
-                  <div key={label} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px' }}>
+                  { label: 'Séries', value: exDbAddSets },
+                  { label: 'Reps', value: exDbAddReps },
+                  { label: 'Repos (s)', value: exDbAddRest },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px', textAlign: 'center' }}>
                     <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
-                    <input type="number" value={value} onChange={e => setter(e.target.value)}
-                      style={{ width: '100%', background: 'transparent', color: TEXT_PRIMARY, fontSize: '1.2rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", outline: 'none', border: 'none' }} />
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: ORANGE }}>{value}</div>
                   </div>
                 ))}
               </div>
 
-              {/* Add button */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => {
-                  toast.success(`${selectedExDb.name} ajouté à la séance 💪`)
-                  setSelectedExDb(null)
-                  setShowExDbModal(false)
-                  setExSearch('')
-                  setExResults([])
-                  setExDbMuscleFilter('Tous')
-                }}
-                style={{ width: '100%', background: ORANGE, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedExDb(null)}
+                style={{ width: '100%', background: BG_BASE, color: TEXT_MUTED, fontWeight: 700, padding: '14px', borderRadius: 14, border: `1px solid ${BORDER}`, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}
               >
-                Ajouter à la séance
-              </motion.button>
+                Fermer
+              </button>
             </motion.div>
           </motion.div>
         )}
@@ -1553,6 +1547,48 @@ export default function CoachApp() {
                       <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0 }}>Aucun exercice pour ce jour.</p>
                     </div>
                   </div>
+                ) : trainingIsToday && todaySessionDone ? (
+                  /* ── SESSION ALREADY DONE TODAY ── */
+                  <div style={{ padding: '0 20px' }}>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      style={{ background: BG_CARD, border: `1px solid ${GREEN}40`, borderRadius: RADIUS_CARD, padding: '40px 24px', textAlign: 'center' }}
+                    >
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 280, damping: 18, delay: 0.1 }}
+                        style={{ width: 72, height: 72, borderRadius: '50%', background: `${GREEN}20`, border: `2px solid ${GREEN}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}
+                      >
+                        <CheckCircle2 size={36} color={GREEN} strokeWidth={1.5} />
+                      </motion.div>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: GREEN, margin: '0 0 6px', letterSpacing: '0.04em' }}>SÉANCE TERMINÉE ✓</p>
+                      <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: '0 0 28px' }}>Bravo ! Tu as complété la séance du jour.</p>
+                      {(() => {
+                        const nextDay = (() => {
+                          const currentIdx = WEEK_DAYS.indexOf(todayKey)
+                          for (let i = 1; i <= 7; i++) {
+                            const nd = WEEK_DAYS[(currentIdx + i) % 7]
+                            const dd = coachProgram?.[nd] ?? { repos: false, exercises: [] }
+                            if (!dd.repos && (dd.exercises?.length || 0) > 0) return nd
+                          }
+                          return null
+                        })()
+                        return nextDay ? (
+                          <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                              <div style={{ fontSize: '0.62rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 3 }}>Prochaine séance</div>
+                              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, color: TEXT_PRIMARY, textTransform: 'capitalize' }}>{nextDay}</div>
+                            </div>
+                            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: ORANGE, background: `${ORANGE}18`, borderRadius: 8, padding: '4px 10px' }}>
+                              {(coachProgram?.[nextDay]?.exercises || []).length} exercices
+                            </div>
+                          </div>
+                        ) : null
+                      })()}
+                    </motion.div>
+                  </div>
                 ) : (
                   /* ── EXERCISES ── */
                   <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1678,8 +1714,8 @@ export default function CoachApp() {
                       onClick={() => setShowExDbModal(true)}
                       style={{ width: '100%', background: BG_CARD, border: `2px dashed ${BORDER}`, borderRadius: 14, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
                     >
-                      <Plus size={18} color={ORANGE} />
-                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, color: ORANGE, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Parcourir les exercices</span>
+                      <Search size={16} color={ORANGE} />
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, color: ORANGE, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Découvrir les exercices</span>
                     </motion.button>
 
                     {/* Finish workout button */}
