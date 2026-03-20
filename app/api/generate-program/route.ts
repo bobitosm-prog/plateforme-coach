@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const maxDuration = 30 // 30 seconds for Vercel
+
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
 export async function POST(req: NextRequest) {
@@ -32,6 +34,7 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
 }
 Les jours de repos ont isRest: true et exercises: [].`
 
+  console.log('[generate-program] Calling Anthropic API...')
   const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -45,6 +48,8 @@ Les jours de repos ont isRest: true et exercises: [].`
       messages: [{ role: 'user', content: prompt }],
     }),
   })
+
+  console.log('[generate-program] Anthropic API responded — status:', anthropicRes.status)
 
   if (!anthropicRes.ok) {
     const err = await anthropicRes.text()
