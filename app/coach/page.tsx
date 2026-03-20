@@ -10,6 +10,7 @@ import {
   LogOut, Copy, Check, ExternalLink, MessageCircle, Send, ArrowLeft,
   X, Clock, Plus,
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { getRole } from '../../lib/getRole'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -92,7 +93,7 @@ export default function CoachPage() {
   const [search, setSearch]     = useState('')
   const [copied, setCopied]     = useState(false)
   const [showInvite, setShowInvite] = useState(false)
-  const [section, setSection]   = useState<'dashboard' | 'messages' | 'calendar'>('dashboard')
+  const [section, setSection]   = useState<'dashboard' | 'messages' | 'calendar' | 'profil'>('dashboard')
 
   // Scheduled sessions + calendar
   const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([])
@@ -405,6 +406,42 @@ export default function CoachPage() {
         .msg-input:focus { border-color: #F97316; }
         @media (max-width: 640px) { .hide-sm { display: none !important; } }
         @media (max-width: 1024px) { .lg-grid { grid-template-columns: 1fr !important; } }
+        /* ── MOBILE STATS 2×2 ── */
+        @media (max-width: 767px) {
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+        }
+        /* ── CLIENT CARDS (mobile) ── */
+        .client-cards-m { display: none; flex-direction: column; gap: 10px; }
+        @media (max-width: 767px) {
+          .client-table-wrap { display: none !important; }
+          .client-cards-m { display: flex; }
+        }
+        .client-card-m { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 14px; cursor: pointer; transition: border-color 150ms; overflow: hidden; }
+        .client-card-m:active { border-color: #F97316; }
+        .client-card-m-inner { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+        .avatar-circle-lg { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #F97316, #FB923C); display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.05rem; color: #fff; flex-shrink: 0; }
+        .client-card-info { flex: 1; min-width: 0; }
+        .client-card-name { font-weight: 600; font-size: 0.95rem; color: #F8FAFC; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .client-card-sub { font-size: 0.72rem; color: #6B7280; margin-top: 4px; }
+        .client-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .client-card-msg-btn { position: relative; background: transparent; border: none; cursor: pointer; padding: 8px; color: #6B7280; display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 8px; transition: color 150ms; }
+        .client-card-msg-btn:active { color: #F97316; }
+        .msg-badge { position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; background: #EF4444; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+        /* ── BOTTOM NAV ── */
+        .bottom-nav { display: none; }
+        @media (max-width: 767px) {
+          .bottom-nav {
+            display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+            background: #111827; border-top: 1px solid #1F2937;
+            padding: 8px 0; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+            z-index: 100;
+          }
+          .section-pad { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
+        }
+        .bottom-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: transparent; border: none; cursor: pointer; padding: 4px 8px; color: #6B7280; transition: color 150ms; position: relative; min-height: 44px; justify-content: center; }
+        .bottom-nav-btn.active { color: #F97316; }
+        .bottom-nav-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .nav-badge { position: absolute; top: 2px; right: calc(50% - 20px); min-width: 16px; height: 16px; background: #EF4444; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
         .cal-col { background: #1F2937; border-radius: 10px; display: flex; flex-direction: column; min-height: 480px; overflow: hidden; }
         .cal-col.today { border: 2px solid #F97316; }
         .cal-col-head { padding: 10px 12px; border-bottom: 1px solid #374151; text-align: center; }
@@ -612,7 +649,7 @@ export default function CoachPage() {
         const todayStr = new Date().toISOString().split('T')[0]
         const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
         return (
-          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+          <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -703,7 +740,7 @@ export default function CoachPage() {
 
       {/* ── MESSAGES SECTION ── */}
       {section === 'messages' && (
-        <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
           {/* Client list */}
           <div style={{ width: 300, flexShrink: 0, background: '#1F2937', borderRight: '1px solid #374151', display: 'flex', flexDirection: 'column' }}>
@@ -821,7 +858,7 @@ export default function CoachPage() {
 
       {/* ── DASHBOARD SECTION ── */}
       {section === 'dashboard' && (
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+        <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
 
           {/* Page header */}
           <div style={{ marginBottom: '32px' }}>
@@ -832,7 +869,7 @@ export default function CoachPage() {
           </div>
 
           {/* ── STATS ROW ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
 
             <div className="stat-card">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -908,7 +945,7 @@ export default function CoachPage() {
                 </div>
               </div>
 
-              <div style={{ overflowX: 'auto', borderRadius: '8px', background: '#111827' }}>
+              <div className="client-table-wrap" style={{ overflowX: 'auto', borderRadius: '8px', background: '#111827' }}>
                 <table className="data-table" aria-label="Liste des clients">
                   <thead>
                     <tr>
@@ -976,6 +1013,64 @@ export default function CoachPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* ── MOBILE CLIENT CARDS ── */}
+              <div className="client-cards-m">
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 14, height: 74, opacity: 0.5 }} />
+                  ))
+                ) : filtered.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: '#6B7280', padding: '32px 0', fontSize: '0.875rem' }}>
+                    {search ? 'Aucun client trouvé.' : "Aucun client pour l'instant."}
+                  </p>
+                ) : (
+                  filtered.map((c, i) => {
+                    const p = c.profiles
+                    const name = p?.full_name ?? 'Sans nom'
+                    const ini = initials(p?.full_name)
+                    const status = statusFor(c.created_at)
+                    const meta = STATUS_META[status]
+                    const since = new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                    const unread = unreadCounts[c.client_id] || 0
+                    return (
+                      <motion.div
+                        key={c.id}
+                        className="client-card-m"
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.055, duration: 0.28, ease: 'easeOut' }}
+                        onClick={() => window.location.href = `/client/${c.client_id}`}
+                      >
+                        <div className="client-card-m-inner">
+                          {p?.avatar_url
+                            ? <img src={p.avatar_url} alt="" style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                            : <div className="avatar-circle-lg">{ini}</div>
+                          }
+                          <div className="client-card-info">
+                            <div className="client-card-name">{name}</div>
+                            <div style={{ marginTop: 4 }}><span className={`badge ${meta.cls}`}>{meta.label}</span></div>
+                            <div className="client-card-sub">
+                              {p?.current_weight ? `${p.current_weight} kg · ` : ''}Membre depuis {since}
+                            </div>
+                          </div>
+                          <div className="client-card-actions">
+                            <button
+                              className="client-card-msg-btn"
+                              onClick={e => { e.stopPropagation(); setSection('messages'); openChat(c) }}
+                              aria-label="Messages"
+                            >
+                              <MessageCircle size={20} color={unread > 0 ? '#EF4444' : '#6B7280'} />
+                              {unread > 0 && <span className="msg-badge">{unread > 9 ? '9+' : unread}</span>}
+                            </button>
+                            <ChevronRight size={18} color="#4B5563" />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )
+                  })
+                )}
               </div>
 
               <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1065,6 +1160,55 @@ export default function CoachPage() {
           </div>
         </div>
       )}
+
+      {/* ── PROFIL SECTION ── */}
+      {section === 'profil' && (
+        <div className="section-pad" style={{ maxWidth: '480px', margin: '0 auto', padding: '40px 16px' }}>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.8rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.04em', margin: '0 0 32px' }}>Mon profil</h1>
+          <div style={{ background: '#1F2937', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <div className="avatar-circle" style={{ width: 64, height: 64, fontSize: '1.4rem' }}>{coachInitials}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.04em' }}>{coachName}</div>
+            <div style={{ fontSize: '0.82rem', color: '#6B7280' }}>{session.user.email}</div>
+            <span className="badge badge-active" style={{ marginTop: 4 }}>Coach</span>
+          </div>
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <button className="btn-secondary" onClick={() => setSection('dashboard')}>
+              <Users size={16} /> Tableau de bord
+            </button>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', padding: '11px 20px', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.04em', cursor: 'pointer', width: '100%' }}
+            >
+              <LogOut size={16} /> Se déconnecter
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── BOTTOM NAV (mobile only) ── */}
+      <nav className="bottom-nav" aria-label="Navigation principale">
+        {([
+          { key: 'dashboard', icon: <Users size={22} strokeWidth={2} />, label: 'Clients' },
+          { key: 'messages',  icon: <MessageCircle size={22} strokeWidth={2} />, label: 'Messages', badge: totalUnread },
+          { key: 'calendar',  icon: <Calendar size={22} strokeWidth={2} />, label: 'Calendrier' },
+          { key: 'profil',    icon: <div className="avatar-circle" style={{ width: 26, height: 26, fontSize: '0.65rem', flexShrink: 0 }}>{coachInitials}</div>, label: 'Profil' },
+        ] as { key: string; icon: React.ReactNode; label: string; badge?: number }[]).map(tab => (
+          <button
+            key={tab.key}
+            className={`bottom-nav-btn${section === tab.key ? ' active' : ''}`}
+            onClick={() => setSection(tab.key as 'dashboard' | 'messages' | 'calendar' | 'profil')}
+            aria-label={tab.label}
+          >
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {tab.icon}
+              {tab.badge && tab.badge > 0 ? (
+                <span className="nav-badge">{tab.badge > 9 ? '9+' : tab.badge}</span>
+              ) : null}
+            </div>
+            <span className="bottom-nav-label">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   )
 }
