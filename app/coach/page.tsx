@@ -84,6 +84,72 @@ const STATUS_META = {
   inactive: { label: 'Inactif',     cls: 'badge-inactive' },
 }
 
+/* ── Wheel picker constants ────────────────────────────────── */
+const WP_MONTHS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
+const WP_YEARS  = ['2025','2026','2027','2028']
+const WP_DAYS   = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'))
+const WP_HOURS  = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+const WP_MINS   = ['00','05','10','15','20','25','30','35','40','45','50','55']
+const WP_ITEM_H = 44
+
+function WheelPicker({ items, value, onChange, label, width = 72 }: {
+  items: string[]; value: string; onChange: (v: string) => void; label?: string; width?: number
+}) {
+  const ref  = useRef<HTMLDivElement>(null)
+  const tmr  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const init = Math.max(0, items.indexOf(value))
+  const [activeIdx, setActiveIdx] = useState(init)
+
+  useEffect(() => {
+    if (ref.current) ref.current.scrollTop = init * WP_ITEM_H
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function onScroll() {
+    if (!ref.current) return
+    const idx = Math.round(ref.current.scrollTop / WP_ITEM_H)
+    const clamped = Math.max(0, Math.min(items.length - 1, idx))
+    setActiveIdx(clamped)
+    if (tmr.current) clearTimeout(tmr.current)
+    tmr.current = setTimeout(() => onChange(items[clamped]), 80)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+      {label && <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6B7280', marginBottom: 4, height: 14 }}>{label}</div>}
+      <div style={{ position: 'relative', height: WP_ITEM_H * 5, width, overflow: 'hidden', borderRadius: 12, background: '#0A0A0A' }}>
+        {/* Selection band */}
+        <div style={{ position: 'absolute', top: WP_ITEM_H * 2, height: WP_ITEM_H, inset: '0 0 auto', left: 0, right: 0, background: 'rgba(249,115,22,0.08)', borderTop: '1px solid rgba(249,115,22,0.4)', borderBottom: '1px solid rgba(249,115,22,0.4)', pointerEvents: 'none', zIndex: 2 }} />
+        {/* Top fade */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: WP_ITEM_H * 2, background: 'linear-gradient(to bottom, #0A0A0A 40%, transparent)', pointerEvents: 'none', zIndex: 3 }} />
+        {/* Bottom fade */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: WP_ITEM_H * 2, background: 'linear-gradient(to top, #0A0A0A 40%, transparent)', pointerEvents: 'none', zIndex: 3 }} />
+        {/* Scroll column */}
+        <div
+          ref={ref} onScroll={onScroll}
+          style={{ height: '100%', overflowY: 'scroll', scrollSnapType: 'y mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' } as React.CSSProperties}
+        >
+          <div style={{ height: WP_ITEM_H * 2 }} />
+          {items.map((item, i) => (
+            <div
+              key={item}
+              onClick={() => { setActiveIdx(i); onChange(item); ref.current?.scrollTo({ top: i * WP_ITEM_H, behavior: 'smooth' }) }}
+              style={{
+                height: WP_ITEM_H, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                scrollSnapAlign: 'center', cursor: 'pointer', userSelect: 'none',
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: i === activeIdx ? 700 : 400,
+                fontSize: i === activeIdx ? '1.35rem' : '1rem',
+                color: i === activeIdx ? '#F97316' : '#6B7280',
+              } as React.CSSProperties}
+            >{item}</div>
+          ))}
+          <div style={{ height: WP_ITEM_H * 2 }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CoachPage() {
   const router = useRouter()
   const [mounted, setMounted]   = useState(false)
@@ -248,6 +314,7 @@ export default function CoachPage() {
 
   async function saveNewSession() {
     if (!session?.user?.id || !nsClientId || !nsDate) return
+    console.log('[saveNewSession] date:', nsDate, 'start:', nsStartTime, 'end:', nsEndTime)
     const start = new Date(`${nsDate}T${nsStartTime}:00`)
     const end   = new Date(`${nsDate}T${nsEndTime}:00`)
     const duration = Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000))
@@ -374,6 +441,7 @@ export default function CoachPage() {
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1F2937; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        .wheel-col::-webkit-scrollbar { display: none; }
         .stat-card { background: #1F2937; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: box-shadow 200ms ease; cursor: default; }
         .stat-card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.15); }
         .sidebar-card { background: #1F2937; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -524,23 +592,54 @@ export default function CoachPage() {
                 </select>
               </div>
 
-              {/* Date */}
-              <div>
-                <label className="form-label">Date *</label>
-                <input type="date" value={nsDate} onChange={e => setNsDate(e.target.value)} className="form-input" />
-              </div>
+              {/* Date wheel */}
+              {(() => {
+                const [yr, mo, da] = nsDate.split('-')
+                const moDisp = WP_MONTHS[parseInt(mo) - 1] ?? WP_MONTHS[0]
+                return (
+                  <div>
+                    <label className="form-label">Date</label>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '4px 0', background: '#111', borderRadius: 14 }}>
+                      <WheelPicker width={56} label="Jour" items={WP_DAYS} value={da}
+                        onChange={d => setNsDate(`${yr}-${mo}-${d}`)} />
+                      <WheelPicker width={68} label="Mois" items={WP_MONTHS} value={moDisp}
+                        onChange={m => { const n = String(WP_MONTHS.indexOf(m) + 1).padStart(2,'0'); setNsDate(`${yr}-${n}-${da}`) }} />
+                      <WheelPicker width={68} label="Année" items={WP_YEARS} value={yr}
+                        onChange={y => setNsDate(`${y}-${mo}-${da}`)} />
+                    </div>
+                  </div>
+                )
+              })()}
 
-              {/* Time */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label className="form-label">Début</label>
-                  <input type="time" value={nsStartTime} onChange={e => setNsStartTime(e.target.value)} className="form-input" />
-                </div>
-                <div>
-                  <label className="form-label">Fin</label>
-                  <input type="time" value={nsEndTime} onChange={e => setNsEndTime(e.target.value)} className="form-input" />
-                </div>
-              </div>
+              {/* Time wheels */}
+              {(() => {
+                const [hS, mS] = nsStartTime.split(':')
+                const [hE, mE] = nsEndTime.split(':')
+                const mSR = WP_MINS.reduce((p, c) => Math.abs(+c - +mS) < Math.abs(+p - +mS) ? c : p)
+                const mER = WP_MINS.reduce((p, c) => Math.abs(+c - +mE) < Math.abs(+p - +mE) ? c : p)
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label className="form-label">Début</label>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, background: '#111', borderRadius: 14, padding: '4px 0' }}>
+                        <WheelPicker width={60} label="H" items={WP_HOURS} value={hS.padStart(2,'0')}
+                          onChange={h => setNsStartTime(`${h}:${mS}`)} />
+                        <WheelPicker width={60} label="Min" items={WP_MINS} value={mSR}
+                          onChange={m => setNsStartTime(`${hS}:${m}`)} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="form-label">Fin</label>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, background: '#111', borderRadius: 14, padding: '4px 0' }}>
+                        <WheelPicker width={60} label="H" items={WP_HOURS} value={hE.padStart(2,'0')}
+                          onChange={h => setNsEndTime(`${h}:${mE}`)} />
+                        <WheelPicker width={60} label="Min" items={WP_MINS} value={mER}
+                          onChange={m => setNsEndTime(`${hE}:${m}`)} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Duration preview */}
               {nsStartTime && nsEndTime && (() => {
