@@ -5,12 +5,18 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import {
   Dumbbell, CheckCircle2, Award, Search, Check, Moon,
+  Timer, Plus, MoreHorizontal,
 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
   MUSCLE_COLORS, WEEK_DAYS, JS_DAYS_FR,
 } from '../../../lib/design-tokens'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
+
+// Hevy-style design tokens
+const BLUE        = '#3B82F6'
+const BG_WORKOUT  = '#0F0F0F'
+const INPUT_BG    = '#262626'
 
 interface TrainingTabProps {
   supabase: any
@@ -23,43 +29,46 @@ interface TrainingTabProps {
 }
 
 export default function TrainingTab({
-  supabase,
-  session,
-  coachProgram,
-  todayKey,
-  todaySessionDone,
-  startProgramWorkout,
-  fetchAll,
+  supabase, session, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
 }: TrainingTabProps) {
-  const [trainingDay, setTrainingDay] = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
+  const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
+  const [setInputs, setSetInputs]       = useState<Record<string, { kg: string; reps: string }[]>>({})
   const [showExDbModal, setShowExDbModal] = useState(false)
   const [workoutFinished, setWorkoutFinished] = useState(false)
-  const [workoutStarted, setWorkoutStarted] = useState<number | null>(null)
+  const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
   const [activeRestExName, setActiveRestExName] = useState<string | null>(null)
-  const [restTimer, setRestTimer] = useState<number>(0)
-  const [restMax, setRestMax] = useState<number>(90)
-  const [restRunning, setRestRunning] = useState(false)
-  const restIntervalRef = useRef<any>(null)
-  const exSearchRef = useRef<any>(null)
+  const [restingSet, setRestingSet]     = useState<{ exName: string; setIdx: number } | null>(null)
+  const [restTimer, setRestTimer]       = useState<number>(0)
+  const [restMax, setRestMax]           = useState<number>(90)
+  const [restRunning, setRestRunning]   = useState(false)
+  const [elapsedSecs, setElapsedSecs]   = useState(0)
+  const restIntervalRef  = useRef<any>(null)
+  const elapsedIntervalRef = useRef<any>(null)
+  const exSearchRef      = useRef<any>(null)
 
-  const todayStr = new Date().toISOString().split('T')[0]
-  const trainingIsToday = trainingDay === todayKey
-  const trainingDayData = coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null
+  const todayStr         = new Date().toISOString().split('T')[0]
+  const trainingIsToday  = trainingDay === todayKey
+  const trainingDayData  = coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null
   const trainingExercises: any[] = trainingDayData?.exercises || []
-  const trainingTotalSets = trainingExercises.reduce((s: number, ex: any) => s + Number(ex.sets), 0)
+
+  const trainingTotalSets = trainingExercises.reduce((s: number, ex: any) => {
+    const key = `fitpro-sets-${todayStr}-${ex.name}`
+    return s + (completedSets[key]?.length || Number(ex.sets) || 0)
+  }, 0)
   const trainingDoneSets = trainingExercises.reduce((s: number, ex: any) => {
     const key = `fitpro-sets-${todayStr}-${ex.name}`
     return s + (completedSets[key] || []).filter(Boolean).length
   }, 0)
 
-  // Rest timer interval
+  // ── Rest timer countdown ──
   useEffect(() => {
     if (restRunning && restTimer > 0) {
       restIntervalRef.current = setInterval(() => {
         setRestTimer(t => {
           if (t <= 1) {
             setRestRunning(false)
+            setRestingSet(null)
             clearInterval(restIntervalRef.current)
             if (navigator.vibrate) navigator.vibrate([200, 100, 200])
             return 0
@@ -71,22 +80,82 @@ export default function TrainingTab({
     return () => clearInterval(restIntervalRef.current)
   }, [restRunning])
 
-  // Load completed sets from localStorage when day or program changes
+  // ── Elapsed workout timer ──
+  useEffect(() => {
+    if (workoutStarted) {
+      elapsedIntervalRef.current = setInterval(() => {
+        setElapsedSecs(Math.round((Date.now() - workoutStarted) / 1000))
+      }, 1000)
+    } else {
+      clearInterval(elapsedIntervalRef.current)
+      setElapsedSecs(0)
+    }
+    return () => clearInterval(elapsedIntervalRef.current)
+  }, [workoutStarted])
+
+  // ── Load sets + inputs from localStorage ──
   useEffect(() => {
     if (!coachProgram || !trainingDay) return
     const dayData = coachProgram[trainingDay]
-    if (!dayData?.exercises) { setCompletedSets({}); return }
-    const loaded: Record<string, boolean[]> = {}
+    if (!dayData?.exercises) { setCompletedSets({}); setSetInputs({}); return }
+    const loadedSets: Record<string, boolean[]> = {}
+    const loadedInputs: Record<string, { kg: string; reps: string }[]> = {}
     ;(dayData.exercises as any[]).forEach((ex: any) => {
-      const key = `fitpro-sets-${todayStr}-${ex.name}`
-      const stored = typeof window !== 'undefined' ? localStorage.getItem(key) : null
-      loaded[key] = stored ? JSON.parse(stored) : Array(Number(ex.sets)).fill(false)
+      const key       = `fitpro-sets-${todayStr}-${ex.name}`
+      const inputKey  = `fitpro-inputs-${todayStr}-${ex.name}`
+      const stored       = typeof window !== 'undefined' ? localStorage.getItem(key) : null
+      const storedInputs = typeof window !== 'undefined' ? localStorage.getItem(inputKey) : null
+      const n = Number(ex.sets) || 3
+      loadedSets[key]       = stored ? JSON.parse(stored) : Array(n).fill(false)
+      loadedInputs[ex.name] = storedInputs
+        ? JSON.parse(storedInputs)
+        : Array(n).fill({ kg: ex.weight ? String(ex.weight) : '', reps: String(ex.reps || '') })
     })
-    setCompletedSets(loaded)
+    setCompletedSets(loadedSets)
+    setSetInputs(loadedInputs)
   }, [trainingDay, coachProgram])
 
-  function toggleSet(exName: string, setIdx: number, totalSetsCount: number, restSecs: number) {
+  // ── Helpers ──
+  function fmtElapsed(s: number) {
+    const h   = Math.floor(s / 3600)
+    const m   = Math.floor((s % 3600) / 60)
+    const sec = s % 60
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  }
+
+  function fmtRest(s: number) {
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+  }
+
+  function updateInput(exName: string, setIdx: number, field: 'kg' | 'reps', value: string) {
+    const inputKey = `fitpro-inputs-${todayStr}-${exName}`
+    setSetInputs(prev => {
+      const arr = prev[exName] ? [...prev[exName]] : []
+      arr[setIdx] = { ...(arr[setIdx] || { kg: '', reps: '' }), [field]: value }
+      if (typeof window !== 'undefined') localStorage.setItem(inputKey, JSON.stringify(arr))
+      return { ...prev, [exName]: arr }
+    })
+  }
+
+  function addSet(exName: string) {
     const key = `fitpro-sets-${todayStr}-${exName}`
+    const prev = completedSets[key] || []
+    const next = [...prev, false]
+    localStorage.setItem(key, JSON.stringify(next))
+    setCompletedSets(p => ({ ...p, [key]: next }))
+    const inputKey = `fitpro-inputs-${todayStr}-${exName}`
+    setSetInputs(prev => {
+      const arr  = prev[exName] ? [...prev[exName]] : []
+      const last = arr.length > 0 ? arr[arr.length - 1] : { kg: '', reps: '' }
+      const next = [...arr, { ...last }]
+      if (typeof window !== 'undefined') localStorage.setItem(inputKey, JSON.stringify(next))
+      return { ...prev, [exName]: next }
+    })
+  }
+
+  function toggleSet(exName: string, setIdx: number, totalSetsCount: number, restSecs: number) {
+    const key  = `fitpro-sets-${todayStr}-${exName}`
     const prev = completedSets[key] || Array(totalSetsCount).fill(false)
     const next = [...prev]
     next[setIdx] = !next[setIdx]
@@ -96,6 +165,7 @@ export default function TrainingTab({
     if (next[setIdx]) {
       const allDone = next.every(Boolean)
       if (!allDone && restSecs > 0) {
+        setRestingSet({ exName, setIdx })
         setActiveRestExName(exName)
         setRestMax(restSecs)
         setRestTimer(restSecs)
@@ -107,6 +177,7 @@ export default function TrainingTab({
         setRestRunning(false)
         setRestTimer(0)
         setActiveRestExName(null)
+        setRestingSet(null)
       }
     }
   }
@@ -114,7 +185,10 @@ export default function TrainingTab({
   async function finishTrainingWorkout() {
     const duration = workoutStarted ? Math.round((Date.now() - workoutStarted) / 60000) : 1
     const exs: any[] = (coachProgram?.[trainingDay]?.exercises as any[]) || []
-    const totalSetsCount = exs.reduce((s: number, ex: any) => s + Number(ex.sets), 0)
+    const totalSetsCount = exs.reduce((s: number, ex: any) => {
+      const key = `fitpro-sets-${todayStr}-${ex.name}`
+      return s + (completedSets[key]?.length || Number(ex.sets) || 0)
+    }, 0)
     const doneSetsCount = exs.reduce((s: number, ex: any) => {
       const key = `fitpro-sets-${todayStr}-${ex.name}`
       return s + (completedSets[key] || []).filter(Boolean).length
@@ -127,63 +201,34 @@ export default function TrainingTab({
       notes: `${doneSetsCount}/${totalSetsCount} séries · ${exs.length} exercices`,
     })
     exs.forEach((ex: any) => {
-      if (typeof window !== 'undefined') localStorage.removeItem(`fitpro-sets-${todayStr}-${ex.name}`)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(`fitpro-sets-${todayStr}-${ex.name}`)
+        localStorage.removeItem(`fitpro-inputs-${todayStr}-${ex.name}`)
+      }
     })
     setCompletedSets({})
+    setSetInputs({})
     setWorkoutStarted(null)
     setRestRunning(false)
     setRestTimer(0)
     setActiveRestExName(null)
+    setRestingSet(null)
     setWorkoutFinished(true)
     setTimeout(() => setWorkoutFinished(false), 4000)
     fetchAll()
   }
 
+  // ══════════════════════════════════════════
   return (
-    <div style={{ minHeight: '100vh' }}>
-
-      {/* ── REST TIMER OVERLAY ── */}
-      <AnimatePresence>
-        {restRunning && restTimer > 0 && (
-          <motion.div
-            key="rest-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.93)', backdropFilter: 'blur(16px)', zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}
-          >
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.25em', color: TEXT_MUTED }}>REPOS</span>
-            {(() => {
-              const r = 70; const circ = 2 * Math.PI * r
-              const offset = circ * (1 - restTimer / Math.max(restMax, 1))
-              return (
-                <div style={{ position: 'relative', width: 180, height: 180 }}>
-                  <svg width={180} height={180} viewBox="0 0 180 180">
-                    <circle cx={90} cy={90} r={r} fill="none" stroke="#1A1A1A" strokeWidth={10} />
-                    <circle cx={90} cy={90} r={r} fill="none" stroke={ORANGE} strokeWidth={10}
-                      strokeDasharray={circ} strokeDashoffset={offset}
-                      strokeLinecap="round" transform="rotate(-90 90 90)"
-                      style={{ transition: 'stroke-dashoffset 1s linear' }} />
-                  </svg>
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '4rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>{restTimer}</span>
-                    <span style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, marginTop: 4 }}>secondes</span>
-                  </div>
-                </div>
-              )
-            })()}
-            {activeRestExName && (
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', color: TEXT_MUTED, textTransform: 'capitalize' }}>après · {activeRestExName}</span>
-            )}
-            <button
-              onClick={() => { setRestRunning(false); setRestTimer(0); setActiveRestExName(null) }}
-              style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '12px 32px', color: TEXT_MUTED, fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase', transition: 'border-color 200ms' }}
-            >
-              Passer le repos
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div style={{ minHeight: '100vh', background: BG_WORKOUT, paddingBottom: 100 }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap');
+        .set-input { -webkit-appearance: none; appearance: none; }
+        .set-input::-webkit-inner-spin-button,
+        .set-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .set-input:focus { border-color: #3B82F6 !important; }
+        .add-set-btn:active { opacity: 0.7; }
+      `}</style>
 
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
       <AnimatePresence>
@@ -193,18 +238,18 @@ export default function TrainingTab({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 55, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, overflow: 'hidden' }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', zIndex: 55, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, overflow: 'hidden' }}
           >
             {Array.from({ length: 24 }).map((_, i) => (
               <motion.div key={i}
                 initial={{ y: -40, x: (i % 2 === 0 ? 1 : -1) * (30 + (i * 17) % 180), opacity: 1, rotate: 0 }}
                 animate={{ y: 700, x: (i % 2 === 0 ? 1 : -1) * (60 + (i * 23) % 200), opacity: 0, rotate: (i % 2 === 0 ? 1 : -1) * 540 }}
                 transition={{ duration: 2.2 + (i % 4) * 0.4, delay: (i % 6) * 0.08 }}
-                style={{ position: 'absolute', top: '10%', width: 10, height: 10, borderRadius: i % 3 === 0 ? '50%' : 2, background: [ORANGE, GREEN, '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'][i % 6] }}
+                style={{ position: 'absolute', top: '10%', width: 10, height: 10, borderRadius: i % 3 === 0 ? '50%' : 2, background: [ORANGE, GREEN, BLUE, '#F59E0B', '#EF4444', '#8B5CF6'][i % 6] }}
               />
             ))}
             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }}>
-              <Award size={72} color={ORANGE} strokeWidth={1.5} />
+              <Award size={72} color={GREEN} strokeWidth={1.5} />
             </motion.div>
             <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.8rem', fontWeight: 700, color: TEXT_PRIMARY, textAlign: 'center', letterSpacing: '0.04em', lineHeight: 1.1 }}>SÉANCE<br />TERMINÉE</div>
             <span style={{ fontSize: '0.9rem', color: TEXT_MUTED }}>Excellent travail !</span>
@@ -212,16 +257,48 @@ export default function TrainingTab({
         )}
       </AnimatePresence>
 
-      {/* ── HEADER ── */}
-      <div style={{ padding: '20px 20px 0' }}>
+      {/* ── PAGE HEADER ── */}
+      <div style={{ padding: '20px 16px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>ENTRAÎNEMENT</h1>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0, color: TEXT_PRIMARY }}>ENTRAÎNEMENT</h1>
           <span style={{ fontSize: '0.72rem', color: TEXT_MUTED, textTransform: 'capitalize' }}>{format(new Date(), 'EEE d MMM', { locale: fr })}</span>
         </div>
       </div>
 
+      {/* ── ACTIVE SESSION TOP BAR ── */}
+      <AnimatePresence>
+        {workoutStarted && (
+          <motion.div
+            key="session-bar"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            style={{ position: 'sticky', top: 0, zIndex: 30, background: '#111111', borderBottom: '1px solid #1E1E1E', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            {/* Timer left */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Timer size={14} color={BLUE} />
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.45rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.08em', lineHeight: 1 }}>{fmtElapsed(elapsedSecs)}</span>
+              </div>
+              <span style={{ fontSize: '0.62rem', color: TEXT_MUTED, paddingLeft: 21 }}>
+                {format(new Date(), 'EEE d MMM', { locale: fr })} · {trainingDoneSets}/{trainingTotalSets} séries
+              </span>
+            </div>
+            {/* Terminer right */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={finishTrainingWorkout}
+              style={{ background: GREEN, color: '#000', border: 'none', borderRadius: 10, padding: '10px 20px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <Check size={15} strokeWidth={3} /> Terminer
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NO PROGRAM ── */}
       {!coachProgram ? (
-        /* ── NO PROGRAM ── */
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '80px 20px', textAlign: 'center' }}>
           <Dumbbell size={56} color={TEXT_MUTED} strokeWidth={1.5} />
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>Programme en préparation</p>
@@ -229,23 +306,23 @@ export default function TrainingTab({
         </div>
       ) : (
         <>
-          {/* ── WEEK DAY TABS ── */}
-          <div style={{ padding: '0 20px', marginBottom: 16 }}>
+          {/* ── WEEK DAY CHIPS ── */}
+          <div style={{ padding: '0 16px', marginBottom: 16 }}>
             <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
               {WEEK_DAYS.map(day => {
                 const d = coachProgram[day] ?? { repos: false, exercises: [] }
-                const isActive = trainingDay === day
-                const isT = day === todayKey
-                const hasWork = !d.repos && (d.exercises?.length || 0) > 0
+                const isActive  = trainingDay === day
+                const isToday   = day === todayKey
+                const hasWork   = !d.repos && (d.exercises?.length || 0) > 0
                 return (
                   <button key={day} onClick={() => setTrainingDay(day)} style={{
                     flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
                     padding: '10px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
                     background: isActive ? ORANGE : BG_CARD,
-                    outline: isT && !isActive ? `2px solid ${ORANGE}` : 'none',
+                    outline: isToday && !isActive ? `2px solid ${ORANGE}` : 'none',
                     transition: 'all 200ms',
                   }}>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: isActive ? '#000' : isT ? ORANGE : TEXT_MUTED, textTransform: 'capitalize' }}>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: isActive ? '#000' : isToday ? ORANGE : TEXT_MUTED, textTransform: 'capitalize' }}>
                       {day.slice(0, 3)}
                     </span>
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: hasWork ? (isActive ? '#00000060' : ORANGE) : 'transparent', transition: 'background 200ms' }} />
@@ -255,9 +332,9 @@ export default function TrainingTab({
             </div>
           </div>
 
+          {/* ── REST DAY ── */}
           {trainingDayData?.repos ? (
-            /* ── REST DAY ── */
-            <div style={{ padding: '0 20px' }}>
+            <div style={{ padding: '0 16px' }}>
               <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 24px', textAlign: 'center' }}>
                 <Moon size={44} color={TEXT_MUTED} style={{ marginBottom: 16 }} />
                 <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.5rem', fontWeight: 700, color: TEXT_PRIMARY, margin: '0 0 6px', letterSpacing: '0.04em' }}>JOUR DE REPOS</p>
@@ -272,17 +349,19 @@ export default function TrainingTab({
                 </div>
               </div>
             </div>
+
           ) : trainingExercises.length === 0 ? (
             /* ── NO EXERCISES ── */
-            <div style={{ padding: '0 20px' }}>
+            <div style={{ padding: '0 16px' }}>
               <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 24px', textAlign: 'center' }}>
                 <Dumbbell size={32} color={TEXT_MUTED} style={{ marginBottom: 12 }} />
                 <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0 }}>Aucun exercice pour ce jour.</p>
               </div>
             </div>
+
           ) : trainingIsToday && todaySessionDone ? (
             /* ── SESSION ALREADY DONE TODAY ── */
-            <div style={{ padding: '0 20px' }}>
+            <div style={{ padding: '0 16px' }}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -299,15 +378,13 @@ export default function TrainingTab({
                 <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: GREEN, margin: '0 0 6px', letterSpacing: '0.04em' }}>SÉANCE TERMINÉE ✓</p>
                 <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: '0 0 28px' }}>Bravo ! Tu as complété la séance du jour.</p>
                 {(() => {
-                  const nextDay = (() => {
-                    const currentIdx = WEEK_DAYS.indexOf(todayKey)
-                    for (let i = 1; i <= 7; i++) {
-                      const nd = WEEK_DAYS[(currentIdx + i) % 7]
-                      const dd = coachProgram?.[nd] ?? { repos: false, exercises: [] }
-                      if (!dd.repos && (dd.exercises?.length || 0) > 0) return nd
-                    }
-                    return null
-                  })()
+                  const currentIdx = WEEK_DAYS.indexOf(todayKey)
+                  let nextDay: string | null = null
+                  for (let i = 1; i <= 7; i++) {
+                    const nd = WEEK_DAYS[(currentIdx + i) % 7]
+                    const dd = coachProgram?.[nd] ?? { repos: false, exercises: [] }
+                    if (!dd.repos && (dd.exercises?.length || 0) > 0) { nextDay = nd; break }
+                  }
                   return nextDay ? (
                     <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
@@ -322,150 +399,282 @@ export default function TrainingTab({
                 })()}
               </motion.div>
             </div>
+
           ) : (
-            /* ── EXERCISES ── */
-            <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            /* ══════════════ HEVY-STYLE EXERCISE CARDS ══════════════ */
+            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-              {/* Séance progress bar (today only) */}
-              {trainingIsToday && trainingTotalSets > 0 && (
-                <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '12px 16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Progression séance</span>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, color: trainingDoneSets === trainingTotalSets ? GREEN : ORANGE }}>{trainingDoneSets}/{trainingTotalSets} séries</span>
-                  </div>
-                  <div style={{ height: 4, background: BORDER, borderRadius: 2, overflow: 'hidden' }}>
-                    <motion.div
-                      animate={{ width: `${trainingTotalSets > 0 ? (trainingDoneSets / trainingTotalSets) * 100 : 0}%` }}
-                      style={{ height: '100%', background: trainingDoneSets === trainingTotalSets ? GREEN : ORANGE, borderRadius: 2 }}
-                      transition={{ duration: 0.4 }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Exercise cards */}
-              {trainingExercises.map((ex: any) => {
-                const numSets = Number(ex.sets) || 3
-                const restSecs = Number(ex.rest) || 60
+              {trainingExercises.map((ex: any, exIdx: number) => {
+                const restSecs   = Number(ex.rest) || 90
                 const storageKey = `fitpro-sets-${todayStr}-${ex.name}`
-                const setsArr: boolean[] = completedSets[storageKey] || Array(numSets).fill(false)
-                const doneCount = setsArr.filter(Boolean).length
-                const allDone = doneCount === numSets && numSets > 0
+                const setsArr: boolean[] = completedSets[storageKey] || Array(Number(ex.sets) || 3).fill(false)
+                const numSets    = setsArr.length
+                const inputs     = setInputs[ex.name] || Array(numSets).fill({ kg: '', reps: String(ex.reps || '') })
+                const doneCount  = setsArr.filter(Boolean).length
+                const allDone    = doneCount === numSets && numSets > 0
+                const isRestingHere = restRunning && restingSet?.exName === ex.name
 
                 return (
                   <motion.div
                     key={ex.name}
-                    layout
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: exIdx * 0.05, duration: 0.28 }}
                     style={{
-                      background: BG_CARD,
-                      border: `1px solid ${allDone ? GREEN : BORDER}`,
-                      borderRadius: RADIUS_CARD,
+                      background: '#1A1A1A',
+                      border: `1px solid ${allDone ? GREEN + '50' : '#242424'}`,
+                      borderRadius: 18,
                       overflow: 'hidden',
-                      transition: 'border-color 0.3s ease',
+                      transition: 'border-color 0.4s ease',
                     }}
                   >
-                    {/* Card header */}
-                    <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: `1px solid ${BORDER}` }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 10, background: allDone ? `${GREEN}20` : `${ORANGE}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 300ms' }}>
-                        {allDone ? <Check size={20} color={GREEN} /> : <Dumbbell size={20} color={ORANGE} />}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: allDone ? GREEN : TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.04em', transition: 'color 300ms' }}>{ex.name}</div>
-                        <div style={{ display: 'flex', gap: 4, marginTop: 5, flexWrap: 'wrap' }}>
-                          {ex.muscle_group && (
-                            <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: MUSCLE_COLORS[ex.muscle_group] || ORANGE, background: `${MUSCLE_COLORS[ex.muscle_group] || ORANGE}20`, borderRadius: 6, padding: '2px 7px' }}>{ex.muscle_group}</span>
-                          )}
-                          {ex.equipment && (
-                            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: TEXT_MUTED, background: '#252525', borderRadius: 6, padding: '2px 7px' }}>{ex.equipment}</span>
-                          )}
+                    {/* ── Card Header ── */}
+                    <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid #222' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {/* Exercise name in blue */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{
+                              fontFamily: "'Barlow Condensed', sans-serif",
+                              fontWeight: 700, fontSize: '1.05rem',
+                              color: allDone ? GREEN : BLUE,
+                              textTransform: 'uppercase', letterSpacing: '0.04em',
+                              transition: 'color 0.3s',
+                            }}>{ex.name}</span>
+
+                            {/* Muscle group badge */}
+                            {ex.muscle_group && (
+                              <span style={{
+                                fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase',
+                                color: MUSCLE_COLORS[ex.muscle_group] || ORANGE,
+                                background: `${MUSCLE_COLORS[ex.muscle_group] || ORANGE}20`,
+                                borderRadius: 6, padding: '2px 7px', flexShrink: 0,
+                              }}>{ex.muscle_group}</span>
+                            )}
+
+                            {/* Done badge */}
+                            {allDone && (
+                              <motion.span
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                style={{ fontSize: '0.58rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}
+                              >✓ TERMINÉ</motion.span>
+                            )}
+                          </div>
+
+                          {/* Subtitle: sets × reps · rest */}
+                          <div style={{ display: 'flex', gap: 6, marginTop: 5, alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: "'Barlow', sans-serif" }}>
+                              {numSets} × {ex.reps} reps
+                            </span>
+                            {restSecs > 0 && (
+                              <>
+                                <span style={{ fontSize: '0.55rem', color: '#333' }}>·</span>
+                                <span style={{ fontSize: '0.65rem', color: '#374151', fontFamily: "'Barlow', sans-serif" }}>
+                                  {fmtRest(restSecs)} repos
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
+
+                        {/* ⋯ menu button */}
+                        <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', color: '#3A3A3A', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 32, minHeight: 32, borderRadius: 8, flexShrink: 0 }}>
+                          <MoreHorizontal size={16} />
+                        </button>
                       </div>
-                      <AnimatePresence>
-                        {allDone && (
-                          <motion.div
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            style={{ width: 26, height: 26, borderRadius: '50%', background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                          >
-                            <Check size={14} color="#000" strokeWidth={3} />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
 
-                    {/* Chips: sets / reps / rest */}
-                    <div style={{ padding: '10px 16px', display: 'flex', gap: 8, borderBottom: `1px solid ${BORDER}` }}>
-                      {[`${numSets} séries`, `${ex.reps} reps`, `${restSecs}s repos`].map(label => (
-                        <span key={label} style={{ fontSize: '0.68rem', fontWeight: 700, color: ORANGE, background: `${ORANGE}18`, borderRadius: 8, padding: '4px 10px' }}>{label}</span>
+                    {/* ── Table Header ── */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '36px 1fr 72px 64px 44px',
+                      gap: 4, padding: '8px 14px 4px', alignItems: 'center',
+                    }}>
+                      {['SÉRIE', 'PRÉCÉDENT', 'KG', 'REPS', ''].map((col, ci) => (
+                        <span key={ci} style={{
+                          fontFamily: "'Barlow Condensed', sans-serif",
+                          fontSize: '0.58rem', fontWeight: 700,
+                          color: '#2E2E2E', textTransform: 'uppercase', letterSpacing: '0.08em',
+                          textAlign: (ci === 0 || ci >= 2) ? 'center' : 'left',
+                        }}>{col}</span>
                       ))}
                     </div>
 
-                    {/* Set checkboxes + progress */}
-                    <div style={{ padding: '14px 16px' }}>
-                      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                        {Array.from({ length: numSets }).map((_, si) => (
-                          <motion.button
-                            key={si}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => trainingIsToday ? toggleSet(ex.name, si, numSets, restSecs) : undefined}
-                            style={{
-                              width: 46, height: 46, borderRadius: 12,
-                              border: `2px solid ${setsArr[si] ? GREEN : BORDER}`,
-                              background: setsArr[si] ? `${GREEN}20` : BG_BASE,
-                              cursor: trainingIsToday ? 'pointer' : 'default',
-                              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-                              transition: 'all 200ms', flexShrink: 0,
-                            }}
-                          >
-                            {setsArr[si]
-                              ? <Check size={18} color={GREEN} strokeWidth={2.5} />
-                              : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: TEXT_MUTED }}>{si + 1}</span>
-                            }
-                          </motion.button>
-                        ))}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                        <span style={{ fontSize: '0.62rem', color: TEXT_MUTED, fontWeight: 700 }}>{doneCount}/{numSets} séries</span>
-                        {allDone && <span style={{ fontSize: '0.62rem', color: GREEN, fontWeight: 700, letterSpacing: '0.05em' }}>TERMINÉ</span>}
-                      </div>
-                      <div style={{ height: 3, background: BORDER, borderRadius: 2, overflow: 'hidden' }}>
-                        <motion.div
-                          animate={{ width: `${numSets > 0 ? (doneCount / numSets) * 100 : 0}%` }}
-                          style={{ height: '100%', background: allDone ? GREEN : ORANGE, borderRadius: 2 }}
-                          transition={{ duration: 0.35 }}
-                        />
-                      </div>
+                    {/* ── Set Rows ── */}
+                    <div style={{ paddingBottom: 4 }}>
+                      {setsArr.map((done, si) => {
+                        const inp = inputs[si] || { kg: '', reps: String(ex.reps || '') }
+                        const isRestingThisSet = isRestingHere && restingSet?.setIdx === si
+
+                        return (
+                          <div key={si}>
+                            {/* Set row */}
+                            <motion.div
+                              animate={{ background: done ? 'rgba(34,197,94,0.06)' : 'transparent' }}
+                              transition={{ duration: 0.35 }}
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '36px 1fr 72px 64px 44px',
+                                gap: 4, padding: '5px 14px', alignItems: 'center',
+                              }}
+                            >
+                              {/* Series number pill */}
+                              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div style={{
+                                  width: 26, height: 26, borderRadius: 7,
+                                  background: done ? `${GREEN}28` : '#262626',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  transition: 'background 300ms',
+                                }}>
+                                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: done ? GREEN : '#555' }}>{si + 1}</span>
+                                </div>
+                              </div>
+
+                              {/* Previous performance */}
+                              <span style={{
+                                fontSize: '0.72rem', color: '#2E2E2E',
+                                fontFamily: "'Barlow', sans-serif",
+                                paddingLeft: 2,
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                textDecoration: done ? 'line-through' : 'none',
+                              }}>—</span>
+
+                              {/* KG input */}
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                className="set-input"
+                                value={inp.kg}
+                                onChange={e => updateInput(ex.name, si, 'kg', e.target.value)}
+                                placeholder="0"
+                                disabled={!trainingIsToday}
+                                style={{
+                                  background: done ? 'rgba(34,197,94,0.1)' : INPUT_BG,
+                                  border: `1px solid ${done ? GREEN + '40' : 'transparent'}`,
+                                  borderRadius: 10, padding: '7px 4px',
+                                  fontSize: '0.95rem', fontFamily: "'Barlow Condensed', sans-serif",
+                                  fontWeight: 700, color: done ? GREEN : TEXT_PRIMARY,
+                                  textAlign: 'center', width: '100%', outline: 'none',
+                                  transition: 'background 300ms, border-color 200ms',
+                                  cursor: trainingIsToday ? 'text' : 'default',
+                                }}
+                              />
+
+                              {/* Reps input */}
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                className="set-input"
+                                value={inp.reps}
+                                onChange={e => updateInput(ex.name, si, 'reps', e.target.value)}
+                                placeholder="0"
+                                disabled={!trainingIsToday}
+                                style={{
+                                  background: done ? 'rgba(34,197,94,0.1)' : INPUT_BG,
+                                  border: `1px solid ${done ? GREEN + '40' : 'transparent'}`,
+                                  borderRadius: 10, padding: '7px 4px',
+                                  fontSize: '0.95rem', fontFamily: "'Barlow Condensed', sans-serif",
+                                  fontWeight: 700, color: done ? GREEN : TEXT_PRIMARY,
+                                  textAlign: 'center', width: '100%', outline: 'none',
+                                  transition: 'background 300ms, border-color 200ms',
+                                  cursor: trainingIsToday ? 'text' : 'default',
+                                }}
+                              />
+
+                              {/* Check button */}
+                              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <motion.button
+                                  whileTap={{ scale: 0.8 }}
+                                  onClick={() => trainingIsToday ? toggleSet(ex.name, si, numSets, restSecs) : undefined}
+                                  style={{
+                                    width: 34, height: 34, borderRadius: 10, border: 'none',
+                                    background: done ? GREEN : '#262626',
+                                    cursor: trainingIsToday ? 'pointer' : 'default',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'background 200ms', flexShrink: 0,
+                                  }}
+                                >
+                                  <Check size={16} color={done ? '#000' : '#333'} strokeWidth={2.5} />
+                                </motion.button>
+                              </div>
+                            </motion.div>
+
+                            {/* ── Inline rest timer between rows ── */}
+                            <AnimatePresence>
+                              {isRestingThisSet && (
+                                <motion.div
+                                  key={`rest-${si}`}
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 34 }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px', overflow: 'hidden' }}
+                                >
+                                  <div style={{ flex: 1, height: 1, background: '#1F1F1F' }} />
+                                  <button
+                                    onClick={() => { setRestRunning(false); setRestTimer(0); setRestingSet(null); setActiveRestExName(null) }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 8px' }}
+                                  >
+                                    <Timer size={12} color={BLUE} />
+                                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: BLUE, letterSpacing: '0.08em' }}>{fmtRest(restTimer)}</span>
+                                  </button>
+                                  <div style={{ flex: 1, height: 1, background: '#1F1F1F' }} />
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )
+                      })}
                     </div>
+
+                    {/* ── Add Set Button ── */}
+                    {trainingIsToday && (
+                      <motion.button
+                        className="add-set-btn"
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => addSet(ex.name)}
+                        style={{
+                          width: '100%', background: 'transparent', border: 'none',
+                          borderTop: '1px solid #222',
+                          padding: '11px 14px', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                          transition: 'background 150ms',
+                        }}
+                      >
+                        <Plus size={13} color={BLUE} strokeWidth={2.5} />
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.8rem', fontWeight: 700, color: BLUE, letterSpacing: '0.06em' }}>
+                          + Ajouter une série ({fmtRest(restSecs)})
+                        </span>
+                      </motion.button>
+                    )}
                   </motion.div>
                 )
               })}
 
-              {/* Browse exercise DB */}
+              {/* ── Browse Exercise DB ── */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setShowExDbModal(true)}
-                style={{ width: '100%', background: BG_CARD, border: `2px dashed ${BORDER}`, borderRadius: 14, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                style={{ width: '100%', background: BG_CARD, border: `2px dashed #222`, borderRadius: 14, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
               >
-                <Search size={16} color={ORANGE} />
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, color: ORANGE, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Découvrir les exercices</span>
+                <Search size={16} color={BLUE} />
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, color: BLUE, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Découvrir les exercices</span>
               </motion.button>
 
-              {/* Finish workout button */}
-              {trainingIsToday && (
+              {/* ── Bottom Finish Button (when session not yet started but sets done) ── */}
+              {trainingIsToday && !workoutStarted && trainingDoneSets > 0 && (
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={finishTrainingWorkout}
                   style={{
-                    width: '100%', background: trainingDoneSets > 0 ? GREEN : BORDER,
-                    color: trainingDoneSets > 0 ? '#000' : TEXT_MUTED,
+                    width: '100%', background: GREEN, color: '#000',
                     fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none',
-                    cursor: trainingDoneSets > 0 ? 'pointer' : 'not-allowed',
+                    cursor: 'pointer',
                     fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase',
-                    transition: 'all 300ms', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   }}
                 >
-                  <Award size={18} color={trainingDoneSets > 0 ? '#000' : TEXT_MUTED} />
+                  <Award size={18} color="#000" />
                   Terminer la séance
                 </motion.button>
               )}
@@ -476,7 +685,7 @@ export default function TrainingTab({
         </>
       )}
 
-      {/* Exercise DB Modal (self-contained) */}
+      {/* Exercise DB Modal */}
       {showExDbModal && (
         <ExerciseSearchModal
           supabase={supabase}
