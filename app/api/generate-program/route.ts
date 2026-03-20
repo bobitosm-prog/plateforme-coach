@@ -59,12 +59,16 @@ Génère ${trainingDays} jours d'entraînement et ${7 - trainingDays} jours de r
     const data = await anthropicRes.json()
     const rawText = data.content[0].text
     console.log('[generate-program] FULL RAW:', rawText)
-    return NextResponse.json({ error: 'debug', rawText }, { status: 200 })
 
-    // Extract JSON from response (Claude sometimes adds text before/after)
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON found in response: ' + rawText.slice(0, 200))
+    // Strip markdown code blocks if present
+    const cleaned = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim()
 
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) throw new Error('No JSON found')
     const parsed = JSON.parse(jsonMatch[0])
     const aiProgram: Record<string, { isRest: boolean; exercises: unknown[] }> = parsed
 
