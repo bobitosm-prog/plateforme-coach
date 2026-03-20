@@ -59,21 +59,15 @@ Les jours de repos ont isRest: true et exercises: [].`
     }
 
     const data = await anthropicRes.json()
-    const text: string = data.content?.[0]?.text ?? ''
+    const rawText = data.content[0].text
+    console.log('[generate-program] Raw AI response:', rawText)
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      console.error('[generate-program] Could not parse JSON from:', text)
-      return NextResponse.json({ error: 'Réponse IA invalide' }, { status: 500 })
-    }
+    // Extract JSON from response (Claude sometimes adds text before/after)
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) throw new Error('No JSON found in response: ' + rawText.slice(0, 200))
 
-    let aiProgram: Record<string, { isRest: boolean; exercises: unknown[] }>
-    try {
-      aiProgram = JSON.parse(jsonMatch[0])
-    } catch (e) {
-      console.error('[generate-program] JSON parse error:', e)
-      return NextResponse.json({ error: 'Réponse IA invalide' }, { status: 500 })
-    }
+    const parsed = JSON.parse(jsonMatch[0])
+    const aiProgram: Record<string, { isRest: boolean; exercises: unknown[] }> = parsed
 
     // Normalise: ensure all 7 days are present
     for (const d of DAYS) {
