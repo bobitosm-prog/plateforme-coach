@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeft, Zap, Mail, Calendar, Scale, Target, Dumbbell,
   Flame, TrendingDown, CheckCircle, CalendarClock, Save,
-  Archive, Trash2, Check, X, Plus, Minus, Moon, Utensils, Search, Pencil,
+  Archive, Trash2, Check, X, Plus, Minus, Moon, Utensils, Search, Pencil, Sparkles, Loader2,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -191,6 +191,69 @@ export default function ClientProfilePage() {
   const [exDbAll,        setExDbAll]        = useState<any[]>([])
   const [exDbFilter,     setExDbFilter]     = useState('Tous')
   const exDbRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // AI Program Generator
+  const [showAiModal,    setShowAiModal]    = useState(false)
+  const [aiLevel,        setAiLevel]        = useState('Intermédiaire')
+  const [aiEquipment,    setAiEquipment]    = useState<string[]>(['Poids du corps'])
+  const [aiTrainingDays, setAiTrainingDays] = useState(4)
+  const [aiGenerating,   setAiGenerating]   = useState(false)
+  const [aiPreview,      setAiPreview]      = useState<WeekProgram | null>(null)
+
+  const AI_EQUIPMENT = ['Haltères', 'Barre', 'Machine', 'Poulie', 'Poids du corps', 'Banc']
+  const AI_LEVELS    = ['Débutant', 'Intermédiaire', 'Avancé']
+
+  const toggleAiEquipment = (item: string) => {
+    setAiEquipment(prev => prev.includes(item) ? prev.filter(e => e !== item) : [...prev, item])
+  }
+
+  const generateAiProgram = async () => {
+    setAiGenerating(true)
+    setAiPreview(null)
+    try {
+      const res = await fetch('/api/generate-program', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          objective: profile?.objective || 'Amélioration de la condition physique',
+          weight:       profile?.current_weight ?? '?',
+          targetWeight: profile?.target_weight  ?? '?',
+          level:        aiLevel,
+          equipment:    aiEquipment.length > 0 ? aiEquipment : ['Poids du corps'],
+          trainingDays: aiTrainingDays,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      const mapped: WeekProgram = {}
+      DAYS.forEach(d => {
+        const aiDay = data.program[d]
+        mapped[d] = {
+          repos: aiDay?.isRest ?? true,
+          exercises: (aiDay?.exercises ?? []).map((ex: any) => ({
+            name:  ex.name  ?? '',
+            sets:  ex.sets  ?? 3,
+            reps:  ex.reps  ?? 10,
+            rest:  ex.rest  ?? '60s',
+            notes: ex.notes ?? '',
+          })),
+        }
+      })
+      setAiPreview(mapped)
+    } catch {
+      showToast('Erreur lors de la génération IA')
+    } finally {
+      setAiGenerating(false)
+    }
+  }
+
+  const acceptAiPreview = () => {
+    if (!aiPreview) return
+    setProgram(aiPreview)
+    setAiPreview(null)
+    setShowAiModal(false)
+    showToast('Programme IA appliqué — vérifiez et sauvegardez')
+  }
 
   /* ── Toast ──────────────────────────────────────────────────── */
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500) }
@@ -664,6 +727,14 @@ export default function ClientProfilePage() {
                   <span style={{fontSize:'0.75rem',color:'#22C55E',display:'flex',alignItems:'center',gap:4,opacity:programSaved?1:0,transition:'opacity 300ms ease'}}>
                     <Check size={12} strokeWidth={2.5}/>Sauvegardé
                   </span>
+                  <button
+                    onClick={() => { setShowAiModal(true); setAiPreview(null) }}
+                    style={{display:'flex',alignItems:'center',gap:6,padding:'6px 14px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.85rem',fontWeight:700,letterSpacing:'0.04em',background:'linear-gradient(135deg,#7C3AED,#A855F7)',color:'#fff',transition:'opacity 200ms ease'}}
+                    onMouseEnter={e=>(e.currentTarget.style.opacity='0.85')}
+                    onMouseLeave={e=>(e.currentTarget.style.opacity='1')}
+                  >
+                    <Sparkles size={13} strokeWidth={2.5}/>Générer avec l&apos;IA
+                  </button>
                   <button className="btn-secondary" style={{padding:'6px 14px',fontSize:'0.85rem'}} onClick={saveProgram} disabled={programSaving}>
                     <Save size={13} strokeWidth={2.5}/>{programSaving?'Sauvegarde…':'Sauvegarder'}
                   </button>
@@ -1197,6 +1268,219 @@ export default function ClientProfilePage() {
       </AnimatePresence>
 
       {/* TOAST */}
+      {/* ── AI PROGRAM GENERATOR MODAL ── */}
+      <AnimatePresence>
+        {showAiModal && (
+          <motion.div
+            key="ai-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+            onClick={() => { if (!aiGenerating) setShowAiModal(false) }}
+          >
+            <motion.div
+              key="ai-modal"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              onClick={e => e.stopPropagation()}
+              style={{ background: '#111827', border: '1px solid #374151', borderRadius: 16, width: '100%', maxWidth: 520, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #374151', background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(168,85,247,0.08))' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7C3AED,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Sparkles size={18} color="#fff" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: '#F8FAFC', margin: 0, letterSpacing: '0.05em' }}>GÉNÉRER AVEC L&apos;IA</h2>
+                    <p style={{ fontSize: '0.72rem', color: '#9CA3AF', margin: 0 }}>Claude génère un programme personnalisé</p>
+                  </div>
+                </div>
+                {!aiGenerating && (
+                  <button onClick={() => setShowAiModal(false)} style={{ width: 32, height: 32, borderRadius: '50%', background: '#1F2937', border: '1px solid #374151', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <X size={14} color="#6B7280" />
+                  </button>
+                )}
+              </div>
+
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+
+                {/* Loading state */}
+                {aiGenerating && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '56px 24px' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'spin 1s linear infinite' }}>
+                      <Loader2 size={28} color="#fff" strokeWidth={2} />
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: '#F8FAFC', margin: 0, letterSpacing: '0.04em' }}>L&apos;IA génère votre programme…</p>
+                      <p style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: 6 }}>Cela prend quelques secondes</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Preview state */}
+                {!aiGenerating && aiPreview && (
+                  <div style={{ padding: '20px 24px' }}>
+                    <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.8rem', fontWeight: 700, color: '#22C55E', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>✓ Programme généré — aperçu</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                      {DAYS.map(d => {
+                        const day = aiPreview[d]
+                        return (
+                          <div key={d} style={{ background: '#1A1A2E', borderRadius: 10, padding: '10px 14px', border: `1px solid ${day.repos ? '#1F2937' : 'rgba(124,58,237,0.3)'}` }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: day.repos ? '#4B5563' : '#A855F7', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                                {d.charAt(0).toUpperCase() + d.slice(1)}
+                              </span>
+                              {day.repos
+                                ? <span style={{ fontSize: '0.72rem', color: '#4B5563', display: 'flex', alignItems: 'center', gap: 4 }}><Moon size={10} /> Repos</span>
+                                : <span style={{ fontSize: '0.72rem', color: '#A855F7', fontWeight: 600 }}>{day.exercises.length} exercice{day.exercises.length !== 1 ? 's' : ''}</span>
+                              }
+                            </div>
+                            {!day.repos && day.exercises.length > 0 && (
+                              <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                {day.exercises.map((ex, i) => (
+                                  <span key={i} style={{ fontSize: '0.68rem', background: 'rgba(124,58,237,0.15)', color: '#C4B5FD', borderRadius: 6, padding: '2px 8px' }}>{ex.name}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        onClick={generateAiProgram}
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '1px solid #374151', background: 'transparent', color: '#9CA3AF', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, transition: 'border-color 150ms, color 150ms' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#6B7280'; (e.currentTarget as HTMLElement).style.color = '#F8FAFC' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#374151'; (e.currentTarget as HTMLElement).style.color = '#9CA3AF' }}
+                      >
+                        <Sparkles size={13} /> Régénérer
+                      </button>
+                      <button
+                        onClick={acceptAiPreview}
+                        style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#fff', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.04em', transition: 'opacity 200ms' }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                      >
+                        <Check size={15} strokeWidth={2.5} /> Accepter ce programme
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Config form */}
+                {!aiGenerating && !aiPreview && (
+                  <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                    {/* Client context (auto-filled) */}
+                    <div style={{ background: '#0F172A', borderRadius: 10, padding: '12px 16px', border: '1px solid #1E293B' }}>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#6B7280', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Contexte client (auto-rempli)</p>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <div>
+                          <p style={{ fontSize: '0.68rem', color: '#6B7280', margin: '0 0 2px' }}>Objectif</p>
+                          <p style={{ fontSize: '0.82rem', color: '#F8FAFC', margin: 0, fontWeight: 500 }}>{profile?.objective || '—'}</p>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '0.68rem', color: '#6B7280', margin: '0 0 2px' }}>Poids actuel</p>
+                          <p style={{ fontSize: '0.82rem', color: '#F8FAFC', margin: 0, fontWeight: 500 }}>{profile?.current_weight ? `${profile.current_weight} kg` : '—'}</p>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '0.68rem', color: '#6B7280', margin: '0 0 2px' }}>Poids cible</p>
+                          <p style={{ fontSize: '0.82rem', color: '#F8FAFC', margin: 0, fontWeight: 500 }}>{profile?.target_weight ? `${profile.target_weight} kg` : '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Niveau */}
+                    <div>
+                      <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Niveau</label>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {AI_LEVELS.map(l => (
+                          <button
+                            key={l}
+                            onClick={() => setAiLevel(l)}
+                            style={{ flex: 1, padding: '8px 4px', borderRadius: 8, border: `1px solid ${aiLevel === l ? '#A855F7' : '#374151'}`, background: aiLevel === l ? 'rgba(168,85,247,0.15)' : 'transparent', color: aiLevel === l ? '#A855F7' : '#6B7280', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, transition: 'all 150ms' }}
+                          >
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Équipement */}
+                    <div>
+                      <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Équipement disponible</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {AI_EQUIPMENT.map(item => {
+                          const checked = aiEquipment.includes(item)
+                          return (
+                            <button
+                              key={item}
+                              onClick={() => toggleAiEquipment(item)}
+                              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: `1px solid ${checked ? '#A855F7' : '#374151'}`, background: checked ? 'rgba(168,85,247,0.15)' : 'transparent', color: checked ? '#A855F7' : '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontWeight: checked ? 700 : 500, transition: 'all 150ms' }}
+                            >
+                              <div style={{ width: 14, height: 14, borderRadius: 4, border: `2px solid ${checked ? '#A855F7' : '#4B5563'}`, background: checked ? '#A855F7' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>
+                                {checked && <Check size={9} color="#fff" strokeWidth={3} />}
+                              </div>
+                              {item}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Jours d'entraînement */}
+                    <div>
+                      <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+                        Jours d&apos;entraînement — <span style={{ color: '#A855F7' }}>{aiTrainingDays} jours/semaine</span>
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ fontSize: '0.78rem', color: '#6B7280', minWidth: 12 }}>3</span>
+                        <input
+                          type="range"
+                          min={3}
+                          max={5}
+                          step={1}
+                          value={aiTrainingDays}
+                          onChange={e => setAiTrainingDays(parseInt(e.target.value))}
+                          style={{ flex: 1, accentColor: '#A855F7', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '0.78rem', color: '#6B7280', minWidth: 12 }}>5</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                        {[3, 4, 5].map(n => (
+                          <span key={n} style={{ fontSize: '0.68rem', color: n === aiTrainingDays ? '#A855F7' : '#4B5563', fontWeight: n === aiTrainingDays ? 700 : 400 }}>{n}j</span>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              {!aiGenerating && !aiPreview && (
+                <div style={{ padding: '16px 24px', borderTop: '1px solid #374151' }}>
+                  <button
+                    onClick={generateAiProgram}
+                    disabled={aiEquipment.length === 0}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 20px', borderRadius: 10, border: 'none', background: aiEquipment.length === 0 ? '#1F2937' : 'linear-gradient(135deg,#7C3AED,#A855F7)', color: aiEquipment.length === 0 ? '#4B5563' : '#fff', cursor: aiEquipment.length === 0 ? 'not-allowed' : 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.05em', transition: 'opacity 200ms' }}
+                    onMouseEnter={e => { if (aiEquipment.length > 0) (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                  >
+                    <Sparkles size={16} strokeWidth={2} />
+                    Générer le programme
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {toast && (
         <div className="toast-el">
           <CheckCircle size={15} color="#22C55E" strokeWidth={2}/>
