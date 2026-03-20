@@ -37,7 +37,7 @@ export default function ProgressTab({
   const latestMeasure = measurements[0]
 
   return (
-    <div style={{ padding: '20px 20px 20px', minHeight: '100vh' }}>
+    <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>PROGRESSION</h1>
       </div>

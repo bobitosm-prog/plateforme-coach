@@ -302,7 +302,8 @@ export default function ClientProfilePage() {
     setEditPhone(p.phone ?? '')
     setEditBirth(p.birth_date ?? '')
     setEditGender(p.gender ?? '')
-    setEditWeight(p.current_weight != null ? String(p.current_weight) : '')
+    const latestW = (weightRes.data as WeightLog[] | null)?.[0]
+    setEditWeight(latestW != null ? String(latestW.poids) : (p.current_weight != null ? String(p.current_weight) : ''))
     setEditHeight(p.height != null ? String(p.height) : '')
     setEditTargetW(p.target_weight != null ? String(p.target_weight) : '')
     setEditBodyFat(p.body_fat_pct != null ? String(p.body_fat_pct) : '')
@@ -454,6 +455,14 @@ export default function ClientProfilePage() {
       showToast(`Erreur : ${error.message}`)
       return
     }
+    // Also log weight change into weight_logs for consistency
+    if (editWeight) {
+      const newWeight = parseFloat(editWeight)
+      if (!isNaN(newWeight) && newWeight !== weightLogs[0]?.poids) {
+        await supabase.from('weight_logs').insert({ user_id: id, poids: newWeight, date: new Date().toISOString().split('T')[0] })
+        setWeightLogs([{ id: 'local', poids: newWeight, date: new Date().toISOString().split('T')[0] }])
+      }
+    }
     setProfile(p => p ? { ...p, ...updates } : p)
     setEditOpen(false)
     showToast('Profil mis à jour')
@@ -476,8 +485,8 @@ export default function ClientProfilePage() {
   const weightDelta     = currentWeight && prevMonthWeight ? currentWeight - prevMonthWeight : null
   const totalSessions   = totalSessionsCount
   const goalProgress = (() => {
-    if (!currentWeight || !profile?.goal_weight || !profile?.current_weight) return null
-    const start=profile.current_weight, target=profile.goal_weight
+    if (!currentWeight || !profile?.goal_weight) return null
+    const start=profile.current_weight ?? currentWeight, target=profile.goal_weight
     if (start===target) return 100
     return Math.max(0, Math.min(100, Math.round(((start-currentWeight)/(start-target))*100)))
   })()
@@ -514,7 +523,7 @@ export default function ClientProfilePage() {
       <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         *,*::before,*::after{box-sizing:border-box;}
-        body{margin:0;font-family:'Barlow',sans-serif;background:#0A0A0A;color:#F8FAFC;overscroll-behavior-y:none;}
+        body{margin:0;font-family:'Barlow',sans-serif;background:#0A0A0A;color:#F8FAFC;overscroll-behavior-y:none;overflow-x:hidden;max-width:100vw;}
         h1,h2,h3,h4{font-family:'Barlow Condensed',sans-serif;}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -1462,7 +1471,7 @@ export default function ClientProfilePage() {
                         </div>
                         <div>
                           <p style={{ fontSize: '0.68rem', color: '#6B7280', margin: '0 0 2px' }}>Poids actuel</p>
-                          <p style={{ fontSize: '0.82rem', color: '#F8FAFC', margin: 0, fontWeight: 500 }}>{profile?.current_weight ? `${profile.current_weight} kg` : '—'}</p>
+                          <p style={{ fontSize: '0.82rem', color: '#F8FAFC', margin: 0, fontWeight: 500 }}>{currentWeight ? `${currentWeight} kg` : '—'}</p>
                         </div>
                         <div>
                           <p style={{ fontSize: '0.68rem', color: '#6B7280', margin: '0 0 2px' }}>Poids cible</p>

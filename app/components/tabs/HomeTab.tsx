@@ -56,7 +56,7 @@ export default function HomeTab({
   startProgramWorkout,
 }: HomeTabProps) {
   return (
-    <div style={{ background: BG_BASE, minHeight: '100vh' }}>
+    <div style={{ background: BG_BASE, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
 
       {/* Header */}
       <div style={{ background: BG_CARD, padding: '20px 20px 16px', borderBottom: `1px solid ${BORDER}` }}>

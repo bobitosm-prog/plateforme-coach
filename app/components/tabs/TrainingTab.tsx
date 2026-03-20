@@ -224,7 +224,7 @@ export default function TrainingTab({
 
   // ══════════════════════════════════════════
   return (
-    <div style={{ minHeight: '100vh', background: BG_WORKOUT, paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', background: BG_WORKOUT, paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap');
         .set-input { -webkit-appearance: none; appearance: none; }

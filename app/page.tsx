@@ -177,7 +177,7 @@ const photoRef = useRef<HTMLInputElement>(null)
       const age = profRes.data.birth_date ? Math.floor((Date.now() - new Date(profRes.data.birth_date).getTime()) / 31557600000) : ''
       setBmrForm(p => ({
         ...p,
-        weight: profRes.data.current_weight?.toString() || '',
+        weight: (weightsRes.data?.[weightsRes.data.length - 1]?.poids ?? profRes.data.current_weight)?.toString() || '',
         height: profRes.data.height?.toString() || '',
         age: age.toString(),
         gender: profRes.data.gender || 'male',
@@ -361,7 +361,9 @@ const photoRef = useRef<HTMLInputElement>(null)
   // Computed values
 const calorieGoal = profile?.calorie_goal || 2500
   const goalWeight = profile?.goal_weight || 75
-  const currentWeight = profile?.current_weight
+  const currentWeight = weightHistory30.length > 0
+    ? weightHistory30[weightHistory30.length - 1].poids
+    : profile?.current_weight
   const completedSessions = wSessions.filter(s => s.completed).length
   const streak = (() => {
     const dates = new Set(wSessions.filter(s => s.completed).map(s => new Date(s.created_at).toDateString()))
@@ -430,7 +432,7 @@ const calorieGoal = profile?.calorie_goal || 2500
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif", paddingBottom: 88 }}>
+    <div style={{ minHeight: '100vh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif", paddingBottom: 88, overflowX: 'hidden', maxWidth: '100vw' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
