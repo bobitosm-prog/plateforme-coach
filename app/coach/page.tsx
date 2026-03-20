@@ -442,6 +442,20 @@ export default function CoachPage() {
         .bottom-nav-btn.active { color: #F97316; }
         .bottom-nav-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
         .nav-badge { position: absolute; top: 2px; right: calc(50% - 20px); min-width: 16px; height: 16px; background: #EF4444; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+        /* ── MOBILE CHAT ── */
+        .chat-back-btn { display: none; }
+        @media (max-width: 767px) {
+          .chat-outer { overflow: hidden; max-width: 100vw; }
+          .chat-outer.has-client .chat-client-list { display: none !important; }
+          .chat-outer:not(.has-client) .chat-panel { display: none !important; }
+          .chat-outer.has-client .chat-panel {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 105;
+            display: flex !important; flex-direction: column; width: 100% !important; overflow: hidden;
+          }
+          .chat-back-btn { display: flex !important; }
+          .chat-msg-bubble { max-width: min(75%, 260px) !important; word-break: break-word; }
+          .chat-input-bar { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important; }
+        }
         .cal-col { background: #1F2937; border-radius: 10px; display: flex; flex-direction: column; min-height: 480px; overflow: hidden; }
         .cal-col.today { border: 2px solid #F97316; }
         .cal-col-head { padding: 10px 12px; border-bottom: 1px solid #374151; text-align: center; }
@@ -740,10 +754,10 @@ export default function CoachPage() {
 
       {/* ── MESSAGES SECTION ── */}
       {section === 'messages' && (
-        <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className={`chat-outer${selectedClient ? ' has-client' : ''}`} style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
           {/* Client list */}
-          <div style={{ width: 300, flexShrink: 0, background: '#1F2937', borderRight: '1px solid #374151', display: 'flex', flexDirection: 'column' }}>
+          <div className="chat-client-list" style={{ width: 300, flexShrink: 0, background: '#1F2937', borderRight: '1px solid #374151', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '16px', borderBottom: '1px solid #374151' }}>
               <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#F8FAFC', margin: 0 }}>Clients</h2>
             </div>
@@ -782,7 +796,7 @@ export default function CoachPage() {
           </div>
 
           {/* Chat panel */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#111827', overflow: 'hidden' }}>
+          <div className="chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#111827', overflow: 'hidden', maxWidth: '100%' }}>
             {!selectedClient ? (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                 <MessageCircle size={48} color="#374151" />
@@ -791,13 +805,21 @@ export default function CoachPage() {
             ) : (
               <>
                 {/* Chat header */}
-                <div style={{ padding: '14px 20px', background: '#1F2937', borderBottom: '1px solid #374151', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                <div style={{ padding: '14px 16px', background: '#1F2937', borderBottom: '1px solid #374151', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                  <button
+                    className="chat-back-btn"
+                    onClick={() => setSelectedClient(null)}
+                    style={{ alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '6px 6px 6px 0', minWidth: 36, minHeight: 44 }}
+                    aria-label="Retour"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
                   {selectedClient.profiles?.avatar_url
-                    ? <img src={selectedClient.profiles.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
-                    : <div className="avatar-circle">{initials(selectedClient.profiles?.full_name)}</div>
+                    ? <img src={selectedClient.profiles.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                    : <div className="avatar-circle" style={{ flexShrink: 0 }}>{initials(selectedClient.profiles?.full_name)}</div>
                   }
-                  <div>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: '#F8FAFC' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: '#F8FAFC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {selectedClient.profiles?.full_name ?? 'Sans nom'}
                     </div>
                     <div style={{ fontSize: '0.72rem', color: '#6B7280' }}>Client</div>
@@ -805,7 +827,7 @@ export default function CoachPage() {
                 </div>
 
                 {/* Messages */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10, maxWidth: '100%' }}>
                   {chatMessages.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '40px 0' }}>
                       <p style={{ color: '#6B7280', fontSize: '0.85rem' }}>Aucun message. Commencez la conversation !</p>
@@ -814,14 +836,15 @@ export default function CoachPage() {
                   {chatMessages.map(msg => {
                     const isMine = msg.sender_id === session.user.id
                     return (
-                      <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
-                        <div style={{
+                      <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', maxWidth: '100%' }}>
+                        <div className="chat-msg-bubble" style={{
                           maxWidth: '65%',
                           background: isMine ? '#F97316' : '#1F2937',
-                          color: isMine ? '#000' : '#F8FAFC',
+                          color: isMine ? '#fff' : '#F8FAFC',
                           borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                          padding: '10px 16px',
+                          padding: '10px 14px',
                           border: isMine ? 'none' : '1px solid #374151',
+                          wordBreak: 'break-word',
                         }}>
                           <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45 }}>{msg.content}</p>
                           <p style={{ margin: '4px 0 0', fontSize: '0.62rem', opacity: 0.6, textAlign: isMine ? 'right' : 'left' }}>
@@ -835,7 +858,7 @@ export default function CoachPage() {
                 </div>
 
                 {/* Input */}
-                <div style={{ padding: '14px 20px', background: '#1F2937', borderTop: '1px solid #374151', display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
+                <div className="chat-input-bar" style={{ padding: '14px 16px', background: '#1F2937', borderTop: '1px solid #374151', display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
                   <input
                     className="msg-input"
                     value={msgInput}
