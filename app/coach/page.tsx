@@ -6,8 +6,9 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import {
   Zap, Users, CalendarCheck, Euro, TrendingUp, Minus,
-  Search, ChevronRight, UserPlus, Dumbbell, Calendar,
-  LogOut, Copy, Check, ExternalLink, MessageCircle, Send, ArrowLeft
+  Search, ChevronRight, ChevronLeft, UserPlus, Dumbbell, Calendar,
+  LogOut, Copy, Check, ExternalLink, MessageCircle, Send, ArrowLeft,
+  X, Clock, Plus,
 } from 'lucide-react'
 import { getRole } from '../../lib/getRole'
 import { format } from 'date-fns'
@@ -29,6 +30,36 @@ interface ClientRow {
     current_weight: number | null
     calorie_goal: number | null
   } | null
+}
+
+interface ScheduledSession {
+  id: string
+  coach_id: string
+  client_id: string
+  scheduled_at: string
+  duration_minutes: number
+  session_type: string
+  notes: string | null
+  status: string
+  created_at: string
+}
+
+const SESSION_TYPES = ['Force', 'Cardio', 'HIIT', 'Mobilité', 'Récupération']
+const SESSION_COLORS: Record<string, string> = {
+  Force: '#F97316', Cardio: '#EF4444', HIIT: '#8B5CF6',
+  Mobilité: '#22C55E', Récupération: '#3B82F6',
+}
+
+function getWeekDays(offsetWeeks = 0): Date[] {
+  const today = new Date()
+  const dow = today.getDay()
+  const diff = dow === 0 ? -6 : 1 - dow
+  const monday = new Date(today)
+  monday.setDate(today.getDate() + diff + offsetWeeks * 7)
+  monday.setHours(0, 0, 0, 0)
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday); d.setDate(monday.getDate() + i); return d
+  })
 }
 
 function initials(name: string | null | undefined) {
@@ -61,7 +92,22 @@ export default function CoachPage() {
   const [search, setSearch]     = useState('')
   const [copied, setCopied]     = useState(false)
   const [showInvite, setShowInvite] = useState(false)
-  const [section, setSection]   = useState<'dashboard' | 'messages'>('dashboard')
+  const [section, setSection]   = useState<'dashboard' | 'messages' | 'calendar'>('dashboard')
+
+  // Scheduled sessions + calendar
+  const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([])
+  const [calWeekOffset, setCalWeekOffset]         = useState(0)
+  const [selectedSession, setSelectedSession]     = useState<ScheduledSession | null>(null)
+
+  // New session modal
+  const [showNewSession,   setShowNewSession]   = useState(false)
+  const [nsClientId,       setNsClientId]       = useState('')
+  const [nsDate,           setNsDate]           = useState(() => new Date().toISOString().split('T')[0])
+  const [nsStartTime,      setNsStartTime]      = useState('10:00')
+  const [nsEndTime,        setNsEndTime]        = useState('11:00')
+  const [nsType,           setNsType]           = useState('Force')
+  const [nsNotes,          setNsNotes]          = useState('')
+  const [nsSaving,         setNsSaving]         = useState('')
 
   // Messaging state
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null)
@@ -138,6 +184,12 @@ export default function CoachPage() {
     setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
   }, [chatMessages])
 
+  // Fetch scheduled sessions when in calendar section or week offset changes
+  useEffect(() => {
+    if (!session?.user?.id) return
+    fetchScheduledSessions(session.user.id, calWeekOffset)
+  }, [session?.user?.id, calWeekOffset, section])
+
   async function fetchClients(coachId: string) {
     setLoading(true)
     const { data: links, error: linksError } = await supabase
@@ -177,6 +229,46 @@ export default function CoachPage() {
       counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1
     }
     setUnreadCounts(counts)
+  }
+
+  async function fetchScheduledSessions(coachId: string, weekOffset = 0) {
+    const days = getWeekDays(weekOffset)
+    const from = days[0]; from.setHours(0, 0, 0, 0)
+    const to   = days[6]; to.setHours(23, 59, 59, 999)
+    const { data } = await supabase
+      .from('scheduled_sessions')
+      .select('*')
+      .eq('coach_id', coachId)
+      .gte('scheduled_at', from.toISOString())
+      .lte('scheduled_at', to.toISOString())
+      .order('scheduled_at', { ascending: true })
+    setScheduledSessions(data ?? [])
+  }
+
+  async function saveNewSession() {
+    if (!session?.user?.id || !nsClientId || !nsDate) return
+    const start = new Date(`${nsDate}T${nsStartTime}:00`)
+    const end   = new Date(`${nsDate}T${nsEndTime}:00`)
+    const duration = Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000))
+    setNsSaving('saving')
+    const { error } = await supabase.from('scheduled_sessions').insert({
+      coach_id: session.user.id,
+      client_id: nsClientId,
+      scheduled_at: start.toISOString(),
+      duration_minutes: duration,
+      session_type: nsType,
+      notes: nsNotes || null,
+      status: 'scheduled',
+    })
+    if (error) { console.error('[saveNewSession]', error); setNsSaving(''); return }
+    setNsSaving('done')
+    await fetchScheduledSessions(session.user.id, calWeekOffset)
+    setTimeout(() => {
+      setShowNewSession(false)
+      setNsClientId(''); setNsDate(new Date().toISOString().split('T')[0])
+      setNsStartTime('10:00'); setNsEndTime('11:00')
+      setNsType('Force'); setNsNotes(''); setNsSaving('')
+    }, 800)
   }
 
   async function loadChat(clientId: string, coachId: string) {
@@ -313,6 +405,18 @@ export default function CoachPage() {
         .msg-input:focus { border-color: #F97316; }
         @media (max-width: 640px) { .hide-sm { display: none !important; } }
         @media (max-width: 1024px) { .lg-grid { grid-template-columns: 1fr !important; } }
+        .cal-col { background: #1F2937; border-radius: 10px; display: flex; flex-direction: column; min-height: 480px; overflow: hidden; }
+        .cal-col.today { border: 2px solid #F97316; }
+        .cal-col-head { padding: 10px 12px; border-bottom: 1px solid #374151; text-align: center; }
+        .cal-body { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .session-pill { border-radius: 8px; padding: 8px 10px; cursor: pointer; transition: opacity 150ms; }
+        .session-pill:hover { opacity: 0.82; }
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+        .modal-box { background: #1F2937; border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.4); }
+        .form-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9CA3AF; display: block; margin-bottom: 6px; }
+        .form-input { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 10px 14px; font-family: 'Barlow', sans-serif; font-size: 0.9rem; color: #F8FAFC; outline: none; transition: border-color 200ms; }
+        .form-input:focus { border-color: #F97316; }
+        .type-chip { border-radius: 8px; padding: 7px 14px; font-family: 'Barlow Condensed', sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; border: 2px solid transparent; transition: all 150ms; }
       `}</style>
 
       {/* ── NAVBAR ── */}
@@ -353,6 +457,249 @@ export default function CoachPage() {
           </div>
         </div>
       </nav>
+
+      {/* ══════════════ NEW SESSION MODAL ══════════════ */}
+      {showNewSession && (
+        <div className="modal-bg" onClick={() => setShowNewSession(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #374151' }}>
+              <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#F8FAFC', margin: 0 }}>Nouvelle séance</h2>
+              <button onClick={() => setShowNewSession(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6B7280', padding: 4 }}><X size={18} /></button>
+            </div>
+
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Client */}
+              <div>
+                <label className="form-label">Client *</label>
+                <select value={nsClientId} onChange={e => setNsClientId(e.target.value)} className="form-input" style={{ cursor: 'pointer' }}>
+                  <option value="">Sélectionner un client…</option>
+                  {clients.map(c => (
+                    <option key={c.client_id} value={c.client_id}>{c.profiles?.full_name ?? c.client_id}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date */}
+              <div>
+                <label className="form-label">Date *</label>
+                <input type="date" value={nsDate} onChange={e => setNsDate(e.target.value)} className="form-input" />
+              </div>
+
+              {/* Time */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="form-label">Début</label>
+                  <input type="time" value={nsStartTime} onChange={e => setNsStartTime(e.target.value)} className="form-input" />
+                </div>
+                <div>
+                  <label className="form-label">Fin</label>
+                  <input type="time" value={nsEndTime} onChange={e => setNsEndTime(e.target.value)} className="form-input" />
+                </div>
+              </div>
+
+              {/* Duration preview */}
+              {nsStartTime && nsEndTime && (() => {
+                const start = new Date(`2000-01-01T${nsStartTime}`)
+                const end   = new Date(`2000-01-01T${nsEndTime}`)
+                const mins  = Math.round((end.getTime() - start.getTime()) / 60000)
+                return mins > 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9CA3AF', fontSize: '0.78rem' }}>
+                    <Clock size={13} />
+                    <span>{mins} min</span>
+                  </div>
+                ) : null
+              })()}
+
+              {/* Session type */}
+              <div>
+                <label className="form-label">Type de séance</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {SESSION_TYPES.map(t => {
+                    const color = SESSION_COLORS[t]
+                    const active = nsType === t
+                    return (
+                      <button
+                        key={t} onClick={() => setNsType(t)}
+                        className="type-chip"
+                        style={{
+                          background: active ? `${color}22` : 'transparent',
+                          borderColor: active ? color : '#374151',
+                          color: active ? color : '#9CA3AF',
+                        }}
+                      >{t}</button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="form-label">Notes (optionnel)</label>
+                <textarea
+                  value={nsNotes} onChange={e => setNsNotes(e.target.value)}
+                  rows={3} placeholder="Objectifs, exercices prévus…"
+                  className="form-input" style={{ resize: 'vertical', minHeight: 80 }}
+                />
+              </div>
+
+              {/* Save */}
+              <button
+                onClick={saveNewSession}
+                disabled={!nsClientId || !nsDate || nsSaving === 'saving'}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  background: nsSaving === 'done' ? '#22C55E' : '#F97316',
+                  color: '#fff', border: 'none', borderRadius: 10, padding: '13px 20px',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700,
+                  letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                  opacity: (!nsClientId || !nsDate) ? 0.5 : 1, transition: 'background 200ms',
+                }}
+              >
+                {nsSaving === 'done' ? <><Check size={16} /> Enregistré !</> : nsSaving === 'saving' ? 'Enregistrement…' : <><Plus size={16} /> Créer la séance</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ SESSION DETAIL MODAL ══════════════ */}
+      {selectedSession && (() => {
+        const clientName = clients.find(c => c.client_id === selectedSession.client_id)?.profiles?.full_name ?? 'Client'
+        const color = SESSION_COLORS[selectedSession.session_type] ?? '#F97316'
+        const dt = new Date(selectedSession.scheduled_at)
+        return (
+          <div className="modal-bg" onClick={() => setSelectedSession(null)}>
+            <div className="modal-box" style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>
+              <div style={{ height: 6, background: color, borderRadius: '16px 16px 0 0' }} />
+              <div style={{ padding: '20px 24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                  <div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color, letterSpacing: '0.08em' }}>{selectedSession.session_type}</span>
+                    <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.35rem', fontWeight: 700, color: '#F8FAFC', margin: '4px 0 0' }}>{clientName}</h3>
+                  </div>
+                  <button onClick={() => setSelectedSession(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6B7280', padding: 4 }}><X size={16} /></button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.85rem', color: '#9CA3AF' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Calendar size={14} />
+                    <span>{format(dt, 'EEEE d MMMM yyyy', { locale: fr })}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Clock size={14} />
+                    <span>{format(dt, 'HH:mm', { locale: fr })} · {selectedSession.duration_minutes} min</span>
+                  </div>
+                  {selectedSession.notes && (
+                    <div style={{ background: '#111827', borderRadius: 8, padding: '10px 14px', color: '#D1D5DB', marginTop: 4 }}>
+                      {selectedSession.notes}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedSession(null)}
+                  style={{ marginTop: 20, width: '100%', background: '#374151', color: '#F8FAFC', border: 'none', borderRadius: 8, padding: '10px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}
+                >Fermer</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ══════════════ CALENDAR SECTION ══════════════ */}
+      {section === 'calendar' && (() => {
+        const days = getWeekDays(calWeekOffset)
+        const todayStr = new Date().toISOString().split('T')[0]
+        const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+        return (
+          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button className="btn-ghost" onClick={() => setSection('dashboard')} style={{ padding: '8px 12px' }}>
+                  <ArrowLeft size={16} /> Dashboard
+                </button>
+                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.8rem', fontWeight: 700, letterSpacing: '0.04em', color: '#F8FAFC', margin: 0 }}>Calendrier</h1>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button className="btn-ghost" onClick={() => setCalWeekOffset(o => o - 1)} style={{ padding: '8px 10px' }}><ChevronLeft size={16} /></button>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 600, color: '#9CA3AF', minWidth: 120, textAlign: 'center' }}>
+                  {format(days[0], 'd MMM', { locale: fr })} – {format(days[6], 'd MMM yyyy', { locale: fr })}
+                </span>
+                <button className="btn-ghost" onClick={() => setCalWeekOffset(o => o + 1)} style={{ padding: '8px 10px' }}><ChevronRight size={16} /></button>
+                <button className="btn-ghost" onClick={() => setCalWeekOffset(0)} style={{ fontSize: '0.78rem', padding: '8px 12px', color: '#F97316' }}>Aujourd'hui</button>
+                <button
+                  onClick={() => setShowNewSession(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F97316', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  <Plus size={14} /> Nouvelle séance
+                </button>
+              </div>
+            </div>
+
+            {/* 7-column week grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
+              {days.map((day, i) => {
+                const dateStr = day.toISOString().split('T')[0]
+                const isToday = dateStr === todayStr
+                const daySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(dateStr))
+                return (
+                  <div key={i} className={`cal-col${isToday ? ' today' : ''}`}>
+                    <div className="cal-col-head">
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: isToday ? '#F97316' : '#6B7280' }}>
+                        {DAY_LABELS[i]}
+                      </div>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: isToday ? '#F97316' : '#F8FAFC', lineHeight: 1 }}>
+                        {format(day, 'd')}
+                      </div>
+                    </div>
+                    <div className="cal-body">
+                      {daySessions.map(s => {
+                        const color = SESSION_COLORS[s.session_type] ?? '#F97316'
+                        const clientName = clients.find(c => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
+                        const dt = new Date(s.scheduled_at)
+                        return (
+                          <div
+                            key={s.id}
+                            className="session-pill"
+                            onClick={() => setSelectedSession(s)}
+                            style={{ background: `${color}18`, borderLeft: `3px solid ${color}` }}
+                          >
+                            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.session_type}</div>
+                            <div style={{ fontSize: '0.78rem', color: '#F8FAFC', fontWeight: 500, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName}</div>
+                            <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                              <Clock size={10} />{format(dt, 'HH:mm')} · {s.duration_minutes}min
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {/* Add session for this day */}
+                      <button
+                        onClick={() => { setNsDate(dateStr); setShowNewSession(true) }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'transparent', border: '1px dashed #374151', borderRadius: 8, padding: '6px', color: '#6B7280', cursor: 'pointer', fontSize: '0.72rem', transition: 'border-color 150ms, color 150ms', marginTop: 'auto' }}
+                        onMouseOver={e => { (e.currentTarget as HTMLElement).style.borderColor = '#F97316'; (e.currentTarget as HTMLElement).style.color = '#F97316' }}
+                        onMouseOut={e => { (e.currentTarget as HTMLElement).style.borderColor = '#374151'; (e.currentTarget as HTMLElement).style.color = '#6B7280' }}
+                      >
+                        <Plus size={11} /> Ajouter
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: 16, marginTop: 20, flexWrap: 'wrap' }}>
+              {SESSION_TYPES.map(t => (
+                <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 3, background: SESSION_COLORS[t] }} />
+                  <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>{t}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── MESSAGES SECTION ── */}
       {section === 'messages' && (
@@ -665,14 +1012,14 @@ export default function CoachPage() {
                     </div>
                   )}
 
-                  <button className="btn-primary btn-primary-orange" aria-label="Planifier une séance">
+                  <button className="btn-primary btn-primary-orange" onClick={() => setShowNewSession(true)}>
                     <Dumbbell size={16} strokeWidth={2.5} />
                     Nouvelle séance
                   </button>
 
                   <hr className="divider" />
 
-                  <button className="btn-secondary" aria-label="Voir le calendrier">
+                  <button className="btn-secondary" onClick={() => setSection('calendar')}>
                     <Calendar size={16} strokeWidth={2} />
                     Voir le calendrier
                   </button>
@@ -683,7 +1030,35 @@ export default function CoachPage() {
               {/* Today */}
               <div className="sidebar-card">
                 <h2 className="section-title">Aujourd'hui</h2>
-                <p style={{ fontSize: '0.85rem', color: '#6B7280' }}>Aucune séance planifiée.</p>
+                {(() => {
+                  const _todayStr = new Date().toISOString().split('T')[0]
+                  const todaySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(_todayStr))
+                  if (todaySessions.length === 0) {
+                    return <p style={{ fontSize: '0.85rem', color: '#6B7280' }}>Aucune séance planifiée.</p>
+                  }
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {todaySessions.map(s => {
+                        const color = SESSION_COLORS[s.session_type] ?? '#F97316'
+                        const clientName = clients.find(c => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
+                        const dt = new Date(s.scheduled_at)
+                        return (
+                          <div
+                            key={s.id}
+                            onClick={() => setSelectedSession(s)}
+                            style={{ background: `${color}18`, borderLeft: `3px solid ${color}`, borderRadius: 6, padding: '8px 10px', cursor: 'pointer' }}
+                          >
+                            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.session_type}</div>
+                            <div style={{ fontSize: '0.82rem', color: '#F8FAFC', fontWeight: 500, marginTop: 2 }}>{clientName}</div>
+                            <div style={{ fontSize: '0.72rem', color: '#9CA3AF', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <Clock size={10} />{format(dt, 'HH:mm')} · {s.duration_minutes}min
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })()}
               </div>
 
             </div>
