@@ -367,7 +367,7 @@ export default function CoachPage() {
   const activeCount = clients.filter(c => statusFor(c.created_at) === 'active').length
 
   return (
-    <div style={{ minHeight: '100vh', background: '#111827', color: '#F8FAFC', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#111827', color: '#F8FAFC', fontFamily: 'Barlow, sans-serif', overflowX: 'hidden', maxWidth: '100vw' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
@@ -452,6 +452,10 @@ export default function CoachPage() {
         .session-pill:hover { opacity: 0.82; }
         .dashboard-back { display: none; }
         @media (min-width: 640px) { .dashboard-back { display: flex; } }
+        .new-session-btn { display: none !important; }
+        @media (min-width: 640px) { .new-session-btn { display: flex !important; } .new-session-btn-mobile { display: none !important; } }
+        .cal-add-btn { display: flex; align-items: center; justify-content: center; background: transparent; border: 1px dashed #374151; border-radius: 6px; padding: 4px 2px; color: #6B7280; cursor: pointer; width: 100%; margin-top: auto; transition: border-color 150ms, color 150ms; min-height: 24px; }
+        .cal-add-btn:hover { border-color: #F97316; color: #F97316; }
         .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
         .modal-box { background: #1F2937; border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.4); }
         .form-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9CA3AF; display: block; margin-bottom: 6px; }
@@ -653,25 +657,26 @@ export default function CoachPage() {
         const todayStr = new Date().toISOString().split('T')[0]
         const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
         return (
-          <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+          <div className="section-pad" style={{ width: '100%', maxWidth: '1280px', margin: '0 auto', padding: '16px 8px', boxSizing: 'border-box', overflowX: 'hidden' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button className="btn-ghost dashboard-back" onClick={() => setSection('dashboard')} style={{ padding: '8px 12px' }}>
                   <ArrowLeft size={16} /> Dashboard
                 </button>
-                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.8rem', fontWeight: 700, letterSpacing: '0.04em', color: '#F8FAFC', margin: 0 }}>Calendrier</h1>
+                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.04em', color: '#F8FAFC', margin: 0 }}>Calendrier</h1>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button className="btn-ghost" onClick={() => setCalWeekOffset(o => o - 1)} style={{ padding: '8px 10px' }}><ChevronLeft size={16} /></button>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 600, color: '#9CA3AF', minWidth: 120, textAlign: 'center' }}>
-                  {format(days[0], 'd MMM', { locale: fr })} – {format(days[6], 'd MMM yyyy', { locale: fr })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                <button className="btn-ghost" onClick={() => setCalWeekOffset(o => o - 1)} style={{ padding: '6px 8px' }}><ChevronLeft size={16} /></button>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.8rem', fontWeight: 600, color: '#9CA3AF', textAlign: 'center' }}>
+                  {format(days[0], 'd MMM', { locale: fr })} – {format(days[6], 'd MMM', { locale: fr })}
                 </span>
-                <button className="btn-ghost" onClick={() => setCalWeekOffset(o => o + 1)} style={{ padding: '8px 10px' }}><ChevronRight size={16} /></button>
-                <button className="btn-ghost" onClick={() => setCalWeekOffset(0)} style={{ fontSize: '0.78rem', padding: '8px 12px', color: '#F97316' }}>Aujourd'hui</button>
+                <button className="btn-ghost" onClick={() => setCalWeekOffset(o => o + 1)} style={{ padding: '6px 8px' }}><ChevronRight size={16} /></button>
+                <button className="btn-ghost" onClick={() => setCalWeekOffset(0)} style={{ fontSize: '0.75rem', padding: '6px 10px', color: '#F97316' }}>Auj.</button>
                 <button
+                  className="new-session-btn"
                   onClick={() => setShowNewSession(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F97316', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ alignItems: 'center', gap: 6, background: '#F97316', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}
                 >
                   <Plus size={14} /> Nouvelle séance
                 </button>
@@ -679,7 +684,7 @@ export default function CoachPage() {
             </div>
 
             {/* 7-column week grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 3, width: '100%' }}>
               {days.map((day, i) => {
                 const dateStr = day.toISOString().split('T')[0]
                 const isToday = dateStr === todayStr
@@ -714,13 +719,8 @@ export default function CoachPage() {
                         )
                       })}
                       {/* Add session for this day */}
-                      <button
-                        onClick={() => { setNsDate(dateStr); setShowNewSession(true) }}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'transparent', border: '1px dashed #374151', borderRadius: 8, padding: '6px', color: '#6B7280', cursor: 'pointer', fontSize: '0.72rem', transition: 'border-color 150ms, color 150ms', marginTop: 'auto' }}
-                        onMouseOver={e => { (e.currentTarget as HTMLElement).style.borderColor = '#F97316'; (e.currentTarget as HTMLElement).style.color = '#F97316' }}
-                        onMouseOut={e => { (e.currentTarget as HTMLElement).style.borderColor = '#374151'; (e.currentTarget as HTMLElement).style.color = '#6B7280' }}
-                      >
-                        <Plus size={11} /> Ajouter
+                      <button className="cal-add-btn" onClick={() => { setNsDate(dateStr); setShowNewSession(true) }}>
+                        <Plus size={10} />
                       </button>
                     </div>
                   </div>
@@ -728,8 +728,17 @@ export default function CoachPage() {
               })}
             </div>
 
+            {/* Mobile-only new session button */}
+            <button
+              className="new-session-btn-mobile"
+              onClick={() => setShowNewSession(true)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', background: '#F97316', color: '#fff', border: 'none', borderRadius: 10, padding: '12px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer', marginTop: 12 }}
+            >
+              <Plus size={16} /> Nouvelle séance
+            </button>
+
             {/* Legend */}
-            <div style={{ display: 'flex', gap: 16, marginTop: 20, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
               {SESSION_TYPES.map(t => (
                 <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ width: 10, height: 10, borderRadius: 3, background: SESSION_COLORS[t] }} />
