@@ -16,24 +16,22 @@ export async function POST(req: NextRequest) {
 
     const { objective, weight, targetWeight, level, equipment, trainingDays } = await req.json()
 
-    const prompt = `Tu es un coach fitness expert. Génère un programme d'entraînement hebdomadaire pour ce client:
-- Objectif: ${objective}
-- Poids: ${weight}kg, Objectif: ${targetWeight}kg
-- Niveau: ${level}
-- Équipement: ${equipment.join(', ')}
-- Jours d'entraînement: ${trainingDays} jours/semaine
+    const prompt = `Tu es un coach fitness. Génère un programme d'entraînement en JSON UNIQUEMENT.
 
-Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
+Client: objectif=${objective}, poids=${weight}kg, cible=${targetWeight}kg, niveau=${level}, équipement=${equipment.join(',')}, ${trainingDays} jours/semaine
+
+Réponds avec SEULEMENT ce JSON (pas de texte avant ou après):
 {
-  "lundi": { "isRest": false, "exercises": [{"name": "Nom", "sets": 3, "reps": 10, "rest": "60s", "notes": ""}] },
-  "mardi": { "isRest": true, "exercises": [] },
-  "mercredi": { "isRest": false, "exercises": [] },
-  "jeudi": { "isRest": true, "exercises": [] },
-  "vendredi": { "isRest": false, "exercises": [] },
-  "samedi": { "isRest": true, "exercises": [] },
-  "dimanche": { "isRest": true, "exercises": [] }
+  "lundi": {"isRest": false, "exercises": [{"name": "Squat", "sets": 3, "reps": 10, "rest": "60s", "notes": ""}]},
+  "mardi": {"isRest": true, "exercises": []},
+  "mercredi": {"isRest": false, "exercises": [{"name": "Développé couché", "sets": 3, "reps": 8, "rest": "90s", "notes": ""}]},
+  "jeudi": {"isRest": true, "exercises": []},
+  "vendredi": {"isRest": false, "exercises": [{"name": "Tractions", "sets": 3, "reps": 8, "rest": "90s", "notes": ""}]},
+  "samedi": {"isRest": true, "exercises": []},
+  "dimanche": {"isRest": true, "exercises": []}
 }
-Les jours de repos ont isRest: true et exercises: [].`
+
+Génère ${trainingDays} jours d'entraînement et ${7 - trainingDays} jours de repos. Maximum 4 exercices par jour.`
 
     console.log('[generate-program] Calling Anthropic API...')
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -45,7 +43,7 @@ Les jours de repos ont isRest: true et exercises: [].`
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 800,
+        max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
