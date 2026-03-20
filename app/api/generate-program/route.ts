@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from 'next/server'
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
 export async function POST(req: NextRequest) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('[generate-program] ANTHROPIC_API_KEY is not defined')
+    return NextResponse.json({ error: 'Configuration serveur manquante: ANTHROPIC_API_KEY' }, { status: 500 })
+  }
+
   const { objective, weight, targetWeight, level, equipment, trainingDays } = await req.json()
 
   const prompt = `Tu es un coach fitness expert. Génère un programme d'entraînement hebdomadaire pour ce client:
@@ -40,8 +45,8 @@ Les jours de repos ont isRest: true et exercises: [].`
 
   if (!anthropicRes.ok) {
     const err = await anthropicRes.text()
-    console.error('[generate-program] Anthropic error:', err)
-    return NextResponse.json({ error: 'Erreur API Anthropic' }, { status: anthropicRes.status })
+    console.error(`[generate-program] Anthropic API error — status: ${anthropicRes.status}, body: ${err}`)
+    return NextResponse.json({ error: `Erreur API Anthropic (${anthropicRes.status})`, detail: err }, { status: anthropicRes.status })
   }
 
   const data = await anthropicRes.json()
