@@ -58,7 +58,8 @@ Génère ${trainingDays} jours d'entraînement et ${7 - trainingDays} jours de r
 
     const data = await anthropicRes.json()
     const rawText = data.content[0].text
-    console.log('[generate-program] Raw AI response:', rawText)
+    console.log('[generate-program] FULL RAW:', rawText)
+    return NextResponse.json({ error: 'debug', rawText }, { status: 200 })
 
     // Extract JSON from response (Claude sometimes adds text before/after)
     const jsonMatch = rawText.match(/\{[\s\S]*\}/)
