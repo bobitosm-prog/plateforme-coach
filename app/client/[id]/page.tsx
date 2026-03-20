@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeft, Zap, Mail, Calendar, Scale, Target, Dumbbell,
   Flame, TrendingDown, CheckCircle, CalendarClock, Save,
-  Archive, Trash2, Check, X, Plus, Minus, Moon, Utensils, Search,
+  Archive, Trash2, Check, X, Plus, Minus, Moon, Utensils, Search, Pencil,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -26,8 +26,8 @@ type Profile = {
   body_fat_pct: number | null; objective: string | null; status: string | null
 }
 type WorkoutSession = {
-  id: string; created_at: string; session_type: string | null
-  duration_min: number | null; notes: string | null
+  id: string; created_at: string; name: string | null
+  completed: boolean | null; duration_minutes: number | null; notes: string | null
 }
 type WeightLog = { id: string; poids: number; date: string }
 
@@ -160,6 +160,9 @@ export default function ClientProfilePage() {
   const [editBodyFat, setEditBodyFat] = useState('')
   const [editStatus,  setEditStatus]  = useState('active')
   const [editObj,     setEditObj]     = useState('')
+  const [editingCalGoal, setEditingCalGoal] = useState(false)
+  const [calGoalInput,   setCalGoalInput]   = useState('')
+  const [totalSessionsCount, setTotalSessionsCount] = useState(0)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Programme
@@ -205,9 +208,10 @@ export default function ClientProfilePage() {
     if (!coachId) return
     setLoading(true); setError(null)
 
-    const [profileRes, sessionsRes, weightRes, notesRes, programRes, mealPlanRes] = await Promise.all([
+    const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,goal_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status').eq('id', id).single(),
-      supabase.from('workout_sessions').select('id,created_at,session_type,duration_min,notes').eq('user_id', id).order('created_at', { ascending: false }),
+      supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
+      supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
       supabase.from('client_programs').select('id,program').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
@@ -228,7 +232,9 @@ export default function ClientProfilePage() {
     setEditBodyFat(p.body_fat_pct != null ? String(p.body_fat_pct) : '')
     setEditStatus(p.status ?? 'active')
     setEditObj(p.objective ?? '')
+    setCalGoalInput(p.calorie_goal != null ? String(p.calorie_goal) : '')
     setSessions((sessionsRes.data ?? []) as WorkoutSession[])
+    setTotalSessionsCount(sessionsCountRes.count ?? 0)
     setWeightLogs((weightRes.data ?? []) as WeightLog[])
     setNotes(notesRes.data?.content ?? '')
 
@@ -367,11 +373,21 @@ export default function ClientProfilePage() {
     setEditOpen(false); showToast('Profil mis à jour')
   }
 
+  /* ── Save calorie goal ──────────────────────────────────────── */
+  async function saveCalorieGoal() {
+    const val = parseInt(calGoalInput)
+    if (!val || val <= 0) return
+    await supabase.from('profiles').update({ calorie_goal: val }).eq('id', id)
+    setProfile(p => p ? { ...p, calorie_goal: val } : p)
+    setEditingCalGoal(false)
+    showToast('Objectif calorique mis à jour')
+  }
+
   /* ── Derived metrics ────────────────────────────────────────── */
   const currentWeight   = weightLogs[0]?.poids ?? profile?.current_weight ?? null
   const prevMonthWeight = weightLogs.find(w => { const d=new Date(w.date),n=new Date(); return d.getMonth()!==n.getMonth()||d.getFullYear()!==n.getFullYear() })?.poids ?? null
   const weightDelta     = currentWeight && prevMonthWeight ? currentWeight - prevMonthWeight : null
-  const totalSessions   = sessions.length
+  const totalSessions   = totalSessionsCount
   const goalProgress = (() => {
     if (!currentWeight || !profile?.goal_weight || !profile?.current_weight) return null
     const start=profile.current_weight, target=profile.goal_weight
@@ -536,12 +552,39 @@ export default function ClientProfilePage() {
                     <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Objectif</span>
                     <div style={{width:30,height:30,background:'rgba(34,197,94,.1)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={14} color="#22C55E" strokeWidth={2}/></div>
                   </div>
-                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.1rem',fontWeight:700,color:'#F8FAFC',lineHeight:1.2}}>
-                    {profile.goal_weight ? `Objectif : ${profile.goal_weight} kg` : profile.calorie_goal ? `${profile.calorie_goal} kcal/j` : '—'}
-                  </div>
+                  {profile.goal_weight && (
+                    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC',marginBottom:6}}>
+                      {profile.goal_weight} kg
+                    </div>
+                  )}
+                  {/* Calorie goal — editable */}
+                  {editingCalGoal ? (
+                    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                      <input
+                        type="number"
+                        value={calGoalInput}
+                        onChange={e => setCalGoalInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') saveCalorieGoal(); if (e.key === 'Escape') setEditingCalGoal(false) }}
+                        autoFocus
+                        style={{background:'#111827',border:'1px solid #F97316',borderRadius:6,padding:'4px 8px',color:'#F8FAFC',fontSize:'0.95rem',fontWeight:700,width:80,outline:'none',fontFamily:"'Barlow Condensed',sans-serif"}}
+                      />
+                      <span style={{fontSize:'0.72rem',color:'#6B7280'}}>kcal/j</span>
+                      <button onClick={saveCalorieGoal} style={{background:'#22C55E',border:'none',borderRadius:6,padding:'4px 8px',cursor:'pointer',display:'flex',alignItems:'center'}}><Check size={12} color="#fff" strokeWidth={3}/></button>
+                      <button onClick={() => setEditingCalGoal(false)} style={{background:'transparent',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center'}}><X size={12} color="#6B7280"/></button>
+                    </div>
+                  ) : (
+                    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                      <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>
+                        {profile.calorie_goal ? `${profile.calorie_goal} kcal/j` : '— kcal/j'}
+                      </span>
+                      <button onClick={() => { setCalGoalInput(profile.calorie_goal ? String(profile.calorie_goal) : ''); setEditingCalGoal(true) }} style={{background:'transparent',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center',opacity:0.5}} title="Modifier l'objectif calorique">
+                        <Pencil size={11} color="#9CA3AF"/>
+                      </button>
+                    </div>
+                  )}
                   {goalProgress !== null && (
                     <>
-                      <div style={{background:'#374151',borderRadius:999,height:6,marginTop:8,overflow:'hidden'}}>
+                      <div style={{background:'#374151',borderRadius:999,height:6,overflow:'hidden'}}>
                         <div style={{height:'100%',borderRadius:999,background:'#22C55E',width:`${goalProgress}%`,transition:'width 600ms ease'}}/>
                       </div>
                       <span style={{fontSize:'0.72rem',color:'#6B7280',marginTop:4,display:'block'}}>{goalProgress} % atteint</span>
@@ -578,15 +621,15 @@ export default function ClientProfilePage() {
               <div className="card" style={{padding:0,overflow:'hidden'}}>
                 <div style={{overflowX:'auto'}}>
                   <table className="data-table">
-                    <thead><tr><th>Date</th><th>Type</th><th>Durée</th><th>Notes</th></tr></thead>
+                    <thead><tr><th>Date</th><th>Séance</th><th>Durée</th><th>Notes</th></tr></thead>
                     <tbody>
                       {sessions.length === 0
                         ? <tr><td colSpan={4} style={{textAlign:'center',color:'#6B7280',padding:'32px 16px'}}>Aucune séance enregistrée</td></tr>
                         : sessions.map(s => (
                           <tr key={s.id}>
                             <td style={{color:'#9CA3AF',whiteSpace:'nowrap'}}>{formatDate(s.created_at)}</td>
-                            <td>{s.session_type ?? '—'}</td>
-                            <td>{s.duration_min ? `${s.duration_min} min` : '—'}</td>
+                            <td style={{textTransform:'capitalize'}}>{s.name ?? '—'}</td>
+                            <td>{s.duration_minutes ? `${s.duration_minutes} min` : '—'}</td>
                             <td style={{color:'#9CA3AF',maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.notes ?? '—'}</td>
                           </tr>
                         ))}
@@ -594,7 +637,10 @@ export default function ClientProfilePage() {
                   </table>
                 </div>
                 <div style={{padding:'12px 16px',borderTop:'1px solid #374151'}}>
-                  <span style={{fontSize:'0.78rem',color:'#6B7280'}}>{sessions.length} séance{sessions.length!==1?'s':''}</span>
+                  <span style={{fontSize:'0.78rem',color:'#6B7280'}}>
+                    {totalSessionsCount} séance{totalSessionsCount!==1?'s':''}
+                    {totalSessionsCount > sessions.length ? ` · ${sessions.length} affichées` : ''}
+                  </span>
                 </div>
               </div>
             </section>
