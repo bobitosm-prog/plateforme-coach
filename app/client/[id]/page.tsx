@@ -6,6 +6,7 @@ import {
   ArrowLeft, Zap, Mail, Calendar, Scale, Target, Dumbbell,
   Flame, TrendingDown, CheckCircle, CalendarClock, Save,
   Archive, Trash2, Check, X, Plus, Minus, Moon, Utensils, Search, Pencil, Sparkles, Loader2,
+  LayoutDashboard, FileText,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -199,6 +200,7 @@ export default function ClientProfilePage() {
   const [aiTrainingDays, setAiTrainingDays] = useState(4)
   const [aiGenerating,   setAiGenerating]   = useState(false)
   const [aiPreview,      setAiPreview]      = useState<WeekProgram | null>(null)
+  const [activeTab,      setActiveTab]      = useState<'apercu'|'programme'|'nutrition'|'notes'>('apercu')
 
   const AI_EQUIPMENT = ['Haltères', 'Barre', 'Machine', 'Poulie', 'Poids du corps', 'Banc']
   const AI_LEVELS    = ['Débutant', 'Intermédiaire', 'Avancé']
@@ -492,547 +494,611 @@ export default function ClientProfilePage() {
 
   /* ── Loading / error ────────────────────────────────────────── */
   if (loading) return (
-    <div style={{minHeight:'100vh',background:'#111827',display:'flex',alignItems:'center',justifyContent:'center'}}>
-      <div style={{width:32,height:32,borderRadius:'50%',border:'3px solid #374151',borderTopColor:'#F97316',animation:'spin 0.7s linear infinite'}}/>
+    <div style={{minHeight:'100vh',background:'#0A0A0A',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{width:32,height:32,borderRadius:'50%',border:'3px solid #2A2A2A',borderTopColor:'#F97316',animation:'spin 0.7s linear infinite'}}/>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
   if (error || !profile) return (
-    <div style={{minHeight:'100vh',background:'#111827',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
+    <div style={{minHeight:'100vh',background:'#0A0A0A',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
       <p style={{color:'#EF4444',fontSize:'0.9rem'}}>{error ?? 'Client introuvable'}</p>
       <button onClick={()=>router.back()} style={{color:'#F97316',background:'none',border:'1px solid #F97316',borderRadius:8,padding:'8px 18px',cursor:'pointer',fontFamily:'Barlow Condensed,sans-serif',fontWeight:600}}>← Retour</button>
     </div>
   )
 
   /* ══════════════════════════════════════════════════════════════
-     RENDER
+     RENDER — MOBILE-FIRST
   ══════════════════════════════════════════════════════════════ */
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         *,*::before,*::after{box-sizing:border-box;}
-        body{margin:0;font-family:'Barlow',sans-serif;background:#111827;color:#F8FAFC;}
+        body{margin:0;font-family:'Barlow',sans-serif;background:#0A0A0A;color:#F8FAFC;overscroll-behavior-y:none;}
         h1,h2,h3,h4{font-family:'Barlow Condensed',sans-serif;}
         @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-        .metric-card{background:#1F2937;border:1px solid #374151;border-radius:12px;padding:16px;transition:box-shadow 200ms ease;}
-        .metric-card:hover{box-shadow:0 10px 15px rgba(0,0,0,.15);}
-        .card{background:#1F2937;border:1px solid #374151;border-radius:12px;padding:20px;}
-        .section-title{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6B7280;margin-bottom:16px;}
-        .btn-primary{display:inline-flex;align-items:center;gap:8px;background:#22C55E;color:#fff;padding:10px 20px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:600;letter-spacing:.04em;border:none;cursor:pointer;transition:opacity 200ms ease,transform 200ms ease;}
-        .btn-primary:hover{opacity:.9;transform:translateY(-1px);}
-        .btn-secondary{display:inline-flex;align-items:center;gap:8px;background:transparent;color:#F97316;border:2px solid #F97316;padding:8px 18px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:background 200ms ease,color 200ms ease;}
-        .btn-secondary:hover{background:#F97316;color:#fff;}
-        .btn-ghost{display:inline-flex;align-items:center;gap:6px;background:transparent;color:#9CA3AF;border:none;padding:7px 12px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.875rem;font-weight:500;cursor:pointer;transition:background 150ms ease,color 150ms ease;}
-        .btn-ghost:hover{background:#374151;color:#F8FAFC;}
-        .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
-        .badge-active{background:rgba(34,197,94,.15);color:#22C55E;}
-        .badge-warning{background:rgba(249,115,22,.15);color:#F97316;}
-        .badge-inactive{background:rgba(156,163,175,.12);color:#9CA3AF;}
-        .data-table{width:100%;border-collapse:collapse;}
-        .data-table thead th{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#6B7280;padding:10px 16px;text-align:left;border-bottom:1px solid #374151;}
-        .data-table tbody tr{border-bottom:1px solid #1F2937;transition:background 150ms ease;}
-        .data-table tbody tr:last-child{border-bottom:none;}
-        .data-table tbody tr:hover{background:#374151;}
-        .data-table tbody td{padding:13px 16px;font-size:.875rem;color:#F8FAFC;}
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 200ms ease;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .card{background:#141414;border:1px solid #242424;border-radius:16px;padding:16px;}
+        .metric-card{background:#141414;border:1px solid #242424;border-radius:14px;padding:14px;}
+        .section-title{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6B7280;margin-bottom:12px;}
+        .btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#F97316;color:#fff;padding:12px 20px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.04em;border:none;cursor:pointer;transition:opacity 200ms,transform 150ms;min-height:44px;}
+        .btn-primary:active{transform:scale(0.97);opacity:.9;}
+        .btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:#F97316;border:1.5px solid #F97316;padding:10px 16px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:background 200ms,color 200ms;min-height:44px;}
+        .btn-secondary:active{background:#F97316;color:#fff;}
+        .btn-ghost{display:inline-flex;align-items:center;gap:6px;background:transparent;color:#9CA3AF;border:none;padding:10px 12px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.875rem;font-weight:500;cursor:pointer;transition:background 150ms,color 150ms;min-height:44px;}
+        .btn-ghost:active{background:#242424;color:#F8FAFC;}
+        .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+        .badge-active{background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.2);}
+        .badge-warning{background:rgba(249,115,22,.12);color:#F97316;border:1px solid rgba(249,115,22,.2);}
+        .badge-inactive{background:rgba(156,163,175,.08);color:#9CA3AF;border:1px solid rgba(156,163,175,.12);}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 200ms ease;}
         .modal-overlay.open{opacity:1;pointer-events:all;}
-        .modal{background:#1F2937;border-radius:16px;padding:32px;max-width:480px;width:92%;transform:translateY(12px);transition:transform 200ms ease;}
+        .modal{background:#111111;border:1px solid #242424;border-radius:20px;max-width:480px;width:92%;transform:translateY(12px);transition:transform 200ms ease;overflow:hidden;}
         .modal-overlay.open .modal{transform:translateY(0);}
-        .toast-el{position:fixed;bottom:24px;right:24px;background:#1F2937;border:1px solid #374151;border-left:3px solid #22C55E;color:#F8FAFC;padding:12px 18px;border-radius:8px;font-size:.875rem;font-weight:500;display:flex;align-items:center;gap:8px;z-index:200;animation:fadeIn 200ms ease;box-shadow:0 10px 15px rgba(0,0,0,.3);}
-        .ex-row{display:grid;grid-template-columns:1fr 56px 56px 64px 1fr 28px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #1F2937;}
-        .ex-row:last-child{border-bottom:none;}
-        .col-hdr{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6B7280;margin-bottom:3px;}
-        .food-row{display:grid;grid-template-columns:1fr 64px 72px 64px 64px 64px 28px;gap:5px;align-items:center;padding:6px 0;border-bottom:1px solid #1a2232;}
-        .food-row:last-child{border-bottom:none;}
-        .day-tab-active{background:#F97316!important;color:#fff!important;box-shadow:0 0 0 2px #F97316;}
+        .toast-el{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1A1A1A;border:1px solid #242424;border-left:3px solid #22C55E;color:#F8FAFC;padding:11px 16px;border-radius:10px;font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:8px;z-index:300;animation:slideUp 200ms ease;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;}
+        .col-hdr{font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6B7280;margin-bottom:3px;}
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0F0F0F;border-top:1px solid #1E1E1E;z-index:50;padding-bottom:env(safe-area-inset-bottom,0px);}
+        .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;border:none;background:transparent;cursor:pointer;transition:color 150ms;min-height:52px;}
+        .day-chip{flex-shrink:0;display:inline-flex;align-items:center;padding:8px 14px;border-radius:10px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.05em;transition:all 150ms ease;min-height:44px;}
+        .ex-row-m{display:flex;flex-direction:column;gap:7px;padding:12px 0;border-bottom:1px solid #1E1E1E;}
+        .ex-row-m:last-child{border-bottom:none;}
+        .food-row-m{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid #1a1f2e;}
+        .food-row-m:last-child{border-bottom:none;}
         input[type=number]::-webkit-inner-spin-button{opacity:.4;}
+        input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:999px;background:#242424;outline:none;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#A855F7;cursor:pointer;border:2px solid #0A0A0A;box-shadow:0 2px 8px rgba(168,85,247,.4);}
+        ::-webkit-scrollbar{display:none;}
       `}</style>
 
-      {/* ── NAVBAR ────────────────────────────────────────────────── */}
-      <nav style={{background:'#1F2937',borderBottom:'1px solid #374151',position:'sticky',top:0,zIndex:50}}>
-        <div style={{maxWidth:1152,margin:'0 auto',padding:'0 24px',display:'flex',alignItems:'center',justifyContent:'space-between',height:64}}>
-          <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <button onClick={()=>router.push('/coach')} className="btn-ghost" style={{padding:'7px 10px'}}>
-              <ArrowLeft size={16} strokeWidth={2.5}/><span>Dashboard</span>
-            </button>
-            <div style={{width:1,height:20,background:'#374151'}}/>
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <div style={{width:28,height:28,background:'#F97316',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <Zap size={15} color="#fff" strokeWidth={2.5}/>
-              </div>
-              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.2rem',fontWeight:700,color:'#F8FAFC',letterSpacing:'0.08em'}}>FITPRO</span>
-            </div>
+      {/* ── MOBILE HEADER ─────────────────────────────────────────── */}
+      <header style={{background:'#0F0F0F',borderBottom:'1px solid #1E1E1E',position:'sticky',top:0,zIndex:40,height:52,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 16px'}}>
+        <button onClick={()=>router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,borderRadius:10,background:'#1A1A1A',border:'1px solid #242424',cursor:'pointer',color:'#9CA3AF',flexShrink:0}} aria-label="Retour">
+          <ArrowLeft size={16} strokeWidth={2.5}/>
+        </button>
+        <div style={{display:'flex',alignItems:'center',gap:7}}>
+          <div style={{width:22,height:22,background:'#F97316',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <Zap size={12} color="#fff" strokeWidth={2.5}/>
           </div>
-          <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#F97316,#FB923C)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:'0.8rem',color:'#fff'}}>
-            {initials(profile.full_name)}
-          </div>
+          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC',letterSpacing:'0.08em'}}>FITPRO</span>
         </div>
-      </nav>
-
-      {/* ── MAIN ──────────────────────────────────────────────────── */}
-      <main style={{maxWidth:1152,margin:'0 auto',padding:'32px 24px'}}>
-
-        {/* CLIENT HEADER */}
-        <div className="card" style={{marginBottom:24}}>
-          <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:20}}>
-            <div style={{position:'relative',flexShrink:0}}>
-              <div style={{width:72,height:72,borderRadius:'50%',background:'#F97316',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.6rem',fontWeight:700,color:'#fff',border:'3px solid #1F2937',boxShadow:'0 0 0 2px #F97316'}}>
-                {initials(profile.full_name)}
-              </div>
-              <div style={{position:'absolute',bottom:2,right:2,width:14,height:14,background:'#22C55E',borderRadius:'50%',border:'2px solid #1F2937'}}/>
-            </div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:12,marginBottom:4}}>
-                <h1 style={{fontSize:'1.75rem',fontWeight:700,color:'#F8FAFC',margin:0}}>{profile.full_name ?? 'Client'}</h1>
-                {(() => {
-                  const s = profile.status ?? 'active'
-                  const cfg = s==='warning' ? {cls:'badge-warning',label:'À relancer'} : s==='inactive' ? {cls:'badge-inactive',label:'Inactif'} : {cls:'badge-active',label:'Actif'}
-                  return <span className={`badge ${cfg.cls}`}>{cfg.label}</span>
-                })()}
-                {profile.objective && (() => {
-                  const labels: Record<string,string> = {perte_poids:'📉 Perte de poids',prise_masse:'💪 Prise de masse',maintien:'⚖️ Maintien',performance:'🏆 Performance'}
-                  return <span style={{fontSize:'0.78rem',color:'#6B7280',background:'rgba(255,255,255,.05)',border:'1px solid #374151',borderRadius:6,padding:'2px 8px'}}>{labels[profile.objective] ?? profile.objective}</span>
-                })()}
-              </div>
-              <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:'4px 20px',marginTop:4}}>
-                {profile.email && <span style={{fontSize:'0.85rem',color:'#6B7280',display:'flex',alignItems:'center',gap:5}}><Mail size={13} strokeWidth={2}/>{profile.email}</span>}
-                <span style={{fontSize:'0.85rem',color:'#6B7280',display:'flex',alignItems:'center',gap:5}}><Calendar size={13} strokeWidth={2}/>Client depuis {formatMonthYear(profile.created_at)}</span>
-              </div>
-            </div>
-            <button className="btn-secondary" onClick={()=>{ setEditTab('info'); setEditOpen(true) }}>Modifier</button>
-          </div>
+        <div style={{width:36,height:36,borderRadius:'50%',background:'linear-gradient(135deg,#F97316,#FB923C)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:'0.72rem',color:'#fff',flexShrink:0}}>
+          {initials(profile.full_name)}
         </div>
+      </header>
 
-        {/* TWO-COLUMN */}
-        <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:24}}>
+      {/* ── MAIN CONTENT ──────────────────────────────────────────── */}
+      <main style={{padding:'14px 14px 80px',maxWidth:600,margin:'0 auto'}}>
 
-          {/* ── LEFT (2/3) ────────────────────────────────────────── */}
-          <div style={{display:'flex',flexDirection:'column',gap:24}}>
+        {/* ══ TAB: APERÇU ══ */}
+        {activeTab === 'apercu' && (
+          <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
 
-            {/* MÉTRIQUES */}
-            <section>
-              <p className="section-title">Métriques clés</p>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
-                {/* Poids */}
-                <div className="metric-card">
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Poids</span>
-                    <div style={{width:30,height:30,background:'rgba(249,115,22,.12)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}><Scale size={14} color="#F97316" strokeWidth={2}/></div>
+            {/* Profile hero */}
+            <div className="card" style={{position:'relative',overflow:'hidden',padding:'16px 16px 14px'}}>
+              <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:'linear-gradient(90deg,#F97316,#FB923C)'}}/>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginTop:4}}>
+                <div style={{position:'relative',flexShrink:0}}>
+                  <div style={{width:60,height:60,borderRadius:'50%',background:'linear-gradient(135deg,#F97316,#FB923C)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.3rem',fontWeight:700,color:'#fff',border:'3px solid #141414',boxShadow:'0 0 0 2px #F97316'}}>
+                    {initials(profile.full_name)}
                   </div>
-                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'2rem',fontWeight:700,color:'#F8FAFC',lineHeight:1}}>
-                    {currentWeight ?? '—'}<span style={{fontSize:'1rem',color:'#6B7280',fontWeight:500,marginLeft:2}}>kg</span>
-                  </div>
-                  {weightDelta !== null && (
-                    <div style={{display:'flex',alignItems:'center',gap:3,marginTop:8}}>
-                      <TrendingDown size={12} color={weightDelta<=0?'#22C55E':'#EF4444'} strokeWidth={2.5}/>
-                      <span style={{fontSize:'0.72rem',color:weightDelta<=0?'#22C55E':'#EF4444',fontWeight:500}}>{weightDelta>0?'+':''}{weightDelta.toFixed(1)} kg ce mois</span>
-                    </div>
-                  )}
+                  <div style={{position:'absolute',bottom:2,right:2,width:12,height:12,background:'#22C55E',borderRadius:'50%',border:'2px solid #141414'}}/>
                 </div>
-                {/* Objectif */}
-                <div className="metric-card">
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Objectif</span>
-                    <div style={{width:30,height:30,background:'rgba(34,197,94,.1)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={14} color="#22C55E" strokeWidth={2}/></div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:4}}>
+                    <h1 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.35rem',fontWeight:700,color:'#F8FAFC',margin:0,lineHeight:1}}>{profile.full_name ?? 'Client'}</h1>
+                    {(() => {
+                      const s = profile.status ?? 'active'
+                      const cfg = s==='warning' ? {cls:'badge-warning',label:'À relancer'} : s==='inactive' ? {cls:'badge-inactive',label:'Inactif'} : {cls:'badge-active',label:'Actif'}
+                      return <span className={`badge ${cfg.cls}`}>{cfg.label}</span>
+                    })()}
                   </div>
-                  {profile.goal_weight && (
-                    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC',marginBottom:6}}>
-                      {profile.goal_weight} kg
-                    </div>
-                  )}
-                  {/* Calorie goal — editable */}
-                  {editingCalGoal ? (
-                    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-                      <input
-                        type="number"
-                        value={calGoalInput}
-                        onChange={e => setCalGoalInput(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveCalorieGoal(); if (e.key === 'Escape') setEditingCalGoal(false) }}
-                        autoFocus
-                        style={{background:'#111827',border:'1px solid #F97316',borderRadius:6,padding:'4px 8px',color:'#F8FAFC',fontSize:'0.95rem',fontWeight:700,width:80,outline:'none',fontFamily:"'Barlow Condensed',sans-serif"}}
-                      />
-                      <span style={{fontSize:'0.72rem',color:'#6B7280'}}>kcal/j</span>
-                      <button onClick={saveCalorieGoal} style={{background:'#22C55E',border:'none',borderRadius:6,padding:'4px 8px',cursor:'pointer',display:'flex',alignItems:'center'}}><Check size={12} color="#fff" strokeWidth={3}/></button>
-                      <button onClick={() => setEditingCalGoal(false)} style={{background:'transparent',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center'}}><X size={12} color="#6B7280"/></button>
-                    </div>
-                  ) : (
-                    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-                      <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>
-                        {profile.calorie_goal ? `${profile.calorie_goal} kcal/j` : '— kcal/j'}
-                      </span>
-                      <button onClick={() => { setCalGoalInput(profile.calorie_goal ? String(profile.calorie_goal) : ''); setEditingCalGoal(true) }} style={{background:'transparent',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center',opacity:0.5}} title="Modifier l'objectif calorique">
-                        <Pencil size={11} color="#9CA3AF"/>
-                      </button>
-                    </div>
-                  )}
-                  {goalProgress !== null && (
-                    <>
-                      <div style={{background:'#374151',borderRadius:999,height:6,overflow:'hidden'}}>
-                        <div style={{height:'100%',borderRadius:999,background:'#22C55E',width:`${goalProgress}%`,transition:'width 600ms ease'}}/>
-                      </div>
-                      <span style={{fontSize:'0.72rem',color:'#6B7280',marginTop:4,display:'block'}}>{goalProgress} % atteint</span>
-                    </>
-                  )}
-                </div>
-                {/* Séances */}
-                <div className="metric-card">
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Séances</span>
-                    <div style={{width:30,height:30,background:'rgba(249,115,22,.12)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}><Dumbbell size={14} color="#F97316" strokeWidth={2}/></div>
-                  </div>
-                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'2rem',fontWeight:700,color:'#F8FAFC',lineHeight:1}}>{totalSessions}</div>
-                  <div style={{display:'flex',alignItems:'center',gap:3,marginTop:8}}>
-                    <CheckCircle size={12} color="#22C55E" strokeWidth={2.5}/>
-                    <span style={{fontSize:'0.72rem',color:'#22C55E',fontWeight:500}}>complétées</span>
-                  </div>
-                </div>
-                {/* Streak */}
-                <div className="metric-card">
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Streak</span>
-                    <div style={{width:30,height:30,background:'rgba(249,115,22,.12)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}><Flame size={14} color="#F97316" strokeWidth={2}/></div>
-                  </div>
-                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'2.5rem',fontWeight:700,color:'#F97316',lineHeight:1}}>{streak}</div>
-                  <div style={{marginTop:8}}><span style={{fontSize:'0.72rem',color:'#F97316',fontWeight:500}}>jours consécutifs</span></div>
+                  {profile.objective && (() => {
+                    const labels: Record<string,string> = {perte_poids:'Perte de poids',prise_masse:'Prise de masse',maintien:'Maintien',performance:'Performance'}
+                    return <span style={{fontSize:'0.75rem',color:'#6B7280'}}>{labels[profile.objective] ?? profile.objective}</span>
+                  })()}
                 </div>
               </div>
-            </section>
-
-            {/* SÉANCES TABLE */}
-            <section>
-              <p className="section-title">Historique des séances</p>
-              <div className="card" style={{padding:0,overflow:'hidden'}}>
-                <div style={{overflowX:'auto'}}>
-                  <table className="data-table">
-                    <thead><tr><th>Date</th><th>Séance</th><th>Durée</th><th>Notes</th></tr></thead>
-                    <tbody>
-                      {sessions.length === 0
-                        ? <tr><td colSpan={4} style={{textAlign:'center',color:'#6B7280',padding:'32px 16px'}}>Aucune séance enregistrée</td></tr>
-                        : sessions.map(s => (
-                          <tr key={s.id}>
-                            <td style={{color:'#9CA3AF',whiteSpace:'nowrap'}}>{formatDate(s.created_at)}</td>
-                            <td style={{textTransform:'capitalize'}}>{s.name ?? '—'}</td>
-                            <td>{s.duration_minutes ? `${s.duration_minutes} min` : '—'}</td>
-                            <td style={{color:'#9CA3AF',maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.notes ?? '—'}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div style={{padding:'12px 16px',borderTop:'1px solid #374151'}}>
-                  <span style={{fontSize:'0.78rem',color:'#6B7280'}}>
-                    {totalSessionsCount} séance{totalSessionsCount!==1?'s':''}
-                    {totalSessionsCount > sessions.length ? ` · ${sessions.length} affichées` : ''}
-                  </span>
-                </div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:'3px 14px',marginTop:10,paddingTop:10,borderTop:'1px solid #1E1E1E'}}>
+                {profile.email && <span style={{fontSize:'0.75rem',color:'#6B7280',display:'flex',alignItems:'center',gap:4}}><Mail size={12} strokeWidth={2}/>{profile.email}</span>}
+                <span style={{fontSize:'0.75rem',color:'#6B7280',display:'flex',alignItems:'center',gap:4}}><Calendar size={12} strokeWidth={2}/>Depuis {formatMonthYear(profile.created_at)}</span>
               </div>
-            </section>
+              <button className="btn-secondary" style={{width:'100%',marginTop:12,fontSize:'0.85rem'}} onClick={()=>{ setEditTab('info'); setEditOpen(true) }}>
+                <Pencil size={13} strokeWidth={2}/>Modifier le profil
+              </button>
+            </div>
 
-            {/* ── PROGRAMME HEBDOMADAIRE ─────────────────────────────── */}
-            <section>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-                <p className="section-title" style={{marginBottom:0}}>Programme hebdomadaire</p>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:'0.75rem',color:'#22C55E',display:'flex',alignItems:'center',gap:4,opacity:programSaved?1:0,transition:'opacity 300ms ease'}}>
-                    <Check size={12} strokeWidth={2.5}/>Sauvegardé
-                  </span>
-                  <button
-                    onClick={() => { setShowAiModal(true); setAiPreview(null) }}
-                    style={{display:'flex',alignItems:'center',gap:6,padding:'6px 14px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.85rem',fontWeight:700,letterSpacing:'0.04em',background:'linear-gradient(135deg,#7C3AED,#A855F7)',color:'#fff',transition:'opacity 200ms ease'}}
-                    onMouseEnter={e=>(e.currentTarget.style.opacity='0.85')}
-                    onMouseLeave={e=>(e.currentTarget.style.opacity='1')}
-                  >
-                    <Sparkles size={13} strokeWidth={2.5}/>Générer avec l&apos;IA
+            {/* 2×2 Metrics */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+              {/* Poids */}
+              <div className="metric-card">
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.62rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Poids</span>
+                  <div style={{width:27,height:27,background:'rgba(249,115,22,.12)',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}}><Scale size={13} color="#F97316" strokeWidth={2}/></div>
+                </div>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.9rem',fontWeight:700,color:'#F8FAFC',lineHeight:1}}>
+                  {currentWeight ?? '—'}<span style={{fontSize:'0.85rem',color:'#6B7280',fontWeight:500,marginLeft:2}}>kg</span>
+                </div>
+                {weightDelta !== null && (
+                  <div style={{display:'flex',alignItems:'center',gap:3,marginTop:6}}>
+                    <TrendingDown size={11} color={weightDelta<=0?'#22C55E':'#EF4444'} strokeWidth={2.5}/>
+                    <span style={{fontSize:'0.68rem',color:weightDelta<=0?'#22C55E':'#EF4444',fontWeight:600}}>{weightDelta>0?'+':''}{weightDelta.toFixed(1)} kg</span>
+                  </div>
+                )}
+              </div>
+              {/* Objectif */}
+              <div className="metric-card">
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.62rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Objectif</span>
+                  <div style={{width:27,height:27,background:'rgba(34,197,94,.1)',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={13} color="#22C55E" strokeWidth={2}/></div>
+                </div>
+                {profile.goal_weight && <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.3rem',fontWeight:700,color:'#F8FAFC',lineHeight:1,marginBottom:5}}>{profile.goal_weight}<span style={{fontSize:'0.78rem',color:'#6B7280',marginLeft:2}}>kg</span></div>}
+                {editingCalGoal ? (
+                  <div style={{display:'flex',alignItems:'center',gap:4}}>
+                    <input type="number" inputMode="numeric" value={calGoalInput} onChange={e=>setCalGoalInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')saveCalorieGoal();if(e.key==='Escape')setEditingCalGoal(false)}} autoFocus style={{background:'#0A0A0A',border:'1px solid #F97316',borderRadius:6,padding:'4px 6px',color:'#F8FAFC',fontSize:'0.9rem',fontWeight:700,width:68,outline:'none',fontFamily:"'Barlow Condensed',sans-serif"}}/>
+                    <button onClick={saveCalorieGoal} style={{background:'#22C55E',border:'none',borderRadius:6,padding:'4px 6px',cursor:'pointer',display:'flex',alignItems:'center',minHeight:28}}><Check size={11} color="#fff" strokeWidth={3}/></button>
+                    <button onClick={()=>setEditingCalGoal(false)} style={{background:'transparent',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center'}}><X size={11} color="#6B7280"/></button>
+                  </div>
+                ) : (
+                  <button onClick={()=>{setCalGoalInput(profile.calorie_goal?String(profile.calorie_goal):'');setEditingCalGoal(true)}} style={{background:'transparent',border:'none',cursor:'pointer',padding:0,display:'flex',alignItems:'center',gap:5}}>
+                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>{profile.calorie_goal??'—'}<span style={{fontSize:'0.68rem',color:'#6B7280',marginLeft:2}}>kcal</span></span>
+                    <Pencil size={10} color="#6B7280" strokeWidth={2}/>
                   </button>
-                  <button className="btn-secondary" style={{padding:'6px 14px',fontSize:'0.85rem'}} onClick={saveProgram} disabled={programSaving}>
-                    <Save size={13} strokeWidth={2.5}/>{programSaving?'Sauvegarde…':'Sauvegarder'}
-                  </button>
+                )}
+                {goalProgress !== null && (
+                  <div style={{marginTop:8}}>
+                    <div style={{background:'#242424',borderRadius:999,height:4,overflow:'hidden'}}>
+                      <div style={{height:'100%',borderRadius:999,background:'#22C55E',width:`${goalProgress}%`,transition:'width 600ms ease'}}/>
+                    </div>
+                    <span style={{fontSize:'0.62rem',color:'#6B7280',marginTop:3,display:'block'}}>{goalProgress}% atteint</span>
+                  </div>
+                )}
+              </div>
+              {/* Séances */}
+              <div className="metric-card">
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.62rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Séances</span>
+                  <div style={{width:27,height:27,background:'rgba(249,115,22,.12)',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}}><Dumbbell size={13} color="#F97316" strokeWidth={2}/></div>
+                </div>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.9rem',fontWeight:700,color:'#F8FAFC',lineHeight:1}}>{totalSessions}</div>
+                <div style={{display:'flex',alignItems:'center',gap:3,marginTop:6}}>
+                  <CheckCircle size={11} color="#22C55E" strokeWidth={2.5}/>
+                  <span style={{fontSize:'0.68rem',color:'#22C55E',fontWeight:600}}>complétées</span>
                 </div>
               </div>
-
-              {/* Day tabs */}
-              <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap'}}>
-                {DAYS.map(day => {
-                  const d = program[day]
-                  const isActive = expandedDay === day
-                  const hasEx = !d.repos && d.exercises.length > 0
-                  return (
-                    <button key={day} onClick={()=>setExpandedDay(isActive?null:day)} style={{
-                      padding:'5px 12px',borderRadius:8,border:'none',cursor:'pointer',
-                      fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.8rem',fontWeight:700,letterSpacing:'0.05em',
-                      transition:'all 150ms ease',
-                      background: d.repos?'rgba(107,114,128,.15)':isActive?'#F97316':hasEx?'rgba(249,115,22,.15)':'#2D3748',
-                      color: d.repos?'#6B7280':isActive?'#fff':hasEx?'#F97316':'#9CA3AF',
-                      boxShadow: isActive?'0 0 0 2px #F97316':'none',
-                    }}>
-                      {DAY_LABELS[day]}
-                      {d.repos && <Moon size={10} style={{marginLeft:4,verticalAlign:'middle'}}/>}
-                      {hasEx && <span style={{marginLeft:5,background:'rgba(249,115,22,.25)',borderRadius:999,padding:'0 5px',fontSize:'0.7rem'}}>{d.exercises.length}</span>}
-                    </button>
-                  )
-                })}
+              {/* Streak */}
+              <div className="metric-card">
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.62rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Streak</span>
+                  <div style={{width:27,height:27,background:'rgba(249,115,22,.12)',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}}><Flame size={13} color="#F97316" strokeWidth={2}/></div>
+                </div>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'2.2rem',fontWeight:700,color:'#F97316',lineHeight:1}}>{streak}</div>
+                <span style={{fontSize:'0.68rem',color:'#F97316',fontWeight:600,marginTop:6,display:'block'}}>jours consécutifs</span>
               </div>
+            </div>
 
-              {expandedDay && (
-                <div className="card" style={{padding:0,overflow:'hidden',animation:'fadeIn 150ms ease'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',borderBottom:'1px solid #374151'}}>
-                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.05rem',fontWeight:700,color:'#F8FAFC'}}>{DAY_FULL[expandedDay]}</span>
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <button onClick={()=>toggleRepos(expandedDay)} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.8rem',fontWeight:700,background:program[expandedDay].repos?'rgba(107,114,128,.2)':'rgba(107,114,128,.1)',color:program[expandedDay].repos?'#9CA3AF':'#6B7280',transition:'all 150ms ease'}}>
-                        <Moon size={12} strokeWidth={2}/>{program[expandedDay].repos?'Repos ✓':'Marquer repos'}
-                      </button>
-                      {!program[expandedDay].repos && (
-                        <button onClick={()=>openExDbModal(expandedDay)} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.8rem',fontWeight:700,background:'rgba(249,115,22,.15)',color:'#F97316'}}>
-                          <Plus size={12} strokeWidth={2.5}/>Ajouter exercice
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {program[expandedDay].repos ? (
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'32px 16px',color:'#6B7280'}}>
-                      <Moon size={20} strokeWidth={1.5}/><span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:600}}>Jour de repos</span>
-                    </div>
-                  ) : program[expandedDay].exercises.length === 0 ? (
-                    <div style={{textAlign:'center',padding:'32px 16px',color:'#6B7280',fontSize:'0.875rem'}}>Aucun exercice — cliquez sur &quot;Ajouter exercice&quot;</div>
-                  ) : (
-                    <div style={{padding:'0 16px'}}>
-                      <div style={{display:'grid',gridTemplateColumns:'1fr 56px 56px 64px 1fr 28px',gap:6,padding:'10px 0 4px'}}>
-                        {['Exercice','Séries','Reps','Repos','Notes',''].map((h,i)=><div key={i} className="col-hdr">{h}</div>)}
+            {/* Session history — cards */}
+            <section>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                <p className="section-title" style={{marginBottom:0}}>Historique séances</p>
+                <span style={{fontSize:'0.72rem',color:'#6B7280'}}>{totalSessionsCount} total</span>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {sessions.length === 0 ? (
+                  <div className="card" style={{textAlign:'center',color:'#6B7280',padding:'28px 16px',fontSize:'0.85rem'}}>Aucune séance enregistrée</div>
+                ) : sessions.map(s => (
+                  <div key={s.id} style={{background:'#141414',border:'1px solid #242424',borderRadius:12,padding:'12px 14px'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,color:'#F8FAFC',fontSize:'0.95rem',textTransform:'capitalize'}}>{s.name ?? '—'}</div>
+                        <div style={{fontSize:'0.7rem',color:'#6B7280',marginTop:2}}>{formatDate(s.created_at)}</div>
                       </div>
-                      {program[expandedDay].exercises.map((ex,idx)=>(
-                        <div key={idx} className="ex-row">
-                          <input placeholder="Nom de l'exercice" value={ex.name} onChange={e=>updateExercise(expandedDay,idx,'name',e.target.value)} style={smallInput} onFocus={e=>{e.target.style.borderColor='#F97316'}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                          <input type="number" min={1} value={ex.sets} onChange={e=>updateExercise(expandedDay,idx,'sets',parseInt(e.target.value)||1)} style={numInput} onFocus={e=>{e.target.style.borderColor='#F97316'}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                          <input type="number" min={1} value={ex.reps} onChange={e=>updateExercise(expandedDay,idx,'reps',parseInt(e.target.value)||1)} style={numInput} onFocus={e=>{e.target.style.borderColor='#F97316'}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                          <input placeholder="60s" value={ex.rest} onChange={e=>updateExercise(expandedDay,idx,'rest',e.target.value)} style={{...smallInput,textAlign:'center'}} onFocus={e=>{e.target.style.borderColor='#F97316'}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                          <input placeholder="Notes" value={ex.notes} onChange={e=>updateExercise(expandedDay,idx,'notes',e.target.value)} style={smallInput} onFocus={e=>{e.target.style.borderColor='#F97316'}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                          <button onClick={()=>removeExercise(expandedDay,idx)} style={{background:'transparent',border:'none',cursor:'pointer',color:'#4B5563',padding:4,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}} onMouseEnter={e=>(e.currentTarget.style.color='#EF4444')} onMouseLeave={e=>(e.currentTarget.style.color='#4B5563')}>
-                            <Minus size={14} strokeWidth={2.5}/>
-                          </button>
-                        </div>
-                      ))}
-                      <div style={{padding:'12px 0'}}>
-                        <button onClick={()=>openExDbModal(expandedDay)} style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:'1px dashed #374151',borderRadius:8,padding:'8px 14px',cursor:'pointer',color:'#6B7280',fontFamily:'Barlow,sans-serif',fontSize:'0.82rem',width:'100%',justifyContent:'center',transition:'all 150ms ease'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='#F97316';e.currentTarget.style.color='#F97316'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='#374151';e.currentTarget.style.color='#6B7280'}}>
-                          <Plus size={13} strokeWidth={2.5}/>Ajouter un exercice
-                        </button>
+                      <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
+                        {s.duration_minutes && <span style={{fontSize:'0.72rem',color:'#9CA3AF',background:'#1E1E1E',borderRadius:6,padding:'2px 7px'}}>{s.duration_minutes} min</span>}
+                        {s.completed && <CheckCircle size={14} color="#22C55E" strokeWidth={2}/>}
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-            </section>
-
-            {/* ══════════════════════════════════════════════════════════
-                PLAN ALIMENTAIRE
-            ══════════════════════════════════════════════════════════ */}
-            <section>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-                <div style={{display:'flex',alignItems:'center',gap:10}}>
-                  <div style={{width:32,height:32,background:'rgba(34,197,94,.12)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    <Utensils size={16} color="#22C55E" strokeWidth={2}/>
-                  </div>
-                  <p className="section-title" style={{marginBottom:0}}>Plan alimentaire</p>
-                </div>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:'0.75rem',color:'#22C55E',display:'flex',alignItems:'center',gap:4,opacity:mealPlanSaved?1:0,transition:'opacity 300ms ease'}}>
-                    <Check size={12} strokeWidth={2.5}/>Sauvegardé
-                  </span>
-                  <button className="btn-secondary" style={{padding:'6px 14px',fontSize:'0.85rem'}} onClick={saveMealPlan} disabled={mealPlanSaving}>
-                    <Save size={13} strokeWidth={2.5}/>{mealPlanSaving?'Sauvegarde…':'Sauvegarder'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Targets row */}
-              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:16}}>
-                {[
-                  { label:'Calories', unit:'kcal', color:MACRO_COLORS.kcal, val:calorieTarget, set:setCalorieTarget },
-                  { label:'Protéines', unit:'g', color:MACRO_COLORS.prot, val:protTarget, set:setProtTarget },
-                  { label:'Glucides', unit:'g', color:MACRO_COLORS.carb, val:carbTarget, set:setCarbTarget },
-                  { label:'Lipides', unit:'g', color:MACRO_COLORS.fat, val:fatTarget, set:setFatTarget },
-                ].map(({ label, unit, color, val, set }) => (
-                  <div key={label} style={{background:'#111827',border:'1px solid #374151',borderRadius:10,padding:'10px 12px',borderTop:`3px solid ${color}`}}>
-                    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.65rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280',marginBottom:6}}>{label}</div>
-                    <div style={{display:'flex',alignItems:'center',gap:4}}>
-                      <input type="number" min={0} value={val} onChange={e=>set(parseInt(e.target.value)||0)} style={{...targetInput,color}} onFocus={e=>{e.target.style.borderColor=color}} onBlur={e=>{e.target.style.borderColor='#374151'}}/>
-                      <span style={{fontSize:'0.75rem',color:'#6B7280',flexShrink:0}}>{unit}</span>
-                    </div>
+                    {s.notes && <div style={{fontSize:'0.7rem',color:'#6B7280',marginTop:6,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.notes}</div>}
                   </div>
                 ))}
               </div>
-
-              {/* Day tabs */}
-              <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap'}}>
-                {DAYS.map(day => {
-                  const { kcal } = dayMacros(mealPlan[day])
-                  const isActive = expandedMealDay === day
-                  const hasFoods = mealPlan[day].meals.some(m => m.foods.length > 0)
-                  return (
-                    <button key={day} onClick={()=>setExpandedMealDay(isActive?null:day)} style={{
-                      padding:'5px 12px',borderRadius:8,border:'none',cursor:'pointer',
-                      fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.8rem',fontWeight:700,letterSpacing:'0.05em',
-                      transition:'all 150ms ease',
-                      background: isActive?'#22C55E':hasFoods?'rgba(34,197,94,.15)':'#2D3748',
-                      color: isActive?'#fff':hasFoods?'#22C55E':'#9CA3AF',
-                      boxShadow: isActive?'0 0 0 2px #22C55E':'none',
-                    }}>
-                      {DAY_LABELS[day]}
-                      {hasFoods && !isActive && <span style={{marginLeft:5,background:'rgba(34,197,94,.2)',borderRadius:999,padding:'0 5px',fontSize:'0.68rem'}}>{kcal} kcal</span>}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {expandedMealDay && (() => {
-                const dayData = mealPlan[expandedMealDay]
-                const totals  = dayMacros(dayData)
-                return (
-                  <div style={{display:'flex',flexDirection:'column',gap:12,animation:'fadeIn 150ms ease'}}>
-
-                    {/* Daily macro summary */}
-                    <div style={{background:'#111827',border:'1px solid #374151',borderRadius:10,padding:'14px 16px'}}>
-                      <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280',marginBottom:12}}>Total du jour</div>
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
-                        {[
-                          { label:'Calories', val:totals.kcal, target:calorieTarget, unit:'kcal', color:MACRO_COLORS.kcal },
-                          { label:'Protéines', val:totals.prot, target:protTarget,    unit:'g',    color:MACRO_COLORS.prot },
-                          { label:'Glucides',  val:totals.carb, target:carbTarget,    unit:'g',    color:MACRO_COLORS.carb },
-                          { label:'Lipides',   val:totals.fat,  target:fatTarget,     unit:'g',    color:MACRO_COLORS.fat  },
-                        ].map(({ label, val, target, unit, color }) => (
-                          <div key={label}>
-                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
-                              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,color:'#6B7280',textTransform:'uppercase',letterSpacing:'0.05em'}}>{label}</span>
-                              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.9rem',fontWeight:700,color}}>
-                                {val}<span style={{fontSize:'0.65rem',color:'#6B7280',marginLeft:2}}>{unit}</span>
-                              </span>
-                            </div>
-                            <div style={{background:'#374151',borderRadius:999,height:5,overflow:'hidden'}}>
-                              <div style={{height:'100%',borderRadius:999,background:color,width:`${pct(val,target)}%`,transition:'width 400ms ease'}}/>
-                            </div>
-                            <div style={{fontSize:'0.65rem',color:'#4B5563',marginTop:3,textAlign:'right'}}>{pct(val,target)}% / {target}{unit}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Meal cards */}
-                    {dayData.meals.map((meal, mealIdx) => {
-                      const mealTotals = meal.foods.reduce((acc,f)=>({kcal:acc.kcal+f.kcal,prot:acc.prot+f.prot,carb:acc.carb+f.carb,fat:acc.fat+f.fat}),{kcal:0,prot:0,carb:0,fat:0})
-                      return (
-                        <div key={mealIdx} className="card" style={{padding:0,overflow:'hidden'}}>
-                          {/* Meal header */}
-                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px',borderBottom:meal.foods.length>0?'1px solid #374151':'none',background:'rgba(255,255,255,.02)'}}>
-                            <div style={{display:'flex',alignItems:'center',gap:10}}>
-                              <span style={{fontSize:'1rem'}}>{MEAL_ICONS[meal.type]}</span>
-                              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>{meal.type}</span>
-                              {meal.foods.length > 0 && (
-                                <span style={{fontSize:'0.75rem',color:'#6B7280',fontFamily:'Barlow,sans-serif'}}>
-                                  {mealTotals.kcal} kcal · {mealTotals.prot}g prot · {mealTotals.carb}g gluc · {mealTotals.fat}g lip
-                                </span>
-                              )}
-                            </div>
-                            <button onClick={()=>addFood(expandedMealDay, mealIdx)} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',borderRadius:7,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,background:'rgba(34,197,94,.12)',color:'#22C55E',transition:'all 150ms ease'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(34,197,94,.25)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(34,197,94,.12)'}}>
-                              <Plus size={11} strokeWidth={2.5}/>Ajouter
-                            </button>
-                          </div>
-
-                          {/* Food items */}
-                          {meal.foods.length > 0 && (
-                            <div style={{padding:'0 16px'}}>
-                              {/* Column headers */}
-                              <div style={{display:'grid',gridTemplateColumns:'1fr 64px 72px 64px 64px 64px 28px',gap:5,padding:'8px 0 4px'}}>
-                                {['Aliment','Qté','Kcal','Prot (g)','Gluc (g)','Lip (g)',''].map((h,i)=>(
-                                  <div key={i} className="col-hdr">{h}</div>
-                                ))}
-                              </div>
-                              {meal.foods.map((food, foodIdx) => (
-                                <div key={foodIdx} className="food-row">
-                                  <input placeholder="Ex: Riz cuit" value={food.name} onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'name',e.target.value)} style={smallInput} onFocus={e=>{e.target.style.borderColor='#22C55E'}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                                  <input placeholder="100g" value={food.qty} onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'qty',e.target.value)} style={{...smallInput,textAlign:'center'}} onFocus={e=>{e.target.style.borderColor='#22C55E'}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                                  <input type="number" min={0} value={food.kcal} onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'kcal',parseInt(e.target.value)||0)} style={{...numInput,color:MACRO_COLORS.kcal}} onFocus={e=>{e.target.style.borderColor=MACRO_COLORS.kcal}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                                  <input type="number" min={0} value={food.prot} onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'prot',parseInt(e.target.value)||0)} style={{...numInput,color:MACRO_COLORS.prot}} onFocus={e=>{e.target.style.borderColor=MACRO_COLORS.prot}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                                  <input type="number" min={0} value={food.carb} onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'carb',parseInt(e.target.value)||0)} style={{...numInput,color:MACRO_COLORS.carb}} onFocus={e=>{e.target.style.borderColor=MACRO_COLORS.carb}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                                  <input type="number" min={0} value={food.fat} onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'fat',parseInt(e.target.value)||0)} style={{...numInput,color:MACRO_COLORS.fat}} onFocus={e=>{e.target.style.borderColor=MACRO_COLORS.fat}} onBlur={e=>{e.target.style.borderColor='#2D3748'}}/>
-                                  <button onClick={()=>removeFood(expandedMealDay,mealIdx,foodIdx)} style={{background:'transparent',border:'none',cursor:'pointer',color:'#4B5563',padding:4,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}} onMouseEnter={e=>(e.currentTarget.style.color='#EF4444')} onMouseLeave={e=>(e.currentTarget.style.color='#4B5563')}>
-                                    <Minus size={13} strokeWidth={2.5}/>
-                                  </button>
-                                </div>
-                              ))}
-                              <div style={{padding:'8px 0'}}/>
-                            </div>
-                          )}
-
-                          {/* Empty state */}
-                          {meal.foods.length === 0 && (
-                            <div style={{textAlign:'center',padding:'16px',color:'#4B5563',fontSize:'0.8rem',fontStyle:'italic'}}>
-                              Aucun aliment — cliquez sur Ajouter
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              })()}
             </section>
           </div>
+        )}
 
-          {/* ── RIGHT COL ─────────────────────────────────────────────── */}
-          <div style={{display:'flex',flexDirection:'column',gap:24}}>
+        {/* ══ TAB: PROGRAMME ══ */}
+        {activeTab === 'programme' && (
+          <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
+            {/* Actions */}
+            <div style={{display:'flex',gap:8}}>
+              <button
+                onClick={()=>{setShowAiModal(true);setAiPreview(null)}}
+                style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'12px 16px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.9rem',fontWeight:700,letterSpacing:'0.04em',background:'linear-gradient(135deg,#7C3AED,#A855F7)',color:'#fff',minHeight:44}}
+              >
+                <Sparkles size={14} strokeWidth={2.5}/>Générer avec l&apos;IA
+              </button>
+              <button className="btn-secondary" style={{padding:'12px 14px',flexShrink:0,gap:0}} onClick={saveProgram} disabled={programSaving} aria-label="Sauvegarder">
+                {programSaving ? <Loader2 size={15} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <Save size={15} strokeWidth={2.5}/>}
+              </button>
+            </div>
+            {programSaved && (
+              <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(34,197,94,.07)',border:'1px solid rgba(34,197,94,.18)',borderRadius:8,color:'#22C55E',fontSize:'0.78rem',fontWeight:600}}>
+                <Check size={12} strokeWidth={2.5}/>Programme sauvegardé
+              </div>
+            )}
 
-            {/* PROCHAIN RDV */}
-            <section className="card">
-              <p className="section-title">Prochain RDV</p>
-              <div style={{display:'flex',alignItems:'center',gap:16,background:'#111827',borderRadius:10,padding:16,borderLeft:'3px solid #F97316'}}>
-                <div style={{width:40,height:40,background:'rgba(249,115,22,.12)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <CalendarClock size={18} color="#F97316" strokeWidth={2}/>
+            {/* Day chips — horizontal scroll */}
+            <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:2}}>
+              {DAYS.map(day => {
+                const d = program[day]
+                const isActive = expandedDay === day
+                const hasEx = !d.repos && d.exercises.length > 0
+                return (
+                  <button
+                    key={day}
+                    className="day-chip"
+                    onClick={()=>setExpandedDay(isActive?null:day)}
+                    style={{
+                      background: d.repos?'rgba(107,114,128,.1)':isActive?'#F97316':hasEx?'rgba(249,115,22,.12)':'#1A1A1A',
+                      color: d.repos?'#6B7280':isActive?'#fff':hasEx?'#F97316':'#9CA3AF',
+                      border: `1.5px solid ${isActive?'#F97316':d.repos?'#1E1E1E':hasEx?'rgba(249,115,22,.25)':'#242424'}`,
+                    }}
+                  >
+                    {DAY_LABELS[day]}
+                    {d.repos && <Moon size={9} style={{marginLeft:3}}/>}
+                    {hasEx && <span style={{marginLeft:4,background:'rgba(249,115,22,.2)',borderRadius:999,padding:'0 4px',fontSize:'0.62rem'}}>{d.exercises.length}</span>}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Expanded day */}
+            {expandedDay && (
+              <div className="card" style={{padding:0,overflow:'hidden',animation:'fadeIn 150ms ease'}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',borderBottom:'1px solid #1E1E1E'}}>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>{DAY_FULL[expandedDay]}</span>
+                  <div style={{display:'flex',alignItems:'center',gap:6}}>
+                    <button
+                      onClick={()=>toggleRepos(expandedDay)}
+                      style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,background:program[expandedDay].repos?'rgba(107,114,128,.18)':'rgba(107,114,128,.08)',color:program[expandedDay].repos?'#9CA3AF':'#6B7280',minHeight:36}}
+                    >
+                      <Moon size={11} strokeWidth={2}/>{program[expandedDay].repos?'Repos ✓':'Repos'}
+                    </button>
+                    {!program[expandedDay].repos && (
+                      <button
+                        onClick={()=>openExDbModal(expandedDay)}
+                        style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,background:'rgba(249,115,22,.12)',color:'#F97316',minHeight:36}}
+                      >
+                        <Plus size={12} strokeWidth={2.5}/>Ajouter
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.05rem',fontWeight:700,color:'#F8FAFC'}}>À planifier</div>
-                  <div style={{fontSize:'0.82rem',color:'#9CA3AF',marginTop:2}}>Aucun RDV planifié</div>
+
+                {program[expandedDay].repos ? (
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'28px 16px',color:'#6B7280'}}>
+                    <Moon size={20} strokeWidth={1.5}/><span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:600}}>Jour de repos</span>
+                  </div>
+                ) : program[expandedDay].exercises.length === 0 ? (
+                  <div style={{textAlign:'center',padding:'28px 16px',color:'#6B7280',fontSize:'0.85rem'}}>Aucun exercice — cliquez Ajouter</div>
+                ) : (
+                  <div style={{padding:'0 14px'}}>
+                    {program[expandedDay].exercises.map((ex,idx)=>(
+                      <div key={idx} className="ex-row-m">
+                        {/* Name + delete */}
+                        <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                          <input
+                            placeholder="Nom de l'exercice"
+                            value={ex.name}
+                            onChange={e=>updateExercise(expandedDay,idx,'name',e.target.value)}
+                            style={{flex:1,background:'#0A0A0A',border:'1px solid #242424',borderRadius:8,padding:'9px 11px',fontFamily:'Barlow,sans-serif',fontSize:'0.88rem',color:'#F8FAFC',outline:'none',minHeight:40}}
+                            onFocus={e=>{e.target.style.borderColor='#F97316'}}
+                            onBlur={e=>{e.target.style.borderColor='#242424'}}
+                          />
+                          <button onClick={()=>removeExercise(expandedDay,idx)} style={{background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.15)',cursor:'pointer',color:'#EF4444',padding:0,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0}}>
+                            <Minus size={14} strokeWidth={2.5}/>
+                          </button>
+                        </div>
+                        {/* Sets / Reps / Rest / Notes */}
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:6}}>
+                          {([
+                            {label:'Séries',field:'sets' as const,type:'number',val:ex.sets},
+                            {label:'Reps',field:'reps' as const,type:'number',val:ex.reps},
+                            {label:'Repos',field:'rest' as const,type:'text',val:ex.rest},
+                            {label:'Notes',field:'notes' as const,type:'text',val:ex.notes},
+                          ]).map(({label,field,type,val})=>(
+                            <div key={field}>
+                              <div className="col-hdr">{label}</div>
+                              <input
+                                type={type}
+                                min={type==='number'?1:undefined}
+                                inputMode={type==='number'?'numeric':undefined}
+                                value={val}
+                                placeholder={field==='rest'?'60s':field==='notes'?'…':''}
+                                onChange={e=>updateExercise(expandedDay,idx,field,type==='number'?parseInt(e.target.value)||1:e.target.value)}
+                                style={{width:'100%',background:'#0A0A0A',border:'1px solid #242424',borderRadius:7,padding:'7px 7px',fontFamily:'Barlow,sans-serif',fontSize:'0.8rem',color:'#F8FAFC',outline:'none',textAlign:type==='number'?'center':'left',minHeight:36}}
+                                onFocus={e=>{e.target.style.borderColor='#F97316'}}
+                                onBlur={e=>{e.target.style.borderColor='#242424'}}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{padding:'10px 0'}}>
+                      <button
+                        onClick={()=>openExDbModal(expandedDay)}
+                        style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:'1.5px dashed #242424',borderRadius:10,padding:'10px 14px',cursor:'pointer',color:'#6B7280',fontFamily:'Barlow,sans-serif',fontSize:'0.82rem',width:'100%',justifyContent:'center',minHeight:44}}
+                        onFocus={e=>{e.currentTarget.style.borderColor='#F97316';e.currentTarget.style.color='#F97316'}}
+                        onBlur={e=>{e.currentTarget.style.borderColor='#242424';e.currentTarget.style.color='#6B7280'}}
+                      >
+                        <Plus size={13} strokeWidth={2.5}/>Ajouter un exercice
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ TAB: NUTRITION ══ */}
+        {activeTab === 'nutrition' && (
+          <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
+            {/* Actions */}
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>Plan alimentaire</span>
+              <button className="btn-secondary" style={{padding:'12px 14px',flexShrink:0,gap:0}} onClick={saveMealPlan} disabled={mealPlanSaving} aria-label="Sauvegarder">
+                {mealPlanSaving ? <Loader2 size={15} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <Save size={15} strokeWidth={2.5}/>}
+              </button>
+            </div>
+            {mealPlanSaved && (
+              <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(34,197,94,.07)',border:'1px solid rgba(34,197,94,.18)',borderRadius:8,color:'#22C55E',fontSize:'0.78rem',fontWeight:600}}>
+                <Check size={12} strokeWidth={2.5}/>Plan alimentaire sauvegardé
+              </div>
+            )}
+
+            {/* Macro targets 2×2 */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9}}>
+              {[
+                { label:'Calories', unit:'kcal', color:MACRO_COLORS.kcal, val:calorieTarget, set:setCalorieTarget },
+                { label:'Protéines', unit:'g', color:MACRO_COLORS.prot, val:protTarget, set:setProtTarget },
+                { label:'Glucides', unit:'g', color:MACRO_COLORS.carb, val:carbTarget, set:setCarbTarget },
+                { label:'Lipides', unit:'g', color:MACRO_COLORS.fat, val:fatTarget, set:setFatTarget },
+              ].map(({ label, unit, color, val, set }) => (
+                <div key={label} style={{background:'#141414',border:'1px solid #242424',borderRadius:12,padding:'11px 12px',borderTop:`3px solid ${color}`}}>
+                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.6rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280',marginBottom:7}}>{label}</div>
+                  <div style={{display:'flex',alignItems:'center',gap:4}}>
+                    <input
+                      type="number"
+                      min={0}
+                      inputMode="numeric"
+                      value={val}
+                      onChange={e=>set(parseInt(e.target.value)||0)}
+                      style={{flex:1,background:'#0A0A0A',border:'1px solid #242424',borderRadius:8,padding:'6px 7px',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.1rem',fontWeight:700,color,outline:'none',textAlign:'center',minHeight:38}}
+                      onFocus={e=>{e.target.style.borderColor=color}}
+                      onBlur={e=>{e.target.style.borderColor='#242424'}}
+                    />
+                    <span style={{fontSize:'0.7rem',color:'#6B7280',flexShrink:0}}>{unit}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Day chips */}
+            <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:2}}>
+              {DAYS.map(day => {
+                const { kcal } = dayMacros(mealPlan[day])
+                const isActive = expandedMealDay === day
+                const hasFoods = mealPlan[day].meals.some(m => m.foods.length > 0)
+                return (
+                  <button
+                    key={day}
+                    className="day-chip"
+                    onClick={()=>setExpandedMealDay(isActive?null:day)}
+                    style={{
+                      background: isActive?'#22C55E':hasFoods?'rgba(34,197,94,.12)':'#1A1A1A',
+                      color: isActive?'#fff':hasFoods?'#22C55E':'#9CA3AF',
+                      border: `1.5px solid ${isActive?'#22C55E':hasFoods?'rgba(34,197,94,.25)':'#242424'}`,
+                    }}
+                  >
+                    {DAY_LABELS[day]}
+                    {hasFoods && !isActive && <span style={{marginLeft:4,background:'rgba(34,197,94,.18)',borderRadius:999,padding:'0 4px',fontSize:'0.6rem'}}>{kcal}</span>}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Expanded meal day */}
+            {expandedMealDay && (() => {
+              const dayData = mealPlan[expandedMealDay]
+              const totals = dayMacros(dayData)
+              return (
+                <div style={{display:'flex',flexDirection:'column',gap:10,animation:'fadeIn 150ms ease'}}>
+                  {/* Macro summary */}
+                  <div style={{background:'#141414',border:'1px solid #242424',borderRadius:12,padding:'12px 14px'}}>
+                    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.65rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280',marginBottom:10}}>Total du jour</div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+                      {[
+                        {label:'Cal',val:totals.kcal,target:calorieTarget,color:MACRO_COLORS.kcal},
+                        {label:'Prot',val:totals.prot,target:protTarget,color:MACRO_COLORS.prot},
+                        {label:'Gluc',val:totals.carb,target:carbTarget,color:MACRO_COLORS.carb},
+                        {label:'Lip',val:totals.fat,target:fatTarget,color:MACRO_COLORS.fat},
+                      ].map(({label,val,target,color})=>(
+                        <div key={label}>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
+                            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.6rem',fontWeight:700,color:'#6B7280',textTransform:'uppercase'}}>{label}</span>
+                            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.85rem',fontWeight:700,color}}>{val}</span>
+                          </div>
+                          <div style={{background:'#242424',borderRadius:999,height:4,overflow:'hidden'}}>
+                            <div style={{height:'100%',borderRadius:999,background:color,width:`${pct(val,target)}%`,transition:'width 400ms ease'}}/>
+                          </div>
+                          <div style={{fontSize:'0.58rem',color:'#4B5563',marginTop:2,textAlign:'right'}}>{pct(val,target)}%</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Meal cards */}
+                  {dayData.meals.map((meal, mealIdx) => {
+                    const mealTotals = meal.foods.reduce((acc,f)=>({kcal:acc.kcal+f.kcal,prot:acc.prot+f.prot,carb:acc.carb+f.carb,fat:acc.fat+f.fat}),{kcal:0,prot:0,carb:0,fat:0})
+                    return (
+                      <div key={mealIdx} className="card" style={{padding:0,overflow:'hidden'}}>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderBottom:meal.foods.length>0?'1px solid #1E1E1E':'none',background:'rgba(255,255,255,.015)'}}>
+                          <div style={{flex:1,minWidth:0}}>
+                            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.95rem',fontWeight:700,color:'#F8FAFC'}}>{meal.type}</span>
+                            {meal.foods.length > 0 && (
+                              <div style={{fontSize:'0.68rem',color:'#6B7280',marginTop:1}}>{mealTotals.kcal} kcal · {mealTotals.prot}g prot</div>
+                            )}
+                          </div>
+                          <button onClick={()=>addFood(expandedMealDay,mealIdx)} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,background:'rgba(34,197,94,.1)',color:'#22C55E',minHeight:36}}>
+                            <Plus size={11} strokeWidth={2.5}/>Ajouter
+                          </button>
+                        </div>
+
+                        {meal.foods.length > 0 && (
+                          <div style={{padding:'0 14px'}}>
+                            {meal.foods.map((food, foodIdx) => (
+                              <div key={foodIdx} className="food-row-m">
+                                {/* Name + delete */}
+                                <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                                  <input
+                                    placeholder="Ex: Riz cuit"
+                                    value={food.name}
+                                    onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'name',e.target.value)}
+                                    style={{flex:1,background:'#0A0A0A',border:'1px solid #242424',borderRadius:8,padding:'8px 10px',fontFamily:'Barlow,sans-serif',fontSize:'0.85rem',color:'#F8FAFC',outline:'none',minHeight:36}}
+                                    onFocus={e=>{e.target.style.borderColor='#22C55E'}}
+                                    onBlur={e=>{e.target.style.borderColor='#242424'}}
+                                  />
+                                  <button onClick={()=>removeFood(expandedMealDay,mealIdx,foodIdx)} style={{background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.15)',cursor:'pointer',color:'#EF4444',padding:0,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,flexShrink:0}}>
+                                    <Minus size={12} strokeWidth={2.5}/>
+                                  </button>
+                                </div>
+                                {/* Qty / Kcal / Prot / Carb / Fat */}
+                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:5}}>
+                                  {([
+                                    {label:'Qté',field:'qty' as const,type:'text',val:food.qty,color:'#9CA3AF'},
+                                    {label:'Kcal',field:'kcal' as const,type:'number',val:food.kcal,color:MACRO_COLORS.kcal},
+                                    {label:'Prot',field:'prot' as const,type:'number',val:food.prot,color:MACRO_COLORS.prot},
+                                    {label:'Gluc',field:'carb' as const,type:'number',val:food.carb,color:MACRO_COLORS.carb},
+                                    {label:'Lip',field:'fat' as const,type:'number',val:food.fat,color:MACRO_COLORS.fat},
+                                  ]).map(({label,field,type,val,color})=>(
+                                    <div key={field}>
+                                      <div className="col-hdr">{label}</div>
+                                      <input
+                                        type={type}
+                                        min={type==='number'?0:undefined}
+                                        inputMode={type==='number'?'numeric':undefined}
+                                        value={val}
+                                        placeholder={field==='qty'?'100g':'0'}
+                                        onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,field,type==='number'?parseInt(e.target.value)||0:e.target.value)}
+                                        style={{width:'100%',background:'#0A0A0A',border:'1px solid #242424',borderRadius:6,padding:'5px 4px',fontFamily:'Barlow,sans-serif',fontSize:'0.75rem',color,outline:'none',textAlign:'center',minHeight:30}}
+                                        onFocus={e=>{e.target.style.borderColor=color}}
+                                        onBlur={e=>{e.target.style.borderColor='#242424'}}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                            <div style={{padding:'6px 0'}}/>
+                          </div>
+                        )}
+                        {meal.foods.length === 0 && (
+                          <div style={{textAlign:'center',padding:'14px',color:'#4B5563',fontSize:'0.78rem',fontStyle:'italic'}}>Aucun aliment</div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
+        {/* ══ TAB: NOTES ══ */}
+        {activeTab === 'notes' && (
+          <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
+            {/* Next RDV */}
+            <div className="card">
+              <p className="section-title">Prochain RDV</p>
+              <div style={{display:'flex',alignItems:'center',gap:14,background:'#0A0A0A',borderRadius:10,padding:14,borderLeft:'3px solid #F97316',marginBottom:12}}>
+                <div style={{width:38,height:38,background:'rgba(249,115,22,.1)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <CalendarClock size={17} color="#F97316" strokeWidth={2}/>
+                </div>
+                <div>
+                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>À planifier</div>
+                  <div style={{fontSize:'0.78rem',color:'#9CA3AF',marginTop:2}}>Aucun RDV planifié</div>
                 </div>
               </div>
-              <button className="btn-primary" style={{width:'100%',justifyContent:'center',marginTop:16}} onClick={()=>showToast('Planification de RDV à venir')}>
+              <button className="btn-primary" style={{width:'100%'}} onClick={()=>showToast('Planification de RDV à venir')}>
                 Planifier un RDV
               </button>
-            </section>
+            </div>
 
-            {/* NOTES COACH */}
-            <section className="card">
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+            {/* Coach notes */}
+            <div className="card">
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
                 <p className="section-title" style={{marginBottom:0}}>Notes coach</p>
-                <div style={{fontSize:'0.75rem',color:'#22C55E',display:'flex',alignItems:'center',gap:4,opacity:notesSaved?1:0,transition:'opacity 300ms ease'}}>
-                  <Check size={12} strokeWidth={2.5}/>Sauvegardé
+                <div style={{fontSize:'0.7rem',color:'#22C55E',display:'flex',alignItems:'center',gap:4,opacity:notesSaved?1:0,transition:'opacity 300ms ease'}}>
+                  <Check size={11} strokeWidth={2.5}/>Sauvegardé
                 </div>
               </div>
-              <textarea value={notes} onChange={e=>onNotesChange(e.target.value)} placeholder="Ajoutez vos observations, programmes, remarques…"
-                style={{width:'100%',background:'#111827',border:'1px solid #374151',borderRadius:8,padding:'14px 16px',fontFamily:'Barlow,sans-serif',fontSize:'0.9rem',color:'#F8FAFC',resize:'vertical',minHeight:120,lineHeight:1.6,outline:'none',transition:'border-color 200ms ease'}}
-                onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.15)'}}
-                onBlur={e=>{e.target.style.borderColor='#374151';e.target.style.boxShadow='none'}}/>
-              <div style={{display:'flex',justifyContent:'flex-end',marginTop:10}}>
-                <button className="btn-secondary" style={{padding:'8px 16px',fontSize:'0.85rem'}} onClick={saveNotes} disabled={notesSaving}>
-                  <Save size={13} strokeWidth={2.5}/>{notesSaving?'Sauvegarde…':'Sauvegarder'}
-                </button>
-              </div>
-            </section>
+              <textarea
+                value={notes}
+                onChange={e=>onNotesChange(e.target.value)}
+                placeholder="Ajoutez vos observations, programmes, remarques…"
+                style={{width:'100%',background:'#0A0A0A',border:'1px solid #242424',borderRadius:10,padding:'12px 14px',fontFamily:'Barlow,sans-serif',fontSize:'0.9rem',color:'#F8FAFC',resize:'vertical',minHeight:120,lineHeight:1.6,outline:'none',transition:'border-color 200ms'}}
+                onFocus={e=>{e.target.style.borderColor='#F97316';e.target.style.boxShadow='0 0 0 3px rgba(249,115,22,.08)'}}
+                onBlur={e=>{e.target.style.borderColor='#242424';e.target.style.boxShadow='none'}}
+              />
+              <button className="btn-secondary" style={{width:'100%',marginTop:10}} onClick={saveNotes} disabled={notesSaving}>
+                <Save size={13} strokeWidth={2.5}/>{notesSaving?'Sauvegarde…':'Sauvegarder les notes'}
+              </button>
+            </div>
 
-            {/* DANGER ZONE */}
-            <section className="card" style={{border:'1px solid #374151'}}>
+            {/* Advanced zone */}
+            <div className="card">
               <p className="section-title" style={{color:'#EF4444'}}>Zone avancée</p>
-              <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                <button className="btn-ghost" style={{justifyContent:'flex-start',color:'#9CA3AF'}} onClick={()=>showToast('Archivage à implémenter')}>
+              <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                <button className="btn-ghost" style={{justifyContent:'flex-start',color:'#9CA3AF',width:'100%'}} onClick={()=>showToast('Archivage à implémenter')}>
                   <Archive size={14} strokeWidth={2}/>Archiver le client
                 </button>
-                <button className="btn-ghost" style={{justifyContent:'flex-start',color:'#EF4444'}} onClick={()=>showToast('Suppression à implémenter')}>
+                <button className="btn-ghost" style={{justifyContent:'flex-start',color:'#EF4444',width:'100%'}} onClick={()=>showToast('Suppression à implémenter')}>
                   <Trash2 size={14} strokeWidth={2}/>Supprimer le client
                 </button>
               </div>
-            </section>
+            </div>
           </div>
-        </div>
+        )}
       </main>
+
+      {/* ── BOTTOM NAVIGATION ─────────────────────────────────────── */}
+      <nav className="bottom-nav">
+        <div style={{display:'flex',alignItems:'stretch',height:52}}>
+          {([
+            {id:'apercu',    label:'Aperçu',     icon:(a:boolean)=><LayoutDashboard size={20} strokeWidth={a?2.5:1.5}/>},
+            {id:'programme', label:'Programme',  icon:(a:boolean)=><Dumbbell        size={20} strokeWidth={a?2.5:1.5}/>},
+            {id:'nutrition', label:'Nutrition',  icon:(a:boolean)=><Utensils        size={20} strokeWidth={a?2.5:1.5}/>},
+            {id:'notes',     label:'Notes',      icon:(a:boolean)=><FileText        size={20} strokeWidth={a?2.5:1.5}/>},
+          ] as {id:'apercu'|'programme'|'nutrition'|'notes', label:string, icon:(a:boolean)=>React.ReactNode}[]).map(tab => {
+            const active = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                className="nav-tab"
+                onClick={()=>setActiveTab(tab.id)}
+                style={{color: active ? '#F97316' : '#4B5563'}}
+                aria-label={tab.label}
+              >
+                {tab.icon(active)}
+                <span style={{fontSize:'0.55rem',fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,letterSpacing:'0.05em',textTransform:'uppercase'}}>{tab.label}</span>
+                {active && <div style={{position:'absolute',bottom:0,width:24,height:2,background:'#F97316',borderRadius:'2px 2px 0 0'}}/>}
+              </button>
+            )
+          })}
+        </div>
+      </nav>
 
       {/* EDIT MODAL */}
       <div className={`modal-overlay${editOpen?' open':''}`} onClick={()=>setEditOpen(false)}>
