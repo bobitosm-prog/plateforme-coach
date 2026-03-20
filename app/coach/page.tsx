@@ -8,7 +8,7 @@ import {
   Zap, Users, CalendarCheck, Euro, TrendingUp, Minus,
   Search, ChevronRight, ChevronLeft, UserPlus, Dumbbell, Calendar,
   LogOut, Copy, Check, ExternalLink, MessageCircle, Send, ArrowLeft,
-  X, Clock, Plus,
+  X, Clock, Plus, Flame, Activity, Moon,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getRole } from '../../lib/getRole'
@@ -444,18 +444,16 @@ export default function CoachPage() {
         .nav-badge { position: absolute; top: 2px; right: calc(50% - 20px); min-width: 16px; height: 16px; background: #EF4444; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
         /* ── CHAT FULL-SCREEN OVERLAY ── */
         .chat-fullscreen { position: fixed; inset: 0; background: #111827; z-index: 200; display: flex; flex-direction: column; overflow: hidden; width: 100vw; height: 100vh; }
-        .cal-col { background: #1F2937; border-radius: 10px; display: flex; flex-direction: column; min-height: 480px; overflow: hidden; }
-        .cal-col.today { border: 2px solid #F97316; }
-        .cal-col-head { padding: 6px 4px; border-bottom: 1px solid #374151; text-align: center; }
-        .cal-body { flex: 1; padding: 4px; display: flex; flex-direction: column; gap: 4px; }
-        .session-pill { border-radius: 6px; padding: 4px 5px; cursor: pointer; transition: opacity 150ms; min-height: 40px; display: flex; flex-direction: column; justify-content: center; gap: 2px; overflow: hidden; }
-        .session-pill:hover { opacity: 0.82; }
+        .cal-day-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 8px; }
+        .cal-day-label { display: inline-flex; align-items: baseline; gap: 6px; border-radius: 8px; padding: 4px 10px; }
+        .cal-day-label.today { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3); }
+        .cal-session-card { background: #1A1A1A; border-radius: 12px; padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 150ms; min-height: 64px; }
+        .cal-session-card:hover { background: #222; }
+        .cal-empty { padding: 10px 14px; color: #4B5563; font-size: 0.78rem; font-style: italic; background: #111827; border-radius: 10px; border: 1px solid #1F2937; }
+        .cal-add-day { display: flex; align-items: center; gap: 4px; background: transparent; border: 1px dashed #374151; border-radius: 8px; padding: 6px 10px; color: #6B7280; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 600; min-height: 36px; transition: border-color 150ms, color 150ms; }
+        .cal-add-day:hover { border-color: #F97316; color: #F97316; }
         .dashboard-back { display: none; }
         @media (min-width: 640px) { .dashboard-back { display: flex; } }
-        .new-session-btn { display: none !important; }
-        @media (min-width: 640px) { .new-session-btn { display: flex !important; } .new-session-btn-mobile { display: none !important; } }
-        .cal-add-btn { display: flex; align-items: center; justify-content: center; background: transparent; border: 1px dashed #374151; border-radius: 6px; padding: 4px 2px; color: #6B7280; cursor: pointer; width: 100%; margin-top: auto; transition: border-color 150ms, color 150ms; min-height: 24px; }
-        .cal-add-btn:hover { border-color: #F97316; color: #F97316; }
         .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
         .modal-box { background: #1F2937; border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.4); }
         .form-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9CA3AF; display: block; margin-bottom: 6px; }
@@ -656,95 +654,143 @@ export default function CoachPage() {
         const days = getWeekDays(calWeekOffset)
         const todayStr = new Date().toISOString().split('T')[0]
         const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+        const TYPE_ICONS: Record<string, React.ReactNode> = {
+          Force: <Dumbbell size={15} />, Cardio: <Flame size={15} />,
+          HIIT: <Zap size={15} />, Mobilité: <Activity size={15} />, Récupération: <Moon size={15} />,
+        }
         return (
-          <div className="section-pad" style={{ width: '100%', maxWidth: '1280px', margin: '0 auto', padding: '16px 8px', boxSizing: 'border-box', overflowX: 'hidden' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button className="btn-ghost dashboard-back" onClick={() => setSection('dashboard')} style={{ padding: '8px 12px' }}>
-                  <ArrowLeft size={16} /> Dashboard
-                </button>
-                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.04em', color: '#F8FAFC', margin: 0 }}>Calendrier</h1>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                <button className="btn-ghost" onClick={() => setCalWeekOffset(o => o - 1)} style={{ padding: '6px 8px' }}><ChevronLeft size={16} /></button>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.8rem', fontWeight: 600, color: '#9CA3AF', textAlign: 'center' }}>
-                  {format(days[0], 'd MMM', { locale: fr })} – {format(days[6], 'd MMM', { locale: fr })}
-                </span>
-                <button className="btn-ghost" onClick={() => setCalWeekOffset(o => o + 1)} style={{ padding: '6px 8px' }}><ChevronRight size={16} /></button>
-                <button className="btn-ghost" onClick={() => setCalWeekOffset(0)} style={{ fontSize: '0.75rem', padding: '6px 10px', color: '#F97316' }}>Auj.</button>
+          <div className="section-pad" style={{ width: '100%', maxWidth: '680px', margin: '0 auto', overflowX: 'hidden', paddingBottom: 100 }}>
+
+            {/* ── Sticky week nav header ── */}
+            <div style={{ position: 'sticky', top: 0, zIndex: 30, background: '#111827', borderBottom: '1px solid #1F2937', padding: '12px 16px 10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.05em', color: '#F8FAFC', margin: 0 }}>CALENDRIER</h1>
                 <button
-                  className="new-session-btn"
-                  onClick={() => setShowNewSession(true)}
-                  style={{ alignItems: 'center', gap: 6, background: '#F97316', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  <Plus size={14} /> Nouvelle séance
-                </button>
+                  onClick={() => setCalWeekOffset(0)}
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700, color: '#F97316', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}
+                >Aujourd'hui</button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button
+                  onClick={() => setCalWeekOffset(o => o - 1)}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#1F2937', border: '1px solid #374151', borderRadius: 10, padding: '9px 12px', color: '#9CA3AF', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 600, minHeight: 44 }}
+                ><ChevronLeft size={14} /> Précédente</button>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 600, color: '#9CA3AF', textAlign: 'center', flexShrink: 0, minWidth: 110 }}>
+                  {format(days[0], 'd', { locale: fr })} – {format(days[6], 'd MMM yyyy', { locale: fr })}
+                </span>
+                <button
+                  onClick={() => setCalWeekOffset(o => o + 1)}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#1F2937', border: '1px solid #374151', borderRadius: 10, padding: '9px 12px', color: '#9CA3AF', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 600, minHeight: 44 }}
+                >Suivante <ChevronRight size={14} /></button>
               </div>
             </div>
 
-            {/* 7-column week grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 3, width: '100%' }}>
+            {/* ── Day list ── */}
+            <div style={{ padding: '8px 16px 16px', display: 'flex', flexDirection: 'column' }}>
               {days.map((day, i) => {
                 const dateStr = day.toISOString().split('T')[0]
                 const isToday = dateStr === todayStr
-                const daySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(dateStr))
+                const daySessions = scheduledSessions
+                  .filter(s => s.scheduled_at.startsWith(dateStr))
+                  .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
                 return (
-                  <div key={i} className={`cal-col${isToday ? ' today' : ''}`}>
-                    <div className="cal-col-head">
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: isToday ? '#F97316' : '#6B7280' }}>
-                        {DAY_LABELS[i]}
+                  <div key={i} style={{ borderBottom: i < 6 ? '1px solid #1F2937' : 'none', paddingBottom: 12, marginBottom: 4 }}>
+                    {/* Day header row */}
+                    <div className="cal-day-header">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div className={`cal-day-label${isToday ? ' today' : ''}`}>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1.05rem', color: isToday ? '#F97316' : '#F8FAFC', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            {DAY_LABELS[i]} {format(day, 'd')}
+                          </span>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.7rem', fontWeight: 600, color: isToday ? '#FB923C' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            {format(day, 'MMM', { locale: fr })}
+                          </span>
+                        </div>
+                        {daySessions.length > 0 && (
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color: '#F97316', background: 'rgba(249,115,22,0.12)', borderRadius: 6, padding: '2px 7px' }}>
+                            {daySessions.length}
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: isToday ? '#F97316' : '#F8FAFC', lineHeight: 1 }}>
-                        {format(day, 'd')}
+                      <button
+                        className="cal-add-day"
+                        onClick={() => { setNsDate(dateStr); setShowNewSession(true) }}
+                      ><Plus size={11} /> Ajouter</button>
+                    </div>
+
+                    {/* Sessions or empty state */}
+                    {daySessions.length === 0 ? (
+                      <div className="cal-empty">Aucune séance</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {daySessions.map(s => {
+                          const color = SESSION_COLORS[s.session_type] ?? '#F97316'
+                          const client = clients.find(c => c.client_id === s.client_id)
+                          const clientName = client?.profiles?.full_name ?? 'Client'
+                          const avatarInitials = clientName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+                          const dt = new Date(s.scheduled_at)
+                          const dtEnd = new Date(dt.getTime() + s.duration_minutes * 60000)
+                          return (
+                            <div
+                              key={s.id}
+                              className="cal-session-card"
+                              onClick={() => setSelectedSession(s)}
+                              style={{ borderLeft: `4px solid ${color}` }}
+                            >
+                              {/* Type icon */}
+                              <div style={{ width: 38, height: 38, borderRadius: 10, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>
+                                {TYPE_ICONS[s.session_type] ?? <Dumbbell size={15} />}
+                              </div>
+                              {/* Info */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: '#F8FAFC', letterSpacing: '0.02em' }}>{s.session_type}</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                                  <Clock size={11} color="#6B7280" />
+                                  <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>{format(dt, 'HH:mm')} – {format(dtEnd, 'HH:mm')}</span>
+                                </div>
+                              </div>
+                              {/* Client + duration */}
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                  <span style={{ fontSize: '0.72rem', color: '#9CA3AF', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName}</span>
+                                  <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${color}25`, border: `1px solid ${color}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.58rem', color, flexShrink: 0 }}>
+                                    {avatarInitials}
+                                  </div>
+                                </div>
+                                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color, background: `${color}15`, borderRadius: 6, padding: '2px 7px' }}>
+                                  {s.duration_minutes}min
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
-                    </div>
-                    <div className="cal-body">
-                      {daySessions.map(s => {
-                        const color = SESSION_COLORS[s.session_type] ?? '#F97316'
-                        const clientName = clients.find(c => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
-                        const dt = new Date(s.scheduled_at)
-                        const initial = s.session_type.charAt(0).toUpperCase()
-                        const pillHeight = Math.max(40, Math.round(s.duration_minutes * 0.9))
-                        return (
-                          <div
-                            key={s.id}
-                            className="session-pill"
-                            onClick={() => setSelectedSession(s)}
-                            style={{ background: `${color}20`, borderLeft: `3px solid ${color}`, height: pillHeight }}
-                          >
-                            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color, lineHeight: 1 }}>{initial}</div>
-                            <div style={{ fontSize: '0.6rem', color: '#9CA3AF', lineHeight: 1 }}>{format(dt, 'HH:mm')}</div>
-                          </div>
-                        )
-                      })}
-                      {/* Add session for this day */}
-                      <button className="cal-add-btn" onClick={() => { setNsDate(dateStr); setShowNewSession(true) }}>
-                        <Plus size={10} />
-                      </button>
-                    </div>
+                    )}
                   </div>
                 )
               })}
             </div>
 
-            {/* Mobile-only new session button */}
-            <button
-              className="new-session-btn-mobile"
-              onClick={() => setShowNewSession(true)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', background: '#F97316', color: '#fff', border: 'none', borderRadius: 10, padding: '12px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer', marginTop: 12 }}
-            >
-              <Plus size={16} /> Nouvelle séance
-            </button>
-
             {/* Legend */}
-            <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 12, padding: '0 16px 16px', flexWrap: 'wrap' }}>
               {SESSION_TYPES.map(t => (
-                <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 3, background: SESSION_COLORS[t] }} />
-                  <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>{t}</span>
+                <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: SESSION_COLORS[t] }} />
+                  <span style={{ fontSize: '0.7rem', color: '#6B7280', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}>{t}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Fixed FAB — Nouvelle séance */}
+            <div style={{ position: 'fixed', bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))', left: 0, right: 0, padding: '0 16px', zIndex: 35, pointerEvents: 'none' }}>
+              <button
+                onClick={() => setShowNewSession(true)}
+                style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', background: '#F97316', color: '#fff', border: 'none', borderRadius: 14, padding: '14px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer', boxShadow: '0 4px 24px rgba(249,115,22,0.45)', transition: 'opacity 150ms' }}
+                onMouseOver={e => (e.currentTarget as HTMLElement).style.opacity = '0.92'}
+                onMouseOut={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
+              >
+                <Plus size={16} /> Nouvelle séance
+              </button>
             </div>
           </div>
         )
