@@ -446,10 +446,12 @@ export default function CoachPage() {
         .chat-fullscreen { position: fixed; inset: 0; background: #111827; z-index: 200; display: flex; flex-direction: column; overflow: hidden; width: 100vw; height: 100vh; }
         .cal-col { background: #1F2937; border-radius: 10px; display: flex; flex-direction: column; min-height: 480px; overflow: hidden; }
         .cal-col.today { border: 2px solid #F97316; }
-        .cal-col-head { padding: 10px 12px; border-bottom: 1px solid #374151; text-align: center; }
-        .cal-body { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-        .session-pill { border-radius: 8px; padding: 8px 10px; cursor: pointer; transition: opacity 150ms; }
+        .cal-col-head { padding: 6px 4px; border-bottom: 1px solid #374151; text-align: center; }
+        .cal-body { flex: 1; padding: 4px; display: flex; flex-direction: column; gap: 4px; }
+        .session-pill { border-radius: 6px; padding: 4px 5px; cursor: pointer; transition: opacity 150ms; min-height: 40px; display: flex; flex-direction: column; justify-content: center; gap: 2px; overflow: hidden; }
         .session-pill:hover { opacity: 0.82; }
+        .dashboard-back { display: none; }
+        @media (min-width: 640px) { .dashboard-back { display: flex; } }
         .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
         .modal-box { background: #1F2937; border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.4); }
         .form-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9CA3AF; display: block; margin-bottom: 6px; }
@@ -655,7 +657,7 @@ export default function CoachPage() {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button className="btn-ghost" onClick={() => setSection('dashboard')} style={{ padding: '8px 12px' }}>
+                <button className="btn-ghost dashboard-back" onClick={() => setSection('dashboard')} style={{ padding: '8px 12px' }}>
                   <ArrowLeft size={16} /> Dashboard
                 </button>
                 <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.8rem', fontWeight: 700, letterSpacing: '0.04em', color: '#F8FAFC', margin: 0 }}>Calendrier</h1>
@@ -677,7 +679,7 @@ export default function CoachPage() {
             </div>
 
             {/* 7-column week grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4 }}>
               {days.map((day, i) => {
                 const dateStr = day.toISOString().split('T')[0]
                 const isToday = dateStr === todayStr
@@ -685,10 +687,10 @@ export default function CoachPage() {
                 return (
                   <div key={i} className={`cal-col${isToday ? ' today' : ''}`}>
                     <div className="cal-col-head">
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: isToday ? '#F97316' : '#6B7280' }}>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: isToday ? '#F97316' : '#6B7280' }}>
                         {DAY_LABELS[i]}
                       </div>
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: isToday ? '#F97316' : '#F8FAFC', lineHeight: 1 }}>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: isToday ? '#F97316' : '#F8FAFC', lineHeight: 1 }}>
                         {format(day, 'd')}
                       </div>
                     </div>
@@ -697,18 +699,17 @@ export default function CoachPage() {
                         const color = SESSION_COLORS[s.session_type] ?? '#F97316'
                         const clientName = clients.find(c => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
                         const dt = new Date(s.scheduled_at)
+                        const initial = s.session_type.charAt(0).toUpperCase()
+                        const pillHeight = Math.max(40, Math.round(s.duration_minutes * 0.9))
                         return (
                           <div
                             key={s.id}
                             className="session-pill"
                             onClick={() => setSelectedSession(s)}
-                            style={{ background: `${color}18`, borderLeft: `3px solid ${color}` }}
+                            style={{ background: `${color}20`, borderLeft: `3px solid ${color}`, height: pillHeight }}
                           >
-                            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.session_type}</div>
-                            <div style={{ fontSize: '0.78rem', color: '#F8FAFC', fontWeight: 500, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName}</div>
-                            <div style={{ fontSize: '0.68rem', color: '#6B7280', marginTop: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <Clock size={10} />{format(dt, 'HH:mm')} · {s.duration_minutes}min
-                            </div>
+                            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color, lineHeight: 1 }}>{initial}</div>
+                            <div style={{ fontSize: '0.6rem', color: '#9CA3AF', lineHeight: 1 }}>{format(dt, 'HH:mm')}</div>
                           </div>
                         )
                       })}
