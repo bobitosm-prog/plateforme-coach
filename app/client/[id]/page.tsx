@@ -359,25 +359,36 @@ export default function ClientProfilePage() {
 
   /* ── Edit profile save ──────────────────────────────────────── */
   const saveEdit = async () => {
-    const updates = {
-      full_name: editName, email: editEmail, phone: editPhone || null,
-      birth_date: editBirth || null, gender: editGender || null,
-      current_weight: editWeight ? parseFloat(editWeight) : null,
-      height: editHeight ? parseFloat(editHeight) : null,
-      target_weight: editTargetW ? parseFloat(editTargetW) : null,
-      body_fat_pct: editBodyFat ? parseFloat(editBodyFat) : null,
-      status: editStatus, objective: editObj || null,
+    // Only valid profiles columns — email excluded (auth-managed)
+    const updates: Record<string, unknown> = {
+      full_name:      editName || null,
+      phone:          editPhone || null,
+      birth_date:     editBirth || null,
+      gender:         editGender || null,
+      current_weight: editWeight  ? parseFloat(editWeight)  : null,
+      height:         editHeight  ? parseFloat(editHeight)  : null,
+      target_weight:  editTargetW ? parseFloat(editTargetW) : null,
+      body_fat_pct:   editBodyFat ? parseFloat(editBodyFat) : null,
+      status:         editStatus,
+      objective:      editObj || null,
     }
-    await supabase.from('profiles').update(updates).eq('id', id)
+    const { error } = await supabase.from('profiles').update(updates).eq('id', id)
+    if (error) {
+      console.error('[saveProfile] Supabase error:', error)
+      showToast(`Erreur : ${error.message}`)
+      return
+    }
     setProfile(p => p ? { ...p, ...updates } : p)
-    setEditOpen(false); showToast('Profil mis à jour')
+    setEditOpen(false)
+    showToast('Profil mis à jour')
   }
 
   /* ── Save calorie goal ──────────────────────────────────────── */
   async function saveCalorieGoal() {
     const val = parseInt(calGoalInput)
     if (!val || val <= 0) return
-    await supabase.from('profiles').update({ calorie_goal: val }).eq('id', id)
+    const { error } = await supabase.from('profiles').update({ calorie_goal: val }).eq('id', id)
+    if (error) { console.error('[saveCalorieGoal] Supabase error:', error); showToast(`Erreur : ${error.message}`); return }
     setProfile(p => p ? { ...p, calorie_goal: val } : p)
     setEditingCalGoal(false)
     showToast('Objectif calorique mis à jour')
