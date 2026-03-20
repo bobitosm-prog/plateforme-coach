@@ -1,10 +1,10 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import {
-  Scale, Target, Dumbbell, Flame, Ruler, Camera, Zap, Moon,
+  Scale, Target, Dumbbell, Flame, Ruler, Camera, Zap, Moon, CheckCircle,
 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
@@ -36,6 +36,8 @@ interface HomeTabProps {
 }
 
 export default function HomeTab({
+  supabase,
+  session,
   profile,
   displayAvatar,
   firstName,
@@ -55,6 +57,24 @@ export default function HomeTab({
   setModal,
   startProgramWorkout,
 }: HomeTabProps) {
+  const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
+    const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999)
+    supabase
+      .from('workout_sessions')
+      .select('id,created_at')
+      .eq('user_id', session.user.id)
+      .gte('created_at', todayStart.toISOString())
+      .lte('created_at', todayEnd.toISOString())
+      .limit(1)
+      .then(({ data }: { data: any[] | null }) => {
+        setTodaySession(data?.[0] ?? null)
+      })
+  }, [session?.user?.id])
+
   return (
     <div style={{ background: BG_BASE, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
 
@@ -121,6 +141,17 @@ export default function HomeTab({
             </div>
           ) : !todayCoachDay?.exercises?.length ? (
             <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0 }}>Aucun exercice prévu.</p>
+          ) : todaySession ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: `${GREEN}12`, border: `1px solid ${GREEN}40`, borderRadius: 12, padding: '16px 14px' }}>
+              <CheckCircle size={32} color={GREEN} style={{ flexShrink: 0 }} />
+              <div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: GREEN }}>Séance terminée !</div>
+                <div style={{ fontSize: '0.78rem', color: TEXT_PRIMARY, marginTop: 2 }}>Bravo ! Tu as terminé ta séance du jour</div>
+                <div style={{ fontSize: '0.68rem', color: TEXT_MUTED, marginTop: 4 }}>
+                  {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
