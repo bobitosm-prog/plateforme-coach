@@ -211,23 +211,63 @@ export default function ClientProfilePage() {
     setAiGenerating(true)
     setAiPreview(null)
     try {
-      const res = await fetch('/api/generate-program', {
+      const objective = profile?.objective || 'Amélioration de la condition physique'
+      const weight = profile?.current_weight ?? '?'
+      const targetWeight = profile?.target_weight ?? '?'
+      const equipment = aiEquipment.length > 0 ? aiEquipment : ['Poids du corps']
+
+      const prompt = `Tu es un coach fitness expert. Génère un programme d'entraînement hebdomadaire pour ce client:
+- Objectif: ${objective}
+- Poids: ${weight}kg, Objectif: ${targetWeight}kg
+- Niveau: ${aiLevel}
+- Équipement: ${equipment.join(', ')}
+- Jours d'entraînement: ${aiTrainingDays} jours/semaine
+
+Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
+{
+  "lundi": { "isRest": false, "exercises": [{"name": "Nom", "sets": 3, "reps": 10, "rest": "60s", "notes": ""}] },
+  "mardi": { "isRest": true, "exercises": [] },
+  "mercredi": { "isRest": false, "exercises": [] },
+  "jeudi": { "isRest": true, "exercises": [] },
+  "vendredi": { "isRest": false, "exercises": [] },
+  "samedi": { "isRest": true, "exercises": [] },
+  "dimanche": { "isRest": true, "exercises": [] }
+}
+Les jours de repos ont isRest: true et exercises: [].`
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'x-api-key': process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY!,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
         body: JSON.stringify({
-          objective: profile?.objective || 'Amélioration de la condition physique',
-          weight:       profile?.current_weight ?? '?',
-          targetWeight: profile?.target_weight  ?? '?',
-          level:        aiLevel,
-          equipment:    aiEquipment.length > 0 ? aiEquipment : ['Poids du corps'],
-          trainingDays: aiTrainingDays,
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 800,
+          messages: [{ role: 'user', content: prompt }],
         }),
       })
+
+      if (!res.ok) {
+        const err = await res.text()
+        throw new Error(`Erreur API Anthropic (${res.status}): ${err}`)
+      }
+
       const data = await res.json()
-      if (data.error) throw new Error(data.error)
+      const text: string = data.content?.[0]?.text ?? ''
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('Réponse IA invalide')
+      const aiProgram: Record<string, { isRest: boolean; exercises: any[] }> = JSON.parse(jsonMatch[0])
+
+      // Ensure all 7 days are present
+      for (const d of DAYS) {
+        if (!aiProgram[d]) aiProgram[d] = { isRest: true, exercises: [] }
+      }
+
       const mapped: WeekProgram = {}
       DAYS.forEach(d => {
-        const aiDay = data.program[d]
+        const aiDay = aiProgram[d]
         mapped[d] = {
           repos: aiDay?.isRest ?? true,
           exercises: (aiDay?.exercises ?? []).map((ex: any) => ({
