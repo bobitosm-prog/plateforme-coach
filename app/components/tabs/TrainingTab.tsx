@@ -61,24 +61,25 @@ export default function TrainingTab({
     return s + (completedSets[key] || []).filter(Boolean).length
   }, 0)
 
-  // ── Rest timer countdown ──
+  // ── Rest timer: pure decrement only (no side-effects inside updater) ──
   useEffect(() => {
-    if (restRunning && restTimer > 0) {
-      restIntervalRef.current = setInterval(() => {
-        setRestTimer(t => {
-          if (t <= 1) {
-            setRestRunning(false)
-            setRestingSet(null)
-            clearInterval(restIntervalRef.current)
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200])
-            return 0
-          }
-          return t - 1
-        })
-      }, 1000)
-    }
+    if (!restRunning || restTimer <= 0) return
+    restIntervalRef.current = setInterval(() => {
+      setRestTimer(prev => Math.max(0, prev - 1))
+    }, 1000)
     return () => clearInterval(restIntervalRef.current)
   }, [restRunning])
+
+  // ── Rest timer expiry: handled in a separate effect to stay pure ──
+  useEffect(() => {
+    if (restRunning && restTimer === 0) {
+      clearInterval(restIntervalRef.current)
+      setRestRunning(false)
+      setRestingSet(null)
+      setActiveRestExName(null)
+      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([200, 100, 200])
+    }
+  }, [restTimer, restRunning])
 
   // ── Elapsed workout timer ──
   useEffect(() => {
@@ -106,10 +107,10 @@ export default function TrainingTab({
       const stored       = typeof window !== 'undefined' ? localStorage.getItem(key) : null
       const storedInputs = typeof window !== 'undefined' ? localStorage.getItem(inputKey) : null
       const n = Number(ex.sets) || 3
-      loadedSets[key]       = stored ? JSON.parse(stored) : Array(n).fill(false)
+      loadedSets[key]       = stored ? JSON.parse(stored) : Array.from({ length: n }, () => false)
       loadedInputs[ex.name] = storedInputs
         ? JSON.parse(storedInputs)
-        : Array(n).fill({ kg: ex.weight ? String(ex.weight) : '', reps: String(ex.reps || '') })
+        : Array.from({ length: n }, () => ({ kg: ex.weight ? String(ex.weight) : '', reps: String(ex.reps || '') }))
     })
     setCompletedSets(loadedSets)
     setSetInputs(loadedInputs)
@@ -139,24 +140,27 @@ export default function TrainingTab({
   }
 
   function addSet(exName: string) {
-    const key = `fitpro-sets-${todayStr}-${exName}`
-    const prev = completedSets[key] || []
-    const next = [...prev, false]
-    localStorage.setItem(key, JSON.stringify(next))
-    setCompletedSets(p => ({ ...p, [key]: next }))
+    const key      = `fitpro-sets-${todayStr}-${exName}`
     const inputKey = `fitpro-inputs-${todayStr}-${exName}`
-    setSetInputs(prev => {
-      const arr  = prev[exName] ? [...prev[exName]] : []
-      const last = arr.length > 0 ? arr[arr.length - 1] : { kg: '', reps: '' }
-      const next = [...arr, { ...last }]
-      if (typeof window !== 'undefined') localStorage.setItem(inputKey, JSON.stringify(next))
-      return { ...prev, [exName]: next }
+    // Use functional updaters to always read current state, never stale closure
+    setCompletedSets(p => {
+      const prev = p[key] || []
+      const next = [...prev, false]
+      localStorage.setItem(key, JSON.stringify(next))
+      return { ...p, [key]: next }
+    })
+    setSetInputs(p => {
+      const arr  = p[exName] ? [...p[exName]] : []
+      const last = arr.length > 0 ? { ...arr[arr.length - 1] } : { kg: '', reps: '' }
+      const next = [...arr, last]
+      localStorage.setItem(inputKey, JSON.stringify(next))
+      return { ...p, [exName]: next }
     })
   }
 
   function toggleSet(exName: string, setIdx: number, totalSetsCount: number, restSecs: number) {
     const key  = `fitpro-sets-${todayStr}-${exName}`
-    const prev = completedSets[key] || Array(totalSetsCount).fill(false)
+    const prev = completedSets[key] || Array.from({ length: totalSetsCount }, () => false)
     const next = [...prev]
     next[setIdx] = !next[setIdx]
     localStorage.setItem(key, JSON.stringify(next))
@@ -407,9 +411,10 @@ export default function TrainingTab({
               {trainingExercises.map((ex: any, exIdx: number) => {
                 const restSecs   = Number(ex.rest) || 90
                 const storageKey = `fitpro-sets-${todayStr}-${ex.name}`
-                const setsArr: boolean[] = completedSets[storageKey] || Array(Number(ex.sets) || 3).fill(false)
+                const n = Number(ex.sets) || 3
+                const setsArr: boolean[] = completedSets[storageKey] || Array.from({ length: n }, () => false)
                 const numSets    = setsArr.length
-                const inputs     = setInputs[ex.name] || Array(numSets).fill({ kg: '', reps: String(ex.reps || '') })
+                const inputs     = setInputs[ex.name] || Array.from({ length: numSets }, () => ({ kg: '', reps: String(ex.reps || '') }))
                 const doneCount  = setsArr.filter(Boolean).length
                 const allDone    = doneCount === numSets && numSets > 0
                 const isRestingHere = restRunning && restingSet?.exName === ex.name
