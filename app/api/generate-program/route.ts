@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
 export async function POST(req: NextRequest) {
+  console.log('API KEY exists:', !!process.env.ANTHROPIC_API_KEY)
+  console.log('API KEY first 10 chars:', process.env.ANTHROPIC_API_KEY?.slice(0, 10))
+
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error('[generate-program] ANTHROPIC_API_KEY is not defined')
     return NextResponse.json({ error: 'Configuration serveur manquante: ANTHROPIC_API_KEY' }, { status: 500 })
