@@ -19,66 +19,26 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-self.addEventListener('fetch', (event) => {
-  // Only cache GET requests — POST/PATCH/PUT/DELETE cannot be cached
-  if (event.request.method !== 'GET') return
-
-  const { request } = event
-  const url = new URL(request.url)
-
-  // Network first for internal API calls
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request).catch(() => new Response(JSON.stringify({ error: 'Offline' }), {
-        headers: { 'Content-Type': 'application/json' },
-      }))
-    )
+self.addEventListener('fetch', event => {
+  // Skip non-GET requests entirely
+  if (event.request.method !== 'GET') {
     return
   }
-
-  // Stale-while-revalidate with 30s TTL for Supabase GET requests
-  if (url.hostname.includes('supabase') && request.method === 'GET') {
-    event.respondWith(
-      caches.open(SUPABASE_CACHE_NAME).then(async (cache) => {
-        const cached = await cache.match(request)
-        if (cached) {
-          const age = Date.now() - Number(cached.headers.get('sw-cached-at') || 0)
-          if (age < SUPABASE_CACHE_TTL_MS) return cached
-        }
-        const fresh = await fetch(request)
-        if (fresh.ok) {
-          const headers = new Headers(fresh.headers)
-          headers.set('sw-cached-at', String(Date.now()))
-          const toCache = new Response(await fresh.clone().arrayBuffer(), { status: fresh.status, headers })
-          cache.put(request, toCache)
-        }
-        return fresh
-      })
-    )
+  // Skip Supabase API calls - always fetch fresh
+  if (event.request.url.includes('supabase.co')) {
     return
   }
-
-  // Cache first for static assets
-  if (url.pathname.startsWith('/_next/static/') || url.pathname.match(/\.(png|jpg|svg|ico|woff2?)$/)) {
-    event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((res) => {
-        const clone = res.clone()
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-        return res
-      }))
-    )
-    return
-  }
-
-  // Network first with cache fallback for pages
+  // Cache-first for static assets only
   event.respondWith(
-    fetch(request)
-      .then((res) => {
-        const clone = res.clone()
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-        return res
+    caches.match(event.request).then(cached => {
+      return cached || fetch(event.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone()
+          caches.open('fitpro-v1').then(cache => cache.put(event.request, clone))
+        }
+        return response
       })
-      .catch(() => caches.match(request))
+    })
   )
 })
 
