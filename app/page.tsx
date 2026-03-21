@@ -197,18 +197,25 @@ const photoRef = useRef<HTMLInputElement>(null)
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
 
-    if (profRes.data) {
-      setProfile(profRes.data)
-      if (!profRes.data.full_name) { router.replace('/onboarding'); return }
-      const age = profRes.data.birth_date ? Math.floor((Date.now() - new Date(profRes.data.birth_date).getTime()) / 31557600000) : ''
+    const profileData = profRes.data
+    console.log('[page] profile.full_name:', profileData?.full_name)
+
+    if (profileData && !profileData.full_name) {
+      router.replace('/onboarding')
+      return
+    }
+
+    if (profileData) {
+      setProfile(profileData)
+      const age = profileData.birth_date ? Math.floor((Date.now() - new Date(profileData.birth_date).getTime()) / 31557600000) : ''
       setBmrForm(p => ({
         ...p,
-        weight: (weightsRes.data?.[weightsRes.data.length - 1]?.poids ?? profRes.data.current_weight)?.toString() || '',
-        height: profRes.data.height?.toString() || '',
+        weight: (weightsRes.data?.[weightsRes.data.length - 1]?.poids ?? profileData.current_weight)?.toString() || '',
+        height: profileData.height?.toString() || '',
         age: age.toString(),
-        gender: profRes.data.gender || 'male',
-        activity: profRes.data.activity_level || 'moderate',
-        body_fat: profRes.data.body_fat_pct?.toString() || '',
+        gender: profileData.gender || 'male',
+        activity: profileData.activity_level || 'moderate',
+        body_fat: profileData.body_fat_pct?.toString() || '',
       }))
     }
     setWSessions(sessRes.data || [])
