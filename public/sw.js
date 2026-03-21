@@ -1,44 +1,31 @@
-const CACHE_NAME = 'fitpro-v1'
-const SUPABASE_CACHE_NAME = 'fitpro-supabase-v1'
-const SUPABASE_CACHE_TTL_MS = 30_000 // 30 seconds
-const APP_SHELL = ['/', '/coach', '/admin']
+const CACHE_NAME = 'fitpro-v2'
+const STATIC_ASSETS = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png']
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   )
   self.skipWaiting()
 })
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== SUPABASE_CACHE_NAME).map((k) => caches.delete(k)))
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   )
   self.clients.claim()
 })
 
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests entirely
-  if (event.request.method !== 'GET') {
-    return
-  }
-  // Skip Supabase API calls - always fetch fresh
-  if (event.request.url.includes('supabase.co')) {
-    return
-  }
-  // Cache-first for static assets only
+  const { request } = event
+  // Only handle GET requests
+  if (request.method !== 'GET') return
+  // Skip Supabase and API calls
+  if (request.url.includes('supabase.co') || request.url.includes('/api/')) return
+  // Cache first for static, network first for pages
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request).then(response => {
-        if (response.ok) {
-          const clone = response.clone()
-          caches.open('fitpro-v1').then(cache => cache.put(event.request, clone))
-        }
-        return response
-      })
-    })
+    caches.match(request).then(cached => cached || fetch(request))
   )
 })
 
