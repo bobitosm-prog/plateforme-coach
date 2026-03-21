@@ -188,7 +188,7 @@ const photoRef = useRef<HTMLInputElement>(null)
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('meal_logs').select('*').eq('user_id', uid).eq('date', today),
-      supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(10),
+      supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(90),
       supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
       supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
       supabase.from('training_programs').select('*').eq('is_template', true),
@@ -303,16 +303,16 @@ const photoRef = useRef<HTMLInputElement>(null)
     setModal(null); fetchAll()
   }
 
-  async function saveWeight(value: number) {
-    await supabase.from('weight_logs').insert({ user_id: session.user.id, poids: value })
+  async function saveWeight(value: number, date: string) {
+    await supabase.from('weight_logs').insert({ user_id: session.user.id, poids: value, date })
     await supabase.from('profiles').upsert({ id: session.user.id, current_weight: value })
     if (!profile?.start_weight) await supabase.from('profiles').update({ start_weight: value }).eq('id', session.user.id)
     toast.success('Poids enregistré !')
     setModal(null); fetchAll()
   }
 
-  async function saveMeasurements(data: Record<string, number>) {
-    await supabase.from('body_measurements').insert({ user_id: session.user.id, ...data })
+  async function saveMeasurements(data: Record<string, number>, date: string) {
+    await supabase.from('body_measurements').insert({ user_id: session.user.id, date, ...data })
     toast.success('Mensurations enregistrées !')
     setModal(null); fetchAll()
   }
@@ -495,6 +495,7 @@ const calorieGoal = profile?.calorie_goal || 2500
       {/* ── MEASURE MODAL ── */}
       {modal === 'measure' && (
         <MeasureModal
+          measurements={measurements}
           onSave={saveMeasurements}
           onClose={() => setModal(null)}
         />

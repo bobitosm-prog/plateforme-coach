@@ -131,17 +131,34 @@ export default function ProgressTab({
       </div>
 
       {/* Quick log row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-        {[
-          { icon: Scale, label: '+ Poids', action: () => setModal('weight') },
-          { icon: Ruler, label: '+ Mesure', action: () => setModal('measure') },
-          { icon: Camera, label: '+ Photo', action: () => photoRef.current?.click() },
-        ].map(({ icon: Icon, label, action }) => (
-          <button key={label} onClick={action} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-            <Icon size={20} color={TEXT_MUTED} />
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: TEXT_MUTED }}>{label}</span>
-          </button>
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <button onClick={() => setModal('weight')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', width: '100%' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: '#F9731615', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Scale size={20} color={ORANGE} />
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', color: TEXT_PRIMARY }}>+ ENREGISTRER MON POIDS</div>
+            <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginTop: 2 }}>Ajouter une mesure kg avec date</div>
+          </div>
+        </button>
+        <button onClick={() => setModal('measure')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', width: '100%' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: '#F9731615', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Ruler size={20} color={ORANGE} />
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', color: TEXT_PRIMARY }}>+ MES MENSURATIONS</div>
+            <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginTop: 2 }}>Taille, hanches, poitrine, bras, cuisses</div>
+          </div>
+        </button>
+        <button onClick={() => photoRef.current?.click()} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', width: '100%' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: '#F9731615', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Camera size={20} color={ORANGE} />
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', color: TEXT_PRIMARY }}>+ PHOTO PROGRESSION</div>
+            <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginTop: 2 }}>Ajouter une photo avant/après</div>
+          </div>
+        </button>
       </div>
       <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
     </div>
