@@ -709,6 +709,7 @@ const calorieGoal = profile?.calorie_goal || 2500
           {activeTab === 'progress' && (
             <ProgressTab
               supabase={supabase}
+              session={session}
               weightHistory30={weightHistory30}
               measurements={measurements}
               progressPhotos={progressPhotos}
@@ -719,6 +720,7 @@ const calorieGoal = profile?.calorie_goal || 2500
               setModal={setModal}
               chartMin={chartMin}
               chartMax={chartMax}
+              onRefresh={fetchAll}
             />
           )}
 
