@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
+  todayNutritionKey,
 } from '../../../lib/design-tokens'
 
 interface HomeTabProps {
@@ -205,7 +206,10 @@ export default function HomeTab({
               </div>
               {/* Today's meals from plan */}
               {(() => {
-                const dayPlan = coachMealPlan[todayKey]
+                const nutritionKey = todayNutritionKey()
+                console.log('[HomeTab] coachMealPlan keys:', Object.keys(coachMealPlan))
+                console.log('[HomeTab] nutritionKey used:', nutritionKey)
+                const dayPlan = coachMealPlan[nutritionKey]
                 const meals: any[] = dayPlan?.meals ?? []
                 if (!meals.length) return <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: 0 }}>Aucun repas planifié aujourd'hui.</p>
                 return (

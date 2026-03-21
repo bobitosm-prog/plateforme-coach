@@ -20,6 +20,9 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
+  // Only cache GET requests — POST/PATCH/PUT/DELETE cannot be cached
+  if (event.request.method !== 'GET') return
+
   const { request } = event
   const url = new URL(request.url)
 
