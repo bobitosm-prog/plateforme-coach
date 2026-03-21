@@ -199,6 +199,7 @@ const photoRef = useRef<HTMLInputElement>(null)
 
     if (profRes.data) {
       setProfile(profRes.data)
+      if (!profRes.data.full_name) { router.replace('/onboarding'); return }
       const age = profRes.data.birth_date ? Math.floor((Date.now() - new Date(profRes.data.birth_date).getTime()) / 31557600000) : ''
       setBmrForm(p => ({
         ...p,
