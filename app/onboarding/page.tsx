@@ -23,7 +23,7 @@ const slideVariants = {
   exit: (dir: number) => ({ x: dir > 0 ? '-100%' : '100%', opacity: 0 }),
 }
 
-const transition = { type: 'tween' as const, duration: 0.3, ease: 'easeInOut' }
+const transition = { type: 'tween' as const, duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }
 
 export default function OnboardingPage() {
   const router = useRouter()
