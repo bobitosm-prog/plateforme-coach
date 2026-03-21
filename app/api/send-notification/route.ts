@@ -4,14 +4,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-)
-
 export async function POST(req: NextRequest) {
+  console.log('[send-notification] route called')
+  console.log('[send-notification] env check:', {
+    VAPID_SUBJECT: !!process.env.VAPID_SUBJECT,
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY: !!process.env.VAPID_PRIVATE_KEY,
+    SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  })
+
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+  )
+
   const { userId, title, body, url } = await req.json()
+  console.log('[send-notification] userId received:', userId)
+
   if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
   const supabase = createClient(
@@ -19,18 +29,28 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-  const { data: rows } = await supabase
+  const { data: rows, error: dbError } = await supabase
     .from('push_subscriptions')
     .select('subscription')
     .eq('user_id', userId)
 
+  console.log('[send-notification] subscriptions fetched:', rows?.length ?? 0, dbError ? `DB error: ${dbError.message}` : 'no DB error')
+
   if (!rows?.length) return NextResponse.json({ sent: 0 })
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     rows.map(row =>
       webpush.sendNotification(row.subscription, JSON.stringify({ title, body, url: url || '/' }))
     )
   )
+
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
+      console.log(`[send-notification] push ${i} sent, statusCode:`, result.value.statusCode)
+    } else {
+      console.error(`[send-notification] push ${i} failed:`, result.reason)
+    }
+  })
 
   return NextResponse.json({ sent: rows.length })
 }
