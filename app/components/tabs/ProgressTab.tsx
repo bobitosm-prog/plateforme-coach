@@ -120,6 +120,7 @@ export default function ProgressTab({
         right_thigh: data.thighs || null,
       })
     if (error) {
+      console.error('[measurements] Supabase error:', JSON.stringify(error))
       toast.error('Erreur lors de l\'enregistrement')
     } else {
       toast.success('Mensurations enregistrées !')
