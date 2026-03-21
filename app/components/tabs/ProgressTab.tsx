@@ -99,7 +99,7 @@ export default function ProgressTab({
   const [savingMeasure, setSavingMeasure] = useState(false)
 
   async function handleSaveMeasure() {
-    if (!session?.user?.id) return
+    if (savingMeasure || !session?.user?.id) return
     const measureData = measureForm
     const payload: Record<string, unknown> = { user_id: session.user.id, date: measureDate }
     if (measureData.waist) payload.waist = Number(measureData.waist)
