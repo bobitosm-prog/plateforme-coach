@@ -8,7 +8,7 @@ import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
 } from '../../../lib/design-tokens'
 
-const new Date().toISOString().split('T')[0] = new Date().toISOString().split('T')[0]
+const TODAY = new Date().toISOString().split('T')[0]
 
 const MEASURE_FIELDS = [
   { key: 'waist',  label: 'Tour de taille',    unit: 'cm' },
