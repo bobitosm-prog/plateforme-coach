@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { LogOut, Zap, ChevronRight, Crown } from 'lucide-react'
+import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED,
 } from '../../../lib/design-tokens'
@@ -40,6 +40,25 @@ export default function ProfileTab({
 }: ProfileTabProps) {
   const [phoneForm, setPhoneForm] = useState<string>(profile?.phone || '')
   const [phoneEditing, setPhoneEditing] = useState(false)
+  const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle')
+
+  async function enableNotifications() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return
+    setNotifStatus('loading')
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') { setNotifStatus('denied'); return }
+    const reg = await navigator.serviceWorker.ready
+    const existing = await reg.pushManager.getSubscription()
+    const sub = existing || await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    })
+    await supabase.from('push_subscriptions').upsert(
+      { user_id: session.user.id, subscription: sub.toJSON() },
+      { onConflict: 'user_id' }
+    )
+    setNotifStatus('done')
+  }
 
   async function savePhone() {
     await supabase.from('profiles').update({ phone: phoneForm }).eq('id', session.user.id)
@@ -127,6 +146,24 @@ export default function ProfileTab({
           </div>
         </div>
       )}
+
+      {/* Notifications */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+        <button
+          onClick={enableNotifications}
+          disabled={notifStatus === 'loading' || notifStatus === 'done'}
+          style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {notifStatus === 'denied' ? <BellOff size={18} color="#EF4444" /> : <Bell size={18} color={notifStatus === 'done' ? GREEN : TEXT_MUTED} />}
+            <span style={{ fontSize: '0.9rem', color: notifStatus === 'denied' ? '#EF4444' : TEXT_PRIMARY }}>
+              {notifStatus === 'done' ? 'Notifications activées' : notifStatus === 'denied' ? 'Notifications refusées' : 'Activer les notifications'}
+            </span>
+          </div>
+          {notifStatus === 'done' && <span style={{ fontSize: '0.65rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 8, padding: '4px 8px' }}>Actif</span>}
+          {notifStatus === 'idle' && <ChevronRight size={16} color={TEXT_MUTED} />}
+        </button>
+      </div>
 
       {/* Sign out */}
       <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', background: 'transparent', border: `1px solid #EF4444`, borderRadius: 14, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms' }}>

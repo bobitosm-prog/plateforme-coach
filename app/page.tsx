@@ -344,6 +344,11 @@ const photoRef = useRef<HTMLInputElement>(null)
     setMessages(prev => [...prev, optimistic])
 
     await supabase.from('messages').insert({ sender_id: session.user.id, receiver_id: coachId, content })
+    fetch('/api/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: coachId, title: 'Nouveau message client', body: content.slice(0, 80), url: '/coach' }),
+    }).catch(() => {})
     loadMessages(coachId)
   }
 

@@ -330,6 +330,11 @@ export default function CoachPage() {
     })
     if (error) { console.error('[saveNewSession]', error); setNsSaving(''); return }
     setNsSaving('done')
+    fetch('/api/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: nsClientId, title: 'Nouvelle séance planifiée', body: `${nsType} · ${nsDate} à ${nsStartTime}`, url: '/' }),
+    }).catch(() => {})
     await fetchScheduledSessions(session.user.id, calWeekOffset)
     setTimeout(() => {
       setShowNewSession(false)
@@ -381,6 +386,11 @@ export default function CoachPage() {
       receiver_id: selectedClient.client_id,
       content,
     })
+    fetch('/api/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: selectedClient.client_id, title: 'Nouveau message', body: content.slice(0, 80), url: '/' }),
+    }).catch(() => {})
     // Replace optimistic with real server row
     loadChat(selectedClient.client_id, session.user.id)
   }
