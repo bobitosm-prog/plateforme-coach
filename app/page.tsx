@@ -79,8 +79,11 @@ const photoRef = useRef<HTMLInputElement>(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const msgEndRef = useRef<HTMLDivElement>(null)
   const lastMsgTimestampRef = useRef<string | null>(null)
+  const initialFetchDone = useRef(false)
+  const fetchAllComplete = useRef(false)
 
-  const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
+  // Stable client — not recreated on every render
+  const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
 
   useEffect(() => {
     setMounted(true)
@@ -98,7 +101,11 @@ const photoRef = useRef<HTMLInputElement>(null)
     })
   }, [session])
 
-  useEffect(() => { if (session) fetchAll() }, [session])
+  useEffect(() => {
+    if (!session || initialFetchDone.current) return
+    initialFetchDone.current = true
+    fetchAll()
+  }, [session])
 
   // Food search debounce (stays in page.tsx since food modal stays here)
   useEffect(() => {
@@ -121,25 +128,43 @@ const photoRef = useRef<HTMLInputElement>(null)
     if (real.length > 0) lastMsgTimestampRef.current = real[real.length - 1].created_at
   }, [messages])
 
-  // Messages: poll every 3s for new messages
+  // Messages: poll every 10s for new messages (only after initial fetchAll is done)
   useEffect(() => {
     if (!session?.user?.id || !coachId) return
     const uid = session.user.id
-    loadMessages(coachId) // initial full load
-    const id = setInterval(async () => {
-      const since = lastMsgTimestampRef.current
-      if (!since) return
-      const { data } = await supabase
-        .from('messages')
-        .select('*')
-        .or(`and(sender_id.eq.${uid},receiver_id.eq.${coachId}),and(sender_id.eq.${coachId},receiver_id.eq.${uid})`)
-        .gt('created_at', since)
-        .order('created_at', { ascending: true })
-      if (data?.length) {
-        setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
-      }
-    }, 3000)
-    return () => clearInterval(id)
+    // Wait for fetchAll to complete before starting poll
+    const startPoll = () => {
+      loadMessages(coachId) // initial full load
+      const id = setInterval(async () => {
+        const since = lastMsgTimestampRef.current
+        if (!since) return
+        const { data } = await supabase
+          .from('messages')
+          .select('*')
+          .or(`and(sender_id.eq.${uid},receiver_id.eq.${coachId}),and(sender_id.eq.${coachId},receiver_id.eq.${uid})`)
+          .gt('created_at', since)
+          .order('created_at', { ascending: true })
+        if (data?.length) {
+          setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
+        }
+      }, 10000)
+      return id
+    }
+
+    let intervalId: ReturnType<typeof setInterval>
+    if (fetchAllComplete.current) {
+      intervalId = startPoll()
+    } else {
+      // Wait up to 10s for fetchAll to finish before starting poll
+      const waitId = setInterval(() => {
+        if (fetchAllComplete.current) {
+          clearInterval(waitId)
+          intervalId = startPoll()
+        }
+      }, 500)
+      return () => { clearInterval(waitId); clearInterval(intervalId) }
+    }
+    return () => clearInterval(intervalId)
   }, [session?.user?.id, coachId])
 
   // Messages: scroll to bottom on new messages
@@ -199,6 +224,8 @@ const photoRef = useRef<HTMLInputElement>(null)
       .eq('client_id', uid)
       .maybeSingle()
     if (coachLink?.coach_id) setCoachId(coachLink.coach_id)
+
+    fetchAllComplete.current = true
   }
 
   async function startProgramWorkout(day: any, exercises: any[]) {

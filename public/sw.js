@@ -1,4 +1,6 @@
 const CACHE_NAME = 'fitpro-v1'
+const SUPABASE_CACHE_NAME = 'fitpro-supabase-v1'
+const SUPABASE_CACHE_TTL_MS = 30_000 // 30 seconds
 const APP_SHELL = ['/', '/coach', '/admin']
 
 self.addEventListener('install', (event) => {
@@ -11,7 +13,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== SUPABASE_CACHE_NAME).map((k) => caches.delete(k)))
     )
   )
   self.clients.claim()
@@ -21,12 +23,34 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Network first for API calls
+  // Network first for internal API calls
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request).catch(() => new Response(JSON.stringify({ error: 'Offline' }), {
         headers: { 'Content-Type': 'application/json' },
       }))
+    )
+    return
+  }
+
+  // Stale-while-revalidate with 30s TTL for Supabase GET requests
+  if (url.hostname.includes('supabase') && request.method === 'GET') {
+    event.respondWith(
+      caches.open(SUPABASE_CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(request)
+        if (cached) {
+          const age = Date.now() - Number(cached.headers.get('sw-cached-at') || 0)
+          if (age < SUPABASE_CACHE_TTL_MS) return cached
+        }
+        const fresh = await fetch(request)
+        if (fresh.ok) {
+          const headers = new Headers(fresh.headers)
+          headers.set('sw-cached-at', String(Date.now()))
+          const toCache = new Response(await fresh.clone().arrayBuffer(), { status: fresh.status, headers })
+          cache.put(request, toCache)
+        }
+        return fresh
+      })
     )
     return
   }
