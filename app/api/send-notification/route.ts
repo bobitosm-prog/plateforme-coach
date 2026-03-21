@@ -13,10 +13,18 @@ export async function POST(req: NextRequest) {
     SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
   })
 
+  const vapidPublicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '')
+    .replace(/=/g, '')
+    .trim()
+
+  const vapidPrivateKey = (process.env.VAPID_PRIVATE_KEY || '')
+    .replace(/=/g, '')
+    .trim()
+
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT!,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!,
+    vapidPublicKey,
+    vapidPrivateKey,
   )
 
   const { userId, title, body, url } = await req.json()

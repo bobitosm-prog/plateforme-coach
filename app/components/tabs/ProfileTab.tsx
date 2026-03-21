@@ -51,7 +51,7 @@ export default function ProfileTab({
     const existing = await reg.pushManager.getSubscription()
     const sub = existing || await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      applicationServerKey: (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').replace(/=/g, '').trim(),
     })
     await supabase.from('push_subscriptions').upsert(
       { user_id: session.user.id, subscription: sub.toJSON() },
