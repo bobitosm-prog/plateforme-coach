@@ -111,10 +111,10 @@ export default function ProgressTab({
     if (measureData.thighs) payload.right_thigh = Number(measureData.thighs)
     if (Object.keys(payload).length <= 2) return
     setSavingMeasure(true)
+    console.log('[measurements] payload:', JSON.stringify(payload))
     const { error } = await supabase.from('body_measurements').insert(payload)
-    console.error('[measurements] payload sent:', JSON.stringify(payload))
     if (error) {
-      console.error('[measurements] error:', JSON.stringify(error))
+      console.log('[measurements] error:', JSON.stringify(error))
       toast.error('Erreur lors de l\'enregistrement')
     } else {
       toast.success('Mensurations enregistrées !')
