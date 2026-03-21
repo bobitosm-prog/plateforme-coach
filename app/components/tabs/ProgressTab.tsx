@@ -100,15 +100,19 @@ export default function ProgressTab({
 
   async function handleSaveMeasure() {
     if (savingMeasure || !session?.user?.id) return
-    const measureData = measureForm
     const payload: Record<string, unknown> = { user_id: session.user.id, date: measureDate }
-    if (measureData.waist) payload.waist = Number(measureData.waist)
-    if (measureData.hips) payload.hips = Number(measureData.hips)
-    if (measureData.chest) payload.chest = Number(measureData.chest)
-    if (measureData.arms) payload.left_arm = Number(measureData.arms)
-    if (measureData.arms) payload.right_arm = Number(measureData.arms)
-    if (measureData.thighs) payload.left_thigh = Number(measureData.thighs)
-    if (measureData.thighs) payload.right_thigh = Number(measureData.thighs)
+    if (measureForm.waist) payload.waist = Number(measureForm.waist)
+    if (measureForm.hips) payload.hips = Number(measureForm.hips)
+    if (measureForm.chest) payload.chest = Number(measureForm.chest)
+    console.log('[measurements] arms raw:', measureForm.arms, 'thighs raw:', measureForm.thighs)
+    if (measureForm.arms) {
+      payload.left_arm = Number(measureForm.arms)
+      payload.right_arm = Number(measureForm.arms)
+    }
+    if (measureForm.thighs) {
+      payload.left_thigh = Number(measureForm.thighs)
+      payload.right_thigh = Number(measureForm.thighs)
+    }
     if (Object.keys(payload).length <= 2) return
     setSavingMeasure(true)
     console.log('[measurements] payload:', JSON.stringify(payload))
