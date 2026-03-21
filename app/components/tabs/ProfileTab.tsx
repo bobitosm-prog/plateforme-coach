@@ -42,21 +42,43 @@ export default function ProfileTab({
   const [phoneEditing, setPhoneEditing] = useState(false)
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle')
 
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+    const rawData = window.atob(base64)
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i)
+    }
+    return outputArray
+  }
+
   async function enableNotifications() {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) return
     setNotifStatus('loading')
+
     const permission = await Notification.requestPermission()
+    console.log('[push] permission:', permission)
     if (permission !== 'granted') { setNotifStatus('denied'); return }
+
     const reg = await navigator.serviceWorker.ready
+    console.log('[push] service worker ready:', reg)
+
     const existing = await reg.pushManager.getSubscription()
+    console.log('[push] existing subscription:', existing)
+
     const sub = existing || await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').replace(/=/g, '').trim(),
+      applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
     })
-    await supabase.from('push_subscriptions').upsert(
+    console.log('[push] subscription:', sub.toJSON())
+
+    const { data, error } = await supabase.from('push_subscriptions').upsert(
       { user_id: session.user.id, subscription: sub.toJSON() },
       { onConflict: 'user_id' }
     )
+    console.log('[push] supabase upsert data:', data, 'error:', error)
+
     setNotifStatus('done')
   }
 
