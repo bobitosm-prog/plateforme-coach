@@ -8,7 +8,7 @@ import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
 } from '../../../lib/design-tokens'
 
-const TODAY = new Date().toISOString().split('T')[0]
+const new Date().toISOString().split('T')[0] = new Date().toISOString().split('T')[0]
 
 const MEASURE_FIELDS = [
   { key: 'waist',  label: 'Tour de taille',    unit: 'cm' },
@@ -54,7 +54,7 @@ export default function ProgressTab({
   // ── Weight modal state ──
   const [showWeight, setShowWeight] = useState(false)
   const [weightVal, setWeightVal] = useState('')
-  const [weightDate, setWeightDate] = useState(TODAY)
+  const [weightDate, setWeightDate] = useState(() => new Date().toISOString().split('T')[0])
   const [savingWeight, setSavingWeight] = useState(false)
 
   // Local chart data so we can append without waiting for parent refetch
@@ -84,7 +84,7 @@ export default function ProgressTab({
       toast.success('Poids enregistré !')
       setShowWeight(false)
       setWeightVal('')
-      setWeightDate(TODAY)
+      setWeightDate(new Date().toISOString().split('T')[0])
       onRefresh()
     }
     setSavingWeight(false)
@@ -95,7 +95,7 @@ export default function ProgressTab({
   const [measureForm, setMeasureForm] = useState<Record<string, string>>({
     waist: '', hips: '', chest: '', arms: '', thighs: '',
   })
-  const [measureDate, setMeasureDate] = useState(TODAY)
+  const [measureDate, setMeasureDate] = useState(() => new Date().toISOString().split('T')[0])
   const [savingMeasure, setSavingMeasure] = useState(false)
 
   async function handleSaveMeasure() {
@@ -120,7 +120,7 @@ export default function ProgressTab({
       toast.success('Mensurations enregistrées !')
       setShowMeasure(false)
       setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' })
-      setMeasureDate(TODAY)
+      setMeasureDate(new Date().toISOString().split('T')[0])
       onRefresh()
     }
     setSavingMeasure(false)
@@ -270,7 +270,7 @@ export default function ProgressTab({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
               <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>ENREGISTRER MON POIDS</h3>
               <button
-                onClick={() => { setShowWeight(false); setWeightVal(''); setWeightDate(TODAY) }}
+                onClick={() => { setShowWeight(false); setWeightVal(''); setWeightDate(new Date().toISOString().split('T')[0]) }}
                 style={{ width: 36, height: 36, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={16} color={TEXT_MUTED} />
@@ -349,7 +349,7 @@ export default function ProgressTab({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>MES MENSURATIONS</h3>
               <button
-                onClick={() => { setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }); setMeasureDate(TODAY) }}
+                onClick={() => { setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }); setMeasureDate(new Date().toISOString().split('T')[0]) }}
                 style={{ width: 36, height: 36, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={16} color={TEXT_MUTED} />
