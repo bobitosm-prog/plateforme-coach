@@ -100,27 +100,21 @@ export default function ProgressTab({
 
   async function handleSaveMeasure() {
     if (!session?.user?.id) return
-    const data: Record<string, number> = {}
-    MEASURE_FIELDS.forEach(({ key }) => {
-      if (measureForm[key]) data[key] = parseFloat(measureForm[key])
-    })
-    if (Object.keys(data).length === 0) return
+    const measureData = measureForm
+    const payload: Record<string, unknown> = { user_id: session.user.id, date: measureDate }
+    if (measureData.waist) payload.waist = Number(measureData.waist)
+    if (measureData.hips) payload.hips = Number(measureData.hips)
+    if (measureData.chest) payload.chest = Number(measureData.chest)
+    if (measureData.arms) payload.left_arm = Number(measureData.arms)
+    if (measureData.arms) payload.right_arm = Number(measureData.arms)
+    if (measureData.thighs) payload.left_thigh = Number(measureData.thighs)
+    if (measureData.thighs) payload.right_thigh = Number(measureData.thighs)
+    if (Object.keys(payload).length <= 2) return
     setSavingMeasure(true)
-    const { error } = await supabase
-      .from('body_measurements')
-      .insert({
-        user_id: session.user.id,
-        date: measureDate,
-        waist: data.waist || null,
-        hips: data.hips || null,
-        chest: data.chest || null,
-        left_arm: data.arms || null,
-        right_arm: data.arms || null,
-        left_thigh: data.thighs || null,
-        right_thigh: data.thighs || null,
-      })
+    const { error } = await supabase.from('body_measurements').insert(payload)
+    console.error('[measurements] payload sent:', JSON.stringify(payload))
     if (error) {
-      console.error('[measurements] Supabase error:', JSON.stringify(error))
+      console.error('[measurements] error:', JSON.stringify(error))
       toast.error('Erreur lors de l\'enregistrement')
     } else {
       toast.success('Mensurations enregistrées !')
