@@ -1,9 +1,15 @@
 'use client'
 import React, { useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED,
 } from '../../../lib/design-tokens'
+
+const supabasePush = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 interface ProfileTabProps {
   supabase: any
@@ -73,7 +79,7 @@ export default function ProfileTab({
     })
     console.log('[push] subscription:', sub.toJSON())
 
-    const { data, error } = await supabase.from('push_subscriptions').upsert(
+    const { data, error } = await supabasePush.from('push_subscriptions').upsert(
       { user_id: session.user.id, subscription: sub.toJSON() },
       { onConflict: 'user_id' }
     )
