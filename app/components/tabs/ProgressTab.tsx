@@ -108,7 +108,17 @@ export default function ProgressTab({
     setSavingMeasure(true)
     const { error } = await supabase
       .from('body_measurements')
-      .insert({ user_id: session.user.id, date: measureDate, ...data })
+      .insert({
+        user_id: session.user.id,
+        date: measureDate,
+        waist: data.waist || null,
+        hips: data.hips || null,
+        chest: data.chest || null,
+        left_arm: data.arms || null,
+        right_arm: data.arms || null,
+        left_thigh: data.thighs || null,
+        right_thigh: data.thighs || null,
+      })
     if (error) {
       toast.error('Erreur lors de l\'enregistrement')
     } else {
@@ -171,11 +181,11 @@ export default function ProgressTab({
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
-              ['Poitrine', latestMeasure.chest ?? latestMeasure.chest, 'cm'],
+              ['Poitrine', latestMeasure.chest, 'cm'],
               ['Taille', latestMeasure.waist, 'cm'],
               ['Hanches', latestMeasure.hips, 'cm'],
-              ['Bras', latestMeasure.arms ?? latestMeasure.left_arm, 'cm'],
-              ['Cuisses', latestMeasure.thighs ?? latestMeasure.left_thigh, 'cm'],
+              ['Bras', latestMeasure.left_arm, 'cm'],
+              ['Cuisses', latestMeasure.left_thigh, 'cm'],
               ['% Graisse', latestMeasure.body_fat, '%'],
               ['Masse Musc', latestMeasure.muscle_mass, 'kg'],
             ].map(([l, v, u]) => v != null && (
