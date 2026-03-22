@@ -1,11 +1,15 @@
 'use client'
 import { useState } from 'react'
-import { UtensilsCrossed, Sparkles } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal } from 'lucide-react'
 import NutritionPreferences from '../NutritionPreferences'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
   NUTRITION_DAYS, todayNutritionKey,
 } from '../../../lib/design-tokens'
+
+const GOLD = '#C9A84C'
+
+type SubTab = 'plan' | 'prefs'
 
 interface NutritionTabProps {
   coachMealPlan: any
@@ -19,23 +23,67 @@ interface NutritionTabProps {
 
 export default function NutritionTab({ coachMealPlan, todayKey, setModal, profile, supabase, userId, fetchAll }: NutritionTabProps) {
   const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
+  const [subTab, setSubTab] = useState<SubTab>(coachMealPlan ? 'plan' : 'prefs')
 
   return (
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>PLAN ALIMENTAIRE</h1>
+        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>NUTRITION</h1>
       </div>
 
-      {!coachMealPlan ? (
+      {/* Sub-tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {[
+          { id: 'plan' as SubTab, label: 'Mon plan', icon: UtensilsCrossed },
+          { id: 'prefs' as SubTab, label: 'Mes préférences', icon: SlidersHorizontal },
+        ].map(({ id, label, icon: Icon }) => {
+          const active = subTab === id
+          return (
+            <button key={id} onClick={() => setSubTab(id)} style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700,
+              letterSpacing: '0.04em', textTransform: 'uppercase',
+              background: active ? (id === 'prefs' ? `${GOLD}20` : `${GREEN}20`) : BG_CARD,
+              color: active ? (id === 'prefs' ? GOLD : GREEN) : TEXT_MUTED,
+              transition: 'all 150ms',
+            }}>
+              <Icon size={15} strokeWidth={2.5} />
+              {label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Preferences sub-tab */}
+      {subTab === 'prefs' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <Sparkles size={18} color="#C9A84C" />
+            <Sparkles size={18} color={GOLD} />
             <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>Personnalise ton plan</h2>
           </div>
           <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 16px', lineHeight: 1.5 }}>Indique tes préférences pour que ton coach puisse créer un plan adapté.</p>
           <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} />
         </div>
-      ) : (
+      )}
+
+      {/* Plan sub-tab */}
+      {subTab === 'plan' && !coachMealPlan && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '60px 0' }}>
+          <UtensilsCrossed size={40} color={TEXT_MUTED} />
+          <p style={{ fontSize: '0.95rem', color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>Ton coach n'a pas encore créé ton plan alimentaire.</p>
+          <button onClick={() => setSubTab('prefs')} style={{
+            marginTop: 8, padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${GOLD}`,
+            background: 'transparent', color: GOLD, cursor: 'pointer',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700,
+            letterSpacing: '0.04em', textTransform: 'uppercase',
+          }}>
+            Configurer mes préférences
+          </button>
+        </div>
+      )}
+
+      {subTab === 'plan' && coachMealPlan && (
         <>
           {/* Macro targets */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
