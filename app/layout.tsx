@@ -37,9 +37,9 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ margin: 0, padding: 0, background: '#050505', height: '100dvh', overflow: 'hidden', position: 'fixed', width: '100%', top: 0, left: 0 }}
+        style={{ background: '#050505' }}
       >
-        <div style={{ maxWidth: 430, margin: '0 auto', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', background: '#0A0A0A', boxShadow: '0 0 60px rgba(0,0,0,0.5)' }}>
+        <div style={{ maxWidth: 430, margin: '0 auto', minHeight: '100vh', background: '#0A0A0A', position: 'relative', boxShadow: '0 0 60px rgba(0,0,0,0.5)' }}>
           <ServiceWorkerRegister />
           {children}
           <Toaster position="top-center" richColors theme="dark" />
