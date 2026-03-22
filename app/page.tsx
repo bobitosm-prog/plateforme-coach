@@ -485,7 +485,57 @@ const calorieGoal = profile?.calorie_goal || 2500
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', overflow: 'hidden', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif" }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif" }}>
+      {/* ── DESKTOP SIDEBAR ── */}
+      <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100vh', position: 'fixed', top: 0, left: 0, background: '#111111', borderRight: '1px solid #222222', zIndex: 50, padding: '24px 0' }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 20px', marginBottom: 32 }}>
+          <div style={{ width: 32, height: 32, background: '#C9A84C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Zap size={18} color="#000" strokeWidth={2.5} fill="#000" />
+          </div>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>FITPRO</span>
+        </div>
+        {/* Nav items */}
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 12px' }}>
+          {([
+            { id: 'home', icon: BarChart2, label: 'Home' },
+            { id: 'training', icon: Dumbbell, label: 'Training' },
+            { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
+            { id: 'progress', icon: TrendingUp, label: 'Progress' },
+            { id: 'messages', icon: MessageCircle, label: 'Messages' },
+            { id: 'profil', icon: User, label: 'Profil' },
+          ] as const).map(({ id, icon: Icon, label }) => {
+            const active = activeTab === id
+            const badge = id === 'messages' && unreadCount > 0
+            return (
+              <button key={id} onClick={() => setActiveTab(id)} style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10,
+                background: active ? 'rgba(201,168,76,0.15)' : 'transparent',
+                border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+                transition: 'background 150ms',
+              }}>
+                <div style={{ position: 'relative' }}>
+                  <Icon size={20} color={active ? '#C9A84C' : '#6B7280'} strokeWidth={2} />
+                  {badge && <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 14, height: 14, background: '#EF4444', borderRadius: 7, fontSize: '0.5rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unreadCount > 9 ? '9+' : unreadCount}</span>}
+                </div>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, color: active ? '#C9A84C' : '#9CA3AF', letterSpacing: '0.04em' }}>{label}</span>
+              </button>
+            )
+          })}
+        </nav>
+        {/* User info */}
+        {profile && (
+          <div style={{ padding: '16px 20px', borderTop: '1px solid #222222', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#C9A84C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#000' }}>
+              {(profile.full_name || '?')[0]?.toUpperCase()}
+            </div>
+            <span style={{ fontSize: '0.82rem', color: '#9CA3AF', fontWeight: 500 }}>{profile.full_name || 'Utilisateur'}</span>
+          </div>
+        )}
+      </aside>
+
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="main-content-area" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100vh', overflow: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
@@ -784,8 +834,8 @@ const calorieGoal = profile?.calorie_goal || 2500
       </AnimatePresence>
       </main>
 
-      {/* ── BOTTOM NAV ── */}
-      <nav className="safe-area-pb" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: 430, margin: '0 auto', background: '#111111', borderTop: '1px solid #222222', height: 64, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 50 }}>
+      {/* ── BOTTOM NAV (mobile only) ── */}
+      <nav className="safe-area-pb mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#111111', borderTop: '1px solid #222222', height: 64, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 50 }}>
         {([
           { id: 'home',      icon: BarChart2,       label: 'Home'      },
           { id: 'training',  icon: Dumbbell,        label: 'Training'  },
@@ -818,6 +868,7 @@ const calorieGoal = profile?.calorie_goal || 2500
           )
         })}
       </nav>
+      </div>{/* end main-content-area */}
     </div>
   )
 }

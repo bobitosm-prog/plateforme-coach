@@ -48,6 +48,22 @@ body {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 
+/* ── Desktop responsive ── */
+@media (min-width: 768px) {
+  .desktop-sidebar {
+    display: flex !important;
+  }
+  .main-content-area {
+    margin-left: 240px;
+  }
+  .mobile-nav {
+    display: none !important;
+  }
+  .content-pb {
+    padding-bottom: 1rem;
+  }
+}
+
 /* ── Fade in up ── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }

@@ -37,13 +37,11 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ background: '#050505' }}
+        style={{ margin: 0, padding: 0, background: '#0A0A0A', minHeight: '100vh' }}
       >
-        <div style={{ maxWidth: 430, margin: '0 auto', minHeight: '100vh', background: '#0A0A0A', position: 'relative', boxShadow: '0 0 60px rgba(0,0,0,0.5)' }}>
-          <ServiceWorkerRegister />
-          {children}
-          <Toaster position="top-center" richColors theme="dark" />
-        </div>
+        <ServiceWorkerRegister />
+        {children}
+        <Toaster position="top-center" richColors theme="dark" />
       </body>
     </html>
   );
