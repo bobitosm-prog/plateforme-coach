@@ -37,7 +37,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ margin: 0, padding: 0, background: '#0A0A0A', minHeight: '100vh' }}
+        style={{ width: '100%', height: '100dvh', overflow: 'hidden', background: '#0a0a0a' }}
       >
         <ServiceWorkerRegister />
         {children}

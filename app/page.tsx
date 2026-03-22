@@ -481,9 +481,9 @@ const calorieGoal = profile?.calorie_goal || 2500
   )
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif" }}>
+    <div style={{ display: 'flex', height: '100dvh', width: '100%', overflow: 'hidden', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif" }}>
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100vh', position: 'fixed', top: 0, left: 0, background: '#111111', borderRight: '1px solid #222222', zIndex: 50, padding: '24px 0' }}>
+      <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: '#111111', borderRight: '1px solid #222222', zIndex: 50, padding: '24px 0' }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 20px', marginBottom: 32 }}>
           <div style={{ width: 32, height: 32, background: '#C9A84C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -531,7 +531,7 @@ const calorieGoal = profile?.calorie_goal || 2500
       </aside>
 
       {/* ── MAIN CONTENT AREA ── */}
-      <div className="main-content-area" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100vh', overflow: 'hidden' }}>
+      <div className="main-content-area" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100dvh', overflow: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
@@ -718,7 +718,7 @@ const calorieGoal = profile?.calorie_goal || 2500
       )}
 
       {/* ── TAB CONTENT ── */}
-      <main ref={mainRef} className="content-pb" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' } as any}>
+      <main ref={mainRef} data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
@@ -831,7 +831,7 @@ const calorieGoal = profile?.calorie_goal || 2500
       </main>
 
       {/* ── BOTTOM NAV (mobile only) ── */}
-      <nav className="safe-area-pb mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#111111', borderTop: '1px solid #222222', height: 64, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 50 }}>
+      <nav className="mobile-nav" style={{ flexShrink: 0, height: 'calc(64px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)', background: '#111111', borderTop: '1px solid #1f1f1f', display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 50 }}>
         {([
           { id: 'home',      icon: BarChart2,       label: 'Home'      },
           { id: 'training',  icon: Dumbbell,        label: 'Training'  },
