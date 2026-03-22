@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
     } = await req.json()
 
     const systemPrompt = `Tu es un nutritionniste expert en fitness. Tu génères des plans alimentaires précis avec des aliments cuits, en grammes exacts.
-Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte autour.`
+Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte autour.
+Sois concis dans les descriptions d'aliments. Chaque repas maximum 4 aliments. Ne dépasse pas 7500 tokens au total.`
 
     const userPrompt = `Génère un plan alimentaire pour 7 jours avec ces paramètres :
 - Calories cibles : ${calorie_goal} kcal/jour

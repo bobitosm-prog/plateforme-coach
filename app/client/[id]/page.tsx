@@ -344,15 +344,50 @@ export default function ClientProfilePage() {
         }
       }
 
-      // Parse the accumulated text
+      // Parse the accumulated text — with truncated JSON repair
       const cleaned = fullText
         .replace(/^```json\s*/i, '')
         .replace(/^```\s*/i, '')
         .replace(/\s*```$/i, '')
         .trim()
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) throw new Error('No JSON found in stream')
-      const plan = JSON.parse(jsonMatch[0])
+
+      let jsonStr = cleaned
+      // Find outermost { ... }
+      const startIdx = jsonStr.indexOf('{')
+      if (startIdx === -1) throw new Error('No JSON found in stream')
+      jsonStr = jsonStr.substring(startIdx)
+
+      let plan: any
+      try {
+        plan = JSON.parse(jsonStr)
+      } catch {
+        // JSON is likely truncated — try to repair by closing open braces/brackets
+        console.warn('[meal-plan] JSON truncated, attempting repair. Length:', jsonStr.length)
+        // Remove trailing incomplete value (partial string, number, etc.)
+        let repaired = jsonStr.replace(/,\s*"[^"]*$/, '') // remove trailing partial key
+          .replace(/,\s*$/, '')        // remove trailing comma
+          .replace(/:\s*"[^"]*$/, ': ""') // close partial string value
+          .replace(/:\s*\[[^\]]*$/, ': []') // close partial array
+
+        // Count and close open braces/brackets
+        let openBraces = 0, openBrackets = 0
+        for (const ch of repaired) {
+          if (ch === '{') openBraces++
+          else if (ch === '}') openBraces--
+          else if (ch === '[') openBrackets++
+          else if (ch === ']') openBrackets--
+        }
+        repaired += ']'.repeat(Math.max(0, openBrackets))
+        repaired += '}'.repeat(Math.max(0, openBraces))
+
+        try {
+          plan = JSON.parse(repaired)
+          console.log('[meal-plan] Repair succeeded')
+        } catch (e2) {
+          console.error('[meal-plan] Repair failed:', e2)
+          throw new Error('JSON tronqué et irréparable')
+        }
+      }
 
       // Ensure all 7 days
       for (const d of DAYS) {
