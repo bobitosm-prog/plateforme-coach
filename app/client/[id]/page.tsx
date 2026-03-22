@@ -661,9 +661,17 @@ export default function ClientProfilePage() {
 
   /* ── Loading / error ────────────────────────────────────────── */
   if (loading) return (
-    <div style={{minHeight:'100vh',background:'#0A0A0A',display:'flex',alignItems:'center',justifyContent:'center'}}>
-      <div style={{width:32,height:32,borderRadius:'50%',border:'3px solid #2A2A2A',borderTopColor:'#F97316',animation:'spin 0.7s linear infinite'}}/>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <div style={{minHeight:'100vh',background:'#0A0A0A',padding:'20px 16px'}}>
+      <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+        <div className="skeleton" style={{width:60,height:60,borderRadius:'50%'}} />
+        <div style={{flex:1,display:'flex',flexDirection:'column',gap:6}}>
+          <div className="skeleton" style={{height:16,width:'60%'}} />
+          <div className="skeleton" style={{height:12,width:'40%'}} />
+        </div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+        {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{height:80,borderRadius:14}} />)}
+      </div>
     </div>
   )
   if (error || !profile) return (

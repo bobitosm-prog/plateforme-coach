@@ -529,7 +529,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* Plan sub-tab */}
       {subTab === 'plan' && loadingPlan && !coachMealPlan && (
-        <p style={{ textAlign: 'center', color: TEXT_MUTED, padding: '40px 0' }}>Chargement...</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+            {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: 12 }} />)}
+          </div>
+          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 100, borderRadius: 16 }} />)}
+        </div>
       )}
 
       {subTab === 'plan' && !loadingPlan && !coachMealPlan && !activeMealPlan && (
