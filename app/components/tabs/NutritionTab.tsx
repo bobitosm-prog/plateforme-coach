@@ -218,14 +218,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
         {/* Meals */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {Object.entries(dayData.repas || {}).map(([mealName, foods]: [string, any]) => {
-            const foodList = Array.isArray(foods) ? foods : []
+          {MEAL_ORDER.map(mealType => {
+            const foodList = Array.isArray(dayData.repas?.[mealType]) ? dayData.repas[mealType] : []
+            if (foodList.length === 0) return null
             const mealKcal = foodList.reduce((s: number, f: any) => s + (f.kcal || 0), 0)
             return (
-              <div key={mealName} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
+              <div key={mealType} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: TEXT_PRIMARY, fontSize: '1rem' }}>
-                    {MEAL_LABELS[mealName] || mealName.replace(/_/g, ' ')}
+                    {MEAL_LABELS[mealType]}
                   </span>
                   <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: GREEN }}>{mealKcal} kcal</span>
                 </div>

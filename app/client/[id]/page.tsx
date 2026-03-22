@@ -55,6 +55,8 @@ const DAY_FULL:   Record<string,string> = { lundi:'Lundi', mardi:'Mardi', mercre
 const MEAL_TYPES = ['Petit-déjeuner','Déjeuner','Dîner','Collation']
 const MEAL_ICONS: Record<string,string> = { 'Petit-déjeuner':'☀️', 'Déjeuner':'🍽️', 'Dîner':'🌙', 'Collation':'🍎' }
 const MACRO_COLORS = { kcal:'#F97316', prot:'#818CF8', carb:'#22C55E', fat:'#FBBF24' }
+const AI_MEAL_ORDER = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
+const AI_MEAL_LABELS: Record<string, string> = { petit_dejeuner: 'Petit-déjeuner', dejeuner: 'Déjeuner', collation: 'Collation', diner: 'Dîner' }
 
 const MUSCLE_COLORS: Record<string, string> = {
   'Poitrine': '#EF4444', 'Dos': '#3B82F6', 'Épaules': '#8B5CF6',
@@ -1093,19 +1095,23 @@ export default function ClientProfilePage() {
                           </div>
                         ))}
                       </div>
-                      {Object.entries(day.repas || {}).map(([mealName, foods]: [string, any]) => (
-                        <div key={mealName} style={{marginBottom:8}}>
-                          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,color:'#C9A84C',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>
-                            {mealName.replace(/_/g,' ')}
-                          </div>
-                          {(Array.isArray(foods) ? foods : []).map((f: any, i: number) => (
-                            <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:'1px solid #1A1A1A'}}>
-                              <span style={{fontSize:'0.78rem',color:'#F8FAFC'}}>{f.aliment}</span>
-                              <span style={{fontSize:'0.7rem',color:'#6B7280',flexShrink:0,marginLeft:8}}>{f.quantite_g}g · {f.kcal}kcal</span>
+                      {AI_MEAL_ORDER.map(mealType => {
+                        const foods = Array.isArray(day.repas?.[mealType]) ? day.repas[mealType] : []
+                        if (foods.length === 0) return null
+                        return (
+                          <div key={mealType} style={{marginBottom:8}}>
+                            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,color:'#C9A84C',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>
+                              {AI_MEAL_LABELS[mealType]}
                             </div>
-                          ))}
-                        </div>
-                      ))}
+                            {foods.map((f: any, i: number) => (
+                              <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:'1px solid #1A1A1A'}}>
+                                <span style={{fontSize:'0.78rem',color:'#F8FAFC'}}>{f.aliment}</span>
+                                <span style={{fontSize:'0.7rem',color:'#6B7280',flexShrink:0,marginLeft:8}}>{f.quantite_g}g · {f.kcal}kcal</span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      })}
                     </div>
                   )
                 })()}
@@ -1160,19 +1166,23 @@ export default function ClientProfilePage() {
                           </div>
                         ))}
                       </div>
-                      {Object.entries(day.repas || {}).map(([mealName, foods]: [string, any]) => (
-                        <div key={mealName} style={{marginBottom:8}}>
-                          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,color:'#22C55E',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>
-                            {mealName.replace(/_/g,' ')}
-                          </div>
-                          {(Array.isArray(foods) ? foods : []).map((f: any, i: number) => (
-                            <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:'1px solid #1A1A1A'}}>
-                              <span style={{fontSize:'0.78rem',color:'#F8FAFC'}}>{f.aliment}</span>
-                              <span style={{fontSize:'0.7rem',color:'#6B7280',flexShrink:0,marginLeft:8}}>{f.quantite_g}g · {f.kcal}kcal</span>
+                      {AI_MEAL_ORDER.map(mealType => {
+                        const foods = Array.isArray(day.repas?.[mealType]) ? day.repas[mealType] : []
+                        if (foods.length === 0) return null
+                        return (
+                          <div key={mealType} style={{marginBottom:8}}>
+                            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,color:'#22C55E',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>
+                              {AI_MEAL_LABELS[mealType]}
                             </div>
-                          ))}
-                        </div>
-                      ))}
+                            {foods.map((f: any, i: number) => (
+                              <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:'1px solid #1A1A1A'}}>
+                                <span style={{fontSize:'0.78rem',color:'#F8FAFC'}}>{f.aliment}</span>
+                                <span style={{fontSize:'0.7rem',color:'#6B7280',flexShrink:0,marginLeft:8}}>{f.quantite_g}g · {f.kcal}kcal</span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      })}
                     </div>
                   )
                 })()}
