@@ -163,7 +163,7 @@ export default function OnboardingPage() {
       )}
 
       {/* Back button */}
-      {step > 1 && step < TOTAL_STEPS && (
+      {step > 1 && (
         <button onClick={goBack} style={{ position: 'fixed', top: 20, left: 16, zIndex: 50, background: 'none', border: 'none', color: MUTED, cursor: 'pointer', padding: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, fontFamily: "'Barlow', sans-serif" }}>
           <ChevronLeft size={18} strokeWidth={2.5} /> Retour
         </button>
