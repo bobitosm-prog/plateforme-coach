@@ -22,7 +22,7 @@ interface HomeTabProps {
   uploadAvatar: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   uploadProgressPhoto: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   currentWeight: number | undefined
-  goalWeight: number
+  goalWeight: number | null
   calorieGoal: number
   completedSessions: number
   streak: number
@@ -106,7 +106,7 @@ export default function HomeTab({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {[
             { label: 'Poids actuel', value: currentWeight ? `${currentWeight} kg` : '—', sub: 'coach-assigned', color: ORANGE, icon: Scale },
-            { label: 'Objectif', value: `${profile?.target_weight || goalWeight} kg`, sub: 'cible', color: TEXT_MUTED, icon: Target },
+            { label: 'Objectif', value: profile?.target_weight ? `${profile.target_weight} kg` : '—', sub: 'cible', color: TEXT_MUTED, icon: Target },
             { label: 'Séances', value: String(completedSessions), sub: 'total complétées', color: TEXT_MUTED, icon: Dumbbell },
             { label: 'Streak', value: streak > 0 ? `${streak}j` : '—', sub: 'jours consécutifs', color: streak > 0 ? ORANGE : TEXT_MUTED, icon: Flame },
           ].map(({ label, value, color, icon: Icon }, i) => (

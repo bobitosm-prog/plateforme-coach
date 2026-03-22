@@ -21,7 +21,7 @@ interface ProfileTabProps {
   avatarRef: React.RefObject<HTMLInputElement | null>
   uploadAvatar: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   currentWeight: number | undefined
-  goalWeight: number
+  goalWeight: number | null
   calorieGoal: number
   coachProgram: any
   setModal: (modal: string) => void
