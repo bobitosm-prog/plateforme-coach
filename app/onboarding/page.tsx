@@ -15,7 +15,21 @@ const CARD = '#1A1A1A'
 const BORDER = '#2A2A2A'
 const TEXT = '#F8FAFC'
 const MUTED = '#6B7280'
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 8
+
+const ALLERGY_OPTIONS = [
+  { id: 'gluten', label: 'Gluten', emoji: '🌾' },
+  { id: 'lactose', label: 'Lactose', emoji: '🥛' },
+  { id: 'nuts', label: 'Fruits à coque', emoji: '🥜' },
+  { id: 'eggs', label: 'Oeufs', emoji: '🥚' },
+  { id: 'soy', label: 'Soja', emoji: '🫘' },
+  { id: 'shellfish', label: 'Crustacés', emoji: '🦐' },
+]
+
+const CATEGORY_LABELS: Record<string, string> = {
+  proteines: 'Protéines', glucides: 'Glucides', lipides: 'Lipides', micronutriments: 'Micronutriments',
+}
+const CATEGORY_ORDER = ['proteines', 'glucides', 'lipides', 'micronutriments']
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0 }),
@@ -41,6 +55,11 @@ export default function OnboardingPage() {
   const [objective, setObjective] = useState('')
   const [fitnessLevel, setFitnessLevel] = useState('')
   const [activityLevel, setActivityLevel] = useState('moderate')
+  const [dietaryType, setDietaryType] = useState('omnivore')
+  const [allergies, setAllergies] = useState<string[]>([])
+  const [likedFoods, setLikedFoods] = useState<string[]>([])
+  const [allFoods, setAllFoods] = useState<any[]>([])
+  const [foodCategory, setFoodCategory] = useState('proteines')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -48,6 +67,9 @@ export default function OnboardingPage() {
       setSession(session)
       const meta = session.user.user_metadata
       if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
+    })
+    supabase.from('fitness_foods').select('*').order('name').then(({ data }) => {
+      if (data) setAllFoods(data)
     })
   }, [])
 
@@ -95,6 +117,9 @@ export default function OnboardingPage() {
       objective: objective || null,
       fitness_level: fitnessLevel || null,
       activity_level: activityLevel,
+      dietary_type: dietaryType,
+      allergies: allergies.length > 0 ? allergies : null,
+      liked_foods: likedFoods.length > 0 ? likedFoods : null,
     }
     if (tdeeData) {
       update.tdee = tdeeData.adjusted
@@ -287,10 +312,114 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* Step 6: Récapitulatif */}
+          {/* Step 6: Régime & Allergies */}
           {step === 6 && (
             <motion.div key="s6" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 20, maxWidth: 480, width: '100%', margin: '0 auto' }}>
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 20, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
+              <div><h2 style={h2Style}>Ton alimentation</h2><p style={subStyle}>Ces infos personnaliseront ton plan</p></div>
+
+              <div>
+                <label style={labelStyle}>Mon régime</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { k: 'omnivore', l: 'Omnivore', d: 'Je mange de tout', e: '🍖' },
+                    { k: 'vegetarian', l: 'Végétarien', d: 'Pas de viande ni poisson', e: '🥗' },
+                    { k: 'vegan', l: 'Vegan', d: '100% végétal', e: '🌱' },
+                  ].map(o => {
+                    const sel = dietaryType === o.k
+                    return (
+                      <button key={o.k} onClick={() => setDietaryType(o.k)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 14, border: `2px solid ${sel ? GOLD : BORDER}`, background: sel ? `${GOLD}15` : CARD, cursor: 'pointer', transition: 'all 200ms' }}>
+                        <span style={{ fontSize: '1.4rem' }}>{o.e}</span>
+                        <div style={{ flex: 1, textAlign: 'left' }}>
+                          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, color: sel ? GOLD : TEXT }}>{o.l}</div>
+                          <div style={{ fontSize: '0.72rem', color: MUTED }}>{o.d}</div>
+                        </div>
+                        {sel && <Check size={16} color={GOLD} strokeWidth={3} />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Allergies & intolérances</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {ALLERGY_OPTIONS.map(a => {
+                    const sel = allergies.includes(a.id)
+                    return (
+                      <button key={a.id} onClick={() => setAllergies(prev => sel ? prev.filter(x => x !== a.id) : [...prev, a.id])}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${sel ? '#EF4444' : BORDER}`, background: sel ? 'rgba(239,68,68,0.08)' : CARD, cursor: 'pointer', transition: 'all 200ms' }}>
+                        <span style={{ fontSize: '1.1rem' }}>{a.emoji}</span>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: sel ? '#EF4444' : TEXT, flex: 1, textAlign: 'left' }}>{a.label}</span>
+                        {sel && <Check size={14} color="#EF4444" strokeWidth={3} />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 'auto', paddingTop: 8 }}><NextBtn onClick={goNext} /></div>
+            </motion.div>
+          )}
+
+          {/* Step 7: Aliments préférés */}
+          {step === 7 && (() => {
+            const filtered = allFoods.filter(f => {
+              if (dietaryType === 'vegan' && !f.is_vegan) return false
+              if (dietaryType === 'vegetarian' && !f.is_vegetarian) return false
+              if (allergies.length > 0 && f.allergens?.some((a: string) => allergies.includes(a))) return false
+              return f.category === foodCategory
+            })
+            return (
+              <motion.div key="s7" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 16, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
+                <div><h2 style={h2Style}>Tes aliments favoris</h2><p style={subStyle}>Sélectionne ce que tu aimes manger</p></div>
+
+                {/* Category tabs */}
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
+                  {CATEGORY_ORDER.map(cat => {
+                    const active = foodCategory === cat
+                    return (
+                      <button key={cat} onClick={() => setFoodCategory(cat)}
+                        style={{ flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700, background: active ? `${GOLD}20` : CARD, color: active ? GOLD : MUTED, transition: 'all 150ms' }}>
+                        {CATEGORY_LABELS[cat]}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Food grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, flex: 1, alignContent: 'start' }}>
+                  {filtered.map((food: any) => {
+                    const sel = likedFoods.includes(food.id)
+                    return (
+                      <button key={food.id} onClick={() => setLikedFoods(prev => sel ? prev.filter(x => x !== food.id) : [...prev, food.id])}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '10px 4px', borderRadius: 12, border: `2px solid ${sel ? GOLD : BORDER}`, background: sel ? `${GOLD}15` : CARD, cursor: 'pointer', position: 'relative', transition: 'all 150ms' }}>
+                        {sel && <div style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={10} color="#000" strokeWidth={3} /></div>}
+                        <span style={{ fontSize: '1.3rem' }}>{food.emoji || '🍽️'}</span>
+                        <span style={{ fontSize: '0.62rem', fontWeight: 600, color: sel ? GOLD : MUTED, textAlign: 'center', lineHeight: 1.2 }}>{food.name}</span>
+                        <span style={{ fontSize: '0.52rem', color: `${MUTED}99`, textAlign: 'center' }}>{food.protein_per_100g}P · {food.carbs_per_100g}G · {food.fat_per_100g}L</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Counter + next */}
+                <div style={{ paddingTop: 4 }}>
+                  <div style={{ fontSize: '0.78rem', color: likedFoods.length >= 5 ? GOLD : MUTED, fontWeight: 600, textAlign: 'center', marginBottom: 10 }}>
+                    {likedFoods.length} aliment{likedFoods.length > 1 ? 's' : ''} sélectionné{likedFoods.length > 1 ? 's' : ''} {likedFoods.length < 5 && '(min. 5)'}
+                  </div>
+                  <NextBtn onClick={goNext} disabled={likedFoods.length < 5} />
+                </div>
+              </motion.div>
+            )
+          })()}
+
+          {/* Step 8: Récapitulatif */}
+          {step === 8 && (
+            <motion.div key="s8" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 20, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
               <div><h2 style={h2Style}>Récapitulatif</h2><p style={subStyle}>Vérifie tes informations</p></div>
 
               <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -307,6 +436,21 @@ export default function OnboardingPage() {
                     <div style={{ fontSize: '0.9rem', color: TEXT, fontWeight: 600, marginTop: 2 }}>{v}</div>
                   </div>
                 ))}
+              </div>
+
+              {/* Diet / allergies / foods badges */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <span style={{ padding: '3px 10px', borderRadius: 999, fontSize: '0.68rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", background: dietaryType === 'vegan' ? 'rgba(34,197,94,0.12)' : dietaryType === 'vegetarian' ? 'rgba(249,115,22,0.12)' : `${GOLD}15`, color: dietaryType === 'vegan' ? '#22C55E' : dietaryType === 'vegetarian' ? '#F97316' : GOLD, border: `1px solid ${dietaryType === 'vegan' ? 'rgba(34,197,94,0.2)' : dietaryType === 'vegetarian' ? 'rgba(249,115,22,0.2)' : `${GOLD}30`}`, textTransform: 'uppercase' }}>
+                  {dietaryType === 'omnivore' ? '🍖 Omnivore' : dietaryType === 'vegetarian' ? '🥗 Végétarien' : '🌱 Vegan'}
+                </span>
+                {allergies.map(a => (
+                  <span key={a} style={{ padding: '3px 10px', borderRadius: 999, fontSize: '0.68rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", background: 'rgba(239,68,68,0.12)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)', textTransform: 'uppercase' }}>
+                    {ALLERGY_OPTIONS.find(o => o.id === a)?.emoji} {a}
+                  </span>
+                ))}
+                <span style={{ padding: '3px 10px', borderRadius: 999, fontSize: '0.68rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", background: 'rgba(156,163,175,0.08)', color: MUTED, border: '1px solid rgba(156,163,175,0.12)' }}>
+                  {likedFoods.length} aliments favoris
+                </span>
               </div>
 
               {/* TDEE card */}
