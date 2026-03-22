@@ -1524,8 +1524,9 @@ export default function ClientProfilePage() {
 
         {/* ══ TAB: MESSAGES ══ */}
         {activeTab === 'messages' && (
-          <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',height:'calc(100vh - 120px)'}}>
-            <div style={{flex:1,overflowY:'auto',padding:'12px 16px',display:'flex',flexDirection:'column',gap:4}}>
+          <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 120px)'}}>
+            {/* Messages scrollable */}
+            <div style={{flex:1,overflowY:'auto',overflowX:'hidden',padding:'12px 16px',display:'flex',flexDirection:'column',gap:4}}>
               {coachMessages.length === 0 && (
                 <div style={{textAlign:'center',padding:'40px 0'}}>
                   <MessageCircle size={32} color="#6B7280" style={{marginBottom:8}}/>
@@ -1559,7 +1560,8 @@ export default function ClientProfilePage() {
               })}
               <div ref={coachMsgEndRef}/>
             </div>
-            <div style={{padding:'10px 14px',background:'#1A1A1A',borderTop:'1px solid #242424',display:'flex',gap:8,alignItems:'flex-end',flexShrink:0}}>
+            {/* Input always at bottom */}
+            <div style={{flexShrink:0,padding:'12px 14px',background:'#111111',borderTop:'1px solid #222222',display:'flex',gap:8,alignItems:'flex-end'}}>
               <textarea value={coachMsgInput} onChange={e=>setCoachMsgInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCoachMessage()}}} placeholder="Écrire un message..." rows={1}
                 style={{flex:1,background:'#0A0A0A',border:'1px solid #242424',borderRadius:20,padding:'10px 16px',color:'#F8FAFC',fontSize:'0.88rem',outline:'none',resize:'none',maxHeight:100,lineHeight:1.4,fontFamily:'inherit'}}/>
               <button onClick={sendCoachMessage} disabled={!coachMsgInput.trim()}

@@ -30,6 +30,8 @@ export default function MessagesTab({
   session, coachId, messages, msgInput, setMsgInput, sendMessage, msgEndRef,
 }: MessagesTabProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const initialScrollDone = useRef(false)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -39,8 +41,23 @@ export default function MessagesTab({
     }
   }, [msgInput])
 
+  // Initial scroll to bottom
+  useEffect(() => {
+    if (messages.length > 0 && !initialScrollDone.current) {
+      initialScrollDone.current = true
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior })
+    }
+  }, [messages.length > 0])
+
+  // Scroll on new messages
+  useEffect(() => {
+    if (messages.length > 0 && initialScrollDone.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages])
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 72px)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div style={{ background: BG_CARD, padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: '#000' }}>C</div>
@@ -105,11 +122,12 @@ export default function MessagesTab({
                 </div>
               )
             })}
+            <div ref={bottomRef} />
             <div ref={msgEndRef} />
           </div>
 
           {/* Input */}
-          <div style={{ padding: '10px 14px', background: BG_CARD, borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
+          <div style={{ flexShrink: 0, padding: '12px 14px', background: '#111111', borderTop: '1px solid #222222', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
             <textarea
               ref={inputRef}
               value={msgInput}
