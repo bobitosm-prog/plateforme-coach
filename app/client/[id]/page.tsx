@@ -26,6 +26,8 @@ type Profile = {
   height: number | null; target_weight: number | null
   body_fat_pct: number | null; objective: string | null; status: string | null
   dietary_type: string | null; allergies: string[] | null; liked_foods: string[] | null
+  activity_level: string | null; tdee: number | null; protein_goal: number | null
+  carbs_goal: number | null; fat_goal: number | null
 }
 type WorkoutSession = {
   id: string; created_at: string; name: string | null
@@ -203,6 +205,11 @@ export default function ClientProfilePage() {
   const [aiPreview,      setAiPreview]      = useState<WeekProgram | null>(null)
   const [activeTab,      setActiveTab]      = useState<'apercu'|'programme'|'nutrition'|'notes'>('apercu')
 
+  // AI Meal Plan Generator
+  const [aiMealGenerating, setAiMealGenerating] = useState(false)
+  const [aiMealPreview, setAiMealPreview] = useState<any>(null)
+  const [aiMealPreviewDay, setAiMealPreviewDay] = useState('lundi')
+
   const AI_EQUIPMENT = ['Haltères', 'Barre', 'Machine', 'Poulie', 'Poids du corps', 'Banc']
   const AI_LEVELS    = ['Débutant', 'Intermédiaire', 'Avancé']
 
@@ -269,6 +276,74 @@ export default function ClientProfilePage() {
     showToast('Programme IA appliqué — vérifiez et sauvegardez')
   }
 
+  /* ── AI Meal Plan Generator ───────────────────────────────── */
+  const generateAiMealPlan = async () => {
+    if (!profile) return
+    setAiMealGenerating(true)
+    setAiMealPreview(null)
+    try {
+      // Fetch liked food names
+      let likedFoodNames: string[] = []
+      if (profile.liked_foods?.length) {
+        const { data: foodRows } = await supabase
+          .from('fitness_foods')
+          .select('name')
+          .in('id', profile.liked_foods)
+        likedFoodNames = (foodRows || []).map((f: any) => f.name)
+      }
+
+      const res = await fetch('/api/generate-meal-plan', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          calorie_goal: profile.calorie_goal || profile.tdee || calorieTarget,
+          protein_goal: profile.protein_goal || protTarget,
+          carbs_goal: profile.carbs_goal || carbTarget,
+          fat_goal: profile.fat_goal || fatTarget,
+          dietary_type: profile.dietary_type,
+          allergies: profile.allergies,
+          liked_foods_names: likedFoodNames,
+          objective: profile.objective,
+        }),
+      })
+
+      if (!res.ok) throw new Error(`Erreur ${res.status}`)
+      const { plan } = await res.json()
+      setAiMealPreview(plan)
+      setAiMealPreviewDay('lundi')
+    } catch {
+      showToast('Erreur lors de la génération du plan alimentaire')
+    } finally {
+      setAiMealGenerating(false)
+    }
+  }
+
+  const acceptAiMealPlan = async () => {
+    if (!aiMealPreview || !profile) return
+    const planData = aiMealPreview
+    const lundi = planData.lundi || {}
+
+    const { error } = await supabase.from('meal_plans').insert({
+      user_id: profile.id,
+      created_by: coachId,
+      total_calories: lundi.total_kcal || calorieTarget,
+      protein_g: lundi.total_protein || protTarget,
+      carbs_g: lundi.total_carbs || carbTarget,
+      fat_g: lundi.total_fat || fatTarget,
+      objective: profile.objective,
+      plan_data: planData,
+      is_active: true,
+    })
+
+    if (error) {
+      showToast(`Erreur : ${error.message}`)
+    } else {
+      setAiMealPreview(null)
+      showToast('Plan alimentaire IA envoyé au client')
+      fetchData()
+    }
+  }
+
   /* ── Toast ──────────────────────────────────────────────────── */
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500) }
 
@@ -286,7 +361,7 @@ export default function ClientProfilePage() {
     setLoading(true); setError(null)
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes] = await Promise.all([
-      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods').eq('id', id).single(),
+      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
@@ -881,6 +956,16 @@ export default function ClientProfilePage() {
             {/* Actions */}
             <div style={{display:'flex',gap:8,alignItems:'center'}}>
               <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>Plan alimentaire</span>
+              {profile?.tdee && profile.tdee > 0 && (
+                <button
+                  onClick={generateAiMealPlan}
+                  disabled={aiMealGenerating}
+                  style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:10,border:'none',cursor:aiMealGenerating?'wait':'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,letterSpacing:'0.04em',background:'linear-gradient(135deg,#C9A84C,#D4AF37)',color:'#000',minHeight:38,opacity:aiMealGenerating?0.6:1}}
+                >
+                  {aiMealGenerating ? <Loader2 size={13} strokeWidth={2.5} style={{animation:'spin 0.7s linear infinite'}}/> : <Sparkles size={13} strokeWidth={2.5}/>}
+                  {aiMealGenerating ? 'Génération...' : 'Générer plan IA'}
+                </button>
+              )}
               <button className="btn-secondary" style={{padding:'12px 14px',flexShrink:0,gap:0}} onClick={saveMealPlan} disabled={mealPlanSaving} aria-label="Sauvegarder">
                 {mealPlanSaving ? <Loader2 size={15} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <Save size={15} strokeWidth={2.5}/>}
               </button>
@@ -888,6 +973,70 @@ export default function ClientProfilePage() {
             {mealPlanSaved && (
               <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(34,197,94,.07)',border:'1px solid rgba(34,197,94,.18)',borderRadius:8,color:'#22C55E',fontSize:'0.78rem',fontWeight:600}}>
                 <Check size={12} strokeWidth={2.5}/>Plan alimentaire sauvegardé
+              </div>
+            )}
+
+            {/* AI Meal Plan Preview */}
+            {aiMealPreview && (
+              <div style={{background:'#141414',border:'1.5px solid #C9A84C40',borderRadius:16,overflow:'hidden'}}>
+                <div style={{padding:'12px 16px',borderBottom:'1px solid #242424',display:'flex',alignItems:'center',gap:8}}>
+                  <Sparkles size={14} color="#C9A84C" strokeWidth={2.5}/>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.9rem',fontWeight:700,color:'#C9A84C',flex:1}}>Plan IA généré</span>
+                  <button onClick={()=>setAiMealPreview(null)} style={{background:'none',border:'none',cursor:'pointer',color:'#6B7280',padding:4}}><X size={16}/></button>
+                </div>
+                {/* Day tabs */}
+                <div style={{display:'flex',gap:4,padding:'8px 12px',overflowX:'auto'}}>
+                  {['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].map(d => (
+                    <button key={d} onClick={()=>setAiMealPreviewDay(d)} style={{
+                      padding:'6px 10px',borderRadius:8,border:'none',cursor:'pointer',
+                      fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,
+                      background:aiMealPreviewDay===d?'#C9A84C':'#1A1A1A',
+                      color:aiMealPreviewDay===d?'#000':'#6B7280',flexShrink:0,
+                    }}>{d.slice(0,3)}</button>
+                  ))}
+                </div>
+                {/* Day content */}
+                {(() => {
+                  const day = aiMealPreview[aiMealPreviewDay]
+                  if (!day) return null
+                  return (
+                    <div style={{padding:'8px 12px 12px'}}>
+                      <div style={{display:'flex',gap:8,marginBottom:10}}>
+                        {[
+                          {l:'Kcal',v:day.total_kcal,c:'#EF4444'},{l:'P',v:`${day.total_protein}g`,c:'#3B82F6'},
+                          {l:'G',v:`${day.total_carbs}g`,c:'#F59E0B'},{l:'L',v:`${day.total_fat}g`,c:'#22C55E'},
+                        ].map(m=>(
+                          <div key={m.l} style={{flex:1,background:'#0A0A0A',borderRadius:8,padding:'6px 4px',textAlign:'center'}}>
+                            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.95rem',fontWeight:700,color:m.c}}>{m.v}</div>
+                            <div style={{fontSize:'0.55rem',color:'#6B7280',fontWeight:700}}>{m.l}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {Object.entries(day.repas || {}).map(([mealName, foods]: [string, any]) => (
+                        <div key={mealName} style={{marginBottom:8}}>
+                          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,color:'#C9A84C',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>
+                            {mealName.replace(/_/g,' ')}
+                          </div>
+                          {(Array.isArray(foods) ? foods : []).map((f: any, i: number) => (
+                            <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:'1px solid #1A1A1A'}}>
+                              <span style={{fontSize:'0.78rem',color:'#F8FAFC'}}>{f.aliment}</span>
+                              <span style={{fontSize:'0.7rem',color:'#6B7280',flexShrink:0,marginLeft:8}}>{f.quantite_g}g · {f.kcal}kcal</span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+                {/* Accept / Regenerate */}
+                <div style={{display:'flex',gap:8,padding:'8px 12px 12px'}}>
+                  <button onClick={generateAiMealPlan} disabled={aiMealGenerating} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:8,border:'1px solid #374151',background:'transparent',color:'#9CA3AF',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.82rem',fontWeight:700}}>
+                    <Sparkles size={13}/>Régénérer
+                  </button>
+                  <button onClick={acceptAiMealPlan} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#C9A84C,#D4AF37)',color:'#000',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.82rem',fontWeight:700}}>
+                    <Check size={13} strokeWidth={3}/>Valider et envoyer
+                  </button>
+                </div>
               </div>
             )}
 
