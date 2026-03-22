@@ -314,80 +314,35 @@ export default function ClientProfilePage() {
 
       if (!res.ok) throw new Error(`Erreur ${res.status}`)
 
-      // Read SSE stream
+      // Read SSE progress events (day-by-day generation)
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
-      let fullText = ''
-      let charCount = 0
-      setAiMealStreamStatus('Génération du plan...')
+      let plan: any = null
+      let buffer = ''
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split('\n')
+        buffer += decoder.decode(value, { stream: true })
+
+        // Process complete SSE lines
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || '' // keep incomplete last line in buffer
+
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
-          const raw = line.slice(6).trim()
-          if (raw === '[DONE]') continue
           try {
-            const evt = JSON.parse(raw)
-            if (evt.type === 'content_block_delta' && evt.delta?.text) {
-              fullText += evt.delta.text
-              charCount += evt.delta.text.length
-              if (charCount % 200 < 20) {
-                const days = (fullText.match(/"(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)"/g) || []).length
-                setAiMealStreamStatus(`Génération... ${days}/7 jours`)
-              }
+            const evt = JSON.parse(line.slice(6))
+            if (evt.type === 'progress') {
+              setAiMealStreamStatus(`Génération jour ${evt.index}/7 — ${evt.day}...`)
+            } else if (evt.type === 'done') {
+              plan = evt.plan
             }
-          } catch { /* skip non-JSON lines */ }
+          } catch { /* skip malformed lines */ }
         }
       }
 
-      // Parse the accumulated text — with truncated JSON repair
-      const cleaned = fullText
-        .replace(/^```json\s*/i, '')
-        .replace(/^```\s*/i, '')
-        .replace(/\s*```$/i, '')
-        .trim()
-
-      let jsonStr = cleaned
-      // Find outermost { ... }
-      const startIdx = jsonStr.indexOf('{')
-      if (startIdx === -1) throw new Error('No JSON found in stream')
-      jsonStr = jsonStr.substring(startIdx)
-
-      let plan: any
-      try {
-        plan = JSON.parse(jsonStr)
-      } catch {
-        // JSON is likely truncated — try to repair by closing open braces/brackets
-        console.warn('[meal-plan] JSON truncated, attempting repair. Length:', jsonStr.length)
-        // Remove trailing incomplete value (partial string, number, etc.)
-        let repaired = jsonStr.replace(/,\s*"[^"]*$/, '') // remove trailing partial key
-          .replace(/,\s*$/, '')        // remove trailing comma
-          .replace(/:\s*"[^"]*$/, ': ""') // close partial string value
-          .replace(/:\s*\[[^\]]*$/, ': []') // close partial array
-
-        // Count and close open braces/brackets
-        let openBraces = 0, openBrackets = 0
-        for (const ch of repaired) {
-          if (ch === '{') openBraces++
-          else if (ch === '}') openBraces--
-          else if (ch === '[') openBrackets++
-          else if (ch === ']') openBrackets--
-        }
-        repaired += ']'.repeat(Math.max(0, openBrackets))
-        repaired += '}'.repeat(Math.max(0, openBraces))
-
-        try {
-          plan = JSON.parse(repaired)
-          console.log('[meal-plan] Repair succeeded')
-        } catch (e2) {
-          console.error('[meal-plan] Repair failed:', e2)
-          throw new Error('JSON tronqué et irréparable')
-        }
-      }
+      if (!plan) throw new Error('Aucun plan reçu')
 
       // Ensure all 7 days
       for (const d of DAYS) {
