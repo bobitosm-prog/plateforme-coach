@@ -215,6 +215,8 @@ export default function ClientProfilePage() {
   const [clientActivePlan, setClientActivePlan] = useState<any>(null)
   const [clientActivePlanDay, setClientActivePlanDay] = useState('lundi')
   const [weeklyTracking, setWeeklyTracking] = useState<Record<string, Set<string>>>({})
+  const [resolvedFoods, setResolvedFoods] = useState<{ id: string; name: string; emoji: string | null }[]>([])
+  const [showAllFoods, setShowAllFoods] = useState(false)
 
   const AI_EQUIPMENT = ['Haltères', 'Barre', 'Machine', 'Poulie', 'Poids du corps', 'Banc']
   const AI_LEVELS    = ['Débutant', 'Intermédiaire', 'Avancé']
@@ -418,6 +420,11 @@ export default function ClientProfilePage() {
     if (profileRes.error) { setError(profileRes.error.message); setLoading(false); return }
     const p = profileRes.data as Profile
     setProfile(p)
+    // Resolve liked_foods UUIDs to names
+    if (p.liked_foods?.length) {
+      supabase.from('fitness_foods').select('id,name,emoji').in('id', p.liked_foods)
+        .then(({ data: foods }: any) => { if (foods) setResolvedFoods(foods) })
+    }
     setEditName(p.full_name ?? '')
     setEditEmail(p.email ?? '')
     setEditPhone(p.phone ?? '')
@@ -776,14 +783,16 @@ export default function ClientProfilePage() {
                       {a}
                     </span>
                   ))}
-                  {(profile.liked_foods || []).map((f: string) => {
-                    const foodEmojis: Record<string,string> = {chicken:'🍗',tuna:'🐟',salmon:'🐠',eggs:'🥚',beef:'🥩',cottage_cheese:'🫙',tofu:'🧈',shrimp:'🦐',rice:'🍚',oats:'🌾',sweet_potato:'🍠',quinoa:'🌿',whole_bread:'🍞',pasta:'🍝',lentils:'🫘',peanut_butter:'🥜',avocado:'🥑',olive_oil:'🫒',almonds:'🌰',broccoli:'🥦',spinach:'🌱',greek_yogurt:'🥛',banana:'🍌',apple:'🍎'}
-                    return (
-                      <span key={f} style={{display:'inline-flex',alignItems:'center',gap:2,padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.06em',fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(156,163,175,0.08)',color:'#9CA3AF',border:'1px solid rgba(156,163,175,0.12)'}}>
-                        {foodEmojis[f] || ''} {f}
-                      </span>
-                    )
-                  })}
+                  {(showAllFoods ? resolvedFoods : resolvedFoods.slice(0, 10)).map(f => (
+                    <span key={f.id} style={{display:'inline-flex',alignItems:'center',gap:2,padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.06em',fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(156,163,175,0.08)',color:'#9CA3AF',border:'1px solid rgba(156,163,175,0.12)'}}>
+                      {f.emoji || ''} {f.name}
+                    </span>
+                  ))}
+                  {resolvedFoods.length > 10 && !showAllFoods && (
+                    <button onClick={()=>setShowAllFoods(true)} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(201,168,76,0.1)',color:'#C9A84C',border:'1px solid rgba(201,168,76,0.2)',cursor:'pointer'}}>
+                      +{resolvedFoods.length - 10} autres
+                    </button>
+                  )}
                 </div>
               )}
               <button className="btn-secondary" style={{width:'100%',marginTop:12,fontSize:'0.85rem'}} onClick={()=>{ setEditTab('info'); setEditOpen(true) }}>
