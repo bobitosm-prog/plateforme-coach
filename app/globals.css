@@ -18,31 +18,34 @@
   box-sizing: border-box;
 }
 
-html, body {
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
   background: #050505;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   overscroll-behavior: none;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
+}
+
+/* iOS bounce prevention — only on iOS */
+@supports (-webkit-touch-callout: none) {
+  body {
+    position: fixed;
+    width: 100%;
+  }
 }
 
 /* iOS safe area */
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom);
 }
-.nav-height {
-  height: calc(4rem + env(safe-area-inset-bottom));
-}
 .content-pb {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
-}
-
-/* Only main scrolls */
-main {
-  overscroll-behavior-y: contain;
 }
 
 /* ── Fade in up ── */

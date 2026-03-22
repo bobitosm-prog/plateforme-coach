@@ -785,7 +785,7 @@ const calorieGoal = profile?.calorie_goal || 2500
       </main>
 
       {/* ── BOTTOM NAV ── */}
-      <nav className="safe-area-pb" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: 430, margin: '0 auto', background: BG_CARD, borderTop: `1px solid ${BORDER}`, height: 64, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 40 }}>
+      <nav className="safe-area-pb" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: 430, margin: '0 auto', background: '#111111', borderTop: '1px solid #222222', height: 64, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 50 }}>
         {([
           { id: 'home',      icon: BarChart2,       label: 'Home'      },
           { id: 'training',  icon: Dumbbell,        label: 'Training'  },
