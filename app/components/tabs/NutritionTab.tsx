@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2 } from 'lucide-react'
 import NutritionPreferences from '../NutritionPreferences'
+import FoodSearch from '../FoodSearch'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
   NUTRITION_DAYS, todayNutritionKey,
@@ -40,6 +41,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [loadingPlan, setLoadingPlan] = useState(true)
   const [showShoppingList, setShowShoppingList] = useState(false)
   const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set())
+  const [mealLogs, setMealLogs] = useState<any[]>([])
+  const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const today = new Date().toISOString().split('T')[0]
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
@@ -48,6 +51,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   useEffect(() => {
     fetchActiveMealPlan()
     fetchTodayTracking()
+    fetchTodayMealLogs()
   }, [userId])
 
   async function fetchActiveMealPlan() {
@@ -75,6 +79,33 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     if (data) {
       setCompletedMeals(new Set(data.map((r: any) => r.meal_type)))
     }
+  }
+
+  async function fetchTodayMealLogs() {
+    const { data } = await supabase
+      .from('meal_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date', today)
+      .order('created_at', { ascending: true })
+    setMealLogs(data || [])
+  }
+
+  async function deleteMealLog(id: string) {
+    await supabase.from('meal_logs').delete().eq('id', id)
+    setMealLogs(prev => prev.filter(l => l.id !== id))
+  }
+
+  // Get meal_logs macros for today
+  function getMealLogsMacros(): { kcal: number; protein: number; carbs: number; fat: number } {
+    const result = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
+    for (const log of mealLogs) {
+      result.kcal += log.calories || 0
+      result.protein += log.proteines || 0
+      result.carbs += log.glucides || 0
+      result.fat += log.lipides || 0
+    }
+    return result
   }
 
   async function toggleMeal(mealType: string, planId: string | null) {
@@ -421,11 +452,29 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       </div>
 
       {/* Today sub-tab — daily tracking */}
+      {/* Food search modal */}
+      {showFoodSearch && (
+        <FoodSearch
+          supabase={supabase}
+          userId={userId}
+          defaultMealType={showFoodSearch}
+          onAdded={() => { setShowFoodSearch(null); fetchTodayMealLogs() }}
+          onClose={() => setShowFoodSearch(null)}
+        />
+      )}
+
       {subTab === 'today' && (() => {
         const todayPlan = getTodayPlanData()
         if (!todayPlan) return renderWaitingScreen()
         const { planData: dayData, planId } = todayPlan
-        const consumed = getConsumedMacros(dayData)
+        const planMacros = getConsumedMacros(dayData)
+        const logMacros = getMealLogsMacros()
+        const consumed = {
+          kcal: planMacros.kcal + logMacros.kcal,
+          protein: planMacros.protein + logMacros.protein,
+          carbs: planMacros.carbs + logMacros.carbs,
+          fat: planMacros.fat + logMacros.fat,
+        }
         const targetKcal = dayData.total_kcal || profile?.calorie_goal || 2000
         const targetP = dayData.total_protein || profile?.protein_goal || 140
         const targetG = dayData.total_carbs || profile?.carbs_goal || 200
@@ -506,6 +555,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: done ? GREEN : TEXT_MUTED }}>{mealKcal} kcal</span>
                   </div>
                   <div style={{ padding: '0 14px' }}>
+                    {/* Plan foods */}
                     {foods.map((food: any, fi: number) => (
                       <div key={fi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: fi > 0 ? `1px solid ${BORDER}` : 'none', opacity: done ? 0.5 : 1 }}>
                         <div>
@@ -518,7 +568,25 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                         </div>
                       </div>
                     ))}
-                    <div style={{ height: 6 }} />
+                    {/* Meal logs (manually added foods) */}
+                    {mealLogs.filter(l => l.meal_type === mealType).map(log => (
+                      <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: `1px solid ${BORDER}` }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '0.82rem', color: GOLD, fontWeight: 500 }}>{log.food_name}</div>
+                          <div style={{ fontSize: '0.62rem', color: TEXT_MUTED }}>{log.quantity_g}g · Ciqual</div>
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: TEXT_MUTED, textAlign: 'right', marginRight: 8 }}>
+                          <div>{Math.round(log.calories)} kcal</div>
+                        </div>
+                        <button onClick={() => deleteMealLog(log.id)} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Trash2 size={12} color="#EF4444" />
+                        </button>
+                      </div>
+                    ))}
+                    {/* Add food button */}
+                    <button onClick={() => setShowFoodSearch(mealType)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '8px', margin: '4px 0 6px', borderRadius: 8, border: `1px dashed ${BORDER}`, background: 'transparent', cursor: 'pointer', color: GOLD, fontSize: '0.72rem', fontWeight: 600 }}>
+                      <Plus size={12} strokeWidth={2.5} /> Ajouter un aliment
+                    </button>
                   </div>
                 </div>
               )

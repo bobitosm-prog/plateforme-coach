@@ -72,16 +72,21 @@ export default function HomeTab({
     Promise.all([
       supabase.from('meal_tracking').select('meal_type').eq('user_id', uid).eq('date', todayDate).eq('is_completed', true),
       supabase.from('meal_plans').select('plan_data').eq('user_id', uid).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    ]).then(([trackingRes, planRes]) => {
+      supabase.from('meal_logs').select('calories').eq('user_id', uid).eq('date', todayDate),
+    ]).then(([trackingRes, planRes, logsRes]) => {
+      // Kcal from checked plan meals
+      let planKcal = 0
       const completedTypes = new Set((trackingRes.data || []).map((r: any) => r.meal_type))
       const dayData = planRes.data?.plan_data?.[dayKey]
-      if (!dayData?.repas || completedTypes.size === 0) { setConsumedKcal(0); return }
-      let kcal = 0
-      for (const [mealType, foods] of Object.entries(dayData.repas)) {
-        if (!completedTypes.has(mealType) || !Array.isArray(foods)) continue
-        for (const f of foods as any[]) kcal += f.kcal || 0
+      if (dayData?.repas && completedTypes.size > 0) {
+        for (const [mealType, foods] of Object.entries(dayData.repas)) {
+          if (!completedTypes.has(mealType) || !Array.isArray(foods)) continue
+          for (const f of foods as any[]) planKcal += f.kcal || 0
+        }
       }
-      setConsumedKcal(kcal)
+      // Kcal from meal_logs (manually added foods)
+      const logsKcal = (logsRes.data || []).reduce((s: number, l: any) => s + (l.calories || 0), 0)
+      setConsumedKcal(planKcal + logsKcal)
     })
   }, [session?.user?.id])
 
