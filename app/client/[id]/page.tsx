@@ -209,6 +209,8 @@ export default function ClientProfilePage() {
   const [aiMealGenerating, setAiMealGenerating] = useState(false)
   const [aiMealPreview, setAiMealPreview] = useState<any>(null)
   const [aiMealPreviewDay, setAiMealPreviewDay] = useState('lundi')
+  const [clientActivePlan, setClientActivePlan] = useState<any>(null)
+  const [clientActivePlanDay, setClientActivePlanDay] = useState('lundi')
 
   const AI_EQUIPMENT = ['Haltères', 'Barre', 'Machine', 'Poulie', 'Poids du corps', 'Banc']
   const AI_LEVELS    = ['Débutant', 'Intermédiaire', 'Avancé']
@@ -360,7 +362,7 @@ export default function ClientProfilePage() {
     if (!coachId) return
     setLoading(true); setError(null)
 
-    const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes] = await Promise.all([
+    const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id),
@@ -368,6 +370,7 @@ export default function ClientProfilePage() {
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
       supabase.from('client_programs').select('id,program').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('id,calorie_target,protein_target,carb_target,fat_target,plan').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('meal_plans').select('*').eq('user_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
 
     if (profileRes.error) { setError(profileRes.error.message); setLoading(false); return }
@@ -415,6 +418,9 @@ export default function ClientProfilePage() {
         }
       })
       setMealPlan(merged)
+    }
+    if (activePlanRes.data) {
+      setClientActivePlan(activePlanRes.data)
     }
     setLoading(false)
   }, [coachId, id])
@@ -953,30 +959,38 @@ export default function ClientProfilePage() {
         {/* ══ TAB: NUTRITION ══ */}
         {activeTab === 'nutrition' && (
           <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
-            {/* Actions */}
+            {/* ── Header + AI Generate Button ── */}
             <div style={{display:'flex',gap:8,alignItems:'center'}}>
               <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>Plan alimentaire</span>
-              {profile?.tdee && profile.tdee > 0 && (
-                <button
-                  onClick={generateAiMealPlan}
-                  disabled={aiMealGenerating}
-                  style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:10,border:'none',cursor:aiMealGenerating?'wait':'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,letterSpacing:'0.04em',background:'linear-gradient(135deg,#C9A84C,#D4AF37)',color:'#000',minHeight:38,opacity:aiMealGenerating?0.6:1}}
-                >
-                  {aiMealGenerating ? <Loader2 size={13} strokeWidth={2.5} style={{animation:'spin 0.7s linear infinite'}}/> : <Sparkles size={13} strokeWidth={2.5}/>}
-                  {aiMealGenerating ? 'Génération...' : 'Générer plan IA'}
-                </button>
-              )}
-              <button className="btn-secondary" style={{padding:'12px 14px',flexShrink:0,gap:0}} onClick={saveMealPlan} disabled={mealPlanSaving} aria-label="Sauvegarder">
-                {mealPlanSaving ? <Loader2 size={15} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <Save size={15} strokeWidth={2.5}/>}
+              <button
+                onClick={generateAiMealPlan}
+                disabled={aiMealGenerating}
+                style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:10,border:'none',cursor:aiMealGenerating?'wait':'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,letterSpacing:'0.04em',background:'linear-gradient(135deg,#C9A84C,#D4AF37)',color:'#000',minHeight:38,opacity:aiMealGenerating?0.6:1}}
+              >
+                {aiMealGenerating ? <Loader2 size={13} strokeWidth={2.5} style={{animation:'spin 0.7s linear infinite'}}/> : <Sparkles size={13} strokeWidth={2.5}/>}
+                {aiMealGenerating ? 'Génération...' : 'Générer plan IA'}
               </button>
             </div>
-            {mealPlanSaved && (
-              <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(34,197,94,.07)',border:'1px solid rgba(34,197,94,.18)',borderRadius:8,color:'#22C55E',fontSize:'0.78rem',fontWeight:600}}>
-                <Check size={12} strokeWidth={2.5}/>Plan alimentaire sauvegardé
+
+            {/* ── Client TDEE / preferences summary ── */}
+            {profile && (
+              <div style={{background:'#141414',border:'1px solid #242424',borderRadius:12,padding:'10px 14px',display:'flex',gap:10,flexWrap:'wrap',alignItems:'center'}}>
+                {profile.tdee ? (
+                  <>
+                    <span style={{fontSize:'0.72rem',color:'#C9A84C',fontWeight:700}}>{profile.tdee} kcal/j</span>
+                    <span style={{fontSize:'0.68rem',color:'#6B7280'}}>P {profile.protein_goal || '—'}g · G {profile.carbs_goal || '—'}g · L {profile.fat_goal || '—'}g</span>
+                  </>
+                ) : (
+                  <span style={{fontSize:'0.72rem',color:'#6B7280',fontStyle:'italic'}}>Le client n'a pas encore calculé son TDEE</span>
+                )}
+                {profile.dietary_type && <span style={{fontSize:'0.65rem',padding:'2px 8px',borderRadius:999,background:'rgba(34,197,94,.12)',color:'#22C55E',fontWeight:700,textTransform:'uppercase'}}>{profile.dietary_type}</span>}
+                {(profile.allergies || []).map((a: string) => (
+                  <span key={a} style={{fontSize:'0.65rem',padding:'2px 8px',borderRadius:999,background:'rgba(239,68,68,.12)',color:'#EF4444',fontWeight:700,textTransform:'uppercase'}}>{a}</span>
+                ))}
               </div>
             )}
 
-            {/* AI Meal Plan Preview */}
+            {/* ── AI Meal Plan Preview ── */}
             {aiMealPreview && (
               <div style={{background:'#141414',border:'1.5px solid #C9A84C40',borderRadius:16,overflow:'hidden'}}>
                 <div style={{padding:'12px 16px',borderBottom:'1px solid #242424',display:'flex',alignItems:'center',gap:8}}>
@@ -984,18 +998,16 @@ export default function ClientProfilePage() {
                   <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.9rem',fontWeight:700,color:'#C9A84C',flex:1}}>Plan IA généré</span>
                   <button onClick={()=>setAiMealPreview(null)} style={{background:'none',border:'none',cursor:'pointer',color:'#6B7280',padding:4}}><X size={16}/></button>
                 </div>
-                {/* Day tabs */}
                 <div style={{display:'flex',gap:4,padding:'8px 12px',overflowX:'auto'}}>
-                  {['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].map(d => (
+                  {DAYS.map(d => (
                     <button key={d} onClick={()=>setAiMealPreviewDay(d)} style={{
                       padding:'6px 10px',borderRadius:8,border:'none',cursor:'pointer',
                       fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,
                       background:aiMealPreviewDay===d?'#C9A84C':'#1A1A1A',
                       color:aiMealPreviewDay===d?'#000':'#6B7280',flexShrink:0,
-                    }}>{d.slice(0,3)}</button>
+                    }}>{DAY_LABELS[d]}</button>
                   ))}
                 </div>
-                {/* Day content */}
                 {(() => {
                   const day = aiMealPreview[aiMealPreviewDay]
                   if (!day) return null
@@ -1028,7 +1040,6 @@ export default function ClientProfilePage() {
                     </div>
                   )
                 })()}
-                {/* Accept / Regenerate */}
                 <div style={{display:'flex',gap:8,padding:'8px 12px 12px'}}>
                   <button onClick={generateAiMealPlan} disabled={aiMealGenerating} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:8,border:'1px solid #374151',background:'transparent',color:'#9CA3AF',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.82rem',fontWeight:700}}>
                     <Sparkles size={13}/>Régénérer
@@ -1039,6 +1050,92 @@ export default function ClientProfilePage() {
                 </div>
               </div>
             )}
+
+            {/* ── Active Meal Plan Summary ── */}
+            {!aiMealPreview && clientActivePlan?.plan_data && (
+              <div style={{background:'#141414',border:'1px solid #242424',borderRadius:16,overflow:'hidden'}}>
+                <div style={{padding:'12px 16px',borderBottom:'1px solid #242424',display:'flex',alignItems:'center',gap:8}}>
+                  <Utensils size={14} color="#22C55E" strokeWidth={2.5}/>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.9rem',fontWeight:700,color:'#22C55E',flex:1}}>Plan actif</span>
+                  <span style={{fontSize:'0.65rem',color:'#6B7280'}}>{new Date(clientActivePlan.created_at).toLocaleDateString('fr-FR')}</span>
+                </div>
+                <div style={{display:'flex',gap:4,padding:'8px 12px',overflowX:'auto'}}>
+                  {DAYS.map(d => {
+                    const dayData = clientActivePlan.plan_data[d]
+                    return (
+                      <button key={d} onClick={()=>setClientActivePlanDay(d)} style={{
+                        padding:'6px 10px',borderRadius:8,border:'none',cursor:'pointer',
+                        fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,
+                        background:clientActivePlanDay===d?'#22C55E':'#1A1A1A',
+                        color:clientActivePlanDay===d?'#000':'#6B7280',flexShrink:0,
+                      }}>
+                        {DAY_LABELS[d]}
+                        {dayData?.total_kcal && <span style={{display:'block',fontSize:'0.55rem',opacity:0.8}}>{dayData.total_kcal}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+                {(() => {
+                  const day = clientActivePlan.plan_data[clientActivePlanDay]
+                  if (!day) return null
+                  return (
+                    <div style={{padding:'8px 12px 12px'}}>
+                      <div style={{display:'flex',gap:8,marginBottom:10}}>
+                        {[
+                          {l:'Kcal',v:day.total_kcal,c:'#EF4444'},{l:'P',v:`${day.total_protein}g`,c:'#3B82F6'},
+                          {l:'G',v:`${day.total_carbs}g`,c:'#F59E0B'},{l:'L',v:`${day.total_fat}g`,c:'#22C55E'},
+                        ].map(m=>(
+                          <div key={m.l} style={{flex:1,background:'#0A0A0A',borderRadius:8,padding:'6px 4px',textAlign:'center'}}>
+                            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.95rem',fontWeight:700,color:m.c}}>{m.v}</div>
+                            <div style={{fontSize:'0.55rem',color:'#6B7280',fontWeight:700}}>{m.l}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {Object.entries(day.repas || {}).map(([mealName, foods]: [string, any]) => (
+                        <div key={mealName} style={{marginBottom:8}}>
+                          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,color:'#22C55E',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>
+                            {mealName.replace(/_/g,' ')}
+                          </div>
+                          {(Array.isArray(foods) ? foods : []).map((f: any, i: number) => (
+                            <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:'1px solid #1A1A1A'}}>
+                              <span style={{fontSize:'0.78rem',color:'#F8FAFC'}}>{f.aliment}</span>
+                              <span style={{fontSize:'0.7rem',color:'#6B7280',flexShrink:0,marginLeft:8}}>{f.quantite_g}g · {f.kcal}kcal</span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+
+            {/* ── No plan message ── */}
+            {!aiMealPreview && !clientActivePlan && (
+              <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,padding:'30px 0',background:'#141414',border:'1px solid #242424',borderRadius:16}}>
+                <Utensils size={28} color="#6B7280"/>
+                <p style={{fontSize:'0.85rem',color:'#6B7280',margin:0,textAlign:'center'}}>Aucun plan actif pour ce client</p>
+                <p style={{fontSize:'0.72rem',color:'#4B5563',margin:0}}>Clique sur "Générer plan IA" pour en créer un</p>
+              </div>
+            )}
+
+            {/* ── Manual meal plan editor (old interface) ── */}
+            <details style={{marginTop:4}}>
+              <summary style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,color:'#6B7280',cursor:'pointer',padding:'8px 0',letterSpacing:'0.04em',textTransform:'uppercase'}}>
+                Édition manuelle du plan
+              </summary>
+              <div style={{display:'flex',flexDirection:'column',gap:12,paddingTop:8}}>
+                <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                  <button className="btn-secondary" style={{padding:'10px 14px',flexShrink:0,gap:6,fontSize:'0.78rem'}} onClick={saveMealPlan} disabled={mealPlanSaving}>
+                    {mealPlanSaving ? <Loader2 size={13} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <Save size={13} strokeWidth={2.5}/>}
+                    Sauvegarder
+                  </button>
+                </div>
+                {mealPlanSaved && (
+                  <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(34,197,94,.07)',border:'1px solid rgba(34,197,94,.18)',borderRadius:8,color:'#22C55E',fontSize:'0.78rem',fontWeight:600}}>
+                    <Check size={12} strokeWidth={2.5}/>Plan alimentaire sauvegardé
+                  </div>
+                )}
 
             {/* Macro targets 2×2 */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9}}>
@@ -1195,6 +1292,8 @@ export default function ClientProfilePage() {
                 </div>
               )
             })()}
+              </div>
+            </details>
           </div>
         )}
 
