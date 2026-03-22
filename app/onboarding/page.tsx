@@ -95,6 +95,8 @@ export default function OnboardingPage() {
       height: height ? parseFloat(height) : null,
       target_weight: goalWeight ? parseFloat(goalWeight) : null,
       objective: objective || null,
+      fitness_level: fitnessLevel || null,
+      calorie_goal: 2000,
     }
     if (avatarUrl) update.avatar_url = avatarUrl
 
@@ -108,6 +110,16 @@ export default function OnboardingPage() {
       console.log('[onboarding save] update failed, trying upsert...')
       const { data: upsData, error: upsErr } = await supabase.from('profiles').upsert(update).select()
       console.log('[onboarding save] upsert result:', JSON.stringify(upsData), 'error:', upsErr)
+    }
+
+    // Insert weight log so dashboard chart picks it up
+    if (weight) {
+      const today = new Date().toISOString().split('T')[0]
+      const { error: wErr } = await supabase.from('weight_logs').upsert(
+        { user_id: uid, date: today, poids: parseFloat(weight) },
+        { onConflict: 'user_id,date' }
+      )
+      console.log('[onboarding save] weight_logs upsert error:', wErr)
     }
 
     setSaving(false)
