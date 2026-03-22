@@ -198,9 +198,11 @@ const photoRef = useRef<HTMLInputElement>(null)
     ])
 
     const profileData = profRes.data
-    console.log('[page] profile.full_name:', profileData?.full_name)
+    console.log('[onboarding check] profRes.data:', JSON.stringify(profRes.data))
+    console.log('[onboarding check] full_name:', profRes.data?.full_name)
 
     if (profileData && !profileData.full_name) {
+      console.log('[onboarding check] REDIRECTING to /onboarding')
       router.replace('/onboarding')
       return
     }
