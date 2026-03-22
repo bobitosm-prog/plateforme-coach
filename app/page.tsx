@@ -198,11 +198,15 @@ const photoRef = useRef<HTMLInputElement>(null)
     ])
 
     const profileData = profRes.data
-    console.log('[onboarding check] profRes.data:', JSON.stringify(profRes.data))
-    console.log('[onboarding check] full_name:', profRes.data?.full_name)
+    console.log('[onboarding] uid:', uid, 'full_name:', profRes.data?.full_name, 'role:', profRes.data?.role)
 
-    if (profileData && !profileData.full_name) {
-      console.log('[onboarding check] REDIRECTING to /onboarding')
+    if (!profRes.data) {
+      console.log('[onboarding] no profile found for uid:', uid)
+      router.replace('/onboarding')
+      return
+    }
+    if (!profRes.data.full_name) {
+      console.log('[onboarding] full_name is null, redirecting')
       router.replace('/onboarding')
       return
     }
