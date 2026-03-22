@@ -98,7 +98,18 @@ export default function OnboardingPage() {
     }
     if (avatarUrl) update.avatar_url = avatarUrl
 
-    await supabase.from('profiles').upsert(update)
+    console.log('[onboarding save] uid:', uid, 'full_name:', update.full_name, 'payload:', JSON.stringify(update))
+
+    const { data: saveData, error } = await supabase.from('profiles').update(update).eq('id', uid).select()
+    console.log('[onboarding save] result:', JSON.stringify(saveData), 'error:', error)
+
+    if (error) {
+      // Fallback: try upsert in case profile row doesn't exist yet
+      console.log('[onboarding save] update failed, trying upsert...')
+      const { data: upsData, error: upsErr } = await supabase.from('profiles').upsert(update).select()
+      console.log('[onboarding save] upsert result:', JSON.stringify(upsData), 'error:', upsErr)
+    }
+
     setSaving(false)
     router.replace('/')
   }
