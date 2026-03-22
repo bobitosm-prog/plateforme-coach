@@ -417,7 +417,15 @@ export default function CoachPage() {
     document.execCommand('copy'); document.body.removeChild(el)
   }
 
-  if (!mounted) return null
+  if (!mounted || (loading && session)) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
+      <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
+      </div>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '0.1em' }}>FITPRO</span>
+      <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  )
 
   if (!session) {
     return (

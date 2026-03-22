@@ -442,24 +442,14 @@ const calorieGoal = profile?.calorie_goal || 2500
   const fullName = session ? (profile?.full_name || session.user.user_metadata?.full_name || 'Athlete') : 'Athlete'
   const firstName = fullName.split(' ')[0]
 
-  // Loading / auth screens
-  if (!mounted || loading) return (
-    <div style={{ minHeight: '100vh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 40, height: 40, border: `3px solid ${ORANGE}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  )
-
-  if (session && !roleChecked) return (
-    <div style={{ minHeight: '100vh', background: '#111827', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 36, height: 36, background: ORANGE, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Zap size={20} color="#fff" strokeWidth={2.5} />
-        </div>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>FITPRO</span>
+  // Loading / splash screen
+  if (!mounted || loading || (session && !roleChecked)) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
+      <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
       </div>
-      <div style={{ width: 28, height: 28, borderRadius: '50%', border: `3px solid #374151`, borderTopColor: ORANGE, animation: 'spin 0.7s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap');`}</style>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>FITPRO</span>
+      <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
   )
 

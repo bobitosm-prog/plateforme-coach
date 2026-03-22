@@ -527,11 +527,16 @@ export default function ClientProfilePage() {
     }
   }, [activeTab, loadCoachMessages])
 
+  const coachMsgPrevLen = useRef(0)
   useEffect(() => {
-    if (activeTab === 'messages') {
-      setTimeout(() => coachMsgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
-    }
-  }, [coachMessages, activeTab])
+    if (activeTab !== 'messages' || coachMessages.length === 0) return
+    const isInitial = coachMsgPrevLen.current === 0
+    coachMsgPrevLen.current = coachMessages.length
+    const timer = setTimeout(() => {
+      coachMsgEndRef.current?.scrollIntoView({ behavior: isInitial ? 'instant' as ScrollBehavior : 'smooth' })
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [coachMessages.length, activeTab])
 
   // Realtime for coach
   useEffect(() => {

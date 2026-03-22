@@ -31,7 +31,7 @@ export default function MessagesTab({
 }: MessagesTabProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const initialScrollDone = useRef(false)
+  const prevLengthRef = useRef(0)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -41,20 +41,16 @@ export default function MessagesTab({
     }
   }, [msgInput])
 
-  // Initial scroll to bottom
+  // Scroll to bottom when messages load or change
   useEffect(() => {
-    if (messages.length > 0 && !initialScrollDone.current) {
-      initialScrollDone.current = true
-      bottomRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior })
-    }
-  }, [messages.length > 0])
-
-  // Scroll on new messages
-  useEffect(() => {
-    if (messages.length > 0 && initialScrollDone.current) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [messages])
+    if (messages.length === 0) return
+    const isInitial = prevLengthRef.current === 0
+    prevLengthRef.current = messages.length
+    const timer = setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: isInitial ? 'instant' as ScrollBehavior : 'smooth' })
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [messages.length])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
