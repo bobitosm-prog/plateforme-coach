@@ -296,14 +296,39 @@ export default function ClientProfilePage() {
     setAiMealPreview(null)
     setAiMealStreamStatus('Préparation...')
     try {
-      // Fetch liked food names
-      let likedFoodNames: string[] = []
+      // Fetch liked foods with full nutritional data from food_items
+      setAiMealStreamStatus('Chargement des aliments...')
+      let availableFoods: any[] = []
       if (profile.liked_foods?.length) {
-        const { data: foodRows } = await supabase
-          .from('fitness_foods')
-          .select('name')
+        const { data: foods } = await supabase
+          .from('food_items')
+          .select('id,nom,name,calories,energy_kcal,proteines,proteins,glucides,carbohydrates,lipides,fat')
           .in('id', profile.liked_foods)
-        likedFoodNames = (foodRows || []).map((f: any) => f.name)
+        availableFoods = (foods || []).map((f: any) => ({
+          nom: f.nom || f.name || '',
+          kcal: Math.round(f.calories ?? f.energy_kcal ?? 0),
+          p: Math.round((f.proteines ?? f.proteins ?? 0) * 10) / 10,
+          g: Math.round((f.glucides ?? f.carbohydrates ?? 0) * 10) / 10,
+          l: Math.round((f.lipides ?? f.fat ?? 0) * 10) / 10,
+        }))
+      }
+      // Fallback: fetch high-protein foods if not enough liked foods
+      if (availableFoods.length < 10) {
+        const { data: fallback } = await supabase
+          .from('food_items')
+          .select('id,nom,name,calories,energy_kcal,proteines,proteins,glucides,carbohydrates,lipides,fat')
+          .not('nom', 'is', null)
+          .gt('proteines', 5)
+          .limit(40)
+        const extra = (fallback || []).map((f: any) => ({
+          nom: f.nom || f.name || '',
+          kcal: Math.round(f.calories ?? f.energy_kcal ?? 0),
+          p: Math.round((f.proteines ?? f.proteins ?? 0) * 10) / 10,
+          g: Math.round((f.glucides ?? f.carbohydrates ?? 0) * 10) / 10,
+          l: Math.round((f.lipides ?? f.fat ?? 0) * 10) / 10,
+        }))
+        const seen = new Set(availableFoods.map((f: any) => f.nom))
+        availableFoods.push(...extra.filter((f: any) => !seen.has(f.nom)))
       }
 
       setAiMealStreamStatus('Connexion à l\'IA...')
@@ -317,8 +342,8 @@ export default function ClientProfilePage() {
           fat_goal: profile.fat_goal || fatTarget,
           dietary_type: profile.dietary_type,
           allergies: profile.allergies,
-          liked_foods_names: likedFoodNames,
           objective: profile.objective,
+          available_foods: availableFoods,
         }),
       })
 

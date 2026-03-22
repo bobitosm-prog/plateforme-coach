@@ -5,38 +5,22 @@ export const maxDuration = 60
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
-function buildSystemPrompt(likedFoods: string): string {
-  return `Tu es un nutritionniste expert en fitness. Tu génères des plans alimentaires réalistes et cohérents.
-Réponds UNIQUEMENT avec du JSON valide.
-TOUTES les valeurs numériques sont des entiers, jamais null ou vides.
+const SYSTEM_PROMPT = `Tu es un nutritionniste expert. Tu génères des plans alimentaires basés sur des données Ciqual officielles.
 
-RÈGLES STRICTES PAR REPAS :
-
-PETIT-DÉJEUNER (énergétique, sucré ou salé léger) :
-- Exemples : flocons d avoine + fruits + yaourt grec
-- PAS de viande, PAS de saumon, PAS de riz
-
-DÉJEUNER (repas principal, complet) :
-- Protéine + féculent + légume obligatoires
-- Exemples : poulet + riz basmati + brocoli, saumon + patate douce + épinards
-
-COLLATION (légère, 200-300 kcal max) :
-- Exemples : yaourt grec + fruits rouges, fromage blanc + amandes
-- PAS de repas complet, PAS de saumon, PAS de viande
-
-DÎNER (léger, digeste, moins de glucides) :
-- Protéine maigre + légumes obligatoires, féculents limités
-- Exemples : blanc de poulet + courgettes, cabillaud + haricots verts
-- PAS de flocons d avoine, PAS de banane
-
-RÈGLES GÉNÉRALES :
-- Varie les protéines : NE PAS répéter la même protéine plus de 2 fois par semaine pour le même repas
-- Utilise en priorité les aliments préférés du client : ${likedFoods || 'aucune préférence'}
-- Quantités réalistes en multiples de 5g
-- 4 repas par jour : petit_dejeuner, dejeuner, collation, diner
+RÈGLES STRICTES :
+- Utilise UNIQUEMENT les aliments de la liste fournie
+- Calcule les quantités exactes pour atteindre les macros cibles
+- TOUTES les valeurs numériques sont des entiers, jamais null ou vides
+- Quantités en multiples de 5g
 - Maximum 4 aliments par repas
 
-Format JSON exact :
+RÈGLES PAR REPAS :
+- petit_dejeuner : féculents + fruits + laitage (PAS de viande ni poisson)
+- dejeuner : protéine + féculent + légume obligatoires
+- collation : léger 150-250 kcal (laitage ou fruits + oléagineux, PAS de viande)
+- diner : protéine maigre + légumes, féculents limités
+
+FORMAT JSON pour UN jour :
 {
   "total_kcal": 2100,
   "total_protein": 140,
@@ -44,14 +28,13 @@ Format JSON exact :
   "total_fat": 58,
   "repas": {
     "petit_dejeuner": [
-      { "aliment": "Flocons d avoine cuits", "quantite_g": 80, "kcal": 290, "proteines": 10, "glucides": 54, "lipides": 6 }
+      { "aliment": "Flocons d avoine", "quantite_g": 80, "kcal": 234, "proteines": 10, "glucides": 54, "lipides": 6 }
     ],
     "dejeuner": [],
     "collation": [],
     "diner": []
   }
 }`
-}
 
 function extractProteins(dayPlan: any): string[] {
   const proteins: string[] = []
@@ -59,34 +42,59 @@ function extractProteins(dayPlan: any): string[] {
   for (const meal of ['dejeuner', 'diner']) {
     const foods = dayPlan.repas[meal]
     if (!Array.isArray(foods) || foods.length === 0) continue
-    // First food in dejeuner/diner is usually the protein
     const name = foods[0]?.aliment || ''
     if (name) proteins.push(name)
   }
   return proteins
 }
 
+function verifyDayPlan(day: any, targetKcal: number): any {
+  let totalKcal = 0, totalP = 0, totalG = 0, totalL = 0
+  for (const foods of Object.values(day.repas || {}) as any[]) {
+    if (!Array.isArray(foods)) continue
+    for (const item of foods) {
+      totalKcal += item.kcal || 0
+      totalP += item.proteines || 0
+      totalG += item.glucides || 0
+      totalL += item.lipides || 0
+    }
+  }
+  if (Math.abs(totalKcal - targetKcal) > 100) {
+    console.warn(`[meal-plan] Day off target: ${totalKcal} vs ${targetKcal}`)
+  }
+  return { ...day, total_kcal: totalKcal, total_protein: totalP, total_carbs: totalG, total_fat: totalL }
+}
+
 async function generateOneDay(
   apiKey: string,
   day: string,
-  params: { calorie_goal: number; protein_goal: number; carbs_goal: number; fat_goal: number; dietary_type: string; allergies: string[]; liked_foods_names: string[]; objective: string },
-  previousDays: string[],
+  params: any,
   proteinsUsed: string[],
 ): Promise<any> {
   const proteinHint = proteinsUsed.length > 0
-    ? `\nProtéines déjà utilisées les jours précédents (varie !) : ${proteinsUsed.join(', ')}`
-    : ''
-  const daysHint = previousDays.length > 0
-    ? `\nJours déjà générés : ${previousDays.join(', ')}`
+    ? `\nProtéines déjà utilisées (varie !) : ${proteinsUsed.join(', ')}`
     : ''
 
+  // Build compact food list string for the prompt
+  const foodListStr = (params.available_foods || [])
+    .map((f: any) => `${f.nom} (${f.kcal}kcal, P${f.p} G${f.g} L${f.l} /100g)`)
+    .join('\n')
+
   const userPrompt = `Génère le plan pour ${day.toUpperCase()} :
+
+OBJECTIFS :
 - Calories : ${params.calorie_goal} kcal ±50
 - Protéines : ${params.protein_goal}g | Glucides : ${params.carbs_goal}g | Lipides : ${params.fat_goal}g
 - Régime : ${params.dietary_type || 'omnivore'}
-- Allergènes à éviter : ${(params.allergies || []).join(', ') || 'aucun'}
+- Allergènes : ${(params.allergies || []).join(', ') || 'aucun'}
 - Objectif : ${params.objective || 'maintenance'}
-- Aliments CUITS, quantités en multiples de 5g${daysHint}${proteinHint}`
+
+ALIMENTS DISPONIBLES (valeurs /100g) :
+${foodListStr || 'Utilise des aliments fitness classiques'}
+${proteinHint}
+
+IMPORTANT : calcule quantite_g pour que kcal = (kcal_100g / 100) × quantite_g
+La somme des kcal doit être ≈ ${params.calorie_goal} kcal`
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -98,7 +106,7 @@ async function generateOneDay(
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1500,
-      system: buildSystemPrompt((params.liked_foods_names || []).join(', ')),
+      system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userPrompt }],
     }),
   })
@@ -113,7 +121,8 @@ async function generateOneDay(
   const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error(`No JSON for ${day}`)
-  return JSON.parse(jsonMatch[0])
+  const parsed = JSON.parse(jsonMatch[0])
+  return verifyDayPlan(parsed, params.calorie_goal)
 }
 
 export async function POST(req: NextRequest) {
@@ -125,7 +134,6 @@ export async function POST(req: NextRequest) {
 
     const params = await req.json()
 
-    // SSE stream: send progress events as each day completes
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -138,10 +146,9 @@ export async function POST(req: NextRequest) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: i + 1, total: 7 })}\n\n`))
 
           try {
-            const dayPlan = await generateOneDay(apiKey, day, params, completedDays, proteinsUsed)
+            const dayPlan = await generateOneDay(apiKey, day, params, proteinsUsed)
             plan[day] = dayPlan
             completedDays.push(day)
-            // Track proteins for variety
             proteinsUsed.push(...extractProteins(dayPlan))
           } catch (e) {
             console.error(`[meal-plan] Error generating ${day}:`, e)
