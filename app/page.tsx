@@ -205,8 +205,9 @@ const photoRef = useRef<HTMLInputElement>(null)
       router.replace('/onboarding')
       return
     }
-    if (!profRes.data.full_name) {
-      console.log('[onboarding] full_name is null, redirecting')
+    const fn = profRes.data.full_name?.trim()
+    if (!fn || fn === 'Athlete') {
+      console.log('[onboarding] full_name missing or default, redirecting. Value:', JSON.stringify(profRes.data.full_name))
       router.replace('/onboarding')
       return
     }
