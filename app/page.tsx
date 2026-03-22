@@ -406,7 +406,7 @@ const photoRef = useRef<HTMLInputElement>(null)
 
   // Computed values
 const calorieGoal = profile?.calorie_goal || 2500
-  const goalWeight = profile?.goal_weight || 75
+  const goalWeight = profile?.target_weight || 75
   const currentWeight = weightHistory30.length > 0
     ? weightHistory30[weightHistory30.length - 1].poids
     : profile?.current_weight

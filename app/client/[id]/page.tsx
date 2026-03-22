@@ -20,7 +20,7 @@ const supabase = createBrowserClient(
 ══════════════════════════════════════════════════════════════ */
 type Profile = {
   id: string; full_name: string | null; email: string | null
-  current_weight: number | null; goal_weight: number | null
+  current_weight: number | null
   calorie_goal: number | null; created_at: string
   phone: string | null; birth_date: string | null; gender: string | null
   height: number | null; target_weight: number | null
@@ -285,7 +285,7 @@ export default function ClientProfilePage() {
     setLoading(true); setError(null)
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes] = await Promise.all([
-      supabase.from('profiles').select('id,full_name,email,current_weight,goal_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status').eq('id', id).single(),
+      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
@@ -485,8 +485,8 @@ export default function ClientProfilePage() {
   const weightDelta     = currentWeight && prevMonthWeight ? currentWeight - prevMonthWeight : null
   const totalSessions   = totalSessionsCount
   const goalProgress = (() => {
-    if (!currentWeight || !profile?.goal_weight) return null
-    const start=profile.current_weight ?? currentWeight, target=profile.goal_weight
+    if (!currentWeight || !profile?.target_weight) return null
+    const start=profile.current_weight ?? currentWeight, target=profile.target_weight
     if (start===target) return 100
     return Math.max(0, Math.min(100, Math.round(((start-currentWeight)/(start-target))*100)))
   })()
@@ -641,7 +641,7 @@ export default function ClientProfilePage() {
                   <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.62rem',fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B7280'}}>Objectif</span>
                   <div style={{width:27,height:27,background:'rgba(34,197,94,.1)',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={13} color="#22C55E" strokeWidth={2}/></div>
                 </div>
-                {profile.goal_weight && <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.3rem',fontWeight:700,color:'#F8FAFC',lineHeight:1,marginBottom:5}}>{profile.goal_weight}<span style={{fontSize:'0.78rem',color:'#6B7280',marginLeft:2}}>kg</span></div>}
+                {profile.target_weight && <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.3rem',fontWeight:700,color:'#F8FAFC',lineHeight:1,marginBottom:5}}>{profile.target_weight}<span style={{fontSize:'0.78rem',color:'#6B7280',marginLeft:2}}>kg</span></div>}
                 {editingCalGoal ? (
                   <div style={{display:'flex',alignItems:'center',gap:4}}>
                     <input type="number" inputMode="numeric" value={calGoalInput} onChange={e=>setCalGoalInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')saveCalorieGoal();if(e.key==='Escape')setEditingCalGoal(false)}} autoFocus style={{background:'#0A0A0A',border:'1px solid #F97316',borderRadius:6,padding:'4px 6px',color:'#F8FAFC',fontSize:'0.9rem',fontWeight:700,width:68,outline:'none',fontFamily:"'Barlow Condensed',sans-serif"}}/>
