@@ -207,6 +207,7 @@ export default function ClientProfilePage() {
 
   // AI Meal Plan Generator
   const [aiMealGenerating, setAiMealGenerating] = useState(false)
+  const [aiMealStreamStatus, setAiMealStreamStatus] = useState('')
   const [aiMealPreview, setAiMealPreview] = useState<any>(null)
   const [aiMealPreviewDay, setAiMealPreviewDay] = useState('lundi')
   const [clientActivePlan, setClientActivePlan] = useState<any>(null)
@@ -283,6 +284,7 @@ export default function ClientProfilePage() {
     if (!profile) return
     setAiMealGenerating(true)
     setAiMealPreview(null)
+    setAiMealStreamStatus('Préparation...')
     try {
       // Fetch liked food names
       let likedFoodNames: string[] = []
@@ -294,6 +296,7 @@ export default function ClientProfilePage() {
         likedFoodNames = (foodRows || []).map((f: any) => f.name)
       }
 
+      setAiMealStreamStatus('Connexion à l\'IA...')
       const res = await fetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -310,13 +313,59 @@ export default function ClientProfilePage() {
       })
 
       if (!res.ok) throw new Error(`Erreur ${res.status}`)
-      const { plan } = await res.json()
+
+      // Read SSE stream
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      let fullText = ''
+      let charCount = 0
+      setAiMealStreamStatus('Génération du plan...')
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n')
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const raw = line.slice(6).trim()
+          if (raw === '[DONE]') continue
+          try {
+            const evt = JSON.parse(raw)
+            if (evt.type === 'content_block_delta' && evt.delta?.text) {
+              fullText += evt.delta.text
+              charCount += evt.delta.text.length
+              if (charCount % 200 < 20) {
+                const days = (fullText.match(/"(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)"/g) || []).length
+                setAiMealStreamStatus(`Génération... ${days}/7 jours`)
+              }
+            }
+          } catch { /* skip non-JSON lines */ }
+        }
+      }
+
+      // Parse the accumulated text
+      const cleaned = fullText
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim()
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('No JSON found in stream')
+      const plan = JSON.parse(jsonMatch[0])
+
+      // Ensure all 7 days
+      for (const d of DAYS) {
+        if (!plan[d]) plan[d] = { total_kcal: 0, total_protein: 0, total_carbs: 0, total_fat: 0, repas: {} }
+      }
+
       setAiMealPreview(plan)
       setAiMealPreviewDay('lundi')
     } catch {
       showToast('Erreur lors de la génération du plan alimentaire')
     } finally {
       setAiMealGenerating(false)
+      setAiMealStreamStatus('')
     }
   }
 
@@ -987,6 +1036,15 @@ export default function ClientProfilePage() {
                 {(profile.allergies || []).map((a: string) => (
                   <span key={a} style={{fontSize:'0.65rem',padding:'2px 8px',borderRadius:999,background:'rgba(239,68,68,.12)',color:'#EF4444',fontWeight:700,textTransform:'uppercase'}}>{a}</span>
                 ))}
+              </div>
+            )}
+
+            {/* ── Streaming loading state ── */}
+            {aiMealGenerating && (
+              <div style={{background:'#141414',border:'1.5px solid #C9A84C30',borderRadius:16,padding:'28px 20px',display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
+                <div style={{width:40,height:40,borderRadius:'50%',border:'3px solid #242424',borderTopColor:'#C9A84C',animation:'spin 0.8s linear infinite'}}/>
+                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.9rem',fontWeight:700,color:'#C9A84C'}}>{aiMealStreamStatus || 'Génération...'}</span>
+                <span style={{fontSize:'0.7rem',color:'#6B7280'}}>Claude rédige le plan alimentaire sur 7 jours</span>
               </div>
             )}
 
