@@ -212,6 +212,7 @@ export default function ClientProfilePage() {
   const [aiMealPreviewDay, setAiMealPreviewDay] = useState('lundi')
   const [clientActivePlan, setClientActivePlan] = useState<any>(null)
   const [clientActivePlanDay, setClientActivePlanDay] = useState('lundi')
+  const [weeklyTracking, setWeeklyTracking] = useState<Record<string, Set<string>>>({})
 
   const AI_EQUIPMENT = ['Haltères', 'Barre', 'Machine', 'Poulie', 'Poids du corps', 'Banc']
   const AI_LEVELS    = ['Débutant', 'Intermédiaire', 'Avancé']
@@ -460,6 +461,26 @@ export default function ClientProfilePage() {
     }
     if (activePlanRes.data) {
       setClientActivePlan(activePlanRes.data)
+    }
+    // Fetch weekly meal tracking
+    const mondayDate = (() => {
+      const d = new Date(); const day = d.getDay()
+      d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
+      return d.toISOString().split('T')[0]
+    })()
+    const { data: trackingData } = await supabase
+      .from('meal_tracking')
+      .select('date,meal_type,is_completed')
+      .eq('user_id', id)
+      .gte('date', mondayDate)
+      .eq('is_completed', true)
+    if (trackingData) {
+      const map: Record<string, Set<string>> = {}
+      for (const r of trackingData) {
+        if (!map[r.date]) map[r.date] = new Set()
+        map[r.date].add(r.meal_type)
+      }
+      setWeeklyTracking(map)
     }
     setLoading(false)
   }, [coachId, id])
@@ -1166,6 +1187,74 @@ export default function ClientProfilePage() {
                 <p style={{fontSize:'0.72rem',color:'#4B5563',margin:0}}>Clique sur "Générer plan IA" pour en créer un</p>
               </div>
             )}
+
+            {/* ── Weekly tracking grid ── */}
+            {(() => {
+              const mondayDate = new Date()
+              const dayOfWeek = mondayDate.getDay()
+              mondayDate.setDate(mondayDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+              const todayStr = new Date().toISOString().split('T')[0]
+              const weekDates = DAYS.map((_, i) => {
+                const d = new Date(mondayDate)
+                d.setDate(d.getDate() + i)
+                return d.toISOString().split('T')[0]
+              })
+              const mealTypes = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
+              const mealLabels = ['P-déj', 'Déj', 'Coll', 'Dîner']
+              let completed = 0, total = 0
+              weekDates.forEach(date => {
+                mealTypes.forEach(mt => {
+                  if (date <= todayStr) { total++; if (weeklyTracking[date]?.has(mt)) completed++ }
+                })
+              })
+              const pct = total > 0 ? Math.round((completed / total) * 100) : 0
+
+              return (
+                <div style={{background:'#141414',border:'1px solid #242424',borderRadius:16,padding:'12px 10px',marginBottom:4}}>
+                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.72rem',fontWeight:700,color:'#C9A84C',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:10}}>
+                    Suivi de la semaine
+                  </div>
+                  {/* Grid header */}
+                  <div style={{display:'grid',gridTemplateColumns:'50px repeat(7, 1fr)',gap:3,marginBottom:4}}>
+                    <div/>
+                    {DAYS.map((d,i) => (
+                      <div key={d} style={{textAlign:'center',fontSize:'0.58rem',fontWeight:700,color:weekDates[i]===todayStr?'#C9A84C':'#6B7280',textTransform:'uppercase'}}>
+                        {DAY_LABELS[d]}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Grid rows */}
+                  {mealTypes.map((mt, mi) => (
+                    <div key={mt} style={{display:'grid',gridTemplateColumns:'50px repeat(7, 1fr)',gap:3,marginBottom:2}}>
+                      <div style={{fontSize:'0.58rem',fontWeight:600,color:'#6B7280',display:'flex',alignItems:'center'}}>{mealLabels[mi]}</div>
+                      {weekDates.map((date, di) => {
+                        const isFuture = date > todayStr
+                        const isDone = weeklyTracking[date]?.has(mt)
+                        return (
+                          <div key={di} style={{
+                            display:'flex',alignItems:'center',justifyContent:'center',
+                            height:24,borderRadius:6,fontSize:'0.65rem',fontWeight:700,
+                            background: isFuture ? '#1A1A1A' : isDone ? 'rgba(34,197,94,.15)' : 'rgba(156,163,175,.06)',
+                            color: isFuture ? '#2A2A2A' : isDone ? '#22C55E' : '#4B5563',
+                          }}>
+                            {isFuture ? '' : isDone ? '✓' : '○'}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                  {/* Score */}
+                  <div style={{marginTop:10}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                      <span style={{fontSize:'0.7rem',color:'#9CA3AF'}}>{profile?.full_name?.split(' ')[0] || 'Client'} a complété {completed}/{total} repas ({pct}%)</span>
+                    </div>
+                    <div style={{background:'#242424',borderRadius:999,height:6,overflow:'hidden'}}>
+                      <div style={{height:'100%',borderRadius:999,background:'linear-gradient(90deg,#C9A84C,#D4AF37)',width:`${pct}%`,transition:'width 300ms'}}/>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* ── Manual meal plan editor (old interface) ── */}
             <details style={{marginTop:4}}>

@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock } from 'lucide-react'
 import NutritionPreferences from '../NutritionPreferences'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
@@ -14,8 +14,15 @@ const MEAL_LABELS: Record<string, string> = {
   collation: 'Collation',
   diner: 'Dîner',
 }
+const MEAL_TIMES: Record<string, string> = {
+  petit_dejeuner: '7h00',
+  dejeuner: '12h30',
+  collation: '16h00',
+  diner: '19h30',
+}
+const MEAL_ORDER = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
 
-type SubTab = 'plan' | 'prefs'
+type SubTab = 'today' | 'plan' | 'prefs'
 
 interface NutritionTabProps {
   coachMealPlan: any
@@ -32,12 +39,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [activeMealPlan, setActiveMealPlan] = useState<any>(null)
   const [loadingPlan, setLoadingPlan] = useState(true)
   const [showShoppingList, setShowShoppingList] = useState(false)
+  const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set())
+  const today = new Date().toISOString().split('T')[0]
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
-  const [subTab, setSubTab] = useState<SubTab>(hasPlan ? 'plan' : 'prefs')
+  const [subTab, setSubTab] = useState<SubTab>(hasPlan ? 'today' : 'prefs')
 
   useEffect(() => {
     fetchActiveMealPlan()
+    fetchTodayTracking()
   }, [userId])
 
   async function fetchActiveMealPlan() {
@@ -51,8 +61,62 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .limit(1)
       .maybeSingle()
     setActiveMealPlan(data)
-    if (data && !coachMealPlan) setSubTab('plan')
+    if (data && !coachMealPlan) setSubTab('today')
     setLoadingPlan(false)
+  }
+
+  async function fetchTodayTracking() {
+    const { data } = await supabase
+      .from('meal_tracking')
+      .select('meal_type')
+      .eq('user_id', userId)
+      .eq('date', today)
+      .eq('is_completed', true)
+    if (data) {
+      setCompletedMeals(new Set(data.map((r: any) => r.meal_type)))
+    }
+  }
+
+  async function toggleMeal(mealType: string, planId: string | null) {
+    const isCompleted = !completedMeals.has(mealType)
+    const next = new Set(completedMeals)
+    if (isCompleted) next.add(mealType); else next.delete(mealType)
+    setCompletedMeals(next)
+
+    await supabase.from('meal_tracking').upsert({
+      user_id: userId,
+      meal_plan_id: planId,
+      date: today,
+      meal_type: mealType,
+      is_completed: isCompleted,
+      completed_at: isCompleted ? new Date().toISOString() : null,
+    }, { onConflict: 'user_id,date,meal_type' })
+  }
+
+  // Get today's plan data from either source
+  function getTodayPlanData(): { planData: any; planId: string | null } | null {
+    if (activeMealPlan?.plan_data) {
+      const dayKey = todayNutritionKey()
+      const dayData = activeMealPlan.plan_data[dayKey]
+      if (dayData) return { planData: dayData, planId: activeMealPlan.id }
+    }
+    return null
+  }
+
+  // Calculate consumed macros from completed meals
+  function getConsumedMacros(dayData: any): { kcal: number; protein: number; carbs: number; fat: number } {
+    const result = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
+    if (!dayData?.repas) return result
+    for (const [mealType, foods] of Object.entries(dayData.repas)) {
+      if (!completedMeals.has(mealType) || !Array.isArray(foods)) continue
+      for (const f of foods as any[]) {
+        result.kcal += f.kcal || 0
+        result.protein += f.proteines || 0
+        result.carbs += f.glucides || 0
+        result.fat += f.lipides || 0
+      }
+    }
+    return result
   }
 
   // Generate shopping list from plan_data (client-side, no API)
@@ -303,28 +367,152 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       </div>
 
       {/* Sub-tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
         {[
-          { id: 'plan' as SubTab, label: 'Mon plan', icon: UtensilsCrossed },
-          { id: 'prefs' as SubTab, label: 'Mes préférences', icon: SlidersHorizontal },
-        ].map(({ id, label, icon: Icon }) => {
+          { id: 'today' as SubTab, label: "Aujourd'hui", icon: Check, color: GOLD },
+          { id: 'plan' as SubTab, label: 'Mon plan', icon: UtensilsCrossed, color: GREEN },
+          { id: 'prefs' as SubTab, label: 'Préférences', icon: SlidersHorizontal, color: GOLD },
+        ].map(({ id, label, icon: Icon, color }) => {
           const active = subTab === id
           return (
             <button key={id} onClick={() => setSubTab(id)} style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700,
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              padding: '10px 8px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700,
               letterSpacing: '0.04em', textTransform: 'uppercase',
-              background: active ? (id === 'prefs' ? `${GOLD}20` : `${GREEN}20`) : BG_CARD,
-              color: active ? (id === 'prefs' ? GOLD : GREEN) : TEXT_MUTED,
+              background: active ? `${color}20` : BG_CARD,
+              color: active ? color : TEXT_MUTED,
               transition: 'all 150ms',
             }}>
-              <Icon size={15} strokeWidth={2.5} />
+              <Icon size={14} strokeWidth={2.5} />
               {label}
             </button>
           )
         })}
       </div>
+
+      {/* Today sub-tab — daily tracking */}
+      {subTab === 'today' && (() => {
+        const todayPlan = getTodayPlanData()
+        if (!todayPlan) return (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '40px 0' }}>
+            <UtensilsCrossed size={36} color={TEXT_MUTED} />
+            <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>Aucun plan actif pour aujourd'hui.</p>
+          </div>
+        )
+        const { planData: dayData, planId } = todayPlan
+        const consumed = getConsumedMacros(dayData)
+        const targetKcal = dayData.total_kcal || profile?.calorie_goal || 2000
+        const targetP = dayData.total_protein || profile?.protein_goal || 140
+        const targetG = dayData.total_carbs || profile?.carbs_goal || 200
+        const targetL = dayData.total_fat || profile?.fat_goal || 60
+        const pctKcal = Math.min(100, Math.round((consumed.kcal / targetKcal) * 100))
+
+        const dayLabel = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* Date header */}
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              {dayLabel}
+            </div>
+
+            {/* Progress card */}
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
+              {/* Calories bar */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.3rem', fontWeight: 700, color: GOLD }}>{consumed.kcal}</span>
+                  <span style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>/ {targetKcal} kcal</span>
+                </div>
+                <div style={{ background: '#242424', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${GOLD}, #D4AF37)`, width: `${pctKcal}%`, transition: 'width 300ms ease' }} />
+                </div>
+              </div>
+              {/* Macros */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                {[
+                  { label: 'Protéines', current: consumed.protein, target: targetP, color: '#3B82F6' },
+                  { label: 'Glucides', current: consumed.carbs, target: targetG, color: '#22C55E' },
+                  { label: 'Lipides', current: consumed.fat, target: targetL, color: '#F97316' },
+                ].map(({ label, current, target, color }) => {
+                  const pct = Math.min(100, Math.round((current / target) * 100))
+                  return (
+                    <div key={label}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                        <span style={{ fontSize: '0.6rem', fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase' }}>{label}</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 700, color }}>{current}g</span>
+                      </div>
+                      <div style={{ background: '#242424', borderRadius: 999, height: 5, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: 999, background: color, width: `${pct}%`, transition: 'width 300ms ease' }} />
+                      </div>
+                      <div style={{ fontSize: '0.55rem', color: TEXT_MUTED, textAlign: 'right', marginTop: 2 }}>/ {target}g</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Meals with checkboxes */}
+            {MEAL_ORDER.map(mealType => {
+              const foods = Array.isArray(dayData.repas?.[mealType]) ? dayData.repas[mealType] : []
+              if (foods.length === 0) return null
+              const done = completedMeals.has(mealType)
+              const mealKcal = foods.reduce((s: number, f: any) => s + (f.kcal || 0), 0)
+              return (
+                <div key={mealType} style={{ background: BG_CARD, border: `1px solid ${done ? `${GREEN}40` : BORDER}`, borderRadius: 16, overflow: 'hidden', transition: 'border-color 200ms' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderBottom: `1px solid ${BORDER}` }}>
+                    <button onClick={() => toggleMeal(mealType, planId)} style={{
+                      width: 32, height: 32, borderRadius: 10, border: 'none', cursor: 'pointer',
+                      background: done ? GREEN : '#242424',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'background 200ms',
+                    }}>
+                      <Check size={16} color={done ? '#000' : '#4B5563'} strokeWidth={3} />
+                    </button>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: done ? GREEN : TEXT_PRIMARY, fontSize: '0.92rem', textDecoration: done ? 'line-through' : 'none' }}>
+                        {MEAL_LABELS[mealType]}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Clock size={10} color={TEXT_MUTED} />
+                        <span style={{ fontSize: '0.65rem', color: TEXT_MUTED }}>{MEAL_TIMES[mealType]}</span>
+                      </div>
+                    </div>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: done ? GREEN : TEXT_MUTED }}>{mealKcal} kcal</span>
+                  </div>
+                  <div style={{ padding: '0 14px' }}>
+                    {foods.map((food: any, fi: number) => (
+                      <div key={fi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: fi > 0 ? `1px solid ${BORDER}` : 'none', opacity: done ? 0.5 : 1 }}>
+                        <div>
+                          <div style={{ fontSize: '0.82rem', color: TEXT_PRIMARY, fontWeight: 500 }}>{food.aliment}</div>
+                          <div style={{ fontSize: '0.62rem', color: TEXT_MUTED }}>{food.quantite_g}g</div>
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: TEXT_MUTED, textAlign: 'right' }}>
+                          <div>{food.kcal} kcal</div>
+                          <div style={{ fontSize: '0.58rem' }}>P{food.proteines || 0} G{food.glucides || 0} L{food.lipides || 0}</div>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ height: 6 }} />
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Summary card */}
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', textAlign: 'center' }}>
+              {pctKcal >= 95 ? (
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: GREEN }}>Objectif atteint !</span>
+              ) : pctKcal < 50 ? (
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: ORANGE }}>Pense à manger ! {consumed.kcal} / {targetKcal} kcal</span>
+              ) : (
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: TEXT_MUTED }}>{consumed.kcal} kcal sur {targetKcal} kcal cibles</span>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Preferences sub-tab */}
       {subTab === 'prefs' && (

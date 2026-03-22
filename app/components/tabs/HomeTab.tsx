@@ -59,6 +59,31 @@ export default function HomeTab({
   startProgramWorkout,
 }: HomeTabProps) {
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
+  const [consumedKcal, setConsumedKcal] = useState(0)
+  const calorieGoal = profile?.calorie_goal || 2000
+
+  // Fetch today's consumed calories from meal_tracking + active meal plan
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const uid = session.user.id
+    const todayDate = new Date().toISOString().split('T')[0]
+    const dayKey = todayNutritionKey()
+
+    Promise.all([
+      supabase.from('meal_tracking').select('meal_type').eq('user_id', uid).eq('date', todayDate).eq('is_completed', true),
+      supabase.from('meal_plans').select('plan_data').eq('user_id', uid).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    ]).then(([trackingRes, planRes]) => {
+      const completedTypes = new Set((trackingRes.data || []).map((r: any) => r.meal_type))
+      const dayData = planRes.data?.plan_data?.[dayKey]
+      if (!dayData?.repas || completedTypes.size === 0) { setConsumedKcal(0); return }
+      let kcal = 0
+      for (const [mealType, foods] of Object.entries(dayData.repas)) {
+        if (!completedTypes.has(mealType) || !Array.isArray(foods)) continue
+        for (const f of foods as any[]) kcal += f.kcal || 0
+      }
+      setConsumedKcal(kcal)
+    })
+  }, [session?.user?.id])
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -180,62 +205,39 @@ export default function HomeTab({
           )}
         </div>
 
-        {/* Nutrition du jour (coach meal plan) */}
+        {/* Nutrition du jour */}
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: GREEN }}>Nutrition du jour</span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#C9A84C' }}>Nutrition du jour</span>
             <button onClick={() => setActiveTab('nutrition')} style={{ fontSize: '0.68rem', fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', letterSpacing: '0.06em' }}>Voir plan</button>
           </div>
-          {!coachMealPlan ? (
-            <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Plan alimentaire en attente.</p>
-          ) : (
-            <>
-              {/* Macro targets row */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 14 }}>
-                {[
-                  { label: 'Kcal', value: coachMealPlan.calorie_target || '—', color: ORANGE },
-                  { label: 'Prot', value: coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—', color: '#3B82F6' },
-                  { label: 'Gluc', value: coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—', color: '#F59E0B' },
-                  { label: 'Lip', value: coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—', color: '#EF4444' },
-                ].map(({ label, value, color }) => (
-                  <div key={label} style={{ background: BG_BASE, borderRadius: 10, padding: '8px 4px', textAlign: 'center' }}>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, color }}>{value}</div>
-                    <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700 }}>{label}</div>
-                  </div>
-                ))}
+          {/* Consumed vs target */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: '#C9A84C' }}>{consumedKcal}</span>
+              <span style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>/ {calorieGoal} kcal</span>
+            </div>
+            <div style={{ background: '#242424', borderRadius: 999, height: 6, overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, #C9A84C, #D4AF37)', width: `${Math.min(100, Math.round((consumedKcal / calorieGoal) * 100))}%`, transition: 'width 300ms ease' }} />
+            </div>
+            <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, marginTop: 3, textAlign: 'right' }}>
+              {consumedKcal > 0 ? `${Math.round((consumedKcal / calorieGoal) * 100)}% de l'objectif` : 'Coche tes repas dans l\'onglet Nutrition'}
+            </div>
+          </div>
+          {/* Macro targets */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+            {[
+              { label: 'Cible', value: calorieGoal, color: '#C9A84C' },
+              { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '—', color: '#3B82F6' },
+              { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—', color: '#22C55E' },
+              { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—', color: '#F97316' },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ background: BG_BASE, borderRadius: 10, padding: '8px 4px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, color }}>{value}</div>
+                <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700 }}>{label}</div>
               </div>
-              {/* Today's meals from plan */}
-              {(() => {
-                const nutritionKey = todayNutritionKey()
-                console.log('[HomeTab] coachMealPlan keys:', Object.keys(coachMealPlan))
-                console.log('[HomeTab] nutritionKey used:', nutritionKey)
-                const dayPlan = coachMealPlan[nutritionKey]
-                const meals: any[] = dayPlan?.meals ?? []
-                if (!meals.length) return <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: 0 }}>Aucun repas planifié aujourd'hui.</p>
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {meals.map((meal: any, mi: number) => {
-                      const mealKcal = (meal.foods || []).reduce((s: number, f: any) => s + (f.kcal || 0), 0)
-                      return (
-                        <div key={mi} style={{ background: BG_BASE, borderRadius: 12, padding: '12px 14px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: TEXT_PRIMARY, fontSize: '0.9rem' }}>{meal.name}</span>
-                            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.8rem', fontWeight: 700, color: ORANGE }}>{mealKcal} kcal</span>
-                          </div>
-                          {(meal.foods || []).map((food: any, fi: number) => (
-                            <div key={fi} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderTop: fi > 0 ? `1px solid ${BORDER}` : 'none' }}>
-                              <span style={{ fontSize: '0.75rem', color: TEXT_MUTED, flex: 1 }}>{food.name}{food.qty ? ` — ${food.qty}` : ''}</span>
-                              <span style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>{food.prot ? `${food.prot}g P` : ''}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              })()}
-            </>
-          )}
+            ))}
+          </div>
         </div>
 
         {/* Quick actions */}
