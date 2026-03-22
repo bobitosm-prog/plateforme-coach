@@ -717,6 +717,10 @@ const calorieGoal = profile?.calorie_goal || 2500
               coachMealPlan={coachMealPlan}
               todayKey={todayKey}
               setModal={setModal}
+              profile={profile}
+              supabase={supabase}
+              userId={session?.user?.id || ''}
+              fetchAll={fetchAll}
             />
           )}
 

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { UtensilsCrossed } from 'lucide-react'
+import { UtensilsCrossed, Sparkles } from 'lucide-react'
+import NutritionPreferences from '../NutritionPreferences'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
   NUTRITION_DAYS, todayNutritionKey,
@@ -10,9 +11,13 @@ interface NutritionTabProps {
   coachMealPlan: any
   todayKey: string
   setModal: (modal: string) => void
+  profile: any
+  supabase: any
+  userId: string
+  fetchAll: () => Promise<void>
 }
 
-export default function NutritionTab({ coachMealPlan, todayKey, setModal }: NutritionTabProps) {
+export default function NutritionTab({ coachMealPlan, todayKey, setModal, profile, supabase, userId, fetchAll }: NutritionTabProps) {
   const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
 
   return (
@@ -22,9 +27,13 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal }: Nutr
       </div>
 
       {!coachMealPlan ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '60px 0' }}>
-          <UtensilsCrossed size={40} color={TEXT_MUTED} />
-          <p style={{ fontSize: '0.95rem', color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>Ton coach n'a pas encore créé ton plan alimentaire.</p>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <Sparkles size={18} color="#C9A84C" />
+            <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>Personnalise ton plan</h2>
+          </div>
+          <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 16px', lineHeight: 1.5 }}>Indique tes préférences pour que ton coach puisse créer un plan adapté.</p>
+          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} />
         </div>
       ) : (
         <>

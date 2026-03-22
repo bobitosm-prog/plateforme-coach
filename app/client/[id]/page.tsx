@@ -25,6 +25,7 @@ type Profile = {
   phone: string | null; birth_date: string | null; gender: string | null
   height: number | null; target_weight: number | null
   body_fat_pct: number | null; objective: string | null; status: string | null
+  dietary_type: string | null; allergies: string[] | null; liked_foods: string[] | null
 }
 type WorkoutSession = {
   id: string; created_at: string; name: string | null
@@ -285,7 +286,7 @@ export default function ClientProfilePage() {
     setLoading(true); setError(null)
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes] = await Promise.all([
-      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status').eq('id', id).single(),
+      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
@@ -612,6 +613,29 @@ export default function ClientProfilePage() {
                 {profile.email && <span style={{fontSize:'0.75rem',color:'#6B7280',display:'flex',alignItems:'center',gap:4}}><Mail size={12} strokeWidth={2}/>{profile.email}</span>}
                 <span style={{fontSize:'0.75rem',color:'#6B7280',display:'flex',alignItems:'center',gap:4}}><Calendar size={12} strokeWidth={2}/>Depuis {formatMonthYear(profile.created_at)}</span>
               </div>
+              {/* Nutrition preferences badges */}
+              {(profile.dietary_type || profile.allergies?.length || profile.liked_foods?.length) && (
+                <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid #1E1E1E',display:'flex',flexWrap:'wrap',gap:6}}>
+                  {profile.dietary_type && (
+                    <span style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(34,197,94,0.12)',color:'#22C55E',border:'1px solid rgba(34,197,94,0.2)'}}>
+                      {profile.dietary_type === 'omnivore' ? '🥩 Omnivore' : profile.dietary_type === 'vegetarian' ? '🥗 Végétarien' : '🌱 Vegan'}
+                    </span>
+                  )}
+                  {(profile.allergies || []).map((a: string) => (
+                    <span key={a} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(239,68,68,0.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,0.2)'}}>
+                      {a}
+                    </span>
+                  ))}
+                  {(profile.liked_foods || []).map((f: string) => {
+                    const foodEmojis: Record<string,string> = {chicken:'🍗',tuna:'🐟',salmon:'🐠',eggs:'🥚',beef:'🥩',cottage_cheese:'🫙',tofu:'🧈',shrimp:'🦐',rice:'🍚',oats:'🌾',sweet_potato:'🍠',quinoa:'🌿',whole_bread:'🍞',pasta:'🍝',lentils:'🫘',peanut_butter:'🥜',avocado:'🥑',olive_oil:'🫒',almonds:'🌰',broccoli:'🥦',spinach:'🌱',greek_yogurt:'🥛',banana:'🍌',apple:'🍎'}
+                    return (
+                      <span key={f} style={{display:'inline-flex',alignItems:'center',gap:2,padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.06em',fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(156,163,175,0.08)',color:'#9CA3AF',border:'1px solid rgba(156,163,175,0.12)'}}>
+                        {foodEmojis[f] || ''} {f}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
               <button className="btn-secondary" style={{width:'100%',marginTop:12,fontSize:'0.85rem'}} onClick={()=>{ setEditTab('info'); setEditOpen(true) }}>
                 <Pencil size={13} strokeWidth={2}/>Modifier le profil
               </button>
