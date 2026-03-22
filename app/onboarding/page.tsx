@@ -382,11 +382,22 @@ export default function OnboardingPage() {
               if (q.length < 2) { setFoodResults([]); return }
               setFoodSearching(true)
               searchTimerRef.current = setTimeout(async () => {
-                const { data } = await supabase
+                // Try 'nom' first, fallback to 'name'
+                let { data, error } = await supabase
                   .from('food_items')
                   .select('id,nom,name,calories,energy_kcal,proteines,proteins,glucides,carbohydrates,lipides,fat')
                   .ilike('nom', `%${q}%`)
                   .limit(15)
+                console.log('[food search] query:', q, 'results:', data?.length, 'error:', error)
+                if ((!data || data.length === 0) && !error) {
+                  const res2 = await supabase
+                    .from('food_items')
+                    .select('id,nom,name,calories,energy_kcal,proteines,proteins,glucides,carbohydrates,lipides,fat')
+                    .ilike('name', `%${q}%`)
+                    .limit(15)
+                  data = res2.data
+                  console.log('[food search] fallback name:', data?.length)
+                }
                 setFoodResults((data || []).map((f: any) => ({
                   id: f.id, nom: f.nom || f.name || '',
                   kcal: Math.round(f.calories ?? f.energy_kcal ?? 0),
