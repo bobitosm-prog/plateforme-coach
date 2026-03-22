@@ -81,7 +81,7 @@ export default function ProgressTab({
     if (!weightVal || !session?.user?.id) return
     setSavingWeight(true)
     const poids = parseFloat(weightVal)
-    const { error } = await supabase.from('weight_logs').insert({ user_id: session.user.id, date: weightDate, poids })
+    const { error } = await supabase.from('weight_logs').upsert({ user_id: session.user.id, date: weightDate, poids }, { onConflict: 'user_id,date' })
     if (error) { toast.error('Erreur lors de l\'enregistrement') }
     else {
       setLocalWeights(prev => [...prev, { date: weightDate, poids }])

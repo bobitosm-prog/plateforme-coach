@@ -325,7 +325,7 @@ const photoRef = useRef<HTMLInputElement>(null)
   }
 
   async function saveWeight(value: number, date: string) {
-    await supabase.from('weight_logs').insert({ user_id: session.user.id, poids: value, date })
+    await supabase.from('weight_logs').upsert({ user_id: session.user.id, poids: value, date }, { onConflict: 'user_id,date' })
     await supabase.from('profiles').upsert({ id: session.user.id, current_weight: value })
     if (!profile?.start_weight) await supabase.from('profiles').update({ start_weight: value }).eq('id', session.user.id)
     toast.success('Poids enregistré !')

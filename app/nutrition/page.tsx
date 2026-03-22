@@ -57,10 +57,11 @@ export default function NutritionPage() {
     const p = prompt("Entrez votre poids actuel (kg) :")
     if (p && !isNaN(parseFloat(p))) {
       const val = parseFloat(p)
-      const { error } = await supabase.from('weight_logs').insert({ 
-        user_id: session.user.id, 
-        poids: val 
-      })
+      const { error } = await supabase.from('weight_logs').upsert({
+        user_id: session.user.id,
+        poids: val,
+        date: new Date().toISOString().split('T')[0],
+      }, { onConflict: 'user_id,date' })
       if (!error) {
         await supabase.from('profiles').upsert({ id: session.user.id, current_weight: val })
         fetchUserData()
