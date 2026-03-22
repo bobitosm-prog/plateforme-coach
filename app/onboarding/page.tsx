@@ -382,28 +382,17 @@ export default function OnboardingPage() {
               if (q.length < 2) { setFoodResults([]); return }
               setFoodSearching(true)
               searchTimerRef.current = setTimeout(async () => {
-                // Try 'nom' first, fallback to 'name'
-                let { data, error } = await supabase
+                const { data } = await supabase
                   .from('food_items')
-                  .select('id,nom,name,calories,energy_kcal,proteines,proteins,glucides,carbohydrates,lipides,fat')
-                  .ilike('nom', `%${q}%`)
+                  .select('id, name, energy_kcal, proteins, carbohydrates, fat')
+                  .ilike('name', `%${q}%`)
                   .limit(15)
-                console.log('[food search] query:', q, 'results:', data?.length, 'error:', error)
-                if ((!data || data.length === 0) && !error) {
-                  const res2 = await supabase
-                    .from('food_items')
-                    .select('id,nom,name,calories,energy_kcal,proteines,proteins,glucides,carbohydrates,lipides,fat')
-                    .ilike('name', `%${q}%`)
-                    .limit(15)
-                  data = res2.data
-                  console.log('[food search] fallback name:', data?.length)
-                }
                 setFoodResults((data || []).map((f: any) => ({
-                  id: f.id, nom: f.nom || f.name || '',
-                  kcal: Math.round(f.calories ?? f.energy_kcal ?? 0),
-                  p: Math.round((f.proteines ?? f.proteins ?? 0) * 10) / 10,
-                  g: Math.round((f.glucides ?? f.carbohydrates ?? 0) * 10) / 10,
-                  l: Math.round((f.lipides ?? f.fat ?? 0) * 10) / 10,
+                  id: f.id, nom: f.name || '',
+                  kcal: Math.round(f.energy_kcal ?? 0),
+                  p: Math.round((f.proteins ?? 0) * 10) / 10,
+                  g: Math.round((f.carbohydrates ?? 0) * 10) / 10,
+                  l: Math.round((f.fat ?? 0) * 10) / 10,
                 })))
                 setFoodSearching(false)
               }, 300)

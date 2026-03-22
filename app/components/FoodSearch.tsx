@@ -46,20 +46,11 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
     if (query.length < 2) { setResults([]); return }
     setSearching(true)
     debounceRef.current = setTimeout(async () => {
-      let { data, error } = await supabase
+      const { data } = await supabase
         .from('food_items')
-        .select('id, nom, name, calories, energy_kcal, proteines, proteins, glucides, carbohydrates, lipides, fat')
-        .ilike('nom', `%${query}%`)
+        .select('id, name, energy_kcal, proteins, carbohydrates, fat')
+        .ilike('name', `%${query}%`)
         .limit(20)
-      console.log('[FoodSearch] query:', query, 'results:', data?.length, 'error:', error)
-      if ((!data || data.length === 0) && !error) {
-        const res2 = await supabase
-          .from('food_items')
-          .select('id, nom, name, calories, energy_kcal, proteines, proteins, glucides, carbohydrates, lipides, fat')
-          .ilike('name', `%${query}%`)
-          .limit(20)
-        data = res2.data
-      }
       setResults((data || []).map(normalizeFoodItem))
       setSearching(false)
     }, 300)

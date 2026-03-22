@@ -302,30 +302,30 @@ export default function ClientProfilePage() {
       if (profile.liked_foods?.length) {
         const { data: foods } = await supabase
           .from('food_items')
-          .select('id,nom,name,calories,energy_kcal,proteines,proteins,glucides,carbohydrates,lipides,fat')
+          .select('id, name, energy_kcal, proteins, carbohydrates, fat')
           .in('id', profile.liked_foods)
         availableFoods = (foods || []).map((f: any) => ({
-          nom: f.nom || f.name || '',
-          kcal: Math.round(f.calories ?? f.energy_kcal ?? 0),
-          p: Math.round((f.proteines ?? f.proteins ?? 0) * 10) / 10,
-          g: Math.round((f.glucides ?? f.carbohydrates ?? 0) * 10) / 10,
-          l: Math.round((f.lipides ?? f.fat ?? 0) * 10) / 10,
+          nom: f.name || '',
+          kcal: Math.round(f.energy_kcal ?? 0),
+          p: Math.round((f.proteins ?? 0) * 10) / 10,
+          g: Math.round((f.carbohydrates ?? 0) * 10) / 10,
+          l: Math.round((f.fat ?? 0) * 10) / 10,
         }))
       }
       // Fallback: fetch high-protein foods if not enough liked foods
       if (availableFoods.length < 10) {
         const { data: fallback } = await supabase
           .from('food_items')
-          .select('id,nom,name,calories,energy_kcal,proteines,proteins,glucides,carbohydrates,lipides,fat')
-          .not('nom', 'is', null)
-          .gt('proteines', 5)
+          .select('id, name, energy_kcal, proteins, carbohydrates, fat')
+          .not('name', 'is', null)
+          .gt('proteins', 5)
           .limit(40)
         const extra = (fallback || []).map((f: any) => ({
-          nom: f.nom || f.name || '',
-          kcal: Math.round(f.calories ?? f.energy_kcal ?? 0),
-          p: Math.round((f.proteines ?? f.proteins ?? 0) * 10) / 10,
-          g: Math.round((f.glucides ?? f.carbohydrates ?? 0) * 10) / 10,
-          l: Math.round((f.lipides ?? f.fat ?? 0) * 10) / 10,
+          nom: f.name || '',
+          kcal: Math.round(f.energy_kcal ?? 0),
+          p: Math.round((f.proteins ?? 0) * 10) / 10,
+          g: Math.round((f.carbohydrates ?? 0) * 10) / 10,
+          l: Math.round((f.fat ?? 0) * 10) / 10,
         }))
         const seen = new Set(availableFoods.map((f: any) => f.nom))
         availableFoods.push(...extra.filter((f: any) => !seen.has(f.nom)))
