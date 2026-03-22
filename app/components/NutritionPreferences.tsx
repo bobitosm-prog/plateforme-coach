@@ -1,6 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
+import type { FitnessFood } from '../../lib/types'
 
 const GOLD = '#C9A84C'
 const BG = '#0A0A0A'
@@ -24,32 +25,14 @@ const ALLERGY_OPTIONS = [
   { id: 'shellfish', label: 'Crustacés', emoji: '🦐' },
 ] as const
 
-const FOOD_OPTIONS = [
-  { id: 'chicken', label: 'Blanc de poulet', emoji: '🍗' },
-  { id: 'tuna', label: 'Thon', emoji: '🐟' },
-  { id: 'salmon', label: 'Saumon', emoji: '🐠' },
-  { id: 'eggs', label: 'Œufs', emoji: '🥚' },
-  { id: 'beef', label: 'Bœuf maigre', emoji: '🥩' },
-  { id: 'cottage_cheese', label: 'Fromage blanc 0%', emoji: '🫙' },
-  { id: 'tofu', label: 'Tofu', emoji: '🧈' },
-  { id: 'shrimp', label: 'Crevettes', emoji: '🦐' },
-  { id: 'rice', label: 'Riz', emoji: '🍚' },
-  { id: 'oats', label: 'Avoine', emoji: '🌾' },
-  { id: 'sweet_potato', label: 'Patate douce', emoji: '🍠' },
-  { id: 'quinoa', label: 'Quinoa', emoji: '🌿' },
-  { id: 'whole_bread', label: 'Pain complet', emoji: '🍞' },
-  { id: 'pasta', label: 'Pâtes complètes', emoji: '🍝' },
-  { id: 'lentils', label: 'Lentilles', emoji: '🫘' },
-  { id: 'peanut_butter', label: 'Beurre de cacahuètes', emoji: '🥜' },
-  { id: 'avocado', label: 'Avocat', emoji: '🥑' },
-  { id: 'olive_oil', label: 'Huile d\'olive', emoji: '🫒' },
-  { id: 'almonds', label: 'Amandes', emoji: '🌰' },
-  { id: 'broccoli', label: 'Brocoli', emoji: '🥦' },
-  { id: 'spinach', label: 'Épinards', emoji: '🌱' },
-  { id: 'greek_yogurt', label: 'Yaourt grec', emoji: '🥛' },
-  { id: 'banana', label: 'Banane', emoji: '🍌' },
-  { id: 'apple', label: 'Pomme', emoji: '🍎' },
-]
+const CATEGORY_LABELS: Record<string, string> = {
+  proteines: 'Protéines',
+  glucides: 'Glucides',
+  lipides: 'Lipides',
+  micronutriments: 'Micronutriments',
+}
+
+const CATEGORY_ORDER = ['proteines', 'glucides', 'lipides', 'micronutriments']
 
 interface NutritionPreferencesProps {
   profile: any
@@ -62,8 +45,38 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   const [dietaryType, setDietaryType] = useState<string>(profile?.dietary_type || 'omnivore')
   const [allergies, setAllergies] = useState<string[]>(profile?.allergies || [])
   const [likedFoods, setLikedFoods] = useState<string[]>(profile?.liked_foods || [])
+  const [foods, setFoods] = useState<FitnessFood[]>([])
+  const [loadingFoods, setLoadingFoods] = useState(true)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(false)
+
+  useEffect(() => {
+    fetchFoods()
+  }, [dietaryType, allergies])
+
+  async function fetchFoods() {
+    setLoadingFoods(true)
+    let query = supabase.from('fitness_foods').select('*').order('name')
+
+    if (dietaryType === 'vegan') {
+      query = query.eq('is_vegan', true)
+    } else if (dietaryType === 'vegetarian') {
+      query = query.eq('is_vegetarian', true)
+    }
+
+    const { data } = await query
+    let results: FitnessFood[] = data || []
+
+    // Filter out foods containing user's allergens
+    if (allergies.length > 0) {
+      results = results.filter(f =>
+        !f.allergens || !f.allergens.some(a => allergies.includes(a))
+      )
+    }
+
+    setFoods(results)
+    setLoadingFoods(false)
+  }
 
   function toggleAllergy(id: string) {
     setAllergies(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id])
@@ -97,6 +110,11 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     color: GOLD,
     marginBottom: 12,
   }
+
+  // Group foods by category
+  const grouped = CATEGORY_ORDER
+    .map(cat => ({ cat, items: foods.filter(f => f.category === cat) }))
+    .filter(g => g.items.length > 0)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -145,32 +163,53 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         </div>
       </div>
 
-      {/* Section: Aliments aimés */}
+      {/* Section: Aliments aimés — grouped by category */}
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
         <div style={sectionTitle}>Aliments que j'aime</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          {FOOD_OPTIONS.map(opt => {
-            const active = likedFoods.includes(opt.id)
-            return (
-              <button key={opt.id} onClick={() => toggleFood(opt.id)} style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                padding: '10px 4px', borderRadius: 12, cursor: 'pointer',
-                background: active ? `${GOLD}15` : BG,
-                border: `2px solid ${active ? GOLD : BORDER}`,
-                transition: 'all 150ms',
-                position: 'relative',
-              }}>
-                {active && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Check size={10} color="#000" strokeWidth={3} />
-                  </div>
-                )}
-                <span style={{ fontSize: '1.3rem' }}>{opt.emoji}</span>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: active ? GOLD : MUTED, textAlign: 'center', lineHeight: 1.2 }}>{opt.label}</span>
-              </button>
-            )
-          })}
-        </div>
+        {loadingFoods ? (
+          <p style={{ fontSize: '0.82rem', color: MUTED, textAlign: 'center', padding: '20px 0' }}>Chargement des aliments...</p>
+        ) : grouped.length === 0 ? (
+          <p style={{ fontSize: '0.82rem', color: MUTED, textAlign: 'center', padding: '20px 0' }}>Aucun aliment disponible avec ces filtres.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {grouped.map(({ cat, items }) => (
+              <div key={cat}>
+                <div style={{
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.7rem', fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 8,
+                }}>
+                  {CATEGORY_LABELS[cat] || cat}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {items.map(food => {
+                    const active = likedFoods.includes(food.id)
+                    return (
+                      <button key={food.id} onClick={() => toggleFood(food.id)} style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                        padding: '10px 4px', borderRadius: 12, cursor: 'pointer',
+                        background: active ? `${GOLD}15` : BG,
+                        border: `2px solid ${active ? GOLD : BORDER}`,
+                        transition: 'all 150ms',
+                        position: 'relative',
+                      }}>
+                        {active && (
+                          <div style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Check size={10} color="#000" strokeWidth={3} />
+                          </div>
+                        )}
+                        <span style={{ fontSize: '1.3rem' }}>{food.emoji || '🍽️'}</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 600, color: active ? GOLD : MUTED, textAlign: 'center', lineHeight: 1.2 }}>{food.name}</span>
+                        <span style={{ fontSize: '0.55rem', color: active ? `${GOLD}99` : `${MUTED}99`, textAlign: 'center', lineHeight: 1.1 }}>
+                          {food.protein_per_100g}g P · {food.carbs_per_100g}g G · {food.fat_per_100g}g L
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Save button */}
