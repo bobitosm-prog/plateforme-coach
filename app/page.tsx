@@ -128,43 +128,49 @@ const photoRef = useRef<HTMLInputElement>(null)
     if (real.length > 0) lastMsgTimestampRef.current = real[real.length - 1].created_at
   }, [messages])
 
-  // Messages: poll every 10s for new messages (only after initial fetchAll is done)
+  // Messages: Realtime subscription + polling fallback
   useEffect(() => {
     if (!session?.user?.id || !coachId) return
     const uid = session.user.id
-    // Wait for fetchAll to complete before starting poll
-    const startPoll = () => {
-      loadMessages(coachId) // initial full load
-      const id = setInterval(async () => {
-        const since = lastMsgTimestampRef.current
-        if (!since) return
-        const { data } = await supabase
-          .from('messages')
-          .select('*')
-          .or(`and(sender_id.eq.${uid},receiver_id.eq.${coachId}),and(sender_id.eq.${coachId},receiver_id.eq.${uid})`)
-          .gt('created_at', since)
-          .order('created_at', { ascending: true })
-        if (data?.length) {
-          setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
-        }
-      }, 10000)
-      return id
-    }
 
-    let intervalId: ReturnType<typeof setInterval>
-    if (fetchAllComplete.current) {
-      intervalId = startPoll()
-    } else {
-      // Wait up to 10s for fetchAll to finish before starting poll
-      const waitId = setInterval(() => {
-        if (fetchAllComplete.current) {
-          clearInterval(waitId)
-          intervalId = startPoll()
+    // Initial load
+    loadMessages(coachId)
+
+    // Realtime: listen for new messages sent TO this user
+    const channel = supabase
+      .channel(`messages-${uid}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${uid}`,
+      }, (payload: any) => {
+        setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), payload.new])
+        if (activeTab !== 'messages') {
+          setUnreadCount(prev => prev + 1)
         }
-      }, 500)
-      return () => { clearInterval(waitId); clearInterval(intervalId) }
+      })
+      .subscribe()
+
+    // Polling fallback every 30s (in case realtime misses)
+    const pollId = setInterval(async () => {
+      const since = lastMsgTimestampRef.current
+      if (!since) return
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${uid},receiver_id.eq.${coachId}),and(sender_id.eq.${coachId},receiver_id.eq.${uid})`)
+        .gt('created_at', since)
+        .order('created_at', { ascending: true })
+      if (data?.length) {
+        setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
+      }
+    }, 30000)
+
+    return () => {
+      supabase.removeChannel(channel)
+      clearInterval(pollId)
     }
-    return () => clearInterval(intervalId)
   }, [session?.user?.id, coachId])
 
   // Messages: scroll to bottom on new messages

@@ -1,11 +1,13 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import { format } from 'date-fns'
+import { useRef, useEffect } from 'react'
+import { format, isToday, isYesterday } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { MessageCircle, Send } from 'lucide-react'
+import { MessageCircle, Send, Check, CheckCheck } from 'lucide-react'
 import {
-  BG_BASE, BG_CARD, BORDER, ORANGE, TEXT_PRIMARY, TEXT_MUTED,
+  BG_BASE, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_MUTED,
 } from '../../../lib/design-tokens'
+
+const GOLD = '#C9A84C'
 
 interface MessagesTabProps {
   session: any
@@ -17,21 +19,38 @@ interface MessagesTabProps {
   msgEndRef: React.RefObject<HTMLDivElement | null>
 }
 
+function dateLabel(dateStr: string): string {
+  const d = new Date(dateStr)
+  if (isToday(d)) return "Aujourd'hui"
+  if (isYesterday(d)) return 'Hier'
+  return format(d, 'd MMMM yyyy', { locale: fr })
+}
+
 export default function MessagesTab({
-  session,
-  coachId,
-  messages,
-  msgInput,
-  setMsgInput,
-  sendMessage,
-  msgEndRef,
+  session, coachId, messages, msgInput, setMsgInput, sendMessage, msgEndRef,
 }: MessagesTabProps) {
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto'
+      inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 100) + 'px'
+    }
+  }, [msgInput])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 72px)' }}>
-
       {/* Header */}
-      <div style={{ background: BG_CARD, padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>MON COACH</h1>
+      <div style={{ background: BG_CARD, padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: '#000' }}>C</div>
+        <div>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0, color: TEXT_PRIMARY }}>MON COACH</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E' }} />
+            <span style={{ fontSize: '0.62rem', color: '#22C55E', fontWeight: 600 }}>En ligne</span>
+          </div>
+        </div>
       </div>
 
       {!coachId ? (
@@ -41,29 +60,47 @@ export default function MessagesTab({
         </div>
       ) : (
         <>
-          {/* Message bubbles */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* Messages */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {messages.length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <p style={{ color: TEXT_MUTED, fontSize: '0.85rem' }}>Commencez la conversation avec votre coach !</p>
+                <MessageCircle size={32} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
+                <p style={{ color: TEXT_MUTED, fontSize: '0.85rem', margin: 0 }}>Envoie ton premier message !</p>
               </div>
             )}
-            {messages.map(msg => {
+            {messages.map((msg, i) => {
               const isMine = msg.sender_id === session.user.id
+              const prevMsg = messages[i - 1]
+              const currDate = new Date(msg.created_at).toDateString()
+              const prevDate = prevMsg ? new Date(prevMsg.created_at).toDateString() : null
+              const showDate = currDate !== prevDate
+
               return (
-                <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
-                  <div style={{
-                    maxWidth: '75%',
-                    background: isMine ? ORANGE : BG_CARD,
-                    color: isMine ? '#000' : TEXT_PRIMARY,
-                    borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                    padding: '10px 14px',
-                    border: isMine ? 'none' : `1px solid ${BORDER}`,
-                  }}>
-                    <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45 }}>{msg.content}</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.62rem', opacity: 0.6, textAlign: isMine ? 'right' : 'left' }}>
-                      {format(new Date(msg.created_at), 'HH:mm', { locale: fr })}
-                    </p>
+                <div key={msg.id}>
+                  {/* Date separator */}
+                  {showDate && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0', padding: '0 8px' }}>
+                      <div style={{ flex: 1, height: 1, background: BORDER }} />
+                      <span style={{ fontSize: '0.62rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>{dateLabel(msg.created_at)}</span>
+                      <div style={{ flex: 1, height: 1, background: BORDER }} />
+                    </div>
+                  )}
+                  {/* Bubble */}
+                  <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
+                    <div style={{
+                      maxWidth: '78%',
+                      background: isMine ? GOLD : '#1E1E1E',
+                      color: isMine ? '#000' : TEXT_PRIMARY,
+                      borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                      padding: '10px 14px',
+                      border: isMine ? 'none' : `1px solid ${BORDER}`,
+                    }}>
+                      <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{msg.content}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 3 }}>
+                        <span style={{ fontSize: '0.58rem', opacity: 0.5 }}>{format(new Date(msg.created_at), 'HH:mm')}</span>
+                        {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.6 }} /> : <Check size={12} style={{ opacity: 0.4 }} />)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )
@@ -72,17 +109,20 @@ export default function MessagesTab({
           </div>
 
           {/* Input */}
-          <div style={{ padding: '12px 16px', background: BG_CARD, borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
-            <input
+          <div style={{ padding: '10px 14px', background: BG_CARD, borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
+            <textarea
+              ref={inputRef}
               value={msgInput}
               onChange={e => setMsgInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-              placeholder="Écrire un message…"
-              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 24, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }}
+              placeholder="Écrire un message..."
+              rows={1}
+              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 20, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: 'inherit' }}
             />
             <button
               onClick={sendMessage}
-              style={{ width: 42, height: 42, borderRadius: '50%', background: msgInput.trim() ? ORANGE : BORDER, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              disabled={!msgInput.trim()}
+              style={{ width: 40, height: 40, borderRadius: '50%', background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
               <Send size={16} color={msgInput.trim() ? '#000' : TEXT_MUTED} />
             </button>
