@@ -119,6 +119,34 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     return result
   }
 
+  // Waiting screen when no plan exists
+  function renderWaitingScreen() {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
+        <div className="animate-pulse-gold" style={{ fontSize: '3.5rem', marginBottom: 24 }}>⏳</div>
+        <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.3rem', fontWeight: 700, color: TEXT_PRIMARY, margin: '0 0 10px' }}>Plan en cours de préparation</h2>
+        <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
+          Ton coach analyse ton profil et prépare ton plan alimentaire personnalisé.
+        </p>
+        <div className="animate-pulse-gold" style={{ padding: '8px 18px', borderRadius: 999, background: `${GOLD}12`, border: `1px solid ${GOLD}30`, marginBottom: 24 }}>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: GOLD, letterSpacing: '0.05em', textTransform: 'uppercase' }}>En attente de validation du coach</span>
+        </div>
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 18px', width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            { icon: '✅', text: 'Profil complété', done: true },
+            { icon: '✅', text: 'Préférences enregistrées', done: true },
+            { icon: '⏳', text: 'Plan alimentaire — en attente', done: false },
+          ].map(({ icon, text, done }) => (
+            <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: '1rem' }}>{icon}</span>
+              <span style={{ fontSize: '0.82rem', color: done ? GREEN : GOLD, fontWeight: 500 }}>{text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   // Generate shopping list from plan_data (client-side, no API)
   function generateShoppingList(planData: any): { name: string; totalG: number }[] {
     const map = new Map<string, number>()
@@ -395,12 +423,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* Today sub-tab — daily tracking */}
       {subTab === 'today' && (() => {
         const todayPlan = getTodayPlanData()
-        if (!todayPlan) return (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '40px 0' }}>
-            <UtensilsCrossed size={36} color={TEXT_MUTED} />
-            <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>Aucun plan actif pour aujourd'hui.</p>
-          </div>
-        )
+        if (!todayPlan) return renderWaitingScreen()
         const { planData: dayData, planId } = todayPlan
         const consumed = getConsumedMacros(dayData)
         const targetKcal = dayData.total_kcal || profile?.calorie_goal || 2000
@@ -537,42 +560,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         </div>
       )}
 
-      {subTab === 'plan' && !loadingPlan && !coachMealPlan && !activeMealPlan && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '40px 20px' }}>
-          <div className="animate-pulse-gold" style={{ width: 72, height: 72, borderRadius: 20, background: `${GOLD}15`, border: `1.5px solid ${GOLD}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '2.2rem' }}>⏳</span>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.3rem', fontWeight: 700, color: TEXT_PRIMARY, margin: '0 0 8px' }}>Plan en cours de préparation</h2>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: 0, lineHeight: 1.6, maxWidth: 300 }}>
-              Ton coach analyse ton profil et prépare ton plan alimentaire personnalisé. Tu recevras une notification dès qu'il sera disponible.
-            </p>
-          </div>
-          <div className="animate-pulse-gold" style={{ padding: '8px 18px', borderRadius: 999, background: `${GOLD}12`, border: `1px solid ${GOLD}30` }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: GOLD, letterSpacing: '0.05em', textTransform: 'uppercase' }}>En attente de validation du coach</span>
-          </div>
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 18px', width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[
-              { icon: '✅', text: 'Ton profil est complet', done: true },
-              { icon: '✅', text: 'Tes préférences ont été enregistrées', done: true },
-              { icon: '⏳', text: 'Plan alimentaire — en attente', done: false },
-            ].map(({ icon, text, done }) => (
-              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: '1rem' }}>{icon}</span>
-                <span style={{ fontSize: '0.82rem', color: done ? GREEN : GOLD, fontWeight: 500 }}>{text}</span>
-              </div>
-            ))}
-          </div>
-          <button onClick={() => setSubTab('prefs')} style={{
-            marginTop: 4, padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${BORDER}`,
-            background: 'transparent', color: TEXT_MUTED, cursor: 'pointer',
-            fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700,
-            letterSpacing: '0.04em',
-          }}>
-            Modifier mes préférences
-          </button>
-        </div>
-      )}
+      {subTab === 'plan' && !loadingPlan && !coachMealPlan && !activeMealPlan && renderWaitingScreen()}
 
       {/* Show AI meal plan from meal_plans table (priority) */}
       {subTab === 'plan' && activeMealPlan && renderAiPlan(activeMealPlan)}
