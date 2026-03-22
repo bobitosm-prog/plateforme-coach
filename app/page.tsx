@@ -174,6 +174,12 @@ const photoRef = useRef<HTMLInputElement>(null)
     }
   }, [messages, activeTab])
 
+  // Scroll to top on tab change
+  const mainRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+  }, [activeTab])
+
   // Messages: mark as read when tab is opened
   useEffect(() => {
     if (activeTab === 'messages' && coachId) markMessagesRead()
@@ -479,7 +485,7 @@ const calorieGoal = profile?.calorie_goal || 2500
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif", paddingBottom: 88, overflowX: 'hidden', maxWidth: '100vw' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', overflow: 'hidden', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
@@ -666,6 +672,7 @@ const calorieGoal = profile?.calorie_goal || 2500
       )}
 
       {/* ── TAB CONTENT ── */}
+      <main ref={mainRef} className="content-pb" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' } as any}>
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
@@ -775,9 +782,10 @@ const calorieGoal = profile?.calorie_goal || 2500
           )}
         </motion.div>
       </AnimatePresence>
+      </main>
 
       {/* ── BOTTOM NAV ── */}
-      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, height: 72, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 40, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <nav className="safe-area-pb" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: 430, margin: '0 auto', background: BG_CARD, borderTop: `1px solid ${BORDER}`, height: 64, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 40 }}>
         {([
           { id: 'home',      icon: BarChart2,       label: 'Home'      },
           { id: 'training',  icon: Dumbbell,        label: 'Training'  },
