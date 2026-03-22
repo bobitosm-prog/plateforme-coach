@@ -464,12 +464,14 @@ export default function ClientProfilePage() {
     if (activePlanRes.data) {
       setClientActivePlan(activePlanRes.data)
     }
-    // Fetch weekly meal tracking
-    const mondayDate = (() => {
-      const d = new Date(); const day = d.getDay()
-      d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
-      return d.toISOString().split('T')[0]
-    })()
+    await fetchWeeklyTracking()
+    setLoading(false)
+  }, [coachId, id])
+
+  const fetchWeeklyTracking = useCallback(async () => {
+    const d = new Date(); const day = d.getDay()
+    d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
+    const mondayDate = d.toISOString().split('T')[0]
     const { data: trackingData } = await supabase
       .from('meal_tracking')
       .select('date,meal_type,is_completed')
@@ -484,10 +486,15 @@ export default function ClientProfilePage() {
       }
       setWeeklyTracking(map)
     }
-    setLoading(false)
-  }, [coachId, id])
+  }, [id])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  // Poll weekly tracking every 30s for real-time coach view
+  useEffect(() => {
+    const interval = setInterval(fetchWeeklyTracking, 30000)
+    return () => clearInterval(interval)
+  }, [fetchWeeklyTracking])
 
   /* ── Exercise DB modal: load all on open ────────────────────── */
   useEffect(() => {
