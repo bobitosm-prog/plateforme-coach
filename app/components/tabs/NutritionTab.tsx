@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react'
 import NutritionPreferences from '../NutritionPreferences'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
@@ -31,6 +31,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
   const [activeMealPlan, setActiveMealPlan] = useState<any>(null)
   const [loadingPlan, setLoadingPlan] = useState(true)
+  const [showShoppingList, setShowShoppingList] = useState(false)
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
   const [subTab, setSubTab] = useState<SubTab>(hasPlan ? 'plan' : 'prefs')
@@ -52,6 +53,25 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     setActiveMealPlan(data)
     if (data && !coachMealPlan) setSubTab('plan')
     setLoadingPlan(false)
+  }
+
+  // Generate shopping list from plan_data (client-side, no API)
+  function generateShoppingList(planData: any): { name: string; totalG: number }[] {
+    const map = new Map<string, number>()
+    for (const day of Object.values(planData) as any[]) {
+      if (!day?.repas) continue
+      for (const foods of Object.values(day.repas) as any[]) {
+        if (!Array.isArray(foods)) continue
+        for (const f of foods) {
+          const name = (f.aliment || '').trim()
+          if (!name) continue
+          map.set(name, (map.get(name) || 0) + (f.quantite_g || 0))
+        }
+      }
+    }
+    return Array.from(map.entries())
+      .map(([name, totalG]) => ({ name, totalG }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
   }
 
   // Render the AI-generated meal plan (from meal_plans table)
@@ -99,6 +119,38 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             )
           })}
         </div>
+
+        {/* Shopping list button + panel */}
+        <button onClick={() => setShowShoppingList(v => !v)} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
+          padding: '10px 16px', borderRadius: 12, border: `1.5px solid ${BORDER}`, cursor: 'pointer',
+          background: showShoppingList ? `${GOLD}15` : BG_CARD,
+          fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700,
+          color: showShoppingList ? GOLD : TEXT_MUTED, marginBottom: 12, transition: 'all 150ms',
+        }}>
+          <ShoppingCart size={15} strokeWidth={2.5} />
+          Liste de courses (semaine)
+          {showShoppingList ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+
+        {showShoppingList && (() => {
+          const items = generateShoppingList(planData)
+          return (
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '12px 16px', marginBottom: 12 }}>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                {items.length} aliments pour la semaine
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {items.map(({ name, totalG }) => (
+                  <div key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: `1px solid ${BORDER}` }}>
+                    <span style={{ fontSize: '0.82rem', color: TEXT_PRIMARY }}>{name}</span>
+                    <span style={{ fontSize: '0.75rem', color: TEXT_MUTED, fontWeight: 600, flexShrink: 0, marginLeft: 8 }}>{totalG}g</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Meals */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
