@@ -454,11 +454,14 @@ const calorieGoal = profile?.calorie_goal || 2500
     </div>
   )
 
-  if (!session) return (
-    <div style={{ overflowY: 'auto', minHeight: '100vh', background: '#050505' }}>
-      <LandingPage />
-    </div>
-  )
+  if (!session) {
+    router.replace('/landing')
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#050505' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    )
+  }
 
   // Subscription gate
   const isSubActive = profile?.subscription_status === 'active' && profile?.subscription_end_date && new Date(profile.subscription_end_date) > new Date()
