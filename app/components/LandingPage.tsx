@@ -96,7 +96,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <button onClick={() => router.push('/')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#ccc', padding: '8px 20px', borderRadius: 50, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s' }}
+            <button onClick={() => router.push('/login')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#ccc', padding: '8px 20px', borderRadius: 50, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = '#ccc' }}>Connexion</button>
             <button onClick={() => router.push('/register-client')} className="shimmer-btn" style={{ background: `linear-gradient(90deg, ${GOLD} 0%, ${GOLD_LIGHT} 50%, ${GOLD} 100%)`, backgroundSize: '200% auto', border: 'none', color: '#000', padding: '9px 22px', borderRadius: 50, fontSize: 14, fontWeight: 600, cursor: 'pointer', animation: 'shimmer 3s linear infinite' }}>Commencer</button>
           </div>

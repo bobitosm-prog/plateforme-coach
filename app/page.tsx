@@ -497,7 +497,7 @@ const calorieGoal = profile?.calorie_goal || 2500
   )
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', width: '100%', overflow: 'hidden', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif" }}>
+    <div className="app-shell" style={{ display: 'flex', width: '100%', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif" }}>
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: '#111111', borderRight: '1px solid #222222', zIndex: 50, padding: '24px 0' }}>
         {/* Logo */}
