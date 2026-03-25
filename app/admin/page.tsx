@@ -162,8 +162,8 @@ export default function AdminPage() {
                   {[
                     { href: '/',        label: 'Dashboard Client', icon: <Home size={15} color="#9CA3AF" /> },
                     { href: '/coach',   label: 'Coach Panel',      icon: <Crown size={15} color="#F97316" /> },
-                    { href: '/exercices', label: 'Exercices',      icon: <Dumbbell size={15} color="#9CA3AF" /> },
-                    { href: '/nutrition', label: 'Nutrition',      icon: <Utensils size={15} color="#9CA3AF" /> },
+                    { href: '/', label: 'Exercices',      icon: <Dumbbell size={15} color="#9CA3AF" /> },
+                    { href: '/', label: 'Nutrition',      icon: <Utensils size={15} color="#9CA3AF" /> },
                     { href: `/join?coach=${session?.user?.id ?? ''}`, label: 'Page Invitation', icon: <UserPlus size={15} color="#22C55E" /> },
                   ].map(item => (
                     <a key={item.href} href={item.href} className="nav-item">
@@ -296,8 +296,8 @@ export default function AdminPage() {
             {[
               { href: '/',          label: 'Dashboard Client', sub: 'Vue client',       icon: <Home size={22} color="#9CA3AF" strokeWidth={1.75} />,    accent: 'rgba(156,163,175,0.1)' },
               { href: '/coach',     label: 'Coach Panel',      sub: 'Gestion clients',  icon: <Crown size={22} color="#F97316" strokeWidth={1.75} />,   accent: 'rgba(249,115,22,0.1)'  },
-              { href: '/exercices', label: 'Exercices',        sub: 'Base d\'exercices', icon: <Dumbbell size={22} color="#60A5FA" strokeWidth={1.75} />, accent: 'rgba(96,165,250,0.1)'  },
-              { href: '/nutrition', label: 'Nutrition',        sub: 'Suivi calories',   icon: <Utensils size={22} color="#34D399" strokeWidth={1.75} />, accent: 'rgba(52,211,153,0.1)'  },
+              { href: '/',          label: 'Exercices',        sub: 'Base d\'exercices', icon: <Dumbbell size={22} color="#60A5FA" strokeWidth={1.75} />, accent: 'rgba(96,165,250,0.1)'  },
+              { href: '/',          label: 'Nutrition',        sub: 'Suivi calories',   icon: <Utensils size={22} color="#34D399" strokeWidth={1.75} />, accent: 'rgba(52,211,153,0.1)'  },
               { href: `/join?coach=${session?.user?.id ?? ''}`, label: 'Invitation', sub: 'Lien client', icon: <UserPlus size={22} color="#A78BFA" strokeWidth={1.75} />, accent: 'rgba(167,139,250,0.1)' },
             ].map(item => (
               <a key={item.href} href={item.href} className="nav-card">

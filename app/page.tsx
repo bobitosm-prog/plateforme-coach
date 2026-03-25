@@ -25,7 +25,6 @@ import NutritionTab from './components/tabs/NutritionTab'
 import ProgressTab from './components/tabs/ProgressTab'
 import ProfileTab from './components/tabs/ProfileTab'
 import MessagesTab from './components/tabs/MessagesTab'
-import LandingPage from './components/LandingPage'
 
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED,
