@@ -819,16 +819,23 @@ export default function CoachPage() {
           HIIT: <Zap size={15} />, Mobilité: <Activity size={15} />, Récupération: <Moon size={15} />,
         }
         return (
-          <div className="section-pad" style={{ width: '100%', maxWidth: '680px', margin: '0 auto', overflowX: 'hidden', paddingBottom: 100 }}>
+          <div className="section-pad" style={{ width: '100%', maxWidth: '680px', margin: '0 auto', overflowX: 'hidden', paddingBottom: '2rem' }}>
 
             {/* ── Sticky week nav header ── */}
             <div style={{ position: 'sticky', top: 0, zIndex: 30, background: '#111827', borderBottom: '1px solid #1F2937', padding: '12px 16px 10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.05em', color: '#F8FAFC', margin: 0 }}>CALENDRIER</h1>
-                <button
-                  onClick={() => setCalWeekOffset(0)}
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700, color: '#F97316', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}
-                >Aujourd'hui</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <button onClick={() => setSection('dashboard')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, background: '#1A1A1A', border: '1px solid #2A2A2A', cursor: 'pointer', color: '#9CA3AF' }}>
+                    <ChevronLeft size={16} strokeWidth={2.5} />
+                  </button>
+                  <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.05em', color: '#F8FAFC', margin: 0 }}>CALENDRIER</h1>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => setCalWeekOffset(0)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#C9A84C', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>Aujourd'hui</button>
+                  <button onClick={() => setShowNewSession(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#000', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}>
+                    <Plus size={12} strokeWidth={2.5} /> Séance
+                  </button>
+                </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button
@@ -941,17 +948,6 @@ export default function CoachPage() {
               ))}
             </div>
 
-            {/* Fixed FAB — Nouvelle séance */}
-            <div style={{ position: 'fixed', bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))', left: 0, right: 0, padding: '0 16px', zIndex: 35, pointerEvents: 'none' }}>
-              <button
-                onClick={() => setShowNewSession(true)}
-                style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', background: '#F97316', color: '#fff', border: 'none', borderRadius: 14, padding: '14px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer', boxShadow: '0 4px 24px rgba(249,115,22,0.45)', transition: 'opacity 150ms' }}
-                onMouseOver={e => (e.currentTarget as HTMLElement).style.opacity = '0.92'}
-                onMouseOut={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
-              >
-                <Plus size={16} /> Nouvelle séance
-              </button>
-            </div>
           </div>
         )
       })()}
