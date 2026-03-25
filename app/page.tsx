@@ -454,7 +454,11 @@ const calorieGoal = profile?.calorie_goal || 2500
     </div>
   )
 
-  if (!session) return <LandingPage />
+  if (!session) return (
+    <div style={{ overflowY: 'auto', minHeight: '100vh', background: '#050505' }}>
+      <LandingPage />
+    </div>
+  )
 
   // Subscription gate
   const isSubActive = profile?.subscription_status === 'active' && profile?.subscription_end_date && new Date(profile.subscription_end_date) > new Date()
