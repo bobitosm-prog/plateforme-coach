@@ -160,6 +160,8 @@ export default function CoachPage() {
   const [copied, setCopied]     = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [section, setSection]   = useState<'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil'>('dashboard')
+  const [coachProfile, setCoachProfile] = useState<any>(null)
+  const [stripeConnecting, setStripeConnecting] = useState(false)
 
   // Food management state
   const [foodList, setFoodList] = useState<any[]>([])
@@ -215,6 +217,10 @@ export default function CoachPage() {
         router.replace('/')
       } else {
         fetchClients(session.user.id)
+        // Fetch coach profile with Stripe info
+        supabase.from('profiles').select('id,full_name,stripe_account_id,stripe_onboarding_complete,subscription_price').eq('id', session.user.id).single().then(({ data }) => {
+          if (data) setCoachProfile(data)
+        })
       }
     })
   }, [session])
@@ -458,6 +464,24 @@ export default function CoachPage() {
   async function deleteFood(id: string) {
     await supabase.from('food_items').delete().eq('id', id)
     setFoodList(prev => prev.filter(f => f.id !== id))
+  }
+
+  async function handleStripeConnect() {
+    if (!session?.user?.id || stripeConnecting) return
+    setStripeConnecting(true)
+    try {
+      const res = await fetch('/api/stripe/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coachId: session.user.id }),
+      })
+      const { url, error } = await res.json()
+      if (url) window.location.href = url
+      else console.error('Stripe connect error:', error)
+    } catch (err) {
+      console.error('Stripe connect error:', err)
+    }
+    setStripeConnecting(false)
   }
 
   if (!mounted || (loading && session)) return (
@@ -1120,11 +1144,23 @@ export default function CoachPage() {
                   <Euro size={18} color="#22C55E" strokeWidth={2} />
                 </div>
               </div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
-                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>Stripe à connecter</span>
-              </div>
+              {coachProfile?.stripe_account_id ? (
+                <>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#22C55E', lineHeight: 1 }}>—</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                    <Check size={13} color="#22C55E" strokeWidth={2.5} />
+                    <span style={{ fontSize: '0.78rem', color: '#22C55E', fontWeight: 500 }}>Stripe connecté</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: '#6B7280', lineHeight: 1, marginBottom: 8 }}>Non connecté</div>
+                  <button onClick={handleStripeConnect} disabled={stripeConnecting}
+                    style={{ width: '100%', padding: '10px', background: stripeConnecting ? '#2A2A2A' : 'linear-gradient(135deg, #C9A84C, #D4AF37)', color: stripeConnecting ? '#6B7280' : '#000', borderRadius: 10, border: 'none', cursor: stripeConnecting ? 'wait' : 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    {stripeConnecting ? 'Connexion...' : '💳 Connecter Stripe'}
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => setSection('messages')}>
