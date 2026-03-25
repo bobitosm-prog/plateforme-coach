@@ -196,26 +196,38 @@ export default function ProfileTab({
       </div>
 
       {/* Subscription */}
-      {coachId && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>Mon abonnement</div>
-          <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5 }}>Abonnement coaching personnalisé avec suivi nutritionnel et programme d'entraînement.</p>
-          <button
-            onClick={async () => {
-              const res = await fetch('/api/stripe/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ clientId: session?.user?.id, coachId }),
-              })
-              const { url, error } = await res.json()
-              if (url) window.location.href = url
-              else console.error('Checkout error:', error)
-            }}
-            style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 12, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            S'abonner — CHF 30/mois
-          </button>
-        </div>
-      )}
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
+        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>Mon abonnement</div>
+        {(() => {
+          const isActive = profile?.subscription_status === 'active' && profile?.subscription_end_date && new Date(profile.subscription_end_date) > new Date()
+          const days = profile?.subscription_end_date ? Math.max(0, Math.ceil((new Date(profile.subscription_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0
+          const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date).toLocaleDateString('fr-FR') : ''
+
+          if (isActive) return (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <span style={{ color: GREEN, fontWeight: 700, fontSize: '0.9rem' }}>Abonnement actif</span>
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 800, color: '#C9A84C' }}>{days} jours restants</div>
+              <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginTop: 4 }}>Renouvellement le {endDate}</div>
+              {days <= 5 && <div style={{ fontSize: '0.78rem', color: '#F59E0B', marginTop: 8, fontWeight: 600 }}>Ton abonnement expire bientôt</div>}
+            </div>
+          )
+
+          return (
+            <div>
+              <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
+              <button onClick={async () => {
+                const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientId: session?.user?.id, coachId: coachId || 'platform' }) })
+                const { url } = await res.json()
+                if (url) window.location.href = url
+              }} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 12, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}>
+                S'abonner — CHF 30/mois
+              </button>
+            </div>
+          )
+        })()}
+      </div>
 
       {/* Sign out */}
       <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', background: 'transparent', border: `1px solid #EF4444`, borderRadius: 14, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms' }}>

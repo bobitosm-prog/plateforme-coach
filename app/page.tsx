@@ -480,6 +480,46 @@ const calorieGoal = profile?.calorie_goal || 2500
     </div>
   )
 
+  // Subscription gate
+  const isSubActive = profile?.subscription_status === 'active' && profile?.subscription_end_date && new Date(profile.subscription_end_date) > new Date()
+  const daysRemaining = profile?.subscription_end_date ? Math.max(0, Math.ceil((new Date(profile.subscription_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0
+
+  const handleSubscribe = async () => {
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: session?.user?.id, coachId: coachId || 'platform' }),
+    })
+    const { url } = await res.json()
+    if (url) window.location.href = url
+  }
+
+  if (profile && !isSubActive) return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0A0A0A', padding: '2rem', textAlign: 'center' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap');`}</style>
+      <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+        <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
+      </div>
+      <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: '#C9A84C', letterSpacing: '0.1em', margin: '0 0 8px' }}>FITPRO</h1>
+      <p style={{ color: '#9CA3AF', fontSize: '0.9rem', margin: '0 0 24px' }}>Accède à ton coaching personnalisé</p>
+      <div style={{ background: '#1A1A1A', borderRadius: 16, padding: '24px', width: '100%', maxWidth: 320, border: '1px solid #2A2A2A' }}>
+        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.4rem', fontWeight: 800, color: '#C9A84C' }}>CHF 30</div>
+        <div style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: 16 }}>par mois</div>
+        <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.82rem', color: '#9CA3AF' }}>
+          <div>✅ Plan alimentaire IA personnalisé</div>
+          <div>✅ Programme d'entraînement</div>
+          <div>✅ Suivi coach en temps réel</div>
+          <div>✅ Accès illimité à l'app</div>
+        </div>
+      </div>
+      <button onClick={handleSubscribe} style={{ width: '100%', maxWidth: 320, marginTop: 20, padding: '16px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 12, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.05rem', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}>
+        S'abonner — CHF 30/mois
+      </button>
+      <p style={{ color: '#4B5563', fontSize: '0.72rem', marginTop: 12 }}>30 jours · Résiliable à tout moment</p>
+      <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 16, background: 'none', border: 'none', color: '#6B7280', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}>Déconnexion</button>
+    </div>
+  )
+
   return (
     <div style={{ display: 'flex', height: '100dvh', width: '100%', overflow: 'hidden', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: "'Barlow', sans-serif" }}>
       {/* ── DESKTOP SIDEBAR ── */}
