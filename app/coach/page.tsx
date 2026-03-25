@@ -1095,17 +1095,21 @@ export default function CoachPage() {
               </div>
             </div>
 
-            <div className="stat-card">
+            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => setSection('calendar')}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Séances / semaine</span>
-                <div style={{ width: '36px', height: '36px', background: 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <CalendarCheck size={18} color="#F97316" strokeWidth={2} />
+                <div style={{ width: '36px', height: '36px', background: 'rgba(201,168,76,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CalendarCheck size={18} color="#C9A84C" strokeWidth={2} />
                 </div>
               </div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
+                {scheduledSessions.length}
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
-                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>À connecter</span>
+                <CalendarCheck size={13} color="#C9A84C" strokeWidth={2.5} />
+                <span style={{ fontSize: '0.78rem', color: '#C9A84C', fontWeight: 500 }}>
+                  {scheduledSessions.filter(s => s.status === 'completed').length} complétées
+                </span>
               </div>
             </div>
 
@@ -1119,7 +1123,7 @@ export default function CoachPage() {
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>—</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
                 <Minus size={13} color="#9CA3AF" strokeWidth={2.5} />
-                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>À connecter</span>
+                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontWeight: 500 }}>Stripe à connecter</span>
               </div>
             </div>
 
