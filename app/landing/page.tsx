@@ -35,15 +35,18 @@ export default function LandingPage() {
   }
   const handleRegister = async () => {
     setLoading(true); setError('')
-    const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: prenom, gender } } })
-    if (error) setError(error.message); else setRegStep(3)
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: prenom, gender } } })
+    if (error) { setError(error.message); setLoading(false); return }
+    if (data.session) { setRegStep(3) }
+    else { setError('Vérifie ton email et clique sur le lien de confirmation, puis connecte-toi.') }
     setLoading(false)
   }
   const handleChooseCoach = async () => {
     setLoading(true); setError('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user) { router.push('/onboarding'); return }
+      console.log('[coach] session:', session?.user?.id)
+      if (!session?.user) { setError('Session expirée. Reconnecte-toi.'); setLoading(false); return }
       const userId = session.user.id
       const { data: coach } = await supabase.from('profiles').select('id').eq('email', 'fe.ma@bluewin.ch').single()
       if (coach) {
