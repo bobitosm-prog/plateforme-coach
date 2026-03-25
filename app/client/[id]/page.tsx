@@ -769,7 +769,7 @@ export default function ClientProfilePage() {
      RENDER — MOBILE-FIRST
   ══════════════════════════════════════════════════════════════ */
   return (
-    <>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0A0A0A' }}>
       <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         *,*::before,*::after{box-sizing:border-box;}
@@ -811,7 +811,7 @@ export default function ClientProfilePage() {
       `}</style>
 
       {/* ── MOBILE HEADER ─────────────────────────────────────────── */}
-      <header style={{background:'#0F0F0F',borderBottom:'1px solid #1E1E1E',position:'sticky',top:0,zIndex:40,height:52,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 16px'}}>
+      <header style={{flexShrink:0,background:'#0F0F0F',borderBottom:'1px solid #1E1E1E',zIndex:40,height:52,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 16px'}}>
         <button onClick={()=>router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,borderRadius:10,background:'#1A1A1A',border:'1px solid #242424',cursor:'pointer',color:'#9CA3AF',flexShrink:0}} aria-label="Retour">
           <ArrowLeft size={16} strokeWidth={2.5}/>
         </button>
@@ -827,7 +827,7 @@ export default function ClientProfilePage() {
       </header>
 
       {/* ── MAIN CONTENT ──────────────────────────────────────────── */}
-      <main style={{padding:'14px 14px 80px',maxWidth:600,margin:'0 auto'}}>
+      <main data-scroll-container style={{flex:1,overflowY:'auto',overflowX:'hidden',padding:'14px 14px 80px',maxWidth:600,margin:'0 auto'}}>
 
         {/* ══ TAB: APERÇU ══ */}
         {activeTab === 'apercu' && (
@@ -2151,6 +2151,6 @@ export default function ClientProfilePage() {
           <span>{toast}</span>
         </div>
       )}
-    </>
+    </div>
   )
 }
