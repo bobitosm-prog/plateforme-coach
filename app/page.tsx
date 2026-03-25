@@ -489,10 +489,17 @@ const calorieGoal = profile?.calorie_goal || 2500
           <div>✅ Accès illimité à l'app</div>
         </div>
       </div>
-      <button onClick={handleSubscribe} style={{ width: '100%', maxWidth: 320, marginTop: 20, padding: '16px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 12, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.05rem', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}>
-        S'abonner — CHF 30/mois
-      </button>
-      <p style={{ color: '#4B5563', fontSize: '0.72rem', marginTop: 12 }}>30 jours · Résiliable à tout moment</p>
+      {coachId ? (
+        <>
+          <button onClick={handleSubscribe} style={{ width: '100%', maxWidth: 320, marginTop: 20, padding: '16px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 12, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.05rem', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}>S'abonner — CHF 30/mois</button>
+          <p style={{ color: '#4B5563', fontSize: '0.72rem', marginTop: 12 }}>30 jours · Résiliable à tout moment</p>
+        </>
+      ) : (
+        <div style={{ width: '100%', maxWidth: 320, marginTop: 20, background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
+          <p style={{ color: '#9CA3AF', fontSize: '0.85rem', margin: '0 0 8px', lineHeight: 1.5 }}>Tu n'as pas encore de coach.</p>
+          <p style={{ color: '#6B7280', fontSize: '0.75rem', margin: 0, lineHeight: 1.5 }}>Rejoins un coach via son lien d'invitation pour commencer ton coaching personnalisé.</p>
+        </div>
+      )}
       <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 16, background: 'none', border: 'none', color: '#6B7280', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}>Déconnexion</button>
     </div>
   )

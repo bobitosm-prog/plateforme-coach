@@ -455,6 +455,9 @@ export default function OnboardingPage() {
                   </div>
                 )}
                 {foodSearching && <p style={{ fontSize: '0.72rem', color: MUTED, textAlign: 'center' }}>Recherche...</p>}
+                {!foodSearching && foodQuery.length >= 2 && foodResults.length === 0 && (
+                  <p style={{ fontSize: '0.75rem', color: MUTED, textAlign: 'center', padding: '8px 0' }}>Aucun aliment trouvé. Essaie un autre terme.</p>
+                )}
 
                 {/* Selected foods as chips */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, minHeight: 32 }}>
@@ -477,6 +480,7 @@ export default function OnboardingPage() {
                     {totalFoods} aliments au total · {mealsWithFood}/4 repas configurés {mealsWithFood < 2 && '(min. 2)'}
                   </div>
                   <NextBtn onClick={goNext} disabled={mealsWithFood < 2} />
+                  <button onClick={goNext} style={{ width: '100%', marginTop: 8, padding: '10px', background: 'none', border: 'none', color: MUTED, fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>Passer cette étape</button>
                 </div>
               </motion.div>
             )

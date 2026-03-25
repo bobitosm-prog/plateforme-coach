@@ -1,8 +1,11 @@
+// NOTE: SUPABASE_SERVICE_ROLE_KEY is required for secure server-side operations.
+// Without it, the route falls back to ANON_KEY which respects RLS and may fail.
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
 function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY manquante — utilisation de ANON_KEY en fallback. Configurer en production.')
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 const DURATION_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
