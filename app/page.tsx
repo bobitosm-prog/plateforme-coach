@@ -25,6 +25,7 @@ import NutritionTab from './components/tabs/NutritionTab'
 import ProgressTab from './components/tabs/ProgressTab'
 import ProfileTab from './components/tabs/ProfileTab'
 import MessagesTab from './components/tabs/MessagesTab'
+import LandingPage from './components/LandingPage'
 
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED,
@@ -453,7 +454,7 @@ const calorieGoal = profile?.calorie_goal || 2500
     </div>
   )
 
-  if (!session) return <LandingInline router={router} supabase={supabase} />
+  if (!session) return <LandingPage />
 
   // Subscription gate
   const isSubActive = profile?.subscription_status === 'active' && profile?.subscription_end_date && new Date(profile.subscription_end_date) > new Date()
@@ -881,61 +882,6 @@ const calorieGoal = profile?.calorie_goal || 2500
         })}
       </nav>
       </div>{/* end main-content-area */}
-    </div>
-  )
-}
-
-/* ── Landing page for non-authenticated visitors ── */
-function LandingInline({ router, supabase }: { router: any; supabase: any }) {
-  return (
-    <div style={{ background: '#0A0A0A', color: '#fff', fontFamily: "'DM Sans', sans-serif", minHeight: '100vh' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');.bn{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em}`}</style>
-
-      {/* Hero */}
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: '60px 24px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-          <div className="animate-pulse-gold" style={{ width: 72, height: 72, background: '#C9A84C', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Zap size={36} color="#000" fill="#000" strokeWidth={2.5} />
-          </div>
-        </div>
-        <h1 className="bn" style={{ fontSize: '3.5rem', lineHeight: 0.95, margin: '0 0 12px' }}>
-          TON COACH PERSO.<br /><span style={{ color: '#C9A84C' }}>TES RÉSULTATS.</span>
-        </h1>
-        <p style={{ color: '#9CA3AF', fontSize: '0.95rem', lineHeight: 1.6, margin: '0 0 32px' }}>
-          Plans alimentaires et sportifs IA.<br />Suivi personnalisé avec ton coach.
-        </p>
-
-        {/* Auth form */}
-        <div style={{ background: '#111', border: '1px solid #1A1A1A', borderRadius: 20, padding: 24, marginBottom: 20 }}>
-          <Auth supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#C9A84C', brandAccent: '#8B6914' }, radii: { borderRadiusButton: '14px', inputBorderRadius: '14px' } } } }}
-            theme="dark" providers={['google']}
-            localization={{ variables: { sign_in: { email_label: 'Email', password_label: 'Mot de passe', button_label: 'Connexion', social_provider_text: 'Continuer avec {{provider}}' } } }}
-          />
-        </div>
-
-        {/* Signup buttons */}
-        <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
-          <button onClick={() => router.push('/register-client')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #C9A84C', background: 'transparent', color: '#C9A84C', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
-            M'inscrire comme client
-          </button>
-          <button onClick={() => router.push('/coach-signup')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #333', background: 'transparent', color: '#9CA3AF', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
-            M'inscrire comme coach
-          </button>
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 28, fontSize: '0.78rem', color: '#6B7280' }}>
-          <span>⭐ <strong style={{ color: '#fff' }}>4.9/5</strong></span>
-          <span>👥 <strong style={{ color: '#fff' }}>500+</strong></span>
-          <span>🏆 <strong style={{ color: '#fff' }}>50+</strong> coachs</span>
-        </div>
-
-        {/* Link to full landing */}
-        <button onClick={() => router.push('/landing')} style={{ marginTop: 24, background: 'none', border: 'none', color: '#C9A84C', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}>
-          Découvrir CoachPro →
-        </button>
-      </div>
     </div>
   )
 }
