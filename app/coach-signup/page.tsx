@@ -87,16 +87,22 @@ function CoachSignupPage() {
   }
 
   async function handleStripeConnect() {
-    if (!session) return
     setStripeConnecting(true)
     try {
+      // Ensure profile is saved first
+      await saveProfile()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { console.error('[coach signup] No user'); setStripeConnecting(false); return }
+      console.log('[coach signup] Calling stripe connect for:', user.id)
       const res = await fetch('/api/stripe/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coachId: session.user.id }),
+        body: JSON.stringify({ coachId: user.id }),
       })
-      const { url } = await res.json()
-      if (url) window.location.href = url
+      const data = await res.json()
+      console.log('[stripe connect] response:', res.status, data)
+      if (data.url) window.location.href = data.url
+      else console.error('[stripe connect] No URL:', data.error)
     } catch (err) {
       console.error('Stripe connect error:', err)
     }
@@ -251,7 +257,7 @@ function CoachSignupPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={async () => { await saveProfile(); handleStripeConnect() }} disabled={stripeConnecting}
+              <button onClick={handleStripeConnect} disabled={stripeConnecting}
                 style={{ width: '100%', maxWidth: 320, padding: '18px', background: stripeConnecting ? '#2A2A2A' : `linear-gradient(135deg, ${GOLD}, #D4AF37)`, border: 'none', borderRadius: 16, color: stripeConnecting ? MUTED : '#000', fontSize: '1.05rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", cursor: stripeConnecting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {stripeConnecting ? 'Connexion...' : 'Connecter mon compte Stripe →'}
               </button>
