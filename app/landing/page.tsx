@@ -40,15 +40,21 @@ export default function LandingPage() {
     setLoading(false)
   }
   const handleChooseCoach = async () => {
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
-    const { data: coach } = await supabase.from('profiles').select('id').eq('email', 'fe.ma@bluewin.ch').single()
-    if (coach) {
-      await supabase.from('coach_clients').upsert({ coach_id: coach.id, client_id: user.id }, { onConflict: 'coach_id,client_id' })
-      await supabase.from('profiles').update({ role: 'client' }).eq('id', user.id)
-    }
-    router.push('/onboarding'); setLoading(false)
+    setLoading(true); setError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { router.push('/onboarding'); return }
+      const userId = session.user.id
+      const { data: coach } = await supabase.from('profiles').select('id').eq('email', 'fe.ma@bluewin.ch').single()
+      if (coach) {
+        await supabase.from('coach_clients').upsert({ coach_id: coach.id, client_id: userId }, { onConflict: 'client_id' })
+        await supabase.from('profiles').update({ role: 'client', full_name: prenom || null, gender: gender || null }).eq('id', userId)
+      }
+      router.push('/onboarding')
+    } catch (err) {
+      console.error('handleChooseCoach error:', err)
+      router.push('/onboarding')
+    } finally { setLoading(false) }
   }
 
   const G = '#C9A84C', GL = '#F0D060'
