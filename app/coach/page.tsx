@@ -221,8 +221,10 @@ export default function CoachPage() {
       } else {
         fetchClients(session.user.id)
         // Fetch coach profile with Stripe info
-        supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price').eq('id', session.user.id).single().then(({ data }) => {
+        supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years').eq('id', session.user.id).single().then(({ data }) => {
           if (data) {
+            // Gate: redirect to coach-signup if onboarding not complete
+            if (!data.coach_onboarding_complete) { router.replace('/coach-signup'); return }
             setCoachProfile(data)
             // Fetch monthly revenue
             const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
@@ -1111,6 +1113,16 @@ export default function CoachPage() {
       {section === 'dashboard' && (
         <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
 
+          {/* Stripe banner */}
+          {coachProfile && !coachProfile.stripe_account_id && coachProfile.email !== 'fe.ma@bluewin.ch' && (
+            <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 14, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.85rem', color: '#C9A84C', fontWeight: 600 }}>Connecte ton compte Stripe pour recevoir les paiements de tes clients</span>
+              <button onClick={handleStripeConnect} disabled={stripeConnecting} style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 8, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                {stripeConnecting ? '...' : '💳 Connecter Stripe'}
+              </button>
+            </div>
+          )}
+
           {/* Page header */}
           <div style={{ marginBottom: '32px' }}>
             <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.02em', margin: 0 }}>Tableau de bord</h1>
@@ -1548,21 +1560,40 @@ export default function CoachPage() {
       {/* ── PROFIL SECTION ── */}
       {section === 'profil' && (
         <div className="section-pad" style={{ maxWidth: '480px', margin: '0 auto', padding: '40px 16px' }}>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.8rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.04em', margin: '0 0 32px' }}>Mon profil</h1>
-          <div style={{ background: '#1F2937', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div className="avatar-circle" style={{ width: 64, height: 64, fontSize: '1.4rem' }}>{coachInitials}</div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.04em' }}>{coachName}</div>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.8rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.04em', margin: '0 0 24px' }}>Mon profil</h1>
+          <div style={{ background: '#141414', border: '1px solid #242424', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <div className="avatar-circle" style={{ width: 72, height: 72, fontSize: '1.5rem', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', color: '#000' }}>{coachInitials}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.3rem', fontWeight: 700, color: '#F8FAFC' }}>{coachName}</div>
             <div style={{ fontSize: '0.82rem', color: '#6B7280' }}>{session.user.email}</div>
-            <span className="badge badge-active" style={{ marginTop: 4 }}>Coach</span>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <span className="badge badge-active">Coach</span>
+              {coachProfile?.stripe_account_id ? <span style={{ padding: '3px 9px', borderRadius: 999, fontSize: '0.65rem', fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.2)' }}>Stripe connecté</span> : <span style={{ padding: '3px 9px', borderRadius: 999, fontSize: '0.65rem', fontWeight: 700, background: 'rgba(249,115,22,0.12)', color: '#F97316', border: '1px solid rgba(249,115,22,0.2)' }}>Stripe manquant</span>}
+            </div>
           </div>
+
+          {/* Coach details */}
+          {coachProfile && (
+            <div style={{ background: '#141414', border: '1px solid #242424', borderRadius: 16, padding: 18, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {coachProfile.coach_bio && <div><div style={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Bio</div><div style={{ fontSize: '0.85rem', color: '#F8FAFC', marginTop: 4 }}>{coachProfile.coach_bio}</div></div>}
+              {coachProfile.coach_speciality?.length > 0 && (
+                <div><div style={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Spécialités</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {coachProfile.coach_speciality.map((s: string) => <span key={s} style={{ padding: '3px 10px', borderRadius: 999, fontSize: '0.68rem', fontWeight: 700, background: 'rgba(201,168,76,0.1)', color: '#C9A84C', border: '1px solid rgba(201,168,76,0.2)' }}>{s}</span>)}
+                  </div>
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {coachProfile.coach_experience_years != null && <div><div style={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Expérience</div><div style={{ fontSize: '0.95rem', color: '#F8FAFC', fontWeight: 600, marginTop: 2 }}>{coachProfile.coach_experience_years} ans</div></div>}
+                <div><div style={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Tarif mensuel</div><div style={{ fontSize: '0.95rem', color: '#C9A84C', fontWeight: 600, marginTop: 2 }}>CHF {coachProfile.subscription_price || 150}</div></div>
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <button className="btn-secondary" onClick={() => setSection('dashboard')}>
               <Users size={16} /> Tableau de bord
             </button>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', padding: '11px 20px', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.04em', cursor: 'pointer', width: '100%' }}
-            >
+            <button onClick={() => supabase.auth.signOut()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', padding: '11px 20px', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', width: '100%' }}>
               <LogOut size={16} /> Se déconnecter
             </button>
           </div>
