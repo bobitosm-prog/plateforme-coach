@@ -453,43 +453,7 @@ const calorieGoal = profile?.calorie_goal || 2500
     </div>
   )
 
-  if (!session) return (
-    <div className="min-h-screen bg-[#080808] flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');.fd{font-family:'Bebas Neue',sans-serif;letter-spacing:.05em}`}</style>
-      <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-[#C9A84C]/8 rounded-full blur-[100px] pointer-events-none" />
-      <div className="w-full max-w-sm relative z-10">
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#C9A84C] to-[#8B6914] rounded-[24px] flex items-center justify-center shadow-[0_20px_60px_rgba(201,168,76,0.3)] rotate-3 mb-5">
-            <Flame size={40} fill="white" className="text-white -rotate-3" />
-          </div>
-          <h1 className="fd text-6xl text-white tracking-widest">COACHPRO</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="h-px w-12 bg-[#C9A84C]/30" />
-            <p className="text-[#C9A84C]/50 text-[9px] tracking-[0.3em] uppercase">Elite Performance</p>
-            <div className="h-px w-12 bg-[#C9A84C]/30" />
-          </div>
-        </div>
-        <div className="bg-[#111]/80 border border-white/5 rounded-[28px] p-6">
-          <Auth supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#C9A84C', brandAccent: '#8B6914' }, radii: { borderRadiusButton: '14px', inputBorderRadius: '14px' } } } }}
-            theme="dark" providers={['google']}
-            localization={{ variables: { sign_in: { email_label: 'Email', password_label: 'Mot de passe', button_label: 'Connexion', social_provider_text: 'Continuer avec {{provider}}' } } }}
-          />
-        </div>
-        <div style={{ marginTop: 24, textAlign: 'center' }}>
-          <p style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: 12 }}>Pas encore de compte ?</p>
-          <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
-            <button onClick={() => router.push('/register-client')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #C9A84C', background: 'transparent', color: '#C9A84C', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.04em' }}>
-              M'inscrire comme client
-            </button>
-            <button onClick={() => router.push('/coach-signup')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #333', background: 'transparent', color: '#9CA3AF', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.04em' }}>
-              M'inscrire comme coach
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  if (!session) return <LandingInline router={router} supabase={supabase} />
 
   // Subscription gate
   const isSubActive = profile?.subscription_status === 'active' && profile?.subscription_end_date && new Date(profile.subscription_end_date) > new Date()
@@ -917,6 +881,61 @@ const calorieGoal = profile?.calorie_goal || 2500
         })}
       </nav>
       </div>{/* end main-content-area */}
+    </div>
+  )
+}
+
+/* ── Landing page for non-authenticated visitors ── */
+function LandingInline({ router, supabase }: { router: any; supabase: any }) {
+  return (
+    <div style={{ background: '#0A0A0A', color: '#fff', fontFamily: "'DM Sans', sans-serif", minHeight: '100vh' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');.bn{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em}`}</style>
+
+      {/* Hero */}
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '60px 24px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <div className="animate-pulse-gold" style={{ width: 72, height: 72, background: '#C9A84C', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Zap size={36} color="#000" fill="#000" strokeWidth={2.5} />
+          </div>
+        </div>
+        <h1 className="bn" style={{ fontSize: '3.5rem', lineHeight: 0.95, margin: '0 0 12px' }}>
+          TON COACH PERSO.<br /><span style={{ color: '#C9A84C' }}>TES RÉSULTATS.</span>
+        </h1>
+        <p style={{ color: '#9CA3AF', fontSize: '0.95rem', lineHeight: 1.6, margin: '0 0 32px' }}>
+          Plans alimentaires et sportifs IA.<br />Suivi personnalisé avec ton coach.
+        </p>
+
+        {/* Auth form */}
+        <div style={{ background: '#111', border: '1px solid #1A1A1A', borderRadius: 20, padding: 24, marginBottom: 20 }}>
+          <Auth supabaseClient={supabase}
+            appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#C9A84C', brandAccent: '#8B6914' }, radii: { borderRadiusButton: '14px', inputBorderRadius: '14px' } } } }}
+            theme="dark" providers={['google']}
+            localization={{ variables: { sign_in: { email_label: 'Email', password_label: 'Mot de passe', button_label: 'Connexion', social_provider_text: 'Continuer avec {{provider}}' } } }}
+          />
+        </div>
+
+        {/* Signup buttons */}
+        <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
+          <button onClick={() => router.push('/register-client')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #C9A84C', background: 'transparent', color: '#C9A84C', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+            M'inscrire comme client
+          </button>
+          <button onClick={() => router.push('/coach-signup')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #333', background: 'transparent', color: '#9CA3AF', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+            M'inscrire comme coach
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 28, fontSize: '0.78rem', color: '#6B7280' }}>
+          <span>⭐ <strong style={{ color: '#fff' }}>4.9/5</strong></span>
+          <span>👥 <strong style={{ color: '#fff' }}>500+</strong></span>
+          <span>🏆 <strong style={{ color: '#fff' }}>50+</strong> coachs</span>
+        </div>
+
+        {/* Link to full landing */}
+        <button onClick={() => router.push('/landing')} style={{ marginTop: 24, background: 'none', border: 'none', color: '#C9A84C', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}>
+          Découvrir CoachPro →
+        </button>
+      </div>
     </div>
   )
 }
