@@ -96,9 +96,10 @@ const photoRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
+      console.log('[role check] user:', session.user.email, 'role:', role)
       if (role === 'super_admin') { router.replace('/admin') }
       else if (role === 'coach') { router.replace('/coach') }
-      else setRoleChecked(true)
+      else { setRoleChecked(true) } // client or null → stay on client dashboard
     })
   }, [session])
 

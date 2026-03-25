@@ -106,6 +106,7 @@ export default function OnboardingPage() {
     const uid = session.user.id
     const update: Record<string, any> = {
       id: uid,
+      role: 'client',
       full_name: firstName.trim(),
       birth_date: birthDate || null,
       gender: gender || null,
