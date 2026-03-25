@@ -2,8 +2,6 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { getRole } from '../lib/getRole'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -95,7 +93,6 @@ const photoRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
-      console.log('[role check] user:', session.user.email, 'role:', role)
       if (role === 'super_admin') { router.replace('/admin') }
       else if (role === 'coach') { router.replace('/coach') }
       else { setRoleChecked(true) } // client or null → stay on client dashboard
@@ -211,16 +208,13 @@ const photoRef = useRef<HTMLInputElement>(null)
     ])
 
     const profileData = profRes.data
-    console.log('[onboarding] uid:', uid, 'full_name:', profRes.data?.full_name, 'role:', profRes.data?.role)
 
     if (!profRes.data) {
-      console.log('[onboarding] no profile found for uid:', uid)
       router.replace('/onboarding')
       return
     }
     const fn = profRes.data.full_name?.trim()
     if (!fn || fn === 'Athlete') {
-      console.log('[onboarding] full_name missing or default, redirecting. Value:', JSON.stringify(profRes.data.full_name))
       router.replace('/onboarding')
       return
     }

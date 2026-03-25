@@ -105,7 +105,7 @@ export default function LandingPage() {
           {[['#features','Fonctionnalités'],['#how','Comment ça marche'],['#pricing','Tarifs'],['#temoignages','Témoignages']].map(([href,label]) => <a key={href} href={href} style={{ color: '#666', textDecoration: 'none', fontSize: 13, fontWeight: 300, letterSpacing: 0.3 }}>{label}</a>)}
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <button onClick={go('/login')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#999', padding: '8px 20px', borderRadius: 40, fontSize: 12.5, cursor: 'pointer', fontFamily: "'DM Sans'", letterSpacing: 0.3 }}>Connexion</button>
+          <button onClick={() => { import('@supabase/ssr').then(({ createBrowserClient }) => { createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!).auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/' } }) }) }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#999', padding: '8px 20px', borderRadius: 40, fontSize: 12.5, cursor: 'pointer', fontFamily: "'DM Sans'", letterSpacing: 0.3 }}>Connexion</button>
           <button onClick={go('/register-client')} className="hide-mobile" style={{ background: gold, border: 'none', color: '#000', padding: '9px 22px', borderRadius: 40, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans'" }}>Commencer</button>
         </div>
       </nav>

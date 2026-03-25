@@ -349,7 +349,6 @@ export default function CoachPage() {
 
   async function saveNewSession() {
     if (!session?.user?.id || !nsClientId || !nsDate) return
-    console.log('[saveNewSession] date:', nsDate, 'start:', nsStartTime, 'end:', nsEndTime)
     const start = new Date(`${nsDate}T${nsStartTime}:00`)
     const end   = new Date(`${nsDate}T${nsEndTime}:00`)
     const duration = Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000))
@@ -1114,7 +1113,7 @@ export default function CoachPage() {
         <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
 
           {/* Stripe banner */}
-          {coachProfile && !coachProfile.stripe_account_id && coachProfile.email !== 'fe.ma@bluewin.ch' && (
+          {coachProfile && !coachProfile.stripe_account_id && coachProfile.email !== process.env.NEXT_PUBLIC_COACH_EMAIL && (
             <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 14, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.85rem', color: '#C9A84C', fontWeight: 600 }}>Connecte ton compte Stripe pour recevoir les paiements de tes clients</span>
               <button onClick={handleStripeConnect} disabled={stripeConnecting} style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 8, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
@@ -1175,7 +1174,7 @@ export default function CoachPage() {
                   <Euro size={18} color="#C9A84C" strokeWidth={2} />
                 </div>
               </div>
-              {coachProfile?.email === 'fe.ma@bluewin.ch' ? (
+              {coachProfile?.email === process.env.NEXT_PUBLIC_COACH_EMAIL ? (
                 <>
                   <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#C9A84C', lineHeight: 1 }}>
                     {monthRevenue > 0 ? `${monthRevenue}` : '0'}

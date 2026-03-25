@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         // Insert commission (if coach is not platform owner)
         if (coachId && coachId !== 'platform') {
           const { data: coach } = await supabase.from('profiles').select('email').eq('id', coachId).single()
-          if (coach?.email !== 'fe.ma@bluewin.ch') {
+          if (coach?.email !== (process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch')) {
             await supabase.from('commissions').insert({
               coach_id: coachId,
               amount: 30 * 0.05, // 1.50 CHF

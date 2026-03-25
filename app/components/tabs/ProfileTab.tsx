@@ -66,26 +66,21 @@ export default function ProfileTab({
     setNotifStatus('loading')
 
     const permission = await Notification.requestPermission()
-    console.log('[push] permission:', permission)
     if (permission !== 'granted') { setNotifStatus('denied'); return }
 
     const reg = await navigator.serviceWorker.ready
-    console.log('[push] service worker ready:', reg)
 
     const existing = await reg.pushManager.getSubscription()
-    console.log('[push] existing subscription:', existing)
 
     const sub = existing || await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
     })
-    console.log('[push] subscription:', sub.toJSON())
 
     const { data, error } = await supabasePush.from('push_subscriptions').upsert(
       { user_id: session.user.id, subscription: sub.toJSON() },
       { onConflict: 'user_id' }
     )
-    console.log('[push] supabase upsert data:', data, 'error:', error)
 
     setNotifStatus('done')
   }

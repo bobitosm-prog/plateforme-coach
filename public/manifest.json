@@ -1,11 +1,11 @@
 {
-  "name": "FITPRO",
-  "short_name": "FITPRO",
-  "description": "Ta plateforme de coaching fitness",
+  "name": "CoachPro",
+  "short_name": "CoachPro",
+  "description": "Coaching fitness propulsé par l'IA",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0A0A0A",
-  "theme_color": "#F97316",
+  "background_color": "#050505",
+  "theme_color": "#C9A84C",
   "orientation": "portrait",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },

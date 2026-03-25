@@ -93,14 +93,12 @@ function CoachSignupPage() {
       await saveProfile()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { console.error('[coach signup] No user'); setStripeConnecting(false); return }
-      console.log('[coach signup] Calling stripe connect for:', user.id)
       const res = await fetch('/api/stripe/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ coachId: user.id }),
       })
       const data = await res.json()
-      console.log('[stripe connect] response:', res.status, data)
       if (data.url) window.location.href = data.url
       else console.error('[stripe connect] No URL:', data.error)
     } catch (err) {

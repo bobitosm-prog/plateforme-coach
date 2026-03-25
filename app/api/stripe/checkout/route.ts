@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     // If coach has Stripe AND is not the platform owner → add transfer with 5% fee
-    if (coachStripeAccountId && coachEmail !== 'fe.ma@bluewin.ch') {
+    if (coachStripeAccountId && coachEmail !== (process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch')) {
       sessionParams.subscription_data = {
         application_fee_percent: 5,
         transfer_data: { destination: coachStripeAccountId },

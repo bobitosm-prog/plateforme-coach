@@ -7,8 +7,6 @@ const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dima
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY
-    console.log('API KEY exists:', !!apiKey)
-    console.log('API KEY first 10 chars:', apiKey?.slice(0, 10))
 
     if (!apiKey) {
       return NextResponse.json({ error: 'Configuration serveur manquante: NEXT_PUBLIC_ANTHROPIC_API_KEY' }, { status: 500 })
@@ -33,7 +31,6 @@ Réponds avec SEULEMENT ce JSON (pas de texte avant ou après):
 
 Génère ${trainingDays} jours d'entraînement et ${7 - trainingDays} jours de repos. Maximum 4 exercices par jour.`
 
-    console.log('[generate-program] Calling Anthropic API...')
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -48,7 +45,6 @@ Génère ${trainingDays} jours d'entraînement et ${7 - trainingDays} jours de r
       }),
     })
 
-    console.log('[generate-program] Anthropic API responded — status:', anthropicRes.status)
 
     if (!anthropicRes.ok) {
       const err = await anthropicRes.text()
@@ -58,7 +54,6 @@ Génère ${trainingDays} jours d'entraînement et ${7 - trainingDays} jours de r
 
     const data = await anthropicRes.json()
     const rawText = data.content[0].text
-    console.log('[generate-program] FULL RAW:', rawText)
 
     // Strip markdown code blocks if present
     const cleaned = rawText
