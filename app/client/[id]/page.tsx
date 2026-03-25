@@ -769,7 +769,7 @@ export default function ClientProfilePage() {
      RENDER — MOBILE-FIRST
   ══════════════════════════════════════════════════════════════ */
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0A0A0A' }}>
+    <div className="client-page-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0A0A0A' }}>
       <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         *,*::before,*::after{box-sizing:border-box;}
@@ -803,6 +803,20 @@ export default function ClientProfilePage() {
         .ex-row-m{display:flex;flex-direction:column;gap:7px;padding:12px 0;border-bottom:1px solid #1E1E1E;}
         .ex-row-m:last-child{border-bottom:none;}
         .food-row-m{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid #1a1f2e;}
+        .desktop-sidebar-client{display:none;}
+        .desktop-header-client{display:none;}
+        .desktop-tabs{display:none;}
+        @media(min-width:768px){
+          .mobile-header-client{display:none !important;}
+          .bottom-nav{display:none !important;}
+          .desktop-sidebar-client{display:flex !important;flex-direction:column;width:280px;min-height:100vh;border-right:1px solid #242424;padding:24px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+          .desktop-header-client{display:flex !important;align-items:center;gap:12px;padding:16px 32px;border-bottom:1px solid #242424;position:sticky;top:0;z-index:40;background:#0A0A0A;}
+          .desktop-tabs{display:flex !important;gap:4px;padding:0 32px;border-bottom:1px solid #242424;background:#0A0A0A;}
+          .desktop-tabs button{padding:12px 16px;border:none;background:transparent;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.04em;color:#6B7280;border-bottom:2px solid transparent;transition:all 150ms;}
+          .desktop-tabs button.dt-active{color:#C9A84C;border-bottom-color:#C9A84C;}
+          .main-client-content{max-width:100% !important;padding:24px 32px 32px !important;}
+          .client-page-root{flex-direction:row !important;}
+        }
         .food-row-m:last-child{border-bottom:none;}
         input[type=number]::-webkit-inner-spin-button{opacity:.4;}
         input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:999px;background:#242424;outline:none;}
@@ -810,8 +824,60 @@ export default function ClientProfilePage() {
         ::-webkit-scrollbar{display:none;}
       `}</style>
 
-      {/* ── MOBILE HEADER ─────────────────────────────────────────── */}
-      <header style={{flexShrink:0,background:'#0F0F0F',borderBottom:'1px solid #1E1E1E',zIndex:40,height:52,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 16px'}}>
+      {/* ── DESKTOP SIDEBAR ── */}
+      <div className="desktop-sidebar-client">
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,marginBottom:24}}>
+          <div style={{width:72,height:72,borderRadius:'50%',background:'linear-gradient(135deg,#C9A84C,#D4AF37)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.5rem',fontWeight:700,color:'#000'}}>{initials(profile.full_name)}</div>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.2rem',fontWeight:700,color:'#F8FAFC'}}>{profile.full_name}</div>
+            {profile.email && <div style={{fontSize:'0.72rem',color:'#6B7280'}}>{profile.email}</div>}
+          </div>
+          {(() => { const s = profile.status ?? 'active'; const cfg = s==='warning'?{cls:'badge-warning',l:'À relancer'}:s==='inactive'?{cls:'badge-inactive',l:'Inactif'}:{cls:'badge-active',l:'Actif'}; return <span className={`badge ${cfg.cls}`}>{cfg.l}</span> })()}
+        </div>
+        <div style={{borderTop:'1px solid #242424',paddingTop:16,display:'flex',flexDirection:'column',gap:10}}>
+          {[
+            {l:'Poids',v:profile.current_weight?`${profile.current_weight} kg`:'—'},
+            {l:'Objectif',v:profile.target_weight?`${profile.target_weight} kg`:'—'},
+            {l:'TDEE',v:profile.tdee?`${profile.tdee} kcal`:'—'},
+          ].map(({l,v})=>(<div key={l} style={{display:'flex',justifyContent:'space-between',fontSize:'0.82rem'}}><span style={{color:'#6B7280'}}>{l}</span><span style={{color:'#F8FAFC',fontWeight:600}}>{v}</span></div>))}
+        </div>
+        {profile.dietary_type && (
+          <div style={{marginTop:12,display:'flex',flexWrap:'wrap',gap:4}}>
+            <span className="badge badge-active">{profile.dietary_type}</span>
+            {(profile.allergies||[]).map((a:string)=>(<span key={a} style={{display:'inline-flex',padding:'3px 8px',borderRadius:999,fontSize:'0.62rem',fontWeight:700,background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.2)'}}>{a}</span>))}
+          </div>
+        )}
+        <div style={{marginTop:'auto',paddingTop:16,display:'flex',flexDirection:'column',gap:8}}>
+          <button onClick={generateAiMealPlan} disabled={aiMealGenerating} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:10,border:'none',cursor:'pointer',background:'linear-gradient(135deg,#C9A84C,#D4AF37)',color:'#000',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.82rem',fontWeight:700,width:'100%'}}>
+            <Sparkles size={14}/>Générer plan IA
+          </button>
+          <button onClick={()=>router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:10,border:'1px solid #2A2A2A',background:'transparent',color:'#6B7280',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.82rem',fontWeight:700,width:'100%'}}>
+            <ArrowLeft size={14}/>Retour clients
+          </button>
+        </div>
+      </div>
+
+      {/* ── DESKTOP CONTENT WRAPPER ── */}
+      <div style={{flex:1,display:'flex',flexDirection:'column',minHeight:0}}>
+
+      {/* ── DESKTOP HEADER ── */}
+      <div className="desktop-header-client">
+        <button onClick={()=>router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,borderRadius:10,background:'#1A1A1A',border:'1px solid #242424',cursor:'pointer',color:'#9CA3AF'}}><ArrowLeft size={16} strokeWidth={2.5}/></button>
+        <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#C9A84C,#D4AF37)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:'0.7rem',color:'#000'}}>{initials(profile.full_name)}</div>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.1rem',fontWeight:700,color:'#F8FAFC'}}>{profile.full_name}</span>
+      </div>
+
+      {/* ── DESKTOP TABS ── */}
+      <div className="desktop-tabs">
+        {(['apercu','programme','nutrition','messages','notes'] as const).map(t=>(
+          <button key={t} className={activeTab===t?'dt-active':''} onClick={()=>setActiveTab(t)}>
+            {{apercu:'Aperçu',programme:'Programme',nutrition:'Nutrition',messages:'Messages',notes:'Notes'}[t]}
+          </button>
+        ))}
+      </div>
+
+      {/* ── MOBILE HEADER ── */}
+      <header className="mobile-header-client" style={{flexShrink:0,background:'#0F0F0F',borderBottom:'1px solid #1E1E1E',zIndex:40,height:52,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 16px'}}>
         <button onClick={()=>router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,borderRadius:10,background:'#1A1A1A',border:'1px solid #242424',cursor:'pointer',color:'#9CA3AF',flexShrink:0}} aria-label="Retour">
           <ArrowLeft size={16} strokeWidth={2.5}/>
         </button>
@@ -827,7 +893,7 @@ export default function ClientProfilePage() {
       </header>
 
       {/* ── MAIN CONTENT ──────────────────────────────────────────── */}
-      <main data-scroll-container style={{flex:1,overflowY:'auto',overflowX:'hidden',padding:'14px 14px 80px',maxWidth:600,margin:'0 auto'}}>
+      <main className="main-client-content" data-scroll-container style={{flex:1,overflowY:'auto',overflowX:'hidden',padding:'14px 14px 80px',maxWidth:600,margin:'0 auto'}}>
 
         {/* ══ TAB: APERÇU ══ */}
         {activeTab === 'apercu' && (
@@ -1658,6 +1724,7 @@ export default function ClientProfilePage() {
           </div>
         )}
       </main>
+      </div>{/* end desktop content wrapper */}
 
       {/* ── BOTTOM NAVIGATION ─────────────────────────────────────── */}
       <nav className="bottom-nav">
