@@ -19,7 +19,7 @@ export default function LandingPage() {
   const go = (path: string) => () => router.push(path)
 
   return (
-    <>
+    <div style={{ background: '#050505', color: '#fff', overflowY: 'auto', minHeight: '100vh', position: 'relative' }}>
       <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <style>{`
         .bn{font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px}
@@ -304,6 +304,6 @@ export default function LandingPage() {
           <div style={{ display: 'flex', gap: 20 }}>{['CGU', 'Confidentialité'].map(l => <a key={l} href="#" style={{ color: '#2a2a2a', fontSize: 12, textDecoration: 'none', fontWeight: 300 }}>{l}</a>)}</div>
         </div>
       </footer>
-    </>
+    </div>
   )
 }

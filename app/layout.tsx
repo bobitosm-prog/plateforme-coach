@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr" style={{ overflowY: 'auto' }}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0A0A0A" />
@@ -37,7 +37,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ width: '100%', height: '100dvh', overflow: 'hidden', background: '#0a0a0a' }}
+        style={{ width: '100%', margin: 0, background: '#0a0a0a', overflowY: 'auto' }}
       >
         <ServiceWorkerRegister />
         {children}
