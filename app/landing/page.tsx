@@ -19,7 +19,7 @@ export default function LandingPage() {
   const go = (path: string) => () => router.push(path)
 
   return (
-    <div style={{ background: '#050505', color: '#fff', overflowY: 'auto', minHeight: '100vh', position: 'relative' }}>
+    <div style={{ background: '#050505', color: '#fff' }}>
       <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <style>{`
         .bn{font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px}

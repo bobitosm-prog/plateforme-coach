@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" style={{ overflowY: 'auto' }}>
+    <html lang="fr">
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0A0A0A" />
@@ -35,10 +35,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="FITPRO" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ width: '100%', margin: 0, background: '#0a0a0a', overflowY: 'auto' }}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ServiceWorkerRegister />
         {children}
         <Toaster position="top-center" richColors theme="dark" />
