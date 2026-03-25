@@ -23,6 +23,48 @@ export async function POST(req: NextRequest) {
         .eq('stripe_checkout_session_id', session.id)
     }
 
+    if (event.type === 'customer.subscription.created') {
+      const sub = event.data.object as Stripe.Subscription
+      const meta = sub.metadata || {}
+      if (meta.clientId) {
+        await supabase.from('payments').insert({
+          client_id: meta.clientId,
+          coach_id: meta.coachId || null,
+          amount: 30,
+          currency: 'chf',
+          description: 'Abonnement coaching mensuel',
+          status: 'active',
+          paid_at: new Date().toISOString(),
+        })
+      }
+    }
+
+    if (event.type === 'customer.subscription.deleted') {
+      const sub = event.data.object as Stripe.Subscription
+      const meta = sub.metadata || {}
+      if (meta.clientId) {
+        await supabase.from('payments')
+          .update({ status: 'cancelled' })
+          .eq('client_id', meta.clientId)
+          .eq('status', 'active')
+      }
+    }
+
+    if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object as any
+      if (invoice.subscription && invoice.metadata) {
+        await supabase.from('payments').insert({
+          client_id: invoice.metadata.clientId || null,
+          coach_id: invoice.metadata.coachId || null,
+          amount: (invoice.amount_paid || 0) / 100,
+          currency: invoice.currency || 'chf',
+          description: 'Paiement abonnement mensuel',
+          status: 'paid',
+          paid_at: new Date().toISOString(),
+        })
+      }
+    }
+
     if (event.type === 'account.updated') {
       const account = event.data.object as Stripe.Account
       if (account.charges_enabled && account.payouts_enabled) {

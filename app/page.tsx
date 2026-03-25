@@ -810,6 +810,7 @@ const calorieGoal = profile?.calorie_goal || 2500
               goalWeight={goalWeight}
               calorieGoal={calorieGoal}
               coachProgram={coachProgram}
+              coachId={coachId}
               setModal={setModal}
               fetchAll={fetchAll}
             />

@@ -24,6 +24,7 @@ interface ProfileTabProps {
   goalWeight: number | null
   calorieGoal: number
   coachProgram: any
+  coachId: string | null
   setModal: (modal: string) => void
   fetchAll: () => Promise<void>
 }
@@ -41,6 +42,7 @@ export default function ProfileTab({
   goalWeight,
   calorieGoal,
   coachProgram,
+  coachId,
   setModal,
   fetchAll,
 }: ProfileTabProps) {
@@ -192,6 +194,28 @@ export default function ProfileTab({
           {notifStatus === 'idle' && <ChevronRight size={16} color={TEXT_MUTED} />}
         </button>
       </div>
+
+      {/* Subscription */}
+      {coachId && (
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>Mon abonnement</div>
+          <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5 }}>Abonnement coaching personnalisé avec suivi nutritionnel et programme d'entraînement.</p>
+          <button
+            onClick={async () => {
+              const res = await fetch('/api/stripe/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clientId: session?.user?.id, coachId }),
+              })
+              const { url, error } = await res.json()
+              if (url) window.location.href = url
+              else console.error('Checkout error:', error)
+            }}
+            style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 12, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            S'abonner — CHF 30/mois
+          </button>
+        </div>
+      )}
 
       {/* Sign out */}
       <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', background: 'transparent', border: `1px solid #EF4444`, borderRadius: 14, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms' }}>
