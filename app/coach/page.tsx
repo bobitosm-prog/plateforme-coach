@@ -162,6 +162,9 @@ export default function CoachPage() {
   const [section, setSection]   = useState<'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil'>('dashboard')
   const [coachProfile, setCoachProfile] = useState<any>(null)
   const [stripeConnecting, setStripeConnecting] = useState(false)
+  const [monthRevenue, setMonthRevenue] = useState(0)
+  const [monthPaymentsCount, setMonthPaymentsCount] = useState(0)
+  const [activeSubscribers, setActiveSubscribers] = useState(0)
 
   // Food management state
   const [foodList, setFoodList] = useState<any[]>([])
@@ -218,8 +221,24 @@ export default function CoachPage() {
       } else {
         fetchClients(session.user.id)
         // Fetch coach profile with Stripe info
-        supabase.from('profiles').select('id,full_name,stripe_account_id,stripe_onboarding_complete,subscription_price').eq('id', session.user.id).single().then(({ data }) => {
-          if (data) setCoachProfile(data)
+        supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price').eq('id', session.user.id).single().then(({ data }) => {
+          if (data) {
+            setCoachProfile(data)
+            // Fetch monthly revenue
+            const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
+            supabase.from('payments').select('amount').eq('status', 'paid').gte('paid_at', startOfMonth.toISOString()).then(({ data: payments }) => {
+              if (payments) {
+                setMonthRevenue(payments.reduce((s: number, p: any) => s + (p.amount || 0), 0))
+                setMonthPaymentsCount(payments.length)
+              }
+            })
+          }
+        })
+        // Fetch active subscribers count
+        supabase.from('coach_clients').select('client_id').eq('coach_id', session.user.id).then(async ({ data: links }) => {
+          if (!links?.length) return
+          const { data: profiles } = await supabase.from('profiles').select('id').in('id', links.map(l => l.client_id)).eq('subscription_status', 'active')
+          setActiveSubscribers(profiles?.length || 0)
         })
       }
     })
@@ -1140,16 +1159,27 @@ export default function CoachPage() {
             <div className="stat-card">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Revenus du mois</span>
-                <div style={{ width: '36px', height: '36px', background: 'rgba(34,197,94,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Euro size={18} color="#22C55E" strokeWidth={2} />
+                <div style={{ width: '36px', height: '36px', background: 'rgba(201,168,76,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Euro size={18} color="#C9A84C" strokeWidth={2} />
                 </div>
               </div>
-              {coachProfile?.stripe_account_id ? (
+              {coachProfile?.email === 'fe.ma@bluewin.ch' ? (
                 <>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#22C55E', lineHeight: 1 }}>—</div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#C9A84C', lineHeight: 1 }}>
+                    {monthRevenue > 0 ? `${monthRevenue}` : '0'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#C9A84C', fontWeight: 500 }}>CHF · {monthPaymentsCount} paiement{monthPaymentsCount !== 1 ? 's' : ''} · {activeSubscribers} abonné{activeSubscribers !== 1 ? 's' : ''}</span>
+                  </div>
+                </>
+              ) : coachProfile?.stripe_account_id ? (
+                <>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.75rem', fontWeight: 700, color: '#C9A84C', lineHeight: 1 }}>
+                    {monthRevenue > 0 ? `${monthRevenue}` : '0'}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
                     <Check size={13} color="#22C55E" strokeWidth={2.5} />
-                    <span style={{ fontSize: '0.78rem', color: '#22C55E', fontWeight: 500 }}>Stripe connecté</span>
+                    <span style={{ fontSize: '0.78rem', color: '#22C55E', fontWeight: 500 }}>Stripe connecté · {activeSubscribers} abonné{activeSubscribers !== 1 ? 's' : ''}</span>
                   </div>
                 </>
               ) : (
