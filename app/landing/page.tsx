@@ -1,143 +1,268 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
 
-const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+// ─── Intersection Observer Hook ───
+function useInView(threshold = 0.15): [React.RefObject<HTMLDivElement | null>, boolean] {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } }, { threshold })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [threshold])
+  return [ref, visible]
+}
+
+// ─── Animated Counter ───
+function Counter({ target, suffix = '', duration = 1800 }: { target: number; suffix?: string; duration?: number }) {
+  const [val, setVal] = useState(0)
+  const [ref, visible] = useInView(0.3)
+  useEffect(() => {
+    if (!visible) return
+    let start = 0
+    const step = target / (duration / 16)
+    const id = setInterval(() => { start += step; if (start >= target) { setVal(target); clearInterval(id) } else setVal(Math.floor(start)) }, 16)
+    return () => clearInterval(id)
+  }, [visible, target, duration])
+  return <span ref={ref}>{val}{suffix}</span>
+}
+
+// ─── FAQ Item ───
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <button onClick={() => setOpen(!open)} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', color: open ? '#C9A84C' : '#bbb', padding: '22px 0', fontSize: 15, fontWeight: 400, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: "'DM Sans', sans-serif", transition: 'color 0.3s', lineHeight: 1.5 }}>
+        {q}
+        <span style={{ color: '#C9A84C', fontSize: 22, transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1)', transform: open ? 'rotate(45deg)' : 'rotate(0)', flexShrink: 0, marginLeft: 16 }}>+</span>
+      </button>
+      <div style={{ maxHeight: open ? 200 : 0, overflow: 'hidden', transition: 'max-height 0.5s cubic-bezier(0.16,1,0.3,1), opacity 0.4s', opacity: open ? 1 : 0 }}>
+        <p style={{ color: '#666', fontSize: 13.5, lineHeight: 1.85, paddingBottom: 20, fontWeight: 300, margin: 0 }}>{a}</p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Section Reveal ───
+function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const [ref, visible] = useInView(0.1)
+  return <div ref={ref} className={className} style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(40px)', transition: `opacity 0.8s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.8s cubic-bezier(0.16,1,0.3,1) ${delay}s` }}>{children}</div>
+}
 
 export default function LandingPage() {
   const router = useRouter()
-  const [mode, setMode] = useState<'login'|'register'>('login')
-  const [step, setStep] = useState(1)
-  const [gender, setGender] = useState<'homme'|'femme'|null>(null)
-  const [prenom, setPrenom] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => { const fn = () => setScrolled(window.scrollY > 50); window.addEventListener('scroll', fn); return () => window.removeEventListener('scroll', fn) }, [])
 
-  useEffect(() => { supabase.auth.getSession().then(({ data: { session } }) => { if (session) router.replace('/') }) }, [])
-
-  const handleGoogle = async () => { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/' } }) }
-  const handleLogin = async () => { setLoading(true); setError(''); const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) setError(error.message); else router.push('/'); setLoading(false) }
-  const handleRegister = async () => { setLoading(true); setError(''); const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: prenom, gender } } }); if (error) { setError(error.message); setLoading(false); return }; if (data.session) setStep(3); else setError('Vérifie ton email et clique sur le lien de confirmation.'); setLoading(false) }
-  const handleChooseCoach = async () => { setLoading(true); setError(''); try { const { data: { session } } = await supabase.auth.getSession(); if (!session?.user) { setError('Session expirée. Reconnecte-toi.'); setLoading(false); return }; const { data: coach } = await supabase.from('profiles').select('id').eq('email', 'fe.ma@bluewin.ch').single(); if (coach) { await supabase.from('coach_clients').upsert({ coach_id: coach.id, client_id: session.user.id }, { onConflict: 'client_id' }); await supabase.from('profiles').update({ role: 'client', full_name: prenom || null, gender: gender || null }).eq('id', session.user.id) }; router.push('/onboarding') } catch { router.push('/onboarding') } finally { setLoading(false) } }
-
-  const G = '#C9A84C'
-  const field: React.CSSProperties = { width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'11px 13px', color:'#fff', fontSize:13, fontFamily:"'DM Sans',sans-serif", marginBottom:10, outline:'none' }
-  const btnMain: React.CSSProperties = { width:'100%', background:G, border:'none', borderRadius:10, padding:13, color:'#000', fontSize:13.5, fontWeight:600, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", marginBottom:12, opacity: loading ? 0.7 : 1 }
-  const btnGoogle: React.CSSProperties = { width:'100%', padding:11, borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.03)', color:'#bbb', fontSize:13, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:16 }
-  const GoogleIcon = () => <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+  const gold = '#C9A84C'
+  const goldLight = '#F0D060'
+  const go = (path: string) => () => router.push(path)
 
   return (
-    <div style={{ background:'#060606', color:'#fff', fontFamily:"'DM Sans', sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
-      <style>{`*{box-sizing:border-box}input::placeholder{color:#333}input:focus{border-color:rgba(201,168,76,0.4)!important}@keyframes livepulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}@media(max-width:960px){.page-wrap{grid-template-columns:1fr!important}.auth-sidebar{position:relative!important;height:auto!important;border-left:none!important;border-top:1px solid rgba(201,168,76,0.08)!important}.feat-grid{grid-template-columns:repeat(2,1fr)!important}.how-steps{grid-template-columns:1fr!important}.proof-grid{grid-template-columns:1fr!important}.price-grid{grid-template-columns:1fr!important}.footer-main{grid-template-columns:1fr 1fr!important}.hero-body{grid-template-columns:1fr!important}}`}</style>
+    <div style={{ background: '#050505', color: '#fff', fontFamily: "'DM Sans', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+      <style>{`
+        *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}::selection{background:rgba(201,168,76,0.3);color:#fff}
+        @keyframes heroFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-16px) rotate(1deg)}}
+        @keyframes orbPulse{0%,100%{opacity:0.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
+        @keyframes slideIn{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+        @keyframes phonePulse{0%,100%{box-shadow:0 0 60px rgba(201,168,76,0.08)}50%{box-shadow:0 0 100px rgba(201,168,76,0.15)}}
+        @keyframes badgeBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+        .grain-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+        .hero-title-line{animation:slideIn 1s cubic-bezier(0.16,1,0.3,1) forwards;opacity:0}
+        .hero-title-line:nth-child(1){animation-delay:0.1s}.hero-title-line:nth-child(2){animation-delay:0.2s}.hero-title-line:nth-child(3){animation-delay:0.3s}
+        .hero-sub-anim{animation:fadeUp 0.8s 0.5s cubic-bezier(0.16,1,0.3,1) forwards;opacity:0}
+        .hero-ctas-anim{animation:fadeUp 0.8s 0.65s cubic-bezier(0.16,1,0.3,1) forwards;opacity:0}
+        .hero-stats-anim{animation:fadeUp 0.8s 0.8s cubic-bezier(0.16,1,0.3,1) forwards;opacity:0}
+        .hero-phone-anim{animation:fadeUp 1s 0.4s cubic-bezier(0.16,1,0.3,1) forwards;opacity:0}
+        .btn-gold{background:linear-gradient(135deg,#C9A84C,#F0D060);border:none;color:#000;padding:16px 36px;border-radius:60px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans';box-shadow:0 8px 32px rgba(201,168,76,0.25);transition:all 0.35s cubic-bezier(0.16,1,0.3,1);position:relative;overflow:hidden}
+        .btn-gold:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 16px 48px rgba(201,168,76,0.35)}
+        .btn-gold::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);background-size:200% 100%;animation:shimmer 3s ease-in-out infinite}
+        .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.1);color:#999;padding:16px 32px;border-radius:60px;font-size:14.5px;cursor:pointer;font-family:'DM Sans';font-weight:300;transition:all 0.3s;display:flex;align-items:center;gap:10px}
+        .btn-ghost:hover{border-color:rgba(201,168,76,0.4);color:#C9A84C;background:rgba(201,168,76,0.04)}
+        .bento-card{background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.05);border-radius:24px;padding:32px;position:relative;overflow:hidden;transition:all 0.5s cubic-bezier(0.16,1,0.3,1)}
+        .bento-card:hover{border-color:rgba(201,168,76,0.3);transform:translateY(-6px)}
+        .phone-mock{width:280px;background:linear-gradient(160deg,#1c1c1e,#0c0c0c);border-radius:48px;border:1.5px solid rgba(255,255,255,0.08);padding:14px 10px;position:relative;z-index:1;box-shadow:0 60px 120px rgba(0,0,0,0.9),0 0 0 1px rgba(255,255,255,0.04) inset;animation:phonePulse 4s ease-in-out infinite}
+        .floating-tag{position:absolute;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border:1px solid rgba(201,168,76,0.2);border-radius:24px;padding:8px 16px;font-size:12px;font-weight:500;white-space:nowrap;z-index:2}
+        @media(max-width:900px){.hide-mobile{display:none!important}.hero-grid{grid-template-columns:1fr!important}.bento-grid{grid-template-columns:1fr!important}.bento-big{grid-column:span 1!important;grid-row:span 1!important}.price-grid{grid-template-columns:1fr!important}.testi-grid-l{grid-template-columns:1fr!important}.how-grid-l{grid-template-columns:1fr!important;gap:40px!important}.how-line-l{display:none!important}.pwa-grid{grid-template-columns:1fr!important}.footer-grid{grid-template-columns:1fr 1fr!important}.section-pad{padding:64px 20px!important}.hero-pad{padding:80px 20px 50px!important}}
+      `}</style>
 
-      <div className="page-wrap" style={{ display:'grid', gridTemplateColumns:'1fr 400px', minHeight:'100vh' }}>
-        <div style={{ overflowX:'hidden' }}>
+      <div className="grain-overlay" />
 
-          {/* HERO */}
-          <section style={{ padding:'80px 56px 64px', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}><div style={{ position:'absolute', width:700, height:700, borderRadius:'50%', border:'1px solid rgba(201,168,76,0.04)', top:-200, right:-200 }} /><div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', border:'1px solid rgba(201,168,76,0.03)', top:-100, right:-100 }} /><div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle,rgba(201,168,76,0.06) 1px,transparent 1px)', backgroundSize:'32px 32px', WebkitMaskImage:'radial-gradient(ellipse 80% 80% at 80% 50%,black,transparent)' } as any} /></div>
-            <div style={{ position:'relative', zIndex:1 }}>
-              <div style={{ display:'inline-flex', alignItems:'center', gap:10, marginBottom:32 }}><div style={{ width:32, height:1, background:G }} /><span style={{ fontSize:11, color:G, letterSpacing:'4px', textTransform:'uppercase' }}>Coaching d'élite · Genève · Suisse</span></div>
-              <h1 style={{ fontFamily:"'Bebas Neue'", lineHeight:0.88, letterSpacing:'-0.5px', marginBottom:24 }}>
-                <span style={{ display:'block', fontSize:'clamp(72px,9vw,120px)' }}>ATTEINS</span>
-                <span style={{ display:'block', fontSize:'clamp(72px,9vw,120px)' }}>TES OBJECTIFS.</span>
-                <span style={{ display:'block', fontSize:'clamp(72px,9vw,120px)', color:'transparent', WebkitTextStroke:'1px rgba(201,168,76,0.35)' } as any}>DÉPASSE</span>
-                <span style={{ display:'block', fontSize:'clamp(72px,9vw,120px)', color:G }}>TES LIMITES.</span>
-              </h1>
-              <div className="hero-body" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:48, alignItems:'end', marginTop:48 }}>
-                <p style={{ fontSize:15, color:'#555', fontWeight:300, lineHeight:1.85, maxWidth:380 }}>Plans alimentaires et sportifs générés par IA en 30 secondes. Basé sur <strong style={{ color:'#888', fontWeight:400 }}>3 484 aliments ANSES/Ciqual 2025</strong>. Ton coach personnel. Résultats garantis.</p>
-                <div style={{ border:'1px solid rgba(255,255,255,0.05)', borderRadius:16, overflow:'hidden', display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
-                  {[['500+','Athlètes'],['4.9','Note'],['50+','Coachs']].map(([n,l],i) => (<div key={l} style={{ padding:'20px 16px', textAlign:'center', borderRight: i<2 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}><div style={{ fontFamily:"'Bebas Neue'", fontSize:36, color:G, lineHeight:1, letterSpacing:1 }}>{n}</div><div style={{ fontSize:10, color:'#333', textTransform:'uppercase', letterSpacing:'2px', marginTop:4, fontWeight:300 }}>{l}</div></div>))}
+      {/* NAV */}
+      <nav style={{ position: 'sticky', top: 0, zIndex: 200, padding: '0 40px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(5,5,5,0.97)' : 'rgba(5,5,5,0.6)', backdropFilter: 'blur(24px)', borderBottom: scrolled ? '1px solid rgba(201,168,76,0.08)' : '1px solid transparent', transition: 'all 0.4s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <div style={{ width: 36, height: 36, background: `linear-gradient(135deg,${gold},${goldLight})`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, boxShadow: '0 4px 24px rgba(201,168,76,0.3)' }}>⚡</div>
+          <div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 21, letterSpacing: 3, lineHeight: 1 }}>COACHPRO</div><div style={{ fontSize: 7, letterSpacing: 4, color: gold, textTransform: 'uppercase', opacity: 0.7 }}>Elite Performance</div></div>
+        </div>
+        <div className="hide-mobile" style={{ display: 'flex', gap: 32 }}>
+          {[['#features','Fonctionnalités'],['#how','Comment ça marche'],['#pricing','Tarifs'],['#temoignages','Témoignages']].map(([href,label]) => <a key={href} href={href} style={{ color: '#666', textDecoration: 'none', fontSize: 13, fontWeight: 300, letterSpacing: 0.3 }}>{label}</a>)}
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button onClick={go('/login')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#999', padding: '8px 20px', borderRadius: 40, fontSize: 12.5, cursor: 'pointer', fontFamily: "'DM Sans'", letterSpacing: 0.3 }}>Connexion</button>
+          <button onClick={go('/register-client')} className="hide-mobile" style={{ background: gold, border: 'none', color: '#000', padding: '9px 22px', borderRadius: 40, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans'" }}>Commencer</button>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="hero-pad" style={{ minHeight: '94vh', display: 'flex', alignItems: 'center', padding: '80px 40px 60px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '20%', right: '10%', width: 500, height: 500, background: 'radial-gradient(circle,rgba(201,168,76,0.08),transparent 60%)', animation: 'orbPulse 6s ease-in-out infinite', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(201,168,76,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.015) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
+        <div className="hero-grid" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 60, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(201,168,76,0.25)', background: 'rgba(201,168,76,0.04)', borderRadius: 40, padding: '6px 16px 6px 8px', marginBottom: 32, animation: 'fadeUp 0.6s 0s cubic-bezier(0.16,1,0.3,1) forwards', opacity: 0 }}>
+              <span style={{ width: 22, height: 22, background: 'rgba(201,168,76,0.12)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: gold }}>✦</span>
+              <span style={{ fontSize: 11.5, color: gold, letterSpacing: 0.5 }}>Propulsé par l'IA Claude d'Anthropic</span>
+            </div>
+            <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(56px,7vw,96px)', lineHeight: 0.92, letterSpacing: 1, marginBottom: 28 }}>
+              <div className="hero-title-line">TRANSFORME</div>
+              <div className="hero-title-line">TON CORPS.</div>
+              <div className="hero-title-line" style={{ color: gold }}>DÉPASSE TES LIMITES.</div>
+            </h1>
+            <p className="hero-sub-anim" style={{ color: '#777', fontSize: 16.5, fontWeight: 300, lineHeight: 1.85, marginBottom: 40, maxWidth: 480 }}>CoachPro connecte athlètes et coaches d'élite avec des plans alimentaires et sportifs générés par IA. Basé sur <span style={{ color: '#aaa' }}>3 484 aliments ANSES/Ciqual 2025</span>.</p>
+            <div className="hero-ctas-anim" style={{ display: 'flex', gap: 14, marginBottom: 56, flexWrap: 'wrap' }}>
+              <button className="btn-gold" onClick={go('/register-client')}>Commencer — CHF 30/mois</button>
+              <button className="btn-ghost" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}><span style={{ fontSize: 10, opacity: 0.6 }}>▶</span> Voir la démo</button>
+            </div>
+            <div className="hero-stats-anim" style={{ display: 'flex' }}>
+              {[[4.9,'★','Note moyenne'],[500,'+','Athlètes actifs'],[50,'+','Coachs certifiés']].map(([num,suf,label],i) => (
+                <div key={i} style={{ padding: '0 32px', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none', ...(i === 0 ? { paddingLeft: 0 } : {}) }}>
+                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: 38, color: gold, lineHeight: 1, letterSpacing: 1 }}><Counter target={num as number} suffix={suf as string} /></div>
+                  <div style={{ fontSize: 10, color: '#3a3a3a', textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 4 }}>{label as string}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="hide-mobile hero-phone-anim" style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 350, height: 350, background: 'radial-gradient(circle,rgba(201,168,76,0.1),transparent 65%)', pointerEvents: 'none' }} />
+            <div className="floating-tag" style={{ top: '8%', right: '-8%', animation: 'badgeBob 3s ease-in-out infinite' }}>🔥 -3 kg ce mois</div>
+            <div className="floating-tag" style={{ top: '42%', left: '-20%', animation: 'badgeBob 3s ease-in-out 0.7s infinite' }}>✓ Plan validé par IA</div>
+            <div className="floating-tag" style={{ bottom: '12%', right: '-6%', animation: 'badgeBob 3s ease-in-out 1.4s infinite' }}>💪 Séance aujourd'hui</div>
+            <div className="phone-mock">
+              <div style={{ width: 90, height: 24, background: '#000', borderRadius: 16, margin: '0 auto 10px', position: 'relative' }}><div style={{ position: 'absolute', width: 10, height: 10, background: '#1a1a1a', borderRadius: '50%', top: '50%', right: 12, transform: 'translateY(-50%)' }} /></div>
+              <div style={{ background: '#0a0a0a', borderRadius: 38, overflow: 'hidden' }}>
+                <div style={{ padding: '16px 16px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div><div style={{ fontSize: 9.5, color: '#444', fontWeight: 300 }}>Mercredi 25 Mars</div><div style={{ fontSize: 17, fontWeight: 500, marginTop: 2 }}>Bonjour, Sarah 👋</div></div>
+                  <div style={{ width: 34, height: 34, background: `linear-gradient(135deg,${gold},${goldLight})`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#000' }}>S</div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, padding: '0 12px 8px' }}>
+                  {[['⚖️','62 kg','Poids actuel',true],['🎯','55 kg','Objectif',false]].map(([icon,val,label,isGold],i) => (<div key={i} style={{ background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)' }}><div style={{ fontSize: 14, marginBottom: 4 }}>{icon as string}</div><div style={{ fontSize: 20, fontWeight: 500, color: isGold ? gold : '#fff' }}>{val as string}</div><div style={{ fontSize: 8, color: '#3a3a3a', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 2 }}>{label as string}</div></div>))}
+                </div>
+                <div style={{ margin: '0 12px 8px', background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ fontSize: 8.5, color: gold, letterSpacing: 2, textTransform: 'uppercase' }}>Nutrition du jour</span><span style={{ fontSize: 8.5, color: '#3a3a3a' }}>1 420 / 1 800 kcal</span></div>
+                  <div style={{ height: 4, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}><div style={{ height: '100%', width: '79%', background: `linear-gradient(90deg,${gold},${goldLight})`, borderRadius: 2 }} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-around' }}>{[['120g','Prot','#60a5fa'],['180g','Gluc','#4ade80'],['48g','Lip',gold]].map(([v,l,c],i) => (<div key={i} style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 500, color: c as string }}>{v}</div><div style={{ fontSize: 7.5, color: '#3a3a3a', textTransform: 'uppercase', letterSpacing: 1 }}>{l}</div></div>))}</div>
+                </div>
+                <div style={{ margin: '0 12px 12px', background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ fontSize: 8.5, color: gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Programme du jour</div>
+                  {[['Squat barre — 4×8','90s'],['Presse — 3×12','60s'],['Fentes haltères — 3×10','60s']].map(([name,rest],i) => (<div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: i < 2 ? '1px solid #181818' : 'none' }}><span style={{ fontSize: 11.5, color: '#aaa' }}>{name}</span><span style={{ fontSize: 9, background: '#1a1a1a', padding: '2px 8px', borderRadius: 6, color: '#555' }}>{rest}</span></div>))}
                 </div>
               </div>
             </div>
-          </section>
-
-          <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(201,168,76,0.1),transparent)' }} />
-
-          {/* FEATURES */}
-          <section style={{ padding:'72px 56px', background:'#0d0d0d' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:48 }}><div><div style={{ fontSize:10, color:G, letterSpacing:'4px', textTransform:'uppercase', marginBottom:12 }}>Fonctionnalités</div><div style={{ fontFamily:"'Bebas Neue'", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'1px', lineHeight:1 }}>CE QUE TU OBTIENS</div></div><div style={{ fontFamily:"'Bebas Neue'", fontSize:80, color:'rgba(201,168,76,0.05)', lineHeight:1, letterSpacing:'-2px' }}>06</div></div>
-            <div className="feat-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:1, background:'rgba(255,255,255,0.04)', borderRadius:20, overflow:'hidden' }}>
-              {[['01','🥗','Nutrition IA personnalisée','Plans 7 jours en 30s. 3 484 aliments ANSES/Ciqual.','Ciqual 2025'],['02','💪','Training sur mesure','Programmes adaptés à ton niveau et équipement.','IA générative'],['03','📊','Suivi de progression','Graphiques, photos avant/après, streak quotidien.','Temps réel'],['04','💬','Coach connecté','Messagerie directe. Retours et ajustements personnalisés.','Messagerie'],['05','🛒','Liste de courses auto','Générée depuis ton plan. Quantités exactes sur 7 jours.','Automatique'],['06','📱','App sans App Store','Progressive Web App. Installe en 2s depuis Safari/Chrome.','PWA']].map(([num,icon,title,desc,tag]) => (<div key={num} style={{ background:'#0d0d0d', padding:'32px 28px' }}><div style={{ fontFamily:"'Bebas Neue'", fontSize:13, color:'rgba(201,168,76,0.3)', letterSpacing:'2px', marginBottom:20 }}>{num}</div><div style={{ width:44, height:44, background:'rgba(201,168,76,0.06)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, marginBottom:16 }}>{icon}</div><div style={{ fontSize:15, fontWeight:500, marginBottom:8, lineHeight:1.3 }}>{title}</div><div style={{ fontSize:12.5, color:'#444', lineHeight:1.7, fontWeight:300, marginBottom:14 }}>{desc}</div><div style={{ display:'inline-block', fontSize:9.5, color:G, letterSpacing:'2px', textTransform:'uppercase', borderBottom:'1px solid rgba(201,168,76,0.2)', paddingBottom:2 }}>{tag}</div></div>))}
-            </div>
-          </section>
-
-          {/* HOW */}
-          <section style={{ padding:'72px 56px' }}>
-            <div style={{ fontSize:10, color:G, letterSpacing:'4px', textTransform:'uppercase', marginBottom:12 }}>Processus</div>
-            <div style={{ fontFamily:"'Bebas Neue'", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'1px', marginBottom:48, lineHeight:1 }}>EN 3 ÉTAPES SIMPLES</div>
-            <div className="how-steps" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:0, position:'relative' }}>
-              <div style={{ position:'absolute', top:28, left:'16%', right:'16%', height:1, background:'linear-gradient(90deg,rgba(201,168,76,0.15),rgba(201,168,76,0.15))' }} />
-              {[['01','2 min','Crée ton profil','Objectifs, mensurations, préférences alimentaires.',false],['02','30 sec','Reçois ton plan IA','Plan nutritionnel 7 jours + programme entraînement.',true],['03','Chaque jour','Progresse & Performe','Suis tes repas, valide tes séances, échange avec ton coach.',false]].map(([num,time,title,desc,active]) => (<div key={num as string} style={{ padding:'0 32px', position:'relative', zIndex:1 }}><div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}><div style={{ width:56, height:56, borderRadius:'50%', background: active ? G : '#0d0d0d', border: active ? `1px solid ${G}` : '1px solid rgba(201,168,76,0.15)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Bebas Neue'", fontSize:22, color: active ? '#000' : G, flexShrink:0, boxShadow: active ? '0 0 0 6px rgba(201,168,76,0.08)' : 'none' }}>{num}</div><div style={{ fontSize:10, color:'#333', letterSpacing:'2px', textTransform:'uppercase', fontWeight:300 }}>{time as string}</div></div><div style={{ fontSize:17, fontWeight:500, marginBottom:10, lineHeight:1.3 }}>{title as string}</div><div style={{ fontSize:13, color:'#444', lineHeight:1.75, fontWeight:300 }}>{desc as string}</div></div>))}
-            </div>
-          </section>
-
-          {/* TESTIMONIALS */}
-          <section style={{ padding:'72px 56px', background:'#0d0d0d' }}>
-            <div style={{ fontSize:10, color:G, letterSpacing:'4px', textTransform:'uppercase', marginBottom:12 }}>Témoignages</div>
-            <div style={{ fontFamily:"'Bebas Neue'", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'1px', lineHeight:1, marginBottom:48 }}>DES RÉSULTATS RÉELS</div>
-            <div className="proof-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
-              {[{init:'MT',bg:'#112210',name:'Marc T.',role:'Coach IFBB · Genève',quote:'Les plans IA me font gagner 2h par client.',result:'+12 clients'},{init:'SM',bg:'#101a28',name:'Sarah M.',role:'Cliente · Lausanne',quote:'8 kg perdus en 3 mois. Précision bluffante.',result:'-8 kg'},{init:'LB',bg:'#1a1028',name:'Lucas B.',role:'Client · Zurich',quote:'Coach humain + IA. Le vrai game changer.',result:'+6 kg muscle'}].map(t => (<div key={t.name} style={{ borderRadius:20, padding:28, border:'1px solid rgba(255,255,255,0.05)', background:'#0a0a0a', position:'relative', overflow:'hidden' }}><div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(201,168,76,0.15),transparent)' }} /><div style={{ width:48, height:48, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:600, fontSize:15, marginBottom:16, background:t.bg }}>{t.init}</div><div style={{ fontSize:14, fontWeight:500, marginBottom:2 }}>{t.name}</div><div style={{ fontSize:11.5, color:'#333', marginBottom:14, fontWeight:300 }}>{t.role}</div><div style={{ color:G, fontSize:11, letterSpacing:'3px', marginBottom:12 }}>★★★★★</div><div style={{ fontSize:13, color:'#4a4a4a', lineHeight:1.8, fontStyle:'italic', fontWeight:300, marginBottom:16 }}>"{t.quote}"</div><div style={{ display:'inline-flex', alignItems:'center', gap:6, fontSize:11.5, color:G, fontWeight:500 }}><div style={{ width:16, height:1, background:G }} />{t.result}</div></div>))}
-            </div>
-          </section>
-
-          {/* PRICING */}
-          <section style={{ padding:'72px 56px' }}>
-            <div style={{ fontSize:10, color:G, letterSpacing:'4px', textTransform:'uppercase', marginBottom:12 }}>Tarifs</div>
-            <div style={{ fontFamily:"'Bebas Neue'", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'1px', lineHeight:1, marginBottom:48 }}>TRANSPARENT ET SIMPLE</div>
-            <div className="price-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-              <div style={{ borderRadius:22, padding:36, border:'1.5px solid rgba(201,168,76,0.25)', background:'rgba(201,168,76,0.02)', position:'relative' }}>
-                <div style={{ position:'absolute', top:-1, left:'50%', transform:'translateX(-50%)', background:G, color:'#000', fontSize:9, fontWeight:700, padding:'4px 16px', borderRadius:'0 0 10px 10px', letterSpacing:'1.5px', textTransform:'uppercase' }}>Le plus populaire</div>
-                <div style={{ fontSize:10, color:G, letterSpacing:'4px', textTransform:'uppercase', marginBottom:20, marginTop:16 }}>Athlète</div>
-                <div style={{ display:'flex', alignItems:'baseline', gap:4, marginBottom:6 }}><span style={{ fontSize:14, color:'#555', marginTop:14 }}>CHF</span><span style={{ fontFamily:"'Bebas Neue'", fontSize:80, lineHeight:1, color:G }}>30</span><span style={{ fontSize:14, color:'#333', fontWeight:300 }}>/mois</span></div>
-                <div style={{ fontSize:13, color:'#333', fontWeight:300, marginBottom:28 }}>Tout inclus, sans engagement</div>
-                <ul style={{ listStyle:'none', marginBottom:32 }}>{['Plan alimentaire IA 7 jours','Programme entraînement perso','3 484 aliments ANSES/Ciqual','Suivi progression & photos','Messagerie coach temps réel','Liste de courses automatique'].map(f => (<li key={f} style={{ fontSize:13, fontWeight:300, padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.04)', display:'flex', alignItems:'center', gap:12, color:'#ccc' }}><div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8, color:G, flexShrink:0 }}>✓</div>{f}</li>))}</ul>
-                <button onClick={() => { setMode('register'); window.scrollTo(0, 0) }} style={{ width:'100%', background:G, border:'none', borderRadius:12, padding:15, fontSize:14, fontWeight:500, cursor:'pointer', color:'#000' }}>Commencer maintenant</button>
-                <div style={{ fontSize:11, color:'#2a2a2a', textAlign:'center', marginTop:10, fontWeight:300 }}>Résiliable à tout moment</div>
-              </div>
-              <div style={{ borderRadius:22, padding:36, border:'1px solid rgba(255,255,255,0.06)', background:'#0a0a0a' }}>
-                <div style={{ fontSize:10, color:'#333', letterSpacing:'4px', textTransform:'uppercase', marginBottom:20 }}>Coach</div>
-                <div style={{ fontFamily:"'Bebas Neue'", fontSize:44, lineHeight:1, marginBottom:6, letterSpacing:1 }}>GRATUIT</div>
-                <div style={{ fontSize:13, color:'#333', fontWeight:300, marginBottom:28 }}>5% commission par client/mois</div>
-                <ul style={{ listStyle:'none', marginBottom:32 }}>{['Dashboard clients illimité','Génération plans IA','Paiements Stripe automatisés','Calendrier & séances','Analytics revenus'].map(f => (<li key={f} style={{ fontSize:13, fontWeight:300, padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.04)', display:'flex', alignItems:'center', gap:12, color:'#333' }}><div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8, color:'#333', flexShrink:0 }}>✓</div>{f}</li>))}</ul>
-                <button onClick={() => router.push('/coach-signup')} style={{ width:'100%', background:'transparent', color:G, border:'1px solid rgba(201,168,76,0.2)', borderRadius:12, padding:15, fontSize:13.5, fontWeight:500, cursor:'pointer' }}>Devenir coach</button>
-              </div>
-            </div>
-          </section>
-
-          {/* FOOTER */}
-          <footer style={{ padding:'56px 56px 40px', background:'#030303', borderTop:'1px solid rgba(255,255,255,0.04)' }}>
-            <div className="footer-main" style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1fr', gap:48, marginBottom:40 }}>
-              <div><div style={{ fontFamily:"'Bebas Neue'", fontSize:20, letterSpacing:'2.5px', display:'flex', alignItems:'center', gap:10, marginBottom:14 }}><div style={{ width:30, height:30, background:G, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>⚡</div>COACHPRO</div><div style={{ fontSize:13, color:'#2a2a2a', lineHeight:1.75, fontWeight:300, maxWidth:240 }}>Coaching fitness propulsé par l'IA. Conçu pour athlètes et coaches d'élite.</div></div>
-              {[{t:'Produit',l:['Fonctionnalités','Tarifs','Coachs','PWA']},{t:'Légal',l:['CGU','Confidentialité','RGPD']},{t:'Contact',l:['contact@moovx.ch','Support','Devenir coach']}].map(col => (<div key={col.t}><div style={{ fontSize:10, color:G, letterSpacing:'3px', textTransform:'uppercase', marginBottom:16 }}>{col.t}</div><div style={{ display:'flex', flexDirection:'column', gap:10 }}>{col.l.map(l => <a key={l} href="#" style={{ color:'#2a2a2a', textDecoration:'none', fontSize:13, fontWeight:300 }}>{l}</a>)}</div></div>))}
-            </div>
-            <div style={{ borderTop:'1px solid rgba(255,255,255,0.04)', paddingTop:24, display:'flex', justifyContent:'space-between', alignItems:'center' }}><span style={{ fontSize:12, color:'#1e1e1e', fontWeight:300 }}>© 2026 CoachPro by MoovX · Genève</span><div style={{ display:'flex', gap:20 }}>{['CGU','Confidentialité'].map(l => <a key={l} href="#" style={{ fontSize:12, color:'#1e1e1e', textDecoration:'none' }}>{l}</a>)}</div></div>
-          </footer>
+          </div>
         </div>
+      </section>
 
-        {/* AUTH */}
-        <div className="auth-sidebar" style={{ background:'#080808', borderLeft:'1px solid rgba(201,168,76,0.08)', position:'sticky', top:0, height:'100vh', overflowY:'auto', padding:'32px 28px', display:'flex', flexDirection:'column', justifyContent:'center' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:28 }}><div style={{ width:36, height:36, background:G, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>⚡</div><div><div style={{ fontFamily:"'Bebas Neue'", fontSize:22, letterSpacing:'2px' }}>COACHPRO</div><div style={{ fontSize:7.5, letterSpacing:'4px', color:G, textTransform:'uppercase', opacity:0.6, lineHeight:1 }}>Elite Performance</div></div></div>
-          <div style={{ display:'flex', background:'rgba(255,255,255,0.03)', borderRadius:10, padding:3, marginBottom:24, border:'1px solid rgba(255,255,255,0.06)' }}>{(['login','register'] as const).map(m => (<button key={m} onClick={() => { setMode(m); setStep(1); setError('') }} style={{ flex:1, padding:9, border:'none', background: mode===m ? '#141414' : 'transparent', color: mode===m ? '#fff' : '#444', fontSize:12.5, cursor:'pointer', borderRadius:8, fontFamily:"'DM Sans',sans-serif" }}>{m==='login'?'Connexion':"S'inscrire"}</button>))}</div>
-          {error && <div style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 13px', fontSize:12.5, color:'#f87171', marginBottom:14 }}>{error}</div>}
-
-          {mode==='login' && <div><button onClick={handleGoogle} style={btnGoogle}><GoogleIcon />Continuer avec Google</button><div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}><div style={{ flex:1, height:1, background:'rgba(255,255,255,0.05)' }} /><span style={{ fontSize:11, color:'#2a2a2a', fontWeight:300 }}>ou par email</span><div style={{ flex:1, height:1, background:'rgba(255,255,255,0.05)' }} /></div><input style={field} type="email" placeholder="Adresse email" value={email} onChange={e=>setEmail(e.target.value)} /><input style={field} type="password" placeholder="Mot de passe" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleLogin()} /><button onClick={handleLogin} disabled={loading} style={btnMain}>{loading?'Connexion...':'Se connecter'}</button></div>}
-
-          {mode==='register' && <div>
-            <div style={{ display:'flex', gap:5, justifyContent:'center', marginBottom:20 }}>{[1,2,3].map(n => (<div key={n} style={{ height:3, borderRadius:2, width: step===n?24:16, background: step===n?G:step>n?'rgba(201,168,76,0.35)':'rgba(255,255,255,0.07)', transition:'all 0.3s' }} />))}</div>
-            {step===1 && <div><div style={{ fontSize:14, fontWeight:500, marginBottom:3, textAlign:'center' }}>Bienvenue 👋</div><div style={{ fontSize:12, color:'#333', textAlign:'center', marginBottom:16, fontWeight:300 }}>Commence par te présenter</div><input style={field} placeholder="Ton prénom" value={prenom} onChange={e=>setPrenom(e.target.value)} /><div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, margin:'14px 0' }}>{(['homme','femme'] as const).map(g => (<button key={g} onClick={()=>setGender(g)} style={{ padding:'16px 8px', borderRadius:12, border: gender===g?'none':'1px solid rgba(201,168,76,0.15)', background: gender===g?G:'rgba(255,255,255,0.02)', color: gender===g?'#000':'#555', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}><span style={{ fontSize:24 }}>{g==='homme'?'👨':'👩'}</span><span style={{ fontSize:11, fontWeight:600, letterSpacing:'1px', textTransform:'uppercase' }}>{g}</span></button>))}</div><button onClick={()=>prenom.trim()&&gender&&setStep(2)} style={btnMain}>Continuer →</button></div>}
-            {step===2 && <div><div style={{ fontSize:14, fontWeight:500, marginBottom:3, textAlign:'center' }}>Crée ton compte</div><div style={{ fontSize:12, color:'#333', textAlign:'center', marginBottom:16, fontWeight:300 }}>Accès immédiat</div><button onClick={handleGoogle} style={btnGoogle}><GoogleIcon />Continuer avec Google</button><div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}><div style={{ flex:1, height:1, background:'rgba(255,255,255,0.05)' }} /><span style={{ fontSize:11, color:'#2a2a2a' }}>ou</span><div style={{ flex:1, height:1, background:'rgba(255,255,255,0.05)' }} /></div><input style={field} type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} /><input style={field} type="password" placeholder="Mot de passe" value={password} onChange={e=>setPassword(e.target.value)} /><button onClick={handleRegister} disabled={loading} style={btnMain}>{loading?'Création...':'Créer mon compte →'}</button><div onClick={()=>setStep(1)} style={{ textAlign:'center', fontSize:11.5, color:'#2a2a2a', cursor:'pointer' }}>← Retour</div></div>}
-            {step===3 && <div><div style={{ fontSize:14, fontWeight:500, marginBottom:3, textAlign:'center' }}>Ton coach 🏆</div><div style={{ fontSize:12, color:'#333', textAlign:'center', marginBottom:16, fontWeight:300 }}>Il créera ton plan personnalisé</div><div style={{ background:'rgba(201,168,76,0.03)', border:'1px solid rgba(201,168,76,0.18)', borderRadius:16, padding:20, textAlign:'center', position:'relative', overflow:'hidden', marginBottom:14 }}><div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:'80%', height:1, background:`linear-gradient(90deg,transparent,${G},transparent)` }} /><div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#1a3a2a,#0a1a10)', border:'2px solid rgba(201,168,76,0.25)', margin:'0 auto 12px', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Bebas Neue'", fontSize:20, color:G }}>FM</div><div style={{ fontSize:16, fontWeight:500, marginBottom:3 }}>Marco Ferreira</div><div style={{ fontSize:11.5, color:'#444', fontWeight:300, marginBottom:12 }}>Coach certifié · Genève 🇨🇭</div><div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginBottom:12 }}><span style={{ color:G, fontSize:12, letterSpacing:'1.5px' }}>★★★★★</span><span style={{ fontSize:11.5, color:'#333' }}>4.9 · 50+ clients</span></div><div style={{ display:'flex', flexWrap:'wrap', gap:5, justifyContent:'center', marginBottom:16 }}>{['💪 Musculation','🥗 Nutrition','⚖️ Perte de poids','🏃 Cardio'].map(s => (<span key={s} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:16, padding:'3px 10px', fontSize:10.5, color:'#444' }}>{s}</span>))}</div><button onClick={handleChooseCoach} disabled={loading} style={{ width:'100%', background:G, border:'none', borderRadius:10, padding:13, color:'#000', fontSize:13.5, fontWeight:600, cursor:'pointer' }}>{loading?'En cours...':'✓ Choisir Marco'}</button></div></div>}
-          </div>}
-
-          <div style={{ display:'flex', justifyContent:'center', gap:14, paddingTop:16, borderTop:'1px solid rgba(255,255,255,0.04)', marginTop:16 }}>{['🔒 SSL','🇨🇭 Données CH','✓ RGPD'].map(b => (<span key={b} style={{ fontSize:10.5, color:'#1e1e1e', fontWeight:300 }}>{b}</span>))}</div>
-        </div>
+      {/* MARQUEE */}
+      <div style={{ borderTop: '1px solid rgba(201,168,76,0.06)', borderBottom: '1px solid rgba(201,168,76,0.06)', background: 'rgba(201,168,76,0.008)', overflow: 'hidden', padding: '15px 0' }}>
+        <div style={{ display: 'flex', gap: 48, animation: 'marquee 22s linear infinite', whiteSpace: 'nowrap' }}>{['FitClub Geneva','Sport Academy Zurich','Elite Performance Basel','ProCoach Lausanne','Swiss Athletics','FitClub Geneva','Sport Academy Zurich','Elite Performance Basel','ProCoach Lausanne','Swiss Athletics'].map((n,i) => (<span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 48 }}><span style={{ fontSize: 10.5, color: '#222', letterSpacing: 4, textTransform: 'uppercase', fontWeight: 500 }}>{n}</span><span style={{ color: 'rgba(201,168,76,0.25)', fontSize: 8 }}>✦</span></span>))}</div>
       </div>
+
+      {/* FEATURES */}
+      <section id="features" style={{ background: '#070707' }}><div className="section-pad" style={{ padding: '100px 40px', maxWidth: 1200, margin: '0 auto' }}>
+        <Reveal><div style={{ textAlign: 'center', marginBottom: 64 }}><div style={{ fontSize: 10.5, color: gold, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 14, fontWeight: 400 }}>Fonctionnalités</div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(40px,4.5vw,62px)', letterSpacing: 2, lineHeight: 0.95, marginBottom: 16 }}>TOUT CE DONT TU AS BESOIN</div><div style={{ color: '#4a4a4a', fontSize: 15, fontWeight: 300 }}>Une seule plateforme. Des résultats mesurables.</div></div></Reveal>
+        <div className="bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
+          <Reveal delay={0.1} className="bento-big"><div className="bento-card" style={{ height: '100%', gridColumn: 'span 2', gridRow: 'span 2' }}><div style={{ fontSize: 36, marginBottom: 18 }}>🥗</div><span style={{ display: 'inline-block', background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.18)', borderRadius: 20, padding: '4px 12px', fontSize: 9.5, color: gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 18 }}>Ciqual 2025 · ANSES</span><div style={{ fontSize: 28, fontWeight: 500, marginBottom: 12, lineHeight: 1.25 }}>Nutrition IA<br />ultra-personnalisée</div><div style={{ color: '#555', fontSize: 14, lineHeight: 1.8, fontWeight: 300 }}>Plans de 7 jours générés en 30 secondes basés sur tes macros et <span style={{ color: '#999' }}>3 484 aliments ANSES/Ciqual 2025</span>.</div><div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 9 }}>{[["Petit-déjeuner","Flocons d'avoine · Banane · Yaourt grec","487 kcal"],["Déjeuner","Blanc de poulet cuit · Riz basmati · Brocoli","612 kcal"],["Dîner","Pavé de saumon · Patate douce · Épinards","520 kcal"]].map(([t,items,kcal],i) => (<div key={i} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 12, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.03)' }}><div><div style={{ fontSize: 9, color: gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 }}>{t}</div><div style={{ fontSize: 12, color: '#555', fontWeight: 300 }}>{items}</div></div><div style={{ fontSize: 10.5, background: 'rgba(255,255,255,0.03)', padding: '3px 10px', borderRadius: 8, color: '#444', whiteSpace: 'nowrap' }}>{kcal}</div></div>))}</div></div></Reveal>
+          {[['💪','Training sur mesure',"Programmes adaptés à ton niveau, objectif et équipement."],['📊','Suivi & Progression',"Graphiques, photos avant/après, mensurations et streak."],['💬','Coach connecté','Messagerie temps réel. Retours instantanés.'],['🛒','Liste de courses auto','Générée depuis ton plan semaine, par rayon.']].map(([icon,title,desc],i) => (<Reveal key={i} delay={0.15+i*0.08}><div className="bento-card"><div style={{ fontSize: 32, marginBottom: 16 }}>{icon}</div><div style={{ fontSize: 20, fontWeight: 500, marginBottom: 10, lineHeight: 1.25 }}>{title}</div><div style={{ color: '#555', fontSize: 13.5, lineHeight: 1.75, fontWeight: 300 }}>{desc}</div></div></Reveal>))}
+        </div>
+      </div></section>
+
+      {/* HOW */}
+      <section id="how" style={{ background: '#070707' }}><div className="section-pad" style={{ padding: '100px 40px', maxWidth: 1200, margin: '0 auto' }}>
+        <Reveal><div style={{ textAlign: 'center', marginBottom: 64 }}><div style={{ fontSize: 10.5, color: gold, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 14 }}>Comment ça marche</div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(40px,4.5vw,62px)', letterSpacing: 2, lineHeight: 0.95 }}>3 ÉTAPES VERS TES RÉSULTATS</div></div></Reveal>
+        <div className="how-grid-l" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 0, position: 'relative' }}>
+          <div className="how-line-l" style={{ position: 'absolute', top: 42, left: '16%', right: '16%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(201,168,76,0.15),transparent)' }} />
+          {[['🎯','2 minutes','Crée ton profil','Objectifs, mensurations, préférences alimentaires.',false],['⚡','30 secondes','Plan IA instantané','Nutrition 7 jours + programme entraînement.',true],['🏆','Chaque jour','Progresse & Performe','Coche tes repas, échange avec ton coach.',false]].map(([icon,time,title,desc,isGold],i) => (
+            <Reveal key={i} delay={0.1+i*0.15}><div style={{ textAlign: 'center', padding: '0 36px' }}><div style={{ width: 84, height: 84, borderRadius: '50%', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, position: 'relative', zIndex: 1, background: isGold ? `linear-gradient(135deg,${gold},${goldLight})` : 'rgba(201,168,76,0.06)', border: isGold ? 'none' : '1px solid rgba(201,168,76,0.15)', boxShadow: isGold ? '0 0 50px rgba(201,168,76,0.25)' : 'none' }}>{icon as string}</div><div style={{ fontSize: 9.5, color: gold, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 10 }}>{time as string}</div><div style={{ fontSize: 19, fontWeight: 500, marginBottom: 10 }}>{title as string}</div><div style={{ color: '#4a4a4a', fontSize: 13.5, lineHeight: 1.75, fontWeight: 300 }}>{desc as string}</div></div></Reveal>
+          ))}
+        </div>
+      </div></section>
+
+      {/* PRICING */}
+      <section id="pricing" style={{ background: '#0b0b0b' }}><div className="section-pad" style={{ padding: '100px 40px', maxWidth: 1200, margin: '0 auto' }}>
+        <Reveal><div style={{ textAlign: 'center', marginBottom: 64 }}><div style={{ fontSize: 10.5, color: gold, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 14 }}>Tarifs</div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(40px,4.5vw,62px)', letterSpacing: 2, lineHeight: 0.95, marginBottom: 16 }}>SIMPLE ET TRANSPARENT</div></div></Reveal>
+        <div className="price-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, maxWidth: 920, margin: '0 auto' }}>
+          <Reveal delay={0.1}><div style={{ borderRadius: 28, padding: 42, position: 'relative', background: 'rgba(201,168,76,0.03)', border: '1.5px solid rgba(201,168,76,0.35)' }}>
+            <span style={{ position: 'absolute', top: 22, right: 22, background: gold, color: '#000', fontSize: 9.5, fontWeight: 700, padding: '4px 14px', borderRadius: 20, letterSpacing: 1, textTransform: 'uppercase' }}>Populaire</span>
+            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: gold, marginBottom: 20 }}>Athlète</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}><span style={{ fontSize: 12, color: '#666', alignSelf: 'flex-start', marginTop: 20 }}>CHF</span><span style={{ fontFamily: "'Bebas Neue'", fontSize: 88, lineHeight: 1, color: gold }}>30</span><span style={{ color: '#555', fontSize: 13 }}>/mois</span></div>
+            <div style={{ color: '#444', fontSize: 12.5, marginBottom: 32, fontWeight: 300 }}>Tout inclus, sans surprise</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 36 }}>{['Plan alimentaire IA 7 jours',"Programme d'entraînement perso",'3 484 aliments ANSES/Ciqual','Suivi progression & photos','Messagerie coach temps réel','Liste de courses automatique','Calculateur BMR/TDEE'].map(f => (<li key={f} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13.5, color: '#bbb', fontWeight: 300 }}><span style={{ color: gold, fontSize: 11 }}>✦</span> {f}</li>))}</ul>
+            <button className="btn-gold" onClick={go('/register-client')} style={{ width: '100%', padding: 16 }}>Commencer maintenant →</button>
+            <div style={{ textAlign: 'center', color: '#333', fontSize: 11.5, marginTop: 14, fontWeight: 300 }}>Sans engagement · Résiliable</div>
+          </div></Reveal>
+          <Reveal delay={0.2}><div style={{ borderRadius: 28, padding: 42, background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#555', marginBottom: 20 }}>Coach</div>
+            <div style={{ fontFamily: "'Bebas Neue'", fontSize: 48, lineHeight: 1, letterSpacing: 1, marginBottom: 8 }}>GRATUIT</div>
+            <div style={{ color: '#444', fontSize: 12.5, marginBottom: 32, fontWeight: 300 }}>*5% commission par client/mois</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 36 }}>{['Dashboard clients illimité','Génération plans IA','Paiements Stripe automatisés','Calendrier & séances','Messagerie temps réel','Analytics revenus'].map(f => (<li key={f} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13.5, color: '#555', fontWeight: 300 }}><span style={{ color: '#333', fontSize: 11 }}>✦</span> {f}</li>))}</ul>
+            <button onClick={go('/coach-signup')} style={{ width: '100%', background: 'transparent', color: gold, border: '1px solid rgba(201,168,76,0.25)', borderRadius: 14, padding: 16, fontSize: 13.5, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans'" }}>Devenir coach →</button>
+          </div></Reveal>
+        </div>
+      </div></section>
+
+      {/* TESTIMONIALS */}
+      <section id="temoignages" style={{ background: '#060606' }}><div className="section-pad" style={{ padding: '100px 40px', maxWidth: 1200, margin: '0 auto' }}>
+        <Reveal><div style={{ textAlign: 'center', marginBottom: 64 }}><div style={{ fontSize: 10.5, color: gold, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 14 }}>Témoignages</div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(40px,4.5vw,62px)', letterSpacing: 2, lineHeight: 0.95 }}>ILS ONT TRANSFORMÉ LEUR VIE</div></div></Reveal>
+        <div className="testi-grid-l" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
+          {[['MT','#1a3a2a','Marc T.','Coach IFBB, Genève','Les plans IA me font gagner 2h par client.','+12 clients'],['SM','#1a2a3a','Sarah M.','Cliente, Lausanne','-8 kg en 3 mois. Précision bluffante.','-8 kg'],['LB','#2a1a3a','Lucas B.','Client, Zurich','Coach humain + IA. Game changer.','+6 kg muscle']].map(([ini,bg,name,role,quote,result],i) => (
+            <Reveal key={i} delay={0.1+i*0.1}><div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 24, padding: 30 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}><div style={{ width: 48, height: 48, borderRadius: '50%', background: bg, border: '1.5px solid rgba(201,168,76,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 15, flexShrink: 0 }}>{ini}</div><div><div style={{ fontSize: 15, fontWeight: 500 }}>{name}</div><div style={{ fontSize: 11.5, color: '#444', fontWeight: 300 }}>{role}</div></div></div>
+              <div style={{ color: gold, fontSize: 13, letterSpacing: 2, marginBottom: 14 }}>★★★★★</div>
+              <p style={{ color: '#666', fontSize: 13.5, lineHeight: 1.85, fontStyle: 'italic', fontWeight: 300, marginBottom: 20, margin: '0 0 20px' }}>"{quote}"</p>
+              <span style={{ display: 'inline-block', background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 20, padding: '5px 14px', fontSize: 11.5, color: gold, fontWeight: 500 }}>{result}</span>
+            </div></Reveal>
+          ))}
+        </div>
+      </div></section>
+
+      {/* FAQ */}
+      <section style={{ background: '#060606' }}><div className="section-pad" style={{ padding: '100px 40px', maxWidth: 1200, margin: '0 auto' }}>
+        <Reveal><div style={{ textAlign: 'center', marginBottom: 64 }}><div style={{ fontSize: 10.5, color: gold, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 14 }}>FAQ</div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(40px,4.5vw,62px)', letterSpacing: 2, lineHeight: 0.95 }}>TES QUESTIONS</div></div></Reveal>
+        <Reveal delay={0.1}><div style={{ maxWidth: 700, margin: '0 auto' }}>{[['Comment fonctionne le paiement ?','CHF 30/mois via Stripe, résiliable à tout moment. Aucun engagement.'],["Qu'est-ce qu'une PWA ?",'Installe depuis Safari ou Chrome en 2 secondes. Plein écran, notifications push.'],["L'IA remplace-t-elle mon coach ?",'Non, l\'IA assiste ton coach humain.'],['Puis-je changer de coach ?','Oui, à tout moment. Nouveau coach sous 24h.'],['Données sécurisées ?','Données en Suisse via Supabase, AES-256. RGPD total.']].map(([q,a],i) => <FaqItem key={i} q={q} a={a} />)}</div></Reveal>
+      </div></section>
+
+      {/* CTA FINAL */}
+      <section style={{ padding: '120px 40px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 350, background: 'radial-gradient(ellipse,rgba(201,168,76,0.08),transparent 65%)', pointerEvents: 'none' }} />
+        <Reveal><div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto' }}>
+          <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(50px,6vw,84px)', lineHeight: 0.92, letterSpacing: 2, marginBottom: 24 }}>PRÊT À DEVENIR<br /><span style={{ color: gold }}>LA MEILLEURE VERSION</span><br />DE TOI-MÊME ?</h2>
+          <p style={{ color: '#555', fontSize: 16.5, fontWeight: 300, marginBottom: 48, lineHeight: 1.7 }}>Rejoins 500+ athlètes qui ont transformé leur physique avec CoachPro.</p>
+          <button className="btn-gold" onClick={go('/register-client')} style={{ padding: '20px 64px', fontSize: 16.5 }}>Commencer maintenant — CHF 30/mois</button>
+          <div style={{ color: '#2a2a2a', fontSize: 12.5, marginTop: 20, fontWeight: 300 }}>✓ Sans engagement · ✓ Résiliable · ✓ Support inclus</div>
+        </div></Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.03)', background: '#020202' }}>
+        <div className="footer-grid" style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 40px 44px', display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', gap: 48 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}><div style={{ width: 34, height: 34, background: `linear-gradient(135deg,${gold},${goldLight})`, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>⚡</div><div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 19, letterSpacing: 2.5 }}>COACHPRO</div><div style={{ fontSize: 7.5, letterSpacing: 3, color: gold, opacity: 0.6, textTransform: 'uppercase' }}>Elite Performance</div></div></div>
+            <p style={{ color: '#333', fontSize: 13, lineHeight: 1.75, fontWeight: 300, maxWidth: 260, margin: '0 0 22px' }}>La plateforme de coaching fitness propulsée par l'IA.</p>
+          </div>
+          {[{t:'Produit',l:['Fonctionnalités','Tarifs','Coachs','PWA']},{t:'Légal',l:['CGU','Confidentialité','RGPD']},{t:'Contact',l:['contact@moovx.ch','Support','Devenir coach']}].map(col => (<div key={col.t}><div style={{ fontSize: 11, color: gold, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 20, fontWeight: 400 }}>{col.t}</div><div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{col.l.map(l => <a key={l} href="#" style={{ color: '#333', textDecoration: 'none', fontSize: 13, fontWeight: 300 }}>{l}</a>)}</div></div>))}
+        </div>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.025)', padding: '22px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ color: '#222', fontSize: 12, fontWeight: 300 }}>© 2026 CoachPro by MoovX · Genève, Suisse</div>
+          <div style={{ display: 'flex', gap: 20 }}>{['CGU','Confidentialité','Cookies'].map(l => <a key={l} href="#" style={{ color: '#222', fontSize: 12, textDecoration: 'none', fontWeight: 300 }}>{l}</a>)}</div>
+        </div>
+      </footer>
     </div>
   )
 }
