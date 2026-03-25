@@ -479,7 +479,7 @@ const calorieGoal = profile?.calorie_goal || 2500
         <div style={{ marginTop: 24, textAlign: 'center' }}>
           <p style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: 12 }}>Pas encore de compte ?</p>
           <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
-            <button onClick={() => router.push('/join')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #C9A84C', background: 'transparent', color: '#C9A84C', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.04em' }}>
+            <button onClick={() => router.push('/register-client')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #C9A84C', background: 'transparent', color: '#C9A84C', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.04em' }}>
               M'inscrire comme client
             </button>
             <button onClick={() => router.push('/coach-signup')} style={{ padding: '12px', borderRadius: 10, border: '1px solid #333', background: 'transparent', color: '#9CA3AF', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.04em' }}>
