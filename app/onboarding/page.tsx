@@ -147,7 +147,6 @@ export default function OnboardingPage() {
   return (
     <div style={{ minHeight: '100svh', background: BG, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'Barlow', sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
         input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.4); cursor: pointer; }
       `}</style>

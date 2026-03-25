@@ -473,7 +473,6 @@ const calorieGoal = profile?.calorie_goal || 2500
 
   if (profile && !isSubActive) return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0A0A0A', padding: '2rem', textAlign: 'center' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap');`}</style>
       <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
         <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
       </div>
@@ -557,7 +556,6 @@ const calorieGoal = profile?.calorie_goal || 2500
       {/* ── MAIN CONTENT AREA ── */}
       <div className="main-content-area" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100dvh', overflow: 'hidden' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
         * { box-sizing: border-box; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }

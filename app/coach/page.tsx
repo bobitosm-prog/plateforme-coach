@@ -517,7 +517,6 @@ export default function CoachPage() {
   if (!session) {
     return (
       <div style={{ minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: 'Barlow, sans-serif' }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');`}</style>
         <div style={{ width: '100%', maxWidth: '440px', background: '#1F2937', padding: '40px', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
             <div style={{ width: '48px', height: '48px', background: '#F97316', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -541,7 +540,6 @@ export default function CoachPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#111827', color: '#F8FAFC', fontFamily: 'Barlow, sans-serif', overflowX: 'hidden', maxWidth: '100vw' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1F2937; }

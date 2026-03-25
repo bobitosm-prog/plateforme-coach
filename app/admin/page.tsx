@@ -125,7 +125,6 @@ export default function AdminPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#111827', color: '#F8FAFC', fontFamily: 'Barlow, sans-serif' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .nav-dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: #1F2937; border: 1px solid #374151; border-radius: 10px; padding: 6px; min-width: 220px; box-shadow: 0 16px 32px rgba(0,0,0,0.4); z-index: 100; }

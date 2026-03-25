@@ -77,7 +77,6 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: BG, fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700;900&display=swap'); input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}`}</style>
       <div className="sticky top-0 z-10 px-4 pt-10 pb-4 border-b" style={{ background: 'rgba(10,10,10,0.97)', borderColor: BORDER, backdropFilter: 'blur(20px)' }}>
         <div className="flex items-center justify-between mb-4">
           <button onClick={onCancel} className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}><ArrowLeft size={14} /> Retour</button>
@@ -235,7 +234,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
 
   if (done) return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center" style={{ background: BG, fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;700;900&display=swap');`}</style>
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 pointer-events-none rounded-full" style={{ background: 'radial-gradient(circle, rgba(201,168,76,0.2) 0%, transparent 70%)', filter: 'blur(40px)' }} />
       <div className="relative z-10 flex flex-col items-center w-full max-w-xs">
         <div className="w-20 h-20 rounded-[28px] flex items-center justify-center mb-5" style={{ background: `linear-gradient(135deg, ${GOLD}, #8B6914)`, boxShadow: '0 20px 60px rgba(201,168,76,0.35)' }}>
@@ -262,7 +260,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: BG, fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700;900&display=swap'); .fd{font-family:'Bebas Neue',sans-serif;letter-spacing:.05em} input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none} input[type=number]{-moz-appearance:textfield}`}</style>
       {restOn && <RestOverlay secs={restSecs} max={restMax} onSkip={skipRest} />}
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span className="text-white font-bold text-sm">Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.1)' }}><X size={16} className="text-white" /></button></div><video src={showVideo} controls autoPlay className="w-full rounded-[20px]" /></div></div>)}
 

@@ -26,7 +26,6 @@ export default function RegisterClientPage() {
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0A0A0A', padding: '2rem', textAlign: 'center', fontFamily: "'Barlow', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600&display=swap');`}</style>
 
       <div className="animate-pulse-gold" style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
         <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />

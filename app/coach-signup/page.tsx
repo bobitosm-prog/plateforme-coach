@@ -114,7 +114,6 @@ function CoachSignupPage() {
 
   return (
     <div style={{ minHeight: '100dvh', background: BG, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'Barlow', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');`}</style>
 
       {/* Progress bar */}
       {step > 1 && (

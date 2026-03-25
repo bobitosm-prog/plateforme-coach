@@ -770,7 +770,6 @@ export default function ClientProfilePage() {
   ══════════════════════════════════════════════════════════════ */
   return (
     <div className="client-page-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0A0A0A' }}>
-      <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         *,*::before,*::after{box-sizing:border-box;}
         body{margin:0;font-family:'Barlow',sans-serif;background:#0A0A0A;color:#F8FAFC;overscroll-behavior-y:none;overflow-x:hidden;max-width:100vw;}
