@@ -151,10 +151,14 @@ function CoachSignupPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={goNext} style={{ width: '100%', maxWidth: 320, padding: '18px', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, border: 'none', borderRadius: 16, color: '#000', fontSize: '1.1rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                Créer mon compte coach <ChevronRight size={20} strokeWidth={2.5} />
+              <button onClick={() => {
+                if (session) { goNext() } else {
+                  supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/coach-signup?step=2` } })
+                }
+              }} style={{ width: '100%', maxWidth: 320, padding: '18px', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, border: 'none', borderRadius: 16, color: '#000', fontSize: '1.1rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                {session ? 'Continuer' : 'Créer mon compte coach'} <ChevronRight size={20} strokeWidth={2.5} />
               </button>
-              <button onClick={() => router.push('/coach')} style={{ background: 'none', border: 'none', color: MUTED, cursor: 'pointer', fontSize: '0.82rem' }}>Déjà un compte ? Se connecter</button>
+              <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', color: MUTED, cursor: 'pointer', fontSize: '0.82rem' }}>Déjà un compte ? Se connecter</button>
             </motion.div>
           )}
 
