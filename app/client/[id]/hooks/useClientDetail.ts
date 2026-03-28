@@ -19,6 +19,7 @@ export type Profile = {
   height: number | null; target_weight: number | null
   body_fat_pct: number | null; objective: string | null; status: string | null
   dietary_type: string | null; allergies: string[] | null; liked_foods: string[] | null
+  meal_preferences: Record<string, string[]> | null
   activity_level: string | null; tdee: number | null; protein_goal: number | null
   carbs_goal: number | null; fat_goal: number | null
 }
@@ -218,7 +219,7 @@ export default function useClientDetail() {
           .select('id, name, energy_kcal, proteins, carbohydrates, fat')
           .in('id', likedArr)
         availableFoods = (foods || []).map((f: any) => ({
-          nom: f.name || '', kcal: Math.round(f.energy_kcal ?? 0),
+          id: f.id, nom: f.name || '', kcal: Math.round(f.energy_kcal ?? 0),
           p: Math.round((f.proteins ?? 0) * 10) / 10, g: Math.round((f.carbohydrates ?? 0) * 10) / 10, l: Math.round((f.fat ?? 0) * 10) / 10,
         }))
       }
@@ -230,11 +231,23 @@ export default function useClientDetail() {
           .not('name', 'is', null)
           .order('name')
         const extra = (fallback || []).map((f: any) => ({
-          nom: f.name || '', kcal: Math.round(f.energy_kcal ?? 0),
+          id: f.id, nom: f.name || '', kcal: Math.round(f.energy_kcal ?? 0),
           p: Math.round((f.proteins ?? 0) * 10) / 10, g: Math.round((f.carbohydrates ?? 0) * 10) / 10, l: Math.round((f.fat ?? 0) * 10) / 10,
         }))
         const seen = new Set(availableFoods.map((f: any) => f.nom))
         availableFoods.push(...extra.filter((f: any) => !seen.has(f.nom)))
+      }
+
+      // Parse meal_preferences to get per-meal food names
+      const mp = profile.meal_preferences && typeof profile.meal_preferences === 'object' ? profile.meal_preferences : {}
+      const foodNameMap = new Map(availableFoods.map((f: any) => [f.id, f.nom]))
+      // Also map by ID from liked foods fetch
+      const resolveNames = (ids: string[]) => (Array.isArray(ids) ? ids : []).map(id => foodNameMap.get(id)).filter(Boolean) as string[]
+      const mealFoodNames = {
+        morning: resolveNames(mp.petit_dejeuner || []),
+        lunch: resolveNames(mp.dejeuner || []),
+        snack: resolveNames(mp.collation || []),
+        dinner: resolveNames(mp.diner || []),
       }
 
       setAiMealStreamStatus("Connexion à l'IA...")
@@ -248,7 +261,7 @@ export default function useClientDetail() {
           fat_goal: profile.fat_goal || fatTarget,
           dietary_type: profile.dietary_type, allergies: profile.allergies,
           objective: profile.objective, available_foods: availableFoods,
-          liked_food_names: availableFoods.slice(0, 20).map((f: any) => f.nom),
+          meal_food_names: mealFoodNames,
         }),
       })
 
@@ -347,7 +360,7 @@ export default function useClientDetail() {
     setLoading(true); setError(null)
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes] = await Promise.all([
-      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
+      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),

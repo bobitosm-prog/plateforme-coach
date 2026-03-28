@@ -65,10 +65,15 @@ RÉPARTITION CALORIQUE PAR REPAS :
 Total : ${pdjKcal + dejKcal + collKcal + dinKcal} ≈ ${kcal} kcal
 
 RÈGLES :
-1. Le total_kcal DOIT être entre ${kcal - 100} et ${kcal + 100}
+1. Le total_kcal DOIT être entre ${kcal - 50} et ${kcal + 50}. C'est NON NÉGOCIABLE.
 2. Calcul : kcal_aliment = (kcal_100g / 100) × quantite_g
 3. Quantités en multiples de 5g, 3-4 aliments par repas
-4. VÉRIFIE ta somme avant de répondre
+
+VÉRIFICATION OBLIGATOIRE avant de retourner le JSON :
+- Additionne les kcal de tous les aliments de la journée
+- Si total < ${kcal - 50} : augmente les portions de féculents (+30-50g), ajoute huile d'olive (10g = 88 kcal)
+- Si total > ${kcal + 50} : réduis les portions de féculents (-20-30g)
+- Le total FINAL doit être entre ${kcal - 50} et ${kcal + 50}
 
 FORMAT JSON UNIQUE (pas de texte) :
 {
@@ -137,22 +142,27 @@ async function generateOneDay(
     .map((f: any) => `${f.nom} (${f.kcal}kcal, P${f.p} G${f.g} L${f.l} /100g)`)
     .join('\n')
 
-  // Liked foods hint
-  const likedHint = (params.liked_food_names || []).length > 0
-    ? `\nALIMENTS FAVORIS DU CLIENT (privilégie-les) : ${params.liked_food_names.join(', ')}`
-    : ''
+  // Per-meal preferences
+  const mfn = params.meal_food_names || {}
+  const prefHint = [
+    mfn.morning?.length ? `Petit-déj favori : ${mfn.morning.join(', ')}` : '',
+    mfn.lunch?.length ? `Déjeuner favori : ${mfn.lunch.join(', ')}` : '',
+    mfn.snack?.length ? `Collation favorite : ${mfn.snack.join(', ')}` : '',
+    mfn.dinner?.length ? `Dîner favori : ${mfn.dinner.join(', ')}` : '',
+  ].filter(Boolean).join('\n')
 
   const userPrompt = `Génère le plan pour ${day.toUpperCase()}.
 
-OBJECTIFS : ${kcal} kcal, ${params.protein_goal}g P, ${params.carbs_goal}g G, ${params.fat_goal}g L
+OBJECTIFS STRICTS : ${kcal} kcal (±50 MAX), ${params.protein_goal}g P, ${params.carbs_goal}g G, ${params.fat_goal}g L
 Allergènes : ${(params.allergies || []).join(', ') || 'aucun'}
 
-ALIMENTS DISPONIBLES (valeurs /100g) :
+${prefHint ? `PRÉFÉRENCES DU CLIENT :\n${prefHint}\nUtilise ces aliments en VARIANT chaque jour. Ne répète PAS le même petit-déjeuner 2 jours de suite.\n` : ''}ALIMENTS DISPONIBLES (valeurs /100g) :
 ${foodListStr || 'Utilise des aliments fitness classiques.'}
-${proteinHint}${likedHint}
+${proteinHint}
 
-RAPPEL : déjeuner et dîner DOIVENT avoir une source de protéine animale/principale (150-250g).
-Le total_kcal DOIT être entre ${kcal - 100} et ${kcal + 100}. Réponds UNIQUEMENT en JSON.`
+VARIÉTÉ : ce jour doit être DIFFÉRENT des précédents. 7 petits-déj différents, 7 déjeuners différents, 7 dîners différents.
+Déjeuner et dîner : protéine animale/principale (150-250g) OBLIGATOIRE.
+TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT en JSON.`
 
   console.log(`[meal-plan] Generating ${day}: target=${kcal}kcal, P=${params.protein_goal}g, G=${params.carbs_goal}g, L=${params.fat_goal}g`)
 
