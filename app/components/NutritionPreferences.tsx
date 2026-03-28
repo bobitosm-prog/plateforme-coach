@@ -58,8 +58,15 @@ interface NutritionPreferencesProps {
 export default function NutritionPreferences({ profile, supabase, userId, onSaved }: NutritionPreferencesProps) {
   const [dietaryType, setDietaryType] = useState<string>(profile?.dietary_type || 'omnivore')
   const [allergies, setAllergies] = useState<string[]>(profile?.allergies || [])
-  const [likedFoods, setLikedFoods] = useState<string[]>(profile?.liked_foods || [])
-  const [mealPrefs, setMealPrefs] = useState<Record<string, string[]>>(profile?.meal_preferences || { petit_dejeuner: [], dejeuner: [], collation: [], diner: [] })
+  const [likedFoods, setLikedFoods] = useState<string[]>(() => {
+    const lf = profile?.liked_foods
+    return Array.isArray(lf) ? lf : []
+  })
+  const [mealPrefs, setMealPrefs] = useState<Record<string, string[]>>(() => {
+    const mp = profile?.meal_preferences
+    if (mp && typeof mp === 'object' && !Array.isArray(mp)) return mp
+    return { petit_dejeuner: [], dejeuner: [], collation: [], diner: [] }
+  })
   const [activityLevel, setActivityLevel] = useState<string>(profile?.activity_level || 'moderate')
   const [foods, setFoods] = useState<any[]>([])
   const [foodMap, setFoodMap] = useState<Record<string, any>>({})
@@ -263,7 +270,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
               {(mealPrefs[activeMeal] || []).map((id: string) => {
                 const food = foodMap[id]
-                if (!food) return <div key={id} style={{ background: BG, borderRadius: 10, padding: '8px', fontSize: '0.7rem', color: MUTED }}>{id.slice(0, 8)}...</div>
+                if (!food) return <div key={String(id)} style={{ background: BG, borderRadius: 10, padding: '8px', fontSize: '0.7rem', color: MUTED }}>{String(id).slice(0, 8)}...</div>
                 return <FoodCard key={id} food={food} active onClick={() => toggleFood(id)} />
               })}
             </div>

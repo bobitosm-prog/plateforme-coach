@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Check, ChevronRight, ChevronLeft, Dumbbell, Flame, Scale, Activity, User, Heart } from 'lucide-react'
 import { ACTIVITY_LEVELS, calcMifflinStJeor } from '../../lib/design-tokens'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
+const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 const GOLD = '#C9A84C'
 const BG = '#0A0A0A'

@@ -7,8 +7,8 @@ import { toast } from 'sonner'
 import { JS_DAYS_FR } from '../../lib/design-tokens'
 import { cache } from '../../lib/cache'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
+const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 export type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'profil' | 'messages'
 

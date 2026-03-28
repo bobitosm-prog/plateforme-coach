@@ -211,11 +211,12 @@ export default function useClientDetail() {
     try {
       setAiMealStreamStatus('Chargement des aliments...')
       let availableFoods: any[] = []
-      if (profile.liked_foods?.length) {
+      const likedArr = Array.isArray(profile.liked_foods) ? profile.liked_foods : []
+      if (likedArr.length) {
         const { data: foods } = await supabase
           .from('food_items')
           .select('id, name, energy_kcal, proteins, carbohydrates, fat')
-          .in('id', profile.liked_foods)
+          .in('id', likedArr)
         availableFoods = (foods || []).map((f: any) => ({
           nom: f.name || '', kcal: Math.round(f.energy_kcal ?? 0),
           p: Math.round((f.proteins ?? 0) * 10) / 10, g: Math.round((f.carbohydrates ?? 0) * 10) / 10, l: Math.round((f.fat ?? 0) * 10) / 10,
@@ -330,9 +331,10 @@ export default function useClientDetail() {
     if (profileRes.error) { setError(profileRes.error.message); setLoading(false); return }
     const p = profileRes.data as Profile
     setProfile(p)
-    if (p.liked_foods?.length) {
-      supabase.from('fitness_foods').select('id,name,emoji').in('id', p.liked_foods)
-        .then(({ data: foods }: any) => { if (foods) setResolvedFoods(foods) })
+    const pLiked = Array.isArray(p.liked_foods) ? p.liked_foods : []
+    if (pLiked.length) {
+      supabase.from('food_items').select('id,name').eq('source', 'fitness').in('id', pLiked)
+        .then(({ data: foods }: any) => { if (foods) setResolvedFoods(foods.map((f: any) => ({ id: f.id, name: f.name, emoji: null }))) })
     }
     setEditName(p.full_name ?? ''); setEditEmail(p.email ?? ''); setEditPhone(p.phone ?? ''); setEditBirth(p.birth_date ?? ''); setEditGender(p.gender ?? '')
     const latestW = (weightRes.data as WeightLog[] | null)?.[0]

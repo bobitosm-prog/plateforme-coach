@@ -64,7 +64,8 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
     ]).then(([foodRes, profRes]: any[]) => {
       const foods = (foodRes.data || []).map((f: any) => ({ ...normalizeFoodItem(f), cat: categorize(f.name || '') }))
       setAllFoods(foods)
-      setLikedIds(profRes.data?.liked_foods || [])
+      const lf = profRes.data?.liked_foods
+      setLikedIds(Array.isArray(lf) ? lf : [])
       setLoading(false)
     })
     setTimeout(() => inputRef.current?.focus(), 100)

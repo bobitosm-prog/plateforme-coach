@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Check, ChevronRight, ChevronLeft } from 'lucide-react'
 
-const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+const supabase = createBrowserClient((process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(), (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim())
 
 const GOLD = '#C9A84C'
 const BG = '#0A0A0A'

@@ -7,8 +7,8 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
+  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 )
 
 /* ── Types ─────────────────────────────────────────────────── */

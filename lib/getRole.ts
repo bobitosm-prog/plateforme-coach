@@ -3,8 +3,8 @@ import { ADMIN_EMAIL, COACH_EMAIL } from './constants'
 
 export async function getRole(userId: string, accessToken: string): Promise<string | null> {
   const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
+    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
   )
 
   // Retry up to 3 times on failure (transient network/RLS errors)
