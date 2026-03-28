@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Bebas_Neue, DM_Sans, Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import ServiceWorkerRegister from "./components/ServiceWorkerRegister";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -33,8 +32,8 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "CoachPro",
-  description: "Coaching fitness propulsé par l'IA",
+  title: "MoovX",
+  description: "Coaching fitness Swiss Made · Swiss Quality",
 };
 
 export default function RootLayout({
@@ -50,11 +49,11 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="CoachPro" />
+        <meta name="apple-mobile-web-app-title" content="MoovX" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){for(var i=0;i<r.length;i++){r[i].unregister()}});if(window.caches){caches.keys().then(function(n){for(var i=0;i<n.length;i++){caches.delete(n[i])}})}}` }} />
       </head>
       <body className="antialiased" style={{ fontFamily: "var(--font-body), 'DM Sans', sans-serif" }}>
-        <ServiceWorkerRegister />
         {children}
         <Toaster position="top-center" richColors theme="dark" />
       </body>
