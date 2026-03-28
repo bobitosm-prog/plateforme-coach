@@ -28,6 +28,9 @@ export default function CoachAliments({
 
   return (
     <div style={{ padding: '20px 16px', maxWidth: 600, margin: '0 auto' }}>
+      <style>{`
+        @media(max-width:768px){.food-col-hide{display:none!important}.food-grid-row{grid-template-columns:1fr 50px 36px!important}}
+      `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0, color: '#F8FAFC' }}>ALIMENTS</h1>
         <button onClick={() => setShowAddFood(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.8rem', fontWeight: 700 }}>
@@ -60,19 +63,19 @@ export default function CoachAliments({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 50px 40px 40px 40px 36px', gap: 4, padding: '6px 10px', fontSize: '0.6rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'Barlow Condensed', sans-serif" }}>
-            <span>Nom</span><span>Kcal</span><span>P</span><span>G</span><span>L</span><span></span>
+          <div className="food-grid-row" style={{ display: 'grid', gridTemplateColumns: '1fr 50px 40px 40px 40px 36px', gap: 4, padding: '6px 10px', fontSize: '0.6rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <span>Nom</span><span>Kcal</span><span className="food-col-hide">P</span><span className="food-col-hide">G</span><span className="food-col-hide">L</span><span></span>
           </div>
           {foodList.map(f => (
-            <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 40px 40px 40px 36px', gap: 4, padding: '10px', background: '#141414', borderRadius: 10, alignItems: 'center', border: '1px solid #1E1E1E' }}>
+            <div key={f.id} className="food-grid-row" style={{ display: 'grid', gridTemplateColumns: '1fr 50px 40px 40px 40px 36px', gap: 4, padding: '10px', background: '#141414', borderRadius: 10, alignItems: 'center', border: '1px solid #1E1E1E' }}>
               <div>
                 <div style={{ fontSize: '0.82rem', color: '#F8FAFC', fontWeight: 500 }}>{f.name}</div>
                 {f.source === 'coach' && <span style={{ fontSize: '0.55rem', color: '#C9A84C', fontWeight: 700 }}>COACH</span>}
               </div>
               <span style={{ fontSize: '0.78rem', color: '#EF4444', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>{Math.round(f.energy_kcal || 0)}</span>
-              <span style={{ fontSize: '0.78rem', color: '#3B82F6', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>{Math.round(f.proteins || 0)}</span>
-              <span style={{ fontSize: '0.78rem', color: '#F59E0B', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>{Math.round(f.carbohydrates || 0)}</span>
-              <span style={{ fontSize: '0.78rem', color: '#22C55E', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>{Math.round(f.fat || 0)}</span>
+              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: '#3B82F6', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>{Math.round(f.proteins || 0)}</span>
+              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: '#F59E0B', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>{Math.round(f.carbohydrates || 0)}</span>
+              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: '#22C55E', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>{Math.round(f.fat || 0)}</span>
               {f.source === 'coach' ? (
                 <button onClick={() => deleteFood(f.id)} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trash2 size={13} color="#EF4444" />
@@ -87,7 +90,7 @@ export default function CoachAliments({
       {/* Add food modal */}
       {showAddFood && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ background: '#1A1A1A', borderRadius: '24px 24px 0 0', padding: '24px 20px 40px', width: '100%', maxWidth: 480, margin: '0 auto' }}>
+          <div style={{ background: '#1A1A1A', borderRadius: '24px 24px 0 0', padding: '24px 20px 40px', width: '100%', maxWidth: 'min(480px, calc(100vw - 32px))', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, margin: 0, color: '#F8FAFC' }}>Nouvel aliment</h3>
               <button onClick={() => setShowAddFood(false)} style={{ width: 32, height: 32, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color="#6B7280" /></button>

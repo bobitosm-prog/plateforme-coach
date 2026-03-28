@@ -47,7 +47,7 @@ export default function CoachCalendar({
   }
 
   return (
-    <div className="section-pad" style={{ width: '100%', maxWidth: '680px', margin: '0 auto', overflowX: 'hidden', paddingBottom: '2rem' }}>
+    <div className="section-pad" style={{ width: '100%', maxWidth: 680, margin: '0 auto', overflowX: 'hidden', paddingBottom: '2rem' }}>
 
       {/* ── Sticky week nav header ── */}
       <div style={{ position: 'sticky', top: 0, zIndex: 30, background: '#111827', borderBottom: '1px solid #1F2937', padding: '12px 16px 10px' }}>

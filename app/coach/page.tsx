@@ -130,6 +130,10 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         .msg-input { flex: 1; background: #111827; border: 1px solid #374151; border-radius: 24px; padding: 10px 18px; font-family: 'Barlow', sans-serif; font-size: 0.9rem; color: #F8FAFC; outline: none; transition: border-color 200ms; }
         .msg-input:focus { border-color: #F97316; }
         @media (max-width: 640px) { .hide-sm { display: none !important; } }
+        @media(max-width:768px){
+          .data-table th,.data-table td{padding:10px 8px;font-size:0.75rem}
+          .section-pad{padding:16px!important}
+        }
         @media (max-width: 1024px) { .lg-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 767px) { .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; } }
         .client-cards-m { display: none; flex-direction: column; gap: 10px; }

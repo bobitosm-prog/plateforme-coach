@@ -145,7 +145,7 @@ export default function CoachApp() {
       {/* ── FOOD MODAL ── */}
       {h.modal === 'food' && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1000, overflowY: 'auto' }}>
-          <div style={{ background: BG_CARD, borderRadius: '24px 24px 0 0', padding: '20px 20px 40px', marginTop: 40, minHeight: '90vh' }}>
+          <div style={{ background: BG_CARD, borderRadius: '24px 24px 0 0', padding: '20px 16px 40px', marginTop: 40, minHeight: 'min(90vh, calc(100dvh - 40px))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>AJOUTER ALIMENT</h3>
               <button onClick={() => { h.setModal(null); h.setSelectedFood(null); h.setFoodSearch('') }} style={{ width: 32, height: 32, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>

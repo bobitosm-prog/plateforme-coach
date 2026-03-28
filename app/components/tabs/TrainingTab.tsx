@@ -231,6 +231,10 @@ export default function TrainingTab({
         .set-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .set-input:focus { border-color: #3B82F6 !important; }
         .add-set-btn:active { opacity: 0.7; }
+        @media(max-width:480px){
+          .set-grid{grid-template-columns:28px 1fr 56px 52px 36px!important;gap:2px!important;padding-left:8px!important;padding-right:8px!important}
+          .set-grid .prev-col{font-size:0.55rem!important}
+        }
       `}</style>
 
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
@@ -490,7 +494,7 @@ export default function TrainingTab({
                     </div>
 
                     {/* ── Table Header ── */}
-                    <div style={{
+                    <div className="set-grid" style={{
                       display: 'grid',
                       gridTemplateColumns: '36px 1fr 72px 64px 44px',
                       gap: 4, padding: '8px 14px 4px', alignItems: 'center',
@@ -517,6 +521,7 @@ export default function TrainingTab({
                             <motion.div
                               animate={{ background: done ? 'rgba(34,197,94,0.06)' : 'transparent' }}
                               transition={{ duration: 0.35 }}
+                              className="set-grid"
                               style={{
                                 display: 'grid',
                                 gridTemplateColumns: '36px 1fr 72px 64px 44px',

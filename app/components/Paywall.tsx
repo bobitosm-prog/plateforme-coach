@@ -59,14 +59,14 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
       </div>
 
       {/* Plans */}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', maxWidth: role === 'coach' ? 400 : 960, width: '100%' }}>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', maxWidth: role === 'coach' ? 'min(400px, calc(100vw - 32px))' : 'min(960px, calc(100vw - 32px))', width: '100%' }}>
         {plans.map((plan, i) => {
           const isPopular = plan.badge === 'Populaire'
           const isBest = plan.badge === 'Meilleure offre'
           const isHighlight = isPopular || isBest
           return (
             <div key={plan.id} style={{
-              flex: role === 'coach' ? '1 1 100%' : '1 1 280px', maxWidth: role === 'coach' ? 400 : 320,
+              flex: role === 'coach' ? '1 1 100%' : '1 1 280px', maxWidth: role === 'coach' ? 'min(400px, calc(100vw - 32px))' : 320,
               borderRadius: 24, padding: isHighlight ? '2px' : 0,
               background: isHighlight ? `linear-gradient(135deg,${GOLD},#F0D060)` : 'transparent',
               animation: `fadeUp 0.6s ${0.1 + i * 0.1}s cubic-bezier(0.16,1,0.3,1) both`,

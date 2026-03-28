@@ -75,7 +75,7 @@ export default function CoachProfile({
 
       {showDelete && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#1A1A1A', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: 24, maxWidth: 400, width: '100%' }}>
+          <div style={{ background: '#1A1A1A', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: 24, maxWidth: 'min(400px, calc(100vw - 32px))', width: '100%' }}>
             <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: '#EF4444', margin: '0 0 12px' }}>Supprimer mon compte</h3>
             <p style={{ fontSize: '0.82rem', color: '#6B7280', lineHeight: 1.6, margin: '0 0 16px' }}>
               Es-tu sûr de vouloir supprimer ton compte ? Toutes tes données seront supprimées définitivement. Cette action est irréversible.
