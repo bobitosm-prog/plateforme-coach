@@ -293,11 +293,39 @@ export default function useClientDetail() {
     if (!aiMealPreview || !profile) return
     const planData = aiMealPreview
     const lundi = planData.lundi || {}
+    // Round all numeric values to integers for DB integer columns
+    const roundPlan = (plan: any) => {
+      const rounded = { ...plan }
+      for (const day of Object.keys(rounded)) {
+        const d = rounded[day]
+        if (!d || typeof d !== 'object') continue
+        d.total_kcal = Math.round(d.total_kcal || 0)
+        d.total_protein = Math.round(d.total_protein || 0)
+        d.total_carbs = Math.round(d.total_carbs || 0)
+        d.total_fat = Math.round(d.total_fat || 0)
+        if (d.repas) {
+          for (const foods of Object.values(d.repas) as any[]) {
+            if (!Array.isArray(foods)) continue
+            for (const f of foods) {
+              f.quantite_g = Math.round(f.quantite_g || 0)
+              f.kcal = Math.round(f.kcal || 0)
+              f.proteines = Math.round(f.proteines || 0)
+              f.glucides = Math.round(f.glucides || 0)
+              f.lipides = Math.round(f.lipides || 0)
+            }
+          }
+        }
+      }
+      return rounded
+    }
+    const roundedPlan = roundPlan(planData)
     const { error } = await supabase.from('meal_plans').insert({
       user_id: profile.id, created_by: coachId,
-      total_calories: lundi.total_kcal || calorieTarget, protein_g: lundi.total_protein || protTarget,
-      carbs_g: lundi.total_carbs || carbTarget, fat_g: lundi.total_fat || fatTarget,
-      objective: profile.objective, plan_data: planData, is_active: true,
+      total_calories: Math.round(lundi.total_kcal || calorieTarget),
+      protein_g: Math.round(lundi.total_protein || protTarget),
+      carbs_g: Math.round(lundi.total_carbs || carbTarget),
+      fat_g: Math.round(lundi.total_fat || fatTarget),
+      objective: profile.objective, plan_data: roundedPlan, is_active: true,
     })
     if (error) { showToast(`Erreur : ${error.message}`) } else { setAiMealPreview(null); showToast('Plan alimentaire IA envoyé au client'); fetchData() }
   }
@@ -475,7 +503,7 @@ export default function useClientDetail() {
   const saveMealPlan = async () => {
     if (!coachId) return
     setMealPlanSaving(true)
-    const payload = { coach_id: coachId, client_id: id, week_start: currentMonday(), calorie_target: calorieTarget, protein_target: protTarget, carb_target: carbTarget, fat_target: fatTarget, plan: mealPlan, updated_at: new Date().toISOString() }
+    const payload = { coach_id: coachId, client_id: id, week_start: currentMonday(), calorie_target: Math.round(calorieTarget), protein_target: Math.round(protTarget), carb_target: Math.round(carbTarget), fat_target: Math.round(fatTarget), plan: mealPlan, updated_at: new Date().toISOString() }
     await Promise.all([
       mealPlanId
         ? supabase.from('client_meal_plans').update(payload).eq('id', mealPlanId)

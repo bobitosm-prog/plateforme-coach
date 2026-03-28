@@ -104,10 +104,16 @@ function verifyDayPlan(day: any, targetKcal: number): any {
   for (const foods of Object.values(day.repas || {}) as any[]) {
     if (!Array.isArray(foods)) continue
     for (const item of foods) {
-      totalKcal += item.kcal || 0
-      totalP += item.proteines || 0
-      totalG += item.glucides || 0
-      totalL += item.lipides || 0
+      // Round all AI-generated values to integers
+      item.quantite_g = Math.round(item.quantite_g || 0)
+      item.kcal = Math.round(item.kcal || 0)
+      item.proteines = Math.round(item.proteines || 0)
+      item.glucides = Math.round(item.glucides || 0)
+      item.lipides = Math.round(item.lipides || 0)
+      totalKcal += item.kcal
+      totalP += item.proteines
+      totalG += item.glucides
+      totalL += item.lipides
     }
   }
   if (Math.abs(totalKcal - targetKcal) > 150) {
