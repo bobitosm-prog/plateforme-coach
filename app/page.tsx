@@ -10,6 +10,7 @@ import {
 import useClientDashboard from './hooks/useClientDashboard'
 import Paywall from './components/Paywall'
 import BugReport from './components/BugReport'
+import ChatAI from './components/ChatAI'
 import { cache } from '../lib/cache'
 
 import WorkoutSession from './components/WorkoutSession'
@@ -298,6 +299,7 @@ export default function CoachApp() {
       </div>{/* end main-content-area */}
 
       <BugReport session={h.session} profile={h.profile} />
+      <ChatAI session={h.session} profile={h.profile} />
 
       {/* ── BOTTOM NAV (fixed on mobile, hidden on desktop via CSS) ── */}
       <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 'calc(64px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)', background: '#111111', borderTop: '1px solid #1f1f1f', display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 999 }}>
