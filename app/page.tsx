@@ -43,7 +43,7 @@ export default function CoachApp() {
 
   /* ── Not authenticated → landing ── */
   if (!h.session && !h.loading) {
-    h.router.replace('/landing')
+    h.router.push('/landing')
     return null
   }
 

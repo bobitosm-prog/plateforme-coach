@@ -85,8 +85,8 @@ export default function CoachPage() {
   )
 
   /* ── No session → landing ── */
-  if (!h.session) {
-    h.router.replace('/landing')
+  if (!h.session && !h.loading) {
+    h.router.push('/landing')
     return null
   }
 

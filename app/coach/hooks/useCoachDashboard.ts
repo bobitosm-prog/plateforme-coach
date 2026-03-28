@@ -167,15 +167,14 @@ export default function useCoachDashboard() {
   /* ── Auth ── */
   useEffect(() => {
     setMounted(true)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s)
-      setLoading(false)
-    })
+    let alive = true
     supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s)
-      setLoading(false)
+      if (alive) { setSession(s); setLoading(false) }
     })
-    return () => subscription.unsubscribe()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (alive) { setSession(s); if (s) setLoading(false) }
+    })
+    return () => { alive = false; subscription.unsubscribe() }
   }, [])
 
   useEffect(() => {

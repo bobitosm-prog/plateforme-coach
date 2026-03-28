@@ -47,19 +47,11 @@ export default function LoginPage() {
     if (data.session) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role, email')
+        .select('role')
         .eq('id', data.session.user.id)
         .single()
-
-      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
-      const coachEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
-      const role = profile?.email === adminEmail ? 'super_admin'
-        : (profile?.email === coachEmail || profile?.role === 'coach') ? 'coach'
-        : 'client'
-
-      // router.push = client-side navigation, session stays in memory (no page reload)
-      const target = role === 'super_admin' ? '/admin' : role === 'coach' ? '/coach' : '/'
-      router.push(target)
+      const role = profile?.role || 'client'
+      router.push(role === 'super_admin' ? '/admin' : role === 'coach' ? '/coach' : '/')
     }
   }
 
