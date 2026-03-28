@@ -58,9 +58,8 @@ export default function OnboardingPage() {
   })
   const [mealTab, setMealTab] = useState('petit_dejeuner')
   const [foodQuery, setFoodQuery] = useState('')
-  const [foodResults, setFoodResults] = useState<any[]>([])
-  const [foodSearching, setFoodSearching] = useState(false)
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [fitnessFoods, setFitnessFoods] = useState<any[]>([])
+  const [fitnessFoodsLoaded, setFitnessFoodsLoaded] = useState(false)
   const [resolvedNames, setResolvedNames] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -366,7 +365,7 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* Step 7: Mes repas (Ciqual search) */}
+          {/* Step 7: Mes repas (fitness food cards) */}
           {step === 7 && (() => {
             const MEAL_TABS = [
               { id: 'petit_dejeuner', label: 'Matin', emoji: '🌅' },
@@ -378,46 +377,68 @@ export default function OnboardingPage() {
             const totalFoods = Object.values(mealPrefs).flat().length
             const mealsWithFood = Object.values(mealPrefs).filter(ids => ids.length > 0).length
 
-            // Search handler
-            const handleSearch = (q: string) => {
-              setFoodQuery(q)
-              clearTimeout(searchTimerRef.current)
-              if (q.length < 2) { setFoodResults([]); return }
-              setFoodSearching(true)
-              searchTimerRef.current = setTimeout(async () => {
-                const { data } = await supabase
-                  .from('food_items')
-                  .select('id, name, energy_kcal, proteins, carbohydrates, fat')
-                  .eq('source', 'fitness')
-                  .ilike('name', `%${q}%`)
-                  .limit(15)
-                setFoodResults((data || []).map((f: any) => ({
+            // Category helper
+            const CATS = [
+              { key: 'proteines', label: 'Protéines', icon: '🥩', patterns: ['poulet', 'dinde', 'boeuf', 'bœuf', 'veau', 'porc', 'saumon', 'thon', 'cabillaud', 'crevette', 'oeuf', 'œuf', 'steak', 'filet', 'escalope', 'jambon', 'bacon', 'merlu', 'sardine', 'truite', 'canard', 'agneau', 'poisson', 'viande'] },
+              { key: 'laitiers', label: 'Produits laitiers', icon: '🥛', patterns: ['yaourt', 'fromage', 'skyr', 'cottage', 'mozzarella', 'parmesan', 'emmental', 'gruyère', 'lait', 'beurre', 'crème'] },
+              { key: 'feculents', label: 'Féculents', icon: '🍚', patterns: ['riz', 'pâtes', 'pasta', 'quinoa', 'patate', 'pomme de terre', 'pain', 'avoine', 'flocon', 'semoule', 'blé', 'sarrasin', 'lentille', 'pois chiche', 'haricot', 'maïs', 'galette', 'wrap', 'toast', 'muesli', 'céréale', 'granola'] },
+              { key: 'legumes', label: 'Légumes', icon: '🥦', patterns: ['brocoli', 'épinard', 'courgette', 'tomate', 'concombre', 'salade', 'carotte', 'poivron', 'aubergine', 'chou', 'haricot vert', 'asperge', 'champignon', 'oignon', 'ail', 'avocat', 'légume'] },
+              { key: 'fruits', label: 'Fruits', icon: '🍎', patterns: ['banane', 'pomme', 'fraise', 'myrtille', 'orange', 'kiwi', 'mangue', 'ananas', 'poire', 'raisin', 'pêche', 'abricot', 'melon', 'pastèque', 'fruit', 'baie', 'datte', 'figue'] },
+              { key: 'oleagineux', label: 'Oléagineux', icon: '🥜', patterns: ['amande', 'noix', 'cacahuète', 'noisette', 'cajou', 'pistache', 'beurre de', 'graines', 'sésame', 'tournesol', 'lin', 'chia'] },
+              { key: 'boissons', label: 'Boissons', icon: '🥤', patterns: ["lait d'", 'lait de', 'boisson', 'smoothie', 'jus', 'eau de coco'] },
+              { key: 'supplements', label: 'Suppléments', icon: '💪', patterns: ['whey', 'protéine', 'caséine', 'barre', 'créatine', 'bcaa', 'shaker', 'iso', 'mass'] },
+            ]
+            const categorize = (name: string) => {
+              const n = name.toLowerCase()
+              for (const cat of CATS) { if (cat.patterns.some(p => n.includes(p))) return cat.key }
+              return 'autres'
+            }
+
+            // Load fitness foods once
+            if (!fitnessFoodsLoaded) {
+              setFitnessFoodsLoaded(true)
+              supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').order('name').then(({ data }) => {
+                const mapped = (data || []).map((f: any) => ({
                   id: f.id, nom: f.name || '',
                   kcal: Math.round(f.energy_kcal ?? 0),
                   p: Math.round((f.proteins ?? 0) * 10) / 10,
                   g: Math.round((f.carbohydrates ?? 0) * 10) / 10,
                   l: Math.round((f.fat ?? 0) * 10) / 10,
-                })))
-                setFoodSearching(false)
-              }, 300)
+                  cat: categorize(f.name || ''),
+                }))
+                setFitnessFoods(mapped)
+                // Pre-populate resolvedNames
+                const names: Record<string, string> = {}
+                mapped.forEach((f: any) => { names[f.id] = f.nom })
+                setResolvedNames(prev => ({ ...prev, ...names }))
+              })
             }
 
-            const addFood = (food: any) => {
-              if (currentIds.includes(food.id)) return
-              setMealPrefs(prev => ({ ...prev, [mealTab]: [...(prev[mealTab] || []), food.id] }))
-              setResolvedNames(prev => ({ ...prev, [food.id]: food.nom }))
-              setFoodQuery('')
-              setFoodResults([])
+            const filtered = foodQuery.length >= 1
+              ? fitnessFoods.filter(f => f.nom.toLowerCase().includes(foodQuery.toLowerCase()))
+              : fitnessFoods
+
+            const toggleFood = (food: any) => {
+              if (currentIds.includes(food.id)) {
+                setMealPrefs(prev => ({ ...prev, [mealTab]: (prev[mealTab] || []).filter((x: string) => x !== food.id) }))
+              } else {
+                setMealPrefs(prev => ({ ...prev, [mealTab]: [...(prev[mealTab] || []), food.id] }))
+                setResolvedNames(prev => ({ ...prev, [food.id]: food.nom }))
+              }
             }
 
-            const removeFood = (id: string) => {
-              setMealPrefs(prev => ({ ...prev, [mealTab]: (prev[mealTab] || []).filter(x => x !== id) }))
-            }
+            // Group by category
+            const grouped = CATS.map(cat => ({
+              ...cat,
+              foods: filtered.filter(f => f.cat === cat.key),
+            })).filter(g => g.foods.length > 0)
+            const autres = filtered.filter(f => f.cat === 'autres')
+            if (autres.length > 0) grouped.push({ key: 'autres', label: 'Autres', icon: '🍽️', patterns: [], foods: autres })
 
             return (
               <motion.div key="s7" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 14, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
-                <div><h2 style={h2Style}>Tes habitudes alimentaires</h2><p style={subStyle}>Dis-nous ce que tu aimes manger à chaque repas</p></div>
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 20px 32px', gap: 12, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
+                <div><h2 style={h2Style}>Tes habitudes alimentaires</h2><p style={subStyle}>Sélectionne ce que tu aimes manger</p></div>
 
                 {/* Meal tabs */}
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -425,7 +446,7 @@ export default function OnboardingPage() {
                     const active = mealTab === t.id
                     const count = (mealPrefs[t.id] || []).length
                     return (
-                      <button key={t.id} onClick={() => { setMealTab(t.id); setFoodQuery(''); setFoodResults([]) }}
+                      <button key={t.id} onClick={() => setMealTab(t.id)}
                         style={{ flex: 1, padding: '10px 4px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: active ? `${GOLD}20` : CARD, transition: 'all 150ms' }}>
                         <span style={{ fontSize: '1.1rem' }}>{t.emoji}</span>
                         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color: active ? GOLD : MUTED }}>{t.label}</span>
@@ -435,55 +456,68 @@ export default function OnboardingPage() {
                   })}
                 </div>
 
-                {/* Search input */}
+                {/* Search filter */}
                 <div style={{ position: 'relative' }}>
-                  <input value={foodQuery} onChange={e => handleSearch(e.target.value)} placeholder="Rechercher dans 3484 aliments..."
-                    style={{ ...inputStyle, paddingLeft: 38 }} />
-                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: GOLD, fontSize: '0.9rem' }}>🔍</span>
+                  <input value={foodQuery} onChange={e => setFoodQuery(e.target.value)} placeholder={`Filtrer ${fitnessFoods.length} aliments fitness...`}
+                    style={{ ...inputStyle, paddingLeft: 38, padding: '10px 14px 10px 38px', fontSize: '0.82rem' }} />
+                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: GOLD, fontSize: '0.82rem' }}>🔍</span>
                 </div>
 
-                {/* Search results dropdown */}
-                {foodResults.length > 0 && (
-                  <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, maxHeight: 200, overflowY: 'auto' }}>
-                    {foodResults.map(food => (
-                      <button key={food.id} onClick={() => addFood(food)} disabled={currentIds.includes(food.id)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderBottom: `1px solid ${BORDER}`, cursor: currentIds.includes(food.id) ? 'default' : 'pointer', opacity: currentIds.includes(food.id) ? 0.4 : 1, textAlign: 'left' }}>
-                        <div>
-                          <div style={{ fontSize: '0.82rem', color: TEXT, fontWeight: 600 }}>{food.nom}</div>
-                          <div style={{ fontSize: '0.62rem', color: MUTED }}>{food.kcal}kcal · {food.p}P · {food.g}G · {food.l}L</div>
-                        </div>
-                        {!currentIds.includes(food.id) && <span style={{ color: GOLD, fontSize: '1rem' }}>+</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {foodSearching && <p style={{ fontSize: '0.72rem', color: MUTED, textAlign: 'center' }}>Recherche...</p>}
-                {!foodSearching && foodQuery.length >= 2 && foodResults.length === 0 && (
-                  <p style={{ fontSize: '0.75rem', color: MUTED, textAlign: 'center', padding: '8px 0' }}>Aucun aliment trouvé. Essaie un autre terme.</p>
-                )}
+                {/* Meal summary */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 12, fontSize: '0.62rem', color: MUTED }}>
+                  {MEAL_TABS.map(t => {
+                    const c = (mealPrefs[t.id] || []).length
+                    return <span key={t.id} style={{ color: c > 0 ? GOLD : MUTED, fontWeight: c > 0 ? 700 : 400 }}>{t.emoji} {c}</span>
+                  })}
+                </div>
 
-                {/* Selected foods as chips */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, minHeight: 32 }}>
-                  {currentIds.length === 0 && <span style={{ fontSize: '0.75rem', color: MUTED, fontStyle: 'italic' }}>Aucun aliment sélectionné</span>}
-                  {currentIds.map(id => (
-                    <span key={id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999, background: `${GOLD}18`, border: `1px solid ${GOLD}40`, fontSize: '0.72rem', fontWeight: 600, color: GOLD }}>
-                      {resolvedNames[id] || id.slice(0, 8)}
-                      <button onClick={() => removeFood(id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: GOLD, padding: 0, fontSize: '0.85rem', lineHeight: 1 }}>×</button>
-                    </span>
+                {/* Food cards by category */}
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 8 }}>
+                  {fitnessFoods.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                      <div style={{ width: 28, height: 28, border: '2px solid #222', borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 8px' }} />
+                      <p style={{ fontSize: '0.75rem', color: MUTED }}>Chargement des aliments...</p>
+                    </div>
+                  )}
+                  {grouped.map(cat => (
+                    <div key={cat.key}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'sticky', top: 0, background: BG, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
+                        <span style={{ fontSize: '0.9rem' }}>{cat.icon}</span>
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700, color: GOLD, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{cat.label}</span>
+                        <span style={{ fontSize: '0.6rem', color: MUTED }}>({cat.foods.length})</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                        {cat.foods.map((food: any) => {
+                          const selected = currentIds.includes(food.id)
+                          return (
+                            <button key={food.id} onClick={() => toggleFood(food)}
+                              style={{ background: selected ? 'rgba(201,168,76,0.08)' : '#111', border: `1px solid ${selected ? GOLD : '#1a1a1a'}`, borderRadius: 12, padding: '10px 10px 8px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', position: 'relative' }}>
+                              {selected && <span style={{ position: 'absolute', top: 6, right: 8, color: GOLD, fontSize: '0.7rem', fontWeight: 700 }}>✓</span>}
+                              <div style={{ fontSize: '0.76rem', fontWeight: 600, color: '#F8FAFC', lineHeight: 1.3, marginBottom: 4, paddingRight: selected ? 16 : 0 }}>{food.nom}</div>
+                              <div style={{ display: 'flex', gap: 6, fontSize: '0.58rem', fontWeight: 500 }}>
+                                <span style={{ color: '#C9A84C' }}>{food.kcal}</span>
+                                <span style={{ color: '#60a5fa' }}>P{food.p}</span>
+                                <span style={{ color: '#4ade80' }}>G{food.g}</span>
+                                <span style={{ color: '#f59e0b' }}>L{food.l}</span>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
                   ))}
-                </div>
-
-                <div style={{ fontSize: '0.68rem', color: MUTED, textAlign: 'center' }}>
-                  {currentIds.length} aliment{currentIds.length !== 1 ? 's' : ''} pour {MEAL_TABS.find(t => t.id === mealTab)?.label?.toLowerCase()}
+                  {foodQuery.length >= 1 && filtered.length === 0 && (
+                    <p style={{ fontSize: '0.75rem', color: MUTED, textAlign: 'center', padding: '12px 0' }}>Aucun aliment trouvé pour &quot;{foodQuery}&quot;</p>
+                  )}
                 </div>
 
                 {/* Validation + next */}
-                <div style={{ marginTop: 'auto', paddingTop: 8 }}>
-                  <div style={{ fontSize: '0.72rem', color: mealsWithFood >= 2 ? GOLD : MUTED, fontWeight: 600, textAlign: 'center', marginBottom: 8 }}>
-                    {totalFoods} aliments au total · {mealsWithFood}/4 repas configurés {mealsWithFood < 2 && '(min. 2)'}
+                <div style={{ flexShrink: 0, paddingTop: 4 }}>
+                  <div style={{ fontSize: '0.68rem', color: mealsWithFood >= 2 ? GOLD : MUTED, fontWeight: 600, textAlign: 'center', marginBottom: 6 }}>
+                    {totalFoods} aliments · {mealsWithFood}/4 repas {mealsWithFood < 2 && '(min. 2)'}
                   </div>
                   <NextBtn onClick={goNext} disabled={mealsWithFood < 2} />
-                  <button onClick={goNext} style={{ width: '100%', marginTop: 8, padding: '10px', background: 'none', border: 'none', color: MUTED, fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>Passer cette étape</button>
+                  <button onClick={goNext} style={{ width: '100%', marginTop: 6, padding: '8px', background: 'none', border: 'none', color: MUTED, fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'underline' }}>Passer cette étape</button>
                 </div>
               </motion.div>
             )
