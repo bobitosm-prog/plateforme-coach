@@ -90,6 +90,7 @@ export default function LandingPage() {
   const problemR = useReveal();
   const featuresR = useReveal();
   const howR = useReveal();
+  const installR = useReveal();
   const pricingR = useReveal();
   const testR = useReveal();
   const faqR = useReveal();
@@ -174,6 +175,7 @@ export default function LandingPage() {
           .hero-stats { flex-direction: column; gap: 16px !important; }
           .price-card.pop { transform: scale(1); }
           .price-card.pop:hover { transform: translateY(-4px); }
+          .install-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -290,6 +292,71 @@ export default function LandingPage() {
                   </div>
                   {i < 2 && <div className="step-line" style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(201,168,76,0.3), rgba(201,168,76,0.08))', minWidth: 40, maxWidth: 160 }} />}
                 </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="divider" />
+
+        {/* ═══════════════ 5b. INSTALL PWA ═══════════════ */}
+        <div ref={installR.ref} className={`rv ${installR.visible ? 'show' : ''}`}>
+          <div className="section">
+            <h2 className="section-title">INSTALLE MOOVX EN 30 SECONDES</h2>
+            <p style={{ textAlign: 'center', color: '#666', fontSize: 15, fontWeight: 300, maxWidth: 500, margin: '0 auto 48px' }}>
+              Pas besoin d&apos;App Store. Installe directement depuis ton navigateur.
+            </p>
+            <div className="install-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 800, margin: '0 auto' }}>
+              {/* iOS */}
+              <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 20, padding: '36px 28px' }}>
+                <svg width="28" height="34" viewBox="0 0 28 34" fill="none" style={{ marginBottom: 20 }}>
+                  <path d="M23.2 11.3c-.12.08-3.2 1.84-3.2 5.63 0 4.4 3.86 5.95 3.97 5.99-.02.07-.62 2.11-2.04 4.18-1.25 1.81-2.55 3.62-4.53 3.62s-2.49-1.15-4.78-1.15c-2.23 0-3.02 1.19-4.84 1.19s-3.05-1.67-4.53-3.71C1.02 24.1 0 20.2 0 16.5c0-5.92 3.84-9.05 7.63-9.05 2.01 0 3.69 1.32 4.95 1.32 1.21 0 3.1-1.4 5.4-1.4.87 0 4 .08 5.32 3.43zM18.8 1.65c.96-1.13 1.65-2.7 1.65-4.27 0-.22-.02-.44-.05-.62-1.57.06-3.44 1.05-4.57 2.36-.88 1.02-1.72 2.59-1.72 4.19 0 .24.04.47.06.55.1.02.27.04.44.04 1.41 0 3.2-.95 4.19-2.25z" fill="#fff"/>
+                </svg>
+                <h3 style={{ fontFamily: 'var(--font-body)', fontSize: 18, fontWeight: 600, color: '#F8FAFC', marginBottom: 24 }}>Sur iPhone</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {[
+                    ['Ouvre app.moovx.ch dans Safari', '🌐'],
+                    ['Appuie sur le bouton Partager ⬆️', '📤'],
+                    ['Choisis « Sur l\u2019\u00e9cran d\u2019accueil »', '📲'],
+                  ].map(([text, icon], i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '1.5px solid #C9A84C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#C9A84C', fontFamily: 'var(--font-display)', flexShrink: 0 }}>{i + 1}</div>
+                      <span style={{ fontSize: 14, color: '#aaa', fontWeight: 400, lineHeight: 1.6 }}>{text}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: 12, color: '#444', marginTop: 20, fontStyle: 'italic' }}>Fonctionne uniquement avec Safari, pas Chrome.</p>
+              </div>
+
+              {/* Android */}
+              <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 20, padding: '36px 28px' }}>
+                <svg width="28" height="32" viewBox="0 0 28 32" fill="none" style={{ marginBottom: 20 }}>
+                  <path d="M1.54 10.34c-.85 0-1.54.74-1.54 1.65v8.24c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65v-8.24c0-.91-.69-1.65-1.54-1.65zm4.23-.62v13.73c0 .85.65 1.55 1.44 1.55h1.57v4.14c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65V25h2.28v4.14c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65V25h1.57c.79 0 1.44-.7 1.44-1.55V9.72H5.77zm20.69.62c-.85 0-1.54.74-1.54 1.65v8.24c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65v-8.24c0-.91-.69-1.65-1.54-1.65zM17.75 1.29l1.47-2.7a.31.31 0 00-.13-.42.29.29 0 00-.4.14L17.2 1.03C16.26.62 15.18.38 14 .38s-2.26.24-3.2.65L9.31-1.69a.29.29 0 00-.4-.14.31.31 0 00-.13.42l1.47 2.7C7.62 2.68 5.93 5.26 5.77 8.3h16.46c-.16-3.04-1.85-5.62-4.48-7.01zM10.42 5.52a.82.82 0 01-.81-.83c0-.46.36-.83.81-.83s.81.37.81.83-.36.83-.81.83zm7.16 0a.82.82 0 01-.81-.83c0-.46.36-.83.81-.83s.81.37.81.83-.36.83-.81.83z" fill="#78C257"/>
+                </svg>
+                <h3 style={{ fontFamily: 'var(--font-body)', fontSize: 18, fontWeight: 600, color: '#F8FAFC', marginBottom: 24 }}>Sur Android</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {[
+                    ['Ouvre app.moovx.ch dans Chrome', '🌐'],
+                    ['Appuie sur le menu \u22ee (3 points en haut)', '⋮'],
+                    ['Choisis « Installer l\u2019application »', '📲'],
+                  ].map(([text], i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '1.5px solid #C9A84C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#C9A84C', fontFamily: 'var(--font-display)', flexShrink: 0 }}>{i + 1}</div>
+                      <span style={{ fontSize: 14, color: '#aaa', fontWeight: 400, lineHeight: 1.6 }}>{text}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: 12, color: '#444', marginTop: 20, fontStyle: 'italic' }}>Fonctionne avec Chrome, Edge, Samsung Internet.</p>
+              </div>
+            </div>
+
+            {/* PWA badges */}
+            <p style={{ textAlign: 'center', color: '#555', fontSize: 14, fontWeight: 300, maxWidth: 600, margin: '36px auto 20px', lineHeight: 1.7 }}>
+              Une fois install&eacute;e, MoovX fonctionne comme une app native : plein &eacute;cran, notifications, acc&egrave;s hors ligne.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 10 }}>
+              {['Plein écran', 'Notifications', 'Hors ligne', 'Mises à jour auto'].map(b => (
+                <span key={b} style={{ fontSize: 12, fontWeight: 500, color: '#C9A84C', background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 20, padding: '6px 16px' }}>✓ {b}</span>
               ))}
             </div>
           </div>
