@@ -5,19 +5,25 @@ export const maxDuration = 60
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
-const SYSTEM_PROMPT = `Tu es un nutritionniste expert. Tu génères des plans alimentaires basés sur une base de 170+ aliments fitness sélectionnés et la base ANSES/Ciqual.
+const SYSTEM_PROMPT = `Tu es un nutritionniste expert spécialisé en fitness et hypertrophie. Tu génères des plans alimentaires STRICTS basés sur les macros du client.
 
-RÈGLES STRICTES :
+RÈGLE #1 — MACROS STRICTES :
+- Le total journalier DOIT être à ±30 kcal du calorie_goal
+- Les protéines DOIVENT être à ±5g du protein_goal
+- Les glucides DOIVENT être à ±10g du carbs_goal
+- Les lipides DOIVENT être à ±5g du fat_goal
+- VÉRIFIE la somme avant de répondre. Si le total dépasse la cible, RÉDUIS les quantités.
+
+RÈGLE #2 — ALIMENTS :
 - Utilise UNIQUEMENT les aliments de la liste fournie
-- Calcule les quantités exactes pour atteindre les macros cibles
-- TOUTES les valeurs numériques sont des entiers, jamais null ou vides
+- Les valeurs nutritionnelles sont pour 100g — calcule : kcal = (kcal_100g / 100) × quantite_g
 - Quantités en multiples de 5g
 - Maximum 4 aliments par repas
 
-RÈGLES PAR REPAS :
-- petit_dejeuner : féculents + fruits + laitage (PAS de viande ni poisson)
+RÈGLE #3 — STRUCTURE DES REPAS :
+- petit_dejeuner : féculents + fruits + laitage (PAS de viande)
 - dejeuner : protéine + féculent + légume obligatoires
-- collation : léger 150-250 kcal (laitage ou fruits + oléagineux, PAS de viande)
+- collation : léger 150-250 kcal (laitage ou fruits + oléagineux)
 - diner : protéine maigre + légumes, féculents limités
 
 FORMAT JSON pour UN jour :
@@ -59,8 +65,8 @@ function verifyDayPlan(day: any, targetKcal: number): any {
       totalL += item.lipides || 0
     }
   }
-  if (Math.abs(totalKcal - targetKcal) > 100) {
-    console.warn(`[meal-plan] Day off target: ${totalKcal} vs ${targetKcal}`)
+  if (Math.abs(totalKcal - targetKcal) > 50) {
+    console.warn(`[meal-plan] Day off target: ${totalKcal} vs ${targetKcal} (diff: ${totalKcal - targetKcal})`)
   }
   return { ...day, total_kcal: totalKcal, total_protein: totalP, total_carbs: totalG, total_fat: totalL }
 }
@@ -82,9 +88,11 @@ async function generateOneDay(
 
   const userPrompt = `Génère le plan pour ${day.toUpperCase()} :
 
-OBJECTIFS :
-- Calories : ${params.calorie_goal} kcal ±50
-- Protéines : ${params.protein_goal}g | Glucides : ${params.carbs_goal}g | Lipides : ${params.fat_goal}g
+OBJECTIFS STRICTS (respecte-les à la lettre) :
+- Calories : EXACTEMENT ${params.calorie_goal} kcal (tolérance ±30 kcal MAX)
+- Protéines : ${params.protein_goal}g (±5g)
+- Glucides : ${params.carbs_goal}g (±10g)
+- Lipides : ${params.fat_goal}g (±5g)
 - Régime : ${params.dietary_type || 'omnivore'}
 - Allergènes : ${(params.allergies || []).join(', ') || 'aucun'}
 - Objectif : ${params.objective || 'maintenance'}
@@ -93,8 +101,10 @@ ALIMENTS DISPONIBLES (valeurs /100g) :
 ${foodListStr || 'Utilise des aliments fitness classiques'}
 ${proteinHint}
 
-IMPORTANT : calcule quantite_g pour que kcal = (kcal_100g / 100) × quantite_g
-La somme des kcal doit être ≈ ${params.calorie_goal} kcal`
+CALCUL : pour chaque aliment, kcal = (kcal_100g / 100) × quantite_g
+VÉRIFIE que la somme total_kcal = ${params.calorie_goal} ±30
+VÉRIFIE que total_protein = ${params.protein_goal} ±5
+Si le total est trop haut, RÉDUIS les quantités. Ne réponds PAS si les macros ne matchent pas.`
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

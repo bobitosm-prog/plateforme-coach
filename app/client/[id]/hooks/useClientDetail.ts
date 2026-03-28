@@ -227,8 +227,7 @@ export default function useClientDetail() {
           .select('id, name, energy_kcal, proteins, carbohydrates, fat')
           .eq('source', 'fitness')
           .not('name', 'is', null)
-          .gt('proteins', 5)
-          .limit(40)
+          .order('name')
         const extra = (fallback || []).map((f: any) => ({
           nom: f.name || '', kcal: Math.round(f.energy_kcal ?? 0),
           p: Math.round((f.proteins ?? 0) * 10) / 10, g: Math.round((f.carbohydrates ?? 0) * 10) / 10, l: Math.round((f.fat ?? 0) * 10) / 10,
