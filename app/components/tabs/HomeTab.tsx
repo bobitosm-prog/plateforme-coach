@@ -61,6 +61,7 @@ export default function HomeTab({
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [consumedKcal, setConsumedKcal] = useState(0)
   const calorieGoal = profile?.calorie_goal || 2000
+  const [waterToday, setWaterToday] = useState(0)
 
   // Fetch today's consumed calories from meal_tracking + active meal plan
   useEffect(() => {
@@ -89,6 +90,22 @@ export default function HomeTab({
       setConsumedKcal(planKcal + logsKcal)
     })
   }, [session?.user?.id])
+
+  // Fetch today's water intake
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const today = new Date().toISOString().split('T')[0]
+    supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', today)
+      .then(({ data }: any) => {
+        setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0))
+      })
+  }, [session?.user?.id])
+
+  async function addWater(ml: number) {
+    if (!session?.user?.id) return
+    await supabase.from('water_intake').insert({ user_id: session.user.id, amount_ml: ml, date: new Date().toISOString().split('T')[0] })
+    setWaterToday(prev => prev + ml)
+  }
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -153,6 +170,37 @@ export default function HomeTab({
             </motion.div>
           ))}
         </div>
+
+        {/* Water intake widget */}
+        {(() => {
+          const waterGoal = profile?.water_goal || 3000
+          const pct = Math.min(100, Math.round((waterToday / waterGoal) * 100))
+          const msg = pct >= 100 ? 'Objectif atteint ! 💪' : pct >= 60 ? 'Tu es bien hydraté !' : pct >= 30 ? 'Continue comme ça !' : 'Pense à boire 💧'
+          return (
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: '1.1rem' }}>💧</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Hydratation</span>
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#3B82F6', fontWeight: 600 }}>{(waterToday / 1000).toFixed(1)}L / {(waterGoal / 1000).toFixed(1)}L</span>
+              </div>
+              {/* Progress bar */}
+              <div style={{ height: 8, background: '#1A1A1A', borderRadius: 4, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? '#22C55E' : '#3B82F6', borderRadius: 4, transition: 'width 0.5s ease' }} />
+              </div>
+              {/* Quick add buttons */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                {[250, 500, 1000].map(ml => (
+                  <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, border: '1px solid rgba(59,130,246,0.2)', background: 'transparent', cursor: 'pointer', color: '#3B82F6', fontSize: '0.72rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    +{ml >= 1000 ? `${ml / 1000}L` : `${ml}ml`}
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize: '0.65rem', color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>{msg}</p>
+            </div>
+          )
+        })()}
 
         {/* Programme du jour */}
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>

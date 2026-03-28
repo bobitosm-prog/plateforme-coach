@@ -52,6 +52,9 @@ export default function ProgressTab({
   setModal, chartMin, chartMax, onRefresh,
 }: ProgressTabProps) {
   const [subTab, setSubTab] = useState<SubTab>('mesures')
+  const [showCompare, setShowCompare] = useState(false)
+  const [compareIdx, setCompareIdx] = useState<[number, number]>([0, 0])
+  const [sliderValue, setSliderValue] = useState(50)
   const latestMeasure = measurements[0]
   const prevMeasure = measurements[1]
 
@@ -293,8 +296,85 @@ export default function ProgressTab({
           )}
 
           <ActionBtn icon={Camera} label="Photo progression" sub="Ajouter une photo avant/après" onClick={() => photoRef.current?.click()} />
+
+          {/* Compare button */}
+          {progressPhotos.length >= 2 && (
+            <button onClick={() => { setCompareIdx([progressPhotos.length - 1, 0]); setSliderValue(50); setShowCompare(true) }}
+              style={{ width: '100%', padding: '14px', borderRadius: 14, border: `1px solid ${GOLD}40`, background: `${GOLD}08`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+              <span style={{ fontSize: '1rem' }}>📸</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.88rem', fontWeight: 700, color: GOLD, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Comparer avant / après</span>
+            </button>
+          )}
         </div>
       )}
+
+      {/* ═══ PHOTO COMPARE MODAL ═══ */}
+      {showCompare && progressPhotos.length >= 2 && (() => {
+        const beforePhoto = progressPhotos[compareIdx[0]]
+        const afterPhoto = progressPhotos[compareIdx[1]]
+        if (!beforePhoto || !afterPhoto) return null
+        const beforeUrl = supabase.storage.from('progress-photos').getPublicUrl(beforePhoto.photo_url).data.publicUrl
+        const afterUrl = supabase.storage.from('progress-photos').getPublicUrl(afterPhoto.photo_url).data.publicUrl
+        const beforeDate = beforePhoto.date ? format(new Date(beforePhoto.date), 'd MMM yyyy', { locale: fr }) : ''
+        const afterDate = afterPhoto.date ? format(new Date(afterPhoto.date), 'd MMM yyyy', { locale: fr }) : ''
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #222' }}>
+              <div style={{ display: 'flex', gap: 16, fontSize: '0.75rem' }}>
+                <span style={{ color: '#EF4444', fontWeight: 600 }}>Avant : {beforeDate}</span>
+                <span style={{ color: '#22C55E', fontWeight: 600 }}>Après : {afterDate}</span>
+              </div>
+              <button onClick={() => setShowCompare(false)} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={16} color="#fff" />
+              </button>
+            </div>
+
+            {/* Photo selectors */}
+            <div style={{ display: 'flex', gap: 8, padding: '8px 16px', borderBottom: '1px solid #1a1a1a' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' }}>Avant</label>
+                <select value={compareIdx[0]} onChange={e => setCompareIdx([Number(e.target.value), compareIdx[1]])}
+                  style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 8, padding: '6px 8px', color: '#fff', fontSize: '0.75rem' }}>
+                  {progressPhotos.map((p: any, i: number) => (
+                    <option key={i} value={i}>{p.date ? format(new Date(p.date), 'd MMM yyyy', { locale: fr }) : `Photo ${i + 1}`}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' }}>Après</label>
+                <select value={compareIdx[1]} onChange={e => setCompareIdx([compareIdx[0], Number(e.target.value)])}
+                  style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 8, padding: '6px 8px', color: '#fff', fontSize: '0.75rem' }}>
+                  {progressPhotos.map((p: any, i: number) => (
+                    <option key={i} value={i}>{p.date ? format(new Date(p.date), 'd MMM yyyy', { locale: fr }) : `Photo ${i + 1}`}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Comparison area */}
+            <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+              {/* After photo (full background) */}
+              <img src={afterUrl} alt="Après" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000' }} />
+              {/* Before photo (clipped) */}
+              <img src={beforeUrl} alt="Avant" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000', clipPath: `inset(0 ${100 - sliderValue}% 0 0)` }} />
+              {/* Slider line */}
+              <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${sliderValue}%`, width: 2, background: GOLD, transform: 'translateX(-50%)', zIndex: 2 }}>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ color: '#000', fontSize: '0.7rem', fontWeight: 700 }}>⟷</span>
+                </div>
+              </div>
+              {/* Range input overlay */}
+              <input type="range" min={0} max={100} value={sliderValue} onChange={e => setSliderValue(Number(e.target.value))}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'ew-resize', zIndex: 3 }} />
+              {/* Labels */}
+              <div style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(239,68,68,0.8)', borderRadius: 6, padding: '3px 8px', fontSize: '0.65rem', fontWeight: 700, color: '#fff', zIndex: 2 }}>AVANT</div>
+              <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(34,197,94,0.8)', borderRadius: 6, padding: '3px 8px', fontSize: '0.65rem', fontWeight: 700, color: '#fff', zIndex: 2 }}>APRÈS</div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ═══ EVOLUTION SUB-TAB ═══ */}
       {subTab === 'evolution' && (

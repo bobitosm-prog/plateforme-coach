@@ -52,6 +52,13 @@ export default function ProfileTab({
   const [phoneEditing, setPhoneEditing] = useState(false)
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle')
   const [showPaywall, setShowPaywall] = useState(false)
+  const [badges, setBadges] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase.from('user_badges').select('badge_type').eq('user_id', session.user.id)
+      .then(({ data }: any) => setBadges((data || []).map((b: any) => b.badge_type)))
+  }, [session?.user?.id])
 
   function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4)
@@ -263,6 +270,44 @@ export default function ProfileTab({
 
       {/* ── Payment history ── */}
       <PaymentHistory supabase={supabase} userId={session?.user?.id} />
+
+      {/* Badges */}
+      {(() => {
+        const ALL_BADGES = [
+          { type: 'first_workout', icon: '🔥', label: 'Premier pas', desc: '1ère séance complétée' },
+          { type: 'week_streak', icon: '💪', label: 'Semaine complète', desc: '7 jours de streak' },
+          { type: 'month_streak', icon: '🏆', label: "Mois d'acier", desc: '30 jours de streak' },
+          { type: 'first_weight', icon: '📊', label: 'Première pesée', desc: '1er poids enregistré' },
+          { type: 'plan_respected', icon: '🥗', label: 'Plan respecté', desc: '7 jours repas cochés' },
+          { type: 'first_photo', icon: '📸', label: 'Avant/Après', desc: '1ère photo uploadée' },
+          { type: 'lifetime', icon: '⭐', label: 'À vie', desc: 'Abonnement lifetime' },
+        ]
+        return (
+          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18, marginBottom: 8 }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>Mes badges</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {ALL_BADGES.map(b => {
+                const earned = badges.includes(b.type)
+                return (
+                  <div key={b.type} style={{
+                    background: BG_BASE,
+                    border: earned ? '1px solid #C9A84C' : `1px solid ${BORDER}`,
+                    borderRadius: 12,
+                    padding: '12px 6px',
+                    textAlign: 'center',
+                    opacity: earned ? 1 : 0.3,
+                    transition: 'opacity 0.3s ease',
+                  }}>
+                    <div style={{ fontSize: '1.4rem', marginBottom: 4 }}>{b.icon}</div>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: earned ? '#C9A84C' : TEXT_MUTED, marginBottom: 2 }}>{b.label}</div>
+                    <div style={{ fontSize: '0.55rem', color: TEXT_MUTED, lineHeight: 1.3 }}>{b.desc}</div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Sign out */}
       <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} style={{ width: '100%', background: 'transparent', border: `1px solid #EF4444`, borderRadius: 14, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
