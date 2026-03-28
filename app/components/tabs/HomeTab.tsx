@@ -294,15 +294,16 @@ export default function HomeTab({
         </div>
 
         {/* Quick actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
           {[
             { icon: Ruler, label: '+ Mesure', action: () => setModal('measure') },
             { icon: Camera, label: '+ Photo', action: () => photoRef.current?.click() },
             { icon: Zap, label: 'BMR', action: () => setModal('bmr') },
-          ].map(({ icon: Icon, label, action }) => (
-            <button key={label} onClick={action} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              <Icon size={18} color={TEXT_MUTED} />
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: TEXT_MUTED }}>{label}</span>
+            { icon: Camera, label: '📷 Scan', action: () => setModal('scan'), gold: true },
+          ].map(({ icon: Icon, label, action, gold }) => (
+            <button key={label} onClick={action} style={{ background: (gold as any) ? 'rgba(201,168,76,0.06)' : BG_CARD, border: `1px solid ${(gold as any) ? 'rgba(201,168,76,0.25)' : BORDER}`, borderRadius: 14, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              {(gold as any) ? <span style={{ fontSize: '1.1rem' }}>📷</span> : <Icon size={18} color={TEXT_MUTED} />}
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: (gold as any) ? '#C9A84C' : TEXT_MUTED }}>{label}</span>
             </button>
           ))}
           <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />

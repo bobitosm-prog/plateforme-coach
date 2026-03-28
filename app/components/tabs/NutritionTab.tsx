@@ -4,6 +4,7 @@ import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import FoodSearch from '../FoodSearch'
+import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
@@ -45,6 +46,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set())
   const [mealLogs, setMealLogs] = useState<any[]>([])
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
+  const [showScanner, setShowScanner] = useState(false)
   const today = new Date().toISOString().split('T')[0]
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
@@ -470,6 +472,19 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           )
         })}
       </div>
+
+      {/* Scanner button */}
+      <button onClick={() => setShowScanner(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '12px', borderRadius: 12, border: `1px solid rgba(201,168,76,0.25)`, background: 'rgba(201,168,76,0.06)', cursor: 'pointer', transition: 'all 150ms' }}>
+        <span style={{ fontSize: '1.1rem' }}>📷</span>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: '#C9A84C', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Scanner un code-barres</span>
+      </button>
+
+      {/* Barcode scanner modal */}
+      {showScanner && (
+        <BarcodeScanner supabase={supabase} userId={userId} defaultMealType="dejeuner"
+          onProductAdded={() => { setShowScanner(false); fetchTodayMealLogs() }}
+          onClose={() => setShowScanner(false)} />
+      )}
 
       {/* Today sub-tab — daily tracking */}
       {/* Food search modal */}
