@@ -189,6 +189,7 @@ export default function useCoachDashboard() {
   useEffect(() => {
     if (!session) { setLoading(false); return }
     getRole(session.user.id, session.access_token).then(role => {
+      if (!role) { /* getRole failed (network/RLS error) — don't redirect, retry silently */ setLoading(false); return }
       if (role !== 'coach' && role !== 'super_admin') {
         router.replace('/')
       } else {

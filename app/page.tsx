@@ -43,10 +43,7 @@ export default function CoachApp() {
 
   /* ── Not authenticated after all retries → landing ── */
   if (!h.session && !h.loading) {
-    if (typeof window !== 'undefined') {
-      alert('[DEBUG page.tsx] REDIRECT TO LANDING — session: ' + !!h.session + ' — loading: ' + h.loading + ' — mounted: ' + h.mounted + ' — roleChecked: ' + h.roleChecked)
-      // h.router.replace('/landing')
-    }
+    if (typeof window !== 'undefined') h.router.replace('/landing')
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#050505' }}>
         <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />

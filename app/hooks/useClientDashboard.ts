@@ -85,6 +85,7 @@ export default function useClientDashboard() {
   useEffect(() => {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
+      if (!role) { /* getRole failed — treat as client rather than redirecting */ setRoleChecked(true); return }
       if (role === 'super_admin') { router.replace('/admin') }
       else if (role === 'coach') { router.replace('/coach') }
       else { setRoleChecked(true) }
