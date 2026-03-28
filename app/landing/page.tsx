@@ -81,6 +81,14 @@ export default function LandingPage() {
   const [heroReady, setHeroReady] = useState(false);
   useEffect(() => { const t = setTimeout(() => setHeroReady(true), 100); return () => clearTimeout(t); }, []);
 
+  /* navbar scroll state */
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   /* FAQ accordion */
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const toggleFaq = useCallback((i: number) => setOpenFaq(prev => prev === i ? null : i), []);
@@ -162,6 +170,15 @@ export default function LandingPage() {
         .section { padding: 120px 24px; max-width: 1200px; margin: 0 auto; }
         .section-title { font-size: clamp(32px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; margin-bottom: 64px; }
 
+        .lp-nav { position: sticky; top: 0; z-index: 200; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; transition: background 0.3s, border-color 0.3s; }
+        .lp-nav.scrolled { background: rgba(5,5,5,0.95) !important; border-bottom: 1px solid rgba(201,168,76,0.1); }
+        .lp-nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .lp-nav-btns { display: flex; align-items: center; gap: 10px; }
+        .lp-nav-ghost { padding: 8px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #999; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s; font-family: var(--font-body); }
+        .lp-nav-ghost:hover { border-color: rgba(201,168,76,0.4); color: #C9A84C; }
+        .lp-nav-gold { padding: 8px 18px; border-radius: 10px; border: none; background: #C9A84C; color: #000; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; font-family: var(--font-body); }
+        .lp-nav-gold:hover { background: #D4AF37; transform: translateY(-1px); }
+
         @media (max-width: 768px) {
           .section { padding: 60px 20px; }
           .section-title { margin-bottom: 40px; }
@@ -176,15 +193,30 @@ export default function LandingPage() {
           .price-card.pop { transform: scale(1); }
           .price-card.pop:hover { transform: translateY(-4px); }
           .install-grid { grid-template-columns: 1fr !important; }
+          .lp-nav { padding: 0 16px; }
+          .lp-nav-gold { display: none; }
+          .lp-nav-ghost { padding: 7px 14px; font-size: 12px; }
         }
       `}</style>
 
       <div className="lp">
+        {/* ── NAVBAR ── */}
+        <nav className={`lp-nav ${scrolled ? 'scrolled' : ''}`} style={{ background: scrolled ? 'rgba(5,5,5,0.95)' : 'rgba(5,5,5,0.4)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)' }}>
+          <Link href="/" className="lp-nav-logo">
+            <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg, #C9A84C, #F0D060)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 16, color: '#000', fontWeight: 700 }}>M</div>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, letterSpacing: '0.1em', color: '#fff' }}>MOOVX</span>
+          </Link>
+          <div className="lp-nav-btns">
+            <Link href="/login" className="lp-nav-ghost">Connexion</Link>
+            <Link href="/register-client" className="lp-nav-gold">Commencer</Link>
+          </div>
+        </nav>
+
         {/* grain */}
         <div className="grain" />
 
         {/* ═══════════════ 1. HERO ═══════════════ */}
-        <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 24px 40px', position: 'relative', background: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(201,168,76,0.04) 0%, transparent 70%)' }}>
+        <section style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px 24px 40px', position: 'relative', background: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(201,168,76,0.04) 0%, transparent 70%)' }}>
           <div className={`hs ${heroReady ? 'ready' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
 
             {/* Logo */}
