@@ -36,14 +36,17 @@ export default function LoginPage() {
     if (!email.trim()) { setError('Email requis'); return }
     if (!password) { setError('Mot de passe requis'); return }
     setError(''); setSubmitting(true)
+    supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_ATTEMPT', details: { email: email.trim(), method: 'password' }, page_url: '/login' })
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     if (signInError) {
+      supabase.from('app_logs').insert({ level: 'warning', message: 'LOGIN_ERROR', details: { error: signInError.message }, page_url: '/login' })
       setSubmitting(false)
       if (signInError.message.includes('Invalid login')) setError('Email ou mot de passe incorrect')
       else if (signInError.message.includes('Email not confirmed')) setError('Email non confirmé. Vérifie ta boîte mail.')
       else setError(signInError.message)
       return
     }
+    supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_RESULT', details: { success: !!data.session, userId: data.session?.user?.id }, page_url: '/login' })
     if (data.session) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -51,7 +54,9 @@ export default function LoginPage() {
         .eq('id', data.session.user.id)
         .single()
       const role = profile?.role || 'client'
-      router.push(role === 'super_admin' ? '/admin' : role === 'coach' ? '/coach' : '/')
+      const target = role === 'super_admin' ? '/admin' : role === 'coach' ? '/coach' : '/'
+      supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_REDIRECT', details: { role, target, userId: data.session.user.id }, page_url: '/login' })
+      router.push(target)
     }
   }
 

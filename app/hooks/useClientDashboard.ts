@@ -65,9 +65,11 @@ export default function useClientDashboard() {
     setMounted(true)
     let alive = true
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      supabase.from('app_logs').insert({ level: 'info', message: 'CLIENT_DASH_SESSION', details: { hasSession: !!s, userId: s?.user?.id, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/' })
       if (alive) { setSession(s); setLoading(false) }
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      supabase.from('app_logs').insert({ level: 'info', message: 'CLIENT_DASH_AUTH_CHANGE', details: { event: _event, hasSession: !!s, userId: s?.user?.id }, page_url: '/' })
       if (alive) { setSession(s); if (s) setLoading(false) }
     })
     return () => { alive = false; subscription.unsubscribe() }

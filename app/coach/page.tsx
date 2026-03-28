@@ -86,6 +86,7 @@ export default function CoachPage() {
 
   /* ── No session → landing ── */
   if (!h.session && !h.loading) {
+    h.supabase.from('app_logs').insert({ level: 'warning', message: 'COACH_PAGE_REDIRECT_LANDING', details: { loading: h.loading, hasSession: !!h.session, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/coach' })
     h.router.push('/landing')
     return null
   }
