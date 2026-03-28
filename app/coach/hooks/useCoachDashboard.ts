@@ -178,9 +178,10 @@ export default function useCoachDashboard() {
       // Still null after 5 attempts (~3s total)
       setAuthChecked(true)
     })()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s)
-      if (s) setAuthChecked(true)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'SIGNED_OUT') { setSession(null); setAuthChecked(true); return }
+      // Only update session if we got a valid one — never overwrite a valid session with null
+      if (s) { setSession(s); setAuthChecked(true) }
     })
     return () => subscription.unsubscribe()
   }, [])

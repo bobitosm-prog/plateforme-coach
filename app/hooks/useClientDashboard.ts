@@ -75,10 +75,9 @@ export default function useClientDashboard() {
       setLoading(false)
     })()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-      setSession(s)
-      if (event === 'INITIAL_SESSION' && !s) return // Don't touch loading — retry handles it
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') setLoading(false)
-      if (event === 'SIGNED_OUT') { setSession(null); setLoading(false) }
+      if (event === 'SIGNED_OUT') { setSession(null); setLoading(false); return }
+      // Only update session if valid — never overwrite a valid session with null
+      if (s) { setSession(s); setLoading(false) }
     })
     return () => subscription.unsubscribe()
   }, [])

@@ -22,7 +22,10 @@ function JoinContent() {
   useEffect(() => {
     setMounted(true)
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setSession(session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') { setSession(null); return }
+      if (session) setSession(session)
+    })
     return () => subscription.unsubscribe()
   }, [])
 
