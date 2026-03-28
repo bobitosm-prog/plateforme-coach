@@ -77,18 +77,29 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
   }
 
   async function lookupProduct(code: string) {
+    const cleanCode = code.replace(/\D/g, '').trim()
+    if (!cleanCode) { setError('Code-barres invalide'); return }
     setLoading(true); setError(''); setProduct(null)
     try {
-      // Check if already in custom_foods
-      const { data: existing } = await supabase.from('custom_foods').select('*').eq('user_id', userId).eq('barcode', code).limit(1).maybeSingle()
-      if (existing) {
-        setProduct({ name: existing.name, brand: existing.brand || '', image_url: existing.image_url, barcode: code, per_100g: { calories: existing.calories_per_100g, proteins: existing.proteins_per_100g, carbs: existing.carbs_per_100g, fat: existing.fats_per_100g }, _existingId: existing.id })
-        setLoading(false); return
-      }
-      const res = await fetch(`/api/food-barcode?code=${code}`)
+      // Check if already in custom_foods (may fail if barcode column doesn't exist yet)
+      try {
+        const { data: existing } = await supabase.from('custom_foods').select('*').eq('user_id', userId).eq('barcode', cleanCode).limit(1).maybeSingle()
+        if (existing?.name) {
+          setProduct({ name: existing.name, brand: existing.brand || '', image_url: existing.image_url, barcode: cleanCode, per_100g: { calories: existing.calories_per_100g, proteins: existing.proteins_per_100g, carbs: existing.carbs_per_100g, fat: existing.fats_per_100g }, _existingId: existing.id })
+          setLoading(false); return
+        }
+      } catch {} // barcode column may not exist yet
+
+      const res = await fetch(`/api/food-barcode?code=${cleanCode}`)
       const data = await res.json()
-      if (data.found) { setProduct(data.product) } else { setError(`Produit non trouvé pour le code ${code}. Vérifie le code.`) }
-    } catch { setError('Erreur de connexion') }
+      if (data.found) {
+        setProduct(data.product)
+      } else {
+        setError(`Produit non trouvé pour le code ${cleanCode}. Vérifie le code-barres.`)
+      }
+    } catch (e) {
+      setError('Erreur de connexion. Vérifie ta connexion internet.')
+    }
     setLoading(false)
   }
 
@@ -260,9 +271,9 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
           <div style={{ display: 'flex', gap: 8 }}>
             <input value={manualCode} onChange={e => setManualCode(e.target.value.replace(/\D/g, '').slice(0, 14))} placeholder="3017620422003" inputMode="numeric"
               style={{ flex: 1, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 14px', color: TEXT, fontSize: '0.9rem', outline: 'none', letterSpacing: '0.1em', textAlign: 'center' }}
-              onKeyDown={e => { if (e.key === 'Enter' && manualCode.length >= 8) { stopCamera(); lookupProduct(manualCode) } }} />
-            <button onClick={() => { if (manualCode.length >= 8) { stopCamera(); lookupProduct(manualCode) } }} disabled={manualCode.length < 8 || loading}
-              style={{ padding: '12px 16px', borderRadius: 12, border: 'none', cursor: manualCode.length >= 8 ? 'pointer' : 'default', background: manualCode.length >= 8 ? GOLD : '#222', color: manualCode.length >= 8 ? '#000' : MUTED, fontWeight: 700 }}>
+              onKeyDown={e => { if (e.key === 'Enter' && manualCode.length >= 4) { stopCamera(); lookupProduct(manualCode) } }} />
+            <button onClick={() => { if (manualCode.length >= 4) { stopCamera(); lookupProduct(manualCode) } }} disabled={manualCode.length < 8 || loading}
+              style={{ padding: '12px 16px', borderRadius: 12, border: 'none', cursor: manualCode.length >= 4 ? 'pointer' : 'default', background: manualCode.length >= 4 ? GOLD : '#222', color: manualCode.length >= 4 ? '#000' : MUTED, fontWeight: 700 }}>
               <Search size={18} />
             </button>
           </div>
