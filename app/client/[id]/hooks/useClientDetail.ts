@@ -248,6 +248,7 @@ export default function useClientDetail() {
           fat_goal: profile.fat_goal || fatTarget,
           dietary_type: profile.dietary_type, allergies: profile.allergies,
           objective: profile.objective, available_foods: availableFoods,
+          liked_food_names: availableFoods.slice(0, 20).map((f: any) => f.nom),
         }),
       })
 
