@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Flame, Beef, Wheat, Droplets, Star } from 'lucide-react'
 import { ACTIVITY_LEVELS, calcMifflinStJeor } from '../../lib/design-tokens'
 
@@ -24,6 +24,13 @@ const ALLERGY_OPTIONS = [
   { id: 'soy', label: 'Soja', emoji: '🫘' },
   { id: 'shellfish', label: 'Crustacés', emoji: '🦐' },
 ] as const
+
+const MEAL_TABS = [
+  { id: 'petit_dejeuner', label: 'Matin', emoji: '🌅' },
+  { id: 'dejeuner', label: 'Midi', emoji: '☀️' },
+  { id: 'collation', label: 'Collation', emoji: '🍎' },
+  { id: 'diner', label: 'Dîner', emoji: '🌙' },
+]
 
 const CATS = [
   { key: 'proteines', label: 'Protéines', icon: '🥩', patterns: ['poulet', 'dinde', 'boeuf', 'bœuf', 'veau', 'porc', 'saumon', 'thon', 'cabillaud', 'crevette', 'oeuf', 'œuf', 'steak', 'filet', 'escalope', 'jambon', 'bacon', 'sardine', 'truite', 'canard', 'agneau', 'poisson', 'viande', 'seitan', 'tofu', 'tempeh'] },
@@ -52,23 +59,31 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   const [dietaryType, setDietaryType] = useState<string>(profile?.dietary_type || 'omnivore')
   const [allergies, setAllergies] = useState<string[]>(profile?.allergies || [])
   const [likedFoods, setLikedFoods] = useState<string[]>(profile?.liked_foods || [])
+  const [mealPrefs, setMealPrefs] = useState<Record<string, string[]>>(profile?.meal_preferences || { petit_dejeuner: [], dejeuner: [], collation: [], diner: [] })
   const [activityLevel, setActivityLevel] = useState<string>(profile?.activity_level || 'moderate')
   const [foods, setFoods] = useState<any[]>([])
+  const [foodMap, setFoodMap] = useState<Record<string, any>>({})
   const [loadingFoods, setLoadingFoods] = useState(true)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(false)
   const [searchQ, setSearchQ] = useState('')
+  const [activeMeal, setActiveMeal] = useState('petit_dejeuner')
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').order('name').then(({ data }: any) => {
-      setFoods((data || []).map((f: any) => ({
+      const mapped = (data || []).map((f: any) => ({
         id: f.id, name: f.name || '',
         kcal: Math.round(f.energy_kcal ?? 0),
         p: Math.round((f.proteins ?? 0) * 10) / 10,
         g: Math.round((f.carbohydrates ?? 0) * 10) / 10,
         l: Math.round((f.fat ?? 0) * 10) / 10,
         cat: categorize(f.name || ''),
-      })))
+      }))
+      setFoods(mapped)
+      const map: Record<string, any> = {}
+      mapped.forEach((f: any) => { map[f.id] = f })
+      setFoodMap(map)
       setLoadingFoods(false)
     })
   }, [])
@@ -95,12 +110,29 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   }, [profile?.current_weight, profile?.height, profile?.birth_date, profile?.gender, profile?.objective, activityLevel])
 
   function toggleFood(id: string) {
-    setLikedFoods(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id])
+    // Toggle in current meal and liked_foods
+    setMealPrefs(prev => {
+      const meal = prev[activeMeal] || []
+      const updated = meal.includes(id) ? meal.filter(f => f !== id) : [...meal, id]
+      const next = { ...prev, [activeMeal]: updated }
+      // Derive liked_foods from all meal prefs
+      const allIds = [...new Set(Object.values(next).flat())]
+      setLikedFoods(allIds)
+      // Auto-save with debounce
+      clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => {
+        supabase.from('profiles').update({ liked_foods: allIds, meal_preferences: next }).eq('id', userId)
+        setToast(true)
+        setTimeout(() => setToast(false), 1500)
+        onSaved()
+      }, 800)
+      return next
+    })
   }
 
   async function save() {
     setSaving(true)
-    const update: Record<string, any> = { dietary_type: dietaryType, allergies, liked_foods: likedFoods, activity_level: activityLevel }
+    const update: Record<string, any> = { dietary_type: dietaryType, allergies, liked_foods: likedFoods, meal_preferences: mealPrefs, activity_level: activityLevel }
     if (tdeeData) {
       update.tdee = tdeeData.adjustedKcal
       update.calorie_goal = tdeeData.adjustedKcal
@@ -115,10 +147,10 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     setTimeout(() => setToast(false), 2500)
   }
 
+  const currentMealIds = mealPrefs[activeMeal] || []
   const filtered = searchQ.length >= 1 ? foods.filter(f => f.name.toLowerCase().includes(searchQ.toLowerCase())) : foods
-  const favorites = filtered.filter(f => likedFoods.includes(f.id))
-  const grouped = CATS.map(cat => ({ ...cat, foods: filtered.filter(f => f.cat === cat.key && !likedFoods.includes(f.id)) })).filter(g => g.foods.length > 0)
-  const autres = filtered.filter(f => f.cat === 'autres' && !likedFoods.includes(f.id))
+  const grouped = CATS.map(cat => ({ ...cat, foods: filtered.filter(f => f.cat === cat.key) })).filter(g => g.foods.length > 0)
+  const autres = filtered.filter(f => f.cat === 'autres')
   if (autres.length > 0) grouped.push({ key: 'autres', label: 'Autres', icon: '🍽️', patterns: [], foods: autres })
 
   const sectionTitle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }
@@ -206,9 +238,42 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         )}
       </div>
 
-      {/* Aliments */}
+      {/* Aliments par repas */}
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
-        <div style={sectionTitle}>Mes aliments ({likedFoods.length} sélectionnés)</div>
+        <div style={sectionTitle}>Mes aliments par repas ({likedFoods.length} sélectionnés)</div>
+
+        {/* Meal tabs */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+          {MEAL_TABS.map(t => {
+            const active = activeMeal === t.id
+            const count = (mealPrefs[t.id] || []).length
+            return (
+              <button key={t.id} onClick={() => setActiveMeal(t.id)} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: active ? `${GOLD}20` : BG, transition: 'all 150ms' }}>
+                <span style={{ fontSize: '1rem' }}>{t.emoji}</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.62rem', fontWeight: 700, color: active ? GOLD : MUTED }}>{t.label}</span>
+                {count > 0 && <span style={{ fontSize: '0.52rem', color: GOLD, fontWeight: 700 }}>{count}</span>}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Current meal's foods */}
+        {(mealPrefs[activeMeal] || []).length > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              {(mealPrefs[activeMeal] || []).map((id: string) => {
+                const food = foodMap[id]
+                if (!food) return <div key={id} style={{ background: BG, borderRadius: 10, padding: '8px', fontSize: '0.7rem', color: MUTED }}>{id.slice(0, 8)}...</div>
+                return <FoodCard key={id} food={food} active onClick={() => toggleFood(id)} />
+              })}
+            </div>
+          </div>
+        )}
+        {(mealPrefs[activeMeal] || []).length === 0 && !loadingFoods && (
+          <p style={{ fontSize: '0.75rem', color: MUTED, textAlign: 'center', padding: '8px 0', marginBottom: 8, fontStyle: 'italic' }}>Aucun aliment pour ce repas. Sélectionne ci-dessous.</p>
+        )}
+
+        {/* Search + all foods */}
         <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder={`Filtrer ${foods.length} aliments fitness...`}
           style={{ width: '100%', padding: '10px 14px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT, fontSize: '0.82rem', outline: 'none', marginBottom: 12 }} />
 
@@ -216,18 +281,6 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           <p style={{ fontSize: '0.82rem', color: MUTED, textAlign: 'center', padding: '20px 0' }}>Chargement...</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* Favorites */}
-            {favorites.length > 0 && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <Star size={13} color={GOLD} fill={GOLD} />
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Mes favoris ({favorites.length})</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                  {favorites.map((food: any) => <FoodCard key={food.id} food={food} active onClick={() => toggleFood(food.id)} />)}
-                </div>
-              </div>
-            )}
             {/* By category */}
             {grouped.map(cat => (
               <div key={cat.key}>
@@ -236,7 +289,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
                   <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{cat.label} ({cat.foods.length})</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                  {cat.foods.map((food: any) => <FoodCard key={food.id} food={food} active={likedFoods.includes(food.id)} onClick={() => toggleFood(food.id)} />)}
+                  {cat.foods.map((food: any) => <FoodCard key={food.id} food={food} active={currentMealIds.includes(food.id)} onClick={() => toggleFood(food.id)} />)}
                 </div>
               </div>
             ))}
