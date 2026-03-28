@@ -1,9 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import FoodSearch from '../FoodSearch'
+import RecipesSection from '../RecipesSection'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
   NUTRITION_DAYS, todayNutritionKey,
@@ -24,7 +25,7 @@ const MEAL_TIMES: Record<string, string> = {
 }
 const MEAL_ORDER = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
 
-type SubTab = 'today' | 'plan' | 'prefs'
+type SubTab = 'today' | 'plan' | 'prefs' | 'recipes'
 
 interface NutritionTabProps {
   coachMealPlan: any
@@ -450,6 +451,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           { id: 'today' as SubTab, label: "Aujourd'hui", icon: Check, color: GOLD },
           { id: 'plan' as SubTab, label: 'Mon plan', icon: UtensilsCrossed, color: GREEN },
           { id: 'prefs' as SubTab, label: 'Préférences', icon: SlidersHorizontal, color: GOLD },
+          { id: 'recipes' as SubTab, label: 'Recettes', icon: ChefHat, color: '#F59E0B' },
         ].map(({ id, label, icon: Icon, color }) => {
           const active = subTab === id
           return (
@@ -653,6 +655,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* Show old-style coach meal plan if no AI plan */}
       {subTab === 'plan' && !activeMealPlan && coachMealPlan && renderCoachPlan()}
+
+      {/* Recipes sub-tab */}
+      {subTab === 'recipes' && (
+        <RecipesSection supabase={supabase} userId={userId} profile={profile} />
+      )}
     </div>
   )
 }
