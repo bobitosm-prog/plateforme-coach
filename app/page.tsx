@@ -11,6 +11,7 @@ import useClientDashboard from './hooks/useClientDashboard'
 import Paywall from './components/Paywall'
 import BugReport from './components/BugReport'
 import ChatAI from './components/ChatAI'
+import BarcodeScanner from './components/BarcodeScanner'
 import { cache } from '../lib/cache'
 
 import WorkoutSession from './components/WorkoutSession'
@@ -143,6 +144,13 @@ export default function CoachApp() {
       {/* ── BMR MODAL ── */}
       {h.modal === 'bmr' && <BmrModal supabase={h.supabase} session={h.session} initialValues={h.bmrForm} onClose={() => h.setModal(null)} />}
 
+      {/* ── BARCODE SCANNER ── */}
+      {h.modal === 'scan' && (
+        <BarcodeScanner supabase={h.supabase} userId={h.session?.user?.id || ''} defaultMealType="dejeuner"
+          onProductAdded={() => { h.setModal(null); h.fetchAll(true) }}
+          onClose={() => h.setModal(null)} />
+      )}
+
       {/* ── FOOD MODAL ── */}
       {h.modal === 'food' && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1000, overflowY: 'auto' }}>
@@ -163,6 +171,7 @@ export default function CoachApp() {
               {[['fitness', 'Fitness'], ['anses', 'ANSES'], ['custom', 'Mes aliments']].map(([id, label]) => (
                 <button key={id} onClick={() => { h.setSearchTab(id as any); h.setFoodSearch(''); h.setSelectedFood(null) }} style={{ flex: 1, border: `1px solid ${h.searchTab === id ? ORANGE : BORDER}`, background: h.searchTab === id ? `${ORANGE}15` : BG_BASE, borderRadius: 12, padding: '8px 6px', fontSize: '0.7rem', fontWeight: 700, color: h.searchTab === id ? ORANGE : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>{label}</button>
               ))}
+              <button onClick={() => { h.setModal('scan') }} style={{ border: `1px solid ${BORDER}`, background: BG_BASE, borderRadius: 12, padding: '8px 10px', fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms', flexShrink: 0 }}>📷</button>
             </div>
             {!h.selectedFood ? (
               <>
