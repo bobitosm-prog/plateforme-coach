@@ -12,6 +12,7 @@ import {
   MUSCLE_COLORS, WEEK_DAYS, JS_DAYS_FR,
 } from '../../../lib/design-tokens'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
+import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 
 // Hevy-style design tokens
 const BLUE        = '#3B82F6'
@@ -35,6 +36,9 @@ export default function TrainingTab({
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
   const [setInputs, setSetInputs]       = useState<Record<string, { kg: string; reps: string }[]>>({})
   const [showExDbModal, setShowExDbModal] = useState(false)
+  const [exerciseDetail, setExerciseDetail] = useState<any>(null)
+  const [exercisesCache, setExercisesCache] = useState<any[]>([])
+  const exercisesCacheLoaded = useRef(false)
   const [workoutFinished, setWorkoutFinished] = useState(false)
   const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
   const [activeRestExName, setActiveRestExName] = useState<string | null>(null)
@@ -115,6 +119,29 @@ export default function TrainingTab({
     setCompletedSets(loadedSets)
     setSetInputs(loadedInputs)
   }, [trainingDay, coachProgram])
+
+  // ── Load exercises_db cache ──
+  useEffect(() => {
+    if (exercisesCacheLoaded.current) return
+    exercisesCacheLoaded.current = true
+    supabase.from('exercises_db').select('*').order('name').then(({ data }: any) => {
+      setExercisesCache(data || [])
+    })
+  }, [])
+
+  function findExercise(name: string) {
+    if (!name || exercisesCache.length === 0) return null
+    const n = name.trim().toLowerCase()
+    // Exact match
+    let found = exercisesCache.find((e: any) => e.name?.toLowerCase() === n)
+    if (found) return found
+    // Partial match
+    found = exercisesCache.find((e: any) => e.name?.toLowerCase().includes(n) || n.includes(e.name?.toLowerCase()))
+    if (found) return found
+    // First 3 words
+    const words = n.split(' ').slice(0, 3).join(' ')
+    return exercisesCache.find((e: any) => e.name?.toLowerCase().includes(words)) || null
+  }
 
   // ── Helpers ──
   function fmtElapsed(s: number) {
@@ -442,13 +469,13 @@ export default function TrainingTab({
                         <div style={{ flex: 1, minWidth: 0 }}>
                           {/* Exercise name in blue */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            <span style={{
+                            <span onClick={() => { const found = findExercise(ex.name); if (found) setExerciseDetail({ ...found, _sets: ex.sets, _reps: ex.reps, _rest: ex.rest }) }} style={{
                               fontFamily: "'Barlow Condensed', sans-serif",
                               fontWeight: 700, fontSize: '1.05rem',
                               color: allDone ? GREEN : BLUE,
                               textTransform: 'uppercase', letterSpacing: '0.04em',
-                              transition: 'color 0.3s',
-                            }}>{ex.name}</span>
+                              transition: 'color 0.3s', cursor: 'pointer',
+                            }}>{ex.name} <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>ℹ️</span></span>
 
                             {/* Muscle group badge */}
                             {ex.muscle_group && (
@@ -699,6 +726,17 @@ export default function TrainingTab({
         <ExerciseSearchModal
           supabase={supabase}
           onClose={() => setShowExDbModal(false)}
+        />
+      )}
+
+      {/* Exercise Detail Modal */}
+      {exerciseDetail && (
+        <ExerciseDetailModal
+          exercise={exerciseDetail}
+          sets={exerciseDetail._sets}
+          reps={exerciseDetail._reps}
+          rest={exerciseDetail._rest}
+          onClose={() => setExerciseDetail(null)}
         />
       )}
     </div>
