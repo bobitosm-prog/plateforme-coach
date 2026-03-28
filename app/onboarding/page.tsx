@@ -64,21 +64,20 @@ export default function OnboardingPage() {
   const [resolvedNames, setResolvedNames] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    // Retry up to 5 times with 600ms delay (race condition after OAuth/login redirect)
-    ;(async () => {
-      for (let i = 0; i < 5; i++) {
-        const { data: { session: s } } = await supabase.auth.getSession()
-        if (s) {
-          setSession(s)
-          const meta = s.user.user_metadata
-          if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
-          return
-        }
-        await new Promise(resolve => setTimeout(resolve, 600))
+    let handled = false
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'SIGNED_OUT') return
+      if (s) {
+        handled = true
+        setSession(s)
+        const meta = s.user.user_metadata
+        if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
       }
-      // Still null after 5 attempts — redirect to landing
-      router.replace('/landing')
-    })()
+      if (event === 'INITIAL_SESSION' && !s) {
+        setTimeout(() => { if (!handled) router.replace('/landing') }, 1500)
+      }
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   function goNext() { setDir(1); setStep(s => s + 1) }

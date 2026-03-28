@@ -46,6 +46,8 @@ export default function LoginPage() {
     }
     // Redirect based on role — avoid race condition in app/page.tsx
     if (data.session) {
+      // Clear anti-loop key so redirect works after fresh login
+      try { sessionStorage.removeItem('moovx-redirect-ts') } catch {}
       const { data: profile } = await supabase
         .from('profiles')
         .select('role, email')

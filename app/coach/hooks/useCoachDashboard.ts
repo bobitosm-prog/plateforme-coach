@@ -167,22 +167,18 @@ export default function useCoachDashboard() {
 
   useEffect(() => {
     setMounted(true)
-    // Retry up to 5 times with 600ms delay if session is null (race condition after login redirect)
-    // authChecked stays false until all retries are exhausted — prevents premature redirect to /landing
-    ;(async () => {
-      for (let i = 0; i < 5; i++) {
-        const { data: { session: s } } = await supabase.auth.getSession()
-        if (s) { setSession(s); setAuthChecked(true); return }
-        await new Promise(resolve => setTimeout(resolve, 600))
-      }
-      // Still null after 5 attempts (~3s total)
-      setAuthChecked(true)
-    })()
+    let handled = false
+
+    // onAuthStateChange is the single source of truth — fires INITIAL_SESSION on mount
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === 'SIGNED_OUT') { setSession(null); setAuthChecked(true); return }
-      // Only update session if we got a valid one — never overwrite a valid session with null
-      if (s) { setSession(s); setAuthChecked(true) }
+      if (s) { handled = true; setSession(s); setAuthChecked(true) }
+      if (event === 'INITIAL_SESSION' && !s) {
+        // No session from INITIAL_SESSION — wait briefly then give up
+        setTimeout(() => { if (!handled) setAuthChecked(true) }, 1500)
+      }
     })
+
     return () => subscription.unsubscribe()
   }, [])
 

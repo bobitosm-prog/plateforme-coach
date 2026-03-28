@@ -41,9 +41,18 @@ export default function CoachApp() {
     </div>
   )
 
-  /* ── Not authenticated after all retries → landing ── */
+  /* ── Not authenticated → landing (with anti-loop protection) ── */
   if (!h.session && !h.loading) {
-    if (typeof window !== 'undefined') h.router.replace('/landing')
+    if (typeof window !== 'undefined') {
+      const loopKey = 'moovx-redirect-ts'
+      const last = parseInt(sessionStorage.getItem(loopKey) || '0', 10)
+      const now = Date.now()
+      if (now - last > 5000) {
+        sessionStorage.setItem(loopKey, String(now))
+        h.router.replace('/landing')
+      }
+      // If <5s since last redirect, stay on spinner to break loop
+    }
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#050505' }}>
         <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />

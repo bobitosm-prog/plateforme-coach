@@ -84,9 +84,17 @@ export default function CoachPage() {
     </div>
   )
 
-  /* ── No session after all retries → landing ── */
+  /* ── No session after all retries → landing (with anti-loop protection) ── */
   if (!h.session && h.authChecked) {
-    if (typeof window !== 'undefined') window.location.href = '/landing'
+    if (typeof window !== 'undefined') {
+      const loopKey = 'moovx-redirect-ts'
+      const last = parseInt(sessionStorage.getItem(loopKey) || '0', 10)
+      const now = Date.now()
+      if (now - last > 5000) {
+        sessionStorage.setItem(loopKey, String(now))
+        window.location.href = '/landing'
+      }
+    }
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A' }}>
         <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />

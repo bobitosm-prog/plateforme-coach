@@ -305,15 +305,15 @@ export default function useClientDetail() {
 
   /* ── Auth ───────────────────────────────────────────────────── */
   useEffect(() => {
-    // Retry up to 5 times with 600ms delay (race condition after login redirect)
-    ;(async () => {
-      for (let i = 0; i < 5; i++) {
-        const { data: { session: s } } = await supabase.auth.getSession()
-        if (s) { setCoachId(s.user.id); return }
-        await new Promise(resolve => setTimeout(resolve, 600))
+    let handled = false
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'SIGNED_OUT') return
+      if (s) { handled = true; setCoachId(s.user.id) }
+      if (event === 'INITIAL_SESSION' && !s) {
+        setTimeout(() => { if (!handled) router.replace('/landing') }, 1500)
       }
-      router.replace('/landing')
-    })()
+    })
+    return () => subscription.unsubscribe()
   }, [router])
 
   /* ── Fetch all data ─────────────────────────────────────────── */
