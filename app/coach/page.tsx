@@ -74,7 +74,7 @@ export default function CoachPage() {
   const h = useCoachDashboard()
 
   /* ── Loading splash ── */
-  if (!h.mounted || h.loading) return (
+  if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
       <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />

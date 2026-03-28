@@ -95,6 +95,7 @@ export default function useCoachDashboard() {
   const router = useRouter()
   const [mounted, setMounted]   = useState(false)
   const [session, setSession]   = useState<any>(null)
+  const [roleChecked, setRoleChecked] = useState(false)
   const [clients, setClients]   = useState<ClientRow[]>([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
@@ -185,10 +186,11 @@ export default function useCoachDashboard() {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
       supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_ROLE', details: { role, userId: session.user.id }, page_url: '/coach' })
-      if (!role) return // getRole failed — don't redirect, stay on spinner
+      if (!role) { setRoleChecked(true); return } // getRole failed — treat as ok, don't redirect
       if (role !== 'coach' && role !== 'super_admin') {
         router.replace('/')
       } else {
+        setRoleChecked(true)
         fetchClients(session.user.id)
         // Fetch coach profile with Stripe info
         supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years').eq('id', session.user.id).single().then(({ data }) => {
@@ -485,6 +487,7 @@ export default function useCoachDashboard() {
     mounted,
     session,
     loading,
+    roleChecked,
     supabase,
 
     // Clients
