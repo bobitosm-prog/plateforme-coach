@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Zap, BarChart2, Dumbbell, UtensilsCrossed, TrendingUp,
@@ -27,6 +28,8 @@ import {
   MEAL_TYPES,
 } from '../lib/design-tokens'
 
+const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
+
 export default function CoachApp() {
   const h = useClientDashboard()
 
@@ -47,6 +50,9 @@ export default function CoachApp() {
     h.router.push('/landing')
     return null
   }
+
+  /* ── Coach role → render coach dashboard directly (no redirect) ── */
+  if (h.userRole === 'coach') return <CoachDashboard />
 
   /* ── Trial expired OR no subscription → paywall ── */
   if (h.profile && !h.isSubActive) return (

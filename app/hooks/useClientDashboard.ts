@@ -26,6 +26,7 @@ export default function useClientDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[] } | null>(null)
   const [modal, setModal] = useState<string | null>(null)
@@ -80,10 +81,10 @@ export default function useClientDashboard() {
   useEffect(() => {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
-      if (!role) { /* getRole failed — treat as client rather than redirecting */ setRoleChecked(true); return }
+      if (!role) { setRoleChecked(true); return }
+      setUserRole(role)
       if (role === 'super_admin') { router.replace('/admin') }
-      else if (role === 'coach') { router.replace('/coach') }
-      else { setRoleChecked(true) }
+      else { setRoleChecked(true) } // coach AND client both stay on page.tsx
     })
   }, [session])
 
@@ -414,7 +415,7 @@ export default function useClientDashboard() {
 
   return {
     // Auth / loading
-    mounted, session, loading, roleChecked, router, supabase,
+    mounted, session, loading, roleChecked, userRole, router, supabase,
     // Profile / data
     profile, measurements, progressPhotos, wSessions,
     coachProgram, coachMealPlan, weightHistory30,
