@@ -4,7 +4,7 @@ import {
 } from 'lucide-react'
 
 type Exercise = { name: string; sets: number; reps: number; rest: string; notes: string }
-type DayData   = { repos: boolean; exercises: Exercise[] }
+type DayData   = { repos: boolean; exercises: Exercise[]; day_name?: string }
 type WeekProgram = Record<string, DayData>
 
 const DAYS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
@@ -80,7 +80,7 @@ export default function ClientProgram({
       {expandedDay && (
         <div className="card" style={{padding:0,overflow:'hidden',animation:'fadeIn 150ms ease'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',borderBottom:'1px solid #1E1E1E'}}>
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>{DAY_FULL[expandedDay]}</span>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>{program[expandedDay].day_name ? `${DAY_FULL[expandedDay]} — ${program[expandedDay].day_name}` : DAY_FULL[expandedDay]}</span>
             <div style={{display:'flex',alignItems:'center',gap:6}}>
               <button
                 onClick={()=>toggleRepos(expandedDay)}

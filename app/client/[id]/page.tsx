@@ -561,14 +561,14 @@ export default function ClientProfilePage() {
                       </div>
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Jours d&apos;entraînement — <span style={{ color: '#A855F7' }}>{h.aiTrainingDays} jours/semaine</span></label>
+                      <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Jours d&apos;entraînement — <span style={{ color: '#A855F7' }}>{h.aiTrainingDays} jours/semaine</span> <span style={{ color: '#4B5563', fontWeight: 400, fontSize: '0.65rem' }}>({h.aiTrainingDays === 3 ? 'Full Body' : h.aiTrainingDays === 4 ? 'Upper/Lower' : h.aiTrainingDays === 5 ? 'PPL+UL' : 'PPL x2'})</span></label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <span style={{ fontSize: '0.78rem', color: '#6B7280', minWidth: 12 }}>3</span>
-                        <input type="range" min={3} max={5} step={1} value={h.aiTrainingDays} onChange={e => h.setAiTrainingDays(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#A855F7', cursor: 'pointer' }} />
-                        <span style={{ fontSize: '0.78rem', color: '#6B7280', minWidth: 12 }}>5</span>
+                        <input type="range" min={3} max={6} step={1} value={h.aiTrainingDays} onChange={e => h.setAiTrainingDays(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#A855F7', cursor: 'pointer' }} />
+                        <span style={{ fontSize: '0.78rem', color: '#6B7280', minWidth: 12 }}>6</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                        {[3, 4, 5].map(n => <span key={n} style={{ fontSize: '0.68rem', color: n === h.aiTrainingDays ? '#A855F7' : '#4B5563', fontWeight: n === h.aiTrainingDays ? 700 : 400 }}>{n}j</span>)}
+                        {[3, 4, 5, 6].map(n => <span key={n} style={{ fontSize: '0.68rem', color: n === h.aiTrainingDays ? '#A855F7' : '#4B5563', fontWeight: n === h.aiTrainingDays ? 700 : 400 }}>{n}j</span>)}
                       </div>
                     </div>
                   </div>
