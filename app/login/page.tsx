@@ -57,17 +57,9 @@ export default function LoginPage() {
         : (profile?.email === coachEmail || profile?.role === 'coach') ? 'coach'
         : 'client'
 
-      // Cookie bridge — first-party, never blocked by Safari ITP
-      document.cookie = `moovx_auth_role=${role};path=/;max-age=60;SameSite=Lax;Secure`
-      document.cookie = `moovx_auth_uid=${data.session.user.id};path=/;max-age=60;SameSite=Lax;Secure`
-
-      if (role === 'super_admin') {
-        window.location.href = '/admin'
-      } else if (role === 'coach') {
-        window.location.href = '/coach'
-      } else {
-        window.location.href = '/'
-      }
+      // router.push = client-side navigation, session stays in memory (no page reload)
+      const target = role === 'super_admin' ? '/admin' : role === 'coach' ? '/coach' : '/'
+      router.push(target)
     }
   }
 

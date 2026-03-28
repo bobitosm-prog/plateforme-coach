@@ -26,7 +26,6 @@ export default function useClientDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
-  const [authError, setAuthError] = useState(false)
 
   const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[] } | null>(null)
   const [modal, setModal] = useState<string | null>(null)
@@ -61,53 +60,18 @@ export default function useClientDashboard() {
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
 
-  /* ── Auth (cookie bridge pattern) ── */
+  /* ── Auth ── */
   useEffect(() => {
     setMounted(true)
-    let sessionFound = false
-
-    // Check cookie bridge — set by /login or /auth/callback before redirect
-    const getCookie = (name: string) => {
-      const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
-      return m ? m[2] : null
-    }
-    const hasJustLoggedIn = !!getCookie('moovx_auth_role')
-
-    // onAuthStateChange fires INITIAL_SESSION on mount
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-      if (event === 'SIGNED_OUT') { setSession(null); setLoading(false); return }
-      if (s) {
-        sessionFound = true
-        setSession(s)
-        setLoading(false)
-        // Clear bridge cookie
-        document.cookie = 'moovx_auth_role=;path=/;max-age=0'
-        document.cookie = 'moovx_auth_uid=;path=/;max-age=0'
-      }
-    })
-
-    // Timeout: 10s if just logged in (cookie bridge), 1.5s for normal visitors
-    const waitTime = hasJustLoggedIn ? 10000 : 1500
-    const timer = setTimeout(async () => {
-      if (sessionFound) return
-      // Last resort: getUser() makes a server call, more reliable than getSession()
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: { session: s } } = await supabase.auth.getSession()
-          if (s) { setSession(s); setLoading(false); return }
-        }
-      } catch {}
-      // No session found
-      if (hasJustLoggedIn) {
-        setAuthError(true)
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s)
       setLoading(false)
-      document.cookie = 'moovx_auth_role=;path=/;max-age=0'
-      document.cookie = 'moovx_auth_uid=;path=/;max-age=0'
-    }, waitTime)
-
-    return () => { subscription.unsubscribe(); clearTimeout(timer) }
+    })
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s)
+      setLoading(false)
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
@@ -447,7 +411,7 @@ export default function useClientDashboard() {
 
   return {
     // Auth / loading
-    mounted, session, loading, roleChecked, authError, router, supabase,
+    mounted, session, loading, roleChecked, router, supabase,
     // Profile / data
     profile, measurements, progressPhotos, wSessions,
     coachProgram, coachMealPlan, weightHistory30,

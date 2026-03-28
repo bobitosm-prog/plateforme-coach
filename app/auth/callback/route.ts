@@ -26,29 +26,7 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, email')
-          .eq('id', session.user.id)
-          .single()
-
-        const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
-        const coachEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
-        const role = profile?.email === adminEmail ? 'super_admin'
-          : (profile?.email === coachEmail || profile?.role === 'coach') ? 'coach'
-          : 'client'
-
-        const redirectTo = role === 'super_admin' ? '/admin' : role === 'coach' ? '/coach' : next
-        const response = NextResponse.redirect(`${origin}${redirectTo}`)
-
-        // Cookie bridge — first-party, survives Safari ITP
-        response.cookies.set('moovx_auth_role', role, { path: '/', maxAge: 60, sameSite: 'lax', secure: true })
-        response.cookies.set('moovx_auth_uid', session.user.id, { path: '/', maxAge: 60, sameSite: 'lax', secure: true })
-
-        return response
-      }
+      // Redirect to / — page.tsx will detect session and route to /coach or /admin
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

@@ -95,8 +95,6 @@ export default function useCoachDashboard() {
   const router = useRouter()
   const [mounted, setMounted]   = useState(false)
   const [session, setSession]   = useState<any>(null)
-  const [authChecked, setAuthChecked] = useState(false)
-  const [authError, setAuthError] = useState(false)
   const [clients, setClients]   = useState<ClientRow[]>([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
@@ -166,52 +164,23 @@ export default function useCoachDashboard() {
 
   /* ── Effects ───────────────────────────────────────────── */
 
-  /* ── Auth (cookie bridge pattern) ── */
+  /* ── Auth ── */
   useEffect(() => {
     setMounted(true)
-    let sessionFound = false
-
-    const getCookie = (name: string) => {
-      if (typeof document === 'undefined') return null
-      const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
-      return m ? m[2] : null
-    }
-    const hasJustLoggedIn = !!getCookie('moovx_auth_role')
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-      if (event === 'SIGNED_OUT') { setSession(null); setAuthChecked(true); return }
-      if (s) {
-        sessionFound = true
-        setSession(s)
-        setAuthChecked(true)
-        document.cookie = 'moovx_auth_role=;path=/;max-age=0'
-        document.cookie = 'moovx_auth_uid=;path=/;max-age=0'
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s)
+      setLoading(false)
     })
-
-    const waitTime = hasJustLoggedIn ? 10000 : 1500
-    const timer = setTimeout(async () => {
-      if (sessionFound) return
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: { session: s } } = await supabase.auth.getSession()
-          if (s) { setSession(s); setAuthChecked(true); return }
-        }
-      } catch {}
-      if (hasJustLoggedIn) setAuthError(true)
-      setAuthChecked(true)
-      document.cookie = 'moovx_auth_role=;path=/;max-age=0'
-      document.cookie = 'moovx_auth_uid=;path=/;max-age=0'
-    }, waitTime)
-
-    return () => { subscription.unsubscribe(); clearTimeout(timer) }
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s)
+      setLoading(false)
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
-    if (!session) { setLoading(false); return }
+    if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
-      if (!role) { /* getRole failed (network/RLS error) — don't redirect, retry silently */ setLoading(false); return }
       if (role !== 'coach' && role !== 'super_admin') {
         router.replace('/')
       } else {
@@ -510,8 +479,6 @@ export default function useCoachDashboard() {
     // Auth / loading
     mounted,
     session,
-    authChecked,
-    authError,
     loading,
     supabase,
 

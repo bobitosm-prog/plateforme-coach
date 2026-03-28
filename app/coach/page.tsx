@@ -74,56 +74,20 @@ export default function CoachPage() {
   const h = useCoachDashboard()
 
   /* ── Loading splash ── */
-  if (!h.mounted || !h.authChecked || (h.loading && h.session)) {
-    const hasBridge = typeof document !== 'undefined' && document.cookie.includes('moovx_auth_role')
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: hasBridge ? 20 : 24 }}>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}`}</style>
-        <div style={{ width: 80, height: 80, background: hasBridge ? 'linear-gradient(135deg,#C9A84C,#F0D060)' : '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hasBridge ? '0 16px 48px rgba(201,168,76,0.25)' : 'none' }}>
-          <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
-        </div>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '0.1em' }}>MOOVX</span>
-        {hasBridge && <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.88rem', fontWeight: 300, color: '#555', animation: 'pulse 2s ease-in-out infinite' }}>Connexion en cours...</span>}
-        <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+  if (!h.mounted || h.loading) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
+      <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
       </div>
-    )
-  }
-
-  /* ── Auth error: cookie bridge detected login but session never arrived ── */
-  if (h.authError) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 20, padding: 24, textAlign: 'center' }}>
-      <div style={{ width: 64, height: 64, background: '#C9A84C', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Zap size={32} color="#000" strokeWidth={2.5} fill="#000" />
-      </div>
-      <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.5rem', fontWeight: 700, color: '#F8FAFC', margin: 0 }}>PROBLÈME DE CONNEXION</h2>
-      <p style={{ color: '#6B7280', fontSize: '0.88rem', maxWidth: 320, lineHeight: 1.6 }}>La session n&apos;a pas pu être récupérée. Essaie de te reconnecter.</p>
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', background: '#C9A84C', color: '#000', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem' }}>Réessayer</button>
-        <button onClick={() => { window.location.href = '/login' }} style={{ padding: '12px 24px', background: '#1A1A1A', color: '#F8FAFC', border: '1px solid #2A2A2A', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem' }}>Retour au login</button>
-      </div>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '0.1em' }}>MOOVX</span>
+      <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
   )
 
-  /* ── No session → landing (only if no cookie bridge) ── */
-  if (!h.session && h.authChecked && !h.authError) {
-    const hasBridge = typeof document !== 'undefined' && document.cookie.includes('moovx_auth_role')
-    if (hasBridge) return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 20 }}>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}`}</style>
-        <div style={{ width: 80, height: 80, background: 'linear-gradient(135deg,#C9A84C,#F0D060)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 16px 48px rgba(201,168,76,0.25)' }}>
-          <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
-        </div>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '0.1em' }}>MOOVX</span>
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.88rem', fontWeight: 300, color: '#555', animation: 'pulse 2s ease-in-out infinite' }}>Connexion en cours...</span>
-        <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    )
-    if (typeof window !== 'undefined') window.location.href = '/landing'
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A' }}>
-        <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    )
+  /* ── No session → landing ── */
+  if (!h.session) {
+    h.router.replace('/landing')
+    return null
   }
 
   return (
