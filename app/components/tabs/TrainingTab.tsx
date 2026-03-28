@@ -53,11 +53,11 @@ export default function TrainingTab({
   const trainingExercises: any[] = trainingDayData?.exercises || []
 
   const trainingTotalSets = trainingExercises.reduce((s: number, ex: any) => {
-    const key = `fitpro-sets-${todayStr}-${ex.name}`
+    const key = `moovx-sets-${todayStr}-${ex.name}`
     return s + (completedSets[key]?.length || Number(ex.sets) || 0)
   }, 0)
   const trainingDoneSets = trainingExercises.reduce((s: number, ex: any) => {
-    const key = `fitpro-sets-${todayStr}-${ex.name}`
+    const key = `moovx-sets-${todayStr}-${ex.name}`
     return s + (completedSets[key] || []).filter(Boolean).length
   }, 0)
 
@@ -102,8 +102,8 @@ export default function TrainingTab({
     const loadedSets: Record<string, boolean[]> = {}
     const loadedInputs: Record<string, { kg: string; reps: string }[]> = {}
     ;(dayData.exercises as any[]).forEach((ex: any) => {
-      const key       = `fitpro-sets-${todayStr}-${ex.name}`
-      const inputKey  = `fitpro-inputs-${todayStr}-${ex.name}`
+      const key       = `moovx-sets-${todayStr}-${ex.name}`
+      const inputKey  = `moovx-inputs-${todayStr}-${ex.name}`
       const stored       = typeof window !== 'undefined' ? localStorage.getItem(key) : null
       const storedInputs = typeof window !== 'undefined' ? localStorage.getItem(inputKey) : null
       const n = Number(ex.sets) || 3
@@ -130,7 +130,7 @@ export default function TrainingTab({
   }
 
   function updateInput(exName: string, setIdx: number, field: 'kg' | 'reps', value: string) {
-    const inputKey = `fitpro-inputs-${todayStr}-${exName}`
+    const inputKey = `moovx-inputs-${todayStr}-${exName}`
     setSetInputs(prev => {
       const arr = prev[exName] ? [...prev[exName]] : []
       arr[setIdx] = { ...(arr[setIdx] || { kg: '', reps: '' }), [field]: value }
@@ -140,8 +140,8 @@ export default function TrainingTab({
   }
 
   function addSet(exName: string) {
-    const key      = `fitpro-sets-${todayStr}-${exName}`
-    const inputKey = `fitpro-inputs-${todayStr}-${exName}`
+    const key      = `moovx-sets-${todayStr}-${exName}`
+    const inputKey = `moovx-inputs-${todayStr}-${exName}`
     // Use functional updaters to always read current state, never stale closure
     setCompletedSets(p => {
       const prev = p[key] || []
@@ -159,7 +159,7 @@ export default function TrainingTab({
   }
 
   function toggleSet(exName: string, setIdx: number, totalSetsCount: number, restSecs: number) {
-    const key  = `fitpro-sets-${todayStr}-${exName}`
+    const key  = `moovx-sets-${todayStr}-${exName}`
     const prev = completedSets[key] || Array.from({ length: totalSetsCount }, () => false)
     const next = [...prev]
     next[setIdx] = !next[setIdx]
@@ -190,11 +190,11 @@ export default function TrainingTab({
     const duration = workoutStarted ? Math.round((Date.now() - workoutStarted) / 60000) : 1
     const exs: any[] = (coachProgram?.[trainingDay]?.exercises as any[]) || []
     const totalSetsCount = exs.reduce((s: number, ex: any) => {
-      const key = `fitpro-sets-${todayStr}-${ex.name}`
+      const key = `moovx-sets-${todayStr}-${ex.name}`
       return s + (completedSets[key]?.length || Number(ex.sets) || 0)
     }, 0)
     const doneSetsCount = exs.reduce((s: number, ex: any) => {
-      const key = `fitpro-sets-${todayStr}-${ex.name}`
+      const key = `moovx-sets-${todayStr}-${ex.name}`
       return s + (completedSets[key] || []).filter(Boolean).length
     }, 0)
     await supabase.from('workout_sessions').insert({
@@ -206,8 +206,8 @@ export default function TrainingTab({
     })
     exs.forEach((ex: any) => {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(`fitpro-sets-${todayStr}-${ex.name}`)
-        localStorage.removeItem(`fitpro-inputs-${todayStr}-${ex.name}`)
+        localStorage.removeItem(`moovx-sets-${todayStr}-${ex.name}`)
+        localStorage.removeItem(`moovx-inputs-${todayStr}-${ex.name}`)
       }
     })
     setCompletedSets({})
@@ -409,7 +409,7 @@ export default function TrainingTab({
 
               {trainingExercises.map((ex: any, exIdx: number) => {
                 const restSecs   = Number(ex.rest) || 90
-                const storageKey = `fitpro-sets-${todayStr}-${ex.name}`
+                const storageKey = `moovx-sets-${todayStr}-${ex.name}`
                 const n = Number(ex.sets) || 3
                 const setsArr: boolean[] = completedSets[storageKey] || Array.from({ length: n }, () => false)
                 const numSets    = setsArr.length
