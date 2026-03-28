@@ -31,15 +31,20 @@ export default function CoachApp() {
   const h = useClientDashboard()
 
   /* ── Loading splash ── */
-  if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
-      <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
+  if (!h.mounted || h.loading || (h.session && !h.roleChecked)) {
+    const hasBridge = typeof document !== 'undefined' && document.cookie.includes('moovx_auth_role')
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: hasBridge ? 20 : 24 }}>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}`}</style>
+        <div style={{ width: 80, height: 80, background: hasBridge ? 'linear-gradient(135deg,#C9A84C,#F0D060)' : '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hasBridge ? '0 16px 48px rgba(201,168,76,0.25)' : 'none' }}>
+          <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
+        </div>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>MOOVX</span>
+        {hasBridge && <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.88rem', fontWeight: 300, color: '#555', animation: 'pulse 2s ease-in-out infinite' }}>Connexion en cours...</span>}
+        <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
       </div>
-      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>MOOVX</span>
-      <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-    </div>
-  )
+    )
+  }
 
   /* ── Auth error: cookie bridge detected login but session never arrived ── */
   if (h.authError) return (
@@ -56,8 +61,20 @@ export default function CoachApp() {
     </div>
   )
 
-  /* ── Not authenticated → landing ── */
-  if (!h.session && !h.loading) {
+  /* ── Not authenticated → landing (only if no cookie bridge) ── */
+  if (!h.session && !h.loading && !h.authError) {
+    const hasBridge = typeof document !== 'undefined' && document.cookie.includes('moovx_auth_role')
+    if (hasBridge) return ( // Cookie bridge still active — stay on loader, don't redirect
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 20 }}>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}`}</style>
+        <div style={{ width: 80, height: 80, background: 'linear-gradient(135deg,#C9A84C,#F0D060)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 16px 48px rgba(201,168,76,0.25)' }}>
+          <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
+        </div>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>MOOVX</span>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.88rem', fontWeight: 300, color: '#555', animation: 'pulse 2s ease-in-out infinite' }}>Connexion en cours...</span>
+        <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    )
     if (typeof window !== 'undefined') h.router.replace('/landing')
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#050505' }}>
