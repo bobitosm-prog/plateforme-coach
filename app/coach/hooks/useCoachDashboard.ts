@@ -174,7 +174,9 @@ export default function useCoachDashboard() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_AUTH_CHANGE', details: { event: _event, hasSession: !!s, userId: s?.user?.id }, page_url: '/coach' })
-      if (alive) { setSession(s); if (s) setLoading(false) }
+      if (!alive) return
+      if (_event === 'SIGNED_OUT') { setSession(null); setLoading(false); return }
+      if (s) { setSession(s); setLoading(false) }
     })
     return () => { alive = false; subscription.unsubscribe() }
   }, [])
@@ -182,6 +184,8 @@ export default function useCoachDashboard() {
   useEffect(() => {
     if (!session) return
     getRole(session.user.id, session.access_token).then(role => {
+      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_ROLE', details: { role, userId: session.user.id }, page_url: '/coach' })
+      if (!role) return // getRole failed — don't redirect, stay on spinner
       if (role !== 'coach' && role !== 'super_admin') {
         router.replace('/')
       } else {

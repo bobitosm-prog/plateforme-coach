@@ -70,7 +70,9 @@ export default function useClientDashboard() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       supabase.from('app_logs').insert({ level: 'info', message: 'CLIENT_DASH_AUTH_CHANGE', details: { event: _event, hasSession: !!s, userId: s?.user?.id }, page_url: '/' })
-      if (alive) { setSession(s); if (s) setLoading(false) }
+      if (!alive) return
+      if (_event === 'SIGNED_OUT') { setSession(null); setLoading(false); return }
+      if (s) { setSession(s); setLoading(false) }
     })
     return () => { alive = false; subscription.unsubscribe() }
   }, [])
