@@ -20,9 +20,8 @@ interface BarcodeScannerProps {
 }
 
 export default function BarcodeScanner({ supabase, userId, onProductAdded, onClose, defaultMealType }: BarcodeScannerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const scanningRef = useRef(false)
-  const [cameraActive, setCameraActive] = useState(false)
+  const scannerRef = useRef<any>(null)
+  const [scanning, setScanning] = useState(false)
   const [manualCode, setManualCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -30,65 +29,51 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
   const [quantity, setQuantity] = useState(100)
   const [mealType, setMealType] = useState(defaultMealType || 'dejeuner')
   const [saving, setSaving] = useState(false)
-  const [cameraSupported] = useState(() => typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia)
-  const [barcodeSupported] = useState(() => typeof window !== 'undefined' && 'BarcodeDetector' in window)
+  const mountedRef = useRef(true)
 
-  // Auto-start camera on mount
+  // Auto-start on mount
   useEffect(() => {
-    if (cameraSupported) startCamera()
-    return () => stopCamera()
+    mountedRef.current = true
+    startCamera()
+    return () => { mountedRef.current = false; stopCamera() }
   }, [])
 
   async function startCamera() {
-    if (!cameraSupported) { setError('Caméra non disponible. Saisis le code manuellement.'); return }
     setError('')
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } })
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-        setCameraActive(true)
-        if (barcodeSupported) detectBarcode()
-        else setError('Scan auto non supporté. Pointe la caméra et saisis le code ci-dessous.')
-      }
+      const { Html5Qrcode } = await import('html5-qrcode')
+      const scanner = new Html5Qrcode('barcode-reader', { verbose: false })
+      scannerRef.current = scanner
+
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 280, height: 150 }, aspectRatio: 1.333 },
+        (decodedText: string) => {
+          scanner.stop().catch(() => {})
+          scannerRef.current = null
+          if (mountedRef.current) { setScanning(false); lookupProduct(decodedText) }
+        },
+        () => {} // scan in progress
+      )
+      if (mountedRef.current) setScanning(true)
     } catch (err: any) {
-      if (err?.name === 'NotAllowedError') {
-        setError("Autorise l'accès à la caméra dans les paramètres de ton navigateur.")
-      } else if (err?.name === 'NotFoundError') {
-        setError('Aucune caméra détectée.')
+      const msg = String(err?.message || err || '')
+      if (msg.includes('NotAllowed') || msg.includes('Permission')) {
+        setError("Autorise l'accès à la caméra dans les réglages de ton navigateur.")
+      } else if (msg.includes('NotFound') || msg.includes('Requested device not found')) {
+        setError('Aucune caméra détectée sur cet appareil.')
       } else {
-        setError("Impossible d'accéder à la caméra. Utilise la saisie manuelle.")
+        setError("Impossible d'ouvrir la caméra. Saisis le code manuellement.")
       }
     }
   }
 
   function stopCamera() {
-    scanningRef.current = false
-    if (videoRef.current?.srcObject) {
-      (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop())
-      videoRef.current.srcObject = null
+    if (scannerRef.current) {
+      scannerRef.current.stop().catch(() => {})
+      scannerRef.current = null
     }
-    setCameraActive(false)
-  }
-
-  async function detectBarcode() {
-    if (!barcodeSupported || !videoRef.current) return
-    scanningRef.current = true
-    const BDet = (window as any).BarcodeDetector
-    const detector = new BDet({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] })
-    const scan = async () => {
-      if (!scanningRef.current || !videoRef.current) return
-      try {
-        const barcodes = await detector.detect(videoRef.current)
-        if (barcodes.length > 0) {
-          stopCamera()
-          await lookupProduct(barcodes[0].rawValue)
-          return
-        }
-      } catch {}
-      if (scanningRef.current) requestAnimationFrame(scan)
-    }
-    requestAnimationFrame(scan)
+    setScanning(false)
   }
 
   async function lookupProduct(code: string) {
@@ -227,43 +212,50 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
   return (
     <div style={{ position: 'fixed', inset: 0, background: BG, zIndex: 1100, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT }}>{cameraActive ? 'POINTE VERS LE CODE-BARRES' : 'SCANNER UN ALIMENT'}</span>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT }}>{scanning ? 'POINTE VERS LE CODE-BARRES' : 'SCANNER UN ALIMENT'}</span>
         <button onClick={() => { stopCamera(); onClose() }} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={MUTED} /></button>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', gap: 20 }}>
-        {/* Camera preview */}
-        {cameraActive ? (
-          <div style={{ position: 'relative', width: '100%', maxWidth: 400, aspectRatio: '4/3', borderRadius: 20, overflow: 'hidden', background: '#111' }}>
-            <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            {/* Scan frame overlay */}
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '70%', height: '40%', border: `2px solid ${GOLD}`, borderRadius: 16, boxShadow: `0 0 0 9999px rgba(0,0,0,0.5)`, animation: 'scanPulse 2s ease-in-out infinite' }} />
-            {!barcodeSupported && (
-              <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, background: 'rgba(0,0,0,0.8)', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.72rem', color: '#F59E0B', margin: 0 }}>Scanner auto non supporté. Utilise la saisie manuelle.</p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
-            <div style={{ width: 80, height: 80, borderRadius: 20, background: `${GOLD}15`, border: `2px solid ${GOLD}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {error ? <Camera size={36} color={GOLD} /> : <div style={{ width: 28, height: 28, border: `3px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', gap: 16, overflowY: 'auto' }}>
+        {/* Camera scanner (html5-qrcode renders here) */}
+        <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', borderRadius: 16, overflow: 'hidden', background: '#111', minHeight: scanning ? 300 : 0 }}>
+          <div id="barcode-reader" />
+        </div>
+
+        {/* Status messages */}
+        {!scanning && !error && !loading && (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ width: 60, height: 60, borderRadius: 16, background: `${GOLD}15`, border: `2px solid ${GOLD}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <div style={{ width: 24, height: 24, border: `3px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             </div>
-            <p style={{ fontSize: '0.88rem', color: MUTED, textAlign: 'center', maxWidth: 300 }}>
-              {error || 'Activation de la caméra...'}
-            </p>
-            {error && cameraSupported && (
-              <button onClick={startCamera} style={{ padding: '12px 28px', borderRadius: 12, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.88rem', fontWeight: 700 }}>
-                Réessayer
-              </button>
-            )}
-          </>
+            <p style={{ fontSize: '0.82rem', color: MUTED }}>Activation de la caméra...</p>
+          </div>
         )}
 
-        {/* Manual input */}
-        <div style={{ width: '100%', maxWidth: 400 }}>
+        {scanning && (
+          <p style={{ fontSize: '0.78rem', color: GOLD, textAlign: 'center', margin: 0, fontWeight: 500 }}>Pointe la caméra vers le code-barres du produit</p>
+        )}
+
+        {error && (
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <p style={{ fontSize: '0.82rem', color: '#EF4444', marginBottom: 10 }}>{error}</p>
+            <button onClick={() => { stopCamera(); startCamera() }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700 }}>
+              Réessayer
+            </button>
+          </div>
+        )}
+
+        {loading && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0' }}>
+            <div style={{ width: 20, height: 20, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <span style={{ fontSize: '0.82rem', color: MUTED }}>Recherche du produit...</span>
+          </div>
+        )}
+
+        {/* Manual input — always visible */}
+        <div style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
           <div style={{ fontSize: '0.75rem', color: TEXT, fontWeight: 600, textAlign: 'center', marginBottom: 8 }}>
-            {cameraActive ? 'Ou saisir le code manuellement :' : 'Saisis le code-barres (13 chiffres sous le code) :'}
+            {scanning ? 'Ou saisir le code manuellement :' : 'Saisis le code-barres (13 chiffres) :'}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input value={manualCode} onChange={e => setManualCode(e.target.value.replace(/\D/g, '').slice(0, 14))} placeholder="3017620422003" inputMode="numeric"
@@ -275,20 +267,17 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
             </button>
           </div>
         </div>
-
-        {loading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 20, height: 20, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            <span style={{ fontSize: '0.82rem', color: MUTED }}>Recherche du produit...</span>
-          </div>
-        )}
-
-        {error && <p style={{ fontSize: '0.82rem', color: '#EF4444', textAlign: 'center', maxWidth: 320 }}>{error}</p>}
       </div>
 
       <style>{`
-        @keyframes scanPulse { 0%,100% { border-color: ${GOLD}; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); } 50% { border-color: ${GOLD}aa; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); } }
         @keyframes spin { to { transform: rotate(360deg) } }
+        #barcode-reader { border: none !important; }
+        #barcode-reader video { border-radius: 12px !important; }
+        #barcode-reader__scan_region { border-radius: 12px !important; overflow: hidden !important; }
+        #barcode-reader__dashboard { background: transparent !important; border: none !important; }
+        #barcode-reader__dashboard_section { display: none !important; }
+        #barcode-reader__dashboard_section_csr { display: none !important; }
+        #barcode-reader__status_span { color: ${MUTED} !important; font-size: 0.72rem !important; }
       `}</style>
     </div>
   )
