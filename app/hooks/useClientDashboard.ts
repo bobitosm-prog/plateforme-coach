@@ -38,7 +38,7 @@ export default function useClientDashboard() {
   const [foodQty, setFoodQty] = useState('100')
   const [mealType, setMealType] = useState('lunch')
   const [customFoodForm, setCustomFoodForm] = useState({ name: '', brand: '', calories_per_100g: '', proteins_per_100g: '', carbs_per_100g: '', fats_per_100g: '' })
-  const [searchTab, setSearchTab] = useState<'anses' | 'custom'>('anses')
+  const [searchTab, setSearchTab] = useState<'fitness' | 'anses' | 'custom'>('fitness')
 
   // BMR form state
   const [bmrForm, setBmrForm] = useState({ weight: '', height: '', age: '', gender: 'male', activity: 'moderate', body_fat: '' })
@@ -99,8 +99,11 @@ export default function useClientDashboard() {
     clearTimeout(searchRef.current)
     if (foodSearch.length < 2) { setFoodResults([]); return }
     searchRef.current = setTimeout(async () => {
-      if (searchTab === 'anses') {
-        const { data } = await supabase.from('food_items').select('*').ilike('name', `%${foodSearch}%`).limit(20)
+      if (searchTab === 'fitness') {
+        const { data } = await supabase.from('food_items').select('*').eq('source', 'fitness').ilike('name', `%${foodSearch}%`).limit(20)
+        setFoodResults(data || [])
+      } else if (searchTab === 'anses') {
+        const { data } = await supabase.from('food_items').select('*').eq('source', 'ANSES').ilike('name', `%${foodSearch}%`).limit(20)
         setFoodResults(data || [])
       } else {
         const { data } = await supabase.from('custom_foods').select('*').eq('user_id', session?.user?.id).ilike('name', `%${foodSearch}%`).limit(20)

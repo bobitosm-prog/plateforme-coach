@@ -4,8 +4,8 @@ import { Plus, Search, X, Check, Trash2 } from 'lucide-react'
 
 interface CoachAlimentsProps {
   foodList: any[]
-  foodFilter: 'all' | 'ciqual' | 'coach'
-  setFoodFilter: (v: 'all' | 'ciqual' | 'coach') => void
+  foodFilter: 'fitness' | 'anses' | 'coach'
+  setFoodFilter: (v: 'fitness' | 'anses' | 'coach') => void
   foodSearchQ: string
   setFoodSearchQ: (v: string) => void
   foodLoading: boolean
@@ -40,7 +40,7 @@ export default function CoachAliments({
 
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-        {([['all', 'Tous'], ['coach', 'Mes ajouts'], ['ciqual', 'Ciqual']] as const).map(([k, l]) => (
+        {([['fitness', 'Fitness'], ['anses', 'ANSES'], ['coach', 'Mes ajouts']] as const).map(([k, l]) => (
           <button key={k} onClick={() => { setFoodFilter(k); setTimeout(loadFoods, 0) }} style={{
             padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
             fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700,

@@ -112,7 +112,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
   // Food management state
   const [foodList, setFoodList] = useState<any[]>([])
-  const [foodFilter, setFoodFilter] = useState<'all' | 'ciqual' | 'coach'>('all')
+  const [foodFilter, setFoodFilter] = useState<'fitness' | 'anses' | 'coach'>('fitness')
   const [foodSearchQ, setFoodSearchQ] = useState('')
   const [foodLoading, setFoodLoading] = useState(false)
   const [showAddFood, setShowAddFood] = useState(false)
@@ -443,8 +443,9 @@ export default function useCoachDashboard(initialSession?: any) {
   async function loadFoods() {
     setFoodLoading(true)
     let query = supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').order('name')
-    if (foodFilter === 'coach') query = query.eq('source', 'coach')
-    else if (foodFilter === 'ciqual') query = query.or('source.eq.ciqual,source.is.null')
+    if (foodFilter === 'fitness') query = query.eq('source', 'fitness')
+    else if (foodFilter === 'anses') query = query.eq('source', 'ANSES')
+    else if (foodFilter === 'coach') query = query.eq('source', 'coach')
     if (foodSearchQ.length >= 2) query = query.ilike('name', `%${foodSearchQ}%`)
     else query = query.limit(50)
     const { data } = await query

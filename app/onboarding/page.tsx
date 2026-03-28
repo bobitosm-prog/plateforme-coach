@@ -388,6 +388,7 @@ export default function OnboardingPage() {
                 const { data } = await supabase
                   .from('food_items')
                   .select('id, name, energy_kcal, proteins, carbohydrates, fat')
+                  .eq('source', 'fitness')
                   .ilike('name', `%${q}%`)
                   .limit(15)
                 setFoodResults((data || []).map((f: any) => ({

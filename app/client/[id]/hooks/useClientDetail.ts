@@ -225,6 +225,7 @@ export default function useClientDetail() {
         const { data: fallback } = await supabase
           .from('food_items')
           .select('id, name, energy_kcal, proteins, carbohydrates, fat')
+          .eq('source', 'fitness')
           .not('name', 'is', null)
           .gt('proteins', 5)
           .limit(40)

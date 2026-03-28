@@ -158,24 +158,24 @@ export default function CoachApp() {
                 </button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-              {[['anses', 'Base ANSES'], ['custom', 'Mes aliments']].map(([id, label]) => (
-                <button key={id} onClick={() => { h.setSearchTab(id as any); h.setFoodSearch(''); h.setSelectedFood(null) }} style={{ flex: 1, border: `1px solid ${h.searchTab === id ? ORANGE : BORDER}`, background: h.searchTab === id ? `${ORANGE}15` : BG_BASE, borderRadius: 12, padding: '10px', fontSize: '0.75rem', fontWeight: 700, color: h.searchTab === id ? ORANGE : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>{label}</button>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+              {[['fitness', 'Fitness'], ['anses', 'ANSES'], ['custom', 'Mes aliments']].map(([id, label]) => (
+                <button key={id} onClick={() => { h.setSearchTab(id as any); h.setFoodSearch(''); h.setSelectedFood(null) }} style={{ flex: 1, border: `1px solid ${h.searchTab === id ? ORANGE : BORDER}`, background: h.searchTab === id ? `${ORANGE}15` : BG_BASE, borderRadius: 12, padding: '8px 6px', fontSize: '0.7rem', fontWeight: 700, color: h.searchTab === id ? ORANGE : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>{label}</button>
               ))}
             </div>
             {!h.selectedFood ? (
               <>
                 <div style={{ position: 'relative', marginBottom: 16 }}>
                   <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED }} />
-                  <input value={h.foodSearch} onChange={e => h.setFoodSearch(e.target.value)} placeholder={h.searchTab === 'anses' ? 'Rechercher dans la base ANSES...' : 'Rechercher mes aliments...'} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, paddingLeft: 40, paddingRight: 16, paddingTop: 12, paddingBottom: 12, color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
+                  <input value={h.foodSearch} onChange={e => h.setFoodSearch(e.target.value)} placeholder={h.searchTab === 'fitness' ? 'Rechercher un aliment fitness...' : h.searchTab !== 'custom' ? 'Rechercher dans la base ANSES...' : 'Rechercher mes aliments...'} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, paddingLeft: 40, paddingRight: 16, paddingTop: 12, paddingBottom: 12, color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
                 </div>
                 {h.searchTab === 'custom' && (
                   <button onClick={() => h.setModal('custom_food')} style={{ width: '100%', border: `2px dashed ${BORDER}`, borderRadius: 12, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: TEXT_MUTED, fontSize: '0.8rem', fontWeight: 700, background: 'transparent', cursor: 'pointer', marginBottom: 12 }}><Plus size={14} /> Créer un aliment personnalisé</button>
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {h.foodResults.map((food: any) => {
-                    const cals = h.searchTab === 'anses' ? (food.energy_kcal || food.calories || 0) : food.calories_per_100g
-                    const prot = h.searchTab === 'anses' ? (food.proteins || 0) : food.proteins_per_100g
+                    const cals = h.searchTab === 'custom' ? food.calories_per_100g : (food.energy_kcal || food.calories || 0)
+                    const prot = h.searchTab === 'custom' ? food.proteins_per_100g : (food.proteins || 0)
                     return (
                       <button key={food.id} onClick={() => h.setSelectedFood(food)} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left', transition: 'border-color 200ms' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -201,10 +201,10 @@ export default function CoachApp() {
                   <div style={{ fontWeight: 700, color: TEXT_PRIMARY, fontSize: '1rem', marginBottom: 12 }}>{h.selectedFood.name}</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {[
-                      ['Calories', h.searchTab === 'anses' ? (h.selectedFood.energy_kcal || 0) : h.selectedFood.calories_per_100g, 'kcal', ORANGE],
-                      ['Protéines', h.searchTab === 'anses' ? (h.selectedFood.proteins || 0) : h.selectedFood.proteins_per_100g, 'g', '#3b82f6'],
-                      ['Glucides', h.searchTab === 'anses' ? (h.selectedFood.carbohydrates || h.selectedFood.carbs || 0) : h.selectedFood.carbs_per_100g, 'g', '#f59e0b'],
-                      ['Lipides', h.searchTab === 'anses' ? (h.selectedFood.fat || h.selectedFood.fats || 0) : h.selectedFood.fats_per_100g, 'g', '#10b981'],
+                      ['Calories', h.searchTab !== 'custom' ? (h.selectedFood.energy_kcal || 0) : h.selectedFood.calories_per_100g, 'kcal', ORANGE],
+                      ['Protéines', h.searchTab !== 'custom' ? (h.selectedFood.proteins || 0) : h.selectedFood.proteins_per_100g, 'g', '#3b82f6'],
+                      ['Glucides', h.searchTab !== 'custom' ? (h.selectedFood.carbohydrates || h.selectedFood.carbs || 0) : h.selectedFood.carbs_per_100g, 'g', '#f59e0b'],
+                      ['Lipides', h.searchTab !== 'custom' ? (h.selectedFood.fat || h.selectedFood.fats || 0) : h.selectedFood.fats_per_100g, 'g', '#10b981'],
                     ].map(([n, v, u, c]) => (
                       <div key={n as string} style={{ textAlign: 'center' }}>
                         <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: c as string }}>{Math.round(v as number)}</div>
@@ -222,10 +222,10 @@ export default function CoachApp() {
                   <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Pour {h.foodQty}g :</div>
                   <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                     {[
-                      ['Kcal', Math.round((h.searchTab === 'anses' ? (h.selectedFood.energy_kcal || 0) : h.selectedFood.calories_per_100g) * parseFloat(h.foodQty) / 100)],
-                      ['Prot', Math.round((h.searchTab === 'anses' ? (h.selectedFood.proteins || 0) : h.selectedFood.proteins_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
-                      ['Gluc', Math.round((h.searchTab === 'anses' ? (h.selectedFood.carbohydrates || h.selectedFood.carbs || 0) : h.selectedFood.carbs_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
-                      ['Lip', Math.round((h.searchTab === 'anses' ? (h.selectedFood.fat || h.selectedFood.fats || 0) : h.selectedFood.fats_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
+                      ['Kcal', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.energy_kcal || 0) : h.selectedFood.calories_per_100g) * parseFloat(h.foodQty) / 100)],
+                      ['Prot', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.proteins || 0) : h.selectedFood.proteins_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
+                      ['Gluc', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.carbohydrates || h.selectedFood.carbs || 0) : h.selectedFood.carbs_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
+                      ['Lip', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.fat || h.selectedFood.fats || 0) : h.selectedFood.fats_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
                     ].map(([n, v]) => (
                       <div key={n as string} style={{ textAlign: 'center' }}>
                         <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: ORANGE }}>{v}</div>
