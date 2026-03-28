@@ -95,6 +95,7 @@ export default function useCoachDashboard() {
   const router = useRouter()
   const [mounted, setMounted]   = useState(false)
   const [session, setSession]   = useState<any>(null)
+  const [authChecked, setAuthChecked] = useState(false)
   const [clients, setClients]   = useState<ClientRow[]>([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
@@ -166,18 +167,21 @@ export default function useCoachDashboard() {
 
   useEffect(() => {
     setMounted(true)
-    // Retry up to 3 times with 500ms delay if session is null (race condition after OAuth/login redirect)
-    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-      if (s) { setSession(s); return }
-      for (let i = 0; i < 3; i++) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        const { data: { session: retry } } = await supabase.auth.getSession()
-        if (retry) { setSession(retry); return }
+    // Retry up to 5 times with 600ms delay if session is null (race condition after login redirect)
+    // authChecked stays false until all retries are exhausted — prevents premature redirect to /landing
+    ;(async () => {
+      for (let i = 0; i < 5; i++) {
+        const { data: { session: s } } = await supabase.auth.getSession()
+        if (s) { setSession(s); setAuthChecked(true); return }
+        await new Promise(resolve => setTimeout(resolve, 600))
       }
-      // Still null after retries — no session
-      setSession(null)
+      // Still null after 5 attempts (~3s total)
+      setAuthChecked(true)
+    })()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      setSession(s)
+      if (s) setAuthChecked(true)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
     return () => subscription.unsubscribe()
   }, [])
 
@@ -482,6 +486,7 @@ export default function useCoachDashboard() {
     // Auth / loading
     mounted,
     session,
+    authChecked,
     loading,
     supabase,
 

@@ -64,12 +64,21 @@ export default function OnboardingPage() {
   const [resolvedNames, setResolvedNames] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { router.replace('/'); return }
-      setSession(session)
-      const meta = session.user.user_metadata
-      if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
-    })
+    // Retry up to 5 times with 600ms delay (race condition after OAuth/login redirect)
+    ;(async () => {
+      for (let i = 0; i < 5; i++) {
+        const { data: { session: s } } = await supabase.auth.getSession()
+        if (s) {
+          setSession(s)
+          const meta = s.user.user_metadata
+          if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
+          return
+        }
+        await new Promise(resolve => setTimeout(resolve, 600))
+      }
+      // Still null after 5 attempts — redirect to landing
+      router.replace('/landing')
+    })()
   }, [])
 
   function goNext() { setDir(1); setStep(s => s + 1) }
@@ -130,6 +139,9 @@ export default function OnboardingPage() {
       update.fat_goal = tdeeData.fatG
     }
 
+    // Set trial_ends_at if not already set (10 days from now)
+    update.trial_ends_at = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+
     const { error } = await supabase.from('profiles').update(update).eq('id', uid).select()
     if (error) await supabase.from('profiles').upsert(update).select()
 
@@ -180,7 +192,7 @@ export default function OnboardingPage() {
                 <div className="animate-pulse-gold" style={{ width: 88, height: 88, background: GOLD, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Zap size={48} color="#000" strokeWidth={2.5} fill="#000" />
                 </div>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.8rem', fontWeight: 800, color: TEXT, letterSpacing: '0.1em' }}>FITPRO</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.8rem', fontWeight: 800, color: TEXT, letterSpacing: '0.1em' }}>MOOVX</span>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={{ textAlign: 'center' }}>
                 <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: TEXT, margin: '0 0 8px' }}>

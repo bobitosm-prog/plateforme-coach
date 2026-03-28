@@ -63,17 +63,17 @@ export default function useClientDashboard() {
   /* ── Auth ── */
   useEffect(() => {
     setMounted(true)
-    // Initial session check — retry once after 800ms if null (race condition with login redirect)
-    // IMPORTANT: loading stays true until retry completes to prevent premature redirect to /landing
-    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-      if (s) { setSession(s); setLoading(false) }
-      else {
-        await new Promise(resolve => setTimeout(resolve, 800))
-        const { data: { session: s2 } } = await supabase.auth.getSession()
-        if (s2) setSession(s2)
-        setLoading(false)
+    // Retry up to 5 times with 600ms delay if session is null (race condition after login redirect)
+    // loading stays true until all retries are exhausted — prevents premature redirect to /landing
+    ;(async () => {
+      for (let i = 0; i < 5; i++) {
+        const { data: { session: s } } = await supabase.auth.getSession()
+        if (s) { setSession(s); setLoading(false); return }
+        await new Promise(resolve => setTimeout(resolve, 600))
       }
-    })
+      // Still null after 5 attempts (~3s total)
+      setLoading(false)
+    })()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
       if (event === 'INITIAL_SESSION' && !s) return // Don't touch loading — retry handles it

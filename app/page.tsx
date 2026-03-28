@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Zap, BarChart2, Dumbbell, UtensilsCrossed, TrendingUp,
@@ -30,14 +30,7 @@ import {
 export default function CoachApp() {
   const h = useClientDashboard()
 
-  // Safety delay: don't redirect to /landing until 2s after mount to avoid race condition
-  const [redirectReady, setRedirectReady] = useState(false)
-  useEffect(() => {
-    const timer = setTimeout(() => setRedirectReady(true), 2000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  /* ── Loading splash ── */
+  /* ── Loading splash (shown while 5x session retries are in progress) ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
       <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -48,8 +41,8 @@ export default function CoachApp() {
     </div>
   )
 
-  /* ── Not authenticated → landing (only after loading is complete AND 2s safety delay) ── */
-  if (!h.session && !h.loading && redirectReady) {
+  /* ── Not authenticated after all retries → landing ── */
+  if (!h.session && !h.loading) {
     h.router.replace('/landing')
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#050505' }}>
@@ -57,17 +50,6 @@ export default function CoachApp() {
       </div>
     )
   }
-
-  /* ── Still waiting for redirect safety delay ── */
-  if (!h.session && !h.loading && !redirectReady) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
-      <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
-      </div>
-      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>MOOVX</span>
-      <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-    </div>
-  )
 
   /* ── Trial expired OR no subscription → paywall ── */
   if (h.profile && !h.isSubActive) return (
