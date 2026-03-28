@@ -91,13 +91,13 @@ export function statusFor(createdAt: string): 'active' | 'warning' | 'inactive' 
 
 /* ── Hook ──────────────────────────────────────────────────── */
 
-export default function useCoachDashboard() {
+export default function useCoachDashboard(initialSession?: any) {
   const router = useRouter()
   const [mounted, setMounted]   = useState(false)
-  const [session, setSession]   = useState<any>(null)
-  const [roleChecked, setRoleChecked] = useState(false)
+  const [session, setSession]   = useState<any>(initialSession || null)
+  const [roleChecked, setRoleChecked] = useState(!!initialSession)
   const [clients, setClients]   = useState<ClientRow[]>([])
-  const [loading, setLoading]   = useState(true)
+  const [loading, setLoading]   = useState(!initialSession)
   const [search, setSearch]     = useState('')
   const [copied, setCopied]     = useState(false)
   const [showInvite, setShowInvite] = useState(false)
@@ -168,6 +168,11 @@ export default function useCoachDashboard() {
   /* ── Auth ── */
   useEffect(() => {
     setMounted(true)
+    // If session was passed from parent (page.tsx), skip auth check entirely
+    if (initialSession) {
+      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_SKIP_AUTH', details: { userId: initialSession.user?.id }, page_url: '/coach' })
+      return
+    }
     let alive = true
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_SESSION', details: { hasSession: !!s, userId: s?.user?.id, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/coach' })
@@ -184,42 +189,49 @@ export default function useCoachDashboard() {
 
   useEffect(() => {
     if (!session) return
+
+    function loadCoachData() {
+      fetchClients(session.user.id)
+      supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years').eq('id', session.user.id).single().then(({ data }) => {
+        if (data) {
+          if (!data.coach_onboarding_complete) { router.replace('/coach-signup'); return }
+          setCoachProfile(data)
+          const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
+          const startOfYear = new Date(startOfMonth.getFullYear(), 0, 1, 0, 0, 0, 0)
+          supabase.from('payments').select('amount,paid_at').eq('status', 'paid').then(({ data: allPayments }) => {
+            if (!allPayments) return
+            const monthStart = startOfMonth.toISOString()
+            const yearStart = startOfYear.toISOString()
+            let mRev = 0, yRev = 0, tRev = 0, mCount = 0
+            for (const p of allPayments) {
+              const amt = p.amount || 0
+              tRev += amt
+              if (p.paid_at && p.paid_at >= yearStart) yRev += amt
+              if (p.paid_at && p.paid_at >= monthStart) { mRev += amt; mCount++ }
+            }
+            setMonthRevenue(mRev); setYearRevenue(yRev); setTotalRevenue(tRev); setMonthPaymentsCount(mCount)
+          })
+        }
+      })
+      supabase.from('coach_clients').select('client_id').eq('coach_id', session.user.id).then(({ data: links }) => {
+        setActiveSubscribers(links?.length || 0)
+      })
+    }
+
+    // If initialSession was provided, role already confirmed by page.tsx — skip getRole
+    if (initialSession) {
+      loadCoachData()
+      return
+    }
+
     getRole(session.user.id, session.access_token).then(role => {
       supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_ROLE', details: { role, userId: session.user.id }, page_url: '/coach' })
-      if (!role) { setRoleChecked(true); return } // getRole failed — treat as ok, don't redirect
+      if (!role) { setRoleChecked(true); return }
       if (role !== 'coach' && role !== 'super_admin') {
         router.replace('/')
       } else {
         setRoleChecked(true)
-        fetchClients(session.user.id)
-        // Fetch coach profile with Stripe info
-        supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years').eq('id', session.user.id).single().then(({ data }) => {
-          if (data) {
-            // Gate: redirect to coach-signup if onboarding not complete
-            if (!data.coach_onboarding_complete) { router.replace('/coach-signup'); return }
-            setCoachProfile(data)
-            // Fetch revenue: month, year, total
-            const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
-            const startOfYear = new Date(startOfMonth.getFullYear(), 0, 1, 0, 0, 0, 0)
-            supabase.from('payments').select('amount,paid_at').eq('status', 'paid').then(({ data: allPayments }) => {
-              if (!allPayments) return
-              const monthStart = startOfMonth.toISOString()
-              const yearStart = startOfYear.toISOString()
-              let mRev = 0, yRev = 0, tRev = 0, mCount = 0
-              for (const p of allPayments) {
-                const amt = p.amount || 0
-                tRev += amt
-                if (p.paid_at && p.paid_at >= yearStart) yRev += amt
-                if (p.paid_at && p.paid_at >= monthStart) { mRev += amt; mCount++ }
-              }
-              setMonthRevenue(mRev); setYearRevenue(yRev); setTotalRevenue(tRev); setMonthPaymentsCount(mCount)
-            })
-          }
-        })
-        // Fetch total clients count (all linked to this coach)
-        supabase.from('coach_clients').select('client_id').eq('coach_id', session.user.id).then(({ data: links }) => {
-          setActiveSubscribers(links?.length || 0)
-        })
+        loadCoachData()
       }
     })
   }, [session])

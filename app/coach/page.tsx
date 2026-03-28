@@ -70,8 +70,8 @@ function WheelPicker({ items, value, onChange, label, width = 72 }: {
 /* ══════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════ */
-export default function CoachPage() {
-  const h = useCoachDashboard()
+export default function CoachPage({ initialSession }: { initialSession?: any } = {}) {
+  const h = useCoachDashboard(initialSession)
 
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (

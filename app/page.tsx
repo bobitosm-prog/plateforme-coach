@@ -52,7 +52,7 @@ export default function CoachApp() {
   }
 
   /* ── Coach role → render coach dashboard directly (no redirect) ── */
-  if (h.userRole === 'coach') return <CoachDashboard />
+  if (h.userRole === 'coach') return <CoachDashboard initialSession={h.session} />
 
   /* ── Trial expired OR no subscription → paywall ── */
   if (h.profile && !h.isSubActive) return (
