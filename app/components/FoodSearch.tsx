@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Search, X, Plus, Minus, Star } from 'lucide-react'
 import { normalizeFoodItem } from '../../lib/utils/food'
+import BarcodeScanner from './BarcodeScanner'
 
 const GOLD = '#C9A84C'
 const BG = '#0A0A0A'
@@ -53,6 +54,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
   const [quantity, setQuantity] = useState(100)
   const [mealType, setMealType] = useState(defaultMealType || 'dejeuner')
   const [saving, setSaving] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const today = new Date().toISOString().split('T')[0]
 
@@ -170,8 +172,16 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
           <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder={`Filtrer ${allFoods.length} aliments fitness...`}
             style={{ width: '100%', padding: '12px 12px 12px 38px', background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT, fontSize: '0.9rem', outline: 'none' }} />
         </div>
+        <button onClick={() => setShowScanner(true)} style={{ width: 42, height: 42, borderRadius: 12, background: `${GOLD}10`, border: `1px solid ${GOLD}25`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>📷</button>
         <button onClick={onClose} style={{ padding: '8px 14px', background: 'none', border: 'none', color: MUTED, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Fermer</button>
       </div>
+
+      {/* Barcode Scanner */}
+      {showScanner && (
+        <BarcodeScanner supabase={supabase} userId={userId} defaultMealType={mealType}
+          onProductAdded={() => { setShowScanner(false); onAdded() }}
+          onClose={() => setShowScanner(false)} />
+      )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 24px' }}>
         {loading && <p style={{ textAlign: 'center', color: MUTED, fontSize: '0.82rem', padding: '32px 0' }}>Chargement...</p>}
