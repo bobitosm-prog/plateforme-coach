@@ -48,7 +48,8 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
     debounceRef.current = setTimeout(async () => {
       const { data } = await supabase
         .from('food_items')
-        .select('id, name, energy_kcal, proteins, carbohydrates, fat')
+        .select('id, name, energy_kcal, proteins, carbohydrates, fat, source')
+        .eq('source', 'fitness')
         .ilike('name', `%${query}%`)
         .limit(20)
       setResults((data || []).map(normalizeFoodItem))
@@ -164,7 +165,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
       <div style={{ padding: '16px', display: 'flex', gap: 10, alignItems: 'center', borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <Search size={16} color={GOLD} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-          <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher un aliment..."
+          <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher un aliment fitness..."
             style={{ width: '100%', padding: '12px 12px 12px 38px', background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT, fontSize: '0.9rem', outline: 'none' }} />
         </div>
         <button onClick={onClose} style={{ padding: '8px 14px', background: 'none', border: 'none', color: MUTED, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Fermer</button>
@@ -186,7 +187,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
               <div style={{ fontSize: '0.88rem', color: TEXT, fontWeight: 600 }}>{food.nom}</div>
               <div style={{ fontSize: '0.68rem', color: MUTED, marginTop: 2 }}>
                 {Math.round(food.calories)} kcal · {Math.round(food.proteines)}P · {Math.round(food.glucides)}G · {Math.round(food.lipides)}L
-                <span style={{ marginLeft: 6, fontSize: '0.55rem', color: '#4B5563', background: '#1A1A1A', padding: '1px 5px', borderRadius: 4 }}>Ciqual</span>
+                <span style={{ marginLeft: 6, fontSize: '0.55rem', color: '#4B5563', background: '#1A1A1A', padding: '1px 5px', borderRadius: 4 }}>Fitness</span>
               </div>
             </div>
             <Plus size={16} color={GOLD} />

@@ -591,7 +591,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: `1px solid ${BORDER}` }}>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '0.82rem', color: GOLD, fontWeight: 500 }}>{log.food_name}</div>
-                          <div style={{ fontSize: '0.62rem', color: TEXT_MUTED }}>{log.quantity_g}g · Ciqual</div>
+                          <div style={{ fontSize: '0.62rem', color: TEXT_MUTED }}>{log.quantity_g}g</div>
                         </div>
                         <div style={{ fontSize: '0.68rem', color: TEXT_MUTED, textAlign: 'right', marginRight: 8 }}>
                           <div>{Math.round(log.calories)} kcal</div>

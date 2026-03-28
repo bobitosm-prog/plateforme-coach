@@ -5,7 +5,7 @@ export const maxDuration = 60
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
-const SYSTEM_PROMPT = `Tu es un nutritionniste expert. Tu génères des plans alimentaires basés sur des données Ciqual officielles.
+const SYSTEM_PROMPT = `Tu es un nutritionniste expert. Tu génères des plans alimentaires basés sur une base de 170+ aliments fitness sélectionnés et la base ANSES/Ciqual.
 
 RÈGLES STRICTES :
 - Utilise UNIQUEMENT les aliments de la liste fournie
