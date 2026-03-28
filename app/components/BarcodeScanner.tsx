@@ -33,10 +33,15 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
   const [cameraSupported] = useState(() => typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia)
   const [barcodeSupported] = useState(() => typeof window !== 'undefined' && 'BarcodeDetector' in window)
 
-  useEffect(() => { return () => stopCamera() }, [])
+  // Auto-start camera on mount
+  useEffect(() => {
+    if (cameraSupported) startCamera()
+    return () => stopCamera()
+  }, [])
 
   async function startCamera() {
-    if (!cameraSupported) { setError('Caméra non disponible sur ce navigateur'); return }
+    if (!cameraSupported) { setError('Caméra non disponible. Saisis le code manuellement.'); return }
+    setError('')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } })
       if (videoRef.current) {
@@ -44,8 +49,17 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
         await videoRef.current.play()
         setCameraActive(true)
         if (barcodeSupported) detectBarcode()
+        else setError('Scan auto non supporté. Pointe la caméra et saisis le code ci-dessous.')
       }
-    } catch { setError("Impossible d'accéder à la caméra. Vérifie les permissions.") }
+    } catch (err: any) {
+      if (err?.name === 'NotAllowedError') {
+        setError("Autorise l'accès à la caméra dans les paramètres de ton navigateur.")
+      } else if (err?.name === 'NotFoundError') {
+        setError('Aucune caméra détectée.')
+      } else {
+        setError("Impossible d'accéder à la caméra. Utilise la saisie manuelle.")
+      }
+    }
   }
 
   function stopCamera() {
@@ -213,7 +227,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
   return (
     <div style={{ position: 'fixed', inset: 0, background: BG, zIndex: 1100, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT }}>SCANNER UN ALIMENT</span>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT }}>{cameraActive ? 'POINTE VERS LE CODE-BARRES' : 'SCANNER UN ALIMENT'}</span>
         <button onClick={() => { stopCamera(); onClose() }} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={MUTED} /></button>
       </div>
 
@@ -233,13 +247,14 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
         ) : (
           <>
             <div style={{ width: 80, height: 80, borderRadius: 20, background: `${GOLD}15`, border: `2px solid ${GOLD}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Camera size={36} color={GOLD} />
+              {error ? <Camera size={36} color={GOLD} /> : <div style={{ width: 28, height: 28, border: `3px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
             </div>
-            <p style={{ fontSize: '0.88rem', color: MUTED, textAlign: 'center', maxWidth: 300 }}>Scanne le code-barres de ton produit pour récupérer ses macros automatiquement.</p>
-            {cameraSupported && (
-              <button onClick={startCamera} style={{ padding: '14px 32px', borderRadius: 14, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.06em' }}>
-                <Camera size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                Ouvrir la caméra
+            <p style={{ fontSize: '0.88rem', color: MUTED, textAlign: 'center', maxWidth: 300 }}>
+              {error || 'Activation de la caméra...'}
+            </p>
+            {error && cameraSupported && (
+              <button onClick={startCamera} style={{ padding: '12px 28px', borderRadius: 12, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.88rem', fontWeight: 700 }}>
+                Réessayer
               </button>
             )}
           </>
@@ -247,8 +262,8 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
 
         {/* Manual input */}
         <div style={{ width: '100%', maxWidth: 400 }}>
-          <div style={{ fontSize: '0.68rem', color: MUTED, fontWeight: 600, textAlign: 'center', marginBottom: 8 }}>
-            {cameraSupported ? 'Ou saisir le code manuellement :' : 'Saisis le code-barres (chiffres sous le code) :'}
+          <div style={{ fontSize: '0.75rem', color: TEXT, fontWeight: 600, textAlign: 'center', marginBottom: 8 }}>
+            {cameraActive ? 'Ou saisir le code manuellement :' : 'Saisis le code-barres (13 chiffres sous le code) :'}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input value={manualCode} onChange={e => setManualCode(e.target.value.replace(/\D/g, '').slice(0, 14))} placeholder="3017620422003" inputMode="numeric"
