@@ -303,17 +303,35 @@ export default function useClientDetail() {
   /* ── Toast ──────────────────────────────────────────────────── */
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500) }
 
-  /* ── Auth ───────────────────────────────────────────────────── */
+  /* ── Auth (cookie bridge pattern) ───────────────────────────── */
   useEffect(() => {
-    let handled = false
+    let sessionFound = false
+    const getCookie = (name: string) => {
+      const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
+      return m ? m[2] : null
+    }
+    const hasJustLoggedIn = !!getCookie('moovx_auth_role')
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === 'SIGNED_OUT') return
-      if (s) { handled = true; setCoachId(s.user.id) }
-      if (event === 'INITIAL_SESSION' && !s) {
-        setTimeout(() => { if (!handled) router.replace('/landing') }, 1500)
+      if (s) {
+        sessionFound = true
+        setCoachId(s.user.id)
+        document.cookie = 'moovx_auth_role=;path=/;max-age=0'
+        document.cookie = 'moovx_auth_uid=;path=/;max-age=0'
       }
     })
-    return () => subscription.unsubscribe()
+
+    const timer = setTimeout(async () => {
+      if (sessionFound) return
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) { setCoachId(user.id); return }
+      } catch {}
+      if (!hasJustLoggedIn) router.replace('/landing')
+    }, hasJustLoggedIn ? 10000 : 1500)
+
+    return () => { subscription.unsubscribe(); clearTimeout(timer) }
   }, [router])
 
   /* ── Fetch all data ─────────────────────────────────────────── */

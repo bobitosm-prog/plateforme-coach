@@ -73,7 +73,7 @@ function WheelPicker({ items, value, onChange, label, width = 72 }: {
 export default function CoachPage() {
   const h = useCoachDashboard()
 
-  /* ── Loading splash (show while auth retries are in progress) ── */
+  /* ── Loading splash ── */
   if (!h.mounted || !h.authChecked || (h.loading && h.session)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
       <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -84,17 +84,24 @@ export default function CoachPage() {
     </div>
   )
 
-  /* ── No session after all retries → landing (with anti-loop protection) ── */
+  /* ── Auth error: cookie bridge detected login but session never arrived ── */
+  if (h.authError) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 20, padding: 24, textAlign: 'center' }}>
+      <div style={{ width: 64, height: 64, background: '#C9A84C', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Zap size={32} color="#000" strokeWidth={2.5} fill="#000" />
+      </div>
+      <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.5rem', fontWeight: 700, color: '#F8FAFC', margin: 0 }}>PROBLÈME DE CONNEXION</h2>
+      <p style={{ color: '#6B7280', fontSize: '0.88rem', maxWidth: 320, lineHeight: 1.6 }}>La session n&apos;a pas pu être récupérée. Essaie de te reconnecter.</p>
+      <div style={{ display: 'flex', gap: 12 }}>
+        <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', background: '#C9A84C', color: '#000', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem' }}>Réessayer</button>
+        <button onClick={() => { window.location.href = '/login' }} style={{ padding: '12px 24px', background: '#1A1A1A', color: '#F8FAFC', border: '1px solid #2A2A2A', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem' }}>Retour au login</button>
+      </div>
+    </div>
+  )
+
+  /* ── No session → landing ── */
   if (!h.session && h.authChecked) {
-    if (typeof window !== 'undefined') {
-      const loopKey = 'moovx-redirect-ts'
-      const last = parseInt(sessionStorage.getItem(loopKey) || '0', 10)
-      const now = Date.now()
-      if (now - last > 5000) {
-        sessionStorage.setItem(loopKey, String(now))
-        window.location.href = '/landing'
-      }
-    }
+    if (typeof window !== 'undefined') window.location.href = '/landing'
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A' }}>
         <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />

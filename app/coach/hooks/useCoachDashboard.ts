@@ -96,6 +96,7 @@ export default function useCoachDashboard() {
   const [mounted, setMounted]   = useState(false)
   const [session, setSession]   = useState<any>(null)
   const [authChecked, setAuthChecked] = useState(false)
+  const [authError, setAuthError] = useState(false)
   const [clients, setClients]   = useState<ClientRow[]>([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
@@ -165,21 +166,46 @@ export default function useCoachDashboard() {
 
   /* ── Effects ───────────────────────────────────────────── */
 
+  /* ── Auth (cookie bridge pattern) ── */
   useEffect(() => {
     setMounted(true)
-    let handled = false
+    let sessionFound = false
 
-    // onAuthStateChange is the single source of truth — fires INITIAL_SESSION on mount
+    const getCookie = (name: string) => {
+      if (typeof document === 'undefined') return null
+      const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
+      return m ? m[2] : null
+    }
+    const hasJustLoggedIn = !!getCookie('moovx_auth_role')
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === 'SIGNED_OUT') { setSession(null); setAuthChecked(true); return }
-      if (s) { handled = true; setSession(s); setAuthChecked(true) }
-      if (event === 'INITIAL_SESSION' && !s) {
-        // No session from INITIAL_SESSION — wait briefly then give up
-        setTimeout(() => { if (!handled) setAuthChecked(true) }, 1500)
+      if (s) {
+        sessionFound = true
+        setSession(s)
+        setAuthChecked(true)
+        document.cookie = 'moovx_auth_role=;path=/;max-age=0'
+        document.cookie = 'moovx_auth_uid=;path=/;max-age=0'
       }
     })
 
-    return () => subscription.unsubscribe()
+    const waitTime = hasJustLoggedIn ? 10000 : 1500
+    const timer = setTimeout(async () => {
+      if (sessionFound) return
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: { session: s } } = await supabase.auth.getSession()
+          if (s) { setSession(s); setAuthChecked(true); return }
+        }
+      } catch {}
+      if (hasJustLoggedIn) setAuthError(true)
+      setAuthChecked(true)
+      document.cookie = 'moovx_auth_role=;path=/;max-age=0'
+      document.cookie = 'moovx_auth_uid=;path=/;max-age=0'
+    }, waitTime)
+
+    return () => { subscription.unsubscribe(); clearTimeout(timer) }
   }, [])
 
   useEffect(() => {
@@ -485,6 +511,7 @@ export default function useCoachDashboard() {
     mounted,
     session,
     authChecked,
+    authError,
     loading,
     supabase,
 

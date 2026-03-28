@@ -64,20 +64,43 @@ export default function OnboardingPage() {
   const [resolvedNames, setResolvedNames] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    let handled = false
+    let sessionFound = false
+    const getCookie = (name: string) => {
+      const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
+      return m ? m[2] : null
+    }
+    const hasJustLoggedIn = !!getCookie('moovx_auth_role')
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === 'SIGNED_OUT') return
       if (s) {
-        handled = true
+        sessionFound = true
         setSession(s)
         const meta = s.user.user_metadata
         if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
-      }
-      if (event === 'INITIAL_SESSION' && !s) {
-        setTimeout(() => { if (!handled) router.replace('/landing') }, 1500)
+        document.cookie = 'moovx_auth_role=;path=/;max-age=0'
+        document.cookie = 'moovx_auth_uid=;path=/;max-age=0'
       }
     })
-    return () => subscription.unsubscribe()
+
+    const timer = setTimeout(async () => {
+      if (sessionFound) return
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: { session: s } } = await supabase.auth.getSession()
+          if (s) {
+            setSession(s)
+            const meta = s.user.user_metadata
+            if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
+            return
+          }
+        }
+      } catch {}
+      if (!hasJustLoggedIn) router.replace('/landing')
+    }, hasJustLoggedIn ? 10000 : 1500)
+
+    return () => { subscription.unsubscribe(); clearTimeout(timer) }
   }, [])
 
   function goNext() { setDir(1); setStep(s => s + 1) }

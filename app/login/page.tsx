@@ -44,21 +44,26 @@ export default function LoginPage() {
       else setError(signInError.message)
       return
     }
-    // Redirect based on role — avoid race condition in app/page.tsx
     if (data.session) {
-      // Clear anti-loop key so redirect works after fresh login
-      try { sessionStorage.removeItem('moovx-redirect-ts') } catch {}
       const { data: profile } = await supabase
         .from('profiles')
         .select('role, email')
         .eq('id', data.session.user.id)
         .single()
-      await new Promise(resolve => setTimeout(resolve, 300))
+
       const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
       const coachEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
-      if (profile?.email === adminEmail || profile?.role === 'super_admin') {
+      const role = profile?.email === adminEmail ? 'super_admin'
+        : (profile?.email === coachEmail || profile?.role === 'coach') ? 'coach'
+        : 'client'
+
+      // Cookie bridge — first-party, never blocked by Safari ITP
+      document.cookie = `moovx_auth_role=${role};path=/;max-age=60;SameSite=Lax;Secure`
+      document.cookie = `moovx_auth_uid=${data.session.user.id};path=/;max-age=60;SameSite=Lax;Secure`
+
+      if (role === 'super_admin') {
         window.location.href = '/admin'
-      } else if (profile?.email === coachEmail || profile?.role === 'coach') {
+      } else if (role === 'coach') {
         window.location.href = '/coach'
       } else {
         window.location.href = '/'
