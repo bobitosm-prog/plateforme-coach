@@ -2,7 +2,8 @@
 import React, { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown } from 'lucide-react'
+import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download } from 'lucide-react'
+import { downloadCsv } from '../../../lib/exportCsv'
 import { toast } from 'sonner'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
@@ -141,6 +142,24 @@ export default function ProgressTab({
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>PROGRESSION</h1>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {subTab === 'mesures' && displayWeights.length > 0 && (
+            <button onClick={() => {
+              const rows = displayWeights.map((w, i) => [w.date, w.poids, i > 0 ? (w.poids - displayWeights[i-1].poids).toFixed(1) : ''])
+              downloadCsv('poids.csv', ['Date', 'Poids (kg)', 'Variation'], rows)
+            }} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.68rem', fontWeight: 600 }}>
+              <Download size={12} /> Poids
+            </button>
+          )}
+          {subTab === 'mesures' && measurements.length > 0 && (
+            <button onClick={() => {
+              const rows = measurements.map((m: any) => [m.date, m.waist ?? '', m.hips ?? '', m.chest ?? '', m.left_arm ?? '', m.left_thigh ?? '', m.body_fat ?? ''])
+              downloadCsv('mensurations.csv', ['Date', 'Taille (cm)', 'Hanches (cm)', 'Poitrine (cm)', 'Bras (cm)', 'Cuisses (cm)', '% MG'], rows)
+            }} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.68rem', fontWeight: 600 }}>
+              <Download size={12} /> Mensurations
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Sub-tabs */}

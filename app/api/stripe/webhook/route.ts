@@ -1,5 +1,3 @@
-// NOTE: SUPABASE_SERVICE_ROLE_KEY is required for secure server-side operations.
-// Without it, the route falls back to ANON_KEY which respects RLS and may fail.
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -7,8 +5,6 @@ import { createClient } from '@supabase/supabase-js'
 function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
 if (!process.env.SUPABASE_SERVICE_ROLE_KEY) console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY manquante — utilisation de ANON_KEY en fallback. Configurer en production.')
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-
-const DURATION_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,58 +16,77 @@ export async function POST(req: NextRequest) {
 
     const event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
 
-    // ── Checkout completed (initial subscription) ──
+    // ── Checkout completed ──
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
       const clientId = session.metadata?.clientId
-      const coachId = session.metadata?.coachId
+      const subType = session.metadata?.subType || session.metadata?.planId || 'client_monthly'
+      const isLifetime = subType === 'client_lifetime'
+      const isCoach = subType === 'coach_monthly'
 
       if (clientId) {
-        // Activate subscription
-        await supabase.from('profiles').update({
-          subscription_status: 'active',
-          subscription_end_date: new Date(Date.now() + DURATION_MS).toISOString(),
+        const updates: Record<string, any> = {
           stripe_customer_id: session.customer as string || null,
-        }).eq('id', clientId)
+          subscription_type: subType,
+        }
+
+        if (isLifetime) {
+          // One-time payment → lifetime access, no expiry
+          updates.subscription_status = 'lifetime'
+          updates.subscription_end_date = null
+        } else {
+          // Subscription → active with end date
+          const interval = subType === 'client_yearly' ? 365 : 30
+          updates.subscription_status = 'active'
+          updates.subscription_end_date = new Date(Date.now() + interval * 24 * 60 * 60 * 1000).toISOString()
+          updates.stripe_subscription_id = session.subscription as string || null
+        }
+
+        // For coach plans, also mark coach fields
+        if (isCoach) {
+          updates.coach_subscription_active = true
+        }
+
+        await supabase.from('profiles').update(updates).eq('id', clientId)
 
         // Update payment status
         await supabase.from('payments')
           .update({ status: 'paid', paid_at: new Date().toISOString() })
           .eq('stripe_checkout_session_id', session.id)
-
-        // Insert commission (if coach is not platform owner)
-        if (coachId && coachId !== 'platform') {
-          const { data: coach } = await supabase.from('profiles').select('email').eq('id', coachId).single()
-          if (coach?.email !== (process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch')) {
-            await supabase.from('commissions').insert({
-              coach_id: coachId,
-              amount: 30 * 0.05, // 1.50 CHF
-              status: 'pending',
-            })
-          }
-        }
       }
     }
 
-    // ── Invoice paid (monthly renewal) ──
+    // ── Subscription updated (plan change, renewal) ──
+    if (event.type === 'customer.subscription.updated') {
+      const sub = event.data.object as Stripe.Subscription
+      if (sub.customer) {
+        const status = sub.status === 'active' ? 'active' : sub.status === 'past_due' ? 'past_due' : sub.status
+        await supabase.from('profiles').update({
+          subscription_status: status,
+        }).eq('stripe_customer_id', sub.customer as string)
+      }
+    }
+
+    // ── Invoice paid (renewal) ──
     if (event.type === 'invoice.payment_succeeded') {
       const invoice = event.data.object as any
       if (invoice.billing_reason === 'subscription_cycle' && invoice.customer) {
-        // Extend subscription by 30 days
-        await supabase.from('profiles').update({
-          subscription_status: 'active',
-          subscription_end_date: new Date(Date.now() + DURATION_MS).toISOString(),
-        }).eq('stripe_customer_id', invoice.customer)
-
-        // Insert payment record
+        // Determine interval from subscription type
         const { data: client } = await supabase.from('profiles')
-          .select('id').eq('stripe_customer_id', invoice.customer).single()
+          .select('id, subscription_type').eq('stripe_customer_id', invoice.customer).single()
+
         if (client) {
+          const interval = client.subscription_type === 'client_yearly' ? 365 : 30
+          await supabase.from('profiles').update({
+            subscription_status: 'active',
+            subscription_end_date: new Date(Date.now() + interval * 24 * 60 * 60 * 1000).toISOString(),
+          }).eq('id', client.id)
+
           await supabase.from('payments').insert({
             client_id: client.id,
             amount: (invoice.amount_paid || 0) / 100,
             currency: invoice.currency || 'chf',
-            description: 'Renouvellement abonnement mensuel',
+            description: `Renouvellement ${client.subscription_type === 'client_yearly' ? 'annuel' : client.subscription_type === 'coach_monthly' ? 'coach' : 'mensuel'}`,
             status: 'paid',
             paid_at: new Date().toISOString(),
           })
@@ -84,7 +99,8 @@ export async function POST(req: NextRequest) {
       const sub = event.data.object as any
       if (sub.customer) {
         await supabase.from('profiles').update({
-          subscription_status: 'expired',
+          subscription_status: 'canceled',
+          stripe_subscription_id: null,
         }).eq('stripe_customer_id', sub.customer)
       }
     }

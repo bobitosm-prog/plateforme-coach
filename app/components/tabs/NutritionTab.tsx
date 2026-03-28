@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2 } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download } from 'lucide-react'
+import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import FoodSearch from '../FoodSearch'
 import {
@@ -424,6 +425,23 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0 }}>NUTRITION</h1>
+        {coachMealPlan && (
+          <button onClick={() => {
+            const rows: (string | number)[][] = []
+            const days = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
+            days.forEach(day => {
+              const d = coachMealPlan[day]
+              if (!d) return
+              MEAL_ORDER.forEach(mt => {
+                const foods = Array.isArray(d.repas?.[mt]) ? d.repas[mt] : []
+                foods.forEach((f: any) => rows.push([day, MEAL_LABELS[mt] || mt, f.aliment || f.name || '', f.quantite_g || '', f.kcal || '', f.proteines || f.prot || '', f.glucides || f.carb || '', f.lipides || f.fat || '']))
+              })
+            })
+            downloadCsv('plan-alimentaire.csv', ['Jour', 'Repas', 'Aliment', 'Quantité (g)', 'Kcal', 'Protéines (g)', 'Glucides (g)', 'Lipides (g)'], rows)
+          }} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.68rem', fontWeight: 600 }}>
+            <Download size={12} /> Exporter
+          </button>
+        )}
       </div>
 
       {/* Sub-tabs */}

@@ -1,7 +1,7 @@
 {
-  "name": "CoachPro",
-  "short_name": "CoachPro",
-  "description": "Coaching fitness propulsé par l'IA",
+  "name": "MoovX",
+  "short_name": "MoovX",
+  "description": "Coaching fitness Swiss Made · Swiss Quality",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050505",

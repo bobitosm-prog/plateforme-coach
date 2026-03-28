@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
 
     const accountLink = await getStripe().accountLinks.create({
       account: account.id,
-      refresh_url: `${process.env.NEXT_PUBLIC_URL || 'https://plateforme-coach-delta.vercel.app'}/coach?stripe=refresh`,
-      return_url: `${process.env.NEXT_PUBLIC_URL || 'https://plateforme-coach-delta.vercel.app'}/coach?stripe=success`,
+      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'}/coach?stripe=refresh`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'}/coach?stripe=success`,
       type: 'account_onboarding',
     })
 

@@ -143,7 +143,7 @@ function CoachSignupPage() {
                 <Zap size={48} color="#000" strokeWidth={2.5} fill="#000" />
               </div>
               <div style={{ textAlign: 'center' }}>
-                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: TEXT, margin: '0 0 8px', letterSpacing: '0.05em' }}>Rejoins CoachPro</h1>
+                <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: TEXT, margin: '0 0 8px', letterSpacing: '0.05em' }}>Rejoins MoovX</h1>
                 <p style={{ color: MUTED, fontSize: '0.9rem', margin: 0 }}>La plateforme de coaching fitness #1</p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 320 }}>
@@ -213,14 +213,14 @@ function CoachSignupPage() {
               </div>
               <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, maxHeight: 260, overflowY: 'auto', fontSize: '0.78rem', color: MUTED, lineHeight: 1.7 }}>
                 <strong style={{ color: TEXT }}>1. COMMISSION PLATEFORME</strong><br />
-                En utilisant CoachPro, vous acceptez de reverser 5% de chaque paiement client à la plateforme CoachPro.<br />
-                Exemple : Pour un abonnement de CHF 150/mois, CHF 7.50 sera reversé à CoachPro.<br /><br />
+                En utilisant MoovX, vous acceptez de reverser 5% de chaque paiement client à la plateforme MoovX.<br />
+                Exemple : Pour un abonnement de CHF 150/mois, CHF 7.50 sera reversé à MoovX.<br /><br />
                 <strong style={{ color: TEXT }}>2. PAIEMENTS</strong><br />
                 Les paiements sont traités via Stripe. Vous devez connecter un compte Stripe valide pour recevoir vos revenus.<br /><br />
                 <strong style={{ color: TEXT }}>3. RESPONSABILITÉS</strong><br />
                 Vous êtes responsable de la qualité de votre coaching et du contenu des plans fournis à vos clients.<br /><br />
                 <strong style={{ color: TEXT }}>4. DONNÉES</strong><br />
-                CoachPro stocke les données de vos clients de manière sécurisée conformément au RGPD.<br /><br />
+                MoovX stocke les données de vos clients de manière sécurisée conformément au RGPD.<br /><br />
                 <strong style={{ color: TEXT }}>5. RÉSILIATION</strong><br />
                 Vous pouvez résilier votre compte à tout moment. Les abonnements clients en cours restent actifs jusqu'à leur terme.
               </div>

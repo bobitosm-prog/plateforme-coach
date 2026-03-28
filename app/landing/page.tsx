@@ -95,70 +95,71 @@ export default function LandingPage() {
       <div className="grain-overlay" />
 
       {/* NAV */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 200, padding: '0 40px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(5,5,5,0.97)' : 'rgba(5,5,5,0.6)', backdropFilter: 'blur(24px)', borderBottom: scrolled ? '1px solid rgba(201,168,76,0.08)' : '1px solid transparent', transition: 'all 0.4s' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 200, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(5,5,5,0.97)' : 'rgba(5,5,5,0.6)', backdropFilter: 'blur(24px)', borderBottom: scrolled ? '1px solid rgba(201,168,76,0.08)' : '1px solid transparent', transition: 'all 0.4s' }}>
+        {/* Spacer for centering */}
+        <div style={{ width: 170 }} className="hide-mobile" />
+        {/* Centered logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <div style={{ width: 36, height: 36, background: `linear-gradient(135deg,${gold},${goldLight})`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, boxShadow: '0 4px 24px rgba(201,168,76,0.3)' }}>⚡</div>
-          <div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 21, letterSpacing: 3, lineHeight: 1 }}>COACHPRO</div><div style={{ fontSize: 7, letterSpacing: 4, color: gold, textTransform: 'uppercase', opacity: 0.7 }}>Elite Performance</div></div>
+          <div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 21, letterSpacing: 3, lineHeight: 1 }}>MOOVX</div><div style={{ fontSize: 7, letterSpacing: 4, color: gold, textTransform: 'uppercase', opacity: 0.7 }}>Swiss Made · Swiss Quality</div></div>
         </div>
-        <div className="hide-mobile" style={{ display: 'flex', gap: 32 }}>
-          {[['#features','Fonctionnalités'],['#how','Comment ça marche'],['#pricing','Tarifs'],['#temoignages','Témoignages']].map(([href,label]) => <a key={href} href={href} style={{ color: '#666', textDecoration: 'none', fontSize: 13, fontWeight: 300, letterSpacing: 0.3 }}>{label}</a>)}
-        </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <button onClick={() => { import('@supabase/ssr').then(({ createBrowserClient }) => { createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!).auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/' } }) }) }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#999', padding: '8px 20px', borderRadius: 40, fontSize: 12.5, cursor: 'pointer', fontFamily: "'DM Sans'", letterSpacing: 0.3 }}>Connexion</button>
+        {/* Right buttons */}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button onClick={go('/login')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#999', padding: '8px 20px', borderRadius: 40, fontSize: 12.5, cursor: 'pointer', fontFamily: "'DM Sans'", letterSpacing: 0.3 }}>Connexion</button>
           <button onClick={go('/register-client')} className="hide-mobile" style={{ background: gold, border: 'none', color: '#000', padding: '9px 22px', borderRadius: 40, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans'" }}>Commencer</button>
         </div>
       </nav>
 
       {/* HERO */}
-      <section className="hero-pad" style={{ minHeight: '94vh', display: 'flex', alignItems: 'center', padding: '80px 40px 60px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '20%', right: '10%', width: 500, height: 500, background: 'radial-gradient(circle,rgba(201,168,76,0.08),transparent 60%)', animation: 'orbPulse 6s ease-in-out infinite', pointerEvents: 'none' }} />
+      <section className="hero-pad" style={{ minHeight: '94vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 40px 60px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, background: 'radial-gradient(circle,rgba(201,168,76,0.08),transparent 60%)', animation: 'orbPulse 6s ease-in-out infinite', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(201,168,76,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.015) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
-        <div className="hero-grid" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 60, alignItems: 'center', position: 'relative', zIndex: 1 }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(201,168,76,0.25)', background: 'rgba(201,168,76,0.04)', borderRadius: 40, padding: '6px 16px 6px 8px', marginBottom: 32, animation: 'fadeUp 0.6s 0s cubic-bezier(0.16,1,0.3,1) forwards', opacity: 0 }}>
-              <span style={{ width: 22, height: 22, background: 'rgba(201,168,76,0.12)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: gold }}>✦</span>
-              <span style={{ fontSize: 11.5, color: gold, letterSpacing: 0.5 }}>Propulsé par l'IA Claude d'Anthropic</span>
-            </div>
-            <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(56px,7vw,96px)', lineHeight: 0.92, letterSpacing: 1, marginBottom: 28 }}>
-              <div className="hero-title-line">TRANSFORME</div>
-              <div className="hero-title-line">TON CORPS.</div>
-              <div className="hero-title-line" style={{ color: gold }}>DÉPASSE TES LIMITES.</div>
-            </h1>
-            <p className="hero-sub-anim" style={{ color: '#777', fontSize: 16.5, fontWeight: 300, lineHeight: 1.85, marginBottom: 40, maxWidth: 480 }}>CoachPro connecte athlètes et coaches d'élite avec des plans alimentaires et sportifs générés par IA. Basé sur <span style={{ color: '#aaa' }}>3 484 aliments ANSES/Ciqual 2025</span>.</p>
-            <div className="hero-ctas-anim" style={{ display: 'flex', gap: 14, marginBottom: 56, flexWrap: 'wrap' }}>
-              <button className="btn-gold" onClick={go('/register-client')}>Commencer — CHF 30/mois</button>
-              <button className="btn-ghost" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}><span style={{ fontSize: 10, opacity: 0.6 }}>▶</span> Voir la démo</button>
-            </div>
-            <div className="hero-stats-anim" style={{ display: 'flex' }}>
-              {[[4.9,'★','Note moyenne'],[500,'+','Athlètes actifs'],[50,'+','Coachs certifiés']].map(([num,suf,label],i) => (
-                <div key={i} style={{ padding: '0 32px', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none', ...(i === 0 ? { paddingLeft: 0 } : {}) }}>
-                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: 38, color: gold, lineHeight: 1, letterSpacing: 1 }}><Counter target={num as number} suffix={suf as string} /></div>
-                  <div style={{ fontSize: 10, color: '#3a3a3a', textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 4 }}>{label as string}</div>
-                </div>
-              ))}
-            </div>
+        <div style={{ maxWidth: 800, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(201,168,76,0.25)', background: 'rgba(201,168,76,0.04)', borderRadius: 40, padding: '6px 16px 6px 8px', marginBottom: 32, animation: 'fadeUp 0.6s 0s cubic-bezier(0.16,1,0.3,1) forwards', opacity: 0 }}>
+            <span style={{ width: 22, height: 22, background: 'rgba(201,168,76,0.12)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: gold }}>✦</span>
+            <span style={{ fontSize: 11.5, color: gold, letterSpacing: 0.5 }}>Propulsé par l&apos;IA Claude d&apos;Anthropic</span>
           </div>
-          <div className="hide-mobile hero-phone-anim" style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+          <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(56px,7vw,96px)', lineHeight: 0.92, letterSpacing: 1, marginBottom: 28 }}>
+            <div className="hero-title-line">TRANSFORME</div>
+            <div className="hero-title-line">TON CORPS.</div>
+            <div className="hero-title-line" style={{ color: gold }}>DÉPASSE TES LIMITES.</div>
+          </h1>
+          <p className="hero-sub-anim" style={{ color: '#777', fontSize: 16.5, fontWeight: 300, lineHeight: 1.85, marginBottom: 40, maxWidth: 520 }}>MoovX connecte athlètes et coaches d&apos;élite avec des plans alimentaires et sportifs générés par IA. Basé sur <span style={{ color: '#aaa' }}>3 484 aliments ANSES/Ciqual 2025</span>.</p>
+          <div className="hero-ctas-anim" style={{ display: 'flex', gap: 14, marginBottom: 56, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button className="btn-gold" onClick={go('/register-client')}>Commencer — Dès CHF 10/mois</button>
+            <button className="btn-ghost" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}><span style={{ fontSize: 10, opacity: 0.6 }}>▶</span> Voir la démo</button>
+          </div>
+          <div className="hero-stats-anim" style={{ display: 'flex', justifyContent: 'center' }}>
+            {[[4.9,'★','Note moyenne'],[500,'+','Athlètes actifs'],[50,'+','Coachs certifiés']].map(([num,suf,label],i) => (
+              <div key={i} style={{ padding: '0 32px', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                <div style={{ fontFamily: "'Bebas Neue'", fontSize: 38, color: gold, lineHeight: 1, letterSpacing: 1 }}><Counter target={num as number} suffix={suf as string} /></div>
+                <div style={{ fontSize: 10, color: '#3a3a3a', textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 4 }}>{label as string}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Phone mockup — centered below */}
+          <div className="hero-phone-anim" style={{ display: 'flex', justifyContent: 'center', position: 'relative', marginTop: 64 }}>
             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 350, height: 350, background: 'radial-gradient(circle,rgba(201,168,76,0.1),transparent 65%)', pointerEvents: 'none' }} />
             <div className="floating-tag" style={{ top: '8%', right: '-8%', animation: 'badgeBob 3s ease-in-out infinite' }}>🔥 -3 kg ce mois</div>
-            <div className="floating-tag" style={{ top: '42%', left: '-20%', animation: 'badgeBob 3s ease-in-out 0.7s infinite' }}>✓ Plan validé par IA</div>
-            <div className="floating-tag" style={{ bottom: '12%', right: '-6%', animation: 'badgeBob 3s ease-in-out 1.4s infinite' }}>💪 Séance aujourd'hui</div>
+            <div className="floating-tag hide-mobile" style={{ top: '42%', left: '-20%', animation: 'badgeBob 3s ease-in-out 0.7s infinite' }}>✓ Plan validé par IA</div>
+            <div className="floating-tag" style={{ bottom: '12%', right: '-6%', animation: 'badgeBob 3s ease-in-out 1.4s infinite' }}>💪 Séance aujourd&apos;hui</div>
             <div className="phone-mock">
               <div style={{ width: 90, height: 24, background: '#000', borderRadius: 16, margin: '0 auto 10px', position: 'relative' }}><div style={{ position: 'absolute', width: 10, height: 10, background: '#1a1a1a', borderRadius: '50%', top: '50%', right: 12, transform: 'translateY(-50%)' }} /></div>
               <div style={{ background: '#0a0a0a', borderRadius: 38, overflow: 'hidden' }}>
                 <div style={{ padding: '16px 16px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div><div style={{ fontSize: 9.5, color: '#444', fontWeight: 300 }}>Mercredi 25 Mars</div><div style={{ fontSize: 17, fontWeight: 500, marginTop: 2 }}>Bonjour, Sarah 👋</div></div>
+                  <div style={{ textAlign: 'left' }}><div style={{ fontSize: 9.5, color: '#444', fontWeight: 300 }}>Mercredi 25 Mars</div><div style={{ fontSize: 17, fontWeight: 500, marginTop: 2 }}>Bonjour, Sarah 👋</div></div>
                   <div style={{ width: 34, height: 34, background: `linear-gradient(135deg,${gold},${goldLight})`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#000' }}>S</div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, padding: '0 12px 8px' }}>
-                  {[['⚖️','62 kg','Poids actuel',true],['🎯','55 kg','Objectif',false]].map(([icon,val,label,isGold],i) => (<div key={i} style={{ background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)' }}><div style={{ fontSize: 14, marginBottom: 4 }}>{icon as string}</div><div style={{ fontSize: 20, fontWeight: 500, color: isGold ? gold : '#fff' }}>{val as string}</div><div style={{ fontSize: 8, color: '#3a3a3a', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 2 }}>{label as string}</div></div>))}
+                  {[['⚖️','62 kg','Poids actuel',true],['🎯','55 kg','Objectif',false]].map(([icon,val,label,isGold],i) => (<div key={i} style={{ background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)', textAlign: 'left' }}><div style={{ fontSize: 14, marginBottom: 4 }}>{icon as string}</div><div style={{ fontSize: 20, fontWeight: 500, color: isGold ? gold : '#fff' }}>{val as string}</div><div style={{ fontSize: 8, color: '#3a3a3a', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 2 }}>{label as string}</div></div>))}
                 </div>
-                <div style={{ margin: '0 12px 8px', background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <div style={{ margin: '0 12px 8px', background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)', textAlign: 'left' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ fontSize: 8.5, color: gold, letterSpacing: 2, textTransform: 'uppercase' }}>Nutrition du jour</span><span style={{ fontSize: 8.5, color: '#3a3a3a' }}>1 420 / 1 800 kcal</span></div>
                   <div style={{ height: 4, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}><div style={{ height: '100%', width: '79%', background: `linear-gradient(90deg,${gold},${goldLight})`, borderRadius: 2 }} /></div>
                   <div style={{ display: 'flex', justifyContent: 'space-around' }}>{[['120g','Prot','#60a5fa'],['180g','Gluc','#4ade80'],['48g','Lip',gold]].map(([v,l,c],i) => (<div key={i} style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 500, color: c as string }}>{v}</div><div style={{ fontSize: 7.5, color: '#3a3a3a', textTransform: 'uppercase', letterSpacing: 1 }}>{l}</div></div>))}</div>
                 </div>
-                <div style={{ margin: '0 12px 12px', background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <div style={{ margin: '0 12px 12px', background: '#121212', borderRadius: 14, padding: '12px 13px', border: '1px solid rgba(255,255,255,0.04)', textAlign: 'left' }}>
                   <div style={{ fontSize: 8.5, color: gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Programme du jour</div>
                   {[['Squat barre — 4×8','90s'],['Presse — 3×12','60s'],['Fentes haltères — 3×10','60s']].map(([name,rest],i) => (<div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: i < 2 ? '1px solid #181818' : 'none' }}><span style={{ fontSize: 11.5, color: '#aaa' }}>{name}</span><span style={{ fontSize: 9, background: '#1a1a1a', padding: '2px 8px', borderRadius: 6, color: '#555' }}>{rest}</span></div>))}
                 </div>
@@ -196,24 +197,42 @@ export default function LandingPage() {
       {/* PRICING */}
       <section id="pricing" style={{ background: '#0b0b0b' }}><div className="section-pad" style={{ padding: '100px 40px', maxWidth: 1200, margin: '0 auto' }}>
         <Reveal><div style={{ textAlign: 'center', marginBottom: 64 }}><div style={{ fontSize: 10.5, color: gold, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 14 }}>Tarifs</div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(40px,4.5vw,62px)', letterSpacing: 2, lineHeight: 0.95, marginBottom: 16 }}>SIMPLE ET TRANSPARENT</div></div></Reveal>
-        <div className="price-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, maxWidth: 920, margin: '0 auto' }}>
-          <Reveal delay={0.1}><div style={{ borderRadius: 28, padding: 42, position: 'relative', background: 'rgba(201,168,76,0.03)', border: '1.5px solid rgba(201,168,76,0.35)' }}>
-            <span style={{ position: 'absolute', top: 22, right: 22, background: gold, color: '#000', fontSize: 9.5, fontWeight: 700, padding: '4px 14px', borderRadius: 20, letterSpacing: 1, textTransform: 'uppercase' }}>Populaire</span>
-            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: gold, marginBottom: 20 }}>Athlète</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}><span style={{ fontSize: 12, color: '#666', alignSelf: 'flex-start', marginTop: 20 }}>CHF</span><span style={{ fontFamily: "'Bebas Neue'", fontSize: 88, lineHeight: 1, color: gold }}>30</span><span style={{ color: '#555', fontSize: 13 }}>/mois</span></div>
-            <div style={{ color: '#444', fontSize: 12.5, marginBottom: 32, fontWeight: 300 }}>Tout inclus, sans surprise</div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 36 }}>{['Plan alimentaire IA 7 jours',"Programme d'entraînement perso",'3 484 aliments ANSES/Ciqual','Suivi progression & photos','Messagerie coach temps réel','Liste de courses automatique','Calculateur BMR/TDEE'].map(f => (<li key={f} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13.5, color: '#bbb', fontWeight: 300 }}><span style={{ color: gold, fontSize: 11 }}>✦</span> {f}</li>))}</ul>
-            <button className="btn-gold" onClick={go('/register-client')} style={{ width: '100%', padding: 16 }}>Commencer maintenant →</button>
-            <div style={{ textAlign: 'center', color: '#333', fontSize: 11.5, marginTop: 14, fontWeight: 300 }}>Sans engagement · Résiliable</div>
+        <div className="price-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 1000, margin: '0 auto 40px' }}>
+          {/* Monthly */}
+          <Reveal delay={0.1}><div style={{ borderRadius: 28, padding: 36, background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#555', marginBottom: 20 }}>Mensuel</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}><span style={{ fontSize: 12, color: '#666', alignSelf: 'flex-start', marginTop: 16 }}>CHF</span><span style={{ fontFamily: "'Bebas Neue'", fontSize: 72, lineHeight: 1, color: '#F8FAFC' }}>10</span><span style={{ color: '#555', fontSize: 13 }}>/mois</span></div>
+            <div style={{ color: '#444', fontSize: 12.5, marginBottom: 28, fontWeight: 300 }}>Coach IA inclus</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>{['Nutrition IA personnalisée','Programme training IA','Suivi progression','Calculateur BMR/TDEE'].map(f => (<li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#888', fontWeight: 300 }}><span style={{ color: '#444', fontSize: 10 }}>✦</span> {f}</li>))}</ul>
+            <button className="btn-gold" onClick={go('/register-client')} style={{ width: '100%', padding: 14, fontSize: 13.5 }}>Commencer →</button>
           </div></Reveal>
-          <Reveal delay={0.2}><div style={{ borderRadius: 28, padding: 42, background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#555', marginBottom: 20 }}>Coach</div>
-            <div style={{ fontFamily: "'Bebas Neue'", fontSize: 48, lineHeight: 1, letterSpacing: 1, marginBottom: 8 }}>GRATUIT</div>
-            <div style={{ color: '#444', fontSize: 12.5, marginBottom: 32, fontWeight: 300 }}>*5% commission par client/mois</div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 36 }}>{['Dashboard clients illimité','Génération plans IA','Paiements Stripe automatisés','Calendrier & séances','Messagerie temps réel','Analytics revenus'].map(f => (<li key={f} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13.5, color: '#555', fontWeight: 300 }}><span style={{ color: '#333', fontSize: 11 }}>✦</span> {f}</li>))}</ul>
-            <button onClick={go('/coach-signup')} style={{ width: '100%', background: 'transparent', color: gold, border: '1px solid rgba(201,168,76,0.25)', borderRadius: 14, padding: 16, fontSize: 13.5, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans'" }}>Devenir coach →</button>
+          {/* Yearly */}
+          <Reveal delay={0.15}><div style={{ borderRadius: 28, padding: 36, position: 'relative', background: 'rgba(201,168,76,0.03)', border: '1.5px solid rgba(201,168,76,0.35)' }}>
+            <span style={{ position: 'absolute', top: 20, right: 20, background: gold, color: '#000', fontSize: 9, fontWeight: 700, padding: '4px 12px', borderRadius: 20, letterSpacing: 1, textTransform: 'uppercase' }}>Populaire</span>
+            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: gold, marginBottom: 20 }}>Annuel</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}><span style={{ fontSize: 12, color: '#666', alignSelf: 'flex-start', marginTop: 16 }}>CHF</span><span style={{ fontFamily: "'Bebas Neue'", fontSize: 72, lineHeight: 1, color: gold }}>80</span><span style={{ color: '#555', fontSize: 13 }}>/an</span></div>
+            <div style={{ color: '#22C55E', fontSize: 12.5, marginBottom: 28, fontWeight: 600 }}>Économise 33% — 6.67 CHF/mois</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>{['Tout le plan mensuel','Économie de 40 CHF/an','Accès prioritaire nouveautés','Support prioritaire'].map(f => (<li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#bbb', fontWeight: 300 }}><span style={{ color: gold, fontSize: 10 }}>✦</span> {f}</li>))}</ul>
+            <button className="btn-gold" onClick={go('/register-client')} style={{ width: '100%', padding: 14, fontSize: 13.5 }}>Commencer →</button>
+            <div style={{ textAlign: 'center', color: '#333', fontSize: 11, marginTop: 12, fontWeight: 300 }}>Résiliable à tout moment</div>
+          </div></Reveal>
+          {/* Lifetime */}
+          <Reveal delay={0.2}><div style={{ borderRadius: 28, padding: 36, position: 'relative', background: 'rgba(34,197,94,0.02)', border: '1px solid rgba(34,197,94,0.15)' }}>
+            <span style={{ position: 'absolute', top: 20, right: 20, background: '#22C55E', color: '#000', fontSize: 9, fontWeight: 700, padding: '4px 12px', borderRadius: 20, letterSpacing: 1, textTransform: 'uppercase' }}>Meilleure offre</span>
+            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#22C55E', marginBottom: 20 }}>À vie</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}><span style={{ fontSize: 12, color: '#666', alignSelf: 'flex-start', marginTop: 16 }}>CHF</span><span style={{ fontFamily: "'Bebas Neue'", fontSize: 72, lineHeight: 1, color: '#22C55E' }}>150</span></div>
+            <div style={{ color: '#444', fontSize: 12.5, marginBottom: 28, fontWeight: 300 }}>Paiement unique · Zéro abo</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>{['Accès permanent','Toutes les fonctionnalités','Mises à jour à vie','Zéro frais récurrents'].map(f => (<li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#888', fontWeight: 300 }}><span style={{ color: '#22C55E', fontSize: 10 }}>✦</span> {f}</li>))}</ul>
+            <button onClick={go('/register-client')} style={{ width: '100%', background: '#22C55E', border: 'none', color: '#000', padding: 14, borderRadius: 60, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans'" }}>Accès à vie →</button>
           </div></Reveal>
         </div>
+        {/* Coach plan */}
+        <Reveal delay={0.25}><div style={{ maxWidth: 480, margin: '0 auto', borderRadius: 28, padding: '36px 42px', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+          <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#555', marginBottom: 16 }}>Coach Pro</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 8 }}><span style={{ fontSize: 12, color: '#666' }}>CHF</span><span style={{ fontFamily: "'Bebas Neue'", fontSize: 56, lineHeight: 1, letterSpacing: 1 }}>50</span><span style={{ color: '#555', fontSize: 13 }}>/mois</span></div>
+          <div style={{ color: '#444', fontSize: 12.5, marginBottom: 24, fontWeight: 300 }}>Clients illimités · IA incluse · Stripe intégré</div>
+          <button onClick={go('/coach-signup')} style={{ background: 'transparent', color: gold, border: '1px solid rgba(201,168,76,0.25)', borderRadius: 14, padding: '14px 40px', fontSize: 13.5, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans'" }}>Devenir coach →</button>
+        </div></Reveal>
       </div></section>
 
       {/* TESTIMONIALS */}
@@ -234,7 +253,7 @@ export default function LandingPage() {
       {/* FAQ */}
       <section style={{ background: '#060606' }}><div className="section-pad" style={{ padding: '100px 40px', maxWidth: 1200, margin: '0 auto' }}>
         <Reveal><div style={{ textAlign: 'center', marginBottom: 64 }}><div style={{ fontSize: 10.5, color: gold, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 14 }}>FAQ</div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(40px,4.5vw,62px)', letterSpacing: 2, lineHeight: 0.95 }}>TES QUESTIONS</div></div></Reveal>
-        <Reveal delay={0.1}><div style={{ maxWidth: 700, margin: '0 auto' }}>{[['Comment fonctionne le paiement ?','CHF 30/mois via Stripe, résiliable à tout moment. Aucun engagement.'],["Qu'est-ce qu'une PWA ?",'Installe depuis Safari ou Chrome en 2 secondes. Plein écran, notifications push.'],["L'IA remplace-t-elle mon coach ?",'Non, l\'IA assiste ton coach humain.'],['Puis-je changer de coach ?','Oui, à tout moment. Nouveau coach sous 24h.'],['Données sécurisées ?','Données en Suisse via Supabase, AES-256. RGPD total.']].map(([q,a],i) => <FaqItem key={i} q={q} a={a} />)}</div></Reveal>
+        <Reveal delay={0.1}><div style={{ maxWidth: 700, margin: '0 auto' }}>{[['Comment fonctionne le paiement ?','Dès CHF 10/mois via Stripe, résiliable à tout moment. Aucun engagement.'],["Qu'est-ce qu'une PWA ?",'Installe depuis Safari ou Chrome en 2 secondes. Plein écran, notifications push.'],["L'IA remplace-t-elle mon coach ?",'Non, l\'IA assiste ton coach humain.'],['Puis-je changer de coach ?','Oui, à tout moment. Nouveau coach sous 24h.'],['Données sécurisées ?','Données en Suisse via Supabase, AES-256. RGPD total.']].map(([q,a],i) => <FaqItem key={i} q={q} a={a} />)}</div></Reveal>
       </div></section>
 
       {/* CTA FINAL */}
@@ -242,24 +261,35 @@ export default function LandingPage() {
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 350, background: 'radial-gradient(ellipse,rgba(201,168,76,0.08),transparent 65%)', pointerEvents: 'none' }} />
         <Reveal><div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto' }}>
           <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 'clamp(50px,6vw,84px)', lineHeight: 0.92, letterSpacing: 2, marginBottom: 24 }}>PRÊT À DEVENIR<br /><span style={{ color: gold }}>LA MEILLEURE VERSION</span><br />DE TOI-MÊME ?</h2>
-          <p style={{ color: '#555', fontSize: 16.5, fontWeight: 300, marginBottom: 48, lineHeight: 1.7 }}>Rejoins 500+ athlètes qui ont transformé leur physique avec CoachPro.</p>
-          <button className="btn-gold" onClick={go('/register-client')} style={{ padding: '20px 64px', fontSize: 16.5 }}>Commencer maintenant — CHF 30/mois</button>
+          <p style={{ color: '#555', fontSize: 16.5, fontWeight: 300, marginBottom: 48, lineHeight: 1.7 }}>Rejoins 500+ athlètes qui ont transformé leur physique avec MoovX.</p>
+          <button className="btn-gold" onClick={go('/register-client')} style={{ padding: '20px 64px', fontSize: 16.5 }}>Commencer maintenant — Dès CHF 10/mois</button>
           <div style={{ color: '#2a2a2a', fontSize: 12.5, marginTop: 20, fontWeight: 300 }}>✓ Sans engagement · ✓ Résiliable · ✓ Support inclus</div>
         </div></Reveal>
       </section>
 
       {/* FOOTER */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.03)', background: '#020202' }}>
-        <div className="footer-grid" style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 40px 44px', display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', gap: 48 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}><div style={{ width: 34, height: 34, background: `linear-gradient(135deg,${gold},${goldLight})`, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>⚡</div><div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 19, letterSpacing: 2.5 }}>COACHPRO</div><div style={{ fontSize: 7.5, letterSpacing: 3, color: gold, opacity: 0.6, textTransform: 'uppercase' }}>Elite Performance</div></div></div>
-            <p style={{ color: '#333', fontSize: 13, lineHeight: 1.75, fontWeight: 300, maxWidth: 260, margin: '0 0 22px' }}>La plateforme de coaching fitness propulsée par l'IA.</p>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 40px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 24 }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, background: `linear-gradient(135deg,${gold},${goldLight})`, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>⚡</div>
+            <div><div style={{ fontFamily: "'Bebas Neue'", fontSize: 19, letterSpacing: 2.5 }}>MOOVX</div><div style={{ fontSize: 7.5, letterSpacing: 3, color: gold, opacity: 0.6, textTransform: 'uppercase' }}>Swiss Made · Swiss Quality</div></div>
           </div>
-          {[{t:'Produit',l:['Fonctionnalités','Tarifs','Coachs','PWA']},{t:'Légal',l:['CGU','Confidentialité','RGPD']},{t:'Contact',l:['contact@moovx.ch','Support','Devenir coach']}].map(col => (<div key={col.t}><div style={{ fontSize: 11, color: gold, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 20, fontWeight: 400 }}>{col.t}</div><div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{col.l.map(l => <a key={l} href="#" style={{ color: '#333', textDecoration: 'none', fontSize: 13, fontWeight: 300 }}>{l}</a>)}</div></div>))}
+          <p style={{ color: '#333', fontSize: 13, lineHeight: 1.75, fontWeight: 300, maxWidth: 320, margin: 0 }}>La plateforme de coaching fitness propulsée par l&apos;IA.</p>
+          {/* Link columns — centered row */}
+          <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {[{t:'Produit',l:['Fonctionnalités','Tarifs','Coachs']},{t:'Légal',l:['CGU','Confidentialité','RGPD']},{t:'Contact',l:['contact@moovx.ch','Support','Devenir coach']}].map(col => (
+              <div key={col.t}>
+                <div style={{ fontSize: 11, color: gold, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 14, fontWeight: 400 }}>{col.t}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{col.l.map(l => <a key={l} href="#" style={{ color: '#333', textDecoration: 'none', fontSize: 13, fontWeight: 300 }}>{l}</a>)}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.025)', padding: '22px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ color: '#222', fontSize: 12, fontWeight: 300 }}>© 2026 CoachPro by MoovX · Genève, Suisse</div>
+        {/* Bottom bar */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.025)', padding: '22px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ display: 'flex', gap: 20 }}>{['CGU','Confidentialité','Cookies'].map(l => <a key={l} href="#" style={{ color: '#222', fontSize: 12, textDecoration: 'none', fontWeight: 300 }}>{l}</a>)}</div>
+          <div style={{ color: '#222', fontSize: 12, fontWeight: 300 }}>© 2026 MoovX · Swiss Made · Genève, Suisse</div>
         </div>
       </footer>
     </div>
