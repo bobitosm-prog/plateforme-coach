@@ -2,18 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
 if (!process.env.SUPABASE_SERVICE_ROLE_KEY) console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY manquante — utilisation de ANON_KEY en fallback.')
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
 
-// Plan config — maps planId to Stripe price_id and mode
-const PLAN_CONFIG: Record<string, { envKey: string; mode: 'subscription' | 'payment'; subType: string; amount: number; description: string }> = {
-  client_monthly:  { envKey: 'NEXT_PUBLIC_PRICE_CLIENT_MONTHLY',  mode: 'subscription', subType: 'client_monthly',  amount: 10,  description: 'MoovX Coach IA — Mensuel' },
-  client_yearly:   { envKey: 'NEXT_PUBLIC_PRICE_CLIENT_YEARLY',   mode: 'subscription', subType: 'client_yearly',   amount: 80,  description: 'MoovX Coach IA — Annuel' },
-  client_lifetime: { envKey: 'NEXT_PUBLIC_PRICE_CLIENT_LIFETIME', mode: 'payment',      subType: 'client_lifetime', amount: 150, description: 'MoovX Coach IA — À vie' },
-  coach_monthly:   { envKey: 'NEXT_PUBLIC_PRICE_COACH_MONTHLY',   mode: 'subscription', subType: 'coach_monthly',   amount: 50,  description: 'MoovX Coach Pro — Mensuel' },
+// Static Price ID map — explicit access so Next.js can resolve at build time
+const PRICE_MAP: Record<string, string | undefined> = {
+  client_monthly:  process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY,
+  client_yearly:   process.env.NEXT_PUBLIC_PRICE_CLIENT_YEARLY,
+  client_lifetime: process.env.NEXT_PUBLIC_PRICE_CLIENT_LIFETIME,
+  coach_monthly:   process.env.NEXT_PUBLIC_PRICE_COACH_MONTHLY,
+}
+
+// Plan metadata
+const PLAN_META: Record<string, { mode: 'subscription' | 'payment'; subType: string; amount: number; description: string }> = {
+  client_monthly:  { mode: 'subscription', subType: 'client_monthly',  amount: 10,  description: 'MoovX Coach IA — Mensuel' },
+  client_yearly:   { mode: 'subscription', subType: 'client_yearly',   amount: 80,  description: 'MoovX Coach IA — Annuel' },
+  client_lifetime: { mode: 'payment',      subType: 'client_lifetime', amount: 150, description: 'MoovX Coach IA — À vie' },
+  coach_monthly:   { mode: 'subscription', subType: 'coach_monthly',   amount: 50,  description: 'MoovX Coach Pro — Mensuel' },
 }
 
 export async function POST(req: NextRequest) {
@@ -21,18 +28,29 @@ export async function POST(req: NextRequest) {
     const { clientId, planId, coachId } = await req.json()
     if (!clientId) return NextResponse.json({ error: 'clientId required' }, { status: 400 })
 
+    const resolvedPlanId = planId || 'client_monthly'
+
+    // Check Stripe secret key
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('[checkout] STRIPE_SECRET_KEY is missing')
+      return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
+    }
+
     // Resolve plan
-    const plan = PLAN_CONFIG[planId || 'client_monthly']
+    const plan = PLAN_META[resolvedPlanId]
     if (!plan) return NextResponse.json({ error: 'Invalid planId' }, { status: 400 })
 
-    const priceId = process.env[plan.envKey]
-    if (!priceId) return NextResponse.json({ error: `Price ID non configuré : ${plan.envKey}. Ajoutez-le dans les variables d'environnement Vercel.` }, { status: 500 })
+    // Resolve price ID — static access, no dynamic process.env[key]
+    const priceId = PRICE_MAP[resolvedPlanId]
+    if (!priceId) {
+      console.error('[checkout] Price ID missing for plan:', resolvedPlanId, 'Available:', Object.entries(PRICE_MAP).map(([k, v]) => `${k}=${v ? 'SET' : 'MISSING'}`))
+      return NextResponse.json({ error: 'Price ID non configuré pour ce plan' }, { status: 500 })
+    }
 
-    const stripe = getStripe()
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
 
     // Get the platform owner's Stripe Connect account for receiving payments
-    // Only use transfer_data if the owner has a fully onboarded Stripe account
     const { data: ownerProfile } = await supabase
       .from('profiles')
       .select('stripe_account_id, stripe_onboarding_complete')
@@ -41,7 +59,7 @@ export async function POST(req: NextRequest) {
     const ownerStripeAccountId = (ownerProfile?.stripe_account_id && ownerProfile?.stripe_onboarding_complete) ? ownerProfile.stripe_account_id : null
 
     // Determine redirect based on role
-    const isCoachPlan = planId === 'coach_monthly'
+    const isCoachPlan = resolvedPlanId === 'coach_monthly'
     const successPath = isCoachPlan ? '/coach?payment=success' : '/?payment=success'
     const cancelPath = isCoachPlan ? '/coach?payment=cancel' : '/?payment=cancel'
 
@@ -51,7 +69,7 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}${successPath}`,
       cancel_url: `${baseUrl}${cancelPath}`,
-      metadata: { clientId, planId: planId || 'client_monthly', coachId: coachId || 'platform', subType: plan.subType },
+      metadata: { clientId, planId: resolvedPlanId, coachId: coachId || 'platform', subType: plan.subType },
     }
 
     // For subscription mode, set subscription_data
@@ -75,9 +93,9 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('[stripe/checkout] Creating session:', {
-      planId, priceId, mode: plan.mode, ownerStripeAccountId,
+      planId: resolvedPlanId, priceId, mode: plan.mode,
+      hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
       hasTransfer: !!ownerStripeAccountId,
-      envKeys: { STRIPE_SECRET_KEY: !!process.env.STRIPE_SECRET_KEY, [plan.envKey]: !!process.env[plan.envKey], STRIPE_PRICE_ID: !!process.env.STRIPE_PRICE_ID },
     })
 
     const session = await stripe.checkout.sessions.create(sessionParams)
