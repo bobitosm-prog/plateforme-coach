@@ -2,12 +2,13 @@
 import React, { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download } from 'lucide-react'
+import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3 } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import { toast } from 'sonner'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
 } from '../../../lib/design-tokens'
+import AnalyticsSection from '../AnalyticsSection'
 
 const GOLD = '#C9A84C'
 
@@ -28,7 +29,7 @@ const EVOLUTION_METRICS = [
   { key: 'body_fat', label: '% MG', unit: '%', source: 'measure' },
 ]
 
-type SubTab = 'mesures' | 'photos' | 'evolution'
+type SubTab = 'mesures' | 'photos' | 'evolution' | 'analytics'
 
 interface ProgressTabProps {
   supabase: any
@@ -44,12 +45,27 @@ interface ProgressTabProps {
   chartMin: number
   chartMax: number
   onRefresh: () => void
+  // Analytics
+  personalRecords: any[]
+  weeklyCalories: { date: string; calories: number; proteins: number; carbs: number; fats: number }[]
+  weeklyWater: { date: string; ml: number }[]
+  weeklyVolume: { week: string; volume: number }[]
+  weightHistoryFull: { date: string; poids: number }[]
+  wSessions: any[]
+  calorieGoal: number
+  goalWeight: number | null
+  waterGoal: number
+  streak: number
+  currentWeight: number | undefined
 }
 
 export default function ProgressTab({
   supabase, session, weightHistory30, measurements, progressPhotos,
   photoRef, photoUploading, uploadProgressPhoto, deletePhoto,
   setModal, chartMin, chartMax, onRefresh,
+  personalRecords, weeklyCalories, weeklyWater, weeklyVolume,
+  weightHistoryFull, wSessions, calorieGoal, goalWeight, waterGoal,
+  streak, currentWeight,
 }: ProgressTabProps) {
   const [subTab, setSubTab] = useState<SubTab>('mesures')
   const [showCompare, setShowCompare] = useState(false)
@@ -171,6 +187,7 @@ export default function ProgressTab({
           { id: 'mesures' as SubTab, label: 'Mesures', icon: Ruler },
           { id: 'photos' as SubTab, label: 'Photos', icon: Camera },
           { id: 'evolution' as SubTab, label: 'Évolution', icon: TrendingUp },
+          { id: 'analytics' as SubTab, label: 'Analytics', icon: BarChart3 },
         ]).map(({ id, label, icon: Icon }) => {
           const active = subTab === id
           return (
@@ -465,6 +482,24 @@ export default function ProgressTab({
             </div>
           )}
         </div>
+      )}
+
+      {/* ═══ ANALYTICS SUB-TAB ═══ */}
+      {subTab === 'analytics' && (
+        <AnalyticsSection
+          personalRecords={personalRecords}
+          weeklyCalories={weeklyCalories}
+          weeklyWater={weeklyWater}
+          weeklyVolume={weeklyVolume}
+          weightHistoryFull={weightHistoryFull}
+          weightHistory30={weightHistory30}
+          wSessions={wSessions}
+          calorieGoal={calorieGoal}
+          goalWeight={goalWeight}
+          waterGoal={waterGoal}
+          streak={streak}
+          currentWeight={currentWeight}
+        />
       )}
 
       <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />

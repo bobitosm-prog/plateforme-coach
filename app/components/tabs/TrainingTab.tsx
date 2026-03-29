@@ -11,6 +11,7 @@ import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
   MUSCLE_COLORS, WEEK_DAYS, JS_DAYS_FR,
 } from '../../../lib/design-tokens'
+import { toast } from 'sonner'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 import CardioSection from '../CardioSection'
@@ -35,11 +36,12 @@ interface TrainingTabProps {
   calendarSelectedDate: Date
   setCalendarSelectedDate: (d: Date) => void
   markSessionCompleted: (id: string) => Promise<void>
+  checkForPR: (exerciseName: string, weight: number, reps: number) => Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }>
 }
 
 export default function TrainingTab({
   supabase, session, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
-  scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted,
+  scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
 }: TrainingTabProps) {
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
@@ -241,6 +243,22 @@ export default function TrainingTab({
       duration_minutes: Math.max(duration, 1),
       notes: `${doneSetsCount}/${totalSetsCount} séries · ${exs.length} exercices`,
     })
+
+    // Check for personal records
+    for (const ex of exs) {
+      const inputs = setInputs[ex.name] || []
+      for (const input of inputs) {
+        const weight = parseFloat(input.kg)
+        const reps = parseInt(input.reps)
+        if (weight > 0 && reps > 0) {
+          const result = await checkForPR(ex.name, weight, reps)
+          if (result.newPR) {
+            toast.success(`🏆 NOUVEAU RECORD ! ${result.exercise} — ${result.value} kg (1RM)`, { duration: 5000 })
+          }
+        }
+      }
+    }
+
     exs.forEach((ex: any) => {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(`moovx-sets-${todayStr}-${ex.name}`)
