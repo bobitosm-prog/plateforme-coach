@@ -298,6 +298,7 @@ export default function LandingPage() {
   const pwaRev = useReveal();
   const pricingRev = useReveal();
   const faqRev = useReveal();
+  const geneveRev = useReveal();
   const ctaRev = useReveal();
 
   const smoothScroll = useCallback((e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -499,7 +500,7 @@ export default function LandingPage() {
             transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
           }}>
-            La plateforme fitness suisse propulsée par l'intelligence artificielle. Nutrition personnalisée, entraînement hypertrophie, suivi complet.
+            Coaching fitness à Genève propulsé par l'intelligence artificielle. Nutrition personnalisée, entraînement hypertrophie, suivi complet.
           </p>
 
           <div className="hero-buttons" style={{
@@ -591,7 +592,7 @@ export default function LandingPage() {
         {/* ─── COACH IA ─── */}
         <div ref={coachIaRev.ref} id="coach-ia">
           <Section>
-            <SectionTitle title="TON COACH IA PERSONNEL" subtitle="Pose n'importe quelle question fitness ou nutrition" visible={coachIaRev.visible} />
+            <SectionTitle title="TON COACH IA PERSONNEL" subtitle="Pose n'importe quelle question fitness ou nutrition — à Genève, disponible 24/7" visible={coachIaRev.visible} />
             <div style={{
               maxWidth: 700,
               margin: '0 auto',
@@ -837,6 +838,27 @@ export default function LandingPage() {
             }}>
               {FAQ_DATA.map(f => <FaqItem key={f.q} q={f.q} a={f.a} />)}
             </div>
+          </Section>
+        </div>
+
+        {/* ─── SEO GENÈVE ─── */}
+        <div ref={geneveRev.ref}>
+          <Section>
+            <SectionTitle title="COACHING FITNESS À GENÈVE" subtitle="La première plateforme de coaching fitness suisse propulsée par l'IA" visible={geneveRev.visible} />
+            <p style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 16,
+              color: '#6b7280',
+              lineHeight: 1.8,
+              maxWidth: 700,
+              margin: '0 auto',
+              textAlign: 'center',
+              opacity: geneveRev.visible ? 1 : 0,
+              transform: geneveRev.visible ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
+            }}>
+              Basé à Genève, MoovX est la première plateforme de coaching fitness suisse propulsée par l&apos;intelligence artificielle. Que tu sois à Plainpalais, aux Eaux-Vives, à Carouge ou aux Pâquis, ton coach IA t&apos;accompagne partout. Plans nutrition adaptés aux produits suisses, programme musculation professionnel, suivi de progression complet.
+            </p>
           </Section>
         </div>
 

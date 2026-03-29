@@ -3,17 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MoovX — Coaching Fitness IA · Swiss Made</title>
-  <meta name="description" content="Plans nutrition IA, programme PPL 6 jours, scanner code-barres, recettes fitness, coach IA. Dès CHF 10/mois.">
+  <title>MoovX — Coaching Fitness IA à Genève | Plans Nutrition & Entraînement Personnalisés</title>
+  <meta name="description" content="Coaching fitness à Genève propulsé par l'intelligence artificielle. Plans nutrition personnalisés, programme musculation PPL 6 jours, scanner code-barres, recettes fitness. Dès CHF 10/mois. Swiss Made.">
+  <meta name="keywords" content="coaching fitness Genève, coach sportif Genève, plan nutrition Genève, musculation Genève, programme entraînement Genève, coaching IA, personal trainer Genève, salle de sport Genève, nutrition sportive Suisse, fitness Suisse romande, coach personnel Genève, programme musculation, plan alimentaire personnalisé, PPL programme, HIIT Genève">
+  <meta name="geo.region" content="CH-GE">
+  <meta name="geo.placename" content="Genève">
+  <meta name="geo.position" content="46.2044;6.1432">
+  <meta name="ICBM" content="46.2044, 6.1432">
   <link rel="canonical" href="https://moovx.ch">
   <link rel="alternate" hreflang="fr" href="https://moovx.ch">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="MoovX — Coaching Fitness IA · Swiss Made">
-  <meta property="og:description" content="Plans nutrition IA, programme PPL 6 jours, scanner code-barres, recettes fitness, coach IA. Dès CHF 10/mois.">
+  <meta property="og:title" content="MoovX — Coaching Fitness IA à Genève">
+  <meta property="og:description" content="Plans nutrition IA, programme PPL 6 jours, scanner code-barres, recettes fitness. Coaching sportif nouvelle génération à Genève. Dès CHF 10/mois.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://moovx.ch">
   <meta property="og:image" content="https://moovx.ch/og-image.png">
+  <meta property="og:locale" content="fr_CH">
+  <meta property="og:site_name" content="MoovX - Coaching Fitness Genève">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
@@ -26,115 +33,79 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- JSON-LD: Organization -->
+  <!-- JSON-LD -->
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "MoovX",
-    "url": "https://moovx.ch",
-    "logo": "https://moovx.ch/og-image.png",
-    "description": "Plateforme de coaching fitness suisse propulsée par l'intelligence artificielle.",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Genève",
-      "addressCountry": "CH"
-    }
-  }
-  </script>
-  <!-- JSON-LD: SoftwareApplication -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "MoovX",
-    "operatingSystem": "Web, iOS, Android",
-    "applicationCategory": "HealthApplication",
-    "offers": {
-      "@type": "Offer",
-      "price": "10",
-      "priceCurrency": "CHF",
-      "priceValidUntil": "2027-12-31"
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://moovx.ch/#organization",
+      "name": "MoovX",
+      "alternateName": "MoovX Coaching Fitness",
+      "url": "https://moovx.ch",
+      "logo": "https://app.moovx.ch/icon-512x512.png",
+      "description": "Coaching fitness à Genève propulsé par l'intelligence artificielle",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Genève",
+        "addressRegion": "GE",
+        "addressCountry": "CH"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 46.2044,
+        "longitude": 6.1432
+      },
+      "areaServed": [
+        { "@type": "City", "name": "Genève" },
+        { "@type": "State", "name": "Suisse romande" }
+      ]
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "120"
-    }
-  }
-  </script>
-  <!-- JSON-LD: FAQPage -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "C'est quoi MoovX ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "MoovX est une plateforme de coaching fitness suisse propulsée par l'intelligence artificielle. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Comment fonctionne la nutrition IA ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "L'IA analyse ton profil (poids, objectif, activité) et génère des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Le scanner code-barres fonctionne comment ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Scanne le code-barres de tes produits avec la caméra de ton téléphone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute à ton journal."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "C'est quoi le programme PPL ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Push/Pull/Legs est un split d'entraînement sur 6 jours optimisé pour l'hypertrophie. Push (poitrine, épaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaillé 2 fois par semaine."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Mes données sont sécurisées ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes données sont hébergées en Europe et tu peux les exporter ou supprimer ton compte à tout moment."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Je peux essayer gratuitement ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Oui ! Tu bénéficies de 10 jours d'essai gratuit avec accès à toutes les fonctionnalités. Sans engagement, sans carte de crédit requise."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Comment installer l'app ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter à l'écran d'accueil. Sur Android : Chrome, menu, Installer l'application."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "C'est quoi le Coach IA ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Un assistant intelligent qui connaît ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entraînement, il te répond de manière personnalisée en français."
-        }
+    {
+      "@type": "SoftwareApplication",
+      "name": "MoovX",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "description": "Application de coaching fitness et nutrition à Genève. Plans alimentaires IA, programme musculation PPL, scanner code-barres, recettes fitness.",
+      "url": "https://app.moovx.ch",
+      "offers": [
+        { "@type": "Offer", "name": "MoovX Mensuel", "price": "10.00", "priceCurrency": "CHF", "description": "Coaching fitness complet - abonnement mensuel" },
+        { "@type": "Offer", "name": "MoovX Annuel", "price": "80.00", "priceCurrency": "CHF", "description": "Coaching fitness complet - abonnement annuel" },
+        { "@type": "Offer", "name": "MoovX À Vie", "price": "150.00", "priceCurrency": "CHF", "description": "Coaching fitness complet - accès permanent" }
+      ],
+      "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "12", "bestRating": "5" }
+    },
+    {
+      "@type": "LocalBusiness",
+      "name": "MoovX - Coaching Fitness Genève",
+      "description": "Coach fitness et nutrition à Genève. Plans personnalisés par intelligence artificielle.",
+      "url": "https://moovx.ch",
+      "address": { "@type": "PostalAddress", "addressLocality": "Genève", "addressRegion": "GE", "postalCode": "1200", "addressCountry": "CH" },
+      "geo": { "@type": "GeoCoordinates", "latitude": 46.2044, "longitude": 6.1432 },
+      "priceRange": "CHF 10-150",
+      "openingHours": "Mo-Su 00:00-23:59",
+      "serviceArea": { "@type": "GeoCircle", "geoMidpoint": { "@type": "GeoCoordinates", "latitude": 46.2044, "longitude": 6.1432 }, "geoRadius": "50000" },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Services de coaching fitness",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Coaching Nutrition IA", "description": "Plans alimentaires personnalisés générés par intelligence artificielle" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Programme Musculation PPL", "description": "Programme Push Pull Legs 6 jours, hypertrophie, 89 exercices guidés" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Suivi Progression", "description": "Analytics avancé, records personnels, photos avant/après" } }
+        ]
       }
-    ]
-  }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Comment fonctionne le coaching fitness MoovX à Genève ?", "acceptedAnswer": { "@type": "Answer", "text": "MoovX est une application de coaching fitness basée à Genève qui utilise l'intelligence artificielle pour générer des plans nutrition et des programmes d'entraînement personnalisés." } },
+        { "@type": "Question", "name": "Combien coûte le coaching fitness MoovX ?", "acceptedAnswer": { "@type": "Answer", "text": "MoovX propose 3 formules : mensuel à CHF 10/mois, annuel à CHF 80/an, ou accès à vie à CHF 150. Toutes les fonctionnalités sont incluses avec 10 jours d'essai gratuit." } },
+        { "@type": "Question", "name": "Est-ce que MoovX remplace un coach sportif à Genève ?", "acceptedAnswer": { "@type": "Answer", "text": "MoovX combine l'IA et le coaching humain. L'IA génère vos plans personnalisés et un coach professionnel peut ajuster votre programme." } }
+      ]
+    }
+  ]
+}
   </script>
 
   <style>
@@ -866,7 +837,7 @@
     <div class="hero-glow"></div>
     <h1 class="reveal-child delay-0">TRANSFORME TON CORPS</h1>
     <p class="subtitle reveal-child delay-150">DÉPASSE TES LIMITES</p>
-    <p class="desc reveal-child delay-300">La plateforme fitness suisse propulsée par l'intelligence artificielle. Nutrition personnalisée, entraînement hypertrophie, suivi complet.</p>
+    <p class="desc reveal-child delay-300">Coaching fitness à Genève propulsé par l'intelligence artificielle. Nutrition personnalisée, entraînement hypertrophie, suivi complet.</p>
     <div class="hero-buttons reveal-child delay-450">
       <a href="https://app.moovx.ch/register-client" class="gold-btn">Commencer — 10 jours gratuits</a>
       <a href="#nutrition" class="ghost-btn">Découvrir &darr;</a>
@@ -1030,7 +1001,7 @@
     <div class="section">
       <div class="section-title reveal">
         <h2>TON COACH IA PERSONNEL</h2>
-        <p>Pose n'importe quelle question fitness ou nutrition</p>
+        <p>à Genève, disponible 24/7 — Pose n'importe quelle question fitness ou nutrition</p>
       </div>
       <div class="reveal">
         <div class="coach-ia-card reveal-child delay-200">
@@ -1265,7 +1236,19 @@
     </div>
   </div>
 
-  <!-- ═══════════ 13. CTA FINAL + FOOTER ═══════════ -->
+  <!-- ═══════════ 13. COACHING FITNESS GENÈVE ═══════════ -->
+  <div id="geneve">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>COACHING FITNESS À GENÈVE</h2>
+      </div>
+      <div class="reveal" style="max-width:700px;margin:0 auto;text-align:center">
+        <p style="font-family:'DM Sans',sans-serif;font-size:17px;color:#a0a0a0;line-height:1.8;margin:0">Basé à Genève, MoovX est la première plateforme de coaching fitness suisse propulsée par l'intelligence artificielle. Que tu sois à Plainpalais, aux Eaux-Vives, à Carouge ou aux Pâquis, ton coach IA t'accompagne partout. Plans nutrition adaptés aux produits suisses, programme musculation professionnel, suivi de progression complet. Commence ta transformation dès aujourd'hui.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 14. CTA FINAL + FOOTER ═══════════ -->
   <div class="cta-section reveal" id="cta">
     <div class="cta-glow"></div>
     <h2>PRÊT À TRANSFORMER TON CORPS ?</h2>
