@@ -6,6 +6,9 @@ import { getRole } from '../../lib/getRole'
 import { toast } from 'sonner'
 import { JS_DAYS_FR } from '../../lib/design-tokens'
 import { cache } from '../../lib/cache'
+import {
+  ScheduledSession, buildWeekSessions, getMonday, toDateStr, scheduleLocalReminder,
+} from '../../lib/schedule-utils'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -57,6 +60,11 @@ export default function useClientDashboard() {
   const lastMsgTimestampRef = useRef<string | null>(null)
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
+
+  // Scheduled sessions (calendar)
+  const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([])
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date>(new Date())
+  const reminderTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -203,6 +211,8 @@ export default function useClientDashboard() {
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
+    // Fetch scheduled sessions and auto-generate if needed
+    await fetchScheduledSessions(uid, profileData, !!coachProgData)
     await resolveCoachLink(uid)
     fetchAllComplete.current = true
   }
@@ -359,6 +369,126 @@ export default function useClientDashboard() {
     setUnreadCount(0)
   }
 
+  /* ── Scheduled sessions ── */
+  async function fetchScheduledSessions(uid: string, profileData: any, hasProgram: boolean) {
+    const monday = getMonday(new Date())
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+
+    const { data: existing } = await supabase
+      .from('scheduled_sessions')
+      .select('*')
+      .eq('user_id', uid)
+      .gte('scheduled_date', toDateStr(monday))
+      .lte('scheduled_date', toDateStr(sunday))
+      .order('scheduled_date', { ascending: true })
+
+    let sessions = existing || []
+
+    // Auto-generate if no sessions exist this week and user has a program
+    if (sessions.length === 0 && hasProgram) {
+      const newSessions = buildWeekSessions(uid, monday, {
+        preferred_training_time: profileData.preferred_training_time || '08:00',
+        reminder_enabled: profileData.reminder_enabled !== false,
+        reminder_minutes_before: profileData.reminder_minutes_before ?? 30,
+        cardio_enabled: profileData.cardio_enabled,
+        cardio_frequency: profileData.cardio_frequency,
+        cardio_preference: profileData.cardio_preference,
+      })
+      const { data: inserted } = await supabase
+        .from('scheduled_sessions')
+        .insert(newSessions)
+        .select()
+      sessions = inserted || []
+    }
+
+    setScheduledSessions(sessions)
+    scheduleReminders(sessions)
+  }
+
+  function scheduleReminders(sessions: ScheduledSession[]) {
+    // Clear existing timers
+    reminderTimers.current.forEach(t => clearTimeout(t))
+    reminderTimers.current = []
+
+    const todayStr = toDateStr(new Date())
+    const todaySessions = sessions.filter(s => s.scheduled_date === todayStr && !s.completed)
+
+    for (const session of todaySessions) {
+      const timer = scheduleLocalReminder(session)
+      if (timer) reminderTimers.current.push(timer)
+    }
+
+    // Immediate notification if session is within 30 minutes
+    const now = Date.now()
+    for (const session of todaySessions) {
+      if (session.session_type === 'rest') continue
+      const sessionTime = new Date(`${session.scheduled_date}T${session.scheduled_time}`).getTime()
+      const diff = sessionTime - now
+      if (diff > 0 && diff < 30 * 60 * 1000 && Notification.permission === 'granted') {
+        const minsLeft = Math.round(diff / 60000)
+        new Notification('MoovX — Bientôt ta séance ! 💪', {
+          body: `${session.title} dans ${minsLeft} min`,
+          icon: '/icon-192.png',
+          tag: `session-soon-${session.id}`,
+        })
+      }
+    }
+  }
+
+  async function markSessionCompleted(sessionId: string) {
+    const { error } = await supabase
+      .from('scheduled_sessions')
+      .update({ completed: true, completed_at: new Date().toISOString() })
+      .eq('id', sessionId)
+    if (!error) {
+      setScheduledSessions(prev =>
+        prev.map(s => s.id === sessionId ? { ...s, completed: true, completed_at: new Date().toISOString() } : s)
+      )
+    }
+  }
+
+  async function regenerateWeekSchedule() {
+    const uid = session?.user?.id
+    if (!uid || !profile) return
+    const monday = getMonday(new Date())
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+
+    // Delete existing sessions for this week
+    await supabase
+      .from('scheduled_sessions')
+      .delete()
+      .eq('user_id', uid)
+      .gte('scheduled_date', toDateStr(monday))
+      .lte('scheduled_date', toDateStr(sunday))
+
+    // Generate new ones
+    const newSessions = buildWeekSessions(uid, monday, {
+      preferred_training_time: profile.preferred_training_time || '08:00',
+      reminder_enabled: profile.reminder_enabled !== false,
+      reminder_minutes_before: profile.reminder_minutes_before ?? 30,
+      cardio_enabled: profile.cardio_enabled,
+      cardio_frequency: profile.cardio_frequency,
+      cardio_preference: profile.cardio_preference,
+    })
+    const { data: inserted } = await supabase
+      .from('scheduled_sessions')
+      .insert(newSessions)
+      .select()
+    setScheduledSessions(inserted || [])
+    scheduleReminders(inserted || [])
+    toast.success('Planning régénéré !')
+  }
+
+  async function updateReminderSettings(settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) {
+    const uid = session?.user?.id
+    if (!uid) return
+    await supabase.from('profiles').update(settings).eq('id', uid)
+    setProfile((prev: any) => ({ ...prev, ...settings }))
+    toast.success('Préférences mises à jour')
+  }
+
   /* ── Computed ── */
   const calorieGoal = profile?.calorie_goal || 2500
   const goalWeight = profile?.target_weight ?? null
@@ -449,6 +579,9 @@ export default function useClientDashboard() {
     isSubActive, isInTrial, trialDaysLeft, trialExpired, handleSubscribe,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
+    // Calendar / scheduled sessions
+    scheduledSessions, calendarSelectedDate, setCalendarSelectedDate,
+    markSessionCompleted, regenerateWeekSchedule, updateReminderSettings,
     // Refs
     mainRef,
   }

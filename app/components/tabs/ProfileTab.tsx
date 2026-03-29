@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Trash2, UserMinus, Download, X } from 'lucide-react'
+import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Trash2, UserMinus, Download, X, Clock, Calendar } from 'lucide-react'
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
 import {
@@ -29,6 +29,8 @@ interface ProfileTabProps {
   coachId: string | null
   setModal: (modal: string) => void
   fetchAll: () => Promise<void>
+  updateReminderSettings: (settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) => Promise<void>
+  regenerateWeekSchedule: () => Promise<void>
 }
 
 export default function ProfileTab({
@@ -47,6 +49,8 @@ export default function ProfileTab({
   coachId,
   setModal,
   fetchAll,
+  updateReminderSettings,
+  regenerateWeekSchedule,
 }: ProfileTabProps) {
   const [phoneForm, setPhoneForm] = useState<string>(profile?.phone || '')
   const [phoneEditing, setPhoneEditing] = useState(false)
@@ -198,6 +202,139 @@ export default function ProfileTab({
           {notifStatus === 'done' && <span style={{ fontSize: '0.65rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 8, padding: '4px 8px' }}>Actif</span>}
           {notifStatus === 'idle' && <ChevronRight size={16} color={TEXT_MUTED} />}
         </button>
+      </div>
+
+      {/* ── Reminder settings ── */}
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18, marginBottom: 8 }}>
+        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>
+          Rappels d&apos;entraînement
+        </div>
+
+        {/* Toggle reminders */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Bell size={16} color={profile?.reminder_enabled ? GREEN : TEXT_MUTED} />
+            <span style={{ fontSize: '0.85rem', color: TEXT_PRIMARY }}>Activer les rappels</span>
+          </div>
+          <button
+            onClick={async () => {
+              const newVal = !profile?.reminder_enabled
+              if (newVal && 'Notification' in window && Notification.permission !== 'granted') {
+                const perm = await Notification.requestPermission()
+                if (perm !== 'granted') return
+              }
+              await updateReminderSettings({ reminder_enabled: newVal })
+            }}
+            style={{
+              width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+              background: profile?.reminder_enabled ? GREEN : '#333',
+              position: 'relative', transition: 'background 200ms',
+            }}
+          >
+            <div style={{
+              width: 18, height: 18, borderRadius: '50%', background: '#fff',
+              position: 'absolute', top: 3,
+              left: profile?.reminder_enabled ? 23 : 3,
+              transition: 'left 200ms',
+            }} />
+          </button>
+        </div>
+
+        {/* Preferred training time */}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <Clock size={16} color={TEXT_MUTED} />
+            <span style={{ fontSize: '0.8rem', color: TEXT_MUTED }}>Heure d&apos;entraînement</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {['06:00', '08:00', '12:00', '17:00', '19:00'].map(time => {
+              const isActive = (profile?.preferred_training_time || '08:00') === time
+              return (
+                <button
+                  key={time}
+                  onClick={() => updateReminderSettings({ preferred_training_time: time })}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    background: isActive ? `${ORANGE}20` : BG_BASE,
+                    color: isActive ? ORANGE : TEXT_MUTED,
+                    fontSize: '0.78rem', fontWeight: isActive ? 700 : 500,
+                    outline: isActive ? `1.5px solid ${ORANGE}` : `1px solid ${BORDER}`,
+                  }}
+                >
+                  {time}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Reminder delay */}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <Calendar size={16} color={TEXT_MUTED} />
+            <span style={{ fontSize: '0.8rem', color: TEXT_MUTED }}>Rappel avant la séance</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[{ label: '15 min', value: 15 }, { label: '30 min', value: 30 }, { label: '1h', value: 60 }].map(opt => {
+              const isActive = (profile?.reminder_minutes_before ?? 30) === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => updateReminderSettings({ reminder_minutes_before: opt.value })}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    background: isActive ? `${ORANGE}20` : BG_BASE,
+                    color: isActive ? ORANGE : TEXT_MUTED,
+                    fontSize: '0.78rem', fontWeight: isActive ? 700 : 500,
+                    outline: isActive ? `1.5px solid ${ORANGE}` : `1px solid ${BORDER}`,
+                  }}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Preview */}
+        {profile?.reminder_enabled && (
+          <div style={{
+            background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10,
+            padding: '10px 14px', marginBottom: 12,
+          }}>
+            <span style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>
+              Tu recevras un rappel à{' '}
+              <strong style={{ color: TEXT_PRIMARY }}>
+                {(() => {
+                  const time = profile?.preferred_training_time || '08:00'
+                  const [h, m] = time.split(':').map(Number)
+                  const mins = (profile?.reminder_minutes_before ?? 30)
+                  const totalMin = h * 60 + m - mins
+                  const rH = Math.floor(totalMin / 60)
+                  const rM = totalMin % 60
+                  return `${String(rH).padStart(2, '0')}:${String(rM).padStart(2, '0')}`
+                })()}
+              </strong>
+              {' '}pour ta séance de{' '}
+              <strong style={{ color: TEXT_PRIMARY }}>{profile?.preferred_training_time || '08:00'}</strong>
+            </span>
+          </div>
+        )}
+
+        {/* Regenerate schedule */}
+        {coachProgram && (
+          <button
+            onClick={regenerateWeekSchedule}
+            style={{
+              width: '100%', padding: '10px', background: BG_BASE,
+              border: `1px solid ${BORDER}`, borderRadius: 10, cursor: 'pointer',
+              fontSize: '0.78rem', color: TEXT_MUTED, fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}
+          >
+            🔄 Régénérer le planning de la semaine
+          </button>
+        )}
       </div>
 
       {/* Subscription */}

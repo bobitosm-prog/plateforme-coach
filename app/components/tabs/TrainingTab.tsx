@@ -14,6 +14,9 @@ import {
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 import CardioSection from '../CardioSection'
+import WeekCalendar from '../WeekCalendar'
+import MonthCalendar from '../MonthCalendar'
+import { ScheduledSession, SESSION_COLORS, SESSION_LABELS, getSessionsForDate, toDateStr } from '../../../lib/schedule-utils'
 
 // Hevy-style design tokens
 const BLUE        = '#3B82F6'
@@ -28,10 +31,15 @@ interface TrainingTabProps {
   todaySessionDone: boolean
   startProgramWorkout: (day: any, exercises: any[]) => void
   fetchAll: () => Promise<void>
+  scheduledSessions: ScheduledSession[]
+  calendarSelectedDate: Date
+  setCalendarSelectedDate: (d: Date) => void
+  markSessionCompleted: (id: string) => Promise<void>
 }
 
 export default function TrainingTab({
   supabase, session, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
+  scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted,
 }: TrainingTabProps) {
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
@@ -40,6 +48,7 @@ export default function TrainingTab({
   const [exerciseDetail, setExerciseDetail] = useState<any>(null)
   const [exercisesCache, setExercisesCache] = useState<any[]>([])
   const exercisesCacheLoaded = useRef(false)
+  const [showMonthCalendar, setShowMonthCalendar] = useState(false)
   const [workoutFinished, setWorkoutFinished] = useState(false)
   const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
   const [activeRestExName, setActiveRestExName] = useState<string | null>(null)
@@ -299,6 +308,80 @@ export default function TrainingTab({
           <span style={{ fontSize: '0.72rem', color: TEXT_MUTED, textTransform: 'capitalize' }}>{format(new Date(), 'EEE d MMM', { locale: fr })}</span>
         </div>
       </div>
+
+      {/* ── WEEK CALENDAR ── */}
+      {scheduledSessions.length > 0 && (
+        <div style={{ padding: '0 16px' }}>
+          <WeekCalendar
+            sessions={scheduledSessions}
+            selectedDate={calendarSelectedDate}
+            onSelectDate={(d) => {
+              setCalendarSelectedDate(d)
+              // Sync training day with calendar selection
+              const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+              setTrainingDay(dayNames[d.getDay()])
+            }}
+            onToggleMonth={() => setShowMonthCalendar(v => !v)}
+          />
+          <AnimatePresence>
+            {showMonthCalendar && (
+              <MonthCalendar
+                sessions={scheduledSessions}
+                selectedDate={calendarSelectedDate}
+                onSelectDate={(d) => {
+                  setCalendarSelectedDate(d)
+                  const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+                  setTrainingDay(dayNames[d.getDay()])
+                }}
+                onClose={() => setShowMonthCalendar(false)}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* ── Selected Day Program Summary ── */}
+          {(() => {
+            const daySessions = getSessionsForDate(scheduledSessions, calendarSelectedDate)
+            if (daySessions.length === 0) return null
+            const isRest = daySessions.every(s => s.session_type === 'rest')
+            if (isRest) {
+              return (
+                <div style={{
+                  background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12,
+                  padding: '12px 16px', marginBottom: 12, textAlign: 'center',
+                }}>
+                  <span style={{ fontSize: '0.85rem', color: '#6B7280' }}>Jour de repos 💤 Récupération active recommandée</span>
+                </div>
+              )
+            }
+            return (
+              <div style={{
+                background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12,
+                padding: '12px 16px', marginBottom: 12,
+              }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {daySessions.filter(s => s.session_type !== 'rest').map(s => (
+                    <div key={s.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '4px 10px', borderRadius: 8,
+                      background: `${SESSION_COLORS[s.session_type]}15`,
+                      border: `1px solid ${SESSION_COLORS[s.session_type]}40`,
+                    }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: SESSION_COLORS[s.session_type] }} />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: SESSION_COLORS[s.session_type] }}>
+                        {s.title}
+                      </span>
+                      {s.completed && <span style={{ fontSize: '0.65rem', color: '#22C55E' }}>✓</span>}
+                      {s.duration_min > 0 && (
+                        <span style={{ fontSize: '0.6rem', color: '#6B7280' }}>{s.duration_min}min</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )}
 
       {/* ── ACTIVE SESSION TOP BAR ── */}
       <AnimatePresence>
