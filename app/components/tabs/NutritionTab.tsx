@@ -6,6 +6,7 @@ import NutritionPreferences from '../NutritionPreferences'
 import FoodSearch from '../FoodSearch'
 import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
+import ShoppingList from '../ShoppingList'
 import {
   BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
   NUTRITION_DAYS, todayNutritionKey,
@@ -48,6 +49,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const [showScanner, setShowScanner] = useState(false)
   const [showFridgeScanner, setShowFridgeScanner] = useState(false)
+  const [showShoppingModal, setShowShoppingModal] = useState(false)
   const today = new Date().toISOString().split('T')[0]
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
@@ -248,37 +250,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           })}
         </div>
 
-        {/* Shopping list button + panel */}
-        <button onClick={() => setShowShoppingList(v => !v)} style={{
+        {/* Shopping list button */}
+        <button onClick={() => setShowShoppingModal(true)} style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
-          padding: '10px 16px', borderRadius: 12, border: `1.5px solid ${BORDER}`, cursor: 'pointer',
-          background: showShoppingList ? `${GOLD}15` : BG_CARD,
+          padding: '12px 16px', borderRadius: 12, border: `1.5px solid rgba(201,168,76,0.2)`, cursor: 'pointer',
+          background: 'rgba(201,168,76,0.04)',
           fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700,
-          color: showShoppingList ? GOLD : TEXT_MUTED, marginBottom: 12, transition: 'all 150ms',
+          color: GOLD, marginBottom: 12, transition: 'all 150ms',
         }}>
           <ShoppingCart size={15} strokeWidth={2.5} />
-          Liste de courses (semaine)
-          {showShoppingList ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          🛒 Liste de courses
         </button>
-
-        {showShoppingList && (() => {
-          const items = generateShoppingList(planData)
-          return (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '12px 16px', marginBottom: 12 }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
-                {items.length} aliments pour la semaine
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {items.map(({ name, totalG }) => (
-                  <div key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: `1px solid ${BORDER}` }}>
-                    <span style={{ fontSize: '0.82rem', color: TEXT_PRIMARY }}>{name}</span>
-                    <span style={{ fontSize: '0.75rem', color: TEXT_MUTED, fontWeight: 600, flexShrink: 0, marginLeft: 8 }}>{totalG}g</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })()}
 
         {/* Meals */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -688,6 +670,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* Recipes sub-tab */}
       {subTab === 'recipes' && (
         <RecipesSection supabase={supabase} userId={userId} profile={profile} />
+      )}
+
+      {/* Shopping list modal */}
+      {showShoppingModal && (activeMealPlan?.plan_data || coachMealPlan) && (
+        <ShoppingList
+          planData={activeMealPlan?.plan_data || coachMealPlan}
+          onClose={() => setShowShoppingModal(false)}
+        />
       )}
     </div>
   )
