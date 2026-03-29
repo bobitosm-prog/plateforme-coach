@@ -13,6 +13,7 @@ import {
 } from '../../../lib/design-tokens'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
+import CardioSection from '../CardioSection'
 
 // Hevy-style design tokens
 const BLUE        = '#3B82F6'
@@ -720,6 +721,11 @@ export default function TrainingTab({
           )}
         </>
       )}
+
+      {/* Cardio Section */}
+      <div style={{ padding: '0 16px 16px' }}>
+        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={80} />
+      </div>
 
       {/* Exercise DB Modal */}
       {showExDbModal && (
