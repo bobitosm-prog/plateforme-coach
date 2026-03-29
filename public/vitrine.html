@@ -1,755 +1,1319 @@
 <!DOCTYPE html>
-<html lang="fr" dir="ltr">
+<html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MoovX — Coaching Fitness IA · Swiss Made</title>
-<meta name="description" content="Coaching fitness propulsé par l'intelligence artificielle. Plans alimentaires personnalisés, entraînement PPL 6 jours, 170 aliments fitness. Swiss Made depuis Genève.">
-<meta name="robots" content="index, follow">
-<meta name="theme-color" content="#C9A84C">
-<link rel="canonical" href="https://moovx.ch">
-<link rel="alternate" hreflang="fr" href="https://moovx.ch">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoovX — Coaching Fitness IA · Swiss Made</title>
+  <meta name="description" content="Plans nutrition IA, programme PPL 6 jours, scanner code-barres, recettes fitness, coach IA. Dès CHF 10/mois.">
+  <link rel="canonical" href="https://moovx.ch">
+  <link rel="alternate" hreflang="fr" href="https://moovx.ch">
 
-<!-- Open Graph -->
-<meta property="og:title" content="MoovX — Coaching Fitness IA · Swiss Made">
-<meta property="og:description" content="Coaching fitness propulsé par l'IA. Plans alimentaires et entraînement personnalisés. 170 aliments fitness. Swiss Made.">
-<meta property="og:image" content="https://moovx.ch/og-image.png">
-<meta property="og:url" content="https://moovx.ch">
-<meta property="og:type" content="website">
-<meta property="og:locale" content="fr_CH">
-<meta property="og:site_name" content="MoovX">
+  <!-- Open Graph -->
+  <meta property="og:title" content="MoovX — Coaching Fitness IA · Swiss Made">
+  <meta property="og:description" content="Plans nutrition IA, programme PPL 6 jours, scanner code-barres, recettes fitness, coach IA. Dès CHF 10/mois.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://moovx.ch">
+  <meta property="og:image" content="https://moovx.ch/og-image.png">
 
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="MoovX — Coaching Fitness IA · Swiss Made">
-<meta name="twitter:description" content="Coaching fitness propulsé par l'IA. Plans alimentaires et entraînement personnalisés. 170 aliments fitness.">
-<meta name="twitter:image" content="https://moovx.ch/og-image.png">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MoovX — Coaching Fitness IA · Swiss Made">
+  <meta name="twitter:description" content="Plans nutrition IA, programme PPL 6 jours, scanner code-barres, recettes fitness, coach IA. Dès CHF 10/mois.">
+  <meta name="twitter:image" content="https://moovx.ch/og-image.png">
 
-<!-- JSON-LD Structured Data -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "name": "MoovX",
-      "url": "https://moovx.ch",
-      "logo": "https://moovx.ch/logo.png",
-      "description": "Coaching fitness propulsé par l'intelligence artificielle. Swiss Made.",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Genève",
-        "addressCountry": "CH"
-      },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "email": "contact@moovx.ch",
-        "contactType": "customer support"
-      }
-    },
-    {
-      "@type": "SoftwareApplication",
-      "name": "MoovX",
-      "operatingSystem": "Web, iOS, Android",
-      "applicationCategory": "HealthApplication",
-      "description": "Coaching fitness IA avec plans alimentaires personnalisés et entraînement PPL 6 jours.",
-      "url": "https://app.moovx.ch",
-      "offers": {
-        "@type": "Offer",
-        "price": "10",
-        "priceCurrency": "CHF",
-        "description": "Dès CHF 10/mois"
-      }
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Qu'est-ce que MoovX ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "MoovX est une plateforme de coaching fitness propulsée par l'intelligence artificielle. Elle propose des plans alimentaires personnalisés avec 170 aliments fitness et un programme d'entraînement PPL sur 6 jours."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Combien coûte MoovX ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "MoovX est disponible dès CHF 10/mois avec 10 jours d'essai gratuit, sans engagement."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "MoovX est-il disponible en Suisse ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Oui, MoovX est une application Swiss Made développée à Genève, Suisse. Elle est accessible partout via navigateur web ou en tant que PWA installable."
-          }
-        }
-      ]
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Accueil",
-          "item": "https://moovx.ch"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Application",
-          "item": "https://app.moovx.ch"
-        }
-      ]
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- JSON-LD: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "MoovX",
+    "url": "https://moovx.ch",
+    "logo": "https://moovx.ch/og-image.png",
+    "description": "Plateforme de coaching fitness suisse propulsee par l'intelligence artificielle.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Geneve",
+      "addressCountry": "CH"
     }
-  ]
-}
-</script>
-
-<!-- Google Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<style>
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
-  color: #ffffff;
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Grain overlay */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  opacity: 0.015;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-/* Keyframes */
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  </script>
+  <!-- JSON-LD: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "MoovX",
+    "operatingSystem": "Web, iOS, Android",
+    "applicationCategory": "HealthApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "10",
+      "priceCurrency": "CHF",
+      "priceValidUntil": "2027-12-31"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "120"
+    }
   }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.5; }
-}
-
-/* Hero */
-.hero {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 60px 24px;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-orb {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(201, 168, 76, 0.08) 0%, transparent 70%);
-  pointer-events: none;
-  animation: pulseGlow 6s ease-in-out infinite;
-}
-
-.logo-block {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 48px;
-  animation: fadeUp 0.8s ease-out both;
-}
-
-.logo-icon {
-  width: 52px;
-  height: 52px;
-  background: linear-gradient(135deg, #C9A84C, #F0D060);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 28px;
-  color: #050505;
-  font-weight: 400;
-}
-
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.logo-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 32px;
-  letter-spacing: 6px;
-  color: #ffffff;
-  line-height: 1;
-}
-
-.logo-tagline {
-  font-size: 11px;
-  color: #666;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-weight: 400;
-}
-
-.hero-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(48px, 10vw, 96px);
-  letter-spacing: 4px;
-  line-height: 1;
-  color: #ffffff;
-  animation: fadeUp 0.8s ease-out 0.15s both;
-}
-
-.hero-subtitle {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(24px, 5vw, 42px);
-  letter-spacing: 6px;
-  background: linear-gradient(90deg, #C9A84C, #F0D060);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-top: 8px;
-  animation: fadeUp 0.8s ease-out 0.3s both;
-}
-
-.hero-body {
-  max-width: 520px;
-  font-size: 16px;
-  line-height: 1.7;
-  color: #666;
-  font-weight: 300;
-  margin-top: 28px;
-  animation: fadeUp 0.8s ease-out 0.45s both;
-}
-
-.hero-cta {
-  display: inline-block;
-  margin-top: 40px;
-  padding: 16px 48px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: #050505;
-  background: linear-gradient(90deg, #C9A84C, #F0D060, #C9A84C);
-  background-size: 200% auto;
-  border: none;
-  border-radius: 60px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: fadeUp 0.8s ease-out 0.6s both, shimmer 3s ease-in-out infinite;
-}
-
-.hero-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(201, 168, 76, 0.3);
-}
-
-.hero-stats {
-  display: flex;
-  gap: 40px;
-  margin-top: 56px;
-  animation: fadeUp 0.8s ease-out 0.75s both;
-}
-
-.hero-stat {
-  text-align: center;
-}
-
-.hero-stat-value {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px;
-  letter-spacing: 2px;
-  color: #C9A84C;
-}
-
-.hero-stat-label {
-  font-size: 12px;
-  color: #555;
-  margin-top: 4px;
-  font-weight: 400;
-}
-
-/* Features */
-.features {
-  padding: 100px 24px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.section-label {
-  text-align: center;
-  font-size: 12px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: #C9A84C;
-  font-weight: 500;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  text-align: center;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(32px, 5vw, 48px);
-  letter-spacing: 3px;
-  margin-bottom: 64px;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.feature-card {
-  background: #0d0d0d;
-  border: 1px solid #141414;
-  border-radius: 16px;
-  padding: 40px 32px;
-  transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-4px);
-  border-color: #C9A84C;
-  box-shadow: 0 8px 40px rgba(201, 168, 76, 0.08);
-}
-
-.feature-icon {
-  font-size: 32px;
-  margin-bottom: 20px;
-}
-
-.feature-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 24px;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
-}
-
-.feature-desc {
-  font-size: 14px;
-  line-height: 1.7;
-  color: #666;
-  font-weight: 300;
-}
-
-/* Stats Band */
-.stats-band {
-  padding: 80px 24px;
-  border-top: 1px solid #111;
-  border-bottom: 1px solid #111;
-}
-
-.stats-row {
-  display: flex;
-  justify-content: center;
-  gap: 64px;
-  max-width: 900px;
-  margin: 0 auto;
-  flex-wrap: wrap;
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-number {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(36px, 5vw, 52px);
-  letter-spacing: 2px;
-  background: linear-gradient(90deg, #C9A84C, #F0D060);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1.1;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #555;
-  margin-top: 6px;
-  font-weight: 400;
-  letter-spacing: 1px;
-}
-
-/* CTA Final */
-.cta-final {
-  padding: 120px 24px;
-  text-align: center;
-  position: relative;
-}
-
-.cta-final-orb {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.cta-final-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(36px, 6vw, 56px);
-  letter-spacing: 4px;
-  margin-bottom: 16px;
-  position: relative;
-}
-
-.cta-final-body {
-  font-size: 16px;
-  color: #666;
-  font-weight: 300;
-  margin-bottom: 40px;
-  position: relative;
-}
-
-.cta-final-btn {
-  display: inline-block;
-  padding: 18px 52px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: #050505;
-  background: linear-gradient(90deg, #C9A84C, #F0D060, #C9A84C);
-  background-size: 200% auto;
-  border: none;
-  border-radius: 60px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: shimmer 3s ease-in-out infinite;
-  position: relative;
-}
-
-.cta-final-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(201, 168, 76, 0.3);
-}
-
-.cta-reassurance {
-  margin-top: 28px;
-  font-size: 13px;
-  color: #555;
-  font-weight: 400;
-  position: relative;
-}
-
-/* Footer */
-.footer {
-  padding: 60px 24px 40px;
-  text-align: center;
-  border-top: 1px solid #0f0f0f;
-}
-
-.footer-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.footer-logo-icon {
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, #C9A84C, #F0D060);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 15px;
-  color: #050505;
-}
-
-.footer-logo-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 4px;
-  color: #333;
-}
-
-.footer-swiss {
-  font-size: 11px;
-  color: #333;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 24px;
-}
-
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.footer-links a {
-  font-size: 13px;
-  color: #444;
-  text-decoration: none;
-  transition: color 0.3s ease;
-  font-weight: 400;
-}
-
-.footer-links a:hover {
-  color: #C9A84C;
-}
-
-.footer-copy {
-  font-size: 12px;
-  color: #1a1a1a;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .features-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
+  </script>
+  <!-- JSON-LD: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "C'est quoi MoovX ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "MoovX est une plateforme de coaching fitness suisse propulsee par l'intelligence artificielle. Elle combine nutrition personnalisee, entrainement hypertrophie PPL, suivi de progression et coaching connecte."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Comment fonctionne la nutrition IA ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "L'IA analyse ton profil (poids, objectif, activite) et genere des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Le scanner code-barres fonctionne comment ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Scanne le code-barres de tes produits avec la camera de ton telephone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute a ton journal."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "C'est quoi le programme PPL ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Push/Pull/Legs est un split d'entrainement sur 6 jours optimise pour l'hypertrophie. Push (poitrine, epaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaille 2 fois par semaine."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mes donnees sont securisees ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes donnees sont hebergees en Europe et tu peux les exporter ou supprimer ton compte a tout moment."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Je peux essayer gratuitement ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui ! Tu beneficies de 10 jours d'essai gratuit avec acces a toutes les fonctionnalites. Sans engagement, sans carte de credit requise."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Comment installer l'app ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter a l'ecran d'accueil. Sur Android : Chrome, menu, Installer l'application."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "C'est quoi le Coach IA ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Un assistant intelligent qui connait ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entrainement, il te repond de maniere personnalisee en francais."
+        }
+      }
+    ]
   }
+  </script>
 
-  .feature-card {
-    padding: 32px 24px;
-  }
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: #050505; color: #f8fafc; font-family: 'DM Sans', sans-serif; }
 
-  .hero {
-    padding: 40px 20px;
-  }
+    /* ── Grain overlay ── */
+    .grain {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0.015;
+      pointer-events: none;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 128px 128px;
+    }
 
-  .hero-stats {
-    gap: 24px;
-  }
+    /* ── Animations ── */
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
 
-  .stats-row {
-    gap: 32px;
-  }
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-child {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible .reveal-child {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-  .stat-item {
-    min-width: 120px;
-  }
+    /* ── Navbar ── */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: all 0.3s;
+    }
+    .navbar.scrolled {
+      background: rgba(5,5,5,0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .navbar-brand .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: #C9A84C;
+      letter-spacing: 3px;
+      text-decoration: none;
+    }
+    .navbar-brand .tagline {
+      font-size: 11px;
+      color: #6b7280;
+      border-left: 1px solid #333;
+      padding-left: 12px;
+    }
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-  .logo-block {
-    margin-bottom: 36px;
-  }
+    /* ── Buttons ── */
+    .gold-btn {
+      background: linear-gradient(135deg, #C9A84C, #b8943f);
+      color: #050505;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .gold-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(201,168,76,0.3);
+    }
+    .ghost-btn {
+      background: transparent;
+      color: #f8fafc;
+      border: 1px solid #333;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .ghost-btn:hover {
+      border-color: #C9A84C;
+      color: #C9A84C;
+    }
 
-  .hero-body {
-    font-size: 15px;
-  }
+    /* ── Section ── */
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+    .section-title {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .section-title h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(36px, 5vw, 56px);
+      color: #f8fafc;
+      margin: 0 0 12px;
+      letter-spacing: 2px;
+    }
+    .section-title p {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      color: #C9A84C;
+      margin: 0;
+    }
 
-  .cta-final {
-    padding: 80px 24px;
-  }
+    /* ── Feature grid ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
 
-  .footer-links {
-    gap: 20px;
-  }
+    /* ── Feature card ── */
+    .feature-card {
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-radius: 12px;
+      padding: 28px 24px;
+      cursor: default;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(201,168,76,0.3);
+      box-shadow: 0 8px 30px rgba(201,168,76,0.08);
+    }
+    .feature-card .icon { margin-bottom: 16px; }
+    .feature-card h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      color: #f8fafc;
+      margin: 0 0 8px;
+    }
+    .feature-card p {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0;
+      line-height: 1.6;
+    }
 
-  .section-title {
-    margin-bottom: 48px;
-  }
-}
-</style>
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(60px, 10vw, 120px);
+      color: #f8fafc;
+      margin: 0 0 8px;
+      letter-spacing: 4px;
+      line-height: 1;
+      position: relative;
+    }
+    .hero .subtitle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(20px, 3vw, 32px);
+      color: #C9A84C;
+      margin: 0 0 24px;
+      letter-spacing: 6px;
+      position: relative;
+    }
+    .hero .desc {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      color: #6b7280;
+      max-width: 560px;
+      line-height: 1.7;
+      margin: 0 0 40px;
+      position: relative;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 48px;
+      position: relative;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+    }
+    .hero-stats .stat-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: #C9A84C;
+    }
+    .hero-stats .stat-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: #6b7280;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Marquee ── */
+    .marquee-wrap {
+      border-top: 1px solid rgba(201,168,76,0.2);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      padding: 16px 0;
+      overflow: hidden;
+    }
+    .marquee-track {
+      display: flex;
+      animation: marqueeScroll 30s linear infinite;
+      white-space: nowrap;
+    }
+    .marquee-track span {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      color: #C9A84C;
+      letter-spacing: 4px;
+    }
+
+    /* ── Coach IA card ── */
+    .coach-ia-card {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #111;
+      border: 1px solid #1a1a1a;
+      border-radius: 16px;
+      padding: 48px 40px;
+      text-align: center;
+    }
+    .coach-ia-card p {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      color: #a0a0a0;
+      line-height: 1.8;
+      margin: 0 0 32px;
+    }
+    .coach-ia-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .coach-ia-pills span {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: #C9A84C;
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 20px;
+      padding: 8px 16px;
+      background: rgba(201,168,76,0.05);
+    }
+
+    /* ── Steps ── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      position: relative;
+    }
+    .step { text-align: center; }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 2px solid #C9A84C;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      color: #C9A84C;
+    }
+    .step h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #f8fafc;
+      margin: 0 0 8px;
+    }
+    .step p {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: #6b7280;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .step-line {
+      position: absolute;
+      top: 28px;
+      height: 2px;
+      background: linear-gradient(90deg, #C9A84C, rgba(201,168,76,0.2));
+    }
+
+    /* ── PWA ── */
+    .pwa-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+    .pwa-card {
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-radius: 12px;
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .pwa-card h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #f8fafc;
+      margin: 0 0 8px;
+    }
+    .pwa-card p {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0;
+    }
+    .pwa-badges {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .pwa-badge {
+      text-align: center;
+      padding: 12px;
+      border: 1px solid #1a1a1a;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    /* ── Pricing ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .pricing-card {
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-radius: 16px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: border-color 0.3s, transform 0.3s;
+      position: relative;
+    }
+    .pricing-card:hover {
+      border-color: rgba(201,168,76,0.3);
+      transform: translateY(-4px);
+    }
+    .pricing-card.highlight {
+      border-color: #C9A84C;
+      box-shadow: 0 0 40px rgba(201,168,76,0.1);
+    }
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      background: #C9A84C;
+      color: #050505;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .pricing-card h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: #6b7280;
+      margin: 8px 0 16px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .pricing-card .price {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 44px;
+      color: #f8fafc;
+      line-height: 1;
+    }
+    .pricing-card .period {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
+    .pricing-checklist {
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .pricing-checklist .item {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: #6b7280;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pricing-checklist .more {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: #555;
+      padding: 6px 0;
+    }
+    .pricing-card .gold-btn,
+    .pricing-card .ghost-btn {
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      padding: 12px 0;
+    }
+    .pricing-note {
+      text-align: center;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    /* ── FAQ ── */
+    .faq-list {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .faq-btn {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #f8fafc;
+      text-align: left;
+    }
+    .faq-btn .faq-icon {
+      color: #C9A84C;
+      font-size: 22px;
+      transition: transform 0.3s;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+    }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .faq-item.open .faq-answer {
+      max-height: 300px;
+    }
+    .faq-answer p {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0 0 20px;
+      line-height: 1.7;
+      padding-right: 40px;
+    }
+
+    /* ── CTA final ── */
+    .cta-section {
+      padding: 120px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-glow {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(201,168,76,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-section h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(32px, 5vw, 56px);
+      color: #f8fafc;
+      margin: 0 0 16px;
+      letter-spacing: 2px;
+      position: relative;
+    }
+    .cta-section .cta-desc {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      color: #6b7280;
+      margin: 0 0 32px;
+      position: relative;
+    }
+    .cta-section .cta-fine {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: #555;
+      margin-top: 16px;
+      position: relative;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid #1a1a1a;
+      padding: 40px 24px;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .footer-brand .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      color: #C9A84C;
+      letter-spacing: 2px;
+    }
+    .footer-brand .tagline {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      color: #6b7280;
+    }
+    .footer-copy {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: #555;
+      margin: 0;
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: #6b7280;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover {
+      color: #C9A84C;
+    }
+
+    /* ── Stagger delays ── */
+    .delay-0 { transition-delay: 0ms !important; }
+    .delay-1 { transition-delay: 80ms !important; }
+    .delay-2 { transition-delay: 160ms !important; }
+    .delay-3 { transition-delay: 240ms !important; }
+    .delay-4 { transition-delay: 320ms !important; }
+    .delay-5 { transition-delay: 400ms !important; }
+    .delay-step-0 { transition-delay: 0ms !important; }
+    .delay-step-1 { transition-delay: 120ms !important; }
+    .delay-step-2 { transition-delay: 240ms !important; }
+    .delay-step-3 { transition-delay: 360ms !important; }
+    .delay-price-0 { transition-delay: 0ms !important; }
+    .delay-price-1 { transition-delay: 100ms !important; }
+    .delay-price-2 { transition-delay: 200ms !important; }
+    .delay-price-3 { transition-delay: 300ms !important; }
+    .delay-150 { transition-delay: 150ms !important; }
+    .delay-200 { transition-delay: 200ms !important; }
+    .delay-300 { transition-delay: 300ms !important; }
+    .delay-450 { transition-delay: 450ms !important; }
+    .delay-600 { transition-delay: 600ms !important; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .navbar-links { display: none !important; }
+      .hero-stats { flex-direction: column !important; gap: 12px !important; }
+      .hero-buttons { flex-direction: column !important; align-items: stretch !important; }
+      .hero-buttons a { width: 100% !important; text-align: center !important; }
+      .feature-grid { grid-template-columns: 1fr !important; }
+      .pricing-grid { grid-template-columns: 1fr !important; }
+      .steps-grid { grid-template-columns: 1fr !important; }
+      .step-line { display: none !important; }
+      .pwa-grid { grid-template-columns: 1fr !important; }
+      .pwa-badges { grid-template-columns: 1fr 1fr !important; }
+      .footer-inner { flex-direction: column !important; text-align: center !important; gap: 24px !important; }
+      .footer-links { justify-content: center !important; }
+      .coaching-grid { grid-template-columns: 1fr !important; }
+      .coach-ia-card { padding: 32px 20px; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-orb"></div>
+  <!-- Grain overlay -->
+  <div class="grain"></div>
 
-  <div class="logo-block">
-    <div class="logo-icon">M</div>
-    <div class="logo-text">
-      <span class="logo-name">MOOVX</span>
-      <span class="logo-tagline">🇨🇭 Swiss Made · Swiss Quality</span>
+  <!-- ═══════════ 1. NAVBAR ═══════════ -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-brand">
+      <a href="#" class="logo">MOOVX</a>
+      <span class="tagline">Swiss Made &middot; Swiss Quality</span>
     </div>
-  </div>
-
-  <h1 class="hero-title">TRANSFORME TON CORPS</h1>
-  <p class="hero-subtitle">DÉPASSE TES LIMITES</p>
-  <p class="hero-body">Coaching fitness propulsé par l'IA. Plans alimentaires et entraînement personnalisés. 170 aliments fitness.</p>
-
-  <a href="https://app.moovx.ch" class="hero-cta">Accéder à l'app →</a>
-
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hero-stat-value">170+</div>
-      <div class="hero-stat-label">Aliments</div>
+    <div class="navbar-links">
+      <a href="https://app.moovx.ch/login" class="ghost-btn" style="padding:8px 20px;font-size:13px">Connexion</a>
+      <a href="https://app.moovx.ch/register-client" class="gold-btn" style="padding:8px 20px;font-size:13px">Commencer</a>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-value">6 JOURS</div>
-      <div class="hero-stat-label">Training</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-value">SWISS</div>
-      <div class="hero-stat-label">Made</div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="features">
-  <p class="section-label">Fonctionnalités</p>
-  <h2 class="section-title">TOUT CE QU'IL TE FAUT</h2>
-
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon">🍽️</div>
-      <h3 class="feature-title">NUTRITION IA</h3>
-      <p class="feature-desc">Plans sur 7 jours, macros calculées au gramme près. Base de 170 aliments fitness sélectionnés pour des résultats optimaux.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🏋️</div>
-      <h3 class="feature-title">TRAINING PPL</h3>
-      <p class="feature-desc">Programme 6 jours Push/Pull/Legs structuré. Timer de repos intégré, suivi des sets et progression automatique.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">💬</div>
-      <h3 class="feature-title">COACH CONNECTÉ</h3>
-      <p class="feature-desc">Messagerie directe avec ton coach. Retours personnalisés sur tes performances et suivi de ta progression.</p>
-    </div>
-  </div>
-</section>
-
-<!-- STATS BAND -->
-<section class="stats-band">
-  <div class="stats-row">
-    <div class="stat-item">
-      <div class="stat-number">170+</div>
-      <div class="stat-label">Aliments</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number">6</div>
-      <div class="stat-label">Jours Training</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number">24/7</div>
-      <div class="stat-label">Accès</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number">🇨🇭</div>
-      <div class="stat-label">Swiss Made</div>
-    </div>
-  </div>
-</section>
-
-<!-- INSTALL PWA -->
-<section style="padding:100px 24px;max-width:900px;margin:0 auto;text-align:center">
-  <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,5vw,48px);letter-spacing:4px;color:#F8FAFC;margin-bottom:12px">INSTALLE MOOVX EN 30 SECONDES</h2>
-  <p style="color:#666;font-size:15px;font-weight:300;max-width:500px;margin:0 auto 48px">Pas besoin d'App Store. Installe directement depuis ton navigateur.</p>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:left">
-    <!-- iOS -->
-    <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:20px;padding:36px 28px">
-      <svg width="24" height="29" viewBox="0 0 28 34" fill="none" style="margin-bottom:20px"><path d="M23.2 11.3c-.12.08-3.2 1.84-3.2 5.63 0 4.4 3.86 5.95 3.97 5.99-.02.07-.62 2.11-2.04 4.18-1.25 1.81-2.55 3.62-4.53 3.62s-2.49-1.15-4.78-1.15c-2.23 0-3.02 1.19-4.84 1.19s-3.05-1.67-4.53-3.71C1.02 24.1 0 20.2 0 16.5c0-5.92 3.84-9.05 7.63-9.05 2.01 0 3.69 1.32 4.95 1.32 1.21 0 3.1-1.4 5.4-1.4.87 0 4 .08 5.32 3.43z" fill="#fff"/></svg>
-      <h3 style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:600;color:#F8FAFC;margin-bottom:24px">Sur iPhone</h3>
-      <div style="display:flex;flex-direction:column;gap:18px">
-        <div style="display:flex;align-items:flex-start;gap:14px"><div style="width:28px;height:28px;border-radius:50%;border:1.5px solid #C9A84C;display:flex;align-items:center;justify-content:center;font-size:13px;color:#C9A84C;font-family:'Bebas Neue',sans-serif;flex-shrink:0">1</div><span style="font-size:14px;color:#aaa;line-height:1.6">Ouvre <strong style="color:#ccc">app.moovx.ch</strong> dans Safari</span></div>
-        <div style="display:flex;align-items:flex-start;gap:14px"><div style="width:28px;height:28px;border-radius:50%;border:1.5px solid #C9A84C;display:flex;align-items:center;justify-content:center;font-size:13px;color:#C9A84C;font-family:'Bebas Neue',sans-serif;flex-shrink:0">2</div><span style="font-size:14px;color:#aaa;line-height:1.6">Appuie sur le bouton <strong style="color:#ccc">Partager ⬆️</strong></span></div>
-        <div style="display:flex;align-items:flex-start;gap:14px"><div style="width:28px;height:28px;border-radius:50%;border:1.5px solid #C9A84C;display:flex;align-items:center;justify-content:center;font-size:13px;color:#C9A84C;font-family:'Bebas Neue',sans-serif;flex-shrink:0">3</div><span style="font-size:14px;color:#aaa;line-height:1.6">Choisis <strong style="color:#ccc">« Sur l'écran d'accueil »</strong></span></div>
-      </div>
-      <p style="font-size:12px;color:#444;margin-top:20px;font-style:italic">Fonctionne uniquement avec Safari, pas Chrome.</p>
-    </div>
-    <!-- Android -->
-    <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:20px;padding:36px 28px">
-      <svg width="24" height="28" viewBox="0 0 28 32" fill="none" style="margin-bottom:20px"><path d="M1.54 10.34c-.85 0-1.54.74-1.54 1.65v8.24c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65v-8.24c0-.91-.69-1.65-1.54-1.65zm4.23-.62v13.73c0 .85.65 1.55 1.44 1.55h1.57v4.14c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65V25h2.28v4.14c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65V25h1.57c.79 0 1.44-.7 1.44-1.55V9.72H5.77zm20.69.62c-.85 0-1.54.74-1.54 1.65v8.24c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65v-8.24c0-.91-.69-1.65-1.54-1.65z" fill="#78C257"/></svg>
-      <h3 style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:600;color:#F8FAFC;margin-bottom:24px">Sur Android</h3>
-      <div style="display:flex;flex-direction:column;gap:18px">
-        <div style="display:flex;align-items:flex-start;gap:14px"><div style="width:28px;height:28px;border-radius:50%;border:1.5px solid #C9A84C;display:flex;align-items:center;justify-content:center;font-size:13px;color:#C9A84C;font-family:'Bebas Neue',sans-serif;flex-shrink:0">1</div><span style="font-size:14px;color:#aaa;line-height:1.6">Ouvre <strong style="color:#ccc">app.moovx.ch</strong> dans Chrome</span></div>
-        <div style="display:flex;align-items:flex-start;gap:14px"><div style="width:28px;height:28px;border-radius:50%;border:1.5px solid #C9A84C;display:flex;align-items:center;justify-content:center;font-size:13px;color:#C9A84C;font-family:'Bebas Neue',sans-serif;flex-shrink:0">2</div><span style="font-size:14px;color:#aaa;line-height:1.6">Appuie sur le menu <strong style="color:#ccc">⋮ (3 points)</strong> en haut</span></div>
-        <div style="display:flex;align-items:flex-start;gap:14px"><div style="width:28px;height:28px;border-radius:50%;border:1.5px solid #C9A84C;display:flex;align-items:center;justify-content:center;font-size:13px;color:#C9A84C;font-family:'Bebas Neue',sans-serif;flex-shrink:0">3</div><span style="font-size:14px;color:#aaa;line-height:1.6">Choisis <strong style="color:#ccc">« Installer l'application »</strong></span></div>
-      </div>
-      <p style="font-size:12px;color:#444;margin-top:20px;font-style:italic">Fonctionne avec Chrome, Edge, Samsung Internet.</p>
-    </div>
-  </div>
-  <p style="color:#555;font-size:14px;font-weight:300;max-width:600px;margin:36px auto 20px;line-height:1.7">Une fois installée, MoovX fonctionne comme une app native.</p>
-  <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px">
-    <span style="font-size:12px;font-weight:500;color:#C9A84C;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:20px;padding:6px 16px">✓ Plein écran</span>
-    <span style="font-size:12px;font-weight:500;color:#C9A84C;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:20px;padding:6px 16px">✓ Notifications</span>
-    <span style="font-size:12px;font-weight:500;color:#C9A84C;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:20px;padding:6px 16px">✓ Hors ligne</span>
-    <span style="font-size:12px;font-weight:500;color:#C9A84C;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:20px;padding:6px 16px">✓ Mises à jour auto</span>
-  </div>
-  <style>@media(max-width:768px){section>[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}}</style>
-</section>
-
-<!-- CTA FINAL -->
-<section class="cta-final">
-  <div class="cta-final-orb"></div>
-  <h2 class="cta-final-title">PRÊT À COMMENCER ?</h2>
-  <p class="cta-final-body">Commence ta transformation aujourd'hui. 10 jours d'essai gratuit.</p>
-  <a href="https://app.moovx.ch" class="cta-final-btn">Lancer l'app MoovX →</a>
-  <p class="cta-reassurance">✓ Sans engagement · ✓ Dès CHF 10/mois · ✓ PWA installable</p>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-  <div class="footer-logo">
-    <div class="footer-logo-icon">M</div>
-    <span class="footer-logo-name">MOOVX</span>
-  </div>
-  <p class="footer-swiss">Swiss Made · Swiss Quality</p>
-  <nav class="footer-links">
-    <a href="https://app.moovx.ch">Application</a>
-    <a href="mailto:contact@moovx.ch">Contact</a>
-    <a href="#">CGU</a>
   </nav>
-  <p class="footer-copy">© 2026 MoovX · Genève, Suisse</p>
-</footer>
 
+  <!-- ═══════════ 2. HERO ═══════════ -->
+  <div class="hero reveal" id="hero">
+    <div class="hero-glow"></div>
+    <h1 class="reveal-child delay-0">TRANSFORME TON CORPS</h1>
+    <p class="subtitle reveal-child delay-150">DEPASSE TES LIMITES</p>
+    <p class="desc reveal-child delay-300">La plateforme fitness suisse propulsee par l'intelligence artificielle. Nutrition personnalisee, entrainement hypertrophie, suivi complet.</p>
+    <div class="hero-buttons reveal-child delay-450">
+      <a href="https://app.moovx.ch/register-client" class="gold-btn">Commencer — 10 jours gratuits</a>
+      <a href="#nutrition" class="ghost-btn">Decouvrir &darr;</a>
+    </div>
+    <div class="hero-stats reveal-child delay-600">
+      <div style="text-align:center">
+        <div class="stat-val">170+</div>
+        <div class="stat-label">Aliments</div>
+      </div>
+      <div style="text-align:center">
+        <div class="stat-val">89</div>
+        <div class="stat-label">Exercices</div>
+      </div>
+      <div style="text-align:center">
+        <div class="stat-val">6 Jours</div>
+        <div class="stat-label">PPL</div>
+      </div>
+      <div style="text-align:center">
+        <div class="stat-val">100%</div>
+        <div class="stat-label">Swiss Made</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 3. MARQUEE ═══════════ -->
+  <div class="marquee-wrap reveal" id="marquee">
+    <div class="marquee-track">
+      <span>Nutrition IA &#10022; Push Pull Legs &#10022; Scanner Code-Barres &#10022; Recettes Fitness &#10022; Liste de Courses &#10022; Chat IA &#10022; HIIT &amp; LISS &#10022; Records Personnels &#10022; Swiss Made &#10022; Coaching Connecte &#10022;&nbsp;</span>
+      <span>Nutrition IA &#10022; Push Pull Legs &#10022; Scanner Code-Barres &#10022; Recettes Fitness &#10022; Liste de Courses &#10022; Chat IA &#10022; HIIT &amp; LISS &#10022; Records Personnels &#10022; Swiss Made &#10022; Coaching Connecte &#10022;&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- ═══════════ 4. NUTRITION IA ═══════════ -->
+  <div id="nutrition">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>NUTRITION INTELLIGENTE</h2>
+        <p>Plans alimentaires generes par l'IA, adaptes a tes macros exacts</p>
+      </div>
+      <div class="feature-grid reveal">
+        <div class="feature-card reveal-child delay-0">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L26 14L14 26L2 14L14 2Z" stroke="#C9A84C" stroke-width="1.5" fill="none"/></svg></div>
+          <h3>Plans 7 jours personnalises</h3>
+          <p>L'IA genere un plan alimentaire complet adapte a tes calories, proteines, glucides et lipides.</p>
+        </div>
+        <div class="feature-card reveal-child delay-1">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="9" height="9" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="16" y="3" width="9" height="9" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="3" y="16" width="9" height="9" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="16" y="16" width="9" height="9" stroke="#C9A84C" stroke-width="1.2" rx="1"/></svg></div>
+          <h3>Scanner code-barres</h3>
+          <p>Scanne les aliments de ton frigo. L'IA cree tes plans avec les produits que tu as deja.</p>
+        </div>
+        <div class="feature-card reveal-child delay-2">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L25 8V20L14 26L3 20V8L14 2Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>Liste de courses auto</h3>
+          <p>Generee depuis ton plan semaine. Organisee par rayon de supermarche.</p>
+        </div>
+        <div class="feature-card reveal-child delay-3">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C14 2 8 10 8 16C8 19.3 10.7 22 14 22C17.3 22 20 19.3 20 16C20 10 14 2 14 2Z" stroke="#C9A84C" stroke-width="1.5"/><path d="M14 14C14 14 12 17 12 18.5C12 19.6 12.9 20.5 14 20.5C15.1 20.5 16 19.6 16 18.5C16 17 14 14 14 14Z" stroke="#C9A84C" stroke-width="1"/></svg></div>
+          <h3>Recettes fitness IA</h3>
+          <p>Recettes adaptees a tes macros avec les 170 aliments fitness de la base.</p>
+        </div>
+        <div class="feature-card reveal-child delay-4">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>170 aliments fitness</h3>
+          <p>Base curatee d'aliments essentiels. Proteines, feculents, legumes, fruits, supplements.</p>
+        </div>
+        <div class="feature-card reveal-child delay-5">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L17 10.5H26L19 16L21.5 25L14 19.5L6.5 25L9 16L2 10.5H11L14 2Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>Preferences personnalisees</h3>
+          <p>Choisis tes aliments favoris. L'IA les utilise en priorite.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 5. ENTRAINEMENT ═══════════ -->
+  <div id="training">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>ENTRAINEMENT HYPERTROPHIE</h2>
+        <p>Programme Push/Pull/Legs 6 jours + Cardio HIIT &amp; LISS</p>
+      </div>
+      <div class="feature-grid reveal">
+        <div class="feature-card reveal-child delay-0">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3L26 25H2L14 3Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>Push Pull Legs 6 jours</h3>
+          <p>Programme hypertrophie scientifique. Chaque muscle entraine 2x/semaine.</p>
+        </div>
+        <div class="feature-card reveal-child delay-1">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M16 2L6 16H14L12 26L22 12H14L16 2Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>Cardio HIIT &amp; LISS</h3>
+          <p>8 seances HIIT + 6 seances LISS. Timer integre avec intervalles work/rest.</p>
+        </div>
+        <div class="feature-card reveal-child delay-2">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M10 2H18L26 10V18L18 26H10L2 18V10L10 2Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>Timer de repos intelligent</h3>
+          <p>Timer automatique entre les series. Vibration quand c'est reparti.</p>
+        </div>
+        <div class="feature-card reveal-child delay-3">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="8" width="22" height="16" rx="2" stroke="#C9A84C" stroke-width="1.5"/><circle cx="14" cy="16" r="4" stroke="#C9A84C" stroke-width="1.5"/><path d="M10 8L12 4H16L18 8" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>89 exercices avec videos</h3>
+          <p>Base de 89 exercices en francais. Description, muscles cibles, conseils.</p>
+        </div>
+        <div class="feature-card reveal-child delay-4">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="6" width="22" height="19" rx="2" stroke="#C9A84C" stroke-width="1.5"/><path d="M3 12H25" stroke="#C9A84C" stroke-width="1.5"/><path d="M9 3V6M19 3V6" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <h3>Calendrier des seances</h3>
+          <p>Vue semaine et mois. Seances auto-planifiees. Rappels push.</p>
+        </div>
+        <div class="feature-card reveal-child delay-5">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M8 4H20V12C20 15.3 17.3 18 14 18C10.7 18 8 15.3 8 12V4Z" stroke="#C9A84C" stroke-width="1.5"/><path d="M8 7H5C5 10 6 12 8 12" stroke="#C9A84C" stroke-width="1.2"/><path d="M20 7H23C23 10 22 12 20 12" stroke="#C9A84C" stroke-width="1.2"/><path d="M11 22H17" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/><path d="M14 18V22" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>Records personnels</h3>
+          <p>Detection automatique des PR (formule Epley). Historique de progression.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 6. SUIVI & ANALYTICS ═══════════ -->
+  <div id="tracking">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>SUIVI COMPLET</h2>
+        <p>Graphiques, badges, photos — mesure chaque progres</p>
+      </div>
+      <div class="feature-grid reveal">
+        <div class="feature-card reveal-child delay-0">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="16" width="4" height="10" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="12" y="8" width="4" height="18" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="20" y="4" width="4" height="22" stroke="#C9A84C" stroke-width="1.2" rx="1"/></svg></div>
+          <h3>Analytics avance</h3>
+          <p>5 graphiques : poids, calories, macros, volume, hydratation. Export CSV.</p>
+        </div>
+        <div class="feature-card reveal-child delay-1">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="8" width="22" height="16" rx="2" stroke="#C9A84C" stroke-width="1.5"/><circle cx="14" cy="16" r="4" stroke="#C9A84C" stroke-width="1.5"/><path d="M10 8L12 4H16L18 8" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>Photos avant/apres</h3>
+          <p>Comparateur avec slider. Superpose tes photos.</p>
+        </div>
+        <div class="feature-card reveal-child delay-2">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3C14 3 6 13 6 18C6 22.4 9.6 26 14 26C18.4 26 22 22.4 22 18C22 13 14 3 14 3Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
+          <h3>Suivi hydratation</h3>
+          <p>Compteur d'eau quotidien. Objectif personnalise.</p>
+        </div>
+        <div class="feature-card reveal-child delay-3">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C14 2 8 10 8 16C8 19.3 10.7 22 14 22C17.3 22 20 19.3 20 16C20 10 14 2 14 2Z" stroke="#C9A84C" stroke-width="1.5"/><path d="M14 14C14 14 12 17 12 18.5C12 19.6 12.9 20.5 14 20.5C15.1 20.5 16 19.6 16 18.5C16 17 14 14 14 14Z" stroke="#C9A84C" stroke-width="1"/></svg></div>
+          <h3>Streak &amp; gamification</h3>
+          <p>Compte tes jours d'affilee. 7 badges a debloquer.</p>
+        </div>
+        <div class="feature-card reveal-child delay-4">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="#C9A84C" stroke-width="1.5"/><circle cx="14" cy="14" r="5" stroke="#C9A84C" stroke-width="1"/></svg></div>
+          <h3>Courbe de poids</h3>
+          <p>Graphique interactif 30/60/90 jours. Tendance moyenne mobile.</p>
+        </div>
+        <div class="feature-card reveal-child delay-5">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4V18M14 18L9 13M14 18L19 13" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 22V24H24V22" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Export donnees</h3>
+          <p>Telecharge tes stats en CSV. Tout est a toi.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 7. COACH IA ═══════════ -->
+  <div id="coach-ia">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>TON COACH IA PERSONNEL</h2>
+        <p>Pose n'importe quelle question fitness ou nutrition</p>
+      </div>
+      <div class="reveal">
+        <div class="coach-ia-card reveal-child delay-200">
+          <div style="margin-bottom:20px;display:flex;justify-content:center">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="12" width="24" height="20" rx="4" stroke="#C9A84C" stroke-width="1.5"/><circle cx="15" cy="22" r="2.5" stroke="#C9A84C" stroke-width="1.2"/><circle cx="25" cy="22" r="2.5" stroke="#C9A84C" stroke-width="1.2"/><path d="M16 28H24" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/><path d="M20 6V12" stroke="#C9A84C" stroke-width="1.5"/><circle cx="20" cy="5" r="2" stroke="#C9A84C" stroke-width="1.2"/><path d="M4 20H8M32 20H36" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <p>Le Coach IA de MoovX connait ton profil, tes objectifs, tes macros. Il te repond en francais, personnalise et motivant. Disponible 24/7.</p>
+          <div class="coach-ia-pills">
+            <span>Comment atteindre mes macros ?</span>
+            <span>Quel exercice pour les pectoraux ?</span>
+            <span>Remplacer un aliment du plan ?</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 8. COACHING CONNECTE ═══════════ -->
+  <div id="coaching">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>COACHING PROFESSIONNEL</h2>
+        <p>Connecte-toi avec ton coach pour un suivi personnalise</p>
+      </div>
+      <div class="feature-grid coaching-grid reveal">
+        <div class="feature-card reveal-child delay-0">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 6H24V20H10L4 24V6Z" stroke="#C9A84C" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="13" r="1" fill="#C9A84C"/><circle cx="14" cy="13" r="1" fill="#C9A84C"/><circle cx="18" cy="13" r="1" fill="#C9A84C"/></svg></div>
+          <h3>Messagerie temps reel</h3>
+          <p>Chat direct avec ton coach. Read receipts. Notifications.</p>
+        </div>
+        <div class="feature-card reveal-child delay-1">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="10" cy="10" r="4" stroke="#C9A84C" stroke-width="1.5"/><circle cx="20" cy="10" r="3" stroke="#C9A84C" stroke-width="1.2"/><path d="M2 24C2 20 5.6 17 10 17C14.4 17 18 20 18 24" stroke="#C9A84C" stroke-width="1.5"/><path d="M18 17C21 17 24 19 24 22" stroke="#C9A84C" stroke-width="1.2"/></svg></div>
+          <h3>Plans personnalises</h3>
+          <p>Ton coach ajuste programme et nutrition selon tes progres.</p>
+        </div>
+        <div class="feature-card reveal-child delay-2">
+          <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 14C4 8.5 8.5 4 14 4C18 4 21.4 6.5 23 10" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/><path d="M24 14C24 19.5 19.5 24 14 24C10 24 6.6 21.5 5 18" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/><path d="M20 10H24V6" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 18H4V22" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Demandes de changement</h3>
+          <p>Demande un nouveau plan. Ton coach regenere avec l'IA.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 9. COMMENT CA MARCHE ═══════════ -->
+  <div id="how">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>COMMENT CA MARCHE</h2>
+        <p>4 etapes pour transformer ton corps</p>
+      </div>
+      <div class="steps-grid reveal">
+        <!-- Lines between steps (desktop only) -->
+        <div class="step-line" style="left:calc(12.5% + 28px);width:calc(25% - 56px)"></div>
+        <div class="step-line" style="left:calc(37.5% + 28px);width:calc(25% - 56px)"></div>
+        <div class="step-line" style="left:calc(62.5% + 28px);width:calc(25% - 56px)"></div>
+
+        <div class="step reveal-child delay-step-0">
+          <div class="step-num">01</div>
+          <h4>Cree ton profil</h4>
+          <p>2 minutes. Objectifs, mensurations, preferences.</p>
+        </div>
+        <div class="step reveal-child delay-step-1">
+          <div class="step-num">02</div>
+          <h4>Scanne ton frigo</h4>
+          <p>L'IA apprend ce que tu manges.</p>
+        </div>
+        <div class="step reveal-child delay-step-2">
+          <div class="step-num">03</div>
+          <h4>Suis ton programme</h4>
+          <p>PPL 6 jours + nutrition. Valide tes repas et seances.</p>
+        </div>
+        <div class="step reveal-child delay-step-3">
+          <div class="step-num">04</div>
+          <h4>Mesure tes progres</h4>
+          <p>Graphiques, records, photos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 10. INSTALLATION PWA ═══════════ -->
+  <div id="pwa">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>INSTALLE MOOVX EN 30 SECONDES</h2>
+        <p>Pas besoin d'App Store. Installe depuis ton navigateur.</p>
+      </div>
+      <div class="reveal">
+        <div class="pwa-grid reveal-child delay-200">
+          <div class="pwa-card">
+            <div style="margin-bottom:12px"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="7" y="2" width="14" height="24" rx="3" stroke="#C9A84C" stroke-width="1.5"/><path d="M12 22H16" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <h4>iPhone</h4>
+            <p>Safari &rarr; Partager &rarr; Ecran d'accueil</p>
+          </div>
+          <div class="pwa-card">
+            <div style="margin-bottom:12px"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="7" y="2" width="14" height="24" rx="3" stroke="#C9A84C" stroke-width="1.5"/><path d="M12 22H16" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <h4>Android</h4>
+            <p>Chrome &rarr; Menu &rarr; Installer</p>
+          </div>
+        </div>
+        <div class="pwa-badges reveal-child delay-450">
+          <div class="pwa-badge">Plein ecran</div>
+          <div class="pwa-badge">Notifications</div>
+          <div class="pwa-badge">Hors ligne</div>
+          <div class="pwa-badge">Mises a jour auto</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 11. PRICING ═══════════ -->
+  <div id="pricing">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>TARIFS SIMPLES</h2>
+        <p>Commence gratuitement, evolue a ton rythme</p>
+      </div>
+      <div class="pricing-grid reveal">
+        <!-- Mensuel -->
+        <div class="pricing-card reveal-child delay-price-0">
+          <h3>Mensuel</h3>
+          <div class="price">CHF 10</div>
+          <div class="period">/mois</div>
+          <div class="pricing-checklist">
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimites</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Programme PPL 6 jours</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio HIIT &amp; LISS</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scanner code-barres</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Recettes fitness IA</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Liste de courses auto</div>
+            <div class="more">+ 6 autres fonctionnalites</div>
+          </div>
+          <a href="https://app.moovx.ch/register-client" class="ghost-btn">Commencer</a>
+        </div>
+        <!-- Annuel (highlight) -->
+        <div class="pricing-card highlight reveal-child delay-price-1">
+          <span class="pricing-badge">Populaire</span>
+          <h3>Annuel</h3>
+          <div class="price">CHF 80</div>
+          <div class="period">/an</div>
+          <div class="pricing-checklist">
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimites</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Programme PPL 6 jours</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio HIIT &amp; LISS</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scanner code-barres</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Recettes fitness IA</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Liste de courses auto</div>
+            <div class="more">+ 6 autres fonctionnalites</div>
+          </div>
+          <a href="https://app.moovx.ch/register-client" class="gold-btn">Commencer</a>
+        </div>
+        <!-- A vie -->
+        <div class="pricing-card reveal-child delay-price-2">
+          <span class="pricing-badge">Meilleure offre</span>
+          <h3>A vie</h3>
+          <div class="price">CHF 150</div>
+          <div class="period">&nbsp;</div>
+          <div class="pricing-checklist">
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimites</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Programme PPL 6 jours</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio HIIT &amp; LISS</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scanner code-barres</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Recettes fitness IA</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Liste de courses auto</div>
+            <div class="more">+ 6 autres fonctionnalites</div>
+          </div>
+          <a href="https://app.moovx.ch/register-client" class="ghost-btn">Commencer</a>
+        </div>
+        <!-- Coach Pro -->
+        <div class="pricing-card reveal-child delay-price-3">
+          <h3>Coach Pro</h3>
+          <div class="price">CHF 50</div>
+          <div class="period">/mois</div>
+          <div class="pricing-checklist">
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimites</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Programme PPL 6 jours</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio HIIT &amp; LISS</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scanner code-barres</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Recettes fitness IA</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Liste de courses auto</div>
+            <div class="more">+ 6 autres fonctionnalites</div>
+          </div>
+          <a href="https://app.moovx.ch/register-client" class="ghost-btn">Devenir Coach</a>
+        </div>
+      </div>
+      <p class="pricing-note reveal">10 jours d'essai gratuit &middot; Sans engagement &middot; Toutes fonctionnalites incluses</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ 12. FAQ ═══════════ -->
+  <div id="faq">
+    <div class="section">
+      <div class="section-title reveal">
+        <h2>QUESTIONS FREQUENTES</h2>
+        <p>Tout ce que tu dois savoir sur MoovX</p>
+      </div>
+      <div class="faq-list reveal">
+        <div class="faq-item">
+          <button class="faq-btn" onclick="toggleFaq(this)">C'est quoi MoovX ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>MoovX est une plateforme de coaching fitness suisse propulsee par l'intelligence artificielle. Elle combine nutrition personnalisee, entrainement hypertrophie PPL, suivi de progression et coaching connecte.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" onclick="toggleFaq(this)">Comment fonctionne la nutrition IA ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>L'IA analyse ton profil (poids, objectif, activite) et genere des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" onclick="toggleFaq(this)">Le scanner code-barres fonctionne comment ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>Scanne le code-barres de tes produits avec la camera de ton telephone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute a ton journal.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" onclick="toggleFaq(this)">C'est quoi le programme PPL ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>Push/Pull/Legs est un split d'entrainement sur 6 jours optimise pour l'hypertrophie. Push (poitrine, epaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaille 2 fois par semaine.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" onclick="toggleFaq(this)">Mes donnees sont securisees ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes donnees sont hebergees en Europe et tu peux les exporter ou supprimer ton compte a tout moment.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" onclick="toggleFaq(this)">Je peux essayer gratuitement ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>Oui ! Tu beneficies de 10 jours d'essai gratuit avec acces a toutes les fonctionnalites. Sans engagement, sans carte de credit requise.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" onclick="toggleFaq(this)">Comment installer l'app ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter a l'ecran d'accueil. Sur Android : Chrome, menu, Installer l'application.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" onclick="toggleFaq(this)">C'est quoi le Coach IA ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>Un assistant intelligent qui connait ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entrainement, il te repond de maniere personnalisee en francais.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 13. CTA FINAL + FOOTER ═══════════ -->
+  <div class="cta-section reveal" id="cta">
+    <div class="cta-glow"></div>
+    <h2>PRET A TRANSFORMER TON CORPS ?</h2>
+    <p class="cta-desc">Rejoins MoovX et commence ta transformation des aujourd'hui.</p>
+    <div style="position:relative">
+      <a href="https://app.moovx.ch/register-client" class="gold-btn" style="font-size:16px;padding:16px 40px">Commencer — 10 jours gratuits</a>
+    </div>
+    <p class="cta-fine">Sans engagement &middot; Resiliable a tout moment</p>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">
+          <span class="logo">MOOVX</span>
+          <span class="tagline">Swiss Made &middot; Swiss Quality</span>
+        </div>
+        <p class="footer-copy">&copy; 2026 MoovX &middot; Geneve, Suisse</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://app.moovx.ch/login">Application</a>
+        <a href="#pricing">Tarifs</a>
+        <a href="#faq">FAQ</a>
+        <a href="mailto:contact@moovx.ch">Contact</a>
+        <a href="#">CGU</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════ JAVASCRIPT ═══════════ -->
+  <script>
+    /* ── Navbar scroll effect ── */
+    var navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 40) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    }, { passive: true });
+
+    /* ── Intersection Observer scroll reveals ── */
+    var revealEls = document.querySelectorAll('.reveal');
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    revealEls.forEach(function(el) {
+      observer.observe(el);
+    });
+
+    /* ── FAQ accordion ── */
+    function toggleFaq(btn) {
+      var item = btn.parentElement;
+      var wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(function(el) {
+        el.classList.remove('open');
+      });
+      if (!wasOpen) {
+        item.classList.add('open');
+      }
+    }
+
+    /* ── Smooth scroll for anchor links ── */
+    document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+      anchor.addEventListener('click', function(e) {
+        var targetId = this.getAttribute('href').slice(1);
+        if (targetId) {
+          var target = document.getElementById(targetId);
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>

@@ -22,14 +22,123 @@ function useReveal(threshold = 0.15) {
   return { ref, visible };
 }
 
+/* ───────────────────────── SVG Icons ───────────────────────── */
+const icons = {
+  diamond: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L26 14L14 26L2 14L14 2Z" stroke="#C9A84C" strokeWidth="1.5" fill="none"/></svg>
+  ),
+  circle: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  hexagon: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L25 8V20L14 26L3 20V8L14 2Z" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  square: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="4" width="20" height="20" stroke="#C9A84C" strokeWidth="1.5" rx="2"/></svg>
+  ),
+  triangle: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3L26 25H2L14 3Z" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  star: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L17 10.5H26L19 16L21.5 25L14 19.5L6.5 25L9 16L2 10.5H11L14 2Z" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  octagon: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M10 2H18L26 10V18L18 26H10L2 18V10L10 2Z" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  cross: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4V24M4 14H24" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/></svg>
+  ),
+  ring: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="#C9A84C" strokeWidth="1.5"/><circle cx="14" cy="14" r="5" stroke="#C9A84C" strokeWidth="1"/></svg>
+  ),
+  bolt: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M16 2L6 16H14L12 26L22 12H14L16 2Z" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  grid: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="9" height="9" stroke="#C9A84C" strokeWidth="1.2" rx="1"/><rect x="16" y="3" width="9" height="9" stroke="#C9A84C" strokeWidth="1.2" rx="1"/><rect x="3" y="16" width="9" height="9" stroke="#C9A84C" strokeWidth="1.2" rx="1"/><rect x="16" y="16" width="9" height="9" stroke="#C9A84C" strokeWidth="1.2" rx="1"/></svg>
+  ),
+  bars: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="16" width="4" height="10" stroke="#C9A84C" strokeWidth="1.2" rx="1"/><rect x="12" y="8" width="4" height="18" stroke="#C9A84C" strokeWidth="1.2" rx="1"/><rect x="20" y="4" width="4" height="22" stroke="#C9A84C" strokeWidth="1.2" rx="1"/></svg>
+  ),
+  camera: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="8" width="22" height="16" rx="2" stroke="#C9A84C" strokeWidth="1.5"/><circle cx="14" cy="16" r="4" stroke="#C9A84C" strokeWidth="1.5"/><path d="M10 8L12 4H16L18 8" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  drop: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3C14 3 6 13 6 18C6 22.4 9.6 26 14 26C18.4 26 22 22.4 22 18C22 13 14 3 14 3Z" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  flame: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C14 2 8 10 8 16C8 19.3 10.7 22 14 22C17.3 22 20 19.3 20 16C20 10 14 2 14 2Z" stroke="#C9A84C" strokeWidth="1.5"/><path d="M14 14C14 14 12 17 12 18.5C12 19.6 12.9 20.5 14 20.5C15.1 20.5 16 19.6 16 18.5C16 17 14 14 14 14Z" stroke="#C9A84C" strokeWidth="1"/></svg>
+  ),
+  trophy: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M8 4H20V12C20 15.3 17.3 18 14 18C10.7 18 8 15.3 8 12V4Z" stroke="#C9A84C" strokeWidth="1.5"/><path d="M8 7H5C5 10 6 12 8 12" stroke="#C9A84C" strokeWidth="1.2"/><path d="M20 7H23C23 10 22 12 20 12" stroke="#C9A84C" strokeWidth="1.2"/><path d="M11 22H17" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/><path d="M14 18V22" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  download: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4V18M14 18L9 13M14 18L19 13" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M4 22V24H24V22" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  robot: (
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="12" width="24" height="20" rx="4" stroke="#C9A84C" strokeWidth="1.5"/><circle cx="15" cy="22" r="2.5" stroke="#C9A84C" strokeWidth="1.2"/><circle cx="25" cy="22" r="2.5" stroke="#C9A84C" strokeWidth="1.2"/><path d="M16 28H24" stroke="#C9A84C" strokeWidth="1.2" strokeLinecap="round"/><path d="M20 6V12" stroke="#C9A84C" strokeWidth="1.5"/><circle cx="20" cy="5" r="2" stroke="#C9A84C" strokeWidth="1.2"/><path d="M4 20H8M32 20H36" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/></svg>
+  ),
+  chat: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 6H24V20H10L4 24V6Z" stroke="#C9A84C" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="10" cy="13" r="1" fill="#C9A84C"/><circle cx="14" cy="13" r="1" fill="#C9A84C"/><circle cx="18" cy="13" r="1" fill="#C9A84C"/></svg>
+  ),
+  users: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="10" cy="10" r="4" stroke="#C9A84C" strokeWidth="1.5"/><circle cx="20" cy="10" r="3" stroke="#C9A84C" strokeWidth="1.2"/><path d="M2 24C2 20 5.6 17 10 17C14.4 17 18 20 18 24" stroke="#C9A84C" strokeWidth="1.5"/><path d="M18 17C21 17 24 19 24 22" stroke="#C9A84C" strokeWidth="1.2"/></svg>
+  ),
+  refresh: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 14C4 8.5 8.5 4 14 4C18 4 21.4 6.5 23 10" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/><path d="M24 14C24 19.5 19.5 24 14 24C10 24 6.6 21.5 5 18" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/><path d="M20 10H24V6" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 18H4V22" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  calendar: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="6" width="22" height="19" rx="2" stroke="#C9A84C" strokeWidth="1.5"/><path d="M3 12H25" stroke="#C9A84C" strokeWidth="1.5"/><path d="M9 3V6M19 3V6" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/></svg>
+  ),
+  shield: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3L4 8V14C4 20 8.5 25 14 26C19.5 25 24 20 24 14V8L14 3Z" stroke="#C9A84C" strokeWidth="1.5"/></svg>
+  ),
+  phone: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="7" y="2" width="14" height="24" rx="3" stroke="#C9A84C" strokeWidth="1.5"/><path d="M12 22H16" stroke="#C9A84C" strokeWidth="1.2" strokeLinecap="round"/></svg>
+  ),
+};
+
+const iconKeys = Object.keys(icons) as (keyof typeof icons)[];
+
 /* ───────────────────────── data ───────────────────────── */
-const FEATURES = [
-  { title: 'Nutrition IA', desc: 'Plans alimentaires personnalisés générés par intelligence artificielle. 170 aliments fitness.', shape: 'diamond' },
-  { title: 'Push Pull Legs', desc: 'Programme d\'entraînement structuré sur 6 jours, adapté à ton niveau.', shape: 'circle' },
-  { title: 'Suivi précis', desc: 'Poids, mensurations, photos — visualise ta progression semaine après semaine.', shape: 'square' },
-  { title: 'Coach connecté', desc: 'Ton coach reçoit tes données en temps réel et ajuste ton plan.', shape: 'triangle' },
-  { title: 'Liste de courses', desc: 'Génération automatique à partir de ton plan alimentaire. Un tap, c\'est prêt.', shape: 'hexagon' },
-  { title: 'App installable', desc: 'Progressive Web App. Ajoute MOOVX à ton écran d\'accueil, zéro téléchargement.', shape: 'star' },
+const NUTRITION_FEATURES = [
+  { icon: 'diamond' as const, title: 'Plans 7 jours personnalises', desc: "L'IA genere un plan alimentaire complet adapte a tes calories, proteines, glucides et lipides." },
+  { icon: 'grid' as const, title: 'Scanner code-barres', desc: "Scanne les aliments de ton frigo. L'IA cree tes plans avec les produits que tu as deja." },
+  { icon: 'hexagon' as const, title: 'Liste de courses auto', desc: "Generee depuis ton plan semaine. Organisee par rayon de supermarche." },
+  { icon: 'flame' as const, title: 'Recettes fitness IA', desc: "Recettes adaptees a tes macros avec les 170 aliments fitness de la base." },
+  { icon: 'circle' as const, title: '170 aliments fitness', desc: "Base curatee d'aliments essentiels. Proteines, feculents, legumes, fruits, supplements." },
+  { icon: 'star' as const, title: 'Preferences personnalisees', desc: "Choisis tes aliments favoris. L'IA les utilise en priorite." },
+];
+
+const TRAINING_FEATURES = [
+  { icon: 'triangle' as const, title: 'Push Pull Legs 6 jours', desc: "Programme hypertrophie scientifique. Chaque muscle entraine 2x/semaine." },
+  { icon: 'bolt' as const, title: 'Cardio HIIT & LISS', desc: "8 seances HIIT + 6 seances LISS. Timer integre avec intervalles work/rest." },
+  { icon: 'octagon' as const, title: 'Timer de repos intelligent', desc: "Timer automatique entre les series. Vibration quand c'est reparti." },
+  { icon: 'camera' as const, title: '89 exercices avec videos', desc: "Base de 89 exercices en francais. Description, muscles cibles, conseils." },
+  { icon: 'calendar' as const, title: 'Calendrier des seances', desc: "Vue semaine et mois. Seances auto-planifiees. Rappels push." },
+  { icon: 'trophy' as const, title: 'Records personnels', desc: "Detection automatique des PR (formule Epley). Historique de progression." },
+];
+
+const TRACKING_FEATURES = [
+  { icon: 'bars' as const, title: 'Analytics avance', desc: "5 graphiques : poids, calories, macros, volume, hydratation. Export CSV." },
+  { icon: 'camera' as const, title: 'Photos avant/apres', desc: "Comparateur avec slider. Superpose tes photos." },
+  { icon: 'drop' as const, title: 'Suivi hydratation', desc: "Compteur d'eau quotidien. Objectif personnalise." },
+  { icon: 'flame' as const, title: 'Streak & gamification', desc: "Compte tes jours d'affilee. 7 badges a debloquer." },
+  { icon: 'ring' as const, title: 'Courbe de poids', desc: "Graphique interactif 30/60/90 jours. Tendance moyenne mobile." },
+  { icon: 'download' as const, title: 'Export donnees', desc: "Telecharge tes stats en CSV. Tout est a toi." },
+];
+
+const COACHING_FEATURES = [
+  { icon: 'chat' as const, title: 'Messagerie temps reel', desc: "Chat direct avec ton coach. Read receipts. Notifications." },
+  { icon: 'users' as const, title: 'Plans personnalises', desc: "Ton coach ajuste programme et nutrition selon tes progres." },
+  { icon: 'refresh' as const, title: 'Demandes de changement', desc: "Demande un nouveau plan. Ton coach regenere avec l'IA." },
+];
+
+const STEPS = [
+  { num: '01', title: 'Cree ton profil', desc: '2 minutes. Objectifs, mensurations, preferences.' },
+  { num: '02', title: 'Scanne ton frigo', desc: "L'IA apprend ce que tu manges." },
+  { num: '03', title: 'Suis ton programme', desc: 'PPL 6 jours + nutrition. Valide tes repas et seances.' },
+  { num: '04', title: 'Mesure tes progres', desc: 'Graphiques, records, photos.' },
 ];
 
 const PRICING = [
@@ -39,463 +148,817 @@ const PRICING = [
   { name: 'Coach Pro', price: 'CHF 50', period: '/mois', badge: null, highlight: false },
 ];
 
-const TESTIMONIALS = [
-  { initials: 'L.M', name: 'Lucas M.', quote: 'J\'ai perdu 8 kg en 3 mois sans jamais avoir faim. Les plans IA sont incroyablement précis.', result: '-8 kg en 3 mois' },
-  { initials: 'S.R', name: 'Sarah R.', quote: 'Enfin une app qui combine nutrition et entraînement de manière intelligente. Je recommande à 100%.', result: '+12 kg muscle' },
-  { initials: 'N.B', name: 'Nicolas B.', quote: 'Le suivi par mon coach via l\'app change tout. On est connecté en permanence, c\'est motivant.', result: '-15% body fat' },
+const PRICING_CHECKLIST = [
+  'Plans nutrition IA illimites',
+  'Programme PPL 6 jours',
+  'Cardio HIIT & LISS',
+  'Scanner code-barres',
+  'Recettes fitness IA',
+  'Liste de courses auto',
+  'Chat IA illimite',
+  'Analytics & records',
+  'Photos avant/apres',
+  'Badges & gamification',
+  '89 exercices avec videos',
+  'Calendrier & rappels',
 ];
 
 const FAQ_DATA = [
-  { q: 'Combien coûte MOOVX ?', a: 'MOOVX est disponible dès CHF 10/mois. L\'abonnement annuel à CHF 80/an est le plus populaire. Une option à vie à CHF 150 est également disponible. Les coachs peuvent souscrire au plan Coach Pro à CHF 50/mois.' },
-  { q: 'Est-ce une application à télécharger ?', a: 'MOOVX est une Progressive Web App (PWA). Tu y accèdes via ton navigateur puis tu l\'ajoutes à ton écran d\'accueil. Aucun téléchargement sur l\'App Store ou Google Play n\'est nécessaire.' },
-  { q: 'L\'IA remplace-t-elle un vrai coach ?', a: 'Non. L\'IA génère tes plans alimentaires et d\'entraînement, mais ton coach a accès à toutes tes données et peut ajuster manuellement ton programme à tout moment. C\'est le meilleur des deux mondes.' },
-  { q: 'Mes données sont-elles sécurisées ?', a: 'Oui. Toutes les données sont chiffrées et stockées sur des serveurs sécurisés. Nous respectons le RGPD et les lois suisses sur la protection des données (LPD). Tu peux supprimer ton compte à tout moment.' },
-  { q: 'Y a-t-il une période d\'essai ?', a: 'Oui, tu bénéficies de 10 jours d\'essai gratuit à la création de ton compte. Aucune carte bancaire n\'est requise pour commencer.' },
-  { q: 'Puis-je résilier à tout moment ?', a: 'Absolument. Tous nos abonnements sont sans engagement et résiliables en un clic depuis ton profil.' },
+  { q: "C'est quoi MoovX ?", a: "MoovX est une plateforme de coaching fitness suisse propulsee par l'intelligence artificielle. Elle combine nutrition personnalisee, entrainement hypertrophie PPL, suivi de progression et coaching connecte." },
+  { q: "Comment fonctionne la nutrition IA ?", a: "L'IA analyse ton profil (poids, objectif, activite) et genere des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits." },
+  { q: "Le scanner code-barres fonctionne comment ?", a: "Scanne le code-barres de tes produits avec la camera de ton telephone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute a ton journal." },
+  { q: "C'est quoi le programme PPL ?", a: "Push/Pull/Legs est un split d'entrainement sur 6 jours optimise pour l'hypertrophie. Push (poitrine, epaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaille 2 fois par semaine." },
+  { q: "Mes donnees sont securisees ?", a: "Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes donnees sont hebergees en Europe et tu peux les exporter ou supprimer ton compte a tout moment." },
+  { q: "Je peux essayer gratuitement ?", a: "Oui ! Tu beneficies de 10 jours d'essai gratuit avec acces a toutes les fonctionnalites. Sans engagement, sans carte de credit requise." },
+  { q: "Comment installer l'app ?", a: "MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter a l'ecran d'accueil. Sur Android : Chrome, menu, Installer l'application." },
+  { q: "C'est quoi le Coach IA ?", a: "Un assistant intelligent qui connait ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entrainement, il te repond de maniere personnalisee en francais." },
 ];
 
-const PROBLEMS = [
-  { title: 'Le problème', color: '#e05050', items: ['Plans génériques qui ignorent ton métabolisme', 'Pas de lien entre nutrition et entraînement', 'Progression impossible à mesurer'] },
-  { title: 'Notre approche', color: '#C9A84C', items: ['IA calibrée sur 170 aliments fitness', 'Nutrition + training synchronisés', 'Suivi poids, mensurations, photos'] },
-  { title: 'Le résultat', color: '#50c070', items: ['Un plan unique adapté à TON corps', 'Progrès visibles dès les premières semaines', 'Motivation constante, résultats durables'] },
-];
-
-/* ───────────────────────── shapes for feature icons ───────────────────────── */
-function GoldShape({ shape }: { shape: string }) {
-  const s = 36;
-  const color = '#C9A84C';
-  const svgs: Record<string, React.ReactNode> = {
-    diamond: <svg width={s} height={s} viewBox="0 0 36 36"><rect x="8" y="8" width="20" height="20" rx="2" transform="rotate(45 18 18)" fill="none" stroke={color} strokeWidth="1.5" /></svg>,
-    circle: <svg width={s} height={s} viewBox="0 0 36 36"><circle cx="18" cy="18" r="10" fill="none" stroke={color} strokeWidth="1.5" /></svg>,
-    square: <svg width={s} height={s} viewBox="0 0 36 36"><rect x="8" y="8" width="20" height="20" rx="2" fill="none" stroke={color} strokeWidth="1.5" /></svg>,
-    triangle: <svg width={s} height={s} viewBox="0 0 36 36"><polygon points="18,6 30,30 6,30" fill="none" stroke={color} strokeWidth="1.5" /></svg>,
-    hexagon: <svg width={s} height={s} viewBox="0 0 36 36"><polygon points="18,4 31,11 31,25 18,32 5,25 5,11" fill="none" stroke={color} strokeWidth="1.5" /></svg>,
-    star: <svg width={s} height={s} viewBox="0 0 36 36"><polygon points="18,4 21,14 32,14 23,20 26,31 18,24 10,31 13,20 4,14 15,14" fill="none" stroke={color} strokeWidth="1.5" /></svg>,
-  };
-  return <div style={{ marginBottom: 16 }}>{svgs[shape] ?? svgs.diamond}</div>;
+/* ───────────────────────── Feature Card ───────────────────────── */
+function FeatureCard({ icon, title, desc, delay = 0, visible }: { icon: keyof typeof icons; title: string; desc: string; delay?: number; visible: boolean }) {
+  return (
+    <div style={{
+      background: '#0d0d0d',
+      border: '1px solid #1a1a1a',
+      borderRadius: 12,
+      padding: '28px 24px',
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateY(0)' : 'translateY(30px)',
+      transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+      cursor: 'default',
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-4px)';
+      e.currentTarget.style.borderColor = 'rgba(201,168,76,0.3)';
+      e.currentTarget.style.boxShadow = '0 8px 30px rgba(201,168,76,0.08)';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.borderColor = '#1a1a1a';
+      e.currentTarget.style.boxShadow = 'none';
+    }}
+    >
+      <div style={{ marginBottom: 16 }}>{icons[icon]}</div>
+      <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 17, color: '#f8fafc', margin: '0 0 8px' }}>{title}</h3>
+      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>{desc}</p>
+    </div>
+  );
 }
 
-/* ───────────────────────── component ───────────────────────── */
-export default function LandingPage() {
-  /* hero stagger */
-  const [heroReady, setHeroReady] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setHeroReady(true), 100); return () => clearTimeout(t); }, []);
+/* ───────────────────────── Section wrapper ───────────────────────── */
+function Section({ id, children, style }: { id?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <section id={id} style={{ maxWidth: 1200, margin: '0 auto', padding: '100px 24px', ...style }}>
+      {children}
+    </section>
+  );
+}
 
-  /* navbar scroll state */
+function SectionTitle({ title, subtitle, visible }: { title: string; subtitle: string; visible: boolean }) {
+  return (
+    <div style={{ textAlign: 'center', marginBottom: 60, opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px, 5vw, 56px)', color: '#f8fafc', margin: '0 0 12px', letterSpacing: 2 }}>{title}</h2>
+      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 17, color: '#C9A84C', margin: 0 }}>{subtitle}</p>
+    </div>
+  );
+}
+
+/* ───────────────────────── Feature Grid ───────────────────────── */
+function FeatureGrid({ features, columns = 3 }: { features: { icon: keyof typeof icons; title: string; desc: string }[]; columns?: number }) {
+  const rev = useReveal();
+  return (
+    <div ref={rev.ref} style={{
+      display: 'grid',
+      gridTemplateColumns: `repeat(${columns}, 1fr)`,
+      gap: 20,
+    }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .fg-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div className="fg-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gap: 20,
+      }}>
+        {features.map((f, i) => (
+          <FeatureCard key={f.title} icon={f.icon} title={f.title} desc={f.desc} delay={i * 80} visible={rev.visible} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── FAQ Accordion ───────────────────────── */
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: '1px solid #1a1a1a' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          padding: '20px 0',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          cursor: 'pointer',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 16,
+          fontWeight: 600,
+          color: '#f8fafc',
+          textAlign: 'left',
+        }}
+      >
+        {q}
+        <span style={{ color: '#C9A84C', fontSize: 22, transform: open ? 'rotate(45deg)' : 'rotate(0)', transition: 'transform 0.3s', flexShrink: 0, marginLeft: 16 }}>+</span>
+      </button>
+      <div style={{
+        maxHeight: open ? 300 : 0,
+        overflow: 'hidden',
+        transition: 'max-height 0.4s ease',
+      }}>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#6b7280', margin: '0 0 20px', lineHeight: 1.7, paddingRight: 40 }}>{a}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── Main Page ───────────────────────── */
+export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  /* FAQ accordion */
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const toggleFaq = useCallback((i: number) => setOpenFaq(prev => prev === i ? null : i), []);
+  const heroRev = useReveal(0.05);
+  const marqueeRev = useReveal(0.1);
+  const nutritionRev = useReveal();
+  const trainingRev = useReveal();
+  const trackingRev = useReveal();
+  const coachIaRev = useReveal();
+  const coachingRev = useReveal();
+  const stepsRev = useReveal();
+  const pwaRev = useReveal();
+  const pricingRev = useReveal();
+  const faqRev = useReveal();
+  const ctaRev = useReveal();
 
-  /* reveal refs */
-  const marqueeR = useReveal();
-  const problemR = useReveal();
-  const featuresR = useReveal();
-  const howR = useReveal();
-  const installR = useReveal();
-  const pricingR = useReveal();
-  const testR = useReveal();
-  const faqR = useReveal();
-  const ctaR = useReveal();
+  const smoothScroll = useCallback((e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
   return (
     <>
-      {/* ── global styles ── */}
+      {/* Google Fonts */}
       <style>{`
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
+        body { margin: 0; background: #050505; }
 
-        .lp { --gold: #C9A84C; --gold-light: #F0D060; --bg: #050505; --bg2: #0a0a0a; --card: #0d0d0d; --border: #141414; --divider: rgba(201,168,76,0.06); font-family: var(--font-body, 'DM Sans', sans-serif); color: #fff; background: linear-gradient(180deg, #050505 0%, #0a0a0a 100%); overflow-x: hidden; }
-        .lp h1, .lp h2, .lp h3, .lp .display { font-family: var(--font-display, 'Bebas Neue', sans-serif); }
+        @keyframes marqueeScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
 
-        /* grain overlay */
-        .grain { position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.015; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-repeat: repeat; background-size: 200px; }
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
 
-        /* reveal */
-        .rv { opacity: 0; transform: translateY(32px); transition: opacity 0.8s cubic-bezier(.16,1,.3,1), transform 0.8s cubic-bezier(.16,1,.3,1); }
-        .rv.show { opacity: 1; transform: translateY(0); }
+        .gold-btn {
+          background: linear-gradient(135deg, #C9A84C, #b8943f);
+          color: #050505;
+          border: none;
+          padding: 14px 32px;
+          border-radius: 8px;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 700;
+          font-size: 15px;
+          cursor: pointer;
+          text-decoration: none;
+          display: inline-block;
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .gold-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 24px rgba(201,168,76,0.3);
+        }
 
-        /* hero stagger children */
-        .hs > * { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
-        .hs.ready > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0s; }
-        .hs.ready > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.12s; }
-        .hs.ready > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.12s; }
-        .hs.ready > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.24s; }
-        .hs.ready > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 0.36s; }
-        .hs.ready > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 0.48s; }
-        .hs.ready > *:nth-child(7) { opacity: 1; transform: translateY(0); transition-delay: 0.6s; }
+        .ghost-btn {
+          background: transparent;
+          color: #f8fafc;
+          border: 1px solid #333;
+          padding: 14px 32px;
+          border-radius: 8px;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 600;
+          font-size: 15px;
+          cursor: pointer;
+          text-decoration: none;
+          display: inline-block;
+          transition: border-color 0.2s, color 0.2s;
+        }
+        .ghost-btn:hover {
+          border-color: #C9A84C;
+          color: #C9A84C;
+        }
 
-        /* marquee */
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .marquee-track { display: flex; width: max-content; animation: marquee 40s linear infinite; }
-
-        /* gold shimmer button */
-        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
-        .btn-gold { display: inline-flex; align-items: center; justify-content: center; padding: 16px 36px; border: none; border-radius: 6px; font-family: var(--font-body, 'DM Sans', sans-serif); font-weight: 600; font-size: 15px; letter-spacing: 0.03em; color: #000; cursor: pointer; text-decoration: none; background: linear-gradient(105deg, #C9A84C 0%, #F0D060 40%, #C9A84C 60%, #F0D060 100%); background-size: 200% 100%; animation: shimmer 4s ease-in-out infinite; transition: transform 0.2s, box-shadow 0.2s; }
-        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(201,168,76,0.25); }
-
-        .btn-ghost { display: inline-flex; align-items: center; justify-content: center; padding: 16px 36px; border: 1px solid rgba(201,168,76,0.3); border-radius: 6px; font-family: var(--font-body, 'DM Sans', sans-serif); font-weight: 500; font-size: 15px; color: #C9A84C; cursor: pointer; background: transparent; text-decoration: none; transition: border-color 0.3s, background 0.3s; }
-        .btn-ghost:hover { border-color: #C9A84C; background: rgba(201,168,76,0.05); }
-
-        /* feature card */
-        .feat-card { background: #0d0d0d; border: 1px solid #141414; border-radius: 10px; padding: 36px 28px; transition: transform 0.35s cubic-bezier(.16,1,.3,1), border-color 0.35s, box-shadow 0.35s; }
-        .feat-card:hover { transform: translateY(-4px); border-color: rgba(201,168,76,0.35); box-shadow: 0 4px 24px rgba(201,168,76,0.08); }
-
-        /* pricing card */
-        .price-card { background: #0d0d0d; border: 1px solid #141414; border-radius: 12px; padding: 40px 28px; text-align: center; transition: transform 0.35s cubic-bezier(.16,1,.3,1), border-color 0.35s; }
-        .price-card:hover { transform: translateY(-4px); }
-        .price-card.pop { border-color: rgba(201,168,76,0.5); transform: scale(1.04); box-shadow: 0 0 40px rgba(201,168,76,0.08); }
-        .price-card.pop:hover { transform: scale(1.04) translateY(-4px); }
-
-        /* testimonial */
-        .testi-card { background: #0a0a0a; border: 1px solid #141414; border-radius: 10px; padding: 36px 28px; }
-
-        /* faq */
-        .faq-item { border-bottom: 1px solid rgba(201,168,76,0.06); }
-        .faq-q { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; cursor: pointer; font-weight: 500; font-size: 17px; color: #ccc; transition: color 0.2s; background: none; border: none; width: 100%; text-align: left; font-family: inherit; }
-        .faq-q:hover { color: #C9A84C; }
-        .faq-a { overflow: hidden; transition: max-height 0.4s ease, opacity 0.4s ease; max-height: 0; opacity: 0; }
-        .faq-a.open { max-height: 300px; opacity: 1; }
-
-        /* divider */
-        .divider { width: 100%; height: 1px; background: rgba(201,168,76,0.06); }
-
-        /* section */
-        .section { padding: 120px 24px; max-width: 1200px; margin: 0 auto; }
-        .section-title { font-size: clamp(32px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; margin-bottom: 64px; }
-
-        .lp-nav { position: sticky; top: 0; z-index: 200; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; transition: background 0.3s, border-color 0.3s; }
-        .lp-nav.scrolled { background: rgba(5,5,5,0.95) !important; border-bottom: 1px solid rgba(201,168,76,0.1); }
-        .lp-nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .lp-nav-btns { display: flex; align-items: center; gap: 10px; }
-        .lp-nav-ghost { padding: 8px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #999; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s; font-family: var(--font-body); }
-        .lp-nav-ghost:hover { border-color: rgba(201,168,76,0.4); color: #C9A84C; }
-        .lp-nav-gold { padding: 8px 18px; border-radius: 10px; border: none; background: #C9A84C; color: #000; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; font-family: var(--font-body); }
-        .lp-nav-gold:hover { background: #D4AF37; transform: translateY(-1px); }
+        .pricing-card {
+          background: #0d0d0d;
+          border: 1px solid #1a1a1a;
+          border-radius: 16px;
+          padding: 32px 28px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transition: border-color 0.3s, transform 0.3s;
+        }
+        .pricing-card:hover {
+          border-color: rgba(201,168,76,0.3);
+          transform: translateY(-4px);
+        }
+        .pricing-card.highlight {
+          border-color: #C9A84C;
+          box-shadow: 0 0 40px rgba(201,168,76,0.1);
+        }
 
         @media (max-width: 768px) {
-          .section { padding: 60px 20px; }
-          .section-title { margin-bottom: 40px; }
-          .hero-btns { flex-direction: column; gap: 12px !important; }
-          .hero-btns a, .hero-btns button { width: 100%; }
-          .grid-2x3 { grid-template-columns: 1fr !important; }
-          .grid-3 { grid-template-columns: 1fr !important; }
-          .grid-4 { grid-template-columns: 1fr !important; }
-          .steps { flex-direction: column !important; gap: 40px !important; }
-          .step-line { display: none !important; }
-          .hero-stats { flex-direction: column; gap: 16px !important; }
-          .price-card.pop { transform: scale(1); }
-          .price-card.pop:hover { transform: translateY(-4px); }
-          .install-grid { grid-template-columns: 1fr !important; }
-          .lp-nav { padding: 0 16px; }
-          .lp-nav-gold { display: none; }
-          .lp-nav-ghost { padding: 7px 14px; font-size: 12px; }
+          .desktop-nav-links { display: none !important; }
+          .hero-stats { flex-direction: column !important; gap: 12px !important; }
+          .hero-buttons { flex-direction: column !important; align-items: stretch !important; }
+          .hero-buttons a, .hero-buttons button { width: 100% !important; text-align: center !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; }
+          .steps-grid { grid-template-columns: 1fr !important; }
+          .pwa-grid { grid-template-columns: 1fr !important; }
+          .coaching-grid { grid-template-columns: 1fr !important; }
+          .pwa-badges { grid-template-columns: 1fr 1fr !important; }
+          .footer-inner { flex-direction: column !important; text-align: center !important; gap: 24px !important; }
+          .footer-links { justify-content: center !important; }
         }
       `}</style>
 
-      <div className="lp">
-        {/* ── NAVBAR ── */}
-        <nav className={`lp-nav ${scrolled ? 'scrolled' : ''}`} style={{ background: scrolled ? 'rgba(5,5,5,0.95)' : 'rgba(5,5,5,0.4)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)' }}>
-          <Link href="/" className="lp-nav-logo">
-            <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg, #C9A84C, #F0D060)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 16, color: '#000', fontWeight: 700 }}>M</div>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, letterSpacing: '0.1em', color: '#fff' }}>MOOVX</span>
-          </Link>
-          <div className="lp-nav-btns">
-            <Link href="/login" className="lp-nav-ghost">Connexion</Link>
-            <Link href="/register-client" className="lp-nav-gold">Commencer</Link>
+      {/* Grain overlay */}
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        opacity: 0.015,
+        pointerEvents: 'none',
+        zIndex: 9999,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'repeat',
+        backgroundSize: '128px 128px',
+      }} />
+
+      <div style={{ background: '#050505', minHeight: '100vh', color: '#f8fafc' }}>
+
+        {/* ─── NAVBAR ─── */}
+        <nav style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0,
+          zIndex: 1000,
+          padding: '0 24px',
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: scrolled ? 'rgba(5,5,5,0.95)' : 'transparent',
+          borderBottom: scrolled ? '1px solid rgba(201,168,76,0.15)' : '1px solid transparent',
+          backdropFilter: scrolled ? 'blur(12px)' : 'none',
+          transition: 'all 0.3s',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, color: '#C9A84C', letterSpacing: 3 }}>MOOVX</span>
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#6b7280', borderLeft: '1px solid #333', paddingLeft: 12 }}>Swiss Made &middot; Swiss Quality</span>
+          </div>
+          <div className="desktop-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Link href="/login" className="ghost-btn" style={{ padding: '8px 20px', fontSize: 13 }}>Connexion</Link>
+            <Link href="/register-client" className="gold-btn" style={{ padding: '8px 20px', fontSize: 13 }}>Commencer</Link>
           </div>
         </nav>
 
-        {/* grain */}
-        <div className="grain" />
+        {/* ─── HERO ─── */}
+        <div ref={heroRev.ref} style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '100px 24px 60px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          {/* Radial gold glow */}
+          <div style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 800, height: 800,
+            background: 'radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
 
-        {/* ═══════════════ 1. HERO ═══════════════ */}
-        <section style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px 24px 40px', position: 'relative', background: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(201,168,76,0.04) 0%, transparent 70%)' }}>
-          <div className={`hs ${heroReady ? 'ready' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+          <h1 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: 'clamp(60px, 10vw, 120px)',
+            color: '#f8fafc',
+            margin: '0 0 8px',
+            letterSpacing: 4,
+            lineHeight: 1,
+            opacity: heroRev.visible ? 1 : 0,
+            transform: heroRev.visible ? 'translateY(0)' : 'translateY(30px)',
+            transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}>
+            TRANSFORME TON CORPS
+          </h1>
 
-            {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
-              <div style={{ width: 40, height: 40, background: 'linear-gradient(135deg, #C9A84C, #F0D060)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 22, color: '#000', fontWeight: 700 }}>M</div>
-              <div>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, letterSpacing: '0.12em', color: '#fff' }}>MOOVX</span>
-                <div style={{ fontSize: 10, letterSpacing: '0.16em', color: '#555', fontWeight: 300, marginTop: -2 }}>Swiss Made &middot; Swiss Quality</div>
-              </div>
-            </div>
+          <p style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: 'clamp(20px, 3vw, 32px)',
+            color: '#C9A84C',
+            margin: '0 0 24px',
+            letterSpacing: 6,
+            opacity: heroRev.visible ? 1 : 0,
+            transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s',
+          }}>
+            DEPASSE TES LIMITES
+          </p>
 
-            {/* Title */}
-            <h1 className="display" style={{ fontSize: 'clamp(60px, 10vw, 120px)', lineHeight: 0.95, letterSpacing: '0.03em', marginBottom: 16 }}>TRANSFORME TON CORPS</h1>
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 17,
+            color: '#6b7280',
+            maxWidth: 560,
+            lineHeight: 1.7,
+            margin: '0 0 40px',
+            opacity: heroRev.visible ? 1 : 0,
+            transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
+          }}>
+            La plateforme fitness suisse propulsee par l'intelligence artificielle. Nutrition personnalisee, entrainement hypertrophie, suivi complet.
+          </p>
 
-            {/* Gold subtitle */}
-            <p className="display" style={{ fontSize: 'clamp(20px, 3vw, 32px)', color: '#C9A84C', letterSpacing: '0.1em', marginBottom: 28 }}>D&Eacute;PASSE TES LIMITES</p>
-
-            {/* Body */}
-            <p style={{ maxWidth: 560, color: '#666', fontWeight: 300, fontSize: 16, lineHeight: 1.7, marginBottom: 40 }}>
-              Plans alimentaires et entra&icirc;nement g&eacute;n&eacute;r&eacute;s par l&rsquo;intelligence artificielle. 170&nbsp;aliments fitness. R&eacute;sultats mesurables.
-            </p>
-
-            {/* Buttons */}
-            <div className="hero-btns" style={{ display: 'flex', gap: 16, marginBottom: 64 }}>
-              <Link href="/register-client" className="btn-gold">Commencer &mdash; D&egrave;s CHF&nbsp;10/mois</Link>
-              <a href="#features" className="btn-ghost">D&eacute;couvrir &darr;</a>
-            </div>
-
-            {/* Stats */}
-            <div className="hero-stats" style={{ display: 'flex', gap: 48, alignItems: 'center' }}>
-              {[['170+', 'Aliments'], ['6 Jours', 'Training'], ['100%', 'Swiss Made']].map(([val, label], i) => (
-                <div key={i} style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: '#C9A84C', letterSpacing: '0.04em' }}>{val}</div>
-                  <div style={{ fontSize: 12, color: '#555', fontWeight: 300, letterSpacing: '0.08em', marginTop: 2 }}>{label}</div>
-                </div>
-              ))}
-            </div>
+          <div className="hero-buttons" style={{
+            display: 'flex',
+            gap: 16,
+            marginBottom: 48,
+            opacity: heroRev.visible ? 1 : 0,
+            transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s',
+          }}>
+            <Link href="/register-client" className="gold-btn">Commencer — 10 jours gratuits</Link>
+            <a href="#nutrition" onClick={(e) => smoothScroll(e, 'nutrition')} className="ghost-btn">Decouvrir &darr;</a>
           </div>
-        </section>
 
-        <div className="divider" />
+          <div className="hero-stats" style={{
+            display: 'flex',
+            gap: 40,
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            opacity: heroRev.visible ? 1 : 0,
+            transition: 'opacity 0.8s 0.6s',
+          }}>
+            {[
+              { val: '170+', label: 'Aliments' },
+              { val: '89', label: 'Exercices' },
+              { val: '6 Jours', label: 'PPL' },
+              { val: '100%', label: 'Swiss Made' },
+            ].map(s => (
+              <div key={s.label} style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, color: '#C9A84C' }}>{s.val}</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#6b7280', letterSpacing: 1, textTransform: 'uppercase' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        {/* ═══════════════ 2. MARQUEE ═══════════════ */}
-        <div ref={marqueeR.ref} className={`rv ${marqueeR.visible ? 'show' : ''}`} style={{ overflow: 'hidden', padding: '18px 0', borderTop: '1px solid rgba(201,168,76,0.06)', borderBottom: '1px solid rgba(201,168,76,0.06)' }}>
-          <div className="marquee-track">
-            {[0, 1].map(k => (
-              <span key={k} style={{ fontSize: 13, letterSpacing: '0.12em', color: '#1a1a1a', fontWeight: 400, whiteSpace: 'nowrap', paddingRight: 80 }}>
-                {'Nutrition IA \u2726 Push Pull Legs \u2726 170 aliments fitness \u2726 Suivi progression \u2726 Coach connect\u00e9 \u2726 Swiss Made \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0'}
-                {'Nutrition IA \u2726 Push Pull Legs \u2726 170 aliments fitness \u2726 Suivi progression \u2726 Coach connect\u00e9 \u2726 Swiss Made \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0'}
+        {/* ─── MARQUEE ─── */}
+        <div ref={marqueeRev.ref} style={{
+          borderTop: '1px solid rgba(201,168,76,0.2)',
+          borderBottom: '1px solid rgba(201,168,76,0.2)',
+          padding: '16px 0',
+          overflow: 'hidden',
+          opacity: marqueeRev.visible ? 1 : 0,
+          transition: 'opacity 0.6s',
+        }}>
+          <div style={{
+            display: 'flex',
+            animation: 'marqueeScroll 30s linear infinite',
+            whiteSpace: 'nowrap',
+          }}>
+            {[1, 2].map(n => (
+              <span key={n} style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: 18,
+                color: '#C9A84C',
+                letterSpacing: 4,
+                paddingRight: 0,
+              }}>
+                {'Nutrition IA \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Liste de Courses \u2726 Chat IA \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Swiss Made \u2726 Coaching Connecte \u2726 '}
               </span>
             ))}
           </div>
         </div>
 
-        {/* ═══════════════ 3. PROBLEM / SOLUTION ═══════════════ */}
-        <div className="divider" />
-        <div ref={problemR.ref} className={`rv ${problemR.visible ? 'show' : ''}`}>
-          <div className="section">
-            <h2 className="section-title">POURQUOI MOOVX&nbsp;?</h2>
-            <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
-              {PROBLEMS.map((col, i) => (
-                <div key={i} style={{ background: '#0a0a0a', border: '1px solid #141414', borderRadius: 10, padding: '36px 28px' }}>
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, letterSpacing: '0.06em', color: col.color, marginBottom: 24 }}>{col.title}</h3>
-                  <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    {col.items.map((item, j) => (
-                      <li key={j} style={{ fontSize: 15, fontWeight: 300, color: '#999', lineHeight: 1.6, paddingLeft: 16, borderLeft: `2px solid ${col.color}30` }}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* ─── NUTRITION IA ─── */}
+        <div ref={nutritionRev.ref} id="nutrition">
+          <Section>
+            <SectionTitle title="NUTRITION INTELLIGENTE" subtitle="Plans alimentaires generes par l'IA, adaptes a tes macros exacts" visible={nutritionRev.visible} />
+            <FeatureGrid features={NUTRITION_FEATURES} />
+          </Section>
         </div>
 
-        <div className="divider" />
-
-        {/* ═══════════════ 4. FEATURES ═══════════════ */}
-        <div ref={featuresR.ref} className={`rv ${featuresR.visible ? 'show' : ''}`} id="features">
-          <div className="section">
-            <h2 className="section-title">TOUT CE DONT TU AS BESOIN</h2>
-            <div className="grid-2x3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-              {FEATURES.map((f, i) => (
-                <div key={i} className="feat-card">
-                  <GoldShape shape={f.shape} />
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, letterSpacing: '0.06em', marginBottom: 10, color: '#eee' }}>{f.title}</h3>
-                  <p style={{ fontSize: 14, fontWeight: 300, color: '#777', lineHeight: 1.7 }}>{f.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* ─── ENTRAINEMENT ─── */}
+        <div ref={trainingRev.ref} id="training">
+          <Section>
+            <SectionTitle title="ENTRAINEMENT HYPERTROPHIE" subtitle="Programme Push/Pull/Legs 6 jours + Cardio HIIT & LISS" visible={trainingRev.visible} />
+            <FeatureGrid features={TRAINING_FEATURES} />
+          </Section>
         </div>
 
-        <div className="divider" />
-
-        {/* ═══════════════ 5. HOW IT WORKS ═══════════════ */}
-        <div ref={howR.ref} className={`rv ${howR.visible ? 'show' : ''}`}>
-          <div className="section">
-            <h2 className="section-title">COMMENT &Ccedil;A MARCHE</h2>
-            <div className="steps" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, position: 'relative' }}>
-              {['Cr\u00e9e ton profil', 'Plan IA instantan\u00e9', 'Progresse chaque jour'].map((step, i) => (
-                <React.Fragment key={i}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: '0 0 200px', textAlign: 'center' }}>
-                    <div style={{ width: 56, height: 56, borderRadius: '50%', border: '1.5px solid #C9A84C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 22, color: '#C9A84C' }}>{i + 1}</div>
-                    <span style={{ fontSize: 15, fontWeight: 500, color: '#ccc', letterSpacing: '0.02em' }}>{step}</span>
-                  </div>
-                  {i < 2 && <div className="step-line" style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(201,168,76,0.3), rgba(201,168,76,0.08))', minWidth: 40, maxWidth: 160 }} />}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
+        {/* ─── SUIVI & ANALYTICS ─── */}
+        <div ref={trackingRev.ref}>
+          <Section>
+            <SectionTitle title="SUIVI COMPLET" subtitle="Graphiques, badges, photos — mesure chaque progres" visible={trackingRev.visible} />
+            <FeatureGrid features={TRACKING_FEATURES} />
+          </Section>
         </div>
 
-        <div className="divider" />
-
-        {/* ═══════════════ 5b. INSTALL PWA ═══════════════ */}
-        <div ref={installR.ref} className={`rv ${installR.visible ? 'show' : ''}`}>
-          <div className="section">
-            <h2 className="section-title">INSTALLE MOOVX EN 30 SECONDES</h2>
-            <p style={{ textAlign: 'center', color: '#666', fontSize: 15, fontWeight: 300, maxWidth: 500, margin: '0 auto 48px' }}>
-              Pas besoin d&apos;App Store. Installe directement depuis ton navigateur.
-            </p>
-            <div className="install-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 800, margin: '0 auto' }}>
-              {/* iOS */}
-              <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 20, padding: '36px 28px' }}>
-                <svg width="28" height="34" viewBox="0 0 28 34" fill="none" style={{ marginBottom: 20 }}>
-                  <path d="M23.2 11.3c-.12.08-3.2 1.84-3.2 5.63 0 4.4 3.86 5.95 3.97 5.99-.02.07-.62 2.11-2.04 4.18-1.25 1.81-2.55 3.62-4.53 3.62s-2.49-1.15-4.78-1.15c-2.23 0-3.02 1.19-4.84 1.19s-3.05-1.67-4.53-3.71C1.02 24.1 0 20.2 0 16.5c0-5.92 3.84-9.05 7.63-9.05 2.01 0 3.69 1.32 4.95 1.32 1.21 0 3.1-1.4 5.4-1.4.87 0 4 .08 5.32 3.43zM18.8 1.65c.96-1.13 1.65-2.7 1.65-4.27 0-.22-.02-.44-.05-.62-1.57.06-3.44 1.05-4.57 2.36-.88 1.02-1.72 2.59-1.72 4.19 0 .24.04.47.06.55.1.02.27.04.44.04 1.41 0 3.2-.95 4.19-2.25z" fill="#fff"/>
-                </svg>
-                <h3 style={{ fontFamily: 'var(--font-body)', fontSize: 18, fontWeight: 600, color: '#F8FAFC', marginBottom: 24 }}>Sur iPhone</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  {[
-                    ['Ouvre app.moovx.ch dans Safari', '🌐'],
-                    ['Appuie sur le bouton Partager ⬆️', '📤'],
-                    ['Choisis « Sur l\u2019\u00e9cran d\u2019accueil »', '📲'],
-                  ].map(([text, icon], i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '1.5px solid #C9A84C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#C9A84C', fontFamily: 'var(--font-display)', flexShrink: 0 }}>{i + 1}</div>
-                      <span style={{ fontSize: 14, color: '#aaa', fontWeight: 400, lineHeight: 1.6 }}>{text}</span>
-                    </div>
-                  ))}
-                </div>
-                <p style={{ fontSize: 12, color: '#444', marginTop: 20, fontStyle: 'italic' }}>Fonctionne uniquement avec Safari, pas Chrome.</p>
-              </div>
-
-              {/* Android */}
-              <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 20, padding: '36px 28px' }}>
-                <svg width="28" height="32" viewBox="0 0 28 32" fill="none" style={{ marginBottom: 20 }}>
-                  <path d="M1.54 10.34c-.85 0-1.54.74-1.54 1.65v8.24c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65v-8.24c0-.91-.69-1.65-1.54-1.65zm4.23-.62v13.73c0 .85.65 1.55 1.44 1.55h1.57v4.14c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65V25h2.28v4.14c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65V25h1.57c.79 0 1.44-.7 1.44-1.55V9.72H5.77zm20.69.62c-.85 0-1.54.74-1.54 1.65v8.24c0 .91.69 1.65 1.54 1.65s1.54-.74 1.54-1.65v-8.24c0-.91-.69-1.65-1.54-1.65zM17.75 1.29l1.47-2.7a.31.31 0 00-.13-.42.29.29 0 00-.4.14L17.2 1.03C16.26.62 15.18.38 14 .38s-2.26.24-3.2.65L9.31-1.69a.29.29 0 00-.4-.14.31.31 0 00-.13.42l1.47 2.7C7.62 2.68 5.93 5.26 5.77 8.3h16.46c-.16-3.04-1.85-5.62-4.48-7.01zM10.42 5.52a.82.82 0 01-.81-.83c0-.46.36-.83.81-.83s.81.37.81.83-.36.83-.81.83zm7.16 0a.82.82 0 01-.81-.83c0-.46.36-.83.81-.83s.81.37.81.83-.36.83-.81.83z" fill="#78C257"/>
-                </svg>
-                <h3 style={{ fontFamily: 'var(--font-body)', fontSize: 18, fontWeight: 600, color: '#F8FAFC', marginBottom: 24 }}>Sur Android</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  {[
-                    ['Ouvre app.moovx.ch dans Chrome', '🌐'],
-                    ['Appuie sur le menu \u22ee (3 points en haut)', '⋮'],
-                    ['Choisis « Installer l\u2019application »', '📲'],
-                  ].map(([text], i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '1.5px solid #C9A84C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#C9A84C', fontFamily: 'var(--font-display)', flexShrink: 0 }}>{i + 1}</div>
-                      <span style={{ fontSize: 14, color: '#aaa', fontWeight: 400, lineHeight: 1.6 }}>{text}</span>
-                    </div>
-                  ))}
-                </div>
-                <p style={{ fontSize: 12, color: '#444', marginTop: 20, fontStyle: 'italic' }}>Fonctionne avec Chrome, Edge, Samsung Internet.</p>
+        {/* ─── COACH IA ─── */}
+        <div ref={coachIaRev.ref} id="coach-ia">
+          <Section>
+            <SectionTitle title="TON COACH IA PERSONNEL" subtitle="Pose n'importe quelle question fitness ou nutrition" visible={coachIaRev.visible} />
+            <div style={{
+              maxWidth: 700,
+              margin: '0 auto',
+              background: '#111',
+              border: '1px solid #1a1a1a',
+              borderRadius: 16,
+              padding: '48px 40px',
+              textAlign: 'center',
+              opacity: coachIaRev.visible ? 1 : 0,
+              transform: coachIaRev.visible ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
+            }}>
+              <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>{icons.robot}</div>
+              <p style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 16,
+                color: '#a0a0a0',
+                lineHeight: 1.8,
+                margin: '0 0 32px',
+              }}>
+                Le Coach IA de MoovX connait ton profil, tes objectifs, tes macros. Il te repond en francais, personnalise et motivant. Disponible 24/7.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
+                {[
+                  'Comment atteindre mes macros ?',
+                  'Quel exercice pour les pectoraux ?',
+                  'Remplacer un aliment du plan ?',
+                ].map(q => (
+                  <span key={q} style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 13,
+                    color: '#C9A84C',
+                    border: '1px solid rgba(201,168,76,0.25)',
+                    borderRadius: 20,
+                    padding: '8px 16px',
+                    background: 'rgba(201,168,76,0.05)',
+                  }}>{q}</span>
+                ))}
               </div>
             </div>
-
-            {/* PWA badges */}
-            <p style={{ textAlign: 'center', color: '#555', fontSize: 14, fontWeight: 300, maxWidth: 600, margin: '36px auto 20px', lineHeight: 1.7 }}>
-              Une fois install&eacute;e, MoovX fonctionne comme une app native : plein &eacute;cran, notifications, acc&egrave;s hors ligne.
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 10 }}>
-              {['Plein écran', 'Notifications', 'Hors ligne', 'Mises à jour auto'].map(b => (
-                <span key={b} style={{ fontSize: 12, fontWeight: 500, color: '#C9A84C', background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 20, padding: '6px 16px' }}>✓ {b}</span>
-              ))}
-            </div>
-          </div>
+          </Section>
         </div>
 
-        <div className="divider" />
+        {/* ─── COACHING CONNECTE ─── */}
+        <div ref={coachingRev.ref}>
+          <Section>
+            <SectionTitle title="COACHING PROFESSIONNEL" subtitle="Connecte-toi avec ton coach pour un suivi personnalise" visible={coachingRev.visible} />
+            <FeatureGrid features={COACHING_FEATURES} columns={3} />
+          </Section>
+        </div>
 
-        {/* ═══════════════ 6. PRICING ═══════════════ */}
-        <div ref={pricingR.ref} className={`rv ${pricingR.visible ? 'show' : ''}`}>
-          <div className="section">
-            <h2 className="section-title">TARIFS SIMPLES</h2>
-            <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, alignItems: 'center' }}>
-              {PRICING.map((p, i) => (
-                <div key={i} className={`price-card ${p.highlight ? 'pop' : ''}`}>
-                  {p.badge && (
-                    <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', color: '#000', background: 'linear-gradient(105deg, #C9A84C, #F0D060)', borderRadius: 20, padding: '5px 14px', marginBottom: 20 }}>{p.badge}</div>
+        {/* ─── COMMENT CA MARCHE ─── */}
+        <div ref={stepsRev.ref} id="how">
+          <Section>
+            <SectionTitle title="COMMENT CA MARCHE" subtitle="4 etapes pour transformer ton corps" visible={stepsRev.visible} />
+            <div className="steps-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 24,
+              position: 'relative',
+            }}>
+              {STEPS.map((s, i) => (
+                <div key={s.num} style={{
+                  textAlign: 'center',
+                  opacity: stepsRev.visible ? 1 : 0,
+                  transform: stepsRev.visible ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * 120}ms`,
+                }}>
+                  <div style={{
+                    width: 56, height: 56,
+                    borderRadius: '50%',
+                    border: '2px solid #C9A84C',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                    fontFamily: "'Bebas Neue', sans-serif",
+                    fontSize: 22,
+                    color: '#C9A84C',
+                  }}>{s.num}</div>
+                  {i < STEPS.length - 1 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 28,
+                      left: `calc(${(i + 0.5) * 25}% + 28px)`,
+                      width: `calc(25% - 56px)`,
+                      height: 2,
+                      background: 'linear-gradient(90deg, #C9A84C, rgba(201,168,76,0.2))',
+                    }} />
                   )}
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, letterSpacing: '0.06em', color: '#ccc', marginBottom: 12 }}>{p.name}</h3>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 44, color: '#fff', letterSpacing: '0.02em' }}>
-                    {p.price}<span style={{ fontSize: 16, color: '#666', fontWeight: 300, fontFamily: 'var(--font-body)' }}>{p.period}</span>
-                  </div>
-                  <div style={{ marginTop: 24 }}>
-                    <Link href="/register-client" className="btn-gold" style={{ width: '100%', fontSize: 13, padding: '12px 20px' }}>Commencer</Link>
-                  </div>
+                  <h4 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 16, color: '#f8fafc', margin: '0 0 8px' }}>{s.title}</h4>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>{s.desc}</p>
                 </div>
               ))}
             </div>
-            <p style={{ textAlign: 'center', marginTop: 40, fontSize: 14, fontWeight: 300, color: '#555', letterSpacing: '0.02em' }}>
-              &#10003; Sans engagement &middot; &#10003; R&eacute;siliable &middot; &#10003; 10&nbsp;jours d&rsquo;essai gratuit
+          </Section>
+        </div>
+
+        {/* ─── PWA INSTALL ─── */}
+        <div ref={pwaRev.ref}>
+          <Section>
+            <SectionTitle title="INSTALLE MOOVX EN 30 SECONDES" subtitle="Pas besoin d'App Store. Installe depuis ton navigateur." visible={pwaRev.visible} />
+            <div className="pwa-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 24,
+              maxWidth: 700,
+              margin: '0 auto 40px',
+              opacity: pwaRev.visible ? 1 : 0,
+              transform: pwaRev.visible ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
+            }}>
+              {[
+                { device: 'iPhone', steps: 'Safari → Partager → Ecran d\'accueil' },
+                { device: 'Android', steps: 'Chrome → Menu → Installer' },
+              ].map(d => (
+                <div key={d.device} style={{
+                  background: '#0d0d0d',
+                  border: '1px solid #1a1a1a',
+                  borderRadius: 12,
+                  padding: '28px 24px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ marginBottom: 12 }}>{icons.phone}</div>
+                  <h4 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 16, color: '#f8fafc', margin: '0 0 8px' }}>{d.device}</h4>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#6b7280', margin: 0 }}>{d.steps}</p>
+                </div>
+              ))}
+            </div>
+            <div className="pwa-badges" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 16,
+              maxWidth: 600,
+              margin: '0 auto',
+              opacity: pwaRev.visible ? 1 : 0,
+              transition: 'opacity 0.6s 0.4s',
+            }}>
+              {['Plein ecran', 'Notifications', 'Hors ligne', 'Mises a jour auto'].map(b => (
+                <div key={b} style={{
+                  textAlign: 'center',
+                  padding: '12px',
+                  border: '1px solid #1a1a1a',
+                  borderRadius: 8,
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 13,
+                  color: '#6b7280',
+                }}>{b}</div>
+              ))}
+            </div>
+          </Section>
+        </div>
+
+        {/* ─── PRICING ─── */}
+        <div ref={pricingRev.ref} id="pricing">
+          <Section>
+            <SectionTitle title="TARIFS SIMPLES" subtitle="Commence gratuitement, evolue a ton rythme" visible={pricingRev.visible} />
+            <div className="pricing-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 20,
+              marginBottom: 40,
+            }}>
+              {PRICING.map((p, i) => (
+                <div key={p.name} className={`pricing-card ${p.highlight ? 'highlight' : ''}`} style={{
+                  opacity: pricingRev.visible ? 1 : 0,
+                  transform: pricingRev.visible ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * 100}ms`,
+                  position: 'relative',
+                  background: '#0d0d0d',
+                  border: p.highlight ? '1px solid #C9A84C' : '1px solid #1a1a1a',
+                  borderRadius: 16,
+                  padding: '32px 28px',
+                  display: 'flex',
+                  flexDirection: 'column' as const,
+                  alignItems: 'center',
+                  boxShadow: p.highlight ? '0 0 40px rgba(201,168,76,0.1)' : 'none',
+                }}>
+                  {p.badge && (
+                    <span style={{
+                      position: 'absolute',
+                      top: -12,
+                      background: '#C9A84C',
+                      color: '#050505',
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '4px 14px',
+                      borderRadius: 20,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                    }}>{p.badge}</span>
+                  )}
+                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#6b7280', margin: '8px 0 16px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1 }}>{p.name}</h3>
+                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 44, color: '#f8fafc', lineHeight: 1 }}>{p.price}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#6b7280', marginBottom: 24 }}>{p.period}</div>
+                  <div style={{ width: '100%', marginBottom: 24 }}>
+                    {PRICING_CHECKLIST.slice(0, 6).map(item => (
+                      <div key={item} style={{
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: 13,
+                        color: '#6b7280',
+                        padding: '6px 0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        {item}
+                      </div>
+                    ))}
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#555', padding: '6px 0' }}>+ 6 autres fonctionnalites</div>
+                  </div>
+                  <Link href="/register-client" className={p.highlight ? 'gold-btn' : 'ghost-btn'} style={{ width: '100%', textAlign: 'center', fontSize: 14, padding: '12px 0' }}>
+                    {p.name === 'Coach Pro' ? 'Devenir Coach' : 'Commencer'}
+                  </Link>
+                </div>
+              ))}
+            </div>
+            <p style={{
+              textAlign: 'center',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 14,
+              color: '#6b7280',
+              opacity: pricingRev.visible ? 1 : 0,
+              transition: 'opacity 0.6s 0.5s',
+            }}>
+              10 jours d'essai gratuit &middot; Sans engagement &middot; Toutes fonctionnalites incluses
             </p>
-          </div>
+          </Section>
         </div>
 
-        <div className="divider" />
-
-        {/* ═══════════════ 7. TESTIMONIALS ═══════════════ */}
-        <div ref={testR.ref} className={`rv ${testR.visible ? 'show' : ''}`}>
-          <div className="section">
-            <h2 className="section-title">ILS EN PARLENT</h2>
-            <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-              {TESTIMONIALS.map((t, i) => (
-                <div key={i} className="testi-card">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05))', border: '1px solid rgba(201,168,76,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 16, color: '#C9A84C', letterSpacing: '0.04em' }}>{t.initials}</div>
-                    <span style={{ fontSize: 15, fontWeight: 500, color: '#ccc' }}>{t.name}</span>
-                  </div>
-                  <p style={{ fontSize: 14, fontWeight: 300, color: '#888', lineHeight: 1.7, marginBottom: 20 }}>&ldquo;{t.quote}&rdquo;</p>
-                  <div style={{ display: 'inline-block', fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', color: '#C9A84C', background: 'rgba(201,168,76,0.08)', borderRadius: 20, padding: '5px 14px' }}>{t.result}</div>
-                </div>
-              ))}
+        {/* ─── FAQ ─── */}
+        <div ref={faqRev.ref} id="faq">
+          <Section>
+            <SectionTitle title="QUESTIONS FREQUENTES" subtitle="Tout ce que tu dois savoir sur MoovX" visible={faqRev.visible} />
+            <div style={{
+              maxWidth: 700,
+              margin: '0 auto',
+              opacity: faqRev.visible ? 1 : 0,
+              transform: faqRev.visible ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
+            }}>
+              {FAQ_DATA.map(f => <FaqItem key={f.q} q={f.q} a={f.a} />)}
             </div>
-          </div>
+          </Section>
         </div>
 
-        <div className="divider" />
-
-        {/* ═══════════════ 8. FAQ ═══════════════ */}
-        <div ref={faqR.ref} className={`rv ${faqR.visible ? 'show' : ''}`}>
-          <div className="section" style={{ maxWidth: 760 }}>
-            <h2 className="section-title">QUESTIONS FR&Eacute;QUENTES</h2>
-            <div>
-              {FAQ_DATA.map((item, i) => (
-                <div key={i} className="faq-item">
-                  <button className="faq-q" onClick={() => toggleFaq(i)}>
-                    <span>{item.q}</span>
-                    <span style={{ fontSize: 22, color: '#C9A84C', transition: 'transform 0.3s', transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0)', flexShrink: 0, marginLeft: 16 }}>+</span>
-                  </button>
-                  <div className={`faq-a ${openFaq === i ? 'open' : ''}`}>
-                    <p style={{ fontSize: 14, fontWeight: 300, color: '#777', lineHeight: 1.7, paddingBottom: 24 }}>{item.a}</p>
-                  </div>
-                </div>
-              ))}
+        {/* ─── CTA FINAL ─── */}
+        <div ref={ctaRev.ref}>
+          <section style={{
+            padding: '120px 24px',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            {/* Gold orb */}
+            <div style={{
+              position: 'absolute',
+              top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 600, height: 600,
+              background: 'radial-gradient(circle, rgba(201,168,76,0.1) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }} />
+            <h2 style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: 'clamp(32px, 5vw, 56px)',
+              color: '#f8fafc',
+              margin: '0 0 16px',
+              letterSpacing: 2,
+              position: 'relative',
+              opacity: ctaRev.visible ? 1 : 0,
+              transform: ctaRev.visible ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}>
+              PRET A TRANSFORMER TON CORPS ?
+            </h2>
+            <p style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 17,
+              color: '#6b7280',
+              margin: '0 0 32px',
+              position: 'relative',
+              opacity: ctaRev.visible ? 1 : 0,
+              transition: 'opacity 0.6s 0.15s',
+            }}>
+              Rejoins MoovX et commence ta transformation des aujourd'hui.
+            </p>
+            <div style={{ position: 'relative', opacity: ctaRev.visible ? 1 : 0, transition: 'opacity 0.6s 0.3s' }}>
+              <Link href="/register-client" className="gold-btn" style={{ fontSize: 16, padding: '16px 40px' }}>
+                Commencer — 10 jours gratuits
+              </Link>
             </div>
-          </div>
-        </div>
-
-        <div className="divider" />
-
-        {/* ═══════════════ 9. FINAL CTA ═══════════════ */}
-        <div ref={ctaR.ref} className={`rv ${ctaR.visible ? 'show' : ''}`}>
-          <section style={{ padding: '120px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-            {/* gold orb */}
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <h2 className="display" style={{ fontSize: 'clamp(36px, 7vw, 80px)', letterSpacing: '0.04em', marginBottom: 32 }}>PR&Ecirc;T &Agrave; COMMENCER&nbsp;?</h2>
-              <Link href="/register-client" className="btn-gold" style={{ fontSize: 16, padding: '18px 44px' }}>Commencer maintenant &mdash; 10&nbsp;jours gratuits</Link>
-            </div>
+            <p style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              color: '#555',
+              marginTop: 16,
+              position: 'relative',
+              opacity: ctaRev.visible ? 1 : 0,
+              transition: 'opacity 0.6s 0.45s',
+            }}>
+              Sans engagement &middot; Resiliable a tout moment
+            </p>
           </section>
         </div>
 
-        <div className="divider" />
-
-        {/* ═══════════════ 10. FOOTER ═══════════════ */}
-        <footer style={{ padding: '60px 24px', textAlign: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 20 }}>
-            <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #C9A84C, #F0D060)', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 18, color: '#000', fontWeight: 700 }}>M</div>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, letterSpacing: '0.12em', color: '#fff' }}>MOOVX</span>
+        {/* ─── FOOTER ─── */}
+        <footer style={{
+          borderTop: '1px solid #1a1a1a',
+          padding: '40px 24px',
+        }}>
+          <div className="footer-inner" style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: '#C9A84C', letterSpacing: 2 }}>MOOVX</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#6b7280' }}>Swiss Made &middot; Swiss Quality</span>
+              </div>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#555', margin: 0 }}>
+                &copy; 2026 MoovX &middot; Geneve, Suisse
+              </p>
+            </div>
+            <div className="footer-links" style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              {[
+                { label: 'Application', href: '/login' },
+                { label: 'Tarifs', href: '#pricing' },
+                { label: 'FAQ', href: '#faq' },
+                { label: 'Contact', href: 'mailto:contact@moovx.ch' },
+                { label: 'CGU', href: '#' },
+              ].map(link => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={link.href.startsWith('#') ? (e) => { e.preventDefault(); const id = link.href.slice(1); if (id) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); } : undefined}
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 13,
+                    color: '#6b7280',
+                    textDecoration: 'none',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A84C'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#6b7280'; }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
           </div>
-          <p style={{ fontSize: 11, letterSpacing: '0.14em', color: '#444', fontWeight: 300, marginBottom: 24 }}>Swiss Made &middot; Swiss Quality</p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 28, marginBottom: 28, flexWrap: 'wrap' }}>
-            <Link href="/register-client" style={{ fontSize: 13, color: '#666', textDecoration: 'none', fontWeight: 400, transition: 'color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')} onMouseLeave={e => (e.currentTarget.style.color = '#666')}>Application</Link>
-            <Link href="/login" style={{ fontSize: 13, color: '#666', textDecoration: 'none', fontWeight: 400, transition: 'color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')} onMouseLeave={e => (e.currentTarget.style.color = '#666')}>Connexion</Link>
-            <a href="mailto:contact@moovx.ch" style={{ fontSize: 13, color: '#666', textDecoration: 'none', fontWeight: 400, transition: 'color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')} onMouseLeave={e => (e.currentTarget.style.color = '#666')}>Contact</a>
-            <a href="#" style={{ fontSize: 13, color: '#666', textDecoration: 'none', fontWeight: 400, transition: 'color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')} onMouseLeave={e => (e.currentTarget.style.color = '#666')}>CGU</a>
-          </div>
-          <p style={{ fontSize: 12, color: '#333', fontWeight: 300 }}>&copy; 2026 MOOVX. Tous droits r&eacute;serv&eacute;s.</p>
         </footer>
+
       </div>
     </>
   );
