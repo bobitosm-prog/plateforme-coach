@@ -25,6 +25,14 @@ const PLAN_META: Record<string, { mode: 'subscription' | 'payment'; subType: str
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('[checkout] ENV CHECK:', {
+      STRIPE_KEY: process.env.STRIPE_SECRET_KEY ? 'SET (' + process.env.STRIPE_SECRET_KEY.substring(0, 10) + '...)' : 'MISSING',
+      MONTHLY: process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY || 'MISSING',
+      YEARLY: process.env.NEXT_PUBLIC_PRICE_CLIENT_YEARLY || 'MISSING',
+      LIFETIME: process.env.NEXT_PUBLIC_PRICE_CLIENT_LIFETIME || 'MISSING',
+      COACH: process.env.NEXT_PUBLIC_PRICE_COACH_MONTHLY || 'MISSING',
+    })
+
     const { clientId, planId, coachId } = await req.json()
     if (!clientId) return NextResponse.json({ error: 'clientId required' }, { status: 400 })
 

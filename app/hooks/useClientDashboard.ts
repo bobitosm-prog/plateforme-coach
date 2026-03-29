@@ -63,7 +63,7 @@ export default function useClientDashboard() {
 
   // Scheduled sessions (calendar)
   const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([])
-  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date>(new Date())
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date>(() => new Date())
   const reminderTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
   // Analytics
@@ -429,18 +429,20 @@ export default function useClientDashboard() {
     }
 
     // Immediate notification if session is within 30 minutes
-    const now = Date.now()
-    for (const session of todaySessions) {
-      if (session.session_type === 'rest') continue
-      const sessionTime = new Date(`${session.scheduled_date}T${session.scheduled_time}`).getTime()
-      const diff = sessionTime - now
-      if (diff > 0 && diff < 30 * 60 * 1000 && Notification.permission === 'granted') {
-        const minsLeft = Math.round(diff / 60000)
-        new Notification('MoovX — Bientôt ta séance ! 💪', {
-          body: `${session.title} dans ${minsLeft} min`,
-          icon: '/icon-192.png',
-          tag: `session-soon-${session.id}`,
-        })
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      const now = Date.now()
+      for (const session of todaySessions) {
+        if (session.session_type === 'rest') continue
+        const sessionTime = new Date(`${session.scheduled_date}T${session.scheduled_time}`).getTime()
+        const diff = sessionTime - now
+        if (diff > 0 && diff < 30 * 60 * 1000) {
+          const minsLeft = Math.round(diff / 60000)
+          new Notification('MoovX — Bientôt ta séance ! 💪', {
+            body: `${session.title} dans ${minsLeft} min`,
+            icon: '/icon-192.png',
+            tag: `session-soon-${session.id}`,
+          })
+        }
       }
     }
   }
