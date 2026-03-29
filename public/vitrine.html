@@ -34,10 +34,10 @@
     "name": "MoovX",
     "url": "https://moovx.ch",
     "logo": "https://moovx.ch/og-image.png",
-    "description": "Plateforme de coaching fitness suisse propulsee par l'intelligence artificielle.",
+    "description": "Plateforme de coaching fitness suisse propulsée par l'intelligence artificielle.",
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Geneve",
+      "addressLocality": "Genève",
       "addressCountry": "CH"
     }
   }
@@ -74,7 +74,7 @@
         "name": "C'est quoi MoovX ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "MoovX est une plateforme de coaching fitness suisse propulsee par l'intelligence artificielle. Elle combine nutrition personnalisee, entrainement hypertrophie PPL, suivi de progression et coaching connecte."
+          "text": "MoovX est une plateforme de coaching fitness suisse propulsée par l'intelligence artificielle. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté."
         }
       },
       {
@@ -82,7 +82,7 @@
         "name": "Comment fonctionne la nutrition IA ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "L'IA analyse ton profil (poids, objectif, activite) et genere des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits."
+          "text": "L'IA analyse ton profil (poids, objectif, activité) et génère des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits."
         }
       },
       {
@@ -90,7 +90,7 @@
         "name": "Le scanner code-barres fonctionne comment ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Scanne le code-barres de tes produits avec la camera de ton telephone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute a ton journal."
+          "text": "Scanne le code-barres de tes produits avec la caméra de ton téléphone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute à ton journal."
         }
       },
       {
@@ -98,15 +98,15 @@
         "name": "C'est quoi le programme PPL ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Push/Pull/Legs est un split d'entrainement sur 6 jours optimise pour l'hypertrophie. Push (poitrine, epaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaille 2 fois par semaine."
+          "text": "Push/Pull/Legs est un split d'entraînement sur 6 jours optimisé pour l'hypertrophie. Push (poitrine, épaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaillé 2 fois par semaine."
         }
       },
       {
         "@type": "Question",
-        "name": "Mes donnees sont securisees ?",
+        "name": "Mes données sont sécurisées ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes donnees sont hebergees en Europe et tu peux les exporter ou supprimer ton compte a tout moment."
+          "text": "Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes données sont hébergées en Europe et tu peux les exporter ou supprimer ton compte à tout moment."
         }
       },
       {
@@ -114,7 +114,7 @@
         "name": "Je peux essayer gratuitement ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Oui ! Tu beneficies de 10 jours d'essai gratuit avec acces a toutes les fonctionnalites. Sans engagement, sans carte de credit requise."
+          "text": "Oui ! Tu bénéficies de 10 jours d'essai gratuit avec accès à toutes les fonctionnalités. Sans engagement, sans carte de crédit requise."
         }
       },
       {
@@ -122,7 +122,7 @@
         "name": "Comment installer l'app ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter a l'ecran d'accueil. Sur Android : Chrome, menu, Installer l'application."
+          "text": "MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter à l'écran d'accueil. Sur Android : Chrome, menu, Installer l'application."
         }
       },
       {
@@ -130,7 +130,7 @@
         "name": "C'est quoi le Coach IA ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Un assistant intelligent qui connait ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entrainement, il te repond de maniere personnalisee en francais."
+          "text": "Un assistant intelligent qui connaît ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entraînement, il te répond de manière personnalisée en français."
         }
       }
     ]
@@ -794,20 +794,53 @@
 
     /* ── Responsive ── */
     @media (max-width: 768px) {
-      .navbar-links { display: none !important; }
-      .hero-stats { flex-direction: column !important; gap: 12px !important; }
+      /* Navbar: keep buttons visible but smaller */
+      .navbar-links {
+        display: flex !important;
+        gap: 8px !important;
+      }
+      .navbar-links .ghost-btn,
+      .navbar-links .gold-btn {
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+      }
+
+      /* Hero stats: 2x2 grid */
+      .hero-stats {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 16px 32px !important;
+      }
+
+      /* Hero buttons: stack vertically */
       .hero-buttons { flex-direction: column !important; align-items: stretch !important; }
       .hero-buttons a { width: 100% !important; text-align: center !important; }
+
+      /* Feature grids: 1 column */
       .feature-grid { grid-template-columns: 1fr !important; }
+      .feature-card { width: 100% !important; }
+
+      /* Pricing: 1 column */
       .pricing-grid { grid-template-columns: 1fr !important; }
+
+      /* Steps: 1 column */
       .steps-grid { grid-template-columns: 1fr !important; }
       .step-line { display: none !important; }
+
+      /* PWA: 1 column */
       .pwa-grid { grid-template-columns: 1fr !important; }
       .pwa-badges { grid-template-columns: 1fr 1fr !important; }
+
+      /* Footer: centered */
       .footer-inner { flex-direction: column !important; text-align: center !important; gap: 24px !important; }
       .footer-links { justify-content: center !important; }
+
+      /* Coaching grid */
       .coaching-grid { grid-template-columns: 1fr !important; }
       .coach-ia-card { padding: 32px 20px; }
+
+      /* Section padding */
+      .section { padding: 60px 16px !important; }
     }
   </style>
 </head>
@@ -832,11 +865,11 @@
   <div class="hero reveal" id="hero">
     <div class="hero-glow"></div>
     <h1 class="reveal-child delay-0">TRANSFORME TON CORPS</h1>
-    <p class="subtitle reveal-child delay-150">DEPASSE TES LIMITES</p>
-    <p class="desc reveal-child delay-300">La plateforme fitness suisse propulsee par l'intelligence artificielle. Nutrition personnalisee, entrainement hypertrophie, suivi complet.</p>
+    <p class="subtitle reveal-child delay-150">DÉPASSE TES LIMITES</p>
+    <p class="desc reveal-child delay-300">La plateforme fitness suisse propulsée par l'intelligence artificielle. Nutrition personnalisée, entraînement hypertrophie, suivi complet.</p>
     <div class="hero-buttons reveal-child delay-450">
       <a href="https://app.moovx.ch/register-client" class="gold-btn">Commencer — 10 jours gratuits</a>
-      <a href="#nutrition" class="ghost-btn">Decouvrir &darr;</a>
+      <a href="#nutrition" class="ghost-btn">Découvrir &darr;</a>
     </div>
     <div class="hero-stats reveal-child delay-600">
       <div style="text-align:center">
@@ -861,8 +894,8 @@
   <!-- ═══════════ 3. MARQUEE ═══════════ -->
   <div class="marquee-wrap reveal" id="marquee">
     <div class="marquee-track">
-      <span>Nutrition IA &#10022; Push Pull Legs &#10022; Scanner Code-Barres &#10022; Recettes Fitness &#10022; Liste de Courses &#10022; Chat IA &#10022; HIIT &amp; LISS &#10022; Records Personnels &#10022; Swiss Made &#10022; Coaching Connecte &#10022;&nbsp;</span>
-      <span>Nutrition IA &#10022; Push Pull Legs &#10022; Scanner Code-Barres &#10022; Recettes Fitness &#10022; Liste de Courses &#10022; Chat IA &#10022; HIIT &amp; LISS &#10022; Records Personnels &#10022; Swiss Made &#10022; Coaching Connecte &#10022;&nbsp;</span>
+      <span>Nutrition IA &#10022; Push Pull Legs &#10022; Scanner Code-Barres &#10022; Recettes Fitness &#10022; Liste de Courses &#10022; Chat IA &#10022; HIIT &amp; LISS &#10022; Records Personnels &#10022; Swiss Made &#10022; Coaching Connecté &#10022;&nbsp;</span>
+      <span>Nutrition IA &#10022; Push Pull Legs &#10022; Scanner Code-Barres &#10022; Recettes Fitness &#10022; Liste de Courses &#10022; Chat IA &#10022; HIIT &amp; LISS &#10022; Records Personnels &#10022; Swiss Made &#10022; Coaching Connecté &#10022;&nbsp;</span>
     </div>
   </div>
 
@@ -871,80 +904,80 @@
     <div class="section">
       <div class="section-title reveal">
         <h2>NUTRITION INTELLIGENTE</h2>
-        <p>Plans alimentaires generes par l'IA, adaptes a tes macros exacts</p>
+        <p>Plans alimentaires générés par l'IA, adaptés a tes macros exacts</p>
       </div>
       <div class="feature-grid reveal">
         <div class="feature-card reveal-child delay-0">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L26 14L14 26L2 14L14 2Z" stroke="#C9A84C" stroke-width="1.5" fill="none"/></svg></div>
-          <h3>Plans 7 jours personnalises</h3>
-          <p>L'IA genere un plan alimentaire complet adapte a tes calories, proteines, glucides et lipides.</p>
+          <h3>Plans 7 jours personnalisés</h3>
+          <p>L'IA génère un plan alimentaire complet adapté a tes calories, protéines, glucides et lipides.</p>
         </div>
         <div class="feature-card reveal-child delay-1">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="9" height="9" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="16" y="3" width="9" height="9" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="3" y="16" width="9" height="9" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="16" y="16" width="9" height="9" stroke="#C9A84C" stroke-width="1.2" rx="1"/></svg></div>
           <h3>Scanner code-barres</h3>
-          <p>Scanne les aliments de ton frigo. L'IA cree tes plans avec les produits que tu as deja.</p>
+          <p>Scanne les aliments de ton frigo. L'IA crée tes plans avec les produits que tu as déjà.</p>
         </div>
         <div class="feature-card reveal-child delay-2">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L25 8V20L14 26L3 20V8L14 2Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
           <h3>Liste de courses auto</h3>
-          <p>Generee depuis ton plan semaine. Organisee par rayon de supermarche.</p>
+          <p>Générée depuis ton plan semaine. Organisée par rayon de supermarché.</p>
         </div>
         <div class="feature-card reveal-child delay-3">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C14 2 8 10 8 16C8 19.3 10.7 22 14 22C17.3 22 20 19.3 20 16C20 10 14 2 14 2Z" stroke="#C9A84C" stroke-width="1.5"/><path d="M14 14C14 14 12 17 12 18.5C12 19.6 12.9 20.5 14 20.5C15.1 20.5 16 19.6 16 18.5C16 17 14 14 14 14Z" stroke="#C9A84C" stroke-width="1"/></svg></div>
           <h3>Recettes fitness IA</h3>
-          <p>Recettes adaptees a tes macros avec les 170 aliments fitness de la base.</p>
+          <p>Recettes adaptées a tes macros avec les 170 aliments fitness de la base.</p>
         </div>
         <div class="feature-card reveal-child delay-4">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
           <h3>170 aliments fitness</h3>
-          <p>Base curatee d'aliments essentiels. Proteines, feculents, legumes, fruits, supplements.</p>
+          <p>Base curatée d'aliments essentiels. Proteines, féculents, legumes, fruits, suppléments.</p>
         </div>
         <div class="feature-card reveal-child delay-5">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L17 10.5H26L19 16L21.5 25L14 19.5L6.5 25L9 16L2 10.5H11L14 2Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
-          <h3>Preferences personnalisees</h3>
-          <p>Choisis tes aliments favoris. L'IA les utilise en priorite.</p>
+          <h3>Préférences personnalisées</h3>
+          <p>Choisis tes aliments favoris. L'IA les utilise en priorité.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════ 5. ENTRAINEMENT ═══════════ -->
+  <!-- ═══════════ 5. ENTRAÎNEMENT ═══════════ -->
   <div id="training">
     <div class="section">
       <div class="section-title reveal">
-        <h2>ENTRAINEMENT HYPERTROPHIE</h2>
+        <h2>ENTRAÎNEMENT HYPERTROPHIE</h2>
         <p>Programme Push/Pull/Legs 6 jours + Cardio HIIT &amp; LISS</p>
       </div>
       <div class="feature-grid reveal">
         <div class="feature-card reveal-child delay-0">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3L26 25H2L14 3Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
           <h3>Push Pull Legs 6 jours</h3>
-          <p>Programme hypertrophie scientifique. Chaque muscle entraine 2x/semaine.</p>
+          <p>Programme hypertrophie scientifique. Chaque muscle entraîné 2x/semaine.</p>
         </div>
         <div class="feature-card reveal-child delay-1">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M16 2L6 16H14L12 26L22 12H14L16 2Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
           <h3>Cardio HIIT &amp; LISS</h3>
-          <p>8 seances HIIT + 6 seances LISS. Timer integre avec intervalles work/rest.</p>
+          <p>8 séances HIIT + 6 séances LISS. Timer intégré avec intervalles work/rest.</p>
         </div>
         <div class="feature-card reveal-child delay-2">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M10 2H18L26 10V18L18 26H10L2 18V10L10 2Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
           <h3>Timer de repos intelligent</h3>
-          <p>Timer automatique entre les series. Vibration quand c'est reparti.</p>
+          <p>Timer automatique entre les séries. Vibration quand c'est reparti.</p>
         </div>
         <div class="feature-card reveal-child delay-3">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="8" width="22" height="16" rx="2" stroke="#C9A84C" stroke-width="1.5"/><circle cx="14" cy="16" r="4" stroke="#C9A84C" stroke-width="1.5"/><path d="M10 8L12 4H16L18 8" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
-          <h3>89 exercices avec videos</h3>
-          <p>Base de 89 exercices en francais. Description, muscles cibles, conseils.</p>
+          <h3>89 exercices avec vidéos</h3>
+          <p>Base de 89 exercices en français. Description, muscles ciblés, conseils.</p>
         </div>
         <div class="feature-card reveal-child delay-4">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="6" width="22" height="19" rx="2" stroke="#C9A84C" stroke-width="1.5"/><path d="M3 12H25" stroke="#C9A84C" stroke-width="1.5"/><path d="M9 3V6M19 3V6" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-          <h3>Calendrier des seances</h3>
-          <p>Vue semaine et mois. Seances auto-planifiees. Rappels push.</p>
+          <h3>Calendrier des séances</h3>
+          <p>Vue semaine et mois. Seances auto-planifiées. Rappels push.</p>
         </div>
         <div class="feature-card reveal-child delay-5">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M8 4H20V12C20 15.3 17.3 18 14 18C10.7 18 8 15.3 8 12V4Z" stroke="#C9A84C" stroke-width="1.5"/><path d="M8 7H5C5 10 6 12 8 12" stroke="#C9A84C" stroke-width="1.2"/><path d="M20 7H23C23 10 22 12 20 12" stroke="#C9A84C" stroke-width="1.2"/><path d="M11 22H17" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/><path d="M14 18V22" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
           <h3>Records personnels</h3>
-          <p>Detection automatique des PR (formule Epley). Historique de progression.</p>
+          <p>Détection automatique des PR (formule Epley). Historique de progression.</p>
         </div>
       </div>
     </div>
@@ -955,28 +988,28 @@
     <div class="section">
       <div class="section-title reveal">
         <h2>SUIVI COMPLET</h2>
-        <p>Graphiques, badges, photos — mesure chaque progres</p>
+        <p>Graphiques, badges, photos — mesure chaque progrès</p>
       </div>
       <div class="feature-grid reveal">
         <div class="feature-card reveal-child delay-0">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="16" width="4" height="10" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="12" y="8" width="4" height="18" stroke="#C9A84C" stroke-width="1.2" rx="1"/><rect x="20" y="4" width="4" height="22" stroke="#C9A84C" stroke-width="1.2" rx="1"/></svg></div>
-          <h3>Analytics avance</h3>
+          <h3>Analytics avancé</h3>
           <p>5 graphiques : poids, calories, macros, volume, hydratation. Export CSV.</p>
         </div>
         <div class="feature-card reveal-child delay-1">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="8" width="22" height="16" rx="2" stroke="#C9A84C" stroke-width="1.5"/><circle cx="14" cy="16" r="4" stroke="#C9A84C" stroke-width="1.5"/><path d="M10 8L12 4H16L18 8" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
-          <h3>Photos avant/apres</h3>
+          <h3>Photos avant/après</h3>
           <p>Comparateur avec slider. Superpose tes photos.</p>
         </div>
         <div class="feature-card reveal-child delay-2">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3C14 3 6 13 6 18C6 22.4 9.6 26 14 26C18.4 26 22 22.4 22 18C22 13 14 3 14 3Z" stroke="#C9A84C" stroke-width="1.5"/></svg></div>
           <h3>Suivi hydratation</h3>
-          <p>Compteur d'eau quotidien. Objectif personnalise.</p>
+          <p>Compteur d'eau quotidien. Objectif personnalisé.</p>
         </div>
         <div class="feature-card reveal-child delay-3">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C14 2 8 10 8 16C8 19.3 10.7 22 14 22C17.3 22 20 19.3 20 16C20 10 14 2 14 2Z" stroke="#C9A84C" stroke-width="1.5"/><path d="M14 14C14 14 12 17 12 18.5C12 19.6 12.9 20.5 14 20.5C15.1 20.5 16 19.6 16 18.5C16 17 14 14 14 14Z" stroke="#C9A84C" stroke-width="1"/></svg></div>
           <h3>Streak &amp; gamification</h3>
-          <p>Compte tes jours d'affilee. 7 badges a debloquer.</p>
+          <p>Compte tes jours d'affilée. 7 badges a débloquer.</p>
         </div>
         <div class="feature-card reveal-child delay-4">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="#C9A84C" stroke-width="1.5"/><circle cx="14" cy="14" r="5" stroke="#C9A84C" stroke-width="1"/></svg></div>
@@ -985,8 +1018,8 @@
         </div>
         <div class="feature-card reveal-child delay-5">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4V18M14 18L9 13M14 18L19 13" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 22V24H24V22" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h3>Export donnees</h3>
-          <p>Telecharge tes stats en CSV. Tout est a toi.</p>
+          <h3>Export données</h3>
+          <p>Télécharge tes stats en CSV. Tout est a toi.</p>
         </div>
       </div>
     </div>
@@ -1004,7 +1037,7 @@
           <div style="margin-bottom:20px;display:flex;justify-content:center">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="12" width="24" height="20" rx="4" stroke="#C9A84C" stroke-width="1.5"/><circle cx="15" cy="22" r="2.5" stroke="#C9A84C" stroke-width="1.2"/><circle cx="25" cy="22" r="2.5" stroke="#C9A84C" stroke-width="1.2"/><path d="M16 28H24" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/><path d="M20 6V12" stroke="#C9A84C" stroke-width="1.5"/><circle cx="20" cy="5" r="2" stroke="#C9A84C" stroke-width="1.2"/><path d="M4 20H8M32 20H36" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/></svg>
           </div>
-          <p>Le Coach IA de MoovX connait ton profil, tes objectifs, tes macros. Il te repond en francais, personnalise et motivant. Disponible 24/7.</p>
+          <p>Le Coach IA de MoovX connaît ton profil, tes objectifs, tes macros. Il te répond en français, personnalisé et motivant. Disponible 24/7.</p>
           <div class="coach-ia-pills">
             <span>Comment atteindre mes macros ?</span>
             <span>Quel exercice pour les pectoraux ?</span>
@@ -1020,34 +1053,34 @@
     <div class="section">
       <div class="section-title reveal">
         <h2>COACHING PROFESSIONNEL</h2>
-        <p>Connecte-toi avec ton coach pour un suivi personnalise</p>
+        <p>Connecte-toi avec ton coach pour un suivi personnalisé</p>
       </div>
       <div class="feature-grid coaching-grid reveal">
         <div class="feature-card reveal-child delay-0">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 6H24V20H10L4 24V6Z" stroke="#C9A84C" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="13" r="1" fill="#C9A84C"/><circle cx="14" cy="13" r="1" fill="#C9A84C"/><circle cx="18" cy="13" r="1" fill="#C9A84C"/></svg></div>
-          <h3>Messagerie temps reel</h3>
+          <h3>Messagerie temps réel</h3>
           <p>Chat direct avec ton coach. Read receipts. Notifications.</p>
         </div>
         <div class="feature-card reveal-child delay-1">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="10" cy="10" r="4" stroke="#C9A84C" stroke-width="1.5"/><circle cx="20" cy="10" r="3" stroke="#C9A84C" stroke-width="1.2"/><path d="M2 24C2 20 5.6 17 10 17C14.4 17 18 20 18 24" stroke="#C9A84C" stroke-width="1.5"/><path d="M18 17C21 17 24 19 24 22" stroke="#C9A84C" stroke-width="1.2"/></svg></div>
-          <h3>Plans personnalises</h3>
-          <p>Ton coach ajuste programme et nutrition selon tes progres.</p>
+          <h3>Plans personnalisés</h3>
+          <p>Ton coach ajuste programme et nutrition selon tes progrès.</p>
         </div>
         <div class="feature-card reveal-child delay-2">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 14C4 8.5 8.5 4 14 4C18 4 21.4 6.5 23 10" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/><path d="M24 14C24 19.5 19.5 24 14 24C10 24 6.6 21.5 5 18" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/><path d="M20 10H24V6" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 18H4V22" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <h3>Demandes de changement</h3>
-          <p>Demande un nouveau plan. Ton coach regenere avec l'IA.</p>
+          <p>Demande un nouveau plan. Ton coach regénère avec l'IA.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════ 9. COMMENT CA MARCHE ═══════════ -->
+  <!-- ═══════════ 9. COMMENT ÇA MARCHE ═══════════ -->
   <div id="how">
     <div class="section">
       <div class="section-title reveal">
-        <h2>COMMENT CA MARCHE</h2>
-        <p>4 etapes pour transformer ton corps</p>
+        <h2>COMMENT ÇA MARCHE</h2>
+        <p>4 étapes pour transformer ton corps</p>
       </div>
       <div class="steps-grid reveal">
         <!-- Lines between steps (desktop only) -->
@@ -1057,8 +1090,8 @@
 
         <div class="step reveal-child delay-step-0">
           <div class="step-num">01</div>
-          <h4>Cree ton profil</h4>
-          <p>2 minutes. Objectifs, mensurations, preferences.</p>
+          <h4>Crée ton profil</h4>
+          <p>2 minutes. Objectifs, mensurations, préférences.</p>
         </div>
         <div class="step reveal-child delay-step-1">
           <div class="step-num">02</div>
@@ -1068,11 +1101,11 @@
         <div class="step reveal-child delay-step-2">
           <div class="step-num">03</div>
           <h4>Suis ton programme</h4>
-          <p>PPL 6 jours + nutrition. Valide tes repas et seances.</p>
+          <p>PPL 6 jours + nutrition. Valide tes repas et séances.</p>
         </div>
         <div class="step reveal-child delay-step-3">
           <div class="step-num">04</div>
-          <h4>Mesure tes progres</h4>
+          <h4>Mesure tes progrès</h4>
           <p>Graphiques, records, photos.</p>
         </div>
       </div>
@@ -1091,7 +1124,7 @@
           <div class="pwa-card">
             <div style="margin-bottom:12px"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="7" y="2" width="14" height="24" rx="3" stroke="#C9A84C" stroke-width="1.5"/><path d="M12 22H16" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
             <h4>iPhone</h4>
-            <p>Safari &rarr; Partager &rarr; Ecran d'accueil</p>
+            <p>Safari &rarr; Partager &rarr; Écran d'accueil</p>
           </div>
           <div class="pwa-card">
             <div style="margin-bottom:12px"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="7" y="2" width="14" height="24" rx="3" stroke="#C9A84C" stroke-width="1.5"/><path d="M12 22H16" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
@@ -1100,10 +1133,10 @@
           </div>
         </div>
         <div class="pwa-badges reveal-child delay-450">
-          <div class="pwa-badge">Plein ecran</div>
+          <div class="pwa-badge">Plein écran</div>
           <div class="pwa-badge">Notifications</div>
           <div class="pwa-badge">Hors ligne</div>
-          <div class="pwa-badge">Mises a jour auto</div>
+          <div class="pwa-badge">Mises à jour auto</div>
         </div>
       </div>
     </div>
@@ -1114,7 +1147,7 @@
     <div class="section">
       <div class="section-title reveal">
         <h2>TARIFS SIMPLES</h2>
-        <p>Commence gratuitement, evolue a ton rythme</p>
+        <p>Commence gratuitement, évolue à ton rythme</p>
       </div>
       <div class="pricing-grid reveal">
         <!-- Mensuel -->
@@ -1123,13 +1156,13 @@
           <div class="price">CHF 10</div>
           <div class="period">/mois</div>
           <div class="pricing-checklist">
-            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimites</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimités</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Programme PPL 6 jours</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio HIIT &amp; LISS</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scanner code-barres</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Recettes fitness IA</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Liste de courses auto</div>
-            <div class="more">+ 6 autres fonctionnalites</div>
+            <div class="more">+ 6 autres fonctionnalités</div>
           </div>
           <a href="https://app.moovx.ch/register-client" class="ghost-btn">Commencer</a>
         </div>
@@ -1140,30 +1173,30 @@
           <div class="price">CHF 80</div>
           <div class="period">/an</div>
           <div class="pricing-checklist">
-            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimites</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimités</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Programme PPL 6 jours</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio HIIT &amp; LISS</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scanner code-barres</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Recettes fitness IA</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Liste de courses auto</div>
-            <div class="more">+ 6 autres fonctionnalites</div>
+            <div class="more">+ 6 autres fonctionnalités</div>
           </div>
           <a href="https://app.moovx.ch/register-client" class="gold-btn">Commencer</a>
         </div>
         <!-- A vie -->
         <div class="pricing-card reveal-child delay-price-2">
           <span class="pricing-badge">Meilleure offre</span>
-          <h3>A vie</h3>
+          <h3>À vie</h3>
           <div class="price">CHF 150</div>
           <div class="period">&nbsp;</div>
           <div class="pricing-checklist">
-            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimites</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimités</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Programme PPL 6 jours</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio HIIT &amp; LISS</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scanner code-barres</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Recettes fitness IA</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Liste de courses auto</div>
-            <div class="more">+ 6 autres fonctionnalites</div>
+            <div class="more">+ 6 autres fonctionnalités</div>
           </div>
           <a href="https://app.moovx.ch/register-client" class="ghost-btn">Commencer</a>
         </div>
@@ -1173,18 +1206,18 @@
           <div class="price">CHF 50</div>
           <div class="period">/mois</div>
           <div class="pricing-checklist">
-            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimites</div>
+            <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Plans nutrition IA illimités</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Programme PPL 6 jours</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio HIIT &amp; LISS</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scanner code-barres</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Recettes fitness IA</div>
             <div class="item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Liste de courses auto</div>
-            <div class="more">+ 6 autres fonctionnalites</div>
+            <div class="more">+ 6 autres fonctionnalités</div>
           </div>
           <a href="https://app.moovx.ch/register-client" class="ghost-btn">Devenir Coach</a>
         </div>
       </div>
-      <p class="pricing-note reveal">10 jours d'essai gratuit &middot; Sans engagement &middot; Toutes fonctionnalites incluses</p>
+      <p class="pricing-note reveal">10 jours d'essai gratuit &middot; Sans engagement &middot; Toutes fonctionnalités incluses</p>
     </div>
   </div>
 
@@ -1192,41 +1225,41 @@
   <div id="faq">
     <div class="section">
       <div class="section-title reveal">
-        <h2>QUESTIONS FREQUENTES</h2>
+        <h2>QUESTIONS FRÉQUENTES</h2>
         <p>Tout ce que tu dois savoir sur MoovX</p>
       </div>
       <div class="faq-list reveal">
         <div class="faq-item">
           <button class="faq-btn" onclick="toggleFaq(this)">C'est quoi MoovX ?<span class="faq-icon">+</span></button>
-          <div class="faq-answer"><p>MoovX est une plateforme de coaching fitness suisse propulsee par l'intelligence artificielle. Elle combine nutrition personnalisee, entrainement hypertrophie PPL, suivi de progression et coaching connecte.</p></div>
+          <div class="faq-answer"><p>MoovX est une plateforme de coaching fitness suisse propulsée par l'intelligence artificielle. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-btn" onclick="toggleFaq(this)">Comment fonctionne la nutrition IA ?<span class="faq-icon">+</span></button>
-          <div class="faq-answer"><p>L'IA analyse ton profil (poids, objectif, activite) et genere des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits.</p></div>
+          <div class="faq-answer"><p>L'IA analyse ton profil (poids, objectif, activité) et génère des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-btn" onclick="toggleFaq(this)">Le scanner code-barres fonctionne comment ?<span class="faq-icon">+</span></button>
-          <div class="faq-answer"><p>Scanne le code-barres de tes produits avec la camera de ton telephone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute a ton journal.</p></div>
+          <div class="faq-answer"><p>Scanne le code-barres de tes produits avec la caméra de ton téléphone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute à ton journal.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-btn" onclick="toggleFaq(this)">C'est quoi le programme PPL ?<span class="faq-icon">+</span></button>
-          <div class="faq-answer"><p>Push/Pull/Legs est un split d'entrainement sur 6 jours optimise pour l'hypertrophie. Push (poitrine, epaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaille 2 fois par semaine.</p></div>
+          <div class="faq-answer"><p>Push/Pull/Legs est un split d'entraînement sur 6 jours optimisé pour l'hypertrophie. Push (poitrine, épaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaillé 2 fois par semaine.</p></div>
         </div>
         <div class="faq-item">
-          <button class="faq-btn" onclick="toggleFaq(this)">Mes donnees sont securisees ?<span class="faq-icon">+</span></button>
-          <div class="faq-answer"><p>Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes donnees sont hebergees en Europe et tu peux les exporter ou supprimer ton compte a tout moment.</p></div>
+          <button class="faq-btn" onclick="toggleFaq(this)">Mes données sont sécurisées ?<span class="faq-icon">+</span></button>
+          <div class="faq-answer"><p>Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes données sont hébergées en Europe et tu peux les exporter ou supprimer ton compte à tout moment.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-btn" onclick="toggleFaq(this)">Je peux essayer gratuitement ?<span class="faq-icon">+</span></button>
-          <div class="faq-answer"><p>Oui ! Tu beneficies de 10 jours d'essai gratuit avec acces a toutes les fonctionnalites. Sans engagement, sans carte de credit requise.</p></div>
+          <div class="faq-answer"><p>Oui ! Tu bénéficies de 10 jours d'essai gratuit avec accès à toutes les fonctionnalités. Sans engagement, sans carte de crédit requise.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-btn" onclick="toggleFaq(this)">Comment installer l'app ?<span class="faq-icon">+</span></button>
-          <div class="faq-answer"><p>MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter a l'ecran d'accueil. Sur Android : Chrome, menu, Installer l'application.</p></div>
+          <div class="faq-answer"><p>MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter à l'écran d'accueil. Sur Android : Chrome, menu, Installer l'application.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-btn" onclick="toggleFaq(this)">C'est quoi le Coach IA ?<span class="faq-icon">+</span></button>
-          <div class="faq-answer"><p>Un assistant intelligent qui connait ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entrainement, il te repond de maniere personnalisee en francais.</p></div>
+          <div class="faq-answer"><p>Un assistant intelligent qui connaît ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entraînement, il te répond de manière personnalisée en français.</p></div>
         </div>
       </div>
     </div>
@@ -1235,12 +1268,12 @@
   <!-- ═══════════ 13. CTA FINAL + FOOTER ═══════════ -->
   <div class="cta-section reveal" id="cta">
     <div class="cta-glow"></div>
-    <h2>PRET A TRANSFORMER TON CORPS ?</h2>
-    <p class="cta-desc">Rejoins MoovX et commence ta transformation des aujourd'hui.</p>
+    <h2>PRÊT À TRANSFORMER TON CORPS ?</h2>
+    <p class="cta-desc">Rejoins MoovX et commence ta transformation dès aujourd'hui.</p>
     <div style="position:relative">
       <a href="https://app.moovx.ch/register-client" class="gold-btn" style="font-size:16px;padding:16px 40px">Commencer — 10 jours gratuits</a>
     </div>
-    <p class="cta-fine">Sans engagement &middot; Resiliable a tout moment</p>
+    <p class="cta-fine">Sans engagement &middot; Résiliable à tout moment</p>
   </div>
 
   <footer class="footer">
@@ -1250,7 +1283,7 @@
           <span class="logo">MOOVX</span>
           <span class="tagline">Swiss Made &middot; Swiss Quality</span>
         </div>
-        <p class="footer-copy">&copy; 2026 MoovX &middot; Geneve, Suisse</p>
+        <p class="footer-copy">&copy; 2026 MoovX &middot; Genève, Suisse</p>
       </div>
       <div class="footer-links">
         <a href="https://app.moovx.ch/login">Application</a>

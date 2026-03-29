@@ -102,76 +102,76 @@ const iconKeys = Object.keys(icons) as (keyof typeof icons)[];
 
 /* ───────────────────────── data ───────────────────────── */
 const NUTRITION_FEATURES = [
-  { icon: 'diamond' as const, title: 'Plans 7 jours personnalises', desc: "L'IA genere un plan alimentaire complet adapte a tes calories, proteines, glucides et lipides." },
-  { icon: 'grid' as const, title: 'Scanner code-barres', desc: "Scanne les aliments de ton frigo. L'IA cree tes plans avec les produits que tu as deja." },
-  { icon: 'hexagon' as const, title: 'Liste de courses auto', desc: "Generee depuis ton plan semaine. Organisee par rayon de supermarche." },
-  { icon: 'flame' as const, title: 'Recettes fitness IA', desc: "Recettes adaptees a tes macros avec les 170 aliments fitness de la base." },
-  { icon: 'circle' as const, title: '170 aliments fitness', desc: "Base curatee d'aliments essentiels. Proteines, feculents, legumes, fruits, supplements." },
-  { icon: 'star' as const, title: 'Preferences personnalisees', desc: "Choisis tes aliments favoris. L'IA les utilise en priorite." },
+  { icon: 'diamond' as const, title: 'Plans 7 jours personnalisés', desc: "L'IA génère un plan alimentaire complet adapté à tes calories, protéines, glucides et lipides." },
+  { icon: 'grid' as const, title: 'Scanner code-barres', desc: "Scanne les aliments de ton frigo. L'IA crée tes plans avec les produits que tu as déjà." },
+  { icon: 'hexagon' as const, title: 'Liste de courses auto', desc: "Générée depuis ton plan semaine. Organisée par rayon de supermarché." },
+  { icon: 'flame' as const, title: 'Recettes fitness IA', desc: "Recettes adaptées à tes macros avec les 170 aliments fitness de la base." },
+  { icon: 'circle' as const, title: '170 aliments fitness', desc: "Base curatée d'aliments essentiels. Protéines, féculents, légumes, fruits, suppléments." },
+  { icon: 'star' as const, title: 'Préférences personnalisées', desc: "Choisis tes aliments favoris. L'IA les utilise en priorité." },
 ];
 
 const TRAINING_FEATURES = [
-  { icon: 'triangle' as const, title: 'Push Pull Legs 6 jours', desc: "Programme hypertrophie scientifique. Chaque muscle entraine 2x/semaine." },
-  { icon: 'bolt' as const, title: 'Cardio HIIT & LISS', desc: "8 seances HIIT + 6 seances LISS. Timer integre avec intervalles work/rest." },
-  { icon: 'octagon' as const, title: 'Timer de repos intelligent', desc: "Timer automatique entre les series. Vibration quand c'est reparti." },
-  { icon: 'camera' as const, title: '89 exercices avec videos', desc: "Base de 89 exercices en francais. Description, muscles cibles, conseils." },
-  { icon: 'calendar' as const, title: 'Calendrier des seances', desc: "Vue semaine et mois. Seances auto-planifiees. Rappels push." },
-  { icon: 'trophy' as const, title: 'Records personnels', desc: "Detection automatique des PR (formule Epley). Historique de progression." },
+  { icon: 'triangle' as const, title: 'Push Pull Legs 6 jours', desc: "Programme hypertrophie scientifique. Chaque muscle entraîné 2x/semaine." },
+  { icon: 'bolt' as const, title: 'Cardio HIIT & LISS', desc: "8 séances HIIT + 6 séances LISS. Timer intégré avec intervalles work/rest." },
+  { icon: 'octagon' as const, title: 'Timer de repos intelligent', desc: "Timer automatique entre les séries. Vibration quand c'est reparti." },
+  { icon: 'camera' as const, title: '89 exercices avec vidéos', desc: "Base de 89 exercices en français. Description, muscles ciblés, conseils." },
+  { icon: 'calendar' as const, title: 'Calendrier des séances', desc: "Vue semaine et mois. Séances auto-planifiées. Rappels push." },
+  { icon: 'trophy' as const, title: 'Records personnels', desc: "Détection automatique des PR (formule Epley). Historique de progression." },
 ];
 
 const TRACKING_FEATURES = [
-  { icon: 'bars' as const, title: 'Analytics avance', desc: "5 graphiques : poids, calories, macros, volume, hydratation. Export CSV." },
-  { icon: 'camera' as const, title: 'Photos avant/apres', desc: "Comparateur avec slider. Superpose tes photos." },
-  { icon: 'drop' as const, title: 'Suivi hydratation', desc: "Compteur d'eau quotidien. Objectif personnalise." },
-  { icon: 'flame' as const, title: 'Streak & gamification', desc: "Compte tes jours d'affilee. 7 badges a debloquer." },
+  { icon: 'bars' as const, title: 'Analytics avancé', desc: "5 graphiques : poids, calories, macros, volume, hydratation. Export CSV." },
+  { icon: 'camera' as const, title: 'Photos avant/après', desc: "Comparateur avec slider. Superpose tes photos." },
+  { icon: 'drop' as const, title: 'Suivi hydratation', desc: "Compteur d'eau quotidien. Objectif personnalisé." },
+  { icon: 'flame' as const, title: 'Streak & gamification', desc: "Compte tes jours d'affilée. 7 badges à débloquer." },
   { icon: 'ring' as const, title: 'Courbe de poids', desc: "Graphique interactif 30/60/90 jours. Tendance moyenne mobile." },
-  { icon: 'download' as const, title: 'Export donnees', desc: "Telecharge tes stats en CSV. Tout est a toi." },
+  { icon: 'download' as const, title: 'Export données', desc: "Télécharge tes stats en CSV. Tout est à toi." },
 ];
 
 const COACHING_FEATURES = [
-  { icon: 'chat' as const, title: 'Messagerie temps reel', desc: "Chat direct avec ton coach. Read receipts. Notifications." },
-  { icon: 'users' as const, title: 'Plans personnalises', desc: "Ton coach ajuste programme et nutrition selon tes progres." },
-  { icon: 'refresh' as const, title: 'Demandes de changement', desc: "Demande un nouveau plan. Ton coach regenere avec l'IA." },
+  { icon: 'chat' as const, title: 'Messagerie temps réel', desc: "Chat direct avec ton coach. Read receipts. Notifications." },
+  { icon: 'users' as const, title: 'Plans personnalisés', desc: "Ton coach ajuste programme et nutrition selon tes progrès." },
+  { icon: 'refresh' as const, title: 'Demandes de changement', desc: "Demande un nouveau plan. Ton coach régénère avec l'IA." },
 ];
 
 const STEPS = [
-  { num: '01', title: 'Cree ton profil', desc: '2 minutes. Objectifs, mensurations, preferences.' },
+  { num: '01', title: 'Crée ton profil', desc: '2 minutes. Objectifs, mensurations, préférences.' },
   { num: '02', title: 'Scanne ton frigo', desc: "L'IA apprend ce que tu manges." },
-  { num: '03', title: 'Suis ton programme', desc: 'PPL 6 jours + nutrition. Valide tes repas et seances.' },
-  { num: '04', title: 'Mesure tes progres', desc: 'Graphiques, records, photos.' },
+  { num: '03', title: 'Suis ton programme', desc: 'PPL 6 jours + nutrition. Valide tes repas et séances.' },
+  { num: '04', title: 'Mesure tes progrès', desc: 'Graphiques, records, photos.' },
 ];
 
 const PRICING = [
   { name: 'Mensuel', price: 'CHF 10', period: '/mois', badge: null, highlight: false },
   { name: 'Annuel', price: 'CHF 80', period: '/an', badge: 'Populaire', highlight: true },
-  { name: 'A vie', price: 'CHF 150', period: '', badge: 'Meilleure offre', highlight: false },
+  { name: 'À vie', price: 'CHF 150', period: '', badge: 'Meilleure offre', highlight: false },
   { name: 'Coach Pro', price: 'CHF 50', period: '/mois', badge: null, highlight: false },
 ];
 
 const PRICING_CHECKLIST = [
-  'Plans nutrition IA illimites',
+  'Plans nutrition IA illimités',
   'Programme PPL 6 jours',
   'Cardio HIIT & LISS',
   'Scanner code-barres',
   'Recettes fitness IA',
   'Liste de courses auto',
-  'Chat IA illimite',
+  'Chat IA illimité',
   'Analytics & records',
-  'Photos avant/apres',
+  'Photos avant/après',
   'Badges & gamification',
-  '89 exercices avec videos',
+  '89 exercices avec vidéos',
   'Calendrier & rappels',
 ];
 
 const FAQ_DATA = [
-  { q: "C'est quoi MoovX ?", a: "MoovX est une plateforme de coaching fitness suisse propulsee par l'intelligence artificielle. Elle combine nutrition personnalisee, entrainement hypertrophie PPL, suivi de progression et coaching connecte." },
-  { q: "Comment fonctionne la nutrition IA ?", a: "L'IA analyse ton profil (poids, objectif, activite) et genere des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits." },
-  { q: "Le scanner code-barres fonctionne comment ?", a: "Scanne le code-barres de tes produits avec la camera de ton telephone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute a ton journal." },
-  { q: "C'est quoi le programme PPL ?", a: "Push/Pull/Legs est un split d'entrainement sur 6 jours optimise pour l'hypertrophie. Push (poitrine, epaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaille 2 fois par semaine." },
-  { q: "Mes donnees sont securisees ?", a: "Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes donnees sont hebergees en Europe et tu peux les exporter ou supprimer ton compte a tout moment." },
-  { q: "Je peux essayer gratuitement ?", a: "Oui ! Tu beneficies de 10 jours d'essai gratuit avec acces a toutes les fonctionnalites. Sans engagement, sans carte de credit requise." },
-  { q: "Comment installer l'app ?", a: "MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter a l'ecran d'accueil. Sur Android : Chrome, menu, Installer l'application." },
-  { q: "C'est quoi le Coach IA ?", a: "Un assistant intelligent qui connait ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entrainement, il te repond de maniere personnalisee en francais." },
+  { q: "C'est quoi MoovX ?", a: "MoovX est une plateforme de coaching fitness suisse propulsée par l'intelligence artificielle. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté." },
+  { q: "Comment fonctionne la nutrition IA ?", a: "L'IA analyse ton profil (poids, objectif, activité) et génère des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits." },
+  { q: "Le scanner code-barres fonctionne comment ?", a: "Scanne le code-barres de tes produits avec la caméra de ton téléphone. MoovX identifie l'aliment via OpenFoodFacts et l'ajoute à ton journal." },
+  { q: "C'est quoi le programme PPL ?", a: "Push/Pull/Legs est un split d'entraînement sur 6 jours optimisé pour l'hypertrophie. Push (poitrine, épaules, triceps), Pull (dos, biceps), Legs (jambes, fessiers). Chaque muscle est travaillé 2 fois par semaine." },
+  { q: "Mes données sont sécurisées ?", a: "Oui. MoovX utilise Supabase avec chiffrement de bout en bout. Tes données sont hébergées en Europe et tu peux les exporter ou supprimer ton compte à tout moment." },
+  { q: "Je peux essayer gratuitement ?", a: "Oui ! Tu bénéficies de 10 jours d'essai gratuit avec accès à toutes les fonctionnalités. Sans engagement, sans carte de crédit requise." },
+  { q: "Comment installer l'app ?", a: "MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter à l'écran d'accueil. Sur Android : Chrome, menu, Installer l'application." },
+  { q: "C'est quoi le Coach IA ?", a: "Un assistant intelligent qui connaît ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entraînement, il te répond de manière personnalisée en français." },
 ];
 
 /* ───────────────────────── Feature Card ───────────────────────── */
@@ -227,25 +227,15 @@ function SectionTitle({ title, subtitle, visible }: { title: string; subtitle: s
 function FeatureGrid({ features, columns = 3 }: { features: { icon: keyof typeof icons; title: string; desc: string }[]; columns?: number }) {
   const rev = useReveal();
   return (
-    <div ref={rev.ref} style={{
+    <div ref={rev.ref} className="fg-grid" style={{
       display: 'grid',
       gridTemplateColumns: `repeat(${columns}, 1fr)`,
       gap: 20,
+      width: '100%',
     }}>
-      <style>{`
-        @media (max-width: 768px) {
-          .fg-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-      <div className="fg-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${columns}, 1fr)`,
-        gap: 20,
-      }}>
-        {features.map((f, i) => (
-          <FeatureCard key={f.title} icon={f.icon} title={f.title} desc={f.desc} delay={i * 80} visible={rev.visible} />
-        ))}
-      </div>
+      {features.map((f, i) => (
+        <FeatureCard key={f.title} icon={f.icon} title={f.title} desc={f.desc} delay={i * 80} visible={rev.visible} />
+      ))}
     </div>
   );
 }
@@ -395,8 +385,9 @@ export default function LandingPage() {
         }
 
         @media (max-width: 768px) {
-          .desktop-nav-links { display: none !important; }
-          .hero-stats { flex-direction: column !important; gap: 12px !important; }
+          .nav-links a { padding: 6px 12px !important; font-size: 12px !important; }
+          .hero-stats { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+          .fg-grid { grid-template-columns: 1fr !important; }
           .hero-buttons { flex-direction: column !important; align-items: stretch !important; }
           .hero-buttons a, .hero-buttons button { width: 100% !important; text-align: center !important; }
           .pricing-grid { grid-template-columns: 1fr !important; }
@@ -442,7 +433,7 @@ export default function LandingPage() {
             <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, color: '#C9A84C', letterSpacing: 3 }}>MOOVX</span>
             <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#6b7280', borderLeft: '1px solid #333', paddingLeft: 12 }}>Swiss Made &middot; Swiss Quality</span>
           </div>
-          <div className="desktop-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link href="/login" className="ghost-btn" style={{ padding: '8px 20px', fontSize: 13 }}>Connexion</Link>
             <Link href="/register-client" className="gold-btn" style={{ padding: '8px 20px', fontSize: 13 }}>Commencer</Link>
           </div>
@@ -494,7 +485,7 @@ export default function LandingPage() {
             transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s',
           }}>
-            DEPASSE TES LIMITES
+            DÉPASSE TES LIMITES
           </p>
 
           <p style={{
@@ -508,7 +499,7 @@ export default function LandingPage() {
             transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
           }}>
-            La plateforme fitness suisse propulsee par l'intelligence artificielle. Nutrition personnalisee, entrainement hypertrophie, suivi complet.
+            La plateforme fitness suisse propulsée par l'intelligence artificielle. Nutrition personnalisée, entraînement hypertrophie, suivi complet.
           </p>
 
           <div className="hero-buttons" style={{
@@ -520,7 +511,7 @@ export default function LandingPage() {
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s',
           }}>
             <Link href="/register-client" className="gold-btn">Commencer — 10 jours gratuits</Link>
-            <a href="#nutrition" onClick={(e) => smoothScroll(e, 'nutrition')} className="ghost-btn">Decouvrir &darr;</a>
+            <a href="#nutrition" onClick={(e) => smoothScroll(e, 'nutrition')} className="ghost-btn">Découvrir &darr;</a>
           </div>
 
           <div className="hero-stats" style={{
@@ -567,7 +558,7 @@ export default function LandingPage() {
                 letterSpacing: 4,
                 paddingRight: 0,
               }}>
-                {'Nutrition IA \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Liste de Courses \u2726 Chat IA \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Swiss Made \u2726 Coaching Connecte \u2726 '}
+                {'Nutrition IA \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Liste de Courses \u2726 Chat IA \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Swiss Made \u2726 Coaching Connecté \u2726 '}
               </span>
             ))}
           </div>
@@ -576,7 +567,7 @@ export default function LandingPage() {
         {/* ─── NUTRITION IA ─── */}
         <div ref={nutritionRev.ref} id="nutrition">
           <Section>
-            <SectionTitle title="NUTRITION INTELLIGENTE" subtitle="Plans alimentaires generes par l'IA, adaptes a tes macros exacts" visible={nutritionRev.visible} />
+            <SectionTitle title="NUTRITION INTELLIGENTE" subtitle="Plans alimentaires générés par l'IA, adaptés à tes macros exacts" visible={nutritionRev.visible} />
             <FeatureGrid features={NUTRITION_FEATURES} />
           </Section>
         </div>
@@ -584,7 +575,7 @@ export default function LandingPage() {
         {/* ─── ENTRAINEMENT ─── */}
         <div ref={trainingRev.ref} id="training">
           <Section>
-            <SectionTitle title="ENTRAINEMENT HYPERTROPHIE" subtitle="Programme Push/Pull/Legs 6 jours + Cardio HIIT & LISS" visible={trainingRev.visible} />
+            <SectionTitle title="ENTRAÎNEMENT HYPERTROPHIE" subtitle="Programme Push/Pull/Legs 6 jours + Cardio HIIT & LISS" visible={trainingRev.visible} />
             <FeatureGrid features={TRAINING_FEATURES} />
           </Section>
         </div>
@@ -592,7 +583,7 @@ export default function LandingPage() {
         {/* ─── SUIVI & ANALYTICS ─── */}
         <div ref={trackingRev.ref}>
           <Section>
-            <SectionTitle title="SUIVI COMPLET" subtitle="Graphiques, badges, photos — mesure chaque progres" visible={trackingRev.visible} />
+            <SectionTitle title="SUIVI COMPLET" subtitle="Graphiques, badges, photos — mesure chaque progrès" visible={trackingRev.visible} />
             <FeatureGrid features={TRACKING_FEATURES} />
           </Section>
         </div>
@@ -621,7 +612,7 @@ export default function LandingPage() {
                 lineHeight: 1.8,
                 margin: '0 0 32px',
               }}>
-                Le Coach IA de MoovX connait ton profil, tes objectifs, tes macros. Il te repond en francais, personnalise et motivant. Disponible 24/7.
+                Le Coach IA de MoovX connaît ton profil, tes objectifs, tes macros. Il te répond en français, personnalisé et motivant. Disponible 24/7.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
                 {[
@@ -647,7 +638,7 @@ export default function LandingPage() {
         {/* ─── COACHING CONNECTE ─── */}
         <div ref={coachingRev.ref}>
           <Section>
-            <SectionTitle title="COACHING PROFESSIONNEL" subtitle="Connecte-toi avec ton coach pour un suivi personnalise" visible={coachingRev.visible} />
+            <SectionTitle title="COACHING PROFESSIONNEL" subtitle="Connecte-toi avec ton coach pour un suivi personnalisé" visible={coachingRev.visible} />
             <FeatureGrid features={COACHING_FEATURES} columns={3} />
           </Section>
         </div>
@@ -655,7 +646,7 @@ export default function LandingPage() {
         {/* ─── COMMENT CA MARCHE ─── */}
         <div ref={stepsRev.ref} id="how">
           <Section>
-            <SectionTitle title="COMMENT CA MARCHE" subtitle="4 etapes pour transformer ton corps" visible={stepsRev.visible} />
+            <SectionTitle title="COMMENT ÇA MARCHE" subtitle="4 étapes pour transformer ton corps" visible={stepsRev.visible} />
             <div className="steps-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
@@ -714,7 +705,7 @@ export default function LandingPage() {
               transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
             }}>
               {[
-                { device: 'iPhone', steps: 'Safari → Partager → Ecran d\'accueil' },
+                { device: 'iPhone', steps: 'Safari → Partager → Écran d\'accueil' },
                 { device: 'Android', steps: 'Chrome → Menu → Installer' },
               ].map(d => (
                 <div key={d.device} style={{
@@ -739,7 +730,7 @@ export default function LandingPage() {
               opacity: pwaRev.visible ? 1 : 0,
               transition: 'opacity 0.6s 0.4s',
             }}>
-              {['Plein ecran', 'Notifications', 'Hors ligne', 'Mises a jour auto'].map(b => (
+              {['Plein écran', 'Notifications', 'Hors ligne', 'Mises à jour auto'].map(b => (
                 <div key={b} style={{
                   textAlign: 'center',
                   padding: '12px',
@@ -757,7 +748,7 @@ export default function LandingPage() {
         {/* ─── PRICING ─── */}
         <div ref={pricingRev.ref} id="pricing">
           <Section>
-            <SectionTitle title="TARIFS SIMPLES" subtitle="Commence gratuitement, evolue a ton rythme" visible={pricingRev.visible} />
+            <SectionTitle title="TARIFS SIMPLES" subtitle="Commence gratuitement, évolue à ton rythme" visible={pricingRev.visible} />
             <div className="pricing-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
@@ -812,7 +803,7 @@ export default function LandingPage() {
                         {item}
                       </div>
                     ))}
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#555', padding: '6px 0' }}>+ 6 autres fonctionnalites</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#555', padding: '6px 0' }}>+ 6 autres fonctionnalités</div>
                   </div>
                   <Link href="/register-client" className={p.highlight ? 'gold-btn' : 'ghost-btn'} style={{ width: '100%', textAlign: 'center', fontSize: 14, padding: '12px 0' }}>
                     {p.name === 'Coach Pro' ? 'Devenir Coach' : 'Commencer'}
@@ -828,7 +819,7 @@ export default function LandingPage() {
               opacity: pricingRev.visible ? 1 : 0,
               transition: 'opacity 0.6s 0.5s',
             }}>
-              10 jours d'essai gratuit &middot; Sans engagement &middot; Toutes fonctionnalites incluses
+              10 jours d'essai gratuit &middot; Sans engagement &middot; Toutes fonctionnalités incluses
             </p>
           </Section>
         </div>
@@ -836,7 +827,7 @@ export default function LandingPage() {
         {/* ─── FAQ ─── */}
         <div ref={faqRev.ref} id="faq">
           <Section>
-            <SectionTitle title="QUESTIONS FREQUENTES" subtitle="Tout ce que tu dois savoir sur MoovX" visible={faqRev.visible} />
+            <SectionTitle title="QUESTIONS FRÉQUENTES" subtitle="Tout ce que tu dois savoir sur MoovX" visible={faqRev.visible} />
             <div style={{
               maxWidth: 700,
               margin: '0 auto',
@@ -877,7 +868,7 @@ export default function LandingPage() {
               transform: ctaRev.visible ? 'translateY(0)' : 'translateY(20px)',
               transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
             }}>
-              PRET A TRANSFORMER TON CORPS ?
+              PRÊT À TRANSFORMER TON CORPS ?
             </h2>
             <p style={{
               fontFamily: "'DM Sans', sans-serif",
@@ -888,7 +879,7 @@ export default function LandingPage() {
               opacity: ctaRev.visible ? 1 : 0,
               transition: 'opacity 0.6s 0.15s',
             }}>
-              Rejoins MoovX et commence ta transformation des aujourd'hui.
+              Rejoins MoovX et commence ta transformation dès aujourd'hui.
             </p>
             <div style={{ position: 'relative', opacity: ctaRev.visible ? 1 : 0, transition: 'opacity 0.6s 0.3s' }}>
               <Link href="/register-client" className="gold-btn" style={{ fontSize: 16, padding: '16px 40px' }}>
@@ -904,7 +895,7 @@ export default function LandingPage() {
               opacity: ctaRev.visible ? 1 : 0,
               transition: 'opacity 0.6s 0.45s',
             }}>
-              Sans engagement &middot; Resiliable a tout moment
+              Sans engagement &middot; Résiliable à tout moment
             </p>
           </section>
         </div>
@@ -927,7 +918,7 @@ export default function LandingPage() {
                 <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#6b7280' }}>Swiss Made &middot; Swiss Quality</span>
               </div>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#555', margin: 0 }}>
-                &copy; 2026 MoovX &middot; Geneve, Suisse
+                &copy; 2026 MoovX &middot; Genève, Suisse
               </p>
             </div>
             <div className="footer-links" style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
