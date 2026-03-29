@@ -17,12 +17,14 @@ interface BarcodeScannerProps {
   onProductAdded: () => void
   onClose: () => void
   defaultMealType?: string
+  continuousMode?: boolean // "Scanne ton frigo" — scan multiple items, auto-save to preferences
 }
 
-export default function BarcodeScanner({ supabase, userId, onProductAdded, onClose, defaultMealType }: BarcodeScannerProps) {
+export default function BarcodeScanner({ supabase, userId, onProductAdded, onClose, defaultMealType, continuousMode }: BarcodeScannerProps) {
   const scannerRef = useRef<any>(null)
   const [scanning, setScanning] = useState(false)
   const [manualCode, setManualCode] = useState('')
+  const [scanCount, setScanCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [product, setProduct] = useState<any>(null)
@@ -112,27 +114,42 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
     const gluc = Math.round((p.carbs / 100) * quantity * 10) / 10
     const lip = Math.round((p.fat / 100) * quantity * 10) / 10
 
-    // Save to custom_foods if not already there
+    // Save to custom_foods
     if (!product._existingId) {
-      await supabase.from('custom_foods').upsert({
-        user_id: userId, name: product.name, brand: product.brand,
-        calories_per_100g: p.calories, proteins_per_100g: p.proteins,
-        carbs_per_100g: p.carbs, fats_per_100g: p.fat,
-        barcode: product.barcode, image_url: product.image_url,
-      }, { onConflict: 'user_id,barcode', ignoreDuplicates: true })
+      try {
+        await supabase.from('custom_foods').upsert({
+          user_id: userId, name: product.name, brand: product.brand,
+          calories_per_100g: p.calories, proteins_per_100g: p.proteins,
+          carbs_per_100g: p.carbs, fats_per_100g: p.fat,
+          barcode: product.barcode, image_url: product.image_url,
+        }, { onConflict: 'user_id,barcode', ignoreDuplicates: true })
+      } catch {} // barcode column may not exist
     }
 
-    // Add to meal_logs
-    await supabase.from('meal_logs').insert({
-      user_id: userId, date: new Date().toISOString().split('T')[0],
-      meal_type: mealType,
-      name: `${product.name}${product.brand ? ` (${product.brand})` : ''} ${quantity}g`,
-      calories: cal, proteins: prot, carbs: gluc, fats: lip,
-      quantity_g: quantity, source: 'barcode',
-    })
-
-    setSaving(false)
-    onProductAdded()
+    if (continuousMode) {
+      // In continuous mode: save to preferences, DON'T add to meal_logs
+      // Increment scan count if already exists
+      try {
+        await supabase.rpc('increment_scan_count', { p_user_id: userId, p_barcode: product.barcode }).catch(() => {})
+      } catch {}
+      setSaving(false)
+      setScanCount(prev => prev + 1)
+      setProduct(null)
+      setQuantity(100)
+      // Restart scanner
+      startCamera()
+    } else {
+      // Normal mode: add to meal_logs and close
+      await supabase.from('meal_logs').insert({
+        user_id: userId, date: new Date().toISOString().split('T')[0],
+        meal_type: mealType,
+        name: `${product.name}${product.brand ? ` (${product.brand})` : ''} ${quantity}g`,
+        calories: cal, proteins: prot, carbs: gluc, fats: lip,
+        quantity_g: quantity, source: 'barcode',
+      })
+      setSaving(false)
+      onProductAdded()
+    }
   }
 
   // ── Product found view ──
@@ -146,8 +163,11 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
     return (
       <div style={{ position: 'fixed', inset: 0, background: BG, zIndex: 1100, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT }}>PRODUIT TROUVÉ</span>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={MUTED} /></button>
+          <div>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT }}>PRODUIT TROUVÉ</span>
+            {continuousMode && scanCount > 0 && <span style={{ marginLeft: 8, fontSize: '0.72rem', color: GOLD, fontWeight: 600 }}>{scanCount} scanné{scanCount > 1 ? 's' : ''}</span>}
+          </div>
+          <button onClick={() => { stopCamera(); onClose() }} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={MUTED} /></button>
         </div>
 
         <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -209,7 +229,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
 
           {/* Actions */}
           <button onClick={addToMeal} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: saving ? 0.6 : 1 }}>
-            {saving ? 'Ajout...' : 'Ajouter au repas'}
+            {saving ? 'Ajout...' : continuousMode ? '✓ Ajouter et scanner suivant' : 'Ajouter au repas'}
           </button>
           <button onClick={() => { setProduct(null); setError(''); startCamera() }} style={{ width: '100%', padding: '12px', borderRadius: 14, border: `1px solid ${BORDER}`, background: 'transparent', color: MUTED, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
             Scanner un autre produit

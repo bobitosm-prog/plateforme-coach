@@ -57,6 +57,12 @@ PROTÉINES PAR REPAS (${diet}) :
 ${proteinRules}
 ${weeklyVariety}
 
+${params.scanned_foods?.length ? `
+ALIMENTS DU CLIENT (à utiliser EN PRIORITÉ) :
+Le client a ces aliments chez lui. Utilise-les en priorité :
+${params.scanned_foods.map((f: any) => `- ${f.name}${f.brand ? ' (' + f.brand + ')' : ''}: ${f.calories}kcal, P${f.proteins}g, G${f.carbs}g, L${f.fat}g /100g`).join('\n')}
+Complète avec les aliments fitness de base si nécessaire.
+` : ''}
 RÉPARTITION CALORIQUE PAR REPAS :
 - petit_dejeuner : ~${pdjKcal} kcal
 - dejeuner : ~${dejKcal} kcal
@@ -162,6 +168,7 @@ ${proteinHint}
 
 VARIÉTÉ : ce jour doit être DIFFÉRENT des précédents. 7 petits-déj différents, 7 déjeuners différents, 7 dîners différents.
 Déjeuner et dîner : protéine animale/principale (150-250g) OBLIGATOIRE.
+${params.scanned_foods?.length ? `\nAliments prioritaires du client : ${params.scanned_foods.slice(0, 10).map((f: any) => f.name).join(', ')}` : ''}
 TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT en JSON.`
 
   console.log(`[meal-plan] Generating ${day}: target=${kcal}kcal, P=${params.protein_goal}g, G=${params.carbs_goal}g, L=${params.fat_goal}g`)

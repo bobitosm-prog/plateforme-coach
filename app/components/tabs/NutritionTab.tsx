@@ -47,6 +47,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [mealLogs, setMealLogs] = useState<any[]>([])
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const [showScanner, setShowScanner] = useState(false)
+  const [showFridgeScanner, setShowFridgeScanner] = useState(false)
   const today = new Date().toISOString().split('T')[0]
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
@@ -479,11 +480,24 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: '#C9A84C', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Scanner un code-barres</span>
       </button>
 
-      {/* Barcode scanner modal */}
+      {/* Scanne ton frigo button */}
+      <button onClick={() => setShowFridgeScanner(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '10px', borderRadius: 12, border: `1px solid ${BORDER}`, background: BG_CARD, cursor: 'pointer', transition: 'all 150ms' }}>
+        <span style={{ fontSize: '0.95rem' }}>🛒</span>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Scanne ton frigo</span>
+      </button>
+
+      {/* Barcode scanner modal (single scan) */}
       {showScanner && (
         <BarcodeScanner supabase={supabase} userId={userId} defaultMealType="dejeuner"
           onProductAdded={() => { setShowScanner(false); fetchTodayMealLogs() }}
           onClose={() => setShowScanner(false)} />
+      )}
+
+      {/* Fridge scanner (continuous mode) */}
+      {showFridgeScanner && (
+        <BarcodeScanner supabase={supabase} userId={userId} continuousMode
+          onProductAdded={() => { setShowFridgeScanner(false); fetchAll() }}
+          onClose={() => setShowFridgeScanner(false)} />
       )}
 
       {/* Today sub-tab — daily tracking */}

@@ -238,6 +238,10 @@ export default function useClientDetail() {
         availableFoods.push(...extra.filter((f: any) => !seen.has(f.nom)))
       }
 
+      // Fetch scanned foods
+      const { data: scannedRaw } = await supabase.from('custom_foods').select('name, brand, calories_per_100g, proteins_per_100g, carbs_per_100g, fats_per_100g, scan_count').eq('user_id', profile.id).not('barcode', 'is', null).order('scan_count', { ascending: false }).limit(20)
+      const scannedFoods = (scannedRaw || []).map((f: any) => ({ name: f.name, brand: f.brand || '', calories: f.calories_per_100g, proteins: f.proteins_per_100g, carbs: f.carbs_per_100g, fat: f.fats_per_100g }))
+
       // Parse meal_preferences to get per-meal food names
       const mp = profile.meal_preferences && typeof profile.meal_preferences === 'object' ? profile.meal_preferences : {}
       const foodNameMap = new Map(availableFoods.map((f: any) => [f.id, f.nom]))
@@ -261,7 +265,7 @@ export default function useClientDetail() {
           fat_goal: profile.fat_goal || fatTarget,
           dietary_type: profile.dietary_type, allergies: profile.allergies,
           objective: profile.objective, available_foods: availableFoods,
-          meal_food_names: mealFoodNames,
+          meal_food_names: mealFoodNames, scanned_foods: scannedFoods,
         }),
       })
 
