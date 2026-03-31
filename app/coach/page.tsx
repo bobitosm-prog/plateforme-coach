@@ -200,6 +200,17 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         </div>
       </nav>
 
+      {/* ── Stripe warning banner ── */}
+      {h.coachProfile && !h.coachProfile.stripe_account_id && (
+        <div style={{ background: 'rgba(245,158,11,0.08)', borderBottom: '1px solid rgba(245,158,11,0.2)', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+          <span style={{ color: '#f59e0b', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>Stripe non connecté — tu ne peux pas recevoir de paiements</span>
+          <button onClick={h.handleStripeConnect} disabled={h.stripeConnecting}
+            style={{ background: '#f59e0b', color: '#000', border: 'none', padding: '5px 14px', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+            {h.stripeConnecting ? 'Connexion...' : 'Configurer'}
+          </button>
+        </div>
+      )}
+
       {/* ══════════════ NEW SESSION MODAL ══════════════ */}
       {h.showNewSession && (
         <div className="modal-bg" onClick={() => h.setShowNewSession(false)}>

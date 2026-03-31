@@ -187,6 +187,19 @@ export default function useCoachDashboard(initialSession?: any) {
     return () => { alive = false; subscription.unsubscribe() }
   }, [])
 
+  // Handle Stripe return
+  useEffect(() => {
+    if (!session) return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('stripe') === 'success') {
+      const accountId = params.get('account')
+      if (accountId) {
+        supabase.from('profiles').update({ stripe_account_id: accountId, stripe_onboarding_complete: true }).eq('id', session.user.id)
+      }
+      window.history.replaceState({}, '', '/coach')
+    }
+  }, [session])
+
   useEffect(() => {
     if (!session) return
 
@@ -481,13 +494,23 @@ export default function useCoachDashboard(initialSession?: any) {
       const res = await fetch('/api/stripe/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coachId: session.user.id }),
+        body: JSON.stringify({
+          coachId: session.user.id,
+          email: session.user.email,
+          existingAccountId: coachProfile?.stripe_account_id || null,
+        }),
       })
-      const { url, error } = await res.json()
-      if (url) window.location.href = url
-      else console.error('Stripe connect error:', error)
-    } catch (err) {
-      console.error('Stripe connect error:', err)
+      const data = await res.json()
+      if (data.url) {
+        if (data.accountId && data.accountId !== coachProfile?.stripe_account_id) {
+          await supabase.from('profiles').update({ stripe_account_id: data.accountId }).eq('id', session.user.id)
+        }
+        window.location.href = data.url
+      } else {
+        alert('Erreur Stripe: ' + (data.error || 'Impossible de connecter'))
+      }
+    } catch {
+      alert('Erreur de connexion à Stripe')
     }
     setStripeConnecting(false)
   }

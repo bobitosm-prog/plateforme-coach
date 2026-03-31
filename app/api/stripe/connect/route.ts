@@ -12,36 +12,42 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY.trim())
-    const { coachId, email } = await req.json()
+    const { coachId, email, existingAccountId } = await req.json()
     if (!coachId) return NextResponse.json({ error: 'coachId required' }, { status: 400 })
 
-    const account = await stripe.accounts.create({
-      type: 'express',
-      email: email || undefined,
-      country: 'CH',
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      business_type: 'individual',
-      metadata: { coachId },
-    })
+    let accountId = existingAccountId
 
-    await supabase.from('profiles').update({ stripe_account_id: account.id }).eq('id', coachId)
+    // If no existing account, create a new one
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: 'express',
+        email: email || undefined,
+        country: 'CH',
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: 'individual',
+        metadata: { coachId },
+      })
+      accountId = account.id
+      await supabase.from('profiles').update({ stripe_account_id: accountId }).eq('id', coachId)
+    }
 
+    // Create a new onboarding link (works for new AND existing accounts)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
     const accountLink = await stripe.accountLinks.create({
-      account: account.id,
-      refresh_url: `${appUrl}/onboarding-coach?stripe=refresh`,
-      return_url: `${appUrl}/onboarding-coach?stripe=success&account=${account.id}`,
+      account: accountId,
+      refresh_url: `${appUrl}/?stripe=refresh`,
+      return_url: `${appUrl}/?stripe=success&account=${accountId}`,
       type: 'account_onboarding',
     })
 
-    return NextResponse.json({ url: accountLink.url, accountId: account.id })
+    return NextResponse.json({ url: accountLink.url, accountId })
   } catch (e: any) {
     if (e.message?.includes('signed up for Connect') || e.type === 'StripeInvalidRequestError') {
       return NextResponse.json({
-        error: 'Stripe Connect n\'est pas encore activé ou erreur de configuration: ' + e.message,
+        error: 'Erreur Stripe Connect: ' + e.message,
         setup_url: 'https://dashboard.stripe.com/connect'
       }, { status: 400 })
     }
