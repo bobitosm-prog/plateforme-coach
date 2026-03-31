@@ -131,6 +131,7 @@ export default function useClientDashboard() {
     ])
 
     if (!profRes.data) { router.replace('/onboarding'); return }
+    if (profRes.data.role === 'coach' && !profRes.data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
     const fn = profRes.data.full_name?.trim()
     if (!fn || fn === 'Athlete') { router.replace('/onboarding'); return }
 

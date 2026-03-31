@@ -66,8 +66,12 @@ function RegisterContent() {
   }, [searchParams])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) { router.replace('/onboarding'); return }
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const { data: prof } = await supabase.from('profiles').select('role, coach_onboarding_complete').eq('id', session.user.id).maybeSingle()
+        router.replace(prof?.role === 'coach' && !prof?.coach_onboarding_complete ? '/onboarding-coach' : '/')
+        return
+      }
       setChecking(false)
     })
   }, [])
