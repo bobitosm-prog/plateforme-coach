@@ -1,14 +1,15 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getRole } from '../../lib/getRole'
 import { toast } from 'sonner'
 import { JS_DAYS_FR } from '../../lib/design-tokens'
 import { cache } from '../../lib/cache'
-import {
-  ScheduledSession, buildWeekSessions, getMonday, toDateStr, scheduleLocalReminder,
-} from '../../lib/schedule-utils'
+import useMessages from './useMessages'
+import useAnalytics from './useAnalytics'
+import useScheduledSessions from './useScheduledSessions'
+import useFoodLog from './useFoodLog'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -34,47 +35,33 @@ export default function useClientDashboard() {
   const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[] } | null>(null)
   const [modal, setModal] = useState<string | null>(null)
 
-  // Food modal state
-  const [foodSearch, setFoodSearch] = useState('')
-  const [foodResults, setFoodResults] = useState<any[]>([])
-  const [selectedFood, setSelectedFood] = useState<any>(null)
-  const [foodQty, setFoodQty] = useState('100')
-  const [mealType, setMealType] = useState('lunch')
-  const [customFoodForm, setCustomFoodForm] = useState({ name: '', brand: '', calories_per_100g: '', proteins_per_100g: '', carbs_per_100g: '', fats_per_100g: '' })
-  const [searchTab, setSearchTab] = useState<'fitness' | 'anses' | 'custom'>('fitness')
-
   // BMR form state
   const [bmrForm, setBmrForm] = useState({ weight: '', height: '', age: '', gender: 'male', activity: 'moderate', body_fat: '' })
 
   const [photoUploading, setPhotoUploading] = useState(false)
   const photoRef = useRef<HTMLInputElement>(null)
   const avatarRef = useRef<HTMLInputElement>(null)
-  const searchRef = useRef<any>(null)
 
-  // Messages
+  // Coach link
   const [coachId, setCoachId] = useState<string | null>(null)
-  const [messages, setMessages] = useState<any[]>([])
-  const [msgInput, setMsgInput] = useState('')
-  const [unreadCount, setUnreadCount] = useState(0)
-  const msgEndRef = useRef<HTMLDivElement>(null)
-  const lastMsgTimestampRef = useRef<string | null>(null)
+
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
 
-  // Scheduled sessions (calendar)
-  const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([])
-  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date>(() => new Date())
-  const reminderTimers = useRef<ReturnType<typeof setTimeout>[]>([])
-
-  // Analytics
-  const [personalRecords, setPersonalRecords] = useState<any[]>([])
-  const [weeklyCalories, setWeeklyCalories] = useState<{ date: string; calories: number; proteins: number; carbs: number; fats: number }[]>([])
-  const [weeklyWater, setWeeklyWater] = useState<{ date: string; ml: number }[]>([])
-  const [weeklyVolume, setWeeklyVolume] = useState<{ week: string; volume: number }[]>([])
-  const [weightHistoryFull, setWeightHistoryFull] = useState<{ date: string; poids: number }[]>([])
-
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
+
+  // --- Sub-hooks ---
+  const userId = session?.user?.id
+
+  const messagesHook = useMessages({ supabase, userId, coachId, activeTab })
+  const analyticsHook = useAnalytics({ supabase })
+  const scheduledHook = useScheduledSessions({ supabase })
+  const foodHook = useFoodLog({
+    supabase,
+    userId,
+    onMutate: () => { setModal(null); fetchAll(true) },
+  })
 
   /* ── Auth ── */
   useEffect(() => {
@@ -99,7 +86,7 @@ export default function useClientDashboard() {
       if (!role) { setRoleChecked(true); return }
       setUserRole(role)
       if (role === 'super_admin') { router.replace('/admin') }
-      else { setRoleChecked(true) } // coach AND client both stay on page.tsx
+      else { setRoleChecked(true) }
     })
   }, [session])
 
@@ -109,67 +96,9 @@ export default function useClientDashboard() {
     fetchAll()
   }, [session])
 
-  /* ── Food search debounce ── */
-  useEffect(() => {
-    clearTimeout(searchRef.current)
-    if (foodSearch.length < 2) { setFoodResults([]); return }
-    searchRef.current = setTimeout(async () => {
-      if (searchTab === 'fitness') {
-        const { data } = await supabase.from('food_items').select('*').eq('source', 'fitness').ilike('name', `%${foodSearch}%`).limit(50)
-        setFoodResults(data || [])
-      } else if (searchTab === 'anses') {
-        const { data } = await supabase.from('food_items').select('*').eq('source', 'ANSES').ilike('name', `%${foodSearch}%`).limit(50)
-        setFoodResults(data || [])
-      } else {
-        const { data } = await supabase.from('custom_foods').select('*').eq('user_id', session?.user?.id).ilike('name', `%${foodSearch}%`).limit(20)
-        setFoodResults(data || [])
-      }
-    }, 300)
-  }, [foodSearch, searchTab])
-
-  /* ── Messages refs ── */
-  useEffect(() => {
-    const real = messages.filter(m => !String(m.id).startsWith('opt-'))
-    if (real.length > 0) lastMsgTimestampRef.current = real[real.length - 1].created_at
-  }, [messages])
-
-  /* ── Messages: Realtime + polling ── */
-  useEffect(() => {
-    if (!session?.user?.id || !coachId) return
-    const uid = session.user.id
-    loadMessages(coachId)
-
-    const channel = supabase
-      .channel(`messages-${uid}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${uid}` }, (payload: any) => {
-        setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), payload.new])
-        if (activeTab !== 'messages') setUnreadCount(prev => prev + 1)
-      })
-      .subscribe()
-
-    const pollId = setInterval(async () => {
-      const since = lastMsgTimestampRef.current
-      if (!since) return
-      const { data } = await supabase.from('messages').select('*')
-        .or(`and(sender_id.eq.${uid},receiver_id.eq.${coachId}),and(sender_id.eq.${coachId},receiver_id.eq.${uid})`)
-        .gt('created_at', since).order('created_at', { ascending: true }).limit(50)
-      if (data?.length) setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
-    }, 30000)
-
-    return () => { supabase.removeChannel(channel); clearInterval(pollId) }
-  }, [session?.user?.id, coachId])
-
-  useEffect(() => {
-    if (activeTab === 'messages') setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
-  }, [messages, activeTab])
-
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }, [activeTab])
-
-  useEffect(() => {
-    if (activeTab === 'messages' && coachId) markMessagesRead()
-  }, [activeTab, coachId])
 
   /* ── Data fetching (with cache) ── */
   async function fetchAll(forceRefresh = false) {
@@ -182,7 +111,6 @@ export default function useClientDashboard() {
       const cached = cache.get(`dashboard_${uid}`)
       if (cached) {
         applyFetchedData(cached.profileData, cached.weightsData, cached.sessData, cached.measureData, cached.photosData, cached.coachProgData, cached.coachMealData)
-        // Still fetch coach link in background
         resolveCoachLink(uid)
         fetchAllComplete.current = true
         return
@@ -214,14 +142,11 @@ export default function useClientDashboard() {
     const coachProgData = coachProgRes.data?.program || null
     const coachMealData = coachMealRes.data?.plan || null
 
-    // Cache the fetched data (5 min TTL)
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
-    // Fetch scheduled sessions and auto-generate if needed
-    await fetchScheduledSessions(uid, profileData, !!coachProgData)
-    // Fetch analytics data in background
-    fetchAnalyticsData(uid)
+    await scheduledHook.fetchScheduledSessions(uid, profileData, !!coachProgData)
+    analyticsHook.fetchAnalyticsData(uid)
     await resolveCoachLink(uid)
     fetchAllComplete.current = true
   }
@@ -284,37 +209,6 @@ export default function useClientDashboard() {
     fetchAll(true)
   }
 
-  async function addFoodToMeal() {
-    if (!selectedFood) return
-    const qty = parseFloat(foodQty) || 100
-    const isCustom = searchTab === 'custom'
-    const cals = isCustom ? selectedFood.calories_per_100g : selectedFood.energy_kcal || selectedFood.calories || 0
-    const prot = isCustom ? selectedFood.proteins_per_100g : selectedFood.proteins || 0
-    const carb = isCustom ? selectedFood.carbs_per_100g : selectedFood.carbohydrates || selectedFood.carbs || 0
-    const fat = isCustom ? selectedFood.fats_per_100g : selectedFood.fat || selectedFood.fats || 0
-    await supabase.from('meal_logs').insert({
-      user_id: session.user.id, meal_type: mealType,
-      name: `${selectedFood.name}${selectedFood.brand ? ` (${selectedFood.brand})` : ''} ${qty}g`,
-      calories: Math.round(cals * qty / 100), proteins: Math.round(prot * qty / 100 * 10) / 10,
-      carbs: Math.round(carb * qty / 100 * 10) / 10, fats: Math.round(fat * qty / 100 * 10) / 10,
-      quantity_g: qty, ...(isCustom ? { custom_food_id: selectedFood.id } : { food_id: selectedFood.id }),
-    })
-    setSelectedFood(null); setFoodSearch(''); setFoodResults([])
-    toast.success('Aliment ajouté !'); setModal(null); fetchAll(true)
-  }
-
-  async function addCustomFood() {
-    const f = customFoodForm
-    if (!f.name || !f.calories_per_100g) return
-    await supabase.from('custom_foods').insert({
-      user_id: session.user.id, name: f.name, brand: f.brand,
-      calories_per_100g: parseFloat(f.calories_per_100g), proteins_per_100g: parseFloat(f.proteins_per_100g) || 0,
-      carbs_per_100g: parseFloat(f.carbs_per_100g) || 0, fats_per_100g: parseFloat(f.fats_per_100g) || 0,
-    })
-    setCustomFoodForm({ name: '', brand: '', calories_per_100g: '', proteins_per_100g: '', carbs_per_100g: '', fats_per_100g: '' })
-    toast.success('Aliment créé !'); setModal(null); fetchAll(true)
-  }
-
   async function saveWeight(value: number, date: string) {
     await supabase.from('weight_logs').upsert({ user_id: session.user.id, poids: value, date }, { onConflict: 'user_id,date' })
     await supabase.from('profiles').upsert({ id: session.user.id, current_weight: value })
@@ -352,263 +246,6 @@ export default function useClientDashboard() {
     setProgressPhotos(prev => prev.filter(p => p.id !== photo.id))
   }
 
-  async function loadMessages(cId: string) {
-    const uid = session?.user?.id
-    if (!uid || !cId) return
-    const { data } = await supabase.from('messages').select('*')
-      .or(`and(sender_id.eq.${uid},receiver_id.eq.${cId}),and(sender_id.eq.${cId},receiver_id.eq.${uid})`)
-      .order('created_at', { ascending: true }).limit(50)
-    setMessages(data || [])
-    setUnreadCount((data || []).filter((m: any) => m.sender_id === cId && !m.read).length)
-  }
-
-  async function sendMessage() {
-    if (!msgInput.trim() || !coachId || !session) return
-    const content = msgInput.trim(); setMsgInput('')
-    const optimistic = { id: `opt-${Date.now()}`, sender_id: session.user.id, receiver_id: coachId, content, read: false, created_at: new Date().toISOString() }
-    setMessages(prev => [...prev, optimistic])
-    await supabase.from('messages').insert({ sender_id: session.user.id, receiver_id: coachId, content })
-    fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: coachId, title: 'Nouveau message client', body: content.slice(0, 80), url: '/coach' }) }).catch(() => {})
-    loadMessages(coachId)
-  }
-
-  async function markMessagesRead() {
-    if (!session || !coachId) return
-    await supabase.from('messages').update({ read: true }).eq('receiver_id', session.user.id).eq('sender_id', coachId).eq('read', false)
-    setUnreadCount(0)
-  }
-
-  /* ── Scheduled sessions ── */
-  async function fetchScheduledSessions(uid: string, profileData: any, hasProgram: boolean) {
-    const monday = getMonday(new Date())
-    const sunday = new Date(monday)
-    sunday.setDate(monday.getDate() + 6)
-
-    const { data: existing } = await supabase
-      .from('scheduled_sessions')
-      .select('*')
-      .eq('user_id', uid)
-      .gte('scheduled_date', toDateStr(monday))
-      .lte('scheduled_date', toDateStr(sunday))
-      .order('scheduled_date', { ascending: true })
-
-    let sessions = existing || []
-
-    // Auto-generate if no sessions exist this week and user has a program
-    if (sessions.length === 0 && hasProgram) {
-      const newSessions = buildWeekSessions(uid, monday, {
-        preferred_training_time: profileData.preferred_training_time || '08:00',
-        reminder_enabled: profileData.reminder_enabled !== false,
-        reminder_minutes_before: profileData.reminder_minutes_before ?? 30,
-        cardio_enabled: profileData.cardio_enabled,
-        cardio_frequency: profileData.cardio_frequency,
-        cardio_preference: profileData.cardio_preference,
-      })
-      const { data: inserted } = await supabase
-        .from('scheduled_sessions')
-        .insert(newSessions)
-        .select()
-      sessions = inserted || []
-    }
-
-    setScheduledSessions(sessions)
-    scheduleReminders(sessions)
-  }
-
-  function scheduleReminders(sessions: ScheduledSession[]) {
-    // Clear existing timers
-    reminderTimers.current.forEach(t => clearTimeout(t))
-    reminderTimers.current = []
-
-    const todayStr = toDateStr(new Date())
-    const todaySessions = sessions.filter(s => s.scheduled_date === todayStr && !s.completed)
-
-    for (const session of todaySessions) {
-      const timer = scheduleLocalReminder(session)
-      if (timer) reminderTimers.current.push(timer)
-    }
-
-    // Immediate notification if session is within 30 minutes
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      const now = Date.now()
-      for (const session of todaySessions) {
-        if (session.session_type === 'rest') continue
-        const sessionTime = new Date(`${session.scheduled_date}T${session.scheduled_time}`).getTime()
-        const diff = sessionTime - now
-        if (diff > 0 && diff < 30 * 60 * 1000) {
-          const minsLeft = Math.round(diff / 60000)
-          new Notification('MoovX — Bientôt ta séance ! 💪', {
-            body: `${session.title} dans ${minsLeft} min`,
-            icon: '/icon-192.png',
-            tag: `session-soon-${session.id}`,
-          })
-        }
-      }
-    }
-  }
-
-  async function markSessionCompleted(sessionId: string) {
-    const { error } = await supabase
-      .from('scheduled_sessions')
-      .update({ completed: true, completed_at: new Date().toISOString() })
-      .eq('id', sessionId)
-    if (!error) {
-      setScheduledSessions(prev =>
-        prev.map(s => s.id === sessionId ? { ...s, completed: true, completed_at: new Date().toISOString() } : s)
-      )
-    }
-  }
-
-  async function regenerateWeekSchedule() {
-    const uid = session?.user?.id
-    if (!uid || !profile) return
-    const monday = getMonday(new Date())
-    const sunday = new Date(monday)
-    sunday.setDate(monday.getDate() + 6)
-
-    // Delete existing sessions for this week
-    await supabase
-      .from('scheduled_sessions')
-      .delete()
-      .eq('user_id', uid)
-      .gte('scheduled_date', toDateStr(monday))
-      .lte('scheduled_date', toDateStr(sunday))
-
-    // Generate new ones
-    const newSessions = buildWeekSessions(uid, monday, {
-      preferred_training_time: profile.preferred_training_time || '08:00',
-      reminder_enabled: profile.reminder_enabled !== false,
-      reminder_minutes_before: profile.reminder_minutes_before ?? 30,
-      cardio_enabled: profile.cardio_enabled,
-      cardio_frequency: profile.cardio_frequency,
-      cardio_preference: profile.cardio_preference,
-    })
-    const { data: inserted } = await supabase
-      .from('scheduled_sessions')
-      .insert(newSessions)
-      .select()
-    setScheduledSessions(inserted || [])
-    scheduleReminders(inserted || [])
-    toast.success('Planning régénéré !')
-  }
-
-  async function updateReminderSettings(settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) {
-    const uid = session?.user?.id
-    if (!uid) return
-    await supabase.from('profiles').update(settings).eq('id', uid)
-    setProfile((prev: any) => ({ ...prev, ...settings }))
-    toast.success('Préférences mises à jour')
-  }
-
-  /* ── Analytics data ── */
-  async function fetchAnalyticsData(uid: string) {
-    const today = new Date()
-    const sevenDaysAgo = new Date(today)
-    sevenDaysAgo.setDate(today.getDate() - 7)
-    const ninetyDaysAgo = new Date(today)
-    ninetyDaysAgo.setDate(today.getDate() - 90)
-
-    const [prRes, calsRes, waterRes, weightsFullRes] = await Promise.all([
-      supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50),
-      supabase.from('meal_logs').select('date, calories, proteins, carbs, fats').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
-      supabase.from('water_intake').select('date, amount_ml').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(30),
-      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date', { ascending: true }).limit(100),
-    ])
-
-    setPersonalRecords(prRes.data || [])
-    setWeightHistoryFull(weightsFullRes.data || [])
-
-    // Aggregate calories by day
-    const calsByDay: Record<string, { calories: number; proteins: number; carbs: number; fats: number }> = {}
-    for (const m of (calsRes.data || [])) {
-      if (!calsByDay[m.date]) calsByDay[m.date] = { calories: 0, proteins: 0, carbs: 0, fats: 0 }
-      calsByDay[m.date].calories += m.calories || 0
-      calsByDay[m.date].proteins += m.proteins || 0
-      calsByDay[m.date].carbs += m.carbs || 0
-      calsByDay[m.date].fats += m.fats || 0
-    }
-    const calArr = Object.entries(calsByDay).map(([date, v]) => ({ date, ...v })).sort((a, b) => a.date.localeCompare(b.date))
-    setWeeklyCalories(calArr)
-
-    // Aggregate water by day
-    const waterByDay: Record<string, number> = {}
-    for (const w of (waterRes.data || [])) {
-      waterByDay[w.date] = (waterByDay[w.date] || 0) + (w.amount_ml || 0)
-    }
-    setWeeklyWater(Object.entries(waterByDay).map(([date, ml]) => ({ date, ml })).sort((a, b) => a.date.localeCompare(b.date)))
-
-    // Weekly training volume from workout_sets (last 4 weeks)
-    const fourWeeksAgo = new Date(today)
-    fourWeeksAgo.setDate(today.getDate() - 28)
-    const { data: setsData } = await supabase
-      .from('workout_sets')
-      .select('weight, reps, created_at')
-      .eq('user_id', uid)
-      .gte('created_at', fourWeeksAgo.toISOString())
-      .eq('completed', true)
-
-    if (setsData && setsData.length > 0) {
-      const volByWeek: Record<string, number> = {}
-      for (const s of setsData) {
-        const d = new Date(s.created_at)
-        const weekStart = new Date(d)
-        const day = weekStart.getDay()
-        weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1))
-        const weekKey = weekStart.toISOString().split('T')[0]
-        volByWeek[weekKey] = (volByWeek[weekKey] || 0) + (s.weight || 0) * (s.reps || 0)
-      }
-      setWeeklyVolume(
-        Object.entries(volByWeek)
-          .map(([week, volume]) => ({ week, volume: Math.round(volume) }))
-          .sort((a, b) => a.week.localeCompare(b.week))
-      )
-    }
-  }
-
-  // PR detection — called after finishing a workout set
-  async function checkForPR(exerciseName: string, weight: number, reps: number): Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }> {
-    const uid = session?.user?.id
-    if (!uid || !weight || !reps) return { newPR: false }
-
-    const estimated1RM = weight * (1 + reps / 30) // Epley formula
-    const { data: currentRecord } = await supabase
-      .from('personal_records')
-      .select('value')
-      .eq('user_id', uid)
-      .eq('exercise_name', exerciseName)
-      .eq('record_type', '1rm')
-      .maybeSingle()
-
-    if (!currentRecord || estimated1RM > (currentRecord.value || 0)) {
-      await supabase.from('personal_records').upsert({
-        user_id: uid,
-        exercise_name: exerciseName,
-        record_type: '1rm',
-        value: Math.round(estimated1RM * 10) / 10,
-        unit: 'kg',
-        previous_value: currentRecord?.value || null,
-        achieved_at: new Date().toISOString().split('T')[0],
-      }, { onConflict: 'user_id, exercise_name, record_type' })
-
-      // Also check max_weight
-      await supabase.from('personal_records').upsert({
-        user_id: uid,
-        exercise_name: exerciseName,
-        record_type: 'max_weight',
-        value: weight,
-        unit: 'kg',
-        achieved_at: new Date().toISOString().split('T')[0],
-      }, { onConflict: 'user_id, exercise_name, record_type' })
-
-      // Refresh PR list
-      const { data: prs } = await supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50)
-      setPersonalRecords(prs || [])
-
-      return { newPR: true, exercise: exerciseName, value: Math.round(estimated1RM * 10) / 10, previous: currentRecord?.value }
-    }
-    return { newPR: false }
-  }
-
   /* ── Computed ── */
   const calorieGoal = profile?.calorie_goal || 2500
   const goalWeight = profile?.target_weight ?? null
@@ -629,7 +266,7 @@ export default function useClientDashboard() {
   const fullName = session ? (profile?.full_name || session.user.user_metadata?.full_name || 'Athlete') : 'Athlete'
   const firstName = fullName.split(' ')[0]
 
-  // Subscription — active if: lifetime, invited, active with valid end date, or in trial
+  // Subscription
   const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
 
@@ -646,15 +283,11 @@ export default function useClientDashboard() {
 
   const isExempt = !!profile && (profile.email === OWNER_EMAIL || profile.email === ADMIN_EMAIL)
   const isInvited = profile?.subscription_type === 'invited'
-
-  // Trial: 10 days from trial_ends_at
   const trialEndsAt = profile?.trial_ends_at ? new Date(profile.trial_ends_at) : null
   const now = new Date()
   const isInTrial = !hasPaidSub && !isExempt && !!trialEndsAt && trialEndsAt > now
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
   const trialExpired = !hasPaidSub && !isExempt && !isInvited && !!trialEndsAt && trialEndsAt <= now
-
-  // Access granted if: paid sub, exempt, invited, or in trial
   const isSubActive = hasPaidSub || isExempt || isInvited || isInTrial
 
   const handleSubscribe = async (planId?: string) => {
@@ -665,6 +298,16 @@ export default function useClientDashboard() {
     const { url } = await res.json()
     if (url) window.location.href = url
   }
+
+  // Wrappers for sub-hooks that need extra context
+  const checkForPR = (exerciseName: string, weight: number, reps: number) =>
+    analyticsHook.checkForPR(userId, exerciseName, weight, reps)
+
+  const regenerateWeekSchedule = () =>
+    scheduledHook.regenerateWeekSchedule(userId, profile)
+
+  const updateReminderSettings = (settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) =>
+    scheduledHook.updateReminderSettings(supabase, userId, settings, setProfile)
 
   return {
     // Auth / loading
@@ -678,19 +321,25 @@ export default function useClientDashboard() {
     workoutSession, setWorkoutSession,
     // Modals
     modal, setModal,
-    // Food modal
-    foodSearch, setFoodSearch, foodResults, selectedFood, setSelectedFood,
-    foodQty, setFoodQty, mealType, setMealType,
-    customFoodForm, setCustomFoodForm, searchTab, setSearchTab,
-    addFoodToMeal, addCustomFood,
+    // Food modal (from sub-hook)
+    foodSearch: foodHook.foodSearch, setFoodSearch: foodHook.setFoodSearch,
+    foodResults: foodHook.foodResults, selectedFood: foodHook.selectedFood,
+    setSelectedFood: foodHook.setSelectedFood,
+    foodQty: foodHook.foodQty, setFoodQty: foodHook.setFoodQty,
+    mealType: foodHook.mealType, setMealType: foodHook.setMealType,
+    customFoodForm: foodHook.customFoodForm, setCustomFoodForm: foodHook.setCustomFoodForm,
+    searchTab: foodHook.searchTab, setSearchTab: foodHook.setSearchTab,
+    addFoodToMeal: foodHook.addFoodToMeal, addCustomFood: foodHook.addCustomFood,
     // BMR
     bmrForm,
     // Photos
     photoUploading, photoRef, avatarRef,
     uploadAvatar, uploadProgressPhoto, deletePhoto,
-    // Messages
-    coachId, messages, msgInput, setMsgInput, unreadCount,
-    msgEndRef, sendMessage,
+    // Messages (from sub-hook)
+    coachId,
+    messages: messagesHook.messages, msgInput: messagesHook.msgInput,
+    setMsgInput: messagesHook.setMsgInput, unreadCount: messagesHook.unreadCount,
+    msgEndRef: messagesHook.msgEndRef, sendMessage: messagesHook.sendMessage,
     // Computed
     calorieGoal, goalWeight, currentWeight, completedSessions, streak,
     todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
@@ -699,11 +348,18 @@ export default function useClientDashboard() {
     isSubActive, isInTrial, trialDaysLeft, trialExpired, handleSubscribe,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
-    // Calendar / scheduled sessions
-    scheduledSessions, calendarSelectedDate, setCalendarSelectedDate,
-    markSessionCompleted, regenerateWeekSchedule, updateReminderSettings,
-    // Analytics
-    personalRecords, weeklyCalories, weeklyWater, weeklyVolume, weightHistoryFull,
+    // Calendar / scheduled sessions (from sub-hook)
+    scheduledSessions: scheduledHook.scheduledSessions,
+    calendarSelectedDate: scheduledHook.calendarSelectedDate,
+    setCalendarSelectedDate: scheduledHook.setCalendarSelectedDate,
+    markSessionCompleted: scheduledHook.markSessionCompleted,
+    regenerateWeekSchedule, updateReminderSettings,
+    // Analytics (from sub-hook)
+    personalRecords: analyticsHook.personalRecords,
+    weeklyCalories: analyticsHook.weeklyCalories,
+    weeklyWater: analyticsHook.weeklyWater,
+    weeklyVolume: analyticsHook.weeklyVolume,
+    weightHistoryFull: analyticsHook.weightHistoryFull,
     checkForPR,
     // Refs
     mainRef,
