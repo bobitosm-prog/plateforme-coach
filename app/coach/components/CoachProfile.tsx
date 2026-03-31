@@ -1,6 +1,12 @@
 'use client'
 import { useState } from 'react'
-import { Users, LogOut, Trash2 } from 'lucide-react'
+import { createBrowserClient } from '@supabase/ssr'
+import { Users, LogOut, Trash2, Save } from 'lucide-react'
+
+const supabase = createBrowserClient(
+  (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
+  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
+)
 
 interface CoachProfileProps {
   coachName: string
@@ -18,6 +24,19 @@ export default function CoachProfile({
   const [showDelete, setShowDelete] = useState(false)
   const [confirmText, setConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [rate, setRate] = useState(String(coachProfile?.coach_monthly_rate || 50))
+  const [rateSaving, setRateSaving] = useState(false)
+  const [rateSaved, setRateSaved] = useState(false)
+
+  async function saveRate() {
+    const val = parseFloat(rate)
+    if (isNaN(val) || val < 1) return
+    setRateSaving(true)
+    await supabase.from('profiles').update({ coach_monthly_rate: val }).eq('id', session.user.id)
+    setRateSaving(false)
+    setRateSaved(true)
+    setTimeout(() => setRateSaved(false), 2000)
+  }
 
   async function deleteAccount() {
     if (confirmText !== 'SUPPRIMER') return
@@ -53,10 +72,27 @@ export default function CoachProfile({
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {coachProfile.coach_experience_years != null && <div><div style={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Expérience</div><div style={{ fontSize: '0.95rem', color: '#F8FAFC', fontWeight: 600, marginTop: 2 }}>{coachProfile.coach_experience_years} ans</div></div>}
-            <div><div style={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Tarif mensuel</div><div style={{ fontSize: '0.95rem', color: '#C9A84C', fontWeight: 600, marginTop: 2 }}>CHF {coachProfile.subscription_price || 150}</div></div>
+            <div><div style={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Clients</div><div style={{ fontSize: '0.95rem', color: '#F8FAFC', fontWeight: 600, marginTop: 2 }}>{coachProfile.coach_max_clients || '--'}</div></div>
           </div>
         </div>
       )}
+
+      {/* Tarif section */}
+      <div style={{ background: '#141414', border: '1px solid #242424', borderRadius: 16, padding: 18, marginTop: 12 }}>
+        <div style={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Mon tarif client</div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input type="number" inputMode="decimal" value={rate} onChange={e => { setRate(e.target.value); setRateSaved(false) }}
+              style={{ width: '100%', background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 10, padding: '10px 50px 10px 14px', color: '#F8FAFC', fontSize: '1rem', fontFamily: "'DM Sans', sans-serif", outline: 'none' }} />
+            <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#6B7280', fontSize: '0.85rem', pointerEvents: 'none' }}>CHF</span>
+          </div>
+          <button onClick={saveRate} disabled={rateSaving}
+            style={{ padding: '10px 16px', background: rateSaved ? 'rgba(34,197,94,0.15)' : 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: rateSaved ? '1px solid rgba(34,197,94,0.3)' : 'none', borderRadius: 10, color: rateSaved ? '#22C55E' : '#000', fontWeight: 700, fontSize: '0.82rem', cursor: rateSaving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'DM Sans', sans-serif", whiteSpace: 'nowrap' }}>
+            {rateSaved ? '✓ Sauvé' : rateSaving ? '...' : <><Save size={14} /> Sauver</>}
+          </button>
+        </div>
+        <p style={{ fontSize: '0.7rem', color: '#555', margin: '8px 0 0', fontStyle: 'italic' }}>Ce montant sera facturé mensuellement à tes clients. MoovX prélève 10% de commission.</p>
+      </div>
 
       <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <button className="btn-secondary" onClick={() => setSection('dashboard')}>

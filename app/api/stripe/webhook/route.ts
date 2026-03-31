@@ -25,29 +25,52 @@ export async function POST(req: NextRequest) {
       const isCoach = subType === 'coach_monthly'
 
       if (clientId) {
-        const updates: Record<string, any> = {
-          stripe_customer_id: session.customer as string || null,
-          subscription_type: subType,
-        }
+        const isCoachSubscription = session.metadata?.type === 'coach_subscription'
+        const coachId = session.metadata?.coachId
 
-        if (isLifetime) {
-          // One-time payment → lifetime access, no expiry
-          updates.subscription_status = 'lifetime'
-          updates.subscription_end_date = null
+        if (isCoachSubscription && coachId) {
+          // Coach subscription — client pays coach directly
+          await supabase.from('profiles').update({
+            stripe_customer_id: session.customer as string || null,
+            subscription_status: 'active',
+            subscription_type: 'coach_paid',
+            stripe_subscription_id: session.subscription as string || null,
+            subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          }).eq('id', clientId)
+
+          await supabase.from('payments').insert({
+            client_id: clientId,
+            coach_id: coachId,
+            amount: (session.amount_total || 0) / 100,
+            currency: 'chf',
+            description: 'Abonnement coaching mensuel',
+            status: 'paid',
+            paid_at: new Date().toISOString(),
+            stripe_checkout_session_id: session.id,
+          })
         } else {
-          // Subscription → active with end date
-          const interval = subType === 'client_yearly' ? 365 : 30
-          updates.subscription_status = 'active'
-          updates.subscription_end_date = new Date(Date.now() + interval * 24 * 60 * 60 * 1000).toISOString()
-          updates.stripe_subscription_id = session.subscription as string || null
-        }
+          // Standard MoovX subscription
+          const updates: Record<string, any> = {
+            stripe_customer_id: session.customer as string || null,
+            subscription_type: subType,
+          }
 
-        // For coach plans, also mark coach fields
-        if (isCoach) {
-          updates.coach_subscription_active = true
-        }
+          if (isLifetime) {
+            updates.subscription_status = 'lifetime'
+            updates.subscription_end_date = null
+          } else {
+            const interval = subType === 'client_yearly' ? 365 : 30
+            updates.subscription_status = 'active'
+            updates.subscription_end_date = new Date(Date.now() + interval * 24 * 60 * 60 * 1000).toISOString()
+            updates.stripe_subscription_id = session.subscription as string || null
+          }
 
-        await supabase.from('profiles').update(updates).eq('id', clientId)
+          if (isCoach) {
+            updates.coach_subscription_active = true
+          }
+
+          await supabase.from('profiles').update(updates).eq('id', clientId)
+        }
 
         // Update payment status
         await supabase.from('payments')

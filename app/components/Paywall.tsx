@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
-import { Zap, Check, Crown, Sparkles } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Check, Crown, Sparkles } from 'lucide-react'
 
 const GOLD = '#C9A84C'
 
@@ -23,8 +23,31 @@ const COACH_PLANS: Plan[] = [
   { id: 'coach_monthly', name: 'Coach Pro', price: 50, interval: '/mois', features: ['Clients illimités', 'Plans IA pour chaque client', 'Calendrier & séances', 'Messagerie temps réel', 'Analytics revenus', 'Paiements Stripe'] },
 ]
 
+const COACH_CLIENT_FEATURES = ['Plans nutrition IA illimités', 'Programme training personnalisé', 'Messagerie directe avec ton coach', 'Suivi progression complet', 'Toutes les fonctionnalités MoovX']
+
 export default function Paywall({ role, userId, coachId, onSignOut }: PaywallProps) {
   const [loading, setLoading] = useState<string | null>(null)
+  const [coachData, setCoachData] = useState<{ name: string; rate: number; id: string } | null>(null)
+
+  // Check if client has a coach with a rate
+  useEffect(() => {
+    if (role !== 'client' || !coachId || coachId === 'platform') return
+    fetch('/api/stripe/coach-checkout', { method: 'OPTIONS' }).catch(() => {})
+    // Fetch coach info via a lightweight approach
+    import('@supabase/ssr').then(({ createBrowserClient }) => {
+      const sb = createBrowserClient(
+        (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
+        (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
+      )
+      sb.from('profiles').select('full_name, coach_monthly_rate, stripe_account_id').eq('id', coachId).maybeSingle()
+        .then(({ data }) => {
+          if (data?.stripe_account_id) {
+            setCoachData({ name: data.full_name || 'Ton coach', rate: data.coach_monthly_rate || 50, id: coachId })
+          }
+        })
+    })
+  }, [role, coachId])
+
   const plans = role === 'coach' ? COACH_PLANS : CLIENT_PLANS
 
   async function handleSelect(planId: string) {
@@ -38,6 +61,21 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
       const { url } = await res.json()
       if (url) window.location.href = url
       else setLoading(null)
+    } catch { setLoading(null) }
+  }
+
+  async function handleCoachCheckout() {
+    if (!coachData) return
+    setLoading('coach')
+    try {
+      const res = await fetch('/api/stripe/coach-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: userId, coachId: coachData.id }),
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else { alert('Erreur: ' + (data.error || 'Impossible de créer le paiement')); setLoading(null) }
     } catch { setLoading(null) }
   }
 
@@ -57,6 +95,38 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
           {role === 'coach' ? 'Accède à ton espace coach et gère tes clients' : 'Commence ta transformation avec le Coach IA'}
         </p>
       </div>
+
+      {/* Coach subscription card — shown to clients with a coach */}
+      {coachData && role === 'client' && (
+        <div style={{ maxWidth: 400, width: '100%', marginBottom: 32, animation: 'fadeUp 0.6s 0.1s cubic-bezier(0.16,1,0.3,1) both' }}>
+          <div style={{ borderRadius: 24, padding: 2, background: `linear-gradient(135deg,${GOLD},#F0D060)` }}>
+            <div style={{ background: '#111', borderRadius: 22, padding: '32px 28px', position: 'relative' }}>
+              <span style={{ position: 'absolute', top: -1, right: 24, background: `linear-gradient(135deg,${GOLD},#F0D060)`, color: '#000', fontSize: '0.62rem', fontWeight: 700, padding: '4px 14px', borderRadius: '0 0 10px 10px', letterSpacing: 1, textTransform: 'uppercase' }}>Recommandé</span>
+              <div style={{ fontSize: '0.7rem', letterSpacing: 3, textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Coaching avec {coachData.name}</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 16 }}>
+                <span style={{ fontSize: '0.75rem', color: '#444', alignSelf: 'flex-start', marginTop: 16 }}>CHF</span>
+                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 64, lineHeight: 1, color: GOLD, letterSpacing: 1 }}>{coachData.rate}</span>
+                <span style={{ color: '#444', fontSize: '0.85rem' }}>/mois</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+                {COACH_CLIENT_FEATURES.map(f => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Check size={14} color={GOLD} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.82rem', color: '#888', fontWeight: 300 }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={handleCoachCheckout} disabled={loading !== null}
+                style={{ width: '100%', padding: '15px 20px', borderRadius: 14, border: 'none', cursor: loading ? 'wait' : 'pointer', background: `linear-gradient(135deg,${GOLD},#F0D060)`, color: '#000', fontSize: '0.9rem', fontWeight: 700, fontFamily: "'DM Sans', sans-serif", boxShadow: '0 8px 32px rgba(201,168,76,0.25)', opacity: loading && loading !== 'coach' ? 0.5 : 1 }}>
+                {loading === 'coach' ? 'Redirection...' : `S'abonner — CHF ${coachData.rate}/mois`}
+              </button>
+            </div>
+          </div>
+          <div style={{ textAlign: 'center', margin: '20px 0 0' }}>
+            <span style={{ fontSize: '0.72rem', color: '#333' }}>ou choisis un plan sans coach :</span>
+          </div>
+        </div>
+      )}
 
       {/* Plans */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', maxWidth: role === 'coach' ? 'min(400px, calc(100vw - 32px))' : 'min(960px, calc(100vw - 32px))', width: '100%' }}>
