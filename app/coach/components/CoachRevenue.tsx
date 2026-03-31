@@ -39,7 +39,7 @@ export default function CoachRevenue({
   return (
     <>
       {/* Stripe banner */}
-      {coachProfile && !coachProfile.stripe_account_id && coachProfile.email !== process.env.NEXT_PUBLIC_COACH_EMAIL && (
+      {coachProfile && !coachProfile.stripe_onboarding_complete && (
         <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 14, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.85rem', color: '#C9A84C', fontWeight: 600 }}>Connecte ton compte Stripe pour recevoir les paiements de tes clients</span>
           <button onClick={handleStripeConnect} disabled={stripeConnecting} style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 8, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
