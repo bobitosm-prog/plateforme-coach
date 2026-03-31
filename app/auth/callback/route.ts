@@ -24,9 +24,20 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // Redirect to / — page.tsx will detect session and route to /coach or /admin
+      // Handle coach invitation link (?coach=uuid)
+      const coachId = searchParams.get('coach')
+      if (coachId && data.session) {
+        const uid = data.session.user.id
+        const supa = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          { cookies: { getAll: () => cookieStore.getAll(), setAll: (c) => c.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } }
+        )
+        await supa.from('profiles').update({ role: 'client', subscription_type: 'invited', subscription_status: 'active' }).eq('id', uid)
+        await supa.from('coach_clients').upsert({ coach_id: coachId, client_id: uid }, { onConflict: 'coach_id,client_id' })
+      }
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

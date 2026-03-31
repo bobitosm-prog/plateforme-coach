@@ -1,149 +1,204 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { UserPlus, Check, AlertCircle } from 'lucide-react'
+import { useEffect, useState, Suspense, useRef } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { Eye, EyeOff } from 'lucide-react'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+const GOLD = '#C9A84C'
+
+const GoogleIcon = () => <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
 
 function JoinContent() {
   const params = useSearchParams()
+  const router = useRouter()
   const coachId = params.get('coach')
-  const [session, setSession] = useState<any>(null)
-  const [linked, setLinked] = useState(false)
-  const [linkError, setLinkError] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
+  const supabase = useRef(createBrowserClient(
+    (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
+    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
+  )).current
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [coachName, setCoachName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    setMounted(true)
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') { setSession(null); return }
-      if (session) setSession(session)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  useEffect(() => {
-    if (!session || !coachId) return
-    async function link() {
-      setLinkError(null)
-      const { error } = await supabase
-        .from('coach_clients')
-        .upsert(
-          { coach_id: coachId, client_id: session.user.id },
-          { onConflict: 'coach_id,client_id' }
-        )
-      if (error) {
-        setLinkError(error.message)
-      } else {
-        // Mark client as invited (free access while coach pays)
-        await supabase.from('profiles').update({
-          role: 'client',
-          subscription_type: 'invited',
-          subscription_status: 'active',
-        }).eq('id', session.user.id)
-        setLinked(true)
-        setTimeout(() => { window.location.href = '/' }, 1500)
+    if (!coachId) { setChecking(false); return }
+    // Fetch coach name
+    supabase.from('profiles').select('full_name').eq('id', coachId).maybeSingle()
+      .then(({ data }) => { if (data?.full_name) setCoachName(data.full_name) })
+    // Check if already logged in
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        // Already logged in — link to coach and redirect
+        await supabase.from('profiles').update({ role: 'client', subscription_type: 'invited', subscription_status: 'active' }).eq('id', session.user.id)
+        await supabase.from('coach_clients').upsert({ coach_id: coachId, client_id: session.user.id }, { onConflict: 'coach_id,client_id' })
+        router.replace('/')
+        return
       }
+      setChecking(false)
+    })
+  }, [coachId])
+
+  async function handleSignUp() {
+    setError('')
+    if (!email.trim()) { setError('Email requis'); return }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Email invalide'); return }
+    if (password.length < 8) { setError('Le mot de passe doit faire au moins 8 caractères'); return }
+    if (password !== confirmPassword) { setError('Les mots de passe ne correspondent pas'); return }
+    if (!coachId) { setError("Lien d'invitation invalide"); return }
+
+    setLoading(true)
+    const redirectUrl = `${window.location.origin}/auth/callback?coach=${coachId}`
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: redirectUrl },
+    })
+
+    if (authError) {
+      setError(authError.message.includes('already registered')
+        ? 'Ce compte existe déjà. Connecte-toi depuis la page de login.'
+        : authError.message)
+      setLoading(false)
+      return
     }
-    link()
-  }, [session, coachId])
 
-  if (!mounted) return null
+    if (authData.user) {
+      // Wait for trigger, then set role + link to coach
+      await new Promise(r => setTimeout(r, 1000))
+      await supabase.from('profiles').update({
+        role: 'client',
+        subscription_type: 'invited',
+        subscription_status: 'active',
+      }).eq('id', authData.user.id)
+      await supabase.from('coach_clients').upsert(
+        { coach_id: coachId, client_id: authData.user.id },
+        { onConflict: 'coach_id,client_id' }
+      )
+    }
 
-  if (!coachId) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <p className="text-zinc-500 text-sm">Lien d'invitation invalide.</p>
-      </div>
-    )
+    setLoading(false)
+    setEmailSent(true)
   }
 
-  if (!session) {
-    // Build redirectTo preserving the ?coach= param so OAuth callbacks keep it
-    const redirectTo = typeof window !== 'undefined' ? window.location.href : undefined
+  function handleGoogleSignUp() {
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback?coach=${coachId}` },
+    })
+  }
 
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-zinc-900 p-8 rounded-[40px] border border-zinc-800 shadow-2xl">
-          <div className="flex justify-center mb-6">
-            <div className="bg-orange-500 p-4 rounded-3xl">
-              <UserPlus size={32} className="text-white" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-black text-white mb-2 text-center italic uppercase">Rejoindre</h1>
-          <p className="text-zinc-500 text-center text-sm mb-8">
-            Crée ton compte pour être suivi par ton coach
-          </p>
-          <Auth
-            supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#f97316', brandAccent: '#ea580c' } } } }}
-            theme="dark"
-            providers={['google']}
-            redirectTo={redirectTo}
-          />
+  if (checking) return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 32, height: 32, border: '3px solid #1a1a1a', borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
+
+  if (!coachId) return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: '#ef4444', fontFamily: "'DM Sans', sans-serif" }}>Lien d&apos;invitation invalide.</p>
+    </div>
+  )
+
+  if (emailSent) return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ width: '100%', maxWidth: 420, background: '#111', border: '1px solid #1a1a1a', borderRadius: 20, padding: 40, textAlign: 'center' }}>
+        <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
+        <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, color: '#f8fafc', margin: '0 0 12px', letterSpacing: 2 }}>VÉRIFIE TA BOÎTE MAIL</h2>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#666', lineHeight: 1.6, margin: '0 0 8px' }}>
+          Un email de confirmation a été envoyé à <strong style={{ color: GOLD }}>{email}</strong>.
+        </p>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#444', margin: 0 }}>
+          Clique sur le lien pour activer ton compte et commencer.
+        </p>
       </div>
-    )
-  }
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6">
-      <div className="w-full max-w-sm bg-zinc-900 p-8 rounded-[40px] border border-zinc-800 shadow-2xl text-center">
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .join-input{width:100%;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:12px 16px;color:#f8fafc;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;box-sizing:border-box} .join-input:focus{border-color:${GOLD}} .join-input::placeholder{color:#333}`}</style>
+      <div style={{ width: '100%', maxWidth: 420, background: '#111', border: '1px solid #1a1a1a', borderRadius: 20, padding: 40 }}>
 
-        {linkError ? (
-          <>
-            <div className="w-16 h-16 rounded-[20px] bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto mb-5">
-              <AlertCircle size={28} className="text-red-500" />
-            </div>
-            <h2 className="text-2xl font-black text-white uppercase mb-2">Erreur</h2>
-            <p className="text-zinc-500 text-sm mb-6">{linkError}</p>
-            <a
-              href="/"
-              className="block w-full py-4 rounded-2xl bg-zinc-800 text-white font-black uppercase tracking-wider text-sm active:scale-[0.98] transition-all"
-            >
-              Aller au Dashboard quand même →
-            </a>
-          </>
-        ) : (
-          <>
-            <div className="w-16 h-16 rounded-[20px] bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-5">
-              <Check size={28} className={linked ? 'text-green-500' : 'text-zinc-600 animate-pulse'} />
-            </div>
-            <h2 className="text-2xl font-black text-white uppercase mb-2">
-              {linked ? 'Connecté !' : 'Connexion en cours…'}
-            </h2>
-            <p className="text-zinc-500 text-sm mb-6">
-              {linked
-                ? 'Lié à ton coach. Redirection…'
-                : 'Enregistrement en cours…'}
+        {/* Logo + header */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <img src="/logo-moovx.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 14, marginBottom: 16 }} />
+          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, color: '#f8fafc', margin: '0 0 8px', letterSpacing: 2 }}>REJOINS MOOVX</h1>
+          {coachName && (
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, color: GOLD, margin: 0 }}>
+              Invitation de coach {coachName}
             </p>
-            {linked && (
-              <a
-                href="/"
-                className="block w-full py-4 rounded-2xl bg-orange-500 text-black font-black uppercase tracking-wider text-sm active:scale-[0.98] transition-all"
-              >
-                Aller au Dashboard →
-              </a>
-            )}
-          </>
+          )}
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#555', margin: '8px 0 0' }}>
+            Crée ton compte pour être suivi par ton coach. Accès gratuit.
+          </p>
+        </div>
+
+        {/* Google */}
+        <button onClick={handleGoogleSignUp}
+          style={{ width: '100%', background: '#fff', border: 'none', borderRadius: 10, padding: '12px 16px', color: '#000', fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 24, transition: 'transform 0.2s' }}>
+          <GoogleIcon /> Continuer avec Google
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 24px' }}>
+          <div style={{ flex: 1, height: 1, background: '#1a1a1a' }} />
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#444', letterSpacing: 1 }}>OU</span>
+          <div style={{ flex: 1, height: 1, background: '#1a1a1a' }} />
+        </div>
+
+        {/* Email */}
+        <div style={{ marginBottom: 14 }}>
+          <input type="email" className="join-input" value={email} onChange={e => { setEmail(e.target.value); setError('') }} placeholder="Email" />
+        </div>
+
+        {/* Password */}
+        <div style={{ position: 'relative', marginBottom: 14 }}>
+          <input type={showPassword ? 'text' : 'password'} className="join-input" style={{ paddingRight: 44 }} value={password} onChange={e => { setPassword(e.target.value); setError('') }} placeholder="Mot de passe (min. 8 car.)" />
+          <button onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            {showPassword ? <EyeOff size={16} color="#333" /> : <Eye size={16} color="#333" />}
+          </button>
+        </div>
+
+        {/* Confirm */}
+        <div style={{ marginBottom: 20 }}>
+          <input type={showPassword ? 'text' : 'password'} className="join-input" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setError('') }} placeholder="Confirmer le mot de passe" onKeyDown={e => { if (e.key === 'Enter') handleSignUp() }} />
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
+            <p style={{ color: '#ef4444', fontSize: 13, fontFamily: "'DM Sans', sans-serif", margin: 0 }}>{error}</p>
+          </div>
         )}
 
+        {/* Submit */}
+        <button onClick={handleSignUp} disabled={loading}
+          style={{ width: '100%', background: loading ? '#333' : `linear-gradient(135deg, ${GOLD}, #b8943f)`, color: loading ? '#666' : '#050505', border: 'none', borderRadius: 10, padding: '14px', fontSize: 15, fontWeight: 700, fontFamily: "'DM Sans', sans-serif", cursor: loading ? 'wait' : 'pointer', transition: 'all 0.2s' }}>
+          {loading ? 'Création du compte...' : 'Créer mon compte gratuit'}
+        </button>
+
+        <p style={{ textAlign: 'center', marginTop: 16, fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#444' }}>
+          Déjà un compte ?{' '}
+          <a href="/login" style={{ color: GOLD, textDecoration: 'none' }}>Se connecter</a>
+        </p>
+
+        <p style={{ textAlign: 'center', marginTop: 20, fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#333' }}>
+          &#10003; Accès gratuit &middot; &#10003; Suivi par ton coach &middot; &#10003; Toutes les fonctionnalités
+        </p>
       </div>
     </div>
   )
 }
 
 export default function JoinPage() {
-  return (
-    <Suspense>
-      <JoinContent />
-    </Suspense>
-  )
+  return <Suspense><JoinContent /></Suspense>
 }
