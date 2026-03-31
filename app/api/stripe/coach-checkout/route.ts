@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       }],
       subscription_data: {
-        application_fee_percent: 10,
+        application_fee_percent: 3,
         transfer_data: { destination: coach.stripe_account_id },
         metadata: { clientId, coachId, type: 'coach_subscription' },
       },

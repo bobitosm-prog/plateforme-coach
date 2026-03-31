@@ -91,7 +91,7 @@ export default function CoachProfile({
             {rateSaved ? '✓ Sauvé' : rateSaving ? '...' : <><Save size={14} /> Sauver</>}
           </button>
         </div>
-        <p style={{ fontSize: '0.7rem', color: '#555', margin: '8px 0 0', fontStyle: 'italic' }}>Ce montant sera facturé mensuellement à tes clients. MoovX prélève 10% de commission.</p>
+        <p style={{ fontSize: '0.7rem', color: '#555', margin: '8px 0 0', fontStyle: 'italic' }}>Ce montant sera facturé mensuellement à tes clients. MoovX prélève 3% de commission.</p>
       </div>
 
       <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
