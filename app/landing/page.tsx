@@ -396,6 +396,8 @@ export default function LandingPage() {
           .pwa-grid { grid-template-columns: 1fr !important; }
           .coaching-grid { grid-template-columns: 1fr !important; }
           .pwa-badges { grid-template-columns: 1fr 1fr !important; }
+          .section-two-col { grid-template-columns: 1fr !important; }
+          .section-two-col .col-image { order: -1; }
           .footer-inner { flex-direction: column !important; text-align: center !important; gap: 24px !important; }
           .footer-links { justify-content: center !important; }
         }
@@ -451,15 +453,17 @@ export default function LandingPage() {
           padding: '100px 24px 60px',
           position: 'relative',
           overflow: 'hidden',
+          backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}>
-          {/* Radial gold glow */}
+          {/* Dark overlay */}
           <div style={{
             position: 'absolute',
-            top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 800, height: 800,
-            background: 'radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%)',
-            pointerEvents: 'none',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.75)',
+            zIndex: 0,
           }} />
 
           <h1 style={{
@@ -469,6 +473,8 @@ export default function LandingPage() {
             margin: '0 0 8px',
             letterSpacing: 4,
             lineHeight: 1,
+            position: 'relative',
+            zIndex: 1,
             opacity: heroRev.visible ? 1 : 0,
             transform: heroRev.visible ? 'translateY(0)' : 'translateY(30px)',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -482,6 +488,8 @@ export default function LandingPage() {
             color: '#C9A84C',
             margin: '0 0 24px',
             letterSpacing: 6,
+            position: 'relative',
+            zIndex: 1,
             opacity: heroRev.visible ? 1 : 0,
             transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s',
@@ -496,6 +504,8 @@ export default function LandingPage() {
             maxWidth: 560,
             lineHeight: 1.7,
             margin: '0 0 40px',
+            position: 'relative',
+            zIndex: 1,
             opacity: heroRev.visible ? 1 : 0,
             transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
@@ -507,6 +517,8 @@ export default function LandingPage() {
             display: 'flex',
             gap: 16,
             marginBottom: 48,
+            position: 'relative',
+            zIndex: 1,
             opacity: heroRev.visible ? 1 : 0,
             transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s',
@@ -520,6 +532,8 @@ export default function LandingPage() {
             gap: 40,
             flexWrap: 'wrap',
             justifyContent: 'center',
+            position: 'relative',
+            zIndex: 1,
             opacity: heroRev.visible ? 1 : 0,
             transition: 'opacity 0.8s 0.6s',
           }}>
@@ -569,6 +583,24 @@ export default function LandingPage() {
         <div ref={nutritionRev.ref} id="nutrition">
           <Section>
             <SectionTitle title="NUTRITION INTELLIGENTE" subtitle="Plans alimentaires générés par l'IA, adaptés à tes macros exacts" visible={nutritionRev.visible} />
+            <div className="section-two-col" style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 40,
+              alignItems: 'center',
+              marginBottom: 40,
+              opacity: nutritionRev.visible ? 1 : 0,
+              transform: nutritionRev.visible ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
+            }}>
+              <div>
+                <h3 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(28px, 4vw, 40px)', color: '#f8fafc', margin: '0 0 16px', letterSpacing: 2 }}>NUTRITION SUR MESURE</h3>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: '#a0a0a0', lineHeight: 1.8, margin: 0 }}>L&apos;IA génère des plans alimentaires personnalisés adaptés à tes macros exacts. Scanner code-barres, 170+ aliments fitness, recettes IA et liste de courses automatique. Coaching nutrition à Genève propulsé par MoovX.</p>
+              </div>
+              <div className="col-image">
+                <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80" alt="Meal prep fitness nutrition Genève - MoovX coaching musculation" loading="lazy" style={{ width: '100%', borderRadius: 16 }} />
+              </div>
+            </div>
             <FeatureGrid features={NUTRITION_FEATURES} />
           </Section>
         </div>
@@ -577,6 +609,24 @@ export default function LandingPage() {
         <div ref={trainingRev.ref} id="training">
           <Section>
             <SectionTitle title="ENTRAÎNEMENT HYPERTROPHIE" subtitle="Programme Push/Pull/Legs 6 jours + Cardio HIIT & LISS" visible={trainingRev.visible} />
+            <div className="section-two-col" style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 40,
+              alignItems: 'center',
+              marginBottom: 40,
+              opacity: trainingRev.visible ? 1 : 0,
+              transform: trainingRev.visible ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
+            }}>
+              <div className="col-image">
+                <img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80" alt="Programme musculation PPL Genève - MoovX coaching fitness" loading="lazy" style={{ width: '100%', borderRadius: 16 }} />
+              </div>
+              <div>
+                <h3 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(28px, 4vw, 40px)', color: '#f8fafc', margin: '0 0 16px', letterSpacing: 2 }}>PROGRAMME PPL 6 JOURS</h3>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: '#a0a0a0', lineHeight: 1.8, margin: 0 }}>Programme Push/Pull/Legs scientifique pour l&apos;hypertrophie. 89 exercices guidés, timer de repos intelligent, cardio HIIT &amp; LISS, records personnels automatiques. Entraînement musculation à Genève avec MoovX.</p>
+              </div>
+            </div>
             <FeatureGrid features={TRAINING_FEATURES} />
           </Section>
         </div>
@@ -845,20 +895,30 @@ export default function LandingPage() {
         <div ref={geneveRev.ref}>
           <Section>
             <SectionTitle title="COACHING FITNESS À GENÈVE" subtitle="La première plateforme de coaching fitness suisse propulsée par l'IA" visible={geneveRev.visible} />
-            <p style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 16,
-              color: '#6b7280',
-              lineHeight: 1.8,
-              maxWidth: 700,
-              margin: '0 auto',
-              textAlign: 'center',
+            <div className="section-two-col" style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 40,
+              alignItems: 'center',
               opacity: geneveRev.visible ? 1 : 0,
               transform: geneveRev.visible ? 'translateY(0)' : 'translateY(20px)',
               transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
             }}>
-              Basé à Genève, MoovX est la première plateforme de coaching fitness suisse propulsée par l&apos;intelligence artificielle. Que tu sois à Plainpalais, aux Eaux-Vives, à Carouge ou aux Pâquis, ton coach IA t&apos;accompagne partout. Plans nutrition adaptés aux produits suisses, programme musculation professionnel, suivi de progression complet.
-            </p>
+              <div>
+                <p style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 17,
+                  color: '#a0a0a0',
+                  lineHeight: 1.8,
+                  margin: 0,
+                }}>
+                  Basé à Genève, MoovX est la première plateforme de coaching fitness suisse propulsée par l&apos;intelligence artificielle. Que tu sois à Plainpalais, aux Eaux-Vives, à Carouge ou aux Pâquis, ton coach IA t&apos;accompagne partout. Plans nutrition adaptés aux produits suisses, programme musculation professionnel, suivi de progression complet. Commence ta transformation dès aujourd&apos;hui.
+                </p>
+              </div>
+              <div className="col-image">
+                <img src="https://images.unsplash.com/photo-1573108037329-37aa135a142e?w=800&q=80" alt="Coaching fitness Genève Suisse - MoovX nutrition musculation" loading="lazy" style={{ width: '100%', borderRadius: 16 }} />
+              </div>
+            </div>
           </Section>
         </div>
 

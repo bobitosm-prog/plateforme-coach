@@ -311,6 +311,21 @@
       padding: 100px 24px 60px;
       position: relative;
       overflow: hidden;
+      background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 0;
+    }
+    .hero > * {
+      position: relative;
+      z-index: 1;
     }
     .hero-glow {
       position: absolute;
@@ -742,6 +757,22 @@
       color: #C9A84C;
     }
 
+    /* ── Two-column image layout ── */
+    .section-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .section-two-col img {
+      width: 100%;
+      border-radius: 16px;
+      display: block;
+    }
+
     /* ── Stagger delays ── */
     .delay-0 { transition-delay: 0ms !important; }
     .delay-1 { transition-delay: 80ms !important; }
@@ -808,6 +839,10 @@
 
       /* Coaching grid */
       .coaching-grid { grid-template-columns: 1fr !important; }
+
+      /* Two-column image layout */
+      .section-two-col { grid-template-columns: 1fr !important; }
+      .section-two-col .col-image { order: -1; }
       .coach-ia-card { padding: 32px 20px; }
 
       /* Section padding */
@@ -834,7 +869,6 @@
 
   <!-- ═══════════ 2. HERO ═══════════ -->
   <div class="hero reveal" id="hero">
-    <div class="hero-glow"></div>
     <h1 class="reveal-child delay-0">TRANSFORME TON CORPS</h1>
     <p class="subtitle reveal-child delay-150">DÉPASSE TES LIMITES</p>
     <p class="desc reveal-child delay-300">Coaching fitness à Genève propulsé par l'intelligence artificielle. Nutrition personnalisée, entraînement hypertrophie, suivi complet.</p>
@@ -877,6 +911,15 @@
         <h2>NUTRITION INTELLIGENTE</h2>
         <p>Plans alimentaires générés par l'IA, adaptés a tes macros exacts</p>
       </div>
+      <div class="section-two-col reveal" style="margin-bottom:40px">
+        <div>
+          <h3 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,40px);color:#f8fafc;margin:0 0 16px;letter-spacing:2px">NUTRITION SUR MESURE</h3>
+          <p style="font-family:'DM Sans',sans-serif;font-size:16px;color:#a0a0a0;line-height:1.8;margin:0">L'IA génère des plans alimentaires personnalisés adaptés à tes macros exacts. Scanner code-barres, 170+ aliments fitness, recettes IA et liste de courses automatique. Coaching nutrition à Genève propulsé par MoovX.</p>
+        </div>
+        <div class="col-image">
+          <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80" alt="Meal prep fitness nutrition Genève - MoovX coaching musculation" loading="lazy">
+        </div>
+      </div>
       <div class="feature-grid reveal">
         <div class="feature-card reveal-child delay-0">
           <div class="icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L26 14L14 26L2 14L14 2Z" stroke="#C9A84C" stroke-width="1.5" fill="none"/></svg></div>
@@ -918,6 +961,15 @@
       <div class="section-title reveal">
         <h2>ENTRAÎNEMENT HYPERTROPHIE</h2>
         <p>Programme Push/Pull/Legs 6 jours + Cardio HIIT &amp; LISS</p>
+      </div>
+      <div class="section-two-col reveal" style="margin-bottom:40px">
+        <div class="col-image">
+          <img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80" alt="Programme musculation PPL Genève - MoovX coaching fitness" loading="lazy">
+        </div>
+        <div>
+          <h3 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,40px);color:#f8fafc;margin:0 0 16px;letter-spacing:2px">PROGRAMME PPL 6 JOURS</h3>
+          <p style="font-family:'DM Sans',sans-serif;font-size:16px;color:#a0a0a0;line-height:1.8;margin:0">Programme Push/Pull/Legs scientifique pour l'hypertrophie. 89 exercices guidés, timer de repos intelligent, cardio HIIT & LISS, records personnels automatiques. Entraînement musculation à Genève avec MoovX.</p>
+        </div>
       </div>
       <div class="feature-grid reveal">
         <div class="feature-card reveal-child delay-0">
@@ -1242,8 +1294,13 @@
       <div class="section-title reveal">
         <h2>COACHING FITNESS À GENÈVE</h2>
       </div>
-      <div class="reveal" style="max-width:700px;margin:0 auto;text-align:center">
-        <p style="font-family:'DM Sans',sans-serif;font-size:17px;color:#a0a0a0;line-height:1.8;margin:0">Basé à Genève, MoovX est la première plateforme de coaching fitness suisse propulsée par l'intelligence artificielle. Que tu sois à Plainpalais, aux Eaux-Vives, à Carouge ou aux Pâquis, ton coach IA t'accompagne partout. Plans nutrition adaptés aux produits suisses, programme musculation professionnel, suivi de progression complet. Commence ta transformation dès aujourd'hui.</p>
+      <div class="section-two-col reveal">
+        <div>
+          <p style="font-family:'DM Sans',sans-serif;font-size:17px;color:#a0a0a0;line-height:1.8;margin:0">Basé à Genève, MoovX est la première plateforme de coaching fitness suisse propulsée par l'intelligence artificielle. Que tu sois à Plainpalais, aux Eaux-Vives, à Carouge ou aux Pâquis, ton coach IA t'accompagne partout. Plans nutrition adaptés aux produits suisses, programme musculation professionnel, suivi de progression complet. Commence ta transformation dès aujourd'hui.</p>
+        </div>
+        <div class="col-image">
+          <img src="https://images.unsplash.com/photo-1573108037329-37aa135a142e?w=800&q=80" alt="Coaching fitness Genève Suisse - MoovX nutrition musculation" loading="lazy">
+        </div>
       </div>
     </div>
   </div>
