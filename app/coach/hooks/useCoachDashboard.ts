@@ -192,7 +192,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
     function loadCoachData() {
       fetchClients(session.user.id)
-      supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years').eq('id', session.user.id).single().then(({ data }) => {
+      supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years').eq('id', session.user.id).maybeSingle().then(({ data }) => {
         if (data) {
           if (!data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
           setCoachProfile(data)
@@ -332,10 +332,10 @@ export default function useCoachDashboard(initialSession?: any) {
     const { data } = await supabase
       .from('scheduled_sessions')
       .select('*')
-      .eq('coach_id', coachId)
-      .gte('scheduled_at', from.toISOString())
-      .lte('scheduled_at', to.toISOString())
-      .order('scheduled_at', { ascending: true })
+      .eq('user_id', coachId)
+      .gte('scheduled_date', from.toISOString().split('T')[0])
+      .lte('scheduled_date', to.toISOString().split('T')[0])
+      .order('scheduled_date', { ascending: true })
     setScheduledSessions(data ?? [])
   }
 
@@ -348,13 +348,12 @@ export default function useCoachDashboard(initialSession?: any) {
     const duration = Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000))
     setNsSaving('saving')
     const { error } = await supabase.from('scheduled_sessions').insert({
-      coach_id: session.user.id,
-      client_id: nsClientId,
-      scheduled_at: start.toISOString(),
+      user_id: nsClientId,
+      scheduled_date: nsDate,
+      session_name: nsType,
       duration_minutes: duration,
-      session_type: nsType,
       notes: nsNotes || null,
-      status: 'scheduled',
+      is_completed: false,
     })
     if (error) { console.error('[saveNewSession]', error); setNsSaving(''); return }
     setNsSaving('done')

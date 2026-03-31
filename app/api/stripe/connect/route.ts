@@ -32,7 +32,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: accountLink.url })
   } catch (e: any) {
-    console.error('[stripe/connect]', e.message)
+    if (e.message?.includes('signed up for Connect') || e.message?.includes('connect')) {
+      return NextResponse.json({
+        error: 'Stripe Connect n\'est pas encore activé. Contacte l\'admin.',
+        setup_url: 'https://dashboard.stripe.com/connect'
+      }, { status: 400 })
+    }
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
