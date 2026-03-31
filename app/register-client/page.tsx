@@ -114,9 +114,7 @@ export default function RegisterClientPage() {
 
           {/* Mobile logo */}
           <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-            <div style={{ width: 48, height: 48, background: `linear-gradient(135deg,${GOLD},#F0D060)`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: '#000', letterSpacing: 2 }}>M</span>
-            </div>
+            <img src="/icon-192x192.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: 14, marginBottom: 12 }} />
             <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 4, color: '#F8FAFC' }}>MOOVX</span>
           </div>
           <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
@@ -210,9 +208,7 @@ function LeftPanel() {
 
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 40px' }}>
-        <div style={{ width: 72, height: 72, background: `linear-gradient(135deg,#C9A84C,#F0D060)`, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 16px 48px rgba(201,168,76,0.2)' }}>
-          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 38, color: '#000', letterSpacing: 2 }}>M</span>
-        </div>
+        <img src="/icon-192x192.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: 20, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px rgba(201,168,76,0.2)' }} />
         <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, letterSpacing: 6, color: '#F8FAFC', marginBottom: 8 }}>MOOVX</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
           <span style={{ fontSize: 14 }}>🇨🇭</span>

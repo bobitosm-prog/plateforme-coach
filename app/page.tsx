@@ -3,7 +3,7 @@ import React from 'react'
 import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Zap, BarChart2, Dumbbell, UtensilsCrossed, TrendingUp,
+  BarChart2, Dumbbell, UtensilsCrossed, TrendingUp,
   User, MessageCircle, Plus, ChevronRight, Search, X,
 } from 'lucide-react'
 
@@ -38,9 +38,7 @@ export default function CoachApp() {
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
-      <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
-      </div>
+      <img src="/icon-192x192.png" alt="MoovX Logo" width={80} height={80} style={{ borderRadius: 20 }} />
       <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>MOOVX</span>
       <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
@@ -61,9 +59,7 @@ export default function CoachApp() {
     <div style={{ minHeight: '100dvh', background: '#0A0A0A', display: 'flex', flexDirection: 'column' }}>
       {h.trialExpired && (
         <div style={{ textAlign: 'center', padding: '40px 24px 0' }}>
-          <div style={{ width: 56, height: 56, background: 'linear-gradient(135deg,#C9A84C,#F0D060)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <Zap size={28} color="#000" strokeWidth={2.5} fill="#000" />
-          </div>
+          <img src="/icon-192x192.png" alt="MoovX Logo" width={56} height={56} style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block' }} />
           <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.6rem,4vw,2.2rem)', letterSpacing: 3, color: '#F8FAFC', margin: '0 0 8px' }}>TA PÉRIODE D&apos;ESSAI EST TERMINÉE</h1>
           <p style={{ color: '#555', fontSize: '0.88rem', margin: '0 0 4px', fontFamily: "'DM Sans', sans-serif", fontWeight: 300, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
             Ton essai gratuit de 10 jours est arrivé à son terme. Abonne-toi pour continuer à utiliser MoovX.
@@ -82,9 +78,7 @@ export default function CoachApp() {
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: '#111111', borderRight: '1px solid #222222', zIndex: 50, padding: '24px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 20px', marginBottom: 32 }}>
-          <div style={{ width: 32, height: 32, background: '#C9A84C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Zap size={18} color="#000" strokeWidth={2.5} fill="#000" />
-          </div>
+          <img src="/icon-192x192.png" alt="MoovX Logo" width={32} height={32} style={{ borderRadius: 8 }} />
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '0.1em' }}>MOOVX</span>
         </div>
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 12px' }}>
