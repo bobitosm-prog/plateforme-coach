@@ -151,6 +151,7 @@ export default function CoachOnboardingPage() {
       coach_availability_hours: { from: hoursFrom, to: hoursTo },
       coach_follow_up_mode: followUpModes.length > 0 ? followUpModes : null,
       coach_onboarding_complete: true,
+      onboarding_completed: true,
     }
     if (avatarUrl) update.avatar_url = avatarUrl
 
