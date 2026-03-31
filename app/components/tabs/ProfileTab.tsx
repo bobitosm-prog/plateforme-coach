@@ -113,7 +113,7 @@ export default function ProfileTab({
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24, gap: 12 }}>
         <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: '50%', background: displayAvatar ? 'transparent' : ORANGE, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative' }}>
           {displayAvatar
-            ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt="" />
+            ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt="Photo de profil" />
             : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '2rem', color: '#fff' }}>{firstName.charAt(0).toUpperCase()}</span>
           }
         </button>

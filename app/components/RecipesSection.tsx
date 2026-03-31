@@ -48,6 +48,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       .select('*')
       .or(`user_id.eq.${userId},is_public.eq.true`)
       .order('created_at', { ascending: false })
+      .limit(50)
     setRecipes(data || [])
     setLoading(false)
   }

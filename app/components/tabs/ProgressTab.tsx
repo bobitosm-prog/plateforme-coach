@@ -293,7 +293,7 @@ export default function ProgressTab({
               const imgSrc = supabase.storage.from('progress-photos').getPublicUrl(p.photo_url).data.publicUrl
               return (
                 <div key={p.id} style={{ aspectRatio: '1', borderRadius: 14, overflow: 'hidden', position: 'relative' }} className="photo-cell">
-                  <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Photo de progression" />
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '16px 8px 6px', fontSize: '0.55rem', color: '#fff', fontWeight: 600 }}>
                     {p.date ? format(new Date(p.date), 'd MMM', { locale: fr }) : ''}
                   </div>

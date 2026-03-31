@@ -136,7 +136,7 @@ export default function TrainingTab({
   useEffect(() => {
     if (exercisesCacheLoaded.current) return
     exercisesCacheLoaded.current = true
-    supabase.from('exercises_db').select('*').order('name').then(({ data }: any) => {
+    supabase.from('exercises_db').select('*').order('name').limit(200).then(({ data }: any) => {
       setExercisesCache(data || [])
     })
   }, [])

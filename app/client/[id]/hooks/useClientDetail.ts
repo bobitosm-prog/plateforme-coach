@@ -218,6 +218,7 @@ export default function useClientDetail() {
           .from('food_items')
           .select('id, name, energy_kcal, proteins, carbohydrates, fat')
           .in('id', likedArr)
+          .limit(200)
         availableFoods = (foods || []).map((f: any) => ({
           id: f.id, nom: f.name || '', kcal: Math.round(f.energy_kcal ?? 0),
           p: Math.round((f.proteins ?? 0) * 10) / 10, g: Math.round((f.carbohydrates ?? 0) * 10) / 10, l: Math.round((f.fat ?? 0) * 10) / 10,
@@ -230,6 +231,7 @@ export default function useClientDetail() {
           .eq('source', 'fitness')
           .not('name', 'is', null)
           .order('name')
+          .limit(200)
         const extra = (fallback || []).map((f: any) => ({
           id: f.id, nom: f.name || '', kcal: Math.round(f.energy_kcal ?? 0),
           p: Math.round((f.proteins ?? 0) * 10) / 10, g: Math.round((f.carbohydrates ?? 0) * 10) / 10, l: Math.round((f.fat ?? 0) * 10) / 10,

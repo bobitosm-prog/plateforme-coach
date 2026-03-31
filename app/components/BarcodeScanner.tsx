@@ -173,7 +173,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
         <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Product info */}
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-            {product.image_url && <img src={product.image_url} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#fff' }} />}
+            {product.image_url && <img src={product.image_url} alt="Photo du produit scanné" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#fff' }} />}
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '1rem', fontWeight: 700, color: TEXT }}>{product.name}</div>
               {product.brand && <div style={{ fontSize: '0.78rem', color: MUTED }}>{product.brand}</div>}

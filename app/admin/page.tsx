@@ -126,6 +126,7 @@ export default function AdminPage() {
       .from('profiles')
       .select('id, full_name, email, role, current_weight, created_at')
       .order('created_at', { ascending: false })
+      .limit(200)
     if (error) {
       console.error('fetchProfiles error:', error)
       setFetchError(error.message)
@@ -145,7 +146,7 @@ export default function AdminPage() {
 
   async function fetchReports() {
     setReportsLoading(true)
-    let q = supabase.from('bug_reports').select('*').order('created_at', { ascending: false })
+    let q = supabase.from('bug_reports').select('*').order('created_at', { ascending: false }).limit(50)
     if (reportFilter !== 'all') q = q.eq('type', reportFilter)
     if (reportStatusFilter !== 'all') q = q.eq('status', reportStatusFilter)
     const { data } = await q

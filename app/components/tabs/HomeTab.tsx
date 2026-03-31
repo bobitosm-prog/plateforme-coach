@@ -71,9 +71,9 @@ export default function HomeTab({
     const dayKey = todayNutritionKey()
 
     Promise.all([
-      supabase.from('meal_tracking').select('meal_type').eq('user_id', uid).eq('date', todayDate).eq('is_completed', true),
+      supabase.from('meal_tracking').select('meal_type').eq('user_id', uid).eq('date', todayDate).eq('is_completed', true).limit(20),
       supabase.from('meal_plans').select('plan_data').eq('user_id', uid).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('meal_logs').select('calories').eq('user_id', uid).eq('date', todayDate),
+      supabase.from('meal_logs').select('calories').eq('user_id', uid).eq('date', todayDate).limit(20),
     ]).then(([trackingRes, planRes, logsRes]) => {
       // Kcal from checked plan meals
       let planKcal = 0
@@ -95,7 +95,7 @@ export default function HomeTab({
   useEffect(() => {
     if (!session?.user?.id) return
     const today = new Date().toISOString().split('T')[0]
-    supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', today)
+    supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', today).limit(10)
       .then(({ data }: any) => {
         setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0))
       })
@@ -139,7 +139,7 @@ export default function HomeTab({
           </div>
           <button onClick={() => avatarRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: displayAvatar ? 'transparent' : ORANGE, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
             {displayAvatar
-              ? <img src={displayAvatar} style={{ width: 48, height: 48, objectFit: 'cover' }} alt="" />
+              ? <img src={displayAvatar} style={{ width: 48, height: 48, objectFit: 'cover' }} alt="Photo de profil" />
               : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>{firstName.charAt(0).toUpperCase()}</span>
             }
           </button>

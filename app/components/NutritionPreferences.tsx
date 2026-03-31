@@ -78,7 +78,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
-    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').order('name').then(({ data }: any) => {
+    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').order('name').limit(200).then(({ data }: any) => {
       const mapped = (data || []).map((f: any) => ({
         id: f.id, name: f.name || '',
         kcal: Math.round(f.energy_kcal ?? 0),

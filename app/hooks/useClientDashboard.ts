@@ -152,7 +152,7 @@ export default function useClientDashboard() {
       if (!since) return
       const { data } = await supabase.from('messages').select('*')
         .or(`and(sender_id.eq.${uid},receiver_id.eq.${coachId}),and(sender_id.eq.${coachId},receiver_id.eq.${uid})`)
-        .gt('created_at', since).order('created_at', { ascending: true })
+        .gt('created_at', since).order('created_at', { ascending: true }).limit(50)
       if (data?.length) setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
     }, 30000)
 
@@ -196,7 +196,7 @@ export default function useClientDashboard() {
       supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(90),
       supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
       supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
-      supabase.from('training_programs').select('*').eq('is_template', true),
+      supabase.from('training_programs').select('*').eq('is_template', true).limit(50),
       supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).maybeSingle(),
       supabase.from('client_programs').select('program').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
@@ -357,7 +357,7 @@ export default function useClientDashboard() {
     if (!uid || !cId) return
     const { data } = await supabase.from('messages').select('*')
       .or(`and(sender_id.eq.${uid},receiver_id.eq.${cId}),and(sender_id.eq.${cId},receiver_id.eq.${uid})`)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: true }).limit(50)
     setMessages(data || [])
     setUnreadCount((data || []).filter((m: any) => m.sender_id === cId && !m.read).length)
   }
@@ -509,10 +509,10 @@ export default function useClientDashboard() {
     ninetyDaysAgo.setDate(today.getDate() - 90)
 
     const [prRes, calsRes, waterRes, weightsFullRes] = await Promise.all([
-      supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }),
-      supabase.from('meal_logs').select('date, calories, proteins, carbs, fats').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date'),
-      supabase.from('water_intake').select('date, amount_ml').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date'),
-      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date', { ascending: true }),
+      supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50),
+      supabase.from('meal_logs').select('date, calories, proteins, carbs, fats').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
+      supabase.from('water_intake').select('date, amount_ml').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(30),
+      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date', { ascending: true }).limit(100),
     ])
 
     setPersonalRecords(prRes.data || [])
@@ -601,7 +601,7 @@ export default function useClientDashboard() {
       }, { onConflict: 'user_id, exercise_name, record_type' })
 
       // Refresh PR list
-      const { data: prs } = await supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false })
+      const { data: prs } = await supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50)
       setPersonalRecords(prs || [])
 
       return { newPR: true, exercise: exerciseName, value: Math.round(estimated1RM * 10) / 10, previous: currentRecord?.value }

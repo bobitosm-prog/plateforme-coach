@@ -61,7 +61,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
   // Load all fitness foods + user favorites once
   useEffect(() => {
     Promise.all([
-      supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').order('name'),
+      supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').order('name').limit(200),
       supabase.from('profiles').select('liked_foods').eq('id', userId).single(),
     ]).then(([foodRes, profRes]: any[]) => {
       const foods = (foodRes.data || []).map((f: any) => ({ ...normalizeFoodItem(f), cat: categorize(f.name || '') }))

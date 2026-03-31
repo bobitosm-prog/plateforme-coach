@@ -395,7 +395,7 @@ export default function OnboardingPage() {
             // Load fitness foods once
             if (!fitnessFoodsLoaded) {
               setFitnessFoodsLoaded(true)
-              supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').order('name').then(({ data }) => {
+              supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').order('name').limit(200).then(({ data }) => {
                 const mapped = (data || []).map((f: any) => ({
                   id: f.id, nom: f.name || '',
                   kcal: Math.round(f.energy_kcal ?? 0),
