@@ -42,8 +42,13 @@ function JoinContent() {
       if (error) {
         setLinkError(error.message)
       } else {
+        // Mark client as invited (free access while coach pays)
+        await supabase.from('profiles').update({
+          role: 'client',
+          subscription_type: 'invited',
+          subscription_status: 'active',
+        }).eq('id', session.user.id)
         setLinked(true)
-        // Auto-redirect after 1.5s
         setTimeout(() => { window.location.href = '/' }, 1500)
       }
     }

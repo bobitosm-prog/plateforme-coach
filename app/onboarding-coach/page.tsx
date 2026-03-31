@@ -54,7 +54,7 @@ export default function CoachOnboardingPage() {
   const [hoursFrom, setHoursFrom] = useState('08:00')
   const [hoursTo, setHoursTo] = useState('20:00')
   const [followUpModes, setFollowUpModes] = useState<string[]>([])
-  const [monthlyRate, setMonthlyRate] = useState('')
+  const [inviteLinkCopied2, setInviteLinkCopied2] = useState(false)
 
   // Step 3 — Stripe
   const [stripeConnected, setStripeConnected] = useState(false)
@@ -78,7 +78,7 @@ export default function CoachOnboardingPage() {
         if (data.coach_speciality) setSpeciality(data.coach_speciality)
         if (data.coach_experience_years) setExperience(data.coach_experience_years)
         if (data.coach_certifications) setCertifications(data.coach_certifications)
-        if (data.coach_hourly_rate) setMonthlyRate(String(data.coach_hourly_rate))
+        // coach_hourly_rate removed from business model
         if (data.coach_max_clients) setMaxClients(String(data.coach_max_clients))
         if (data.coach_available_days) setAvailableDays(data.coach_available_days)
         if (data.coach_availability_hours) {
@@ -146,7 +146,6 @@ export default function CoachOnboardingPage() {
       coach_speciality: speciality || null,
       coach_certifications: certifications.trim() || null,
       coach_experience_years: experience || null,
-      coach_hourly_rate: monthlyRate ? parseFloat(monthlyRate) : null,
       coach_max_clients: maxClients === 'Illimité' ? 999 : maxClients ? parseInt(maxClients) : null,
       coach_available_days: availableDays.length > 0 ? availableDays : null,
       coach_availability_hours: { from: hoursFrom, to: hoursTo },
@@ -158,6 +157,8 @@ export default function CoachOnboardingPage() {
     const { error } = await supabase.from('profiles').update(update).eq('id', uid).select()
     if (error) await supabase.from('profiles').upsert(update).select()
 
+    // Wait for DB write to propagate before redirecting
+    await new Promise(r => setTimeout(r, 500))
     setSaving(false)
     router.replace('/')
   }
@@ -329,14 +330,28 @@ export default function CoachOnboardingPage() {
                 </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Tarif mensuel par client (CHF)</label>
-                <div style={{ position: 'relative' }}>
-                  <input type="number" inputMode="decimal" value={monthlyRate} onChange={e => setMonthlyRate(e.target.value)} placeholder="ex: 150" style={{ ...inputStyle, paddingRight: 60 }} />
-                  <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: MUTED, fontSize: '0.85rem', pointerEvents: 'none' }}>CHF/m</span>
-                </div>
-                <p style={{ fontSize: '0.72rem', color: '#555', margin: '6px 0 0', fontStyle: 'italic' }}>Ce tarif est informatif. Les paiements passent par Stripe.</p>
+              {/* Business model explanation */}
+              <div style={{ background: `${GOLD}08`, border: `1px solid ${GOLD}25`, borderRadius: 14, padding: '16px 18px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Comment ça marche</div>
+                <p style={{ fontSize: '0.85rem', color: TEXT, lineHeight: 1.6, margin: 0, opacity: 0.85 }}>
+                  Tu paies CHF 50/mois pour accéder à tous les outils MoovX. Tes clients s'inscrivent gratuitement via ton lien d'invitation et ont accès à toutes les fonctionnalités.
+                </p>
               </div>
+
+              {session && (
+                <div>
+                  <label style={labelStyle}>Ton lien d'invitation</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="text" readOnly value={`${typeof window !== 'undefined' ? window.location.origin : 'https://app.moovx.ch'}/join?coach=${session.user.id}`}
+                      style={{ ...inputStyle, flex: 1, fontSize: '0.82rem', color: GOLD, background: '#111' }} />
+                    <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/join?coach=${session.user.id}`); setInviteLinkCopied2(true); setTimeout(() => setInviteLinkCopied2(false), 2000) }}
+                      style={{ padding: '12px 18px', background: inviteLinkCopied2 ? '#22C55E' : GOLD, border: 'none', borderRadius: 12, color: '#000', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', transition: 'background 200ms', whiteSpace: 'nowrap' }}>
+                      {inviteLinkCopied2 ? '✓ Copié' : 'Copier'}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: '0.72rem', color: '#555', margin: '6px 0 0', fontStyle: 'italic' }}>Partage ce lien avec tes clients. Ils s'inscrivent et sont automatiquement assignés à toi.</p>
+                </div>
+              )}
 
               <div style={{ marginTop: 'auto', paddingTop: 8 }}>
                 <NextBtn onClick={goNext} />
@@ -429,7 +444,7 @@ export default function CoachOnboardingPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   {[
                     { l: 'Expérience', v: experience || '--' },
-                    { l: 'Tarif', v: monthlyRate ? `${monthlyRate} CHF/mois` : '--' },
+                    { l: 'Clients max', v: maxClients || '--' },
                   ].map(({ l, v }) => (
                     <div key={l}>
                       <div style={{ fontSize: '0.6rem', color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
