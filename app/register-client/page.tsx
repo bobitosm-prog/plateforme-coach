@@ -103,18 +103,27 @@ function RegisterContent() {
       setError(signUpError.message.includes('already registered') ? 'Cet email est déjà utilisé. Connecte-toi.' : signUpError.message)
       return
     }
-    // Upsert profile with role
+    // Save role — wait for Supabase trigger to create profile first, then UPDATE
     if (data?.user) {
-      const profileData: Record<string, string> = {
-        id: data.user.id,
+      const uid = data.user.id
+      const profileData: Record<string, any> = {
         role: selectedRole,
+        email: email.trim(),
       }
       if (selectedRole === 'coach') {
         profileData.full_name = fullName.trim()
         profileData.coach_speciality = speciality
         profileData.coach_experience_years = experience
       }
-      await supabase.from('profiles').upsert(profileData)
+      // Wait for trigger to create the row
+      await new Promise(r => setTimeout(r, 1000))
+      // Try UPDATE first (trigger already created the row)
+      const { error: updateErr } = await supabase.from('profiles').update(profileData).eq('id', uid)
+      if (updateErr) {
+        // Fallback: trigger hasn't fired yet, upsert with id
+        await new Promise(r => setTimeout(r, 1000))
+        await supabase.from('profiles').upsert({ id: uid, ...profileData })
+      }
     }
     setSubmitting(false)
     setEmailSent(true)

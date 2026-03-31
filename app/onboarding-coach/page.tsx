@@ -141,6 +141,7 @@ export default function CoachOnboardingPage() {
     const uid = session.user.id
     const update: Record<string, any> = {
       id: uid,
+      role: 'coach',
       full_name: fullName.trim(),
       coach_bio: bio.trim() || null,
       coach_speciality: speciality || null,
