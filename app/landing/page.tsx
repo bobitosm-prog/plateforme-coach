@@ -10,6 +10,7 @@ import TrainingSection from './components/TrainingSection';
 import TrackingSection from './components/TrackingSection';
 import CoachIaSection from './components/CoachIaSection';
 import CoachingSection from './components/CoachingSection';
+import PricingModelSection from './components/PricingModelSection';
 import StepsSection from './components/StepsSection';
 import PwaSection from './components/PwaSection';
 import PricingSection from './components/PricingSection';
@@ -35,6 +36,7 @@ export default function LandingPage() {
   const trackingRev = useReveal();
   const coachIaRev = useReveal();
   const coachingRev = useReveal();
+  const pricingModelRev = useReveal();
   const stepsRev = useReveal();
   const pwaRev = useReveal();
   const pricingRev = useReveal();
@@ -243,6 +245,7 @@ export default function LandingPage() {
         <TrackingSection revealRef={trackingRev.ref} visible={trackingRev.visible} />
         <CoachIaSection revealRef={coachIaRev.ref} visible={coachIaRev.visible} />
         <CoachingSection revealRef={coachingRev.ref} visible={coachingRev.visible} />
+        <PricingModelSection revealRef={pricingModelRev.ref} visible={pricingModelRev.visible} />
         <StepsSection revealRef={stepsRev.ref} visible={stepsRev.visible} />
         <PwaSection revealRef={pwaRev.ref} visible={pwaRev.visible} />
         <PricingSection revealRef={pricingRev.ref} visible={pricingRev.visible} />

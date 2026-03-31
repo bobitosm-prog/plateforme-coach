@@ -171,6 +171,8 @@ export const FAQ_DATA = [
   { q: "Je peux essayer gratuitement ?", a: "Oui ! Tu b\u00e9n\u00e9ficies de 10 jours d'essai gratuit avec acc\u00e8s \u00e0 toutes les fonctionnalit\u00e9s. Sans engagement, sans carte de cr\u00e9dit requise." },
   { q: "Comment installer l'app ?", a: "MoovX est une Progressive Web App (PWA). Sur iPhone : ouvre Safari, bouton Partager, Ajouter \u00e0 l'\u00e9cran d'accueil. Sur Android : Chrome, menu, Installer l'application." },
   { q: "C'est quoi le Coach IA ?", a: "Un assistant intelligent qui conna\u00eet ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entra\u00eenement, il te r\u00e9pond de mani\u00e8re personnalis\u00e9e en fran\u00e7ais." },
+  { q: "Comment fonctionnent les paiements pour les coaches ?", a: "Les coaches fixent librement leur tarif mensuel. Les clients paient directement via Stripe. Le paiement est automatiquement transf\u00e9r\u00e9 sur le compte du coach, apr\u00e8s d\u00e9duction de 3% de commission MoovX. Les coaches re\u00e7oivent donc 97% du montant." },
+  { q: "Les clients invit\u00e9s par un coach doivent payer la plateforme ?", a: "Non. Les clients invit\u00e9s par un coach acc\u00e8dent gratuitement \u00e0 toutes les fonctionnalit\u00e9s de MoovX. Ils paient uniquement le tarif de coaching fix\u00e9 par leur coach. Les clients sans coach paient l'abonnement MoovX standard (d\u00e8s CHF 10/mois)." },
 ];
 
 /* ───────────────────────── Feature Card ───────────────────────── */
