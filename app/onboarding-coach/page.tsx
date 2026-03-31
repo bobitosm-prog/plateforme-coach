@@ -88,7 +88,21 @@ export default function CoachOnboardingPage() {
         if (data.coach_follow_up_mode) setFollowUpModes(data.coach_follow_up_mode)
         if (data.avatar_url) setAvatarUrl(data.avatar_url)
         if (data.coach_onboarding_complete) router.replace('/')
+        if (data.stripe_account_id) setStripeConnected(true)
       })
+
+      // Handle Stripe return
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('stripe') === 'success') {
+        const accountId = params.get('account')
+        if (accountId) {
+          supabase.from('profiles').update({ stripe_account_id: accountId, stripe_onboarding_complete: true }).eq('id', s.user.id)
+        }
+        setStripeConnected(true)
+        setStep(3) // Stay on Stripe step to show success
+        // Clean URL
+        window.history.replaceState({}, '', '/onboarding-coach')
+      }
     })
   }, [])
 
@@ -110,13 +124,28 @@ export default function CoachOnboardingPage() {
   }
 
   async function handleStripeConnect() {
+    if (!session) return
     setStripeLoading(true)
     try {
-      const res = await fetch('/api/stripe/connect', { method: 'POST' })
+      const res = await fetch('/api/stripe/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coachId: session.user.id, email: session.user.email }),
+      })
       const data = await res.json()
-      if (data.url) { window.location.href = data.url } else { setStripeConnected(true) }
-    } catch { /* user can retry */ }
-    setStripeLoading(false)
+      if (data.url) {
+        if (data.accountId) {
+          await supabase.from('profiles').update({ stripe_account_id: data.accountId }).eq('id', session.user.id)
+        }
+        window.location.href = data.url
+      } else {
+        alert('Erreur: ' + (data.error || 'Impossible de connecter Stripe'))
+        setStripeLoading(false)
+      }
+    } catch {
+      alert('Erreur de connexion à Stripe')
+      setStripeLoading(false)
+    }
   }
 
   function toggleDay(day: string) {
