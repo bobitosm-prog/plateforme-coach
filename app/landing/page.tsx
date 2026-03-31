@@ -433,7 +433,7 @@ export default function LandingPage() {
           transition: 'all 0.3s',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <img src="/icon-192x192.png" alt="MoovX Logo coaching fitness Genève" width={36} height={36} style={{ borderRadius: 8 }} />
+            <img src="/logo-moovx.png" alt="MoovX Logo coaching fitness Genève" width={36} height={36} style={{ borderRadius: 8 }} />
             <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, color: '#C9A84C', letterSpacing: 3 }}>MOOVX</span>
             <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#6b7280', borderLeft: '1px solid #333', paddingLeft: 12 }}>Swiss Made &middot; Swiss Quality</span>
           </div>

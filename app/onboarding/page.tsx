@@ -179,9 +179,7 @@ export default function OnboardingPage() {
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', gap: 32 }}>
               <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.15, type: 'spring', stiffness: 260, damping: 20 }}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                <div className="animate-pulse-gold" style={{ width: 88, height: 88, background: GOLD, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Zap size={48} color="#000" strokeWidth={2.5} fill="#000" />
-                </div>
+                <img src="/logo-moovx.png" alt="MoovX" width={88} height={88} style={{ borderRadius: 24 }} className="animate-pulse-gold" />
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.8rem', fontWeight: 800, color: TEXT, letterSpacing: '0.1em' }}>MOOVX</span>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={{ textAlign: 'center' }}>

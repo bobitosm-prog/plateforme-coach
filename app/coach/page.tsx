@@ -76,9 +76,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0A0A0A', gap: 24 }}>
-      <div style={{ width: 80, height: 80, background: '#C9A84C', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Zap size={40} color="#000" strokeWidth={2.5} fill="#000" />
-      </div>
+      <img src="/logo-moovx.png" alt="MoovX" width={80} height={80} style={{ borderRadius: 20 }} />
       <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '0.1em' }}>MOOVX</span>
       <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
@@ -180,7 +178,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
       <nav style={{ background: '#1F2937', borderBottom: '1px solid #374151', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <div style={{ width: '32px', height: '32px', background: '#F97316', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Zap size={18} color="#fff" strokeWidth={2.5} /></div>
+            <img src="/logo-moovx.png" alt="MoovX" width={32} height={32} style={{ borderRadius: 6 }} />
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.35rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.08em' }}>MOOVX</span>
           </a>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
