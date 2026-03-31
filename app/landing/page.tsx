@@ -451,7 +451,7 @@ export default function LandingPage() {
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          padding: '100px 24px 60px',
+          padding: '80px 24px 40px',
           position: 'relative',
           overflow: 'hidden',
           backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80')",
@@ -469,11 +469,11 @@ export default function LandingPage() {
 
           <h1 style={{
             fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: 'clamp(60px, 10vw, 120px)',
+            fontSize: 'clamp(48px, 8vw, 100px)',
             color: '#f8fafc',
             margin: '0 0 8px',
             letterSpacing: 4,
-            lineHeight: 1,
+            lineHeight: 0.95,
             position: 'relative',
             zIndex: 1,
             opacity: heroRev.visible ? 1 : 0,
@@ -485,9 +485,9 @@ export default function LandingPage() {
 
           <p style={{
             fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: 'clamp(20px, 3vw, 32px)',
+            fontSize: 'clamp(16px, 2.5vw, 26px)',
             color: '#C9A84C',
-            margin: '0 0 24px',
+            margin: '0 0 16px',
             letterSpacing: 6,
             position: 'relative',
             zIndex: 1,
@@ -501,23 +501,38 @@ export default function LandingPage() {
           <p style={{
             fontFamily: "'DM Sans', sans-serif",
             fontSize: 17,
-            color: '#6b7280',
-            maxWidth: 560,
-            lineHeight: 1.7,
-            margin: '0 0 40px',
+            color: '#9ca3af',
+            maxWidth: 620,
+            lineHeight: 1.8,
+            margin: '0 auto 20px',
             position: 'relative',
             zIndex: 1,
             opacity: heroRev.visible ? 1 : 0,
             transform: heroRev.visible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
           }}>
-            Coaching fitness à Genève propulsé par l'intelligence artificielle. Nutrition personnalisée, entraînement hypertrophie, suivi complet.
+            La première plateforme de coaching fitness suisse propulsée par l&apos;intelligence artificielle. Plans nutrition sur mesure, programme musculation PPL 6 jours, scanner code-barres, recettes IA, suivi complet. Ton coach personnel, dans ta poche, 24/7.
+          </p>
+
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 14,
+            color: '#C9A84C',
+            fontWeight: 600,
+            letterSpacing: 1,
+            margin: '0 0 28px',
+            position: 'relative',
+            zIndex: 1,
+            opacity: heroRev.visible ? 1 : 0,
+            transition: 'opacity 0.8s 0.35s',
+          }}>
+            Rejoins +1,200 utilisateurs à Genève — Dès CHF 10/mois
           </p>
 
           <div className="hero-buttons" style={{
             display: 'flex',
             gap: 16,
-            marginBottom: 48,
+            marginBottom: 32,
             position: 'relative',
             zIndex: 1,
             opacity: heroRev.visible ? 1 : 0,
@@ -542,7 +557,9 @@ export default function LandingPage() {
               { val: '170+', label: 'Aliments' },
               { val: '89', label: 'Exercices' },
               { val: '6 Jours', label: 'PPL' },
-              { val: '100%', label: 'Swiss Made' },
+              { val: '8', label: 'HIIT' },
+              { val: '24/7', label: 'Coach IA' },
+              { val: '100%', label: 'Swiss' },
             ].map(s => (
               <div key={s.label} style={{ textAlign: 'center' }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, color: '#C9A84C' }}>{s.val}</div>
@@ -550,6 +567,20 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 12,
+            color: '#555',
+            marginTop: 20,
+            letterSpacing: 0.5,
+            position: 'relative',
+            zIndex: 1,
+            opacity: heroRev.visible ? 1 : 0,
+            transition: 'opacity 0.8s 0.7s',
+          }}>
+            &#10003; Sans engagement &middot; &#10003; 10 jours gratuits &middot; &#10003; Annulable à tout moment &middot; &#10003; 100% Swiss Made
+          </p>
         </div>
 
         {/* ─── MARQUEE ─── */}
