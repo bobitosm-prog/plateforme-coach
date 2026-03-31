@@ -194,7 +194,7 @@ export default function useCoachDashboard(initialSession?: any) {
       fetchClients(session.user.id)
       supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years').eq('id', session.user.id).single().then(({ data }) => {
         if (data) {
-          if (!data.coach_onboarding_complete) { router.replace('/coach-signup'); return }
+          if (!data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
           setCoachProfile(data)
           const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
           const startOfYear = new Date(startOfMonth.getFullYear(), 0, 1, 0, 0, 0, 0)
