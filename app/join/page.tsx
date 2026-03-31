@@ -36,8 +36,11 @@ function JoinContent() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         // Already logged in — link to coach and redirect
-        await supabase.from('profiles').update({ role: 'client', subscription_type: 'invited', subscription_status: 'active' }).eq('id', session.user.id)
-        await supabase.from('coach_clients').upsert({ coach_id: coachId, client_id: session.user.id }, { onConflict: 'coach_id,client_id' })
+        await fetch('/api/assign-coach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachId, clientId: session.user.id }),
+        })
         router.replace('/')
         return
       }
@@ -70,17 +73,13 @@ function JoinContent() {
     }
 
     if (authData.user) {
-      // Wait for trigger, then set role + link to coach
-      await new Promise(r => setTimeout(r, 1000))
-      await supabase.from('profiles').update({
-        role: 'client',
-        subscription_type: 'invited',
-        subscription_status: 'active',
-      }).eq('id', authData.user.id)
-      await supabase.from('coach_clients').upsert(
-        { coach_id: coachId, client_id: authData.user.id },
-        { onConflict: 'coach_id,client_id' }
-      )
+      // Wait for Supabase trigger to create profile, then assign via server API (bypasses RLS)
+      await new Promise(r => setTimeout(r, 1500))
+      await fetch('/api/assign-coach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coachId, clientId: authData.user.id }),
+      })
     }
 
     setLoading(false)
