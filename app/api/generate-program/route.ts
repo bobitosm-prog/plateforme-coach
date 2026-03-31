@@ -38,10 +38,10 @@ Chaque groupe musculaire 2x/semaine avec variations. 4-6 exercices, 3-4 sets, 8-
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY
+    const apiKey = process.env.ANTHROPIC_API_KEY
 
     if (!apiKey) {
-      return NextResponse.json({ error: 'Configuration serveur manquante: NEXT_PUBLIC_ANTHROPIC_API_KEY' }, { status: 500 })
+      return NextResponse.json({ error: 'Configuration serveur manquante: ANTHROPIC_API_KEY' }, { status: 500 })
     }
 
     const { objective, weight, targetWeight, level, equipment, trainingDays } = await req.json()

@@ -171,8 +171,6 @@ Déjeuner et dîner : protéine animale/principale (150-250g) OBLIGATOIRE.
 ${params.scanned_foods?.length ? `\nAliments prioritaires du client : ${params.scanned_foods.slice(0, 10).map((f: any) => f.name).join(', ')}` : ''}
 TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT en JSON.`
 
-  console.log(`[meal-plan] Generating ${day}: target=${kcal}kcal, P=${params.protein_goal}g, G=${params.carbs_goal}g, L=${params.fat_goal}g`)
-
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -204,14 +202,12 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY || '').trim()
+    const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'API key manquante' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
     const params = await req.json()
-    console.log('[meal-plan] Request params:', { calorie_goal: params.calorie_goal, protein_goal: params.protein_goal, carbs_goal: params.carbs_goal, fat_goal: params.fat_goal, foods_count: params.available_foods?.length })
-
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {

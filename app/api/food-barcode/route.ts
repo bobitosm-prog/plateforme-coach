@@ -6,15 +6,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Code-barres invalide' }, { status: 400 })
   }
 
-  console.log('[barcode] Looking up:', barcode)
-
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`, {
       headers: { 'User-Agent': 'MoovX/1.0 (contact@moovx.ch)' },
     })
     const data = await res.json()
-    console.log('[barcode] OpenFoodFacts status:', data.status, 'product:', data.product?.product_name_fr || data.product?.product_name || 'none')
-
     if (data.status !== 1 || !data.product) {
       return NextResponse.json({ found: false, error: 'Produit non trouvé' })
     }

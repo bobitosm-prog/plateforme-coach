@@ -4,7 +4,7 @@ export const runtime = 'edge'
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY || '').trim()
+    const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
     const { message, history, profile } = await req.json()
