@@ -48,8 +48,10 @@ export default function LoginPage() {
     }
     supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_RESULT', details: { success: !!data.session, userId: data.session?.user?.id }, page_url: '/login' })
     if (data.session) {
-      supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_REDIRECT', details: { target: '/', userId: data.session.user.id }, page_url: '/login' })
-      router.push('/') // Always go to / — page.tsx handles role-based routing
+      const { data: profile } = await supabase.from('profiles').select('role, coach_onboarding_complete').eq('id', data.session.user.id).maybeSingle()
+      const target = profile?.role === 'coach' && !profile?.coach_onboarding_complete ? '/onboarding-coach' : '/'
+      supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_REDIRECT', details: { target, userId: data.session.user.id, role: profile?.role }, page_url: '/login' })
+      router.push(target)
     }
   }
 
