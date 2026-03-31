@@ -159,10 +159,16 @@ export default function CoachOnboardingPage() {
     const { error } = await supabase.from('profiles').update(update).eq('id', uid).select()
     if (error) await supabase.from('profiles').upsert(update).select()
 
-    // Wait for DB write to propagate before redirecting
-    await new Promise(r => setTimeout(r, 500))
+    // Verify the save worked before redirecting
+    const { data: check } = await supabase.from('profiles').select('coach_onboarding_complete').eq('id', uid).single()
+    if (!check?.coach_onboarding_complete) {
+      // Retry if save failed silently
+      await supabase.from('profiles').update({ coach_onboarding_complete: true, onboarding_completed: true }).eq('id', uid)
+    }
+
     setSaving(false)
-    router.replace('/')
+    // Full page reload to clear all cached state
+    window.location.href = '/'
   }
 
   return (
