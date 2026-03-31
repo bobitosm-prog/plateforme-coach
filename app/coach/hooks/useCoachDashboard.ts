@@ -187,18 +187,41 @@ export default function useCoachDashboard(initialSession?: any) {
     return () => { alive = false; subscription.unsubscribe() }
   }, [])
 
-  // Handle Stripe return
+  // Handle Stripe return + verify account status on load
   useEffect(() => {
     if (!session) return
     const params = new URLSearchParams(window.location.search)
+    const uid = session.user.id
+
     if (params.get('stripe') === 'success') {
       const accountId = params.get('account')
       if (accountId) {
-        supabase.from('profiles').update({ stripe_account_id: accountId, stripe_onboarding_complete: true }).eq('id', session.user.id)
+        (async () => {
+          await supabase.from('profiles').update({ stripe_account_id: accountId, stripe_onboarding_complete: true }).eq('id', uid)
+          window.history.replaceState({}, '', window.location.pathname)
+          window.location.reload()
+        })()
+        return
       }
-      window.history.replaceState({}, '', '/coach')
+      window.history.replaceState({}, '', window.location.pathname)
     }
   }, [session])
+
+  // Verify real Stripe status and sync to DB
+  useEffect(() => {
+    if (!coachProfile?.stripe_account_id) return
+    if (coachProfile.stripe_onboarding_complete) return
+    fetch('/api/stripe/check-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accountId: coachProfile.stripe_account_id }),
+    }).then(r => r.json()).then(data => {
+      if (data.connected) {
+        supabase.from('profiles').update({ stripe_onboarding_complete: true }).eq('id', session!.user.id)
+          .then(() => { setCoachProfile((p: any) => p ? { ...p, stripe_onboarding_complete: true } : p) })
+      }
+    }).catch(() => {})
+  }, [coachProfile?.stripe_account_id])
 
   useEffect(() => {
     if (!session) return
