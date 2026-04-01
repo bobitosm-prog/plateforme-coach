@@ -24,6 +24,7 @@ import CoachMessages from './components/CoachMessages'
 import CoachAliments from './components/CoachAliments'
 import CoachProfile from './components/CoachProfile'
 import CoachPrograms from './components/CoachPrograms'
+import CoachVideoReviews from './components/CoachVideoReviews'
 
 /* ── WheelPicker ──────────────────────────────────────────── */
 function WheelPicker({ items, value, onChange, label, width = 72 }: {
@@ -414,6 +415,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             handleStripeConnect={h.handleStripeConnect} setSection={h.setSection}
             atRiskClients={h.atRiskClients}
           />
+          <CoachVideoReviews session={h.session} supabase={h.supabase} />
           <ClientsList
             filtered={h.filtered} loading={h.loading}
             search={h.search} setSearch={h.setSearch}

@@ -110,6 +110,7 @@ export default function useCoachDashboard(initialSession?: any) {
   const [monthPaymentsCount, setMonthPaymentsCount] = useState(0)
   const [activeSubscribers, setActiveSubscribers] = useState(0)
   const [atRiskClients, setAtRiskClients] = useState<any[]>([])
+  const [pendingVideoCount, setPendingVideoCount] = useState(0)
 
   // Food management state
   const [foodList, setFoodList] = useState<any[]>([])
@@ -229,6 +230,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
     function loadCoachData() {
       fetchClients(session.user.id)
+      supabase.from('exercise_feedback').select('id', { count: 'exact', head: true }).eq('coach_id', session.user.id).eq('status', 'pending').then(({ count }: { count: number | null }) => setPendingVideoCount(count || 0))
       supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years,coach_monthly_rate').eq('id', session.user.id).maybeSingle().then(({ data }) => {
         if (data) {
           if (!data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
@@ -645,5 +647,8 @@ export default function useCoachDashboard(initialSession?: any) {
     // Stripe
     stripeConnecting,
     handleStripeConnect,
+
+    // Video reviews
+    pendingVideoCount,
   }
 }
