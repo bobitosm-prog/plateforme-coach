@@ -26,7 +26,7 @@ export default function MarqueeSection({ revealRef, visible }: RevealProps) {
             letterSpacing: 4,
             paddingRight: 0,
           }}>
-            {'Nutrition IA \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Liste de Courses \u2726 Chat IA \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Swiss Made \u2726 Coaching Connect\u00e9 \u2726 '}
+            {'Nutrition IA \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Liste de Courses \u2726 Chat IA \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Remplacement IA \u2726 Feedback Vid\u00e9o \u2726 Templates Coach \u2726 Swiss Made \u2726 Coaching Connect\u00e9 \u2726 '}
           </span>
         ))}
       </div>

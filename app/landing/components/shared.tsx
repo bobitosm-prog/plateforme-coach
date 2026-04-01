@@ -173,6 +173,8 @@ export const FAQ_DATA = [
   { q: "C'est quoi le Coach IA ?", a: "Un assistant intelligent qui conna\u00eet ton profil, tes objectifs et tes macros. Pose-lui n'importe quelle question sur la nutrition ou l'entra\u00eenement, il te r\u00e9pond de mani\u00e8re personnalis\u00e9e en fran\u00e7ais." },
   { q: "Comment fonctionnent les paiements pour les coaches ?", a: "Les coaches fixent librement leur tarif mensuel. Les clients paient directement via Stripe. Le paiement est automatiquement transf\u00e9r\u00e9 sur le compte du coach, apr\u00e8s d\u00e9duction de 3% de commission MoovX. Les coaches re\u00e7oivent donc 97% du montant." },
   { q: "Les clients invit\u00e9s par un coach doivent payer la plateforme ?", a: "Non. Les clients invit\u00e9s par un coach acc\u00e8dent gratuitement \u00e0 toutes les fonctionnalit\u00e9s de MoovX. Ils paient uniquement le tarif de coaching fix\u00e9 par leur coach. Les clients sans coach paient l'abonnement MoovX standard (d\u00e8s CHF 10/mois)." },
+  { q: "Je peux remplacer un exercice si j'ai pas le mat\u00e9riel ?", a: "Oui ! L'IA analyse tes contraintes (pas de mat\u00e9riel, blessure, manque de temps) et te propose 3 alternatives adapt\u00e9es en temps r\u00e9el. Tu choisis celle qui te convient et elle remplace l'exercice dans ta s\u00e9ance." },
+  { q: "Mon coach peut voir mes vid\u00e9os d'exercice ?", a: "Oui ! Tu peux filmer ton ex\u00e9cution directement depuis l'app et l'envoyer \u00e0 ton coach. Il re\u00e7oit la vid\u00e9o, la regarde et te donne un feedback personnalis\u00e9 pour corriger ta forme." },
 ];
 
 /* ───────────────────────── Feature Card ───────────────────────── */

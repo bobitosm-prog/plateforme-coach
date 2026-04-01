@@ -8,6 +8,7 @@ import MarqueeSection from './components/MarqueeSection';
 import NutritionSection from './components/NutritionSection';
 import TrainingSection from './components/TrainingSection';
 import TrackingSection from './components/TrackingSection';
+import AdvancedFeaturesSection from './components/AdvancedFeaturesSection';
 import CoachIaSection from './components/CoachIaSection';
 import CoachingSection from './components/CoachingSection';
 import PricingModelSection from './components/PricingModelSection';
@@ -34,6 +35,7 @@ export default function LandingPage() {
   const nutritionRev = useReveal();
   const trainingRev = useReveal();
   const trackingRev = useReveal();
+  const advancedRev = useReveal();
   const coachIaRev = useReveal();
   const coachingRev = useReveal();
   const pricingModelRev = useReveal();
@@ -223,8 +225,8 @@ export default function LandingPage() {
             {[
               { val: '170+', label: 'Aliments' },
               { val: '89', label: 'Exercices' },
-              { val: '6 Jours', label: 'PPL' },
-              { val: '8', label: 'HIIT' },
+              { val: '22+', label: 'Fonctionnalités' },
+              { val: '14', label: 'HIIT & LISS' },
               { val: '24/7', label: 'Coach IA' },
               { val: '100%', label: 'Swiss' },
             ].map(s => (
@@ -243,6 +245,7 @@ export default function LandingPage() {
         <NutritionSection revealRef={nutritionRev.ref} visible={nutritionRev.visible} />
         <TrainingSection revealRef={trainingRev.ref} visible={trainingRev.visible} />
         <TrackingSection revealRef={trackingRev.ref} visible={trackingRev.visible} />
+        <AdvancedFeaturesSection revealRef={advancedRev.ref} visible={advancedRev.visible} />
         <CoachIaSection revealRef={coachIaRev.ref} visible={coachIaRev.visible} />
         <CoachingSection revealRef={coachingRev.ref} visible={coachingRev.visible} />
         <PricingModelSection revealRef={pricingModelRev.ref} visible={pricingModelRev.visible} />

@@ -50,8 +50,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="MoovX" />
-        <link rel="icon" href="/logo-moovx.png" />
-        <link rel="apple-touch-icon" href="/logo-moovx.png" />
+        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" href="/favicon-16x16.png" sizes="16x16" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){for(var i=0;i<r.length;i++){r[i].unregister()}});if(window.caches){caches.keys().then(function(n){for(var i=0;i<n.length;i++){caches.delete(n[i])}})}}` }} />
       </head>
       <body className="antialiased" style={{ fontFamily: "var(--font-body), 'DM Sans', sans-serif" }}>
