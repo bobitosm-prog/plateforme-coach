@@ -23,6 +23,8 @@ import TrainingDayChips from './training/TrainingDayChips'
 import TrainingRestDay from './training/TrainingRestDay'
 import TrainingSessionDone from './training/TrainingSessionDone'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
+import VideoFeedbackModal from '../VideoFeedbackModal'
+import VideoFeedbackHistory from '../VideoFeedbackHistory'
 
 // Hevy-style design tokens
 const BLUE        = '#3B82F6'
@@ -59,6 +61,7 @@ export default function TrainingTab({
   const [showMonthCalendar, setShowMonthCalendar] = useState(false)
   const [workoutFinished, setWorkoutFinished] = useState(false)
   const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
+  const [videoExercise, setVideoExercise]     = useState<string | null>(null)
   const [activeRestExName, setActiveRestExName] = useState<string | null>(null)
   const [restingSet, setRestingSet]     = useState<{ exName: string; setIdx: number } | null>(null)
   const [restTimer, setRestTimer]       = useState<number>(0)
@@ -461,6 +464,7 @@ export default function TrainingTab({
                     onExerciseInfo={handleExerciseInfo}
                     fmtRest={fmtRest}
                     onCancelRest={cancelRest}
+                    onVideoFeedback={(name: string) => setVideoExercise(name)}
                   />
                 )
               })}
@@ -521,6 +525,20 @@ export default function TrainingTab({
           rest={exerciseDetail._rest}
           onClose={() => setExerciseDetail(null)}
         />
+      )}
+
+      {/* Video Feedback Modal */}
+      {videoExercise && session?.user?.id && (
+        <VideoFeedbackModal
+          exerciseName={videoExercise}
+          userId={session.user.id}
+          onClose={() => setVideoExercise(null)}
+        />
+      )}
+
+      {/* Video Feedback History */}
+      {session?.user?.id && (
+        <VideoFeedbackHistory userId={session.user.id} />
       )}
     </div>
   )

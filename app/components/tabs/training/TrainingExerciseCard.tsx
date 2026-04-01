@@ -25,12 +25,13 @@ interface TrainingExerciseCardProps {
   onExerciseInfo: (ex: any) => void
   fmtRest: (s: number) => string
   onCancelRest: () => void
+  onVideoFeedback?: (exerciseName: string) => void
 }
 
 export default function TrainingExerciseCard({
   ex, exIdx, setsArr, inputs, trainingIsToday,
   restRunning, restingSet, restTimer,
-  onToggleSet, onAddSet, onUpdateInput, onExerciseInfo, fmtRest, onCancelRest,
+  onToggleSet, onAddSet, onUpdateInput, onExerciseInfo, fmtRest, onCancelRest, onVideoFeedback,
 }: TrainingExerciseCardProps) {
   const restSecs   = Number(ex.rest) || 90
   const numSets    = setsArr.length
@@ -74,6 +75,14 @@ export default function TrainingExerciseCard({
                   background: `${MUSCLE_COLORS[ex.muscle_group] || ORANGE}20`,
                   borderRadius: 6, padding: '2px 7px', flexShrink: 0,
                 }}>{ex.muscle_group}</span>
+              )}
+
+              {/* Video feedback button */}
+              {onVideoFeedback && (
+                <span onClick={(e) => { e.stopPropagation(); onVideoFeedback(ex.name) }}
+                  style={{ fontSize: '0.65rem', fontWeight: 700, color: ORANGE, background: `${ORANGE}15`, borderRadius: 6, padding: '2px 7px', cursor: 'pointer', flexShrink: 0 }}>
+                  📹
+                </span>
               )}
 
               {/* Done badge */}
