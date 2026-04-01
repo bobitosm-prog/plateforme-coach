@@ -184,7 +184,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 
 export default function WorkoutSession({ sessionName, exercises: raw, onFinish, onClose }: WorkoutSessionProps) {
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name, muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: e.reps || '10-12', rest: e.rest_seconds || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes, videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true })))
+  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name, muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes, videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true })))
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
@@ -230,7 +230,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
 
   const finish = () => { if (elT.current) clearInterval(elT.current); setDone(true); onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) }) }
 
-  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(exercises.map(e => ({ id: uid(), name: e.exercise_name, muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: e.reps || '10-12', rest: e.rest_seconds || 90, tempo: undefined, rir: null, notes: e.notes, videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))); setMode('session') }} onCancel={() => setMode('session')} />
+  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(exercises.map(e => ({ id: uid(), name: e.exercise_name, muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || 90, tempo: undefined, rir: null, notes: e.notes, videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))); setMode('session') }} onCancel={() => setMode('session')} />
 
   if (done) return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center" style={{ background: BG, fontFamily: "'DM Sans', sans-serif" }}>
@@ -351,7 +351,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                           <div className="rounded-xl overflow-hidden" style={{ background: set.done ? 'rgba(201,168,76,0.07)' : 'rgba(0,0,0,0.4)', border: `1px solid ${set.done ? 'rgba(201,168,76,0.25)' : 'rgba(255,255,255,0.09)'}` }}>
                             <input type="number" inputMode="numeric" value={set.reps}
                               onChange={e => setField(exo.id, set.id, 'reps', e.target.value)} disabled={set.done}
-                              placeholder={exo.targetReps.split('-')[0] || '0'}
+                              placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
                               className="w-full py-2.5 text-sm font-black text-center bg-transparent outline-none"
                               style={{ color: set.done ? GOLD : 'white', caretColor: GOLD }} />
                           </div>
