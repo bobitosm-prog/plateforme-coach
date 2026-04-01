@@ -27,6 +27,7 @@ interface CoachRevenueProps {
   stripeConnecting: boolean
   handleStripeConnect: () => void
   setSection: (s: 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
+  atRiskClients: any[]
 }
 
 export default function CoachRevenue({
@@ -34,7 +35,7 @@ export default function CoachRevenue({
   scheduledSessions,
   monthRevenue, yearRevenue, totalRevenue, monthPaymentsCount, activeSubscribers,
   coachProfile, stripeConnecting, handleStripeConnect,
-  setSection,
+  setSection, atRiskClients,
 }: CoachRevenueProps) {
   return (
     <>
@@ -45,6 +46,35 @@ export default function CoachRevenue({
           <button onClick={handleStripeConnect} disabled={stripeConnecting} style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 8, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
             {stripeConnecting ? '...' : '💳 Connecter Stripe'}
           </button>
+        </div>
+      )}
+
+      {/* At-risk clients alert */}
+      {atRiskClients.length > 0 && (
+        <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '16px 18px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#EF4444', fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Clients a relancer ({atRiskClients.length})
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {atRiskClients.map((c: any) => (
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#F8FAFC' }}>{c.name}</span>
+                  <span style={{ fontSize: '0.78rem', color: '#9CA3AF', marginLeft: 8 }}>
+                    Derniere seance : {c.daysSince >= 999 ? 'aucune' : `${c.daysSince} jours`}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSection('messages')}
+                  style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '6px 14px', color: '#EF4444', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  Envoyer un message
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

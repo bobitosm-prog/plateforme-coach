@@ -101,7 +101,7 @@ export default function useCoachDashboard(initialSession?: any) {
   const [search, setSearch]     = useState('')
   const [copied, setCopied]     = useState(false)
   const [showInvite, setShowInvite] = useState(false)
-  const [section, setSection]   = useState<'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil'>('dashboard')
+  const [section, setSection]   = useState<'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil' | 'programs'>('dashboard')
   const [coachProfile, setCoachProfile] = useState<any>(null)
   const [stripeConnecting, setStripeConnecting] = useState(false)
   const [monthRevenue, setMonthRevenue] = useState(0)
@@ -109,6 +109,7 @@ export default function useCoachDashboard(initialSession?: any) {
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [monthPaymentsCount, setMonthPaymentsCount] = useState(0)
   const [activeSubscribers, setActiveSubscribers] = useState(0)
+  const [atRiskClients, setAtRiskClients] = useState<any[]>([])
 
   // Food management state
   const [foodList, setFoodList] = useState<any[]>([])
@@ -344,6 +345,33 @@ export default function useCoachDashboard(initialSession?: any) {
     setClients(rows)
     setLoading(false)
     fetchUnreadCounts(coachId, clientIds)
+    fetchAtRiskClients(rows)
+  }
+
+  async function fetchAtRiskClients(clientRows: ClientRow[]) {
+    if (!clientRows.length) { setAtRiskClients([]); return }
+    const results: any[] = []
+    for (const c of clientRows) {
+      const { data } = await supabase
+        .from('workout_sessions')
+        .select('created_at')
+        .eq('user_id', c.client_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const lastDate = data?.created_at ? new Date(data.created_at) : null
+      const daysSince = lastDate ? Math.floor((Date.now() - lastDate.getTime()) / 86400000) : 999
+      if (daysSince >= 3) {
+        results.push({
+          id: c.client_id,
+          name: c.profiles?.full_name ?? 'Client',
+          daysSince,
+          lastSession: lastDate,
+        })
+      }
+    }
+    results.sort((a, b) => b.daysSince - a.daysSince)
+    setAtRiskClients(results)
   }
 
   async function fetchUnreadCounts(coachId: string, clientIds: string[]) {
@@ -564,6 +592,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
     // Stats
     activeCount,
+    atRiskClients,
     monthRevenue,
     yearRevenue,
     totalRevenue,

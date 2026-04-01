@@ -23,6 +23,7 @@ import CoachCalendar from './components/CoachCalendar'
 import CoachMessages from './components/CoachMessages'
 import CoachAliments from './components/CoachAliments'
 import CoachProfile from './components/CoachProfile'
+import CoachPrograms from './components/CoachPrograms'
 
 /* ── WheelPicker ──────────────────────────────────────────── */
 function WheelPicker({ items, value, onChange, label, width = 72 }: {
@@ -70,8 +71,23 @@ function WheelPicker({ items, value, onChange, label, width = 72 }: {
 /* ══════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════ */
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return
+  const headers = Object.keys(data[0]).join(',')
+  const rows = data.map(row => Object.values(row).map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+  const csv = [headers, ...rows].join('\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `moovx-${filename}-${new Date().toISOString().split('T')[0]}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function CoachPage({ initialSession }: { initialSession?: any } = {}) {
   const h = useCoachDashboard(initialSession)
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
@@ -188,9 +204,51 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
               {h.totalUnread > 0 && <span style={{ position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, background: '#EF4444', borderRadius: 9, fontSize: '0.65rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{h.totalUnread > 9 ? '9+' : h.totalUnread}</span>}
             </button>
             <div className="hide-sm" style={{ width: '1px', height: '24px', background: '#374151' }} />
-            <div className="hide-sm" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="hide-sm" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div className="avatar-circle">{h.coachInitials}</div>
               <span style={{ fontFamily: 'Barlow, sans-serif', fontSize: '0.875rem', fontWeight: 500, color: '#D1D5DB' }}>{h.coachName}</span>
+              <button
+                onClick={() => setShowExportMenu(v => !v)}
+                style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 8, padding: '6px 12px', color: '#C9A84C', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}
+              >
+                Exporter CSV
+              </button>
+              {showExportMenu && (
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 6, background: '#1F2937', border: '1px solid #374151', borderRadius: 10, padding: 6, minWidth: 220, zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+                  <button
+                    onClick={() => {
+                      const data = h.clients.map(c => {
+                        const atRisk = h.atRiskClients.find((r: any) => r.id === c.client_id)
+                        return {
+                          nom: c.profiles?.full_name ?? '',
+                          email: '',
+                          derniere_seance: atRisk ? (atRisk.daysSince >= 999 ? 'aucune' : `il y a ${atRisk.daysSince} jours`) : 'recente',
+                          statut: atRisk && atRisk.daysSince >= 3 ? 'inactif' : 'actif',
+                        }
+                      })
+                      downloadCSV(data, 'clients')
+                      setShowExportMenu(false)
+                    }}
+                    style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '10px 14px', color: '#F8FAFC', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderRadius: 6 }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#374151')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    Exporter la liste clients
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const { data } = await h.supabase.from('payments').select('*').eq('status', 'paid')
+                      if (data?.length) downloadCSV(data, 'paiements')
+                      setShowExportMenu(false)
+                    }}
+                    style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '10px 14px', color: '#F8FAFC', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderRadius: 6 }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#374151')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    Exporter les paiements
+                  </button>
+                </div>
+              )}
             </div>
             <div className="hide-sm" style={{ width: '1px', height: '24px', background: '#374151' }} />
             <button className="btn-ghost" onClick={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} aria-label="Se déconnecter">
@@ -354,6 +412,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             monthPaymentsCount={h.monthPaymentsCount} activeSubscribers={h.activeSubscribers}
             coachProfile={h.coachProfile} stripeConnecting={h.stripeConnecting}
             handleStripeConnect={h.handleStripeConnect} setSection={h.setSection}
+            atRiskClients={h.atRiskClients}
           />
           <ClientsList
             filtered={h.filtered} loading={h.loading}
@@ -371,6 +430,10 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
       )}
 
       {/* ══ ALIMENTS SECTION ══ */}
+      {h.section === 'programs' && (
+        <CoachPrograms session={h.session} clients={h.clients} />
+      )}
+
       {h.section === 'aliments' && (
         <CoachAliments
           foodList={h.foodList} foodFilter={h.foodFilter} setFoodFilter={h.setFoodFilter}
@@ -399,6 +462,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           { key: 'dashboard', icon: <Users size={22} strokeWidth={2} />, label: 'Clients' },
           { key: 'messages', icon: <MessageCircle size={22} strokeWidth={2} />, label: 'Messages', badge: h.totalUnread },
           { key: 'calendar', icon: <Calendar size={22} strokeWidth={2} />, label: 'Calendrier' },
+          { key: 'programs', icon: <Dumbbell size={22} strokeWidth={2} />, label: 'Programmes' },
           { key: 'aliments', icon: <UtensilsCrossed size={22} strokeWidth={2} />, label: 'Aliments' },
           { key: 'profil', icon: <div className="avatar-circle" style={{ width: 26, height: 26, fontSize: '0.65rem', flexShrink: 0 }}>{h.coachInitials}</div>, label: 'Profil' },
         ] as { key: string; icon: React.ReactNode; label: string; badge?: number }[]).map(tab => (
