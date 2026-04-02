@@ -4,8 +4,8 @@ import React from 'react';
 import { useReveal, useCounter } from './shared';
 
 const STATS = [
-  { target: 1200, suffix: '+', label: 'Plans IA g\u00e9n\u00e9r\u00e9s' },
-  { target: 89, suffix: '', label: 'Exercices guid\u00e9s' },
+  { target: 1200, suffix: '+', label: 'Plans IA générés' },
+  { target: 89, suffix: '', label: 'Exercices guidés' },
   { target: 170, suffix: '', label: 'Aliments fitness' },
   { target: 98, suffix: '%', label: 'Satisfaction client' },
 ];

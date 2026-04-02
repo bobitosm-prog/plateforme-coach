@@ -181,7 +181,7 @@ export default function Hero() {
                 textTransform: 'uppercase',
               }}
             >
-              {'\ud83c\udde8\ud83c\udded'} Swiss Made · Gen\u00e8ve
+              {'\ud83c\udde8\ud83c\udded'} Swiss Made · Genève
             </span>
             <div style={{ flex: 1, maxWidth: 60, height: 1, background: 'var(--gold-rule)' }} />
           </div>
@@ -218,7 +218,7 @@ export default function Hero() {
               ...revealStyle(sub.visible, 0.16),
             }}
           >
-            D\u00c9PASSE TES LIMITES
+            DÉPASSE TES LIMITES
           </p>
 
           {/* Description */}
@@ -233,7 +233,7 @@ export default function Hero() {
                 fontWeight: 300,
               }}
             >
-              La premi\u00e8re plateforme de coaching fitness suisse propuls\u00e9e par l&apos;intelligence artificielle. Plans nutrition sur mesure, programme PPL 6 jours, scanner code-barres, recettes IA. Ton coach 24/7.
+              La première plateforme de coaching fitness suisse propulsée par l&apos;intelligence artificielle. Plans nutrition sur mesure, programme PPL 6 jours, scanner code-barres, recettes IA. Ton coach 24/7.
             </p>
             <p
               style={{
@@ -246,7 +246,7 @@ export default function Hero() {
                 textTransform: 'uppercase',
               }}
             >
-              Rejoins +1 200 utilisateurs \u00e0 Gen\u00e8ve &mdash; D\u00e8s CHF 10/mois
+              Rejoins +1 200 utilisateurs à Genève &mdash; Dès CHF 10/mois
             </p>
           </div>
 
@@ -296,14 +296,14 @@ export default function Hero() {
                 textDecoration: 'none',
               }}
             >
-              D\u00e9couvrir \u2193
+              Découvrir ↓
             </a>
           </div>
 
           {/* Trust line */}
           <p ref={trust.ref} style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: 0.5, ...revealStyle(trust.visible, 0.4) }}>
-            <span style={{ color: 'var(--text-muted)' }}>{'\u2713'}</span> Sans engagement &nbsp;\u00b7&nbsp;
-            <span style={{ color: 'var(--text-muted)' }}>{'\u2713'}</span> 10 jours gratuits &nbsp;\u00b7&nbsp;
+            <span style={{ color: 'var(--text-muted)' }}>{'\u2713'}</span> Sans engagement &nbsp;·&nbsp;
+            <span style={{ color: 'var(--text-muted)' }}>{'\u2713'}</span> 10 jours gratuits &nbsp;·&nbsp;
             <span style={{ color: 'var(--text-muted)' }}>{'\u2713'}</span> 100% Swiss Made
           </p>
         </div>
@@ -314,10 +314,10 @@ export default function Hero() {
           className="hero-stats-col"
           style={revealStyle(stats.visible, 0.16)}
         >
-          <StatItem target={1200} label="Plans IA<br/>g\u00e9n\u00e9r\u00e9s" first />
-          <StatItem target={89} label="Exercices<br/>guid\u00e9s" />
+          <StatItem target={1200} label="Plans IA<br/>générés" first />
+          <StatItem target={89} label="Exercices<br/>guidés" />
           <StatItem target={170} label="Aliments<br/>fitness" />
-          <StatItem target={22} label="Fonctionnal-<br/>it\u00e9s" />
+          <StatItem target={22} label="Fonctionnal-<br/>ités" />
 
           {/* 24/7 - static, not animated */}
           <div

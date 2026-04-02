@@ -6,23 +6,23 @@ import { useReveal } from './shared';
 const FEATURES = [
   {
     num: '01',
-    title: 'Plans 7 jours personnalis\u00e9s',
-    desc: "L\u2019IA g\u00e9n\u00e8re un plan alimentaire complet adapt\u00e9 \u00e0 tes calories, prot\u00e9ines, glucides et lipides. R\u00e9g\u00e9n\u00e9ration illimit\u00e9e.",
+    title: 'Plans 7 jours personnalisés',
+    desc: "L\u2019IA génère un plan alimentaire complet adapté à tes calories, protéines, glucides et lipides. Régénération illimitée.",
   },
   {
     num: '02',
     title: '170 aliments fitness',
-    desc: "Base curat\u00e9e d\u2019aliments essentiels : prot\u00e9ines, f\u00e9culents, l\u00e9gumes, suppl\u00e9ments. Donn\u00e9es Swiss v\u00e9rifi\u00e9es.",
+    desc: "Base curatée d\u2019aliments essentiels : protéines, féculents, légumes, suppléments. Données Swiss vérifiées.",
   },
   {
     num: '03',
     title: 'Recettes fitness IA',
-    desc: "Recettes adapt\u00e9es \u00e0 tes macros avec les aliments que tu as d\u00e9j\u00e0 chez toi. Go\u00fbteuses et performantes.",
+    desc: "Recettes adaptées à tes macros avec les aliments que tu as déjà chez toi. Goûteuses et performantes.",
   },
   {
     num: '04',
-    title: 'Pr\u00e9f\u00e9rences respect\u00e9es',
-    desc: "Exclus les aliments que tu n\u2019aimes pas. L\u2019IA les ignore \u00e0 chaque g\u00e9n\u00e9ration, toujours.",
+    title: 'Préférences respectées',
+    desc: "Exclus les aliments que tu n\u2019aimes pas. L\u2019IA les ignore à chaque génération, toujours.",
   },
 ];
 

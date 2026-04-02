@@ -4,11 +4,11 @@ import React from 'react';
 import { useReveal } from './shared';
 
 const PPL_ROWS = [
-  { day: 'LUNDI', type: 'Push A', focus: 'Poitrine, \u00c9paules, Triceps' },
-  { day: 'MARDI', type: 'Pull A', focus: 'Dos, Biceps, Arri\u00e8re \u00e9paules' },
+  { day: 'LUNDI', type: 'Push A', focus: 'Poitrine, Épaules, Triceps' },
+  { day: 'MARDI', type: 'Pull A', focus: 'Dos, Biceps, Arrière épaules' },
   { day: 'MERCREDI', type: 'Legs A', focus: 'Quadriceps, Ischio, Mollets' },
-  { day: 'JEUDI', type: 'Push B', focus: 'Poitrine, \u00c9paules, Triceps' },
-  { day: 'VENDREDI', type: 'Pull B', focus: 'Dos, Biceps, Trap\u00e8zes' },
+  { day: 'JEUDI', type: 'Push B', focus: 'Poitrine, Épaules, Triceps' },
+  { day: 'VENDREDI', type: 'Pull B', focus: 'Dos, Biceps, Trapèzes' },
   { day: 'SAMEDI', type: 'Legs B', focus: 'Fessiers, Ischio, Mollets' },
 ];
 
