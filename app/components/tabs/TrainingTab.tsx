@@ -11,6 +11,7 @@ import {
   GREEN, RADIUS_CARD, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, JS_DAYS_FR,
 } from '../../../lib/design-tokens'
+import { playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
 import { toast } from 'sonner'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
@@ -64,6 +65,8 @@ export default function TrainingTab({
   const [restMax, setRestMax]           = useState<number>(90)
   const [restRunning, setRestRunning]   = useState(false)
   const [elapsedSecs, setElapsedSecs]   = useState(0)
+  const [showTimerAlert, setShowTimerAlert] = useState(false)
+  const [motivationalMsg, setMotivationalMsg] = useState('')
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
@@ -91,14 +94,19 @@ export default function TrainingTab({
     return () => clearInterval(restIntervalRef.current)
   }, [restRunning])
 
-  // ── Rest timer expiry: handled in a separate effect to stay pure ──
+  // ── Rest timer expiry + warning tick ──
   useEffect(() => {
+    if (restRunning && restTimer === 5) playWarningTick()
     if (restRunning && restTimer === 0) {
       clearInterval(restIntervalRef.current)
       setRestRunning(false)
       setRestingSet(null)
       setActiveRestExName(null)
-      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([200, 100, 200])
+      playBeep()
+      vibrateDevice()
+      setMotivationalMsg(getRandomMessage())
+      setShowTimerAlert(true)
+      setTimeout(() => setShowTimerAlert(false), 3000)
     }
   }, [restTimer, restRunning])
 
@@ -297,11 +305,47 @@ export default function TrainingTab({
         .set-input::-webkit-inner-spin-button,
         .set-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .set-input:focus { border-color: ${GOLD} !important; }
+        @keyframes ttTimerFade {
+          0% { opacity: 0; transform: scale(0.95); }
+          10% { opacity: 1; transform: scale(1); }
+          80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes ttTimerPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.15); }
+        }
         @media(max-width:480px){
           .set-grid{grid-template-columns:28px 1fr 70px 52px 28px!important;gap:2px!important;padding-left:8px!important;padding-right:8px!important}
           .set-grid .prev-col{font-size:11px!important}
         }
       `}</style>
+
+      {/* ── TIMER COMPLETE ALERT ── */}
+      {showTimerAlert && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(201,168,76,0.12)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, pointerEvents: 'none',
+          animation: 'ttTimerFade 3s ease-in-out forwards',
+        }}>
+          <div style={{
+            width: 80, height: 80, border: `2px solid ${GOLD}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 24, animation: 'ttTimerPulse 0.5s ease-in-out 3',
+          }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+              <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill={GOLD} />
+            </svg>
+          </div>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 42, color: GOLD, letterSpacing: 4, margin: '0 0 12px', textAlign: 'center' }}>
+            REPOS TERMINÉ
+          </p>
+          <p style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', margin: 0 }}>
+            {motivationalMsg}
+          </p>
+        </div>
+      )}
 
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
       <WorkoutCelebration visible={workoutFinished} />

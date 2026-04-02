@@ -7,6 +7,7 @@ import {
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY
 } from '../../lib/design-tokens'
+import { playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -200,6 +201,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
   const [done, setDone] = useState(false)
   const [showVideo, setShowVideo] = useState<string | null>(null)
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
+  const [showTimerAlert, setShowTimerAlert] = useState(false)
+  const [motivationalMsg, setMotivationalMsg] = useState('')
 
   // Fetch previous performance for all exercises
   useEffect(() => {
@@ -228,8 +231,18 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
 
   useEffect(() => { elT.current = setInterval(() => setElapsed(Date.now() - t0), 1000); return () => { if (elT.current) clearInterval(elT.current) } }, [])
   useEffect(() => {
-    if (restOn && restSecs > 0) { restT.current = setTimeout(() => setRestSecs(s => s - 1), 1000) }
-    else if (restOn && restSecs === 0) { setRestOn(false); if (navigator.vibrate) navigator.vibrate([300, 100, 300]) }
+    if (restOn && restSecs > 0) {
+      restT.current = setTimeout(() => setRestSecs(s => s - 1), 1000)
+      // Warning tick at 5 seconds
+      if (restSecs === 5) playWarningTick()
+    } else if (restOn && restSecs === 0) {
+      setRestOn(false)
+      playBeep()
+      vibrateDevice()
+      setMotivationalMsg(getRandomMessage())
+      setShowTimerAlert(true)
+      setTimeout(() => setShowTimerAlert(false), 3000)
+    }
     return () => { if (restT.current) clearTimeout(restT.current) }
   }, [restOn, restSecs])
   useEffect(() => {
@@ -299,8 +312,44 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
         @media(max-width:420px){
           .ws-grid { grid-template-columns: 28px 1fr 64px 56px 36px !important; }
         }
+        @keyframes wsTimerFade {
+          0% { opacity: 0; transform: scale(0.95); }
+          10% { opacity: 1; transform: scale(1); }
+          80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes wsTimerPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.15); }
+        }
       `}</style>
       {restOn && <RestOverlay secs={restSecs} max={restMax} onSkip={skipRest} />}
+
+      {/* Timer complete alert */}
+      {showTimerAlert && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(201,168,76,0.12)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, pointerEvents: 'none',
+          animation: 'wsTimerFade 3s ease-in-out forwards',
+        }}>
+          <div style={{
+            width: 80, height: 80, border: `2px solid ${GOLD}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 24, animation: 'wsTimerPulse 0.5s ease-in-out 3',
+          }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+              <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill={GOLD} />
+            </svg>
+          </div>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 42, color: GOLD, letterSpacing: 4, margin: '0 0 12px', textAlign: 'center' }}>
+            REPOS TERMINÉ
+          </p>
+          <p style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', margin: 0 }}>
+            {motivationalMsg}
+          </p>
+        </div>
+      )}
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       {/* HEADER */}

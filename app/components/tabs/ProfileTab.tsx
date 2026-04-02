@@ -1,13 +1,14 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Trash2, UserMinus, Download, X, Clock, Calendar } from 'lucide-react'
+import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Trash2, UserMinus, Download, X, Clock, Calendar, Volume2 } from 'lucide-react'
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
 } from '../../../lib/design-tokens'
+import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
 
 const ORANGE = GOLD
 
@@ -59,6 +60,7 @@ export default function ProfileTab({
   const [phoneEditing, setPhoneEditing] = useState(false)
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle')
   const [showPaywall, setShowPaywall] = useState(false)
+  const [timerSound, setTimerSound] = useState(() => isTimerSoundEnabled())
   const [badges, setBadges] = useState<string[]>([])
 
   useEffect(() => {
@@ -238,6 +240,29 @@ export default function ProfileTab({
               width: 18, height: 18, borderRadius: '50%', background: '#fff',
               position: 'absolute', top: 3,
               left: profile?.reminder_enabled ? 23 : 3,
+              transition: 'left 200ms',
+            }} />
+          </button>
+        </div>
+
+        {/* Timer sound toggle */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Volume2 size={16} color={timerSound ? GREEN : TEXT_MUTED} />
+            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Son du timer</span>
+          </div>
+          <button
+            onClick={() => { const next = !timerSound; setTimerSound(next); setTimerSoundEnabled(next) }}
+            style={{
+              width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+              background: timerSound ? GOLD : '#333',
+              position: 'relative', transition: 'background 200ms',
+            }}
+          >
+            <div style={{
+              width: 18, height: 18, borderRadius: '50%', background: '#fff',
+              position: 'absolute', top: 3,
+              left: timerSound ? 23 : 3,
               transition: 'left 200ms',
             }} />
           </button>
