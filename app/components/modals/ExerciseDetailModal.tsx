@@ -6,7 +6,8 @@ import {
   MUSCLE_COLORS,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
-import { getExerciseGif } from '../../../lib/exercise-images'
+import ExercisePreview from '../ExercisePreview'
+import { getExerciseImage } from '../../../lib/exercise-media'
 
 interface ExerciseDetailModalProps {
   exercise: any | null
@@ -63,10 +64,10 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
               <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block' }} src={exercise.video_url} />
             </div>
           ) : (() => {
-            const gif = getExerciseGif(exercise.name)
-            return gif ? (
-              <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}` }}>
-                <img src={gif} alt={exercise.name} loading="lazy" style={{ width: '100%', display: 'block' }} onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
+            const imgUrl = getExerciseImage(exercise.name)
+            return imgUrl ? (
+              <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+                <ExercisePreview name={exercise.name} size={200} animate={true} />
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '28px 16px', marginBottom: 18, border: `1px solid ${BORDER}` }}>

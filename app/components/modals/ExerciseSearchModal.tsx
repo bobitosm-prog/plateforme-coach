@@ -7,7 +7,7 @@ import {
   MUSCLE_COLORS, MUSCLE_GROUPS_FILTER,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
-import { getExerciseGif, ExercisePlaceholder } from '../../../lib/exercise-images'
+import { getExerciseImage } from '../../../lib/exercise-media'
 
 interface ExerciseSearchModalProps {
   supabase: any
@@ -131,10 +131,10 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
                     >
                       {/* Exercise image or muscle color bar */}
                       {(() => {
-                        const gif = getExerciseGif(ex.name)
-                        return gif ? (
+                        const imgUrl = getExerciseImage(ex.name)
+                        return imgUrl ? (
                           <div style={{ height: 80, overflow: 'hidden', flexShrink: 0 }}>
-                            <img src={gif} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
+                            <img src={imgUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { const p = (e.target as HTMLImageElement).parentElement!; p.style.height = '4px'; p.style.background = mgColor; (e.target as HTMLImageElement).style.display = 'none' }} />
                           </div>
                         ) : (
                           <div style={{ height: 4, background: mgColor, width: '100%', flexShrink: 0 }} />

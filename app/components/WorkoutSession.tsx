@@ -8,7 +8,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY
 } from '../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
-import { getExerciseGif, ExercisePlaceholder } from '../../lib/exercise-images'
+import ExercisePreview from './ExercisePreview'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -400,22 +400,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
             <div key={exo.id} style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24 }}>
               {/* ── Accordion Header ── */}
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
-                {(() => {
-                  const gif = getExerciseGif(exo.name)
-                  return gif ? (
-                    <div style={{ width: 40, height: 40, flexShrink: 0, overflow: 'hidden', border: `1px solid ${isDone ? GOLD : BORDER}`, position: 'relative' }}>
-                      <img src={gif} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDone ? 0.5 : 1 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                      {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.3)' }}><Check size={16} color="#050505" strokeWidth={3} /></div>}
-                    </div>
-                  ) : (
-                    <div style={{
-                      width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                      background: isDone ? GOLD : BG_BASE, border: `1px solid ${isDone ? 'transparent' : BORDER}`,
-                    }}>
-                      {isDone ? <Check size={14} color="#050505" strokeWidth={3} /> : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_MUTED }}>{idx + 1}</span>}
-                    </div>
-                  )
-                })()}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <ExercisePreview name={exo.name} size={40} animate={false} />
+                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)' }}><Check size={16} color="#050505" strokeWidth={3} /></div>}
+                </div>
                 <div className="flex-1 min-w-0">
                   <h3 style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 15, color: TEXT_PRIMARY, letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.2 }}>{exo.name}</h3>
                 </div>

@@ -6,6 +6,7 @@ import { fr } from 'date-fns/locale'
 import {
   Ruler, Camera, Zap, Moon, CheckCircle,
 } from 'lucide-react'
+import ExercisePreview from '../ExercisePreview'
 import {
   AreaChart, Area, BarChart, Bar, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
@@ -301,7 +302,7 @@ export default function HomeTab({
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
                 {(todayCoachDay.exercises as any[]).slice(0, 4).map((ex: any, i: number) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '10px 12px' }}>
-                    <div style={{ width: 26, height: 26, borderRadius: RADIUS_CARD, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 16, color: GOLD, flexShrink: 0 }}>{i + 1}</div>
+                    <ExercisePreview name={ex.name} size={36} animate={false} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_PRIMARY, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</div>
                       <div style={{ fontFamily: FONT_BODY, fontWeight: 400, fontSize: 12, color: TEXT_MUTED }}>{ex.sets} × {ex.reps} reps</div>
