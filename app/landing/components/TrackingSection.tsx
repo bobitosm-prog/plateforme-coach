@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 import { useReveal } from './shared';
 
 const FEATURES = [
-  { num: '01', title: 'Analytics avancé', desc: '5 graphiques interactifs : poids, calories, macros, volume d'entraînement, hydratation. Export CSV.' },
+  { num: '01', title: 'Analytics avancé', desc: "5 graphiques interactifs : poids, calories, macros, volume d'entraînement, hydratation. Export CSV." },
   { num: '02', title: 'Photos avant/après', desc: 'Comparateur slider intégré. Superpose tes photos pour voir ta transformation en temps réel.' },
   { num: '03', title: 'Records personnels', desc: 'Détection automatique des PR via la formule Epley. Historique complet de ta progression.' },
   { num: '04', title: 'Streak & gamification', desc: '7 badges à débloquer. Série de jours consécutifs. La motivation par les récompenses.' },
-  { num: '05', title: 'Hydratation', desc: 'Compteur d'eau quotidien avec objectif personnalisé selon ton poids et ton activité physique.' },
-  { num: '06', title: 'Tes données t'appartiennent', desc: 'Export CSV complet à tout moment. Conformité RGPD. Hébergé en Europe sur Supabase.' },
+  { num: '05', title: 'Hydratation', desc: "Compteur d'eau quotidien avec objectif personnalisé selon ton poids et ton activité physique." },
+  { num: '06', title: "Tes données t'appartiennent", desc: 'Export CSV complet à tout moment. Conformité RGPD. Hébergé en Europe sur Supabase.' },
 ];
 
 export default function TrackingSection() {
