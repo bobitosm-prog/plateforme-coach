@@ -297,10 +297,9 @@ export default function TrainingTab({
         .set-input::-webkit-inner-spin-button,
         .set-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .set-input:focus { border-color: ${GOLD} !important; }
-        .add-set-btn:active { opacity: 0.7; }
         @media(max-width:480px){
-          .set-grid{grid-template-columns:28px 1fr 56px 52px 36px!important;gap:2px!important;padding-left:8px!important;padding-right:8px!important}
-          .set-grid .prev-col{font-size:0.55rem!important}
+          .set-grid{grid-template-columns:28px 1fr 70px 52px 28px!important;gap:2px!important;padding-left:8px!important;padding-right:8px!important}
+          .set-grid .prev-col{font-size:11px!important}
         }
       `}</style>
 
@@ -434,7 +433,7 @@ export default function TrainingTab({
 
           ) : (
             /* ══════════════ EXERCISE CARDS ══════════════ */
-            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               {trainingExercises.map((ex: any, exIdx: number) => {
                 const storageKey = `moovx-sets-${todayStr}-${ex.name}`
@@ -461,6 +460,8 @@ export default function TrainingTab({
                     fmtRest={fmtRest}
                     onCancelRest={cancelRest}
                     onVideoFeedback={(name: string) => setVideoExercise(name)}
+                    supabase={supabase}
+                    userId={session?.user?.id}
                   />
                 )
               })}
