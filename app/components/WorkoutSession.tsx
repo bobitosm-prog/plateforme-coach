@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, MoreHorizontal } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -291,6 +291,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
+      <style>{`
+        .ws-input { -webkit-appearance: none; appearance: none; }
+        .ws-input::-webkit-inner-spin-button,
+        .ws-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .ws-input:focus { border-color: ${GOLD} !important; }
+        @media(max-width:420px){
+          .ws-grid { grid-template-columns: 28px 1fr 64px 56px 36px !important; }
+        }
+      `}</style>
       {restOn && <RestOverlay secs={restSecs} max={restMax} onSkip={skipRest} />}
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
@@ -315,9 +324,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       </div>
 
       {/* EXERCICES */}
-      <div className="px-4 py-4 space-y-3 pb-36">
+      <div className="px-4 py-4 pb-36" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
         <button onClick={() => setMode('custom')} className="w-full flex items-center gap-3 p-4 active:scale-[0.98]"
-          style={{ background: GOLD_DIM, border: `1px dashed ${GOLD_RULE}`, borderRadius: RADIUS_CARD }}>
+          style={{ background: GOLD_DIM, border: `1px dashed ${GOLD_RULE}`, borderRadius: RADIUS_CARD, marginBottom: 24 }}>
           <Plus size={18} style={{ color: GOLD }} />
           <div className="text-left">
             <div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>Séance personnalisée</div>
@@ -330,81 +339,169 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
           return (
-            <div key={exo.id} className="overflow-hidden transition-all"
-              style={{ background: isDone ? GOLD_DIM : BG_CARD, border: `1px solid ${isDone ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD }}>
-              <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 p-4 text-left">
-                <div className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-                  style={{ background: isDone ? GOLD : BG_BASE, border: `1px solid ${isDone ? 'transparent' : BORDER}`, borderRadius: RADIUS_CARD }}>
-                  {isDone ? <Check size={16} className="text-black" strokeWidth={3} /> : <span className="text-sm" style={{ color: TEXT_MUTED, fontFamily: FONT_DISPLAY }}>{idx + 1}</span>}
+            <div key={exo.id} style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24 }}>
+              {/* ── Accordion Header ── */}
+              <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
+                <div style={{
+                  width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  background: isDone ? GOLD : BG_BASE, border: `1px solid ${isDone ? 'transparent' : BORDER}`,
+                }}>
+                  {isDone ? <Check size={14} color="#050505" strokeWidth={3} /> : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_MUTED }}>{idx + 1}</span>}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 18, color: GOLD, letterSpacing: 1, textTransform: 'uppercase', margin: '0 0 2px', lineHeight: 1.2 }}>{exo.name}</h3>
-                  <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 12, color: TEXT_MUTED, margin: 0 }}>{exo.muscle}{exo.notes ? ` · ${exo.notes.slice(0, 50)}` : ''}</p>
+                  <h3 style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 15, color: TEXT_PRIMARY, letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.2 }}>{exo.name}</h3>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span className="text-[9px] px-2 py-1" style={{ background: BG_BASE, color: TEXT_MUTED, border: `1px solid ${BORDER}`, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.targetSets}×{exo.targetReps}</span>
-                  <span className="text-[9px] px-2 py-1" style={{ background: GOLD_DIM, color: GOLD, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700 }}>⏱{fmt(exo.rest)}</span>
-                  {exo.videoUrl && <button onClick={e => { e.stopPropagation(); setShowVideo(exo.videoUrl!) }} className="w-7 h-7 flex items-center justify-center" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 0 }}><Play size={10} style={{ color: GOLD }} /></button>}
-                  <span className="text-[10px]" style={{ color: cnt > 0 ? GOLD : TEXT_DIM, fontFamily: FONT_DISPLAY }}>{cnt}/{exo.sets.length}</span>
+                  <span style={{ fontSize: 9, padding: '2px 8px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.targetSets}×{exo.targetReps}</span>
+                  <span style={{ fontSize: 9, padding: '2px 8px', background: GOLD_DIM, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700 }}>⏱{fmt(exo.rest)}</span>
+                  <span style={{ fontSize: 10, color: cnt > 0 ? GOLD : TEXT_DIM, fontFamily: FONT_DISPLAY }}>{cnt}/{exo.sets.length}</span>
                   {exo.open ? <ChevronUp size={14} style={{ color: TEXT_DIM }} /> : <ChevronDown size={14} style={{ color: TEXT_DIM }} />}
                 </div>
               </button>
 
+              {/* ── Expanded Content ── */}
               {exo.open && (
-                <div className="px-4 pb-4">
-                  {(exo.notes || exo.tempo || exo.rir != null) && (
-                    <div className="px-3 py-2.5 mb-3 flex flex-wrap gap-1.5" style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}>
-                      {exo.tempo && <span className="text-[9px] px-2 py-0.5" style={{ background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700 }}>Tempo {exo.tempo}</span>}
-                      {exo.rir != null && <span className="text-[9px] px-2 py-0.5" style={{ background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700 }}>RIR {exo.rir}</span>}
-                      {exo.notes && <p className="text-[10px] w-full mt-0.5 italic leading-relaxed" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{exo.notes}</p>}
+                <div>
+                  {/* Exercise name in gold + description + action icons */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 18, color: GOLD, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 4px', lineHeight: 1.2 }}>{exo.name}</h3>
+                      {(exo.notes || exo.muscle) && (
+                        <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 12, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>
+                          {exo.notes || exo.muscle}
+                        </p>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, flexShrink: 0, paddingTop: 2 }}>
+                      {exo.videoUrl && (
+                        <button onClick={() => setShowVideo(exo.videoUrl!)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                          <Play size={20} style={{ color: TEXT_MUTED }} />
+                        </button>
+                      )}
+                      <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                        <MoreHorizontal size={20} style={{ color: TEXT_MUTED }} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tempo/RIR badges */}
+                  {(exo.tempo || exo.rir != null) && (
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                      {exo.tempo && <span style={{ fontSize: 9, padding: '2px 8px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700 }}>Tempo {exo.tempo}</span>}
+                      {exo.rir != null && <span style={{ fontSize: 9, padding: '2px 8px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700 }}>RIR {exo.rir}</span>}
                     </div>
                   )}
-                  <div className="grid gap-2 mb-2 px-1" style={{ gridTemplateColumns: '32px 1fr 1fr 1fr 40px' }}>
-                    {['SET', 'PRÉCÉDENT', 'KG', 'REPS', '✓'].map(h => <span key={h} className="text-[9px] text-center" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{h}</span>)}
+
+                  {/* Table header */}
+                  <div className="ws-grid" style={{ display: 'grid', gridTemplateColumns: '32px 1fr 70px 70px 36px', gap: 2, padding: '0 0 6px', alignItems: 'center' }}>
+                    {['SET', 'PRÉCÉDENT', 'KG', 'REPS', ''].map(h => (
+                      <span key={h} style={{ fontSize: 10, textAlign: 'center', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' as const }}>{h}</span>
+                    ))}
                   </div>
-                  <div className="space-y-2">
+
+                  {/* Set rows */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {exo.sets.map((set: ExSet) => {
                       const ok = !set.done && (set.weight !== '' || set.reps !== '')
                       return (
-                        <div key={set.id} className="grid gap-2 items-center px-2 py-2 transition-all"
-                          style={{ gridTemplateColumns: '32px 1fr 1fr 1fr 40px', background: set.done ? GOLD_DIM : BG_BASE, border: `1px solid ${set.done ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD }}>
-                          <div className="w-7 h-7 flex items-center justify-center mx-auto text-xs"
-                            style={{ background: set.done ? GOLD_DIM : BG_CARD, color: set.done ? GOLD : TEXT_MUTED, borderRadius: RADIUS_CARD, fontFamily: FONT_DISPLAY, fontWeight: 700, border: `1px solid ${set.done ? GOLD_RULE : BORDER}` }}>
-                            {set.done ? <Check size={12} strokeWidth={3} style={{ color: GREEN }} /> : set.num}
+                        <div key={set.id} className="ws-grid" style={{
+                          display: 'grid', gridTemplateColumns: '32px 1fr 70px 70px 36px', gap: 2,
+                          alignItems: 'center', padding: '4px 0',
+                          background: set.done ? `${GOLD}08` : 'transparent',
+                          transition: 'background 0.3s',
+                        }}>
+                          {/* Set number */}
+                          <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <div style={{
+                              width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
+                              background: set.done ? GOLD_DIM : 'transparent',
+                            }}>
+                              {set.done
+                                ? <Check size={12} strokeWidth={3} style={{ color: GREEN }} />
+                                : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_MUTED }}>{set.num}</span>
+                              }
+                            </div>
                           </div>
-                          {/* Previous performance */}
-                          <span className="text-center text-[13px]" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>
+
+                          {/* Previous */}
+                          <span style={{ textAlign: 'center', fontSize: 13, color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 400 }}>
                             {previousData[exo.name]?.[set.num - 1]
                               ? `${previousData[exo.name][set.num - 1].weight}×${previousData[exo.name][set.num - 1].reps}`
                               : '—'}
                           </span>
-                          <div className="overflow-hidden" style={{ background: set.done ? GOLD_DIM : BG_BASE, border: `1px solid ${set.done ? GOLD_RULE : BORDER}`, borderRadius: 0 }}>
-                            <input type="number" inputMode="decimal" step="0.5" value={set.weight}
-                              onChange={e => setField(exo.id, set.id, 'weight', e.target.value)} disabled={set.done}
-                              placeholder={last?.weight ? String(last.weight) : '0'}
-                              className="w-full py-2.5 text-sm text-center bg-transparent outline-none"
-                              style={{ color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, fontFamily: FONT_DISPLAY, fontWeight: 700 }} />
+
+                          {/* KG input */}
+                          <input
+                            type="number" inputMode="decimal" step="0.5"
+                            className="ws-input"
+                            value={set.weight}
+                            onChange={e => setField(exo.id, set.id, 'weight', e.target.value)}
+                            disabled={set.done}
+                            placeholder={last?.weight ? String(last.weight) : '0'}
+                            style={{
+                              width: 70, height: 44, textAlign: 'center',
+                              background: set.done ? GOLD_DIM : BG_BASE,
+                              border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
+                              borderRadius: 0, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
+                              color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none',
+                              transition: 'border-color 0.2s',
+                            }}
+                          />
+
+                          {/* Reps input */}
+                          <input
+                            type="number" inputMode="numeric"
+                            className="ws-input"
+                            value={set.reps}
+                            onChange={e => setField(exo.id, set.id, 'reps', e.target.value)}
+                            disabled={set.done}
+                            placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
+                            style={{
+                              width: 70, height: 44, textAlign: 'center',
+                              background: set.done ? GOLD_DIM : BG_BASE,
+                              border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
+                              borderRadius: 0, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
+                              color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none',
+                              transition: 'border-color 0.2s',
+                            }}
+                          />
+
+                          {/* Check button */}
+                          <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            {set.done ? (
+                              <button onClick={() => unvalidate(exo.id, set.id)} style={{
+                                width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 0, cursor: 'pointer',
+                              }}><RotateCcw size={14} style={{ color: GOLD }} /></button>
+                            ) : (
+                              <button onClick={() => ok ? validate(exo.id, set.id) : undefined} style={{
+                                width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: ok ? GOLD : 'transparent', border: `1px solid ${ok ? 'transparent' : TEXT_DIM}`,
+                                borderRadius: 0, cursor: ok ? 'pointer' : 'default',
+                                transition: 'all 0.2s', transform: 'scale(1)',
+                              }}
+                              onMouseDown={e => { if (ok) (e.currentTarget.style.transform = 'scale(1.05)') }}
+                              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+                              ><Check size={16} strokeWidth={3} style={{ color: ok ? '#050505' : TEXT_DIM }} /></button>
+                            )}
                           </div>
-                          <div className="overflow-hidden" style={{ background: set.done ? GOLD_DIM : BG_BASE, border: `1px solid ${set.done ? GOLD_RULE : BORDER}`, borderRadius: 0 }}>
-                            <input type="number" inputMode="numeric" value={set.reps}
-                              onChange={e => setField(exo.id, set.id, 'reps', e.target.value)} disabled={set.done}
-                              placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
-                              className="w-full py-2.5 text-sm text-center bg-transparent outline-none"
-                              style={{ color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, fontFamily: FONT_DISPLAY, fontWeight: 700 }} />
-                          </div>
-                          {set.done
-                            ? <button onClick={() => unvalidate(exo.id, set.id)} className="w-9 h-9 mx-auto flex items-center justify-center active:scale-90" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD }}><RotateCcw size={13} style={{ color: GOLD }} /></button>
-                            : <button onClick={() => ok ? validate(exo.id, set.id) : undefined} className="w-9 h-9 mx-auto flex items-center justify-center active:scale-90 transition-all"
-                                style={{ background: ok ? GOLD : BG_CARD, border: `1px solid ${ok ? 'transparent' : BORDER}`, borderRadius: RADIUS_CARD }}>
-                                <Check size={15} strokeWidth={3} style={{ color: ok ? '#050505' : TEXT_DIM }} />
-                              </button>}
                         </div>
                       )
                     })}
                   </div>
-                  <button onClick={() => addSet(exo.id)} className="mt-2.5 w-full py-2.5 flex items-center justify-center gap-1.5 text-xs active:opacity-70"
-                    style={{ border: `1px dashed ${BORDER}`, color: TEXT_MUTED, borderRadius: 0, background: 'transparent', fontFamily: FONT_ALT, fontWeight: 700, cursor: 'pointer' }}>
-                    <Plus size={12} /> Ajouter un set
+
+                  {/* Add set button */}
+                  <button onClick={() => addSet(exo.id)} style={{
+                    width: '100%', marginTop: 10, padding: '12px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    background: 'transparent', border: `1px solid ${TEXT_DIM}`, borderRadius: 0, cursor: 'pointer',
+                    fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, color: TEXT_MUTED, letterSpacing: '1px', textTransform: 'uppercase' as const,
+                    transition: 'background 0.15s, border-color 0.15s', minHeight: 44,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = BG_CARD_2; e.currentTarget.style.borderColor = GOLD_RULE }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = TEXT_DIM }}
+                  >
+                    <Plus size={13} /> + Ajouter un set
                   </button>
                 </div>
               )}
