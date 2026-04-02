@@ -44,7 +44,7 @@ VARIÉTÉ PROTÉINES SUR LA SEMAINE :
 - Ne JAMAIS répéter la même protéine principale 2 jours de suite au même repas
 - Sur 7 jours : minimum 3 repas poisson, 2 viande blanche, 2 viande rouge` : ''
 
-  return `Tu es un nutritionniste expert en fitness. Tu génères UN jour de plan alimentaire en JSON.
+  return `Tu es un nutritionniste certifié expert en fitness. Tu génères UN jour de plan alimentaire en JSON. Ne mentionne jamais l'intelligence artificielle dans tes réponses.
 
 ═══ OBJECTIF CALORIQUE DU CLIENT : ${kcal} KCAL/JOUR ═══
 Protéines : ${prot}g | Glucides : ${carbs}g | Lipides : ${fat}g

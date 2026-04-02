@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         max_tokens: 500,
         messages: [{
           role: 'user',
-          content: `Tu es un coach fitness expert. L'utilisateur veut remplacer l'exercice "${exerciseName}" (muscle: ${muscleGroup || 'non spécifié'}).
+          content: `Tu es un coach fitness professionnel certifié. Ne mentionne jamais l'IA. L'utilisateur veut remplacer l'exercice "${exerciseName}" (muscle: ${muscleGroup || 'non spécifié'}).
 Raison : ${reason || 'non spécifiée'}
 ${availableEquipment ? `Matériel disponible : ${availableEquipment}` : ''}
 

@@ -13,16 +13,16 @@ interface PaywallProps {
 type Plan = { id: string; name: string; price: number; interval: string; features: string[]; badge?: string; savings?: string }
 
 const CLIENT_PLANS: Plan[] = [
-  { id: 'client_monthly', name: 'Mensuel', price: 10, interval: '/mois', features: ['Nutrition IA personnalisee', 'Programme training IA', 'Suivi progression', 'Calculateur BMR/TDEE'] },
+  { id: 'client_monthly', name: 'Mensuel', price: 10, interval: '/mois', features: ['Nutrition personnalisee', 'Programme training personnalise', 'Suivi progression', 'Calculateur BMR/TDEE'] },
   { id: 'client_yearly', name: 'Annuel', price: 80, interval: '/an', badge: 'Populaire', savings: 'Economise 33%', features: ['Tout le plan mensuel', 'Economie de 40 CHF/an', 'Acces prioritaire nouvelles fonctionnalites'] },
   { id: 'client_lifetime', name: 'A vie', price: 150, interval: '', badge: 'Meilleure offre', features: ['Acces permanent', 'Toutes les fonctionnalites', 'Mises a jour a vie', 'Zero abonnement'] },
 ]
 
 const COACH_PLANS: Plan[] = [
-  { id: 'coach_monthly', name: 'Coach Pro', price: 50, interval: '/mois', features: ['Clients illimites', 'Plans IA pour chaque client', 'Calendrier & seances', 'Messagerie temps reel', 'Analytics revenus', 'Paiements Stripe'] },
+  { id: 'coach_monthly', name: 'Coach Pro', price: 50, interval: '/mois', features: ['Clients illimites', 'Plans personnalises pour chaque client', 'Calendrier & seances', 'Messagerie temps reel', 'Analytics revenus', 'Paiements Stripe'] },
 ]
 
-const COACH_CLIENT_FEATURES = ['Plans nutrition IA illimites', 'Programme training personnalise', 'Messagerie directe avec ton coach', 'Suivi progression complet', 'Toutes les fonctionnalites MoovX']
+const COACH_CLIENT_FEATURES = ['Plans nutrition personnalises illimites', 'Programme training personnalise', 'Messagerie directe avec ton coach', 'Suivi progression complet', 'Toutes les fonctionnalites MoovX']
 
 export default function Paywall({ role, userId, coachId, onSignOut }: PaywallProps) {
   const [loading, setLoading] = useState<string | null>(null)
@@ -91,7 +91,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
           {role === 'coach' ? 'ACTIVE TON DASHBOARD' : 'CHOISIS TON PLAN'}
         </h1>
         <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 300, fontFamily: FONT_BODY, margin: 0 }}>
-          {role === 'coach' ? 'Accede a ton espace coach et gere tes clients' : 'Commence ta transformation avec le Coach IA'}
+          {role === 'coach' ? 'Accede a ton espace coach et gere tes clients' : 'Commence ta transformation avec ton coach personnel'}
         </p>
       </div>
 

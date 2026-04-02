@@ -4,17 +4,17 @@ import React from 'react';
 import { useReveal } from './shared';
 
 const CLIENT_CHECKS = [
-  { text: 'Plans nutrition IA illimités', highlight: false },
+  { text: 'Plans nutrition illimités', highlight: false },
   { text: 'Programme PPL 6 jours', highlight: false },
   { text: 'Scanner code-barres + recettes', highlight: false },
-  { text: 'Coach IA 24/7', highlight: false },
+  { text: 'Coach personnel 24/7', highlight: false },
   { text: 'Analytics & suivi complet', highlight: false },
   { text: 'Si invité par un coach : accès ', highlight: false, suffix: 'gratuit', suffixHighlight: true },
 ];
 
 const COACH_CHECKS = [
   'Dashboard de gestion clients',
-  'Plans nutrition IA pour tes clients',
+  'Plans nutrition personnalisés pour tes clients',
   'Clients illimités',
   'Messagerie + Feedback vidéo',
   'Paiements Stripe automatiques',

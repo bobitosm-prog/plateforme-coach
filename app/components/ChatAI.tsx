@@ -149,9 +149,9 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
               <Bot size={20} color="#050505" strokeWidth={2.5} />
             </div>
             <div>
-              <div style={{ fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>COACH IA</div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>COACH PERSONNEL</div>
               <div style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Sparkles size={9} color={GOLD} /> Propulse par Claude
+                <Sparkles size={9} color={GOLD} /> Ton coach MoovX
               </div>
             </div>
           </div>

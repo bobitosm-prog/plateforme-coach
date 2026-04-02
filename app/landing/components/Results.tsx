@@ -4,7 +4,7 @@ import React from 'react';
 import { useReveal, useCounter } from './shared';
 
 const STATS = [
-  { target: 1200, suffix: '+', label: 'Plans IA générés' },
+  { target: 1200, suffix: '+', label: 'Plans personnalisés générés' },
   { target: 89, suffix: '', label: 'Exercices guidés' },
   { target: 170, suffix: '', label: 'Aliments fitness' },
   { target: 98, suffix: '%', label: 'Satisfaction client' },
@@ -117,7 +117,7 @@ export default function Results() {
             margin: 0,
           }}
         >
-          La puissance de l&apos;IA au service de ta transformation physique
+          L&apos;expertise au service de ta transformation physique
         </p>
       </div>
 

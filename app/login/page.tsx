@@ -223,7 +223,7 @@ function LeftPanel() {
           <span style={{ fontSize: '0.7rem', letterSpacing: 4, color: GOLD, textTransform: 'uppercase', fontWeight: 400, fontFamily: FONT_BODY }}>Swiss Made · Swiss Quality</span>
         </div>
         <p style={{ color: TEXT_MUTED, fontSize: '0.88rem', fontWeight: 300, lineHeight: 1.8, maxWidth: 300, margin: '0 auto', fontFamily: FONT_BODY }}>
-          La plateforme de coaching fitness d&apos;élite propulsée par l&apos;IA
+          La plateforme de coaching fitness d&apos;élite
         </p>
       </div>
       <div style={{ position: 'absolute', bottom: 32, left: 0, right: 0, textAlign: 'center' }}>

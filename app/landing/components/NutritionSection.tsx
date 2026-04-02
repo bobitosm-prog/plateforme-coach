@@ -7,7 +7,7 @@ const FEATURES = [
   {
     num: '01',
     title: 'Plans 7 jours personnalisés',
-    desc: "L'IA génère un plan alimentaire complet adapté à tes calories, protéines, glucides et lipides. Régénération illimitée.",
+    desc: "Nos experts génèrent un plan alimentaire complet adapté à tes calories, protéines, glucides et lipides. Régénération illimitée.",
   },
   {
     num: '02',
@@ -16,17 +16,17 @@ const FEATURES = [
   },
   {
     num: '03',
-    title: 'Recettes fitness IA',
+    title: 'Recettes fitness pro',
     desc: "Recettes adaptées à tes macros avec les aliments que tu as déjà chez toi. Goûteuses et performantes.",
   },
   {
     num: '04',
     title: 'Préférences respectées',
-    desc: "Exclus les aliments que tu n'aimes pas. L'IA les ignore à chaque génération, toujours.",
+    desc: "Exclus les aliments que tu n'aimes pas. Notre système les ignore à chaque génération, toujours.",
   },
 ];
 
-const HERO_TAGS = ['Plans 7 jours', 'Scanner code-barres', 'Recettes IA', 'Liste de courses'];
+const HERO_TAGS = ['Plans 7 jours', 'Scanner code-barres', 'Recettes pro', 'Liste de courses'];
 
 export default function NutritionSection() {
   const { ref, visible } = useReveal();
@@ -147,7 +147,7 @@ export default function NutritionSection() {
               marginTop: 0,
             }}
           >
-            ALIMENTATION INTELLIGENTE
+            ALIMENTATION SUR MESURE
           </h2>
           <p
             style={{
@@ -157,7 +157,7 @@ export default function NutritionSection() {
               margin: 0,
             }}
           >
-            Plans sur 7 jours g&eacute;n&eacute;r&eacute;s par l&apos;IA, adapt&eacute;s &agrave; tes macros exacts
+            Plans sur 7 jours g&eacute;n&eacute;r&eacute;s par nos experts, adapt&eacute;s &agrave; tes macros exacts
           </p>
         </div>
 
@@ -194,7 +194,7 @@ export default function NutritionSection() {
                   margin: '0 0 20px',
                 }}
               >
-                SCANNE TON FRIGO, L&apos;IA CR&Eacute;E TON PLAN
+                SCANNE TON FRIGO, ON CR&Eacute;E TON PLAN
               </h3>
               <p
                 style={{
@@ -205,7 +205,7 @@ export default function NutritionSection() {
                   margin: '0 0 28px',
                 }}
               >
-                Photographie tes aliments ou scanne les codes-barres. L&apos;intelligence artificielle
+                Photographie tes aliments ou scanne les codes-barres. Notre &eacute;quipe
                 analyse ton frigo et g&eacute;n&egrave;re un plan nutritionnel complet sur 7 jours,
                 parfaitement calibr&eacute; sur tes objectifs.
               </p>

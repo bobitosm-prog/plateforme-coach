@@ -42,7 +42,7 @@ export default function CoachIaSection() {
             textTransform: 'uppercase',
             margin: '0 auto',
           }}>
-            04 — Coach IA
+            04 — Coach personnel
           </span>
           <h2 style={{
             fontFamily: 'var(--font-display)',
@@ -111,14 +111,14 @@ export default function CoachIaSection() {
                 color: 'var(--text)',
                 margin: 0,
               }}>
-                COACH IA MOOVX
+                COACH MOOVX
               </h3>
               <p style={{
                 fontSize: 12,
                 color: 'var(--text-muted)',
                 margin: '4px 0 0',
               }}>
-                Actif maintenant &middot; Répond en &lt; 2 secondes
+                Actif maintenant &middot; Disponible 24/7
               </p>
             </div>
 
@@ -157,7 +157,7 @@ export default function CoachIaSection() {
               margin: '0 0 28px',
               fontFamily: 'var(--font-body)',
             }}>
-              Le Coach IA de MoovX connaît ton profil, tes objectifs, tes macros et ton historique complet
+              Le Coach MoovX connaît ton profil, tes objectifs, tes macros et ton historique complet
               d&apos;entraînement. Il te répond en français, de manière personnalisée et motivante.
               Disponible 24 heures sur 24, 7 jours sur 7 — même à 5h du matin avant ta séance.
             </p>

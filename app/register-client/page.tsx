@@ -221,7 +221,7 @@ function RegisterContent() {
                   Je veux transformer mon corps avec un programme personnalisé
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: '100%' }}>
-                  {['Plans nutrition IA', 'Programme PPL', 'Suivi progression', 'Coach IA 24/7'].map(f => (
+                  {['Plans nutrition personnalises', 'Programme PPL', 'Suivi progression', 'Coach personnel 24/7'].map(f => (
                     <span key={f} style={{ fontSize: 13, color: TEXT_MUTED, fontFamily: FONT_BODY }}>
                       <span style={{ color: GOLD, marginRight: 6 }}>&#10003;</span>{f}
                     </span>
@@ -237,10 +237,10 @@ function RegisterContent() {
                 <CoachIcon />
                 <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: '2px', color: TEXT_PRIMARY, margin: 0 }}>JE SUIS COACH</h2>
                 <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, lineHeight: 1.6 }}>
-                  Je veux gérer mes clients avec les outils IA de MoovX
+                  Je veux gérer mes clients avec les outils pro de MoovX
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: '100%' }}>
-                  {['Dashboard coach', 'Plans IA pour tes clients', 'Messagerie', 'Analytics'].map(f => (
+                  {['Dashboard coach', 'Plans personnalises pour tes clients', 'Messagerie', 'Analytics'].map(f => (
                     <span key={f} style={{ fontSize: 13, color: TEXT_MUTED, fontFamily: FONT_BODY }}>
                       <span style={{ color: GOLD, marginRight: 6 }}>&#10003;</span>{f}
                     </span>
@@ -353,7 +353,7 @@ function RegisterContent() {
 
             <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
               <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 6px', lineHeight: 1 }}>DEVENIR COACH PRO</h1>
-              <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px', fontFamily: FONT_BODY }}>Gère tes clients avec l&apos;IA</p>
+              <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px', fontFamily: FONT_BODY }}>Gère tes clients avec nos outils pro</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -487,7 +487,7 @@ function LeftPanel() {
           <span style={{ fontSize: '0.7rem', letterSpacing: 4, color: GOLD, textTransform: 'uppercase', fontWeight: 400, fontFamily: FONT_BODY }}>Swiss Made · Swiss Quality</span>
         </div>
         <p style={{ color: TEXT_MUTED, fontSize: '0.88rem', fontWeight: 300, lineHeight: 1.8, maxWidth: 300, margin: '0 auto', fontFamily: FONT_BODY }}>
-          La plateforme de coaching fitness d&apos;élite propulsée par l&apos;IA
+          La plateforme de coaching fitness d&apos;élite
         </p>
       </div>
 

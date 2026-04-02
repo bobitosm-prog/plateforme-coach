@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const targetCalPerMeal = Math.round((profile?.calorie_goal || 2000) / 4)
     const targetProtPerMeal = Math.round((profile?.protein_goal || 130) / 4)
 
-    const systemPrompt = `Tu es un chef cuisinier spécialisé en nutrition sportive et fitness. Génère UNE recette.
+    const systemPrompt = `Tu es un chef cuisinier certifié spécialisé en nutrition sportive et fitness. Ne mentionne jamais l'intelligence artificielle dans tes réponses. Génère UNE recette.
 
 PROFIL DU CLIENT :
 - Calories par repas : ~${targetCalPerMeal} kcal
@@ -62,7 +62,7 @@ Réponds UNIQUEMENT en JSON (pas de backticks, pas de texte) :
       }),
     })
 
-    if (!res.ok) return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
+    if (!res.ok) return NextResponse.json({ error: `Erreur serveur (${res.status})` }, { status: res.status })
 
     const data = await res.json()
     const raw = data.content?.[0]?.text || ''

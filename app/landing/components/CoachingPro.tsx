@@ -5,7 +5,7 @@ import { useReveal } from './shared';
 
 const FEATURES = [
   { num: '01', title: 'Messagerie temps réel', desc: 'Chat direct avec chaque client. Read receipts et notifications push intégrées.' },
-  { num: '02', title: 'Plans IA pour tes clients', desc: 'Génère nutrition et programmes personnalisés pour chaque client en quelques secondes.' },
+  { num: '02', title: 'Plans personnalisés pour tes clients', desc: 'Génère nutrition et programmes personnalisés pour chaque client en quelques secondes.' },
   { num: '03', title: 'Alertes clients inactifs', desc: "Détection automatique des clients qui ne s'entraînent plus depuis 3 jours. Relance en un clic." },
   { num: '04', title: 'Templates de programmes', desc: "Crée tes programmes modèles (PPL, Full Body, Perte de poids) et assigne-les en un clic." },
   { num: '05', title: 'Feedback vidéo', desc: "Le client filme son exécution, tu commentes et corriges la forme directement dans l'app." },
@@ -59,7 +59,7 @@ export default function CoachingPro() {
             fontWeight: 300,
             margin: '16px 0 0',
           }}>
-            Dashboard complet, messagerie, plans IA, feedback vidéo
+            Dashboard complet, messagerie, plans personnalisés, feedback vidéo
           </p>
         </div>
 

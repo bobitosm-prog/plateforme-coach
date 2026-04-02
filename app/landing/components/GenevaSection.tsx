@@ -75,8 +75,8 @@ export default function GenevaSection() {
             }}
           >
             Basé à Genève, MoovX est la première plateforme de coaching fitness
-            suisse propulsée par l&apos;intelligence artificielle. Que tu sois à
-            Plainpalais, aux Eaux-Vives, à Carouge ou aux Pâquis, ton coach IA
+            suisse propulsée par des experts certifiés. Que tu sois à
+            Plainpalais, aux Eaux-Vives, à Carouge ou aux Pâquis, ton coach personnel
             t&apos;accompagne partout. Plans nutrition adaptés aux produits suisses,
             programme musculation professionnel, suivi de progression complet.
           </p>

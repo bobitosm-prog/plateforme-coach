@@ -184,7 +184,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
         <div style={{ textAlign: 'center', padding: '12px 0' }}>
           <Sparkles size={28} color={GOLD} style={{ margin: '0 auto 8px' }} />
           <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px' }}>GENERER UNE RECETTE</h3>
-          <p style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED, margin: '4px 0 0' }}>Le chef IA cree une recette adaptee a tes macros</p>
+          <p style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED, margin: '4px 0 0' }}>Notre chef cree une recette adaptee a tes macros</p>
         </div>
 
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
@@ -197,7 +197,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
         </div>
 
         <button onClick={generateRecipe} disabled={generating} style={{ width: '100%', padding: '16px', borderRadius: 0, border: 'none', cursor: 'pointer', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', opacity: generating ? 0.6 : 1, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
-          {generating ? 'Le chef IA prepare ta recette...' : 'Generer la recette'}
+          {generating ? 'Notre chef prepare ta recette...' : 'Generer la recette'}
         </button>
       </div>
     )

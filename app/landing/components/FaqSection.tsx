@@ -6,11 +6,11 @@ import { useReveal } from './shared';
 const FAQ_DATA = [
   {
     q: "C'est quoi MoovX ?",
-    a: "MoovX est une plateforme de coaching fitness suisse propulsée par l'intelligence artificielle. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté. Basée à Genève.",
+    a: "MoovX est une plateforme de coaching fitness suisse propulsée par des experts certifiés. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté. Basée à Genève.",
   },
   {
-    q: "Comment fonctionne la nutrition IA ?",
-    a: "L'IA analyse ton profil (poids, objectif, activité) et génère des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour qu'elle utilise tes produits existants.",
+    q: "Comment fonctionne la nutrition experte ?",
+    a: "Nos nutritionnistes analysent ton profil (poids, objectif, activité) et génèrent des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour utiliser tes produits existants.",
   },
   {
     q: "Le scanner code-barres fonctionne comment ?",
@@ -42,7 +42,7 @@ const FAQ_DATA = [
   },
   {
     q: "Je peux remplacer un exercice si je n'ai pas le matériel ?",
-    a: "Oui. L'IA analyse tes contraintes et propose 3 alternatives adaptées en temps réel. Blessure, manque de matériel, durée réduite — tout est géré.",
+    a: "Oui. Notre système analyse tes contraintes et propose 3 alternatives adaptées en temps réel. Blessure, manque de matériel, durée réduite — tout est géré.",
   },
 ];
 

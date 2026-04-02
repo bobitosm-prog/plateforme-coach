@@ -15,7 +15,7 @@ const SPECIALITIES = ['Musculation / Hypertrophie', 'Perte de poids', 'Nutrition
 const EXPERIENCE_OPTIONS = ['1-2 ans', '3-5 ans', '5-10 ans', '10+ ans']
 const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const MAX_CLIENT_OPTIONS = ['5', '10', '20', '50', 'Illimité']
-const FOLLOW_UP_MODES = ['Chat dans l\'app', 'Appels vidéo', 'Plans IA automatiques', 'Suivi hebdomadaire']
+const FOLLOW_UP_MODES = ['Chat dans l\'app', 'Appels vidéo', 'Plans personnalisés automatiques', 'Suivi hebdomadaire']
 const HOURS = Array.from({ length: 15 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`)
 
 const slideVariants = {

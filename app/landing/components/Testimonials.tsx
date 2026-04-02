@@ -4,12 +4,12 @@ import React from 'react';
 import { useReveal } from './shared';
 
 const testimonials = [
-  { quote: "L'IA de MoovX a révolutionné ma nutrition. En 3 mois, j'ai perdu 8kg tout en gardant ma masse musculaire. Les plans sont parfaitement adaptés.", author: 'Marc D.', location: 'Genève' },
+  { quote: "MoovX a révolutionné ma nutrition. En 3 mois, j'ai perdu 8kg tout en gardant ma masse musculaire. Les plans sont parfaitement adaptés.", author: 'Marc D.', location: 'Genève' },
   { quote: "Le programme PPL est exactement ce qu'il me fallait. Le timer de repos et le suivi des PR me motivent à chaque séance. Top qualité suisse !", author: 'Julie K.', location: 'Carouge' },
-  { quote: "Le scanner code-barres est génial. Je scanne mon frigo et l'IA me crée un plan complet. La liste de courses automatique est un game changer.", author: 'Thomas R.', location: 'Eaux-Vives' },
-  { quote: "Meilleure app fitness que j'ai testée. Le Coach IA répond à toutes mes questions. CHF 10/mois c'est vraiment donné pour ce niveau de qualité.", author: 'Sarah M.', location: 'Plainpalais' },
-  { quote: "En tant que coach, MoovX me permet de gérer mes clients efficacement. La messagerie et les plans IA sont un duo imbattable.", author: 'Alex P.', location: 'Coach Pro' },
-  { quote: "Les recettes fitness IA sont incroyables. Adaptées à mes macros, avec les ingrédients que j'ai déjà. Jamais été aussi constant dans ma diète.", author: 'Léa B.', location: 'Pâquis' },
+  { quote: "Le scanner code-barres est génial. Je scanne mon frigo et MoovX me crée un plan complet. La liste de courses automatique est un game changer.", author: 'Thomas R.', location: 'Eaux-Vives' },
+  { quote: "Meilleure app fitness que j'ai testée. Le coach répond à toutes mes questions. CHF 10/mois c'est vraiment donné pour ce niveau de qualité.", author: 'Sarah M.', location: 'Plainpalais' },
+  { quote: "En tant que coach, MoovX me permet de gérer mes clients efficacement. La messagerie et les plans personnalisés sont un duo imbattable.", author: 'Alex P.', location: 'Coach Pro' },
+  { quote: "Les recettes fitness sont incroyables. Adaptées à mes macros, avec les ingrédients que j'ai déjà. Jamais été aussi constant dans ma diète.", author: 'Léa B.', location: 'Pâquis' },
 ];
 
 const allTestimonials = [...testimonials, ...testimonials];

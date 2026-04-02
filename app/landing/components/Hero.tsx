@@ -233,7 +233,7 @@ export default function Hero() {
                 fontWeight: 300,
               }}
             >
-              La première plateforme de coaching fitness suisse propulsée par l&apos;intelligence artificielle. Plans nutrition sur mesure, programme PPL 6 jours, scanner code-barres, recettes IA. Ton coach 24/7.
+              La première plateforme de coaching fitness suisse propulsée par des experts certifiés. Plans nutrition sur mesure, programme PPL 6 jours, scanner code-barres, recettes pro. Ton coach 24/7.
             </p>
             <p
               style={{
@@ -314,7 +314,7 @@ export default function Hero() {
           className="hero-stats-col"
           style={revealStyle(stats.visible, 0.16)}
         >
-          <StatItem target={1200} label="Plans IA<br/>générés" first />
+          <StatItem target={1200} label="Plans personnalisés<br/>générés" first />
           <StatItem target={89} label="Exercices<br/>guidés" />
           <StatItem target={170} label="Aliments<br/>fitness" />
           <StatItem target={22} label="Fonctionnal-<br/>ités" />
@@ -350,7 +350,7 @@ export default function Hero() {
                 lineHeight: 1.4,
               }}
             >
-              Coach IA
+              Coach personnel
               <br />
               disponible
             </div>

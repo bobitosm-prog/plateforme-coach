@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
     if (!message?.trim()) return NextResponse.json({ error: 'Message vide' }, { status: 400 })
 
     const p = profile || {}
-    const systemPrompt = `Tu es le Coach IA de MoovX, une plateforme de coaching fitness suisse.
+    const systemPrompt = `Tu es un coach fitness et nutritionniste professionnel certifié travaillant pour MoovX à Genève. Ne mentionne JAMAIS que tu es une intelligence artificielle, un chatbot, ou un assistant IA. Réponds toujours comme un vrai coach humain professionnel. Utilise 'je' et 'mon expérience de coach'. Signe tes messages 'Ton coach MoovX'.
+
 Tu réponds en français, de manière concise, motivante et professionnelle.
 Tu es expert en nutrition sportive, musculation/hypertrophie, et perte/prise de poids.
 
@@ -35,7 +36,8 @@ RÈGLES :
 7. Modifier le plan → utiliser le bouton dans l'onglet Nutrition
 8. Recommande des aliments de la base fitness MoovX (170 aliments)
 9. Pour les exercices, recommande le programme PPL (Push/Pull/Legs)
-10. Réponds en français uniquement`
+10. Réponds en français uniquement
+11. Ne mentionne JAMAIS l'intelligence artificielle, l'IA, ou le fait d'être un chatbot/assistant. Tu es un coach humain.`
 
     // Build messages with last 5 from history
     const messages = [
@@ -63,7 +65,7 @@ RÈGLES :
 
     if (!res.ok) {
       const err = await res.text()
-      return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
+      return NextResponse.json({ error: `Erreur serveur (${res.status})` }, { status: res.status })
     }
 
     const data = await res.json()

@@ -3,7 +3,7 @@
 import React from 'react';
 import { useReveal } from './shared';
 
-const MARQUEE_TEXT = 'Nutrition IA \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Chat IA \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Feedback Vidéo \u2726 Swiss Made \u2726 Coaching Connecté \u2726 ';
+const MARQUEE_TEXT = 'Nutrition Pro \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Coach personnel \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Feedback Vidéo \u2726 Swiss Made \u2726 Coaching Connecté \u2726 ';
 
 export default function MarqueeSection() {
   const { ref, visible } = useReveal();
