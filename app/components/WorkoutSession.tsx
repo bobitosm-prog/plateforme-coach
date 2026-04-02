@@ -18,7 +18,7 @@ interface WorkoutSessionProps { sessionName: string; exercises: any[]; onFinish:
 
 const uid = () => Math.random().toString(36).slice(2)
 const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', reps: '', done: false }))
-const fmt = (s: number) => s >= 60 ? `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}` : `${s}s`
+const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt(s) || 0 : s; return n >= 60 ? `${Math.floor(n / 60)}:${(n % 60).toString().padStart(2, '0')}` : `${n}s` }
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
 
 function RestOverlay({ secs, max, onSkip }: { secs: number; max: number; onSkip: () => void }) {
@@ -311,7 +311,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
         .ws-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .ws-input:focus { border-color: ${GOLD} !important; }
         @media(max-width:420px){
-          .ws-grid { grid-template-columns: 28px 1fr 64px 56px 36px !important; }
+          .ws-grid { grid-template-columns: 30px 60px 1fr 1fr 36px !important; }
         }
         @keyframes wsPopIn {
           0% { opacity: 0; transform: scale(0.8); }
@@ -361,7 +361,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       {/* HEADER */}
-      <div className="sticky top-0 z-40 px-4 pt-10 pb-4 border-b" style={{ background: 'rgba(5,5,5,0.97)', borderColor: BORDER, backdropFilter: 'blur(20px)' }}>
+      <div className="sticky top-0 z-40 pt-10 pb-4 border-b" style={{ background: 'rgba(5,5,5,0.97)', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '40px 16px 16px' }}>
         <div className="flex items-center justify-between mb-3">
           <button onClick={onClose} className="flex items-center gap-1.5 text-xs" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700 }}><ArrowLeft size={14} /> Abandonner</button>
           <div className="flex items-center gap-2 px-3 py-1.5" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}>
@@ -381,9 +381,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       </div>
 
       {/* EXERCICES */}
-      <div className="px-4 py-4 pb-36" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-        <button onClick={() => setMode('custom')} className="w-full flex items-center gap-3 p-4 active:scale-[0.98]"
-          style={{ background: GOLD_DIM, border: `1px dashed ${GOLD_RULE}`, borderRadius: RADIUS_CARD, marginBottom: 24 }}>
+      <div className="py-4 pb-36" style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px 140px' }}>
+        <button onClick={() => setMode('custom')} className="flex items-center gap-3 p-4 active:scale-[0.98]"
+          style={{ background: GOLD_DIM, border: `1px dashed ${GOLD_RULE}`, borderRadius: RADIUS_CARD, marginBottom: 24, margin: '0 4px 24px', width: 'calc(100% - 8px)' }}>
           <Plus size={18} style={{ color: GOLD }} />
           <div className="text-left">
             <div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>Séance personnalisée</div>
@@ -449,9 +449,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                   )}
 
                   {/* Table header */}
-                  <div className="ws-grid" style={{ display: 'grid', gridTemplateColumns: '32px 1fr 70px 70px 36px', gap: 2, padding: '0 0 6px', alignItems: 'center' }}>
-                    {['SET', 'PRÉCÉDENT', 'KG', 'REPS', ''].map(h => (
-                      <span key={h} style={{ fontSize: 10, textAlign: 'center', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' as const }}>{h}</span>
+                  <div className="ws-grid" style={{ display: 'grid', gridTemplateColumns: '30px 60px 1fr 1fr 36px', gap: 2, padding: '0 0 6px', alignItems: 'center' }}>
+                    {['SET', 'PRÉC.', 'KG', 'REPS', ''].map(h => (
+                      <span key={h} style={{ fontSize: 9, textAlign: 'center', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{h}</span>
                     ))}
                   </div>
 
@@ -461,7 +461,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                       const ok = !set.done && (set.weight !== '' || set.reps !== '')
                       return (
                         <div key={set.id} className="ws-grid" style={{
-                          display: 'grid', gridTemplateColumns: '32px 1fr 70px 70px 36px', gap: 2,
+                          display: 'grid', gridTemplateColumns: '30px 60px 1fr 1fr 36px', gap: 2,
                           alignItems: 'center', padding: '4px 0',
                           background: set.done ? `${GOLD}08` : 'transparent',
                           transition: 'background 0.3s',
@@ -470,18 +470,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                           <div style={{ display: 'flex', justifyContent: 'center' }}>
                             <div style={{
                               width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
-                              background: set.done ? GOLD_DIM : 'transparent',
+                              border: `1px solid ${set.done ? GREEN : TEXT_DIM}`,
+                              background: set.done ? GREEN : 'transparent',
+                              transition: 'all 0.2s',
                             }}>
                               {set.done
-                                ? <Check size={12} strokeWidth={3} style={{ color: GREEN }} />
+                                ? <Check size={12} strokeWidth={3} style={{ color: '#fff' }} />
                                 : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_MUTED }}>{set.num}</span>
                               }
                             </div>
                           </div>
 
                           {/* Previous */}
-                          <span style={{ textAlign: 'center', fontSize: 13, color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 400 }}>
+                          <span style={{ textAlign: 'center', fontSize: 11, color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {previousData[exo.name]?.[set.num - 1]
                               ? `${previousData[exo.name][set.num - 1].weight}×${previousData[exo.name][set.num - 1].reps}`
                               : '—'}
@@ -496,12 +497,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                             disabled={set.done}
                             placeholder={last?.weight ? String(last.weight) : '0'}
                             style={{
-                              width: 70, height: 44, textAlign: 'center',
+                              width: '100%', height: 44, textAlign: 'center',
                               background: set.done ? GOLD_DIM : BG_BASE,
                               border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
                               borderRadius: 0, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
                               color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none',
-                              transition: 'border-color 0.2s',
+                              opacity: set.done ? 0.7 : 1, transition: 'border-color 0.2s, opacity 0.3s',
                             }}
                           />
 
@@ -514,12 +515,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                             disabled={set.done}
                             placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
                             style={{
-                              width: 70, height: 44, textAlign: 'center',
+                              width: '100%', height: 44, textAlign: 'center',
                               background: set.done ? GOLD_DIM : BG_BASE,
                               border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
                               borderRadius: 0, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
                               color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none',
-                              transition: 'border-color 0.2s',
+                              opacity: set.done ? 0.7 : 1, transition: 'border-color 0.2s, opacity 0.3s',
                             }}
                           />
 
