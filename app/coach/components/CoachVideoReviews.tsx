@@ -87,7 +87,7 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
         color: GOLD,
         marginBottom: 16,
       }}>
-        {`VID\u00C9OS \u00C0 REVIEWER (${feedbacks.length})`}
+        {`VIDÉOS À REVIEWER (${feedbacks.length})`}
       </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

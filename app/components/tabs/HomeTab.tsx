@@ -154,10 +154,10 @@ export default function HomeTab({
         {/* 4 metric cards — Bauhaus 2x2 grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: BORDER, border: `1px solid ${BORDER}` }}>
           {[
-            { label: 'Poids actuel', value: currentWeight ? `${currentWeight} kg` : '\u2014', color: GOLD, icon: Scale },
-            { label: 'Objectif', value: profile?.target_weight ? `${profile.target_weight} kg` : '\u2014', color: TEXT_MUTED, icon: Target },
-            { label: 'S\u00e9ances', value: String(completedSessions), color: TEXT_MUTED, icon: Dumbbell },
-            { label: 'Streak', value: streak > 0 ? `${streak}j` : '\u2014', color: streak > 0 ? GOLD : TEXT_MUTED, icon: Flame },
+            { label: 'Poids actuel', value: currentWeight ? `${currentWeight} kg` : '—', color: GOLD, icon: Scale },
+            { label: 'Objectif', value: profile?.target_weight ? `${profile.target_weight} kg` : '—', color: TEXT_MUTED, icon: Target },
+            { label: 'Séances', value: String(completedSessions), color: TEXT_MUTED, icon: Dumbbell },
+            { label: 'Streak', value: streak > 0 ? `${streak}j` : '—', color: streak > 0 ? GOLD : TEXT_MUTED, icon: Flame },
           ].map(({ label, value, color, icon: Icon }, i) => (
             <motion.div
               key={label}
@@ -178,7 +178,7 @@ export default function HomeTab({
         {(() => {
           const waterGoal = profile?.water_goal || 3000
           const pct = Math.min(100, Math.round((waterToday / waterGoal) * 100))
-          const msg = pct >= 100 ? 'Objectif atteint !' : pct >= 60 ? 'Tu es bien hydrat\u00e9 !' : pct >= 30 ? 'Continue comme \u00e7a !' : 'Pense \u00e0 boire'
+          const msg = pct >= 100 ? 'Objectif atteint !' : pct >= 60 ? 'Tu es bien hydraté !' : pct >= 30 ? 'Continue comme ça !' : 'Pense à boire'
           return (
             <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -220,17 +220,17 @@ export default function HomeTab({
               <Moon size={20} color={TEXT_MUTED} />
               <div>
                 <div style={{ fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_PRIMARY }}>Jour de repos</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>R\u00e9cup\u00e8re bien, \u00e9tirements bienvenus</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>Récupère bien, étirements bienvenus</div>
               </div>
             </div>
           ) : !todayCoachDay?.exercises?.length ? (
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0 }}>Aucun exercice pr\u00e9vu.</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0 }}>Aucun exercice prévu.</p>
           ) : todaySession ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: `${GREEN}12`, border: `1px solid ${GREEN}40`, borderRadius: RADIUS_CARD, padding: '16px 14px' }}>
               <CheckCircle size={32} color={GREEN} style={{ flexShrink: 0 }} />
               <div>
-                <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 16, color: GREEN }}>S\u00e9ance termin\u00e9e !</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY, marginTop: 2 }}>Bravo ! Tu as termin\u00e9 ta s\u00e9ance du jour</div>
+                <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 16, color: GREEN }}>Séance terminée !</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY, marginTop: 2 }}>Bravo ! Tu as terminé ta séance du jour</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 4 }}>
                   {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
                 </div>
@@ -244,7 +244,7 @@ export default function HomeTab({
                     <div style={{ width: 26, height: 26, borderRadius: RADIUS_CARD, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 16, color: GOLD, flexShrink: 0 }}>{i + 1}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_PRIMARY, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</div>
-                      <div style={{ fontFamily: FONT_BODY, fontWeight: 400, fontSize: 12, color: TEXT_MUTED }}>{ex.sets} \u00d7 {ex.reps} reps{ex.rest ? ` \u00b7 repos ${ex.rest}` : ''}</div>
+                      <div style={{ fontFamily: FONT_BODY, fontWeight: 400, fontSize: 12, color: TEXT_MUTED }}>{ex.sets} × {ex.reps} reps{ex.rest ? ` · repos ${ex.rest}` : ''}</div>
                     </div>
                   </div>
                 ))}
@@ -257,7 +257,7 @@ export default function HomeTab({
               <button
                 onClick={() => startProgramWorkout({ day_name: todayKey }, todayCoachDay.exercises)}
                 style={{ width: '100%', background: GOLD, color: '#050505', fontWeight: 800, padding: '13px', borderRadius: 0, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 15, letterSpacing: '1.5px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
-                Commencer la s\u00e9ance
+                Commencer la séance
               </button>
             </>
           )}
@@ -286,9 +286,9 @@ export default function HomeTab({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: BORDER }}>
             {[
               { label: 'Cible', value: calorieGoal, color: GOLD },
-              { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '\u2014', color: '#3B82F6' },
-              { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '\u2014', color: '#22C55E' },
-              { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '\u2014', color: '#F97316' },
+              { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '—', color: '#3B82F6' },
+              { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—', color: '#22C55E' },
+              { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—', color: '#F97316' },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ background: BG_CARD, padding: '8px 4px', textAlign: 'center' }}>
                 <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 400, color }}>{value}</div>

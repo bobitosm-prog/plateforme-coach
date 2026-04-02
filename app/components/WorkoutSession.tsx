@@ -187,6 +187,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 }
 
 export default function WorkoutSession({ sessionName, exercises: raw, onFinish, onClose }: WorkoutSessionProps) {
+  const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
   const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name, muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes, videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true })))
   const [restOn, setRestOn] = useState(false)
@@ -198,6 +199,32 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
   const elT = useRef<NodeJS.Timeout | null>(null)
   const [done, setDone] = useState(false)
   const [showVideo, setShowVideo] = useState<string | null>(null)
+  const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
+
+  // Fetch previous performance for all exercises
+  useEffect(() => {
+    const names = raw.map(e => e.exercise_name).filter(Boolean)
+    if (!names.length) return
+    const fetchPrev = async () => {
+      const prev: Record<string, { weight: number; reps: number }[]> = {}
+      for (const name of names) {
+        const { data } = await supabase
+          .from('workout_sets')
+          .select('weight, reps, created_at')
+          .eq('exercise_name', name)
+          .order('created_at', { ascending: false })
+          .limit(20)
+        if (data?.length) {
+          const first = new Date(data[0].created_at).getTime()
+          prev[name] = data
+            .filter((d: any) => Math.abs(new Date(d.created_at).getTime() - first) < 7200000)
+            .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 }))
+        }
+      }
+      setPreviousData(prev)
+    }
+    fetchPrev()
+  }, [raw])
 
   useEffect(() => { elT.current = setInterval(() => setElapsed(Date.now() - t0), 1000); return () => { if (elT.current) clearInterval(elT.current) } }, [])
   useEffect(() => {
@@ -311,8 +338,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                   {isDone ? <Check size={16} className="text-black" strokeWidth={3} /> : <span className="text-sm" style={{ color: TEXT_MUTED, fontFamily: FONT_DISPLAY }}>{idx + 1}</span>}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm truncate" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.name}</div>
-                  <div className="text-[10px] truncate mt-0.5" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{exo.muscle}</div>
+                  <h3 style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 18, color: GOLD, letterSpacing: 1, textTransform: 'uppercase', margin: '0 0 2px', lineHeight: 1.2 }}>{exo.name}</h3>
+                  <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 12, color: TEXT_MUTED, margin: 0 }}>{exo.muscle}{exo.notes ? ` · ${exo.notes.slice(0, 50)}` : ''}</p>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <span className="text-[9px] px-2 py-1" style={{ background: BG_BASE, color: TEXT_MUTED, border: `1px solid ${BORDER}`, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.targetSets}×{exo.targetReps}</span>
@@ -332,19 +359,25 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                       {exo.notes && <p className="text-[10px] w-full mt-0.5 italic leading-relaxed" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{exo.notes}</p>}
                     </div>
                   )}
-                  <div className="grid gap-2 mb-2 px-1" style={{ gridTemplateColumns: '32px 1fr 1fr 40px' }}>
-                    {['SET', 'KG', 'REPS', '✓'].map(h => <span key={h} className="text-[9px] text-center" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{h}</span>)}
+                  <div className="grid gap-2 mb-2 px-1" style={{ gridTemplateColumns: '32px 1fr 1fr 1fr 40px' }}>
+                    {['SET', 'PRÉCÉDENT', 'KG', 'REPS', '✓'].map(h => <span key={h} className="text-[9px] text-center" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{h}</span>)}
                   </div>
                   <div className="space-y-2">
                     {exo.sets.map((set: ExSet) => {
                       const ok = !set.done && (set.weight !== '' || set.reps !== '')
                       return (
                         <div key={set.id} className="grid gap-2 items-center px-2 py-2 transition-all"
-                          style={{ gridTemplateColumns: '32px 1fr 1fr 40px', background: set.done ? GOLD_DIM : BG_BASE, border: `1px solid ${set.done ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD }}>
+                          style={{ gridTemplateColumns: '32px 1fr 1fr 1fr 40px', background: set.done ? GOLD_DIM : BG_BASE, border: `1px solid ${set.done ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD }}>
                           <div className="w-7 h-7 flex items-center justify-center mx-auto text-xs"
                             style={{ background: set.done ? GOLD_DIM : BG_CARD, color: set.done ? GOLD : TEXT_MUTED, borderRadius: RADIUS_CARD, fontFamily: FONT_DISPLAY, fontWeight: 700, border: `1px solid ${set.done ? GOLD_RULE : BORDER}` }}>
                             {set.done ? <Check size={12} strokeWidth={3} style={{ color: GREEN }} /> : set.num}
                           </div>
+                          {/* Previous performance */}
+                          <span className="text-center text-[13px]" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>
+                            {previousData[exo.name]?.[set.num - 1]
+                              ? `${previousData[exo.name][set.num - 1].weight}×${previousData[exo.name][set.num - 1].reps}`
+                              : '—'}
+                          </span>
                           <div className="overflow-hidden" style={{ background: set.done ? GOLD_DIM : BG_BASE, border: `1px solid ${set.done ? GOLD_RULE : BORDER}`, borderRadius: 0 }}>
                             <input type="number" inputMode="decimal" step="0.5" value={set.weight}
                               onChange={e => setField(exo.id, set.id, 'weight', e.target.value)} disabled={set.done}

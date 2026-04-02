@@ -7,12 +7,12 @@ const FEATURES = [
   {
     num: '01',
     title: 'Plans 7 jours personnalisés',
-    desc: "L\u2019IA génère un plan alimentaire complet adapté à tes calories, protéines, glucides et lipides. Régénération illimitée.",
+    desc: "L'IA génère un plan alimentaire complet adapté à tes calories, protéines, glucides et lipides. Régénération illimitée.",
   },
   {
     num: '02',
     title: '170 aliments fitness',
-    desc: "Base curatée d\u2019aliments essentiels : protéines, féculents, légumes, suppléments. Données Swiss vérifiées.",
+    desc: "Base curatée d'aliments essentiels : protéines, féculents, légumes, suppléments. Données Swiss vérifiées.",
   },
   {
     num: '03',
@@ -22,7 +22,7 @@ const FEATURES = [
   {
     num: '04',
     title: 'Préférences respectées',
-    desc: "Exclus les aliments que tu n\u2019aimes pas. L\u2019IA les ignore à chaque génération, toujours.",
+    desc: "Exclus les aliments que tu n'aimes pas. L'IA les ignore à chaque génération, toujours.",
   },
 ];
 
