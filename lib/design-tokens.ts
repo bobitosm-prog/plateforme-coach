@@ -1,11 +1,23 @@
-export const BG_BASE = '#0A0A0A'
-export const BG_CARD = '#1A1A1A'
-export const BORDER = '#2A2A2A'
-export const ORANGE = '#F97316'
-export const GREEN = '#22C55E'
-export const TEXT_PRIMARY = '#F8FAFC'
-export const TEXT_MUTED = '#6B7280'
-export const RADIUS_CARD = 20
+// ─── Bauhaus/Swiss Design System ───
+export const BG_BASE = '#050505'
+export const BG_CARD = '#0D0C0B'
+export const BG_CARD_2 = '#141310'
+export const BORDER = '#3D3B38'
+export const GOLD = '#C9A84C'
+export const GOLD_DIM = 'rgba(201,168,76,0.15)'
+export const GOLD_RULE = 'rgba(201,168,76,0.25)'
+export const GREEN = '#4ade80'
+export const RED = '#ef4444'
+export const TEXT_PRIMARY = '#F0EDE8'
+export const TEXT_MUTED = '#8A8580'
+export const TEXT_DIM = '#3D3B38'
+export const RADIUS_CARD = 2
+export const FONT_DISPLAY = "'Bebas Neue', sans-serif"
+export const FONT_ALT = "'Barlow Condensed', sans-serif"
+export const FONT_BODY = "'Outfit', sans-serif"
+
+// Legacy aliases (to avoid breaking imports)
+export const ORANGE = GOLD
 
 export const MUSCLE_COLORS: Record<string, string> = {
   'Poitrine': '#EF4444',

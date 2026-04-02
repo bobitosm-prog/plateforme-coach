@@ -1,14 +1,12 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Plus, MoreHorizontal, Timer } from 'lucide-react'
-import { MUSCLE_COLORS } from '../../../../lib/design-tokens'
+import {
+  BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS,
+} from '../../../../lib/design-tokens'
 
-const BLUE  = '#3B82F6'
-const GREEN = '#22C55E'
-const ORANGE = '#F97316'
-const TEXT_PRIMARY = '#F5F5F5'
-const TEXT_MUTED   = '#6B7280'
-const INPUT_BG     = '#262626'
+const INPUT_BG = '#141310'
 
 interface TrainingExerciseCardProps {
   ex: any
@@ -46,41 +44,41 @@ export default function TrainingExerciseCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: exIdx * 0.05, duration: 0.28 }}
       style={{
-        background: '#1A1A1A',
-        border: `1px solid ${allDone ? GREEN + '50' : '#242424'}`,
-        borderRadius: 18,
+        background: BG_CARD,
+        border: `1px solid ${allDone ? GREEN + '50' : BORDER}`,
+        borderRadius: RADIUS_CARD,
         overflow: 'hidden',
         transition: 'border-color 0.4s ease',
       }}
     >
       {/* ── Card Header ── */}
-      <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid #222' }}>
+      <div style={{ padding: '14px 14px 10px', borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Exercise name in blue */}
+            {/* Exercise name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span onClick={() => onExerciseInfo(ex)} style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontWeight: 700, fontSize: '1.05rem',
-                color: allDone ? GREEN : BLUE,
-                textTransform: 'uppercase', letterSpacing: '0.04em',
+                fontFamily: FONT_BODY,
+                fontWeight: 500, fontSize: 15,
+                color: allDone ? GREEN : TEXT_PRIMARY,
+                letterSpacing: '0.02em',
                 transition: 'color 0.3s', cursor: 'pointer',
               }}>{ex.name} <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>ℹ️</span></span>
 
               {/* Muscle group badge */}
               {ex.muscle_group && (
                 <span style={{
-                  fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase',
-                  color: MUSCLE_COLORS[ex.muscle_group] || ORANGE,
-                  background: `${MUSCLE_COLORS[ex.muscle_group] || ORANGE}20`,
-                  borderRadius: 6, padding: '2px 7px', flexShrink: 0,
+                  fontFamily: FONT_ALT, fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase',
+                  color: MUSCLE_COLORS[ex.muscle_group] || GOLD,
+                  background: `${MUSCLE_COLORS[ex.muscle_group] || GOLD}20`,
+                  borderRadius: 0, padding: '2px 7px', flexShrink: 0,
                 }}>{ex.muscle_group}</span>
               )}
 
               {/* Video feedback button */}
               {onVideoFeedback && (
                 <span onClick={(e) => { e.stopPropagation(); onVideoFeedback(ex.name) }}
-                  style={{ fontSize: '0.65rem', fontWeight: 700, color: ORANGE, background: `${ORANGE}15`, borderRadius: 6, padding: '2px 7px', cursor: 'pointer', flexShrink: 0 }}>
+                  style={{ fontSize: '0.65rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 0, padding: '2px 7px', cursor: 'pointer', flexShrink: 0 }}>
                   📹
                 </span>
               )}
@@ -90,20 +88,23 @@ export default function TrainingExerciseCard({
                 <motion.span
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  style={{ fontSize: '0.58rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}
+                  style={{ fontFamily: FONT_ALT, fontSize: '0.58rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 0, padding: '2px 7px', flexShrink: 0 }}
                 >✓ TERMINÉ</motion.span>
               )}
             </div>
 
             {/* Subtitle: sets × reps · rest */}
             <div style={{ display: 'flex', gap: 6, marginTop: 5, alignItems: 'center' }}>
-              <span style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: "'Barlow', sans-serif" }}>
-                {numSets} × {ex.reps} reps
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: GOLD }}>
+                {numSets} × {ex.reps}
+              </span>
+              <span style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, color: TEXT_MUTED }}>
+                reps
               </span>
               {restSecs > 0 && (
                 <>
-                  <span style={{ fontSize: '0.55rem', color: '#333' }}>·</span>
-                  <span style={{ fontSize: '0.65rem', color: '#374151', fontFamily: "'Barlow', sans-serif" }}>
+                  <span style={{ fontSize: '0.55rem', color: TEXT_DIM }}>·</span>
+                  <span style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, color: TEXT_MUTED }}>
                     {fmtRest(restSecs)} repos
                   </span>
                 </>
@@ -112,7 +113,7 @@ export default function TrainingExerciseCard({
           </div>
 
           {/* ⋯ menu button */}
-          <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', color: '#3A3A3A', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 32, minHeight: 32, borderRadius: 8, flexShrink: 0 }}>
+          <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', color: TEXT_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 32, minHeight: 32, borderRadius: RADIUS_CARD, flexShrink: 0 }}>
             <MoreHorizontal size={16} />
           </button>
         </div>
@@ -126,9 +127,9 @@ export default function TrainingExerciseCard({
       }}>
         {['SÉRIE', 'PRÉCÉDENT', 'KG', 'REPS', ''].map((col, ci) => (
           <span key={ci} style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: '0.58rem', fontWeight: 700,
-            color: '#2E2E2E', textTransform: 'uppercase', letterSpacing: '0.08em',
+            fontFamily: FONT_ALT,
+            fontSize: '0.58rem', fontWeight: 800,
+            color: TEXT_DIM, textTransform: 'uppercase', letterSpacing: '2px',
             textAlign: (ci === 0 || ci >= 2) ? 'center' : 'left',
           }}>{col}</span>
         ))}
@@ -144,7 +145,7 @@ export default function TrainingExerciseCard({
             <div key={si}>
               {/* Set row */}
               <motion.div
-                animate={{ background: done ? 'rgba(34,197,94,0.06)' : 'transparent' }}
+                animate={{ background: done ? 'rgba(74,222,128,0.06)' : 'transparent' }}
                 transition={{ duration: 0.35 }}
                 className="set-grid"
                 style={{
@@ -156,19 +157,19 @@ export default function TrainingExerciseCard({
                 {/* Series number pill */}
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                   <div style={{
-                    width: 26, height: 26, borderRadius: 7,
-                    background: done ? `${GREEN}28` : '#262626',
+                    width: 26, height: 26, borderRadius: 0,
+                    background: done ? `${GREEN}28` : INPUT_BG,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'background 300ms',
                   }}>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: done ? GREEN : '#555' }}>{si + 1}</span>
+                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, color: done ? GREEN : TEXT_DIM }}>{si + 1}</span>
                   </div>
                 </div>
 
                 {/* Previous performance */}
                 <span style={{
-                  fontSize: '0.72rem', color: '#2E2E2E',
-                  fontFamily: "'Barlow', sans-serif",
+                  fontSize: '0.72rem', color: TEXT_DIM,
+                  fontFamily: FONT_BODY,
                   paddingLeft: 2,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   textDecoration: done ? 'line-through' : 'none',
@@ -184,10 +185,10 @@ export default function TrainingExerciseCard({
                   placeholder="0"
                   disabled={!trainingIsToday}
                   style={{
-                    background: done ? 'rgba(34,197,94,0.1)' : INPUT_BG,
-                    border: `1px solid ${done ? GREEN + '40' : 'transparent'}`,
-                    borderRadius: 10, padding: '7px 4px',
-                    fontSize: '0.95rem', fontFamily: "'Barlow Condensed', sans-serif",
+                    background: done ? 'rgba(74,222,128,0.1)' : INPUT_BG,
+                    border: `1px solid ${done ? GREEN + '40' : BORDER}`,
+                    borderRadius: 0, padding: '7px 4px',
+                    fontSize: '0.95rem', fontFamily: FONT_ALT,
                     fontWeight: 700, color: done ? GREEN : TEXT_PRIMARY,
                     textAlign: 'center', width: '100%', outline: 'none',
                     transition: 'background 300ms, border-color 200ms',
@@ -205,10 +206,10 @@ export default function TrainingExerciseCard({
                   placeholder="0"
                   disabled={!trainingIsToday}
                   style={{
-                    background: done ? 'rgba(34,197,94,0.1)' : INPUT_BG,
-                    border: `1px solid ${done ? GREEN + '40' : 'transparent'}`,
-                    borderRadius: 10, padding: '7px 4px',
-                    fontSize: '0.95rem', fontFamily: "'Barlow Condensed', sans-serif",
+                    background: done ? 'rgba(74,222,128,0.1)' : INPUT_BG,
+                    border: `1px solid ${done ? GREEN + '40' : BORDER}`,
+                    borderRadius: 0, padding: '7px 4px',
+                    fontSize: '0.95rem', fontFamily: FONT_ALT,
                     fontWeight: 700, color: done ? GREEN : TEXT_PRIMARY,
                     textAlign: 'center', width: '100%', outline: 'none',
                     transition: 'background 300ms, border-color 200ms',
@@ -222,14 +223,14 @@ export default function TrainingExerciseCard({
                     whileTap={{ scale: 0.8 }}
                     onClick={() => trainingIsToday ? onToggleSet(ex.name, si, numSets, restSecs) : undefined}
                     style={{
-                      width: 34, height: 34, borderRadius: 10, border: 'none',
-                      background: done ? GREEN : '#262626',
+                      width: 34, height: 34, borderRadius: 0, border: 'none',
+                      background: done ? GREEN : INPUT_BG,
                       cursor: trainingIsToday ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'background 200ms', flexShrink: 0,
                     }}
                   >
-                    <Check size={16} color={done ? '#000' : '#333'} strokeWidth={2.5} />
+                    <Check size={16} color={done ? '#050505' : TEXT_DIM} strokeWidth={2.5} />
                   </motion.button>
                 </div>
               </motion.div>
@@ -244,15 +245,15 @@ export default function TrainingExerciseCard({
                     exit={{ opacity: 0, height: 0 }}
                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px', overflow: 'hidden' }}
                   >
-                    <div style={{ flex: 1, height: 1, background: '#1F1F1F' }} />
+                    <div style={{ flex: 1, height: 1, background: BORDER }} />
                     <button
                       onClick={onCancelRest}
                       style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 8px' }}
                     >
-                      <Timer size={12} color={BLUE} />
-                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: BLUE, letterSpacing: '0.08em' }}>{fmtRest(restTimer)}</span>
+                      <Timer size={12} color={GOLD} />
+                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.1rem', fontWeight: 700, color: GOLD, letterSpacing: '0.08em' }}>{fmtRest(restTimer)}</span>
                     </button>
-                    <div style={{ flex: 1, height: 1, background: '#1F1F1F' }} />
+                    <div style={{ flex: 1, height: 1, background: BORDER }} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -269,14 +270,14 @@ export default function TrainingExerciseCard({
           onClick={() => onAddSet(ex.name)}
           style={{
             width: '100%', background: 'transparent', border: 'none',
-            borderTop: '1px solid #222',
+            borderTop: `1px solid ${BORDER}`,
             padding: '11px 14px', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
             transition: 'background 150ms',
           }}
         >
-          <Plus size={13} color={BLUE} strokeWidth={2.5} />
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.8rem', fontWeight: 700, color: BLUE, letterSpacing: '0.06em' }}>
+          <Plus size={13} color={GOLD} strokeWidth={2.5} />
+          <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: GOLD, letterSpacing: '1px' }}>
             + Ajouter une série ({fmtRest(restSecs)})
           </span>
         </motion.button>

@@ -154,6 +154,12 @@ input:focus, textarea:focus, select:focus {
   animation: bounceCheck 300ms ease-out;
 }
 
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg, #050505); }
+::-webkit-scrollbar-thumb { background: var(--gold-rule, rgba(201,168,76,0.25)); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold, #C9A84C); }
+
 /* ── Mobile responsive fixes ── */
 @media (max-width: 768px) {
   input, select, textarea { font-size: 16px !important; }

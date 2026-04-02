@@ -4,10 +4,9 @@ import { format, isToday, isYesterday } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { MessageCircle, Send, Check, CheckCheck } from 'lucide-react'
 import {
-  BG_BASE, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_MUTED,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
 } from '../../../lib/design-tokens'
-
-const GOLD = '#C9A84C'
 
 interface MessagesTabProps {
   session: any
@@ -56,12 +55,12 @@ export default function MessagesTab({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div style={{ background: BG_CARD, padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: '#000' }}>C</div>
+        <div style={{ width: 36, height: 36, borderRadius: RADIUS_CARD, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: '#050505' }}>C</div>
         <div>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0, color: TEXT_PRIMARY }}>MON COACH</h1>
+          <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>MON COACH</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E' }} />
-            <span style={{ fontSize: '0.62rem', color: '#22C55E', fontWeight: 600 }}>En ligne</span>
+            <div style={{ width: 6, height: 6, borderRadius: RADIUS_CARD, background: '#22C55E' }} />
+            <span style={{ fontSize: '0.62rem', color: '#22C55E', fontWeight: 600, fontFamily: FONT_BODY }}>En ligne</span>
           </div>
         </div>
       </div>
@@ -69,7 +68,7 @@ export default function MessagesTab({
       {!coachId ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <MessageCircle size={40} color={TEXT_MUTED} />
-          <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', margin: 0 }}>Aucun coach assigné pour l'instant.</p>
+          <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Aucun coach assigné pour l'instant.</p>
         </div>
       ) : (
         <>
@@ -78,7 +77,7 @@ export default function MessagesTab({
             {messages.length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <MessageCircle size={32} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
-                <p style={{ color: TEXT_MUTED, fontSize: '0.85rem', margin: 0 }}>Envoie ton premier message !</p>
+                <p style={{ color: TEXT_MUTED, fontSize: '0.85rem', margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Envoie ton premier message !</p>
               </div>
             )}
             {messages.map((msg, i) => {
@@ -94,7 +93,7 @@ export default function MessagesTab({
                   {showDate && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0', padding: '0 8px' }}>
                       <div style={{ flex: 1, height: 1, background: BORDER }} />
-                      <span style={{ fontSize: '0.62rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>{dateLabel(msg.created_at)}</span>
+                      <span style={{ fontSize: '0.62rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px', flexShrink: 0, fontFamily: FONT_ALT }}>{dateLabel(msg.created_at)}</span>
                       <div style={{ flex: 1, height: 1, background: BORDER }} />
                     </div>
                   )}
@@ -102,16 +101,16 @@ export default function MessagesTab({
                   <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
                     <div style={{
                       maxWidth: '78%',
-                      background: isMine ? GOLD : '#1E1E1E',
-                      color: isMine ? '#000' : TEXT_PRIMARY,
-                      borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                      background: isMine ? GOLD_DIM : BG_CARD_2,
+                      color: isMine ? TEXT_PRIMARY : TEXT_PRIMARY,
+                      borderRadius: RADIUS_CARD,
                       padding: '10px 14px',
-                      border: isMine ? 'none' : `1px solid ${BORDER}`,
+                      border: isMine ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
                     }}>
-                      <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{msg.content}</p>
+                      <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.45, whiteSpace: 'pre-wrap', fontFamily: FONT_BODY, fontWeight: 400 }}>{msg.content}</p>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 3 }}>
-                        <span style={{ fontSize: '0.58rem', opacity: 0.5 }}>{format(new Date(msg.created_at), 'HH:mm')}</span>
-                        {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.6 }} /> : <Check size={12} style={{ opacity: 0.4 }} />)}
+                        <span style={{ fontSize: '0.58rem', opacity: 0.5, fontFamily: FONT_BODY }}>{format(new Date(msg.created_at), 'HH:mm')}</span>
+                        {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.6, color: GOLD }} /> : <Check size={12} style={{ opacity: 0.4 }} />)}
                       </div>
                     </div>
                   </div>
@@ -123,7 +122,7 @@ export default function MessagesTab({
           </div>
 
           {/* Input */}
-          <div style={{ flexShrink: 0, padding: '12px 14px', background: '#111111', borderTop: '1px solid #222222', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <div style={{ flexShrink: 0, padding: '12px 14px', background: BG_BASE, borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 8, alignItems: 'flex-end' }}>
             <textarea
               ref={inputRef}
               value={msgInput}
@@ -131,14 +130,14 @@ export default function MessagesTab({
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
               placeholder="Écrire un message..."
               rows={1}
-              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 20, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: 'inherit' }}
+              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: FONT_BODY, fontWeight: 400 }}
             />
             <button
               onClick={sendMessage}
               disabled={!msgInput.trim()}
-              style={{ width: 40, height: 40, borderRadius: '50%', background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              style={{ width: 40, height: 40, borderRadius: 0, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
-              <Send size={16} color={msgInput.trim() ? '#000' : TEXT_MUTED} />
+              <Send size={16} color={msgInput.trim() ? '#050505' : TEXT_MUTED} />
             </button>
           </div>
         </>

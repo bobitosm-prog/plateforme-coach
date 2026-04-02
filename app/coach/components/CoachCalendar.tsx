@@ -5,6 +5,11 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../../lib/design-tokens'
 
 import { SESSION_COLORS, SESSION_TYPES } from '../hooks/useCoachDashboard'
 import type { ClientRow, ScheduledSession } from '../hooks/useCoachDashboard'
@@ -50,17 +55,17 @@ export default function CoachCalendar({
     <div className="section-pad" style={{ width: '100%', maxWidth: 680, margin: '0 auto', overflowX: 'hidden', paddingBottom: '2rem' }}>
 
       {/* ── Sticky week nav header ── */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 30, background: '#111827', borderBottom: '1px solid #1F2937', padding: '12px 16px 10px' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 30, background: BG_BASE, borderBottom: `1px solid ${BORDER}`, padding: '12px 16px 10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button onClick={() => setSection('dashboard')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, background: '#1A1A1A', border: '1px solid #2A2A2A', cursor: 'pointer', color: '#9CA3AF' }}>
+            <button onClick={() => setSection('dashboard')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 0, background: BG_CARD, border: `1px solid ${BORDER}`, cursor: 'pointer', color: TEXT_MUTED }}>
               <ChevronLeft size={16} strokeWidth={2.5} />
             </button>
-            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.05em', color: '#F8FAFC', margin: 0 }}>CALENDRIER</h1>
+            <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '3px', color: TEXT_PRIMARY, margin: 0, textTransform: 'uppercase' }}>CALENDRIER</h1>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => setCalWeekOffset(0)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#C9A84C', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>Aujourd&apos;hui</button>
-            <button onClick={() => setShowNewSession(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#000', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}>
+            <button onClick={() => setCalWeekOffset(0)} style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Aujourd&apos;hui</button>
+            <button onClick={() => setShowNewSession(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: BG_BASE, background: GOLD, border: 'none', borderRadius: 0, padding: '5px 12px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
               <Plus size={12} strokeWidth={2.5} /> Séance
             </button>
           </div>
@@ -68,14 +73,14 @@ export default function CoachCalendar({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             onClick={() => setCalWeekOffset(o => o - 1)}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#1F2937', border: '1px solid #374151', borderRadius: 10, padding: '9px 12px', color: '#9CA3AF', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 600, minHeight: 44 }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '9px 12px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, minHeight: 44, letterSpacing: '1px' }}
           ><ChevronLeft size={14} /> Précédente</button>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 600, color: '#9CA3AF', textAlign: 'center', flexShrink: 0, minWidth: 110 }}>
+          <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, color: TEXT_MUTED, textAlign: 'center', flexShrink: 0, minWidth: 110, letterSpacing: '1px' }}>
             {format(days[0], 'd', { locale: fr })} – {format(days[6], 'd MMM yyyy', { locale: fr })}
           </span>
           <button
             onClick={() => setCalWeekOffset(o => o + 1)}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#1F2937', border: '1px solid #374151', borderRadius: 10, padding: '9px 12px', color: '#9CA3AF', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 600, minHeight: 44 }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '9px 12px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, minHeight: 44, letterSpacing: '1px' }}
           >Suivante <ChevronRight size={14} /></button>
         </div>
       </div>
@@ -89,20 +94,20 @@ export default function CoachCalendar({
             .filter(s => s.scheduled_at.startsWith(dateStr))
             .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
           return (
-            <div key={i} style={{ borderBottom: i < 6 ? '1px solid #1F2937' : 'none', paddingBottom: 12, marginBottom: 4 }}>
+            <div key={i} style={{ borderBottom: i < 6 ? `1px solid ${BORDER}` : 'none', paddingBottom: 12, marginBottom: 4 }}>
               {/* Day header row */}
               <div className="cal-day-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div className={`cal-day-label${isToday ? ' today' : ''}`}>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1.05rem', color: isToday ? '#F97316' : '#F8FAFC', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '1.1rem', color: isToday ? GOLD : TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '2px' }}>
                       {DAY_LABELS[i]} {format(day, 'd')}
                     </span>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.7rem', fontWeight: 600, color: isToday ? '#FB923C' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', fontWeight: 600, color: isToday ? GOLD : TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '1.5px' }}>
                       {format(day, 'MMM', { locale: fr })}
                     </span>
                   </div>
                   {daySessions.length > 0 && (
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color: '#F97316', background: 'rgba(249,115,22,0.12)', borderRadius: 6, padding: '2px 7px' }}>
+                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 2, padding: '2px 7px', letterSpacing: '1px' }}>
                       {daySessions.length}
                     </span>
                   )}
@@ -119,7 +124,7 @@ export default function CoachCalendar({
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {daySessions.map(s => {
-                    const color = SESSION_COLORS[s.session_type] ?? '#F97316'
+                    const color = SESSION_COLORS[s.session_type] ?? GOLD
                     const client = clients.find(c => c.client_id === s.client_id)
                     const clientName = client?.profiles?.full_name ?? 'Client'
                     const avatarInitials = clientName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
@@ -130,29 +135,29 @@ export default function CoachCalendar({
                         key={s.id}
                         className="cal-session-card"
                         onClick={() => setSelectedSession(s)}
-                        style={{ borderLeft: `4px solid ${color}` }}
+                        style={{ borderLeft: `2px solid ${GOLD}` }}
                       >
                         {/* Type icon */}
-                        <div style={{ width: 38, height: 38, borderRadius: 10, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>
+                        <div style={{ width: 38, height: 38, borderRadius: 2, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, flexShrink: 0 }}>
                           {TYPE_ICONS[s.session_type] ?? <Dumbbell size={15} />}
                         </div>
                         {/* Info */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: '#F8FAFC', letterSpacing: '0.02em' }}>{s.session_type}</div>
+                          <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '1rem', color: TEXT_PRIMARY, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{s.session_type}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                            <Clock size={11} color="#6B7280" />
-                            <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>{format(dt, 'HH:mm')} – {format(dtEnd, 'HH:mm')}</span>
+                            <Clock size={11} color={TEXT_MUTED} />
+                            <span style={{ fontFamily: FONT_BODY, fontSize: '0.75rem', color: TEXT_MUTED }}>{format(dt, 'HH:mm')} – {format(dtEnd, 'HH:mm')}</span>
                           </div>
                         </div>
                         {/* Client + duration */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                            <span style={{ fontSize: '0.72rem', color: '#9CA3AF', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName}</span>
-                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${color}25`, border: `1px solid ${color}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.58rem', color, flexShrink: 0 }}>
+                            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: TEXT_MUTED, maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName}</span>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '0.58rem', color: GOLD, flexShrink: 0 }}>
                               {avatarInitials}
                             </div>
                           </div>
-                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color, background: `${color}15`, borderRadius: 6, padding: '2px 7px' }}>
+                          <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 2, padding: '2px 7px', letterSpacing: '0.5px' }}>
                             {s.duration_minutes}min
                           </span>
                         </div>
@@ -170,8 +175,8 @@ export default function CoachCalendar({
       <div style={{ display: 'flex', gap: 12, padding: '0 16px 16px', flexWrap: 'wrap' }}>
         {SESSION_TYPES.map(t => (
           <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, background: SESSION_COLORS[t] }} />
-            <span style={{ fontSize: '0.7rem', color: '#6B7280', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}>{t}</span>
+            <div style={{ width: 8, height: 8, borderRadius: 0, background: SESSION_COLORS[t] }} />
+            <span style={{ fontSize: '0.7rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 600, letterSpacing: '1px' }}>{t}</span>
           </div>
         ))}
       </div>

@@ -3,6 +3,11 @@
 import {
   Users, CalendarCheck, MessageCircle, TrendingUp, Check,
 } from 'lucide-react'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../../lib/design-tokens'
 
 import type { ClientRow, ScheduledSession } from '../hooks/useCoachDashboard'
 
@@ -41,19 +46,19 @@ export default function CoachRevenue({
     <>
       {/* Stripe banner */}
       {coachProfile && !coachProfile.stripe_onboarding_complete && (
-        <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 14, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.85rem', color: '#C9A84C', fontWeight: 600 }}>Connecte ton compte Stripe pour recevoir les paiements de tes clients</span>
-          <button onClick={handleStripeConnect} disabled={stripeConnecting} style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 8, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
-            {stripeConnecting ? '...' : '💳 Connecter Stripe'}
+        <div style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.85rem', color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Connecte ton compte Stripe pour recevoir les paiements de tes clients</span>
+          <button onClick={handleStripeConnect} disabled={stripeConnecting} style={{ padding: '8px 16px', background: GOLD, border: 'none', borderRadius: 0, color: BG_BASE, fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0, letterSpacing: '1px', textTransform: 'uppercase' as const }}>
+            {stripeConnecting ? '...' : 'Connecter Stripe'}
           </button>
         </div>
       )}
 
       {/* At-risk clients alert */}
       {atRiskClients.length > 0 && (
-        <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '16px 18px', marginBottom: 16 }}>
+        <div style={{ background: 'rgba(239,68,68,0.05)', border: `1px solid ${BORDER}`, borderLeft: `2px solid ${RED}`, borderRadius: RADIUS_CARD, padding: '16px 18px', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#EF4444', fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: RED, fontFamily: FONT_ALT, letterSpacing: '2px', textTransform: 'uppercase' }}>
               Clients a relancer ({atRiskClients.length})
             </span>
           </div>
@@ -61,14 +66,14 @@ export default function CoachRevenue({
             {atRiskClients.map((c: any) => (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#F8FAFC' }}>{c.name}</span>
-                  <span style={{ fontSize: '0.78rem', color: '#9CA3AF', marginLeft: 8 }}>
+                  <span style={{ fontSize: '0.9rem', fontFamily: FONT_BODY, fontWeight: 600, color: TEXT_PRIMARY }}>{c.name}</span>
+                  <span style={{ fontSize: '0.78rem', color: TEXT_MUTED, marginLeft: 8, fontFamily: FONT_BODY }}>
                     Derniere seance : {c.daysSince >= 999 ? 'aucune' : `${c.daysSince} jours`}
                   </span>
                 </div>
                 <button
                   onClick={() => setSection('messages')}
-                  style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '6px 14px', color: '#EF4444', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  style={{ background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 0, padding: '6px 14px', color: RED, fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const }}
                 >
                   Envoyer un message
                 </button>
@@ -80,108 +85,96 @@ export default function CoachRevenue({
 
       {/* Page header */}
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '0.02em', margin: 0 }}>Tableau de bord</h1>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '3px', margin: 0, textTransform: 'uppercase' }}>Tableau de bord</h1>
       </div>
 
-      {/* ── STATS ROW ── */}
-      <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '32px' }}>
+      {/* ── STATS ROW ── Bauhaus grid */}
+      <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1px', marginBottom: '32px', background: BORDER, border: `1px solid ${BORDER}` }}>
 
         {/* Clients */}
-        <div className="stat-card">
+        <div style={{ background: BG_CARD, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Clients</span>
-            <div style={{ width: '32px', height: '32px', background: 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Users size={16} color="#F97316" strokeWidth={2} />
-            </div>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 800, letterSpacing: '3px', textTransform: 'uppercase', color: TEXT_MUTED }}>Clients</span>
+            <Users size={16} color={GOLD} strokeWidth={2} />
           </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.4rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '40px', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
             {loading ? '—' : clients.length}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-            <TrendingUp size={12} color="#22C55E" strokeWidth={2.5} />
-            <span style={{ fontSize: '0.72rem', color: '#22C55E', fontWeight: 500 }}>{activeCount} actifs</span>
+            <TrendingUp size={12} color={GREEN} strokeWidth={2.5} />
+            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: GREEN, fontWeight: 500 }}>{activeCount} actifs</span>
           </div>
         </div>
 
         {/* Sessions */}
-        <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => setSection('calendar')}>
+        <div style={{ background: BG_CARD, padding: 24, cursor: 'pointer' }} onClick={() => setSection('calendar')}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Séances</span>
-            <div style={{ width: '32px', height: '32px', background: 'rgba(201,168,76,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CalendarCheck size={16} color="#C9A84C" strokeWidth={2} />
-            </div>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 800, letterSpacing: '3px', textTransform: 'uppercase', color: TEXT_MUTED }}>Séances</span>
+            <CalendarCheck size={16} color={GOLD} strokeWidth={2} />
           </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.4rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1 }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '40px', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
             {scheduledSessions.length}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-            <span style={{ fontSize: '0.72rem', color: '#C9A84C', fontWeight: 500 }}>
+            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: GOLD, fontWeight: 500 }}>
               {scheduledSessions.filter(s => s.status === 'completed').length} complétées
             </span>
           </div>
         </div>
 
         {/* Revenue: Month */}
-        <div className="stat-card">
+        <div style={{ background: BG_CARD, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Revenus du mois</span>
-            <div style={{ width: '32px', height: '32px', background: 'rgba(201,168,76,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#C9A84C' }}>
-              CHF
-            </div>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 800, letterSpacing: '3px', textTransform: 'uppercase', color: TEXT_MUTED }}>Revenus du mois</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: GOLD }}>CHF</span>
           </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.4rem', fontWeight: 700, color: '#C9A84C', lineHeight: 1 }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '40px', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
             CHF {fmtChf(monthRevenue)}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#9CA3AF', fontWeight: 500, marginTop: '8px' }}>
+          <div style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: TEXT_MUTED, fontWeight: 500, marginTop: '8px' }}>
             {monthPaymentsCount} paiement{monthPaymentsCount !== 1 ? 's' : ''} ce mois
           </div>
         </div>
 
         {/* Revenue: Year */}
-        <div className="stat-card">
+        <div style={{ background: BG_CARD, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Revenus de l&apos;année</span>
-            <div style={{ width: '32px', height: '32px', background: 'rgba(201,168,76,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#C9A84C' }}>
-              CHF
-            </div>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 800, letterSpacing: '3px', textTransform: 'uppercase', color: TEXT_MUTED }}>Revenus de l&apos;année</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: GOLD }}>CHF</span>
           </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.4rem', fontWeight: 700, color: '#C9A84C', lineHeight: 1 }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '40px', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
             CHF {fmtChf(yearRevenue)}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#9CA3AF', fontWeight: 500, marginTop: '8px' }}>
+          <div style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: TEXT_MUTED, fontWeight: 500, marginTop: '8px' }}>
             {new Date().getFullYear()}
           </div>
         </div>
 
         {/* Revenue: Total */}
-        <div className="stat-card">
+        <div style={{ background: BG_CARD, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Revenus totaux</span>
-            <div style={{ width: '32px', height: '32px', background: 'rgba(201,168,76,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: '#C9A84C' }}>
-              CHF
-            </div>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 800, letterSpacing: '3px', textTransform: 'uppercase', color: TEXT_MUTED }}>Revenus totaux</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: GOLD }}>CHF</span>
           </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.4rem', fontWeight: 700, color: '#C9A84C', lineHeight: 1 }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '40px', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
             CHF {fmtChf(totalRevenue)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-            <Check size={12} color="#22C55E" strokeWidth={2.5} />
-            <span style={{ fontSize: '0.72rem', color: '#22C55E', fontWeight: 500 }}>{activeSubscribers} client{activeSubscribers !== 1 ? 's' : ''} actif{activeSubscribers !== 1 ? 's' : ''}</span>
+            <Check size={12} color={GREEN} strokeWidth={2.5} />
+            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: GREEN, fontWeight: 500 }}>{activeSubscribers} client{activeSubscribers !== 1 ? 's' : ''} actif{activeSubscribers !== 1 ? 's' : ''}</span>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => setSection('messages')}>
+        <div style={{ background: BG_CARD, padding: 24, cursor: 'pointer' }} onClick={() => setSection('messages')}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9CA3AF' }}>Messages</span>
-            <div style={{ width: '32px', height: '32px', background: totalUnread > 0 ? 'rgba(239,68,68,0.12)' : 'rgba(249,115,22,0.12)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MessageCircle size={16} color={totalUnread > 0 ? '#EF4444' : '#F97316'} strokeWidth={2} />
-            </div>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 800, letterSpacing: '3px', textTransform: 'uppercase', color: TEXT_MUTED }}>Messages</span>
+            <MessageCircle size={16} color={totalUnread > 0 ? RED : TEXT_MUTED} strokeWidth={2} />
           </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '2.4rem', fontWeight: 700, color: totalUnread > 0 ? '#EF4444' : '#F8FAFC', lineHeight: 1 }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '40px', fontWeight: 700, color: totalUnread > 0 ? RED : TEXT_PRIMARY, lineHeight: 1 }}>
             {totalUnread}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#9CA3AF', fontWeight: 500, marginTop: '8px' }}>non lus</div>
+          <div style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: TEXT_MUTED, fontWeight: 500, marginTop: '8px' }}>non lus</div>
         </div>
 
       </div>

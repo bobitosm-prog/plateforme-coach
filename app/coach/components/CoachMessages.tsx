@@ -3,6 +3,11 @@
 import { ChevronRight, ArrowLeft, Send } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../../lib/design-tokens'
 
 import { initials } from '../hooks/useCoachDashboard'
 import type { ClientRow } from '../hooks/useCoachDashboard'
@@ -32,12 +37,12 @@ export default function CoachMessages({
       {/* ── MESSAGES SECTION: client list (no chat open) ── */}
       {!selectedClient && (
         <div className="section-pad" style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '16px', borderBottom: '1px solid #374151', background: '#1F2937', flexShrink: 0 }}>
-            <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#F8FAFC', margin: 0 }}>Messages</h2>
+          <div style={{ padding: '16px', borderBottom: `1px solid ${BORDER}`, background: BG_CARD, flexShrink: 0 }}>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Messages</h2>
           </div>
-          <div style={{ overflowY: 'auto', flex: 1, background: '#1F2937' }}>
+          <div style={{ overflowY: 'auto', flex: 1, background: BG_BASE }}>
             {clients.length === 0 && (
-              <p style={{ padding: '24px 16px', color: '#6B7280', fontSize: '0.85rem', textAlign: 'center' }}>Aucun client.</p>
+              <p style={{ padding: '24px 16px', color: TEXT_MUTED, fontSize: '0.85rem', textAlign: 'center', fontFamily: FONT_BODY }}>Aucun client.</p>
             )}
             {clients.map(c => {
               const name = c.profiles?.full_name ?? 'Sans nom'
@@ -50,15 +55,15 @@ export default function CoachMessages({
                     : <div className="avatar-circle" style={{ width: 38, height: 38, fontSize: '0.9rem' }}>{ini}</div>
                   }
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#F8FAFC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-                    <div style={{ fontSize: '0.72rem', color: '#6B7280', marginTop: 2 }}>Appuyer pour ouvrir</div>
+                    <div style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: '0.9rem', color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                    <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, marginTop: 2 }}>Appuyer pour ouvrir</div>
                   </div>
                   {unread > 0 && (
-                    <span style={{ minWidth: 20, height: 20, background: '#EF4444', borderRadius: 10, fontSize: '0.65rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', flexShrink: 0 }}>
+                    <span style={{ minWidth: 20, height: 20, background: RED, borderRadius: 10, fontSize: '0.65rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', flexShrink: 0 }}>
                       {unread > 9 ? '9+' : unread}
                     </span>
                   )}
-                  <ChevronRight size={16} color="#4B5563" style={{ flexShrink: 0 }} />
+                  <ChevronRight size={16} color={TEXT_DIM} style={{ flexShrink: 0 }} />
                 </div>
               )
             })}
@@ -71,10 +76,10 @@ export default function CoachMessages({
         <div className="chat-fullscreen">
 
           {/* Header */}
-          <div style={{ padding: '14px 16px', paddingTop: 'max(14px, env(safe-area-inset-top, 14px))', background: '#1F2937', borderBottom: '1px solid #374151', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div style={{ padding: '14px 16px', paddingTop: 'max(14px, env(safe-area-inset-top, 14px))', background: BG_CARD, borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <button
               onClick={() => setSelectedClient(null)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '6px', minWidth: 44, minHeight: 44 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: '6px', minWidth: 44, minHeight: 44 }}
               aria-label="Retour"
             >
               <ArrowLeft size={20} />
@@ -84,10 +89,10 @@ export default function CoachMessages({
               : <div className="avatar-circle" style={{ flexShrink: 0 }}>{initials(selectedClient.profiles?.full_name)}</div>
             }
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: '#F8FAFC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '1rem', color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
                 {selectedClient.profiles?.full_name ?? 'Sans nom'}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#6B7280' }}>Client</div>
+              <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>Client</div>
             </div>
           </div>
 
@@ -95,7 +100,7 @@ export default function CoachMessages({
           <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {chatMessages.length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <p style={{ color: '#6B7280', fontSize: '0.85rem' }}>Aucun message. Commencez la conversation !</p>
+                <p style={{ color: TEXT_MUTED, fontSize: '0.85rem', fontFamily: FONT_BODY }}>Aucun message. Commencez la conversation !</p>
               </div>
             )}
             {chatMessages.map(msg => {
@@ -105,14 +110,14 @@ export default function CoachMessages({
                   <div style={{
                     maxWidth: '75%',
                     wordBreak: 'break-word',
-                    background: isMine ? '#F97316' : '#1F2937',
-                    color: '#F8FAFC',
-                    borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                    background: isMine ? GOLD_DIM : BG_CARD_2,
+                    color: TEXT_PRIMARY,
+                    borderRadius: RADIUS_CARD,
                     padding: '10px 14px',
-                    border: isMine ? 'none' : '1px solid #374151',
+                    border: isMine ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
                   }}>
-                    <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45 }}>{msg.content}</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.62rem', opacity: 0.6, textAlign: isMine ? 'right' : 'left' }}>
+                    <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45, fontFamily: FONT_BODY }}>{msg.content}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.62rem', opacity: 0.6, textAlign: isMine ? 'right' : 'left', fontFamily: FONT_BODY }}>
                       {format(new Date(msg.created_at), 'HH:mm', { locale: fr })}
                     </p>
                   </div>
@@ -123,7 +128,7 @@ export default function CoachMessages({
           </div>
 
           {/* Fixed input bar — sits above bottom nav */}
-          <div style={{ position: 'fixed', bottom: 60, left: 0, right: 0, background: '#1F2937', borderTop: '1px solid #374151', padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', display: 'flex', gap: 12, alignItems: 'center', zIndex: 201 }}>
+          <div style={{ position: 'fixed', bottom: 60, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', display: 'flex', gap: 12, alignItems: 'center', zIndex: 201 }}>
             <input
               className="msg-input"
               value={msgInput}
@@ -133,9 +138,9 @@ export default function CoachMessages({
             />
             <button
               onClick={sendMessage}
-              style={{ width: 44, height: 44, borderRadius: '50%', background: msgInput.trim() ? '#F97316' : '#374151', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              style={{ width: 44, height: 44, borderRadius: 0, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
-              <Send size={17} color={msgInput.trim() ? '#000' : '#6B7280'} />
+              <Send size={17} color={msgInput.trim() ? BG_BASE : TEXT_MUTED} />
             </button>
           </div>
         </div>

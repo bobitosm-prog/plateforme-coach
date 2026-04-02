@@ -7,7 +7,9 @@ import {
   Dumbbell, Search, Award,
 } from 'lucide-react'
 import {
-  BG_CARD, BORDER, RADIUS_CARD, TEXT_PRIMARY, TEXT_MUTED, JS_DAYS_FR,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, RADIUS_CARD, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, JS_DAYS_FR,
 } from '../../../lib/design-tokens'
 import { toast } from 'sonner'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
@@ -25,12 +27,6 @@ import TrainingSessionDone from './training/TrainingSessionDone'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
-
-// Hevy-style design tokens
-const BLUE        = '#3B82F6'
-const BG_WORKOUT  = '#0F0F0F'
-const GREEN       = '#22C55E'
-const ORANGE      = '#F97316'
 
 interface TrainingTabProps {
   supabase: any
@@ -295,12 +291,12 @@ export default function TrainingTab({
 
   // ══════════════════════════════════════════
   return (
-    <div style={{ minHeight: '100vh', background: BG_WORKOUT, paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
+    <div style={{ minHeight: '100vh', background: BG_BASE, paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
       <style>{`
         .set-input { -webkit-appearance: none; appearance: none; }
         .set-input::-webkit-inner-spin-button,
         .set-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .set-input:focus { border-color: #3B82F6 !important; }
+        .set-input:focus { border-color: ${GOLD} !important; }
         .add-set-btn:active { opacity: 0.7; }
         @media(max-width:480px){
           .set-grid{grid-template-columns:28px 1fr 56px 52px 36px!important;gap:2px!important;padding-left:8px!important;padding-right:8px!important}
@@ -314,8 +310,8 @@ export default function TrainingTab({
       {/* ── PAGE HEADER ── */}
       <div style={{ padding: '20px 16px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: 0, color: TEXT_PRIMARY }}>ENTRAÎNEMENT</h1>
-          <span style={{ fontSize: '0.72rem', color: TEXT_MUTED, textTransform: 'capitalize' }}>{format(new Date(), 'EEE d MMM', { locale: fr })}</span>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>ENTRAÎNEMENT</h1>
+          <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textTransform: 'capitalize' }}>{format(new Date(), 'EEE d MMM', { locale: fr })}</span>
         </div>
       </div>
 
@@ -355,33 +351,33 @@ export default function TrainingTab({
             if (isRest) {
               return (
                 <div style={{
-                  background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12,
+                  background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
                   padding: '12px 16px', marginBottom: 12, textAlign: 'center',
                 }}>
-                  <span style={{ fontSize: '0.85rem', color: '#6B7280' }}>Jour de repos 💤 Récupération active recommandée</span>
+                  <span style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>Jour de repos 💤 Récupération active recommandée</span>
                 </div>
               )
             }
             return (
               <div style={{
-                background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12,
+                background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
                 padding: '12px 16px', marginBottom: 12,
               }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {daySessions.filter(s => s.session_type !== 'rest').map(s => (
                     <div key={s.id} style={{
                       display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '4px 10px', borderRadius: 8,
-                      background: `${SESSION_COLORS[s.session_type]}15`,
-                      border: `1px solid ${SESSION_COLORS[s.session_type]}40`,
+                      padding: '2px 10px', borderRadius: 0,
+                      background: GOLD_DIM,
+                      border: `1px solid ${GOLD_RULE}`,
                     }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: SESSION_COLORS[s.session_type] }} />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: SESSION_COLORS[s.session_type] }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD }} />
+                      <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 800, letterSpacing: '1px', color: GOLD }}>
                         {s.title}
                       </span>
-                      {s.completed && <span style={{ fontSize: '0.65rem', color: '#22C55E' }}>✓</span>}
+                      {s.completed && <span style={{ fontSize: '0.65rem', color: GREEN }}>✓</span>}
                       {s.duration_min > 0 && (
-                        <span style={{ fontSize: '0.6rem', color: '#6B7280' }}>{s.duration_min}min</span>
+                        <span style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>{s.duration_min}min</span>
                       )}
                     </div>
                   ))}
@@ -406,8 +402,8 @@ export default function TrainingTab({
       {!coachProgram ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '80px 20px', textAlign: 'center' }}>
           <Dumbbell size={56} color={TEXT_MUTED} strokeWidth={1.5} />
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>Programme en préparation</p>
-          <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0, maxWidth: 260 }}>Ton coach prépare ton programme. Tu seras notifié dès qu'il est prêt.</p>
+          <p style={{ fontFamily: FONT_ALT, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Programme en préparation</p>
+          <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0, maxWidth: 260 }}>Ton coach prépare ton programme. Tu seras notifié dès qu'il est prêt.</p>
         </div>
       ) : (
         <>
@@ -428,7 +424,7 @@ export default function TrainingTab({
             <div style={{ padding: '0 16px' }}>
               <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 24px', textAlign: 'center' }}>
                 <Dumbbell size={32} color={TEXT_MUTED} style={{ marginBottom: 12 }} />
-                <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0 }}>Aucun exercice pour ce jour.</p>
+                <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0 }}>Aucun exercice pour ce jour.</p>
               </div>
             </div>
 
@@ -473,10 +469,10 @@ export default function TrainingTab({
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setShowExDbModal(true)}
-                style={{ width: '100%', background: BG_CARD, border: `2px dashed #222`, borderRadius: 14, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                style={{ width: '100%', background: BG_CARD, border: `2px dashed ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
               >
-                <Search size={16} color={BLUE} />
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', fontWeight: 700, color: BLUE, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Découvrir les exercices</span>
+                <Search size={16} color={GOLD} />
+                <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 800, color: GOLD, letterSpacing: '2px', textTransform: 'uppercase' }}>Découvrir les exercices</span>
               </motion.button>
 
               {/* ── Bottom Finish Button (when session not yet started but sets done) ── */}
@@ -485,14 +481,14 @@ export default function TrainingTab({
                   whileTap={{ scale: 0.97 }}
                   onClick={finishTrainingWorkout}
                   style={{
-                    width: '100%', background: GREEN, color: '#000',
-                    fontWeight: 700, padding: '16px', borderRadius: 14, border: 'none',
+                    width: '100%', background: GREEN, color: '#050505',
+                    fontWeight: 700, padding: '16px', borderRadius: RADIUS_CARD, border: 'none',
                     cursor: 'pointer',
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase',
+                    fontFamily: FONT_ALT, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   }}
                 >
-                  <Award size={18} color="#000" />
+                  <Award size={18} color="#050505" />
                   Terminer la séance
                 </motion.button>
               )}

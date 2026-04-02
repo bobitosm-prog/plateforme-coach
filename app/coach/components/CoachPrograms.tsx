@@ -2,13 +2,17 @@
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Plus, Copy, Trash2, ChevronDown, X, Save } from 'lucide-react'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../../lib/design-tokens'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
   (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 )
 
-const GOLD = '#C9A84C'
 const SPLITS = ['PPL (Push/Pull/Legs)', 'Full Body', 'Upper/Lower', 'Bro Split', 'Autre']
 const DURATIONS = ['4 semaines', '6 semaines', '8 semaines', '12 semaines']
 
@@ -132,26 +136,26 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setSaving(false); setAssignModal(null); setAssignClientId('')
   }
 
-  const cardStyle: React.CSSProperties = { background: '#141414', border: '1px solid #242424', borderRadius: 14, padding: 20 }
-  const inputStyle: React.CSSProperties = { width: '100%', background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '10px 14px', color: '#f8fafc', fontSize: 14, fontFamily: "'DM Sans', sans-serif", outline: 'none' }
-  const labelStyle: React.CSSProperties = { fontSize: 11, color: '#6b7280', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 6, display: 'block' }
+  const cardStyle: React.CSSProperties = { background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20 }
+  const inputStyle: React.CSSProperties = { width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: 14, fontFamily: FONT_BODY, outline: 'none' }
+  const labelStyle: React.CSSProperties = { fontFamily: FONT_ALT, fontSize: 11, color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '1.5px', marginBottom: 6, display: 'block' }
 
   // List view
   if (!creating) return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>Programmes</h1>
-        <button onClick={() => setCreating(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, border: 'none', borderRadius: 8, padding: '8px 16px', color: '#000', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '3px', textTransform: 'uppercase' }}>Programmes</h1>
+        <button onClick={() => setCreating(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: GOLD, border: 'none', borderRadius: 0, padding: '8px 16px', color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const, clipPath: 'polygon(0 0, 100% 0, 94% 100%, 0% 100%)' }}>
           <Plus size={16} /> Créer
         </button>
       </div>
 
       {loading ? (
-        <p style={{ color: '#555', textAlign: 'center' }}>Chargement...</p>
+        <p style={{ color: TEXT_DIM, textAlign: 'center', fontFamily: FONT_BODY }}>Chargement...</p>
       ) : programs.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
-          <p style={{ color: '#555', margin: '0 0 16px' }}>Aucun programme template créé</p>
-          <button onClick={() => setCreating(true)} style={{ background: '#1a1a1a', border: `1px solid ${GOLD}40`, borderRadius: 8, padding: '10px 20px', color: GOLD, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+          <p style={{ color: TEXT_MUTED, margin: '0 0 16px', fontFamily: FONT_BODY }}>Aucun programme template créé</p>
+          <button onClick={() => setCreating(true)} style={{ background: BG_CARD_2, border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '10px 20px', color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 14, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
             Créer ton premier programme
           </button>
         </div>
@@ -160,15 +164,15 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
           {programs.map(p => (
             <div key={p.id} style={{ ...cardStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc' }}>{p.name}</div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY }}>{p.name}</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginTop: 4 }}>
                   {p.days?.length || 0} jours · {p.split || '–'} · {p.duration || '–'}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
-                <button onClick={() => startEdit(p)} title="Modifier" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', color: '#9ca3af' }}><ChevronDown size={14} /></button>
-                <button onClick={() => deleteProgram(p.id!)} title="Supprimer" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', color: '#ef4444' }}><Trash2 size={14} /></button>
+                <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
+                <button onClick={() => startEdit(p)} title="Modifier" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED }}><ChevronDown size={14} /></button>
+                <button onClick={() => deleteProgram(p.id!)} title="Supprimer" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '6px 10px', cursor: 'pointer', color: RED }}><Trash2 size={14} /></button>
               </div>
             </div>
           ))}
@@ -178,10 +182,10 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
       {/* Assign modal */}
       {assignModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setAssignModal(null)}>
-          <div style={{ background: '#111', border: '1px solid #333', borderRadius: 16, padding: 24, maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 18, fontWeight: 700, color: '#f8fafc', margin: 0 }}>Assigner "{assignModal.name}"</h3>
-              <button onClick={() => setAssignModal(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer' }}><X size={18} /></button>
+              <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.3rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px' }}>Assigner "{assignModal.name}"</h3>
+              <button onClick={() => setAssignModal(null)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer' }}><X size={18} /></button>
             </div>
             <label style={labelStyle}>Choisir un client</label>
             <select value={assignClientId} onChange={e => setAssignClientId(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }}>
@@ -189,7 +193,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               {clients.map((c: any) => <option key={c.id} value={c.id}>{c.full_name || c.email}</option>)}
             </select>
             <button onClick={assignToClient} disabled={!assignClientId || saving}
-              style={{ width: '100%', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, border: 'none', borderRadius: 8, padding: '12px', color: '#000', fontWeight: 700, cursor: saving ? 'wait' : 'pointer' }}>
+              style={{ width: '100%', background: GOLD, border: 'none', borderRadius: 0, padding: '12px', color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, cursor: saving ? 'wait' : 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const, clipPath: 'polygon(0 0, 100% 0, 96% 100%, 0% 100%)' }}>
               {saving ? 'Assignation...' : 'Assigner le programme'}
             </button>
           </div>
@@ -202,10 +206,10 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '3px', textTransform: 'uppercase' }}>
           {editing ? 'Modifier' : 'Créer'} un programme
         </h1>
-        <button onClick={resetForm} style={{ background: 'none', border: '1px solid #333', borderRadius: 6, padding: '6px 12px', color: '#666', fontSize: 13, cursor: 'pointer' }}>Annuler</button>
+        <button onClick={resetForm} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 0, padding: '6px 12px', color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 13, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Annuler</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -223,26 +227,26 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
           <div key={di} style={cardStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <input value={day.name} onChange={e => { const u = [...pDays]; u[di].name = e.target.value; setPDays(u) }}
-                style={{ ...inputStyle, width: 'auto', fontWeight: 700, fontSize: 15, background: 'transparent', border: 'none', padding: '4px 0', color: GOLD }} />
-              {pDays.length > 1 && <button onClick={() => removeDay(di)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={14} /></button>}
+                style={{ ...inputStyle, width: 'auto', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, background: 'transparent', border: 'none', padding: '4px 0', color: GOLD, letterSpacing: '2px' }} />
+              {pDays.length > 1 && <button onClick={() => removeDay(di)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer' }}><Trash2 size={14} /></button>}
             </div>
 
             {day.exercises.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 12, background: BORDER }}>
                 {day.exercises.map((ex, ei) => (
-                  <div key={ei} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0a0a0a', borderRadius: 8, padding: '8px 12px' }}>
+                  <div key={ei} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: BG_BASE, padding: '8px 12px' }}>
                     <div>
-                      <span style={{ fontSize: 14, color: '#f8fafc', fontWeight: 600 }}>{ex.name}</span>
-                      <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 8 }}>{ex.sets}x{ex.reps} · {ex.rest}s repos</span>
+                      <span style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 600 }}>{ex.name}</span>
+                      <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginLeft: 8 }}>{ex.sets}x{ex.reps} · {ex.rest}s repos</span>
                     </div>
-                    <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer' }}><X size={14} /></button>
+                    <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer' }}><X size={14} /></button>
                   </div>
                 ))}
               </div>
             )}
 
             {addDayIdx === di ? (
-              <div style={{ background: '#0a0a0a', borderRadius: 8, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ background: BG_BASE, borderRadius: RADIUS_CARD, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <select value={exName} onChange={e => setExName(e.target.value)} style={inputStyle}>
                   <option value="">Choisir un exercice...</option>
                   {exerciseDb.map((e: any) => <option key={e.name} value={e.name}>{e.name}</option>)}
@@ -253,24 +257,24 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                   <div><label style={{ ...labelStyle, fontSize: 10 }}>Repos (s)</label><input value={exRest} onChange={e => setExRest(e.target.value)} style={inputStyle} /></div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => addExercise(di)} style={{ flex: 1, background: GOLD, border: 'none', borderRadius: 6, padding: '8px', color: '#000', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Ajouter</button>
-                  <button onClick={() => setAddDayIdx(null)} style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '8px 14px', color: '#666', fontSize: 13, cursor: 'pointer' }}>Annuler</button>
+                  <button onClick={() => addExercise(di)} style={{ flex: 1, background: GOLD, border: 'none', borderRadius: 0, padding: '8px', color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Ajouter</button>
+                  <button onClick={() => setAddDayIdx(null)} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 14px', color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setAddDayIdx(di)} style={{ width: '100%', background: 'transparent', border: '1px dashed #333', borderRadius: 8, padding: '10px', color: '#6b7280', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <button onClick={() => setAddDayIdx(di)} style={{ width: '100%', background: 'transparent', border: `1px dashed ${BORDER}`, borderRadius: 0, padding: '10px', color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 <Plus size={14} /> Ajouter un exercice
               </button>
             )}
           </div>
         ))}
 
-        <button onClick={addDay} style={{ background: 'transparent', border: '1px dashed #333', borderRadius: 12, padding: '14px', color: GOLD, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <button onClick={addDay} style={{ background: 'transparent', border: `1px dashed ${BORDER}`, borderRadius: 0, padding: '14px', color: GOLD, fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, letterSpacing: '1px', textTransform: 'uppercase' as const }}>
           <Plus size={16} /> Ajouter un jour
         </button>
 
         <button onClick={saveProgram} disabled={!pName.trim() || saving}
-          style={{ width: '100%', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, border: 'none', borderRadius: 12, padding: '16px', color: '#000', fontWeight: 700, fontSize: 16, fontFamily: "'Barlow Condensed', sans-serif", cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.04em' }}>
+          style={{ width: '100%', background: GOLD, border: 'none', borderRadius: 0, padding: '16px', color: BG_BASE, fontWeight: 700, fontSize: 16, fontFamily: FONT_ALT, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '1.5px', textTransform: 'uppercase' as const, clipPath: 'polygon(0 0, 100% 0, 97% 100%, 0% 100%)' }}>
           <Save size={18} /> {saving ? 'Sauvegarde...' : editing ? 'Mettre à jour' : 'Sauvegarder le programme'}
         </button>
       </div>

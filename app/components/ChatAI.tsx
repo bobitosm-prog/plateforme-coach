@@ -2,13 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Send, Bot, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-
-const GOLD = '#C9A84C'
-const BG = '#0a0a0a'
-const CARD = '#1A1A1A'
-const BORDER = '#2A2A2A'
-const TEXT = '#F8FAFC'
-const MUTED = '#6B7280'
+import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
 
 const SUGGESTIONS = [
   'Comment atteindre mes macros ?',
@@ -131,8 +125,8 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
   if (!open) {
     return (
       <button onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 300) }}
-        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 16, background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998 }}>
-        <Bot size={24} color="#000" strokeWidth={2.5} />
+        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 0, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+        <Bot size={24} color="#050505" strokeWidth={2.5} />
       </button>
     )
   }
@@ -146,23 +140,23 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
         exit={{ opacity: 0, y: 40 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className="chat-ai-panel"
-        style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: 'calc(100dvh - 0px)', background: BG, zIndex: 1001, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${BORDER}` }}
+        style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: 'calc(100dvh - 0px)', background: BG_BASE, zIndex: 1001, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${BORDER}` }}
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Bot size={20} color="#000" strokeWidth={2.5} />
+            <div style={{ width: 36, height: 36, borderRadius: 0, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Bot size={20} color="#050505" strokeWidth={2.5} />
             </div>
             <div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, color: TEXT, letterSpacing: '0.04em' }}>COACH IA</div>
-              <div style={{ fontSize: '0.6rem', color: MUTED, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Sparkles size={9} color={GOLD} /> Propulsé par Claude
+              <div style={{ fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>COACH IA</div>
+              <div style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Sparkles size={9} color={GOLD} /> Propulse par Claude
               </div>
             </div>
           </div>
-          <button onClick={() => setOpen(false)} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color={MUTED} />
+          <button onClick={() => setOpen(false)} style={{ width: 32, height: 32, borderRadius: 0, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color={TEXT_MUTED} />
           </button>
         </div>
 
@@ -171,18 +165,19 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
           {messages.length === 0 && (
             <div style={{ textAlign: 'center', padding: '40px 0' }}>
               <Bot size={40} color={GOLD} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT, margin: '0 0 6px' }}>Salut {profile?.full_name?.split(' ')[0] || ''} !</p>
-              <p style={{ fontSize: '0.82rem', color: MUTED, margin: 0, lineHeight: 1.5 }}>Pose-moi une question sur ta nutrition, ton entraînement ou tes objectifs.</p>
+              <p style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, color: TEXT_PRIMARY, margin: '0 0 6px', letterSpacing: '1px', textTransform: 'uppercase' }}>Salut {profile?.full_name?.split(' ')[0] || ''} !</p>
+              <p style={{ fontSize: '0.82rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED, margin: 0, lineHeight: 1.5 }}>Pose-moi une question sur ta nutrition, ton entrainement ou tes objectifs.</p>
             </div>
           )}
 
           {messages.map((msg, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
               <div style={{
-                maxWidth: '85%', padding: '10px 14px', fontSize: '0.85rem', lineHeight: 1.55, color: TEXT,
-                borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                background: msg.role === 'user' ? CARD : 'rgba(201,168,76,0.06)',
-                border: msg.role === 'assistant' ? `1px solid rgba(201,168,76,0.15)` : 'none',
+                maxWidth: '85%', padding: '10px 14px', fontSize: '0.85rem', lineHeight: 1.55, color: TEXT_PRIMARY,
+                fontFamily: FONT_BODY, fontWeight: 300,
+                borderRadius: 2,
+                background: msg.role === 'user' ? GOLD_DIM : BG_CARD_2,
+                border: msg.role === 'user' ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
                 whiteSpace: 'pre-wrap', wordBreak: 'break-word',
               }}>
                 {msg.content}
@@ -192,7 +187,7 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
 
           {loading && (
             <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <div style={{ padding: '10px 14px', borderRadius: '16px 16px 16px 4px', background: 'rgba(201,168,76,0.06)', border: `1px solid rgba(201,168,76,0.15)` }}>
+              <div style={{ padding: '10px 14px', borderRadius: 2, background: BG_CARD_2, border: `1px solid ${BORDER}` }}>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {[0, 1, 2].map(i => (
                     <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD, opacity: 0.5, animation: `dotPulse 1.2s ${i * 0.2}s ease-in-out infinite` }} />
@@ -202,7 +197,7 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
             </div>
           )}
 
-          {error && <p style={{ fontSize: '0.75rem', color: '#EF4444', textAlign: 'center' }}>{error}</p>}
+          {error && <p style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, color: '#ef4444', textAlign: 'center' }}>{error}</p>}
           <div ref={endRef} />
         </div>
 
@@ -210,7 +205,7 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
         {messages.length === 0 && (
           <div style={{ padding: '0 16px 8px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {SUGGESTIONS.map(s => (
-              <button key={s} onClick={() => sendMessage(s)} style={{ fontSize: '0.7rem', fontWeight: 500, color: GOLD, background: 'transparent', border: `1px solid rgba(201,168,76,0.2)`, borderRadius: 20, padding: '6px 12px', cursor: 'pointer', transition: 'all 150ms' }}>{s}</button>
+              <button key={s} onClick={() => sendMessage(s)} style={{ fontSize: '0.7rem', fontWeight: 700, fontFamily: FONT_ALT, color: GOLD, background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '6px 12px', cursor: 'pointer', transition: 'all 150ms', letterSpacing: '0.5px' }}>{s}</button>
             ))}
           </div>
         )}
@@ -221,17 +216,17 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
             placeholder="Pose ta question..."
             rows={1}
-            style={{ flex: 1, background: '#111', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '10px 14px', color: TEXT, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, fontFamily: "'DM Sans', sans-serif" }}
+            style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, fontFamily: FONT_BODY }}
           />
           <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
-            style={{ width: 40, height: 40, borderRadius: 12, background: input.trim() ? `linear-gradient(135deg, ${GOLD}, #D4AF37)` : '#222', border: 'none', cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms' }}>
-            <Send size={18} color={input.trim() ? '#000' : MUTED} strokeWidth={2.5} />
+            style={{ width: 40, height: 40, borderRadius: 0, background: input.trim() ? GOLD : BG_CARD_2, border: input.trim() ? 'none' : `1px solid ${BORDER}`, cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms' }}>
+            <Send size={18} color={input.trim() ? '#050505' : TEXT_MUTED} strokeWidth={2.5} />
           </button>
         </div>
 
         <style>{`
           @keyframes dotPulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
-          @media (min-width: 768px) { .chat-ai-panel { height: calc(100dvh - 80px) !important; bottom: 0 !important; border-radius: 16px 0 0 0 !important; } }
+          @media (min-width: 768px) { .chat-ai-panel { height: calc(100dvh - 80px) !important; bottom: 0 !important; border-radius: 2px 0 0 0 !important; } }
         `}</style>
       </motion.div>
     </AnimatePresence>

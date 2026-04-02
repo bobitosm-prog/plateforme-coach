@@ -1,5 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../../lib/design-tokens'
 
 interface ExerciseFeedback {
   id: string
@@ -74,12 +79,12 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
   return (
     <div style={{ marginBottom: 32 }}>
       <h2 style={{
-        fontFamily: "'Barlow Condensed', sans-serif",
-        fontSize: 20,
+        fontFamily: FONT_DISPLAY,
+        fontSize: 24,
         fontWeight: 700,
         textTransform: 'uppercase',
-        letterSpacing: 1,
-        color: '#C9A84C',
+        letterSpacing: '3px',
+        color: GOLD,
         marginBottom: 16,
       }}>
         {`VID\u00C9OS \u00C0 REVIEWER (${feedbacks.length})`}
@@ -88,23 +93,24 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {feedbacks.map(fb => (
           <div key={fb.id} style={{
-            background: '#0d0d0d',
-            border: '1px solid #1a1a1a',
-            borderRadius: 12,
+            background: BG_CARD,
+            border: `1px solid ${BORDER}`,
+            borderLeft: `2px solid ${GOLD}`,
+            borderRadius: RADIUS_CARD,
             padding: 20,
           }}>
             <div style={{ marginBottom: 8 }}>
               <span style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT_BODY,
                 fontWeight: 600,
-                color: '#fff',
+                color: TEXT_PRIMARY,
                 fontSize: 15,
               }}>
                 {clientNames[fb.client_id] || fb.client_id}
               </span>
               <span style={{
-                fontFamily: "'DM Sans', sans-serif",
-                color: '#888',
+                fontFamily: FONT_BODY,
+                color: TEXT_MUTED,
                 fontSize: 14,
                 marginLeft: 12,
               }}>
@@ -114,9 +120,9 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
 
             {fb.client_note && (
               <p style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT_BODY,
                 fontStyle: 'italic',
-                color: '#777',
+                color: TEXT_MUTED,
                 fontSize: 13,
                 margin: '0 0 12px',
               }}>
@@ -131,7 +137,7 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
               style={{
                 width: '100%',
                 maxWidth: 480,
-                borderRadius: 8,
+                borderRadius: RADIUS_CARD,
                 background: '#000',
                 marginBottom: 12,
               }}
@@ -144,11 +150,11 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
               rows={3}
               style={{
                 width: '100%',
-                background: '#111',
-                border: '1px solid #1a1a1a',
-                borderRadius: 8,
-                color: '#fff',
-                fontFamily: "'DM Sans', sans-serif",
+                background: BG_BASE,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 0,
+                color: TEXT_PRIMARY,
+                fontFamily: FONT_BODY,
                 fontSize: 14,
                 padding: '10px 12px',
                 resize: 'vertical',
@@ -162,16 +168,18 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
                 disabled={sending[fb.id]}
                 onClick={() => handleAction(fb, 'reviewed')}
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT_ALT,
                   fontSize: 14,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   padding: '8px 18px',
-                  borderRadius: 8,
+                  borderRadius: 0,
                   border: 'none',
-                  background: '#C9A84C',
-                  color: '#000',
+                  background: GOLD,
+                  color: BG_BASE,
                   cursor: 'pointer',
                   opacity: sending[fb.id] ? 0.5 : 1,
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase' as const,
                 }}
               >
                 Envoyer le feedback
@@ -180,16 +188,18 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
                 disabled={sending[fb.id]}
                 onClick={() => handleAction(fb, 'approved')}
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT_ALT,
                   fontSize: 14,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   padding: '8px 18px',
-                  borderRadius: 8,
-                  border: '1px solid #2a2a2a',
+                  borderRadius: 0,
+                  border: `1px solid ${BORDER}`,
                   background: 'transparent',
-                  color: '#22C55E',
+                  color: GREEN,
                   cursor: 'pointer',
                   opacity: sending[fb.id] ? 0.5 : 1,
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase' as const,
                 }}
               >
                 &#10003; Approuver

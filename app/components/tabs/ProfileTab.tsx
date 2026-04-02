@@ -5,8 +5,11 @@ import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Trash2, UserMinus, Dow
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
 import {
-  BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
 } from '../../../lib/design-tokens'
+
+const ORANGE = GOLD
 
 const supabasePush = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -107,40 +110,40 @@ export default function ProfileTab({
 
   return (
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
-      <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 24px' }}>PROFIL</h1>
+      <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.6rem', fontWeight: 800, letterSpacing: '2px', margin: '0 0 24px', textTransform: 'uppercase', color: TEXT_PRIMARY }}>PROFIL</h1>
 
       {/* Avatar + name */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24, gap: 12 }}>
-        <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: '50%', background: displayAvatar ? 'transparent' : ORANGE, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative' }}>
+        <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: RADIUS_CARD, background: displayAvatar ? 'transparent' : GOLD, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative' }}>
           {displayAvatar
             ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt="Photo de profil" />
-            : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '2rem', color: '#fff' }}>{firstName.charAt(0).toUpperCase()}</span>
+            : <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '2rem', color: '#050505' }}>{firstName.charAt(0).toUpperCase()}</span>
           }
         </button>
         <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: TEXT_PRIMARY }}>{fullName}</div>
-          <div style={{ fontSize: '0.8rem', color: TEXT_MUTED }}>{session.user.email}</div>
+          <div style={{ fontFamily: FONT_ALT, fontSize: '1.4rem', fontWeight: 700, color: TEXT_PRIMARY }}>{fullName}</div>
+          <div style={{ fontSize: '0.8rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>{session.user.email}</div>
         </div>
       </div>
 
-      {/* Stats row — weight read-only */}
+      {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 24 }}>
         {[
-          { label: 'Poids', value: currentWeight ? `${currentWeight}kg` : '—', color: ORANGE },
+          { label: 'Poids', value: currentWeight ? `${currentWeight}kg` : '—', color: GOLD },
           { label: 'Objectif', value: goalWeight ? `${goalWeight}kg` : '—', color: TEXT_MUTED },
           { label: 'Kcal/j', value: calorieGoal ? `${calorieGoal}` : '—', color: TEXT_MUTED },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 8px', textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color }}>{value}</div>
-            <div style={{ fontSize: '0.62rem', color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700, marginTop: 4 }}>{label}</div>
+          <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 8px', textAlign: 'center' }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, color }}>{value}</div>
+            <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginTop: 4 }}>{label}</div>
           </div>
         ))}
       </div>
 
       {/* Phone field */}
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', marginBottom: 8 }}>
-        <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 8 }}>Téléphone</div>
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px', marginBottom: 8 }}>
+        <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 8 }}>Téléphone</div>
         {phoneEditing ? (
           <div style={{ display: 'flex', gap: 8 }}>
             <input
@@ -148,25 +151,25 @@ export default function ProfileTab({
               value={phoneForm}
               onChange={e => setPhoneForm(e.target.value)}
               placeholder="+33 6 00 00 00 00"
-              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '8px 12px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }}
+              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 12px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', fontFamily: FONT_BODY }}
             />
-            <button onClick={savePhone} style={{ background: GREEN, border: 'none', borderRadius: 10, padding: '8px 14px', color: '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>OK</button>
-            <button onClick={() => { setPhoneEditing(false); setPhoneForm(profile?.phone || '') }} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '8px 12px', color: TEXT_MUTED, fontSize: '0.8rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={savePhone} style={{ background: GOLD, border: 'none', borderRadius: 0, padding: '8px 14px', color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>OK</button>
+            <button onClick={() => { setPhoneEditing(false); setPhoneForm(profile?.phone || '') }} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 12px', color: TEXT_MUTED, fontSize: '0.8rem', cursor: 'pointer', fontFamily: FONT_ALT }}>✕</button>
           </div>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.9rem', color: profile?.phone ? TEXT_PRIMARY : TEXT_MUTED }}>{profile?.phone || 'Ajouter un numéro'}</span>
-            <button onClick={() => setPhoneEditing(true)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '4px 10px', color: TEXT_MUTED, fontSize: '0.72rem', cursor: 'pointer' }}>Modifier</button>
+            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: profile?.phone ? TEXT_PRIMARY : TEXT_MUTED }}>{profile?.phone || 'Ajouter un numéro'}</span>
+            <button onClick={() => setPhoneEditing(true)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 0, padding: '4px 10px', color: TEXT_MUTED, fontSize: '0.72rem', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>Modifier</button>
           </div>
         )}
       </div>
 
       {/* BMR calculator */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-        <button onClick={() => setModal('bmr')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+        <button onClick={() => setModal('bmr')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Zap size={18} color={TEXT_MUTED} />
-            <span style={{ fontSize: '0.9rem', color: TEXT_PRIMARY }}>Calculateur BMR</span>
+            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Calculateur BMR</span>
           </div>
           <ChevronRight size={16} color={TEXT_MUTED} />
         </button>
@@ -174,14 +177,14 @@ export default function ProfileTab({
 
       {/* Coach section */}
       {coachProgram && (
-        <div style={{ background: BG_CARD, border: `1px solid ${ORANGE}30`, borderRadius: 14, padding: 16, marginBottom: 16 }}>
+        <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Crown size={18} color={ORANGE} />
+            <Crown size={18} color={GOLD} />
             <div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, color: TEXT_PRIMARY }}>Mon coach</div>
-              <div style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>Programme actif</div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, color: TEXT_PRIMARY }}>Mon coach</div>
+              <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>Programme actif</div>
             </div>
-            <span style={{ marginLeft: 'auto', fontSize: '0.65rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 8, padding: '4px 8px' }}>Actif</span>
+            <span style={{ marginLeft: 'auto', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GREEN, background: `${GREEN}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>Actif</span>
           </div>
         </div>
       )}
@@ -191,22 +194,22 @@ export default function ProfileTab({
         <button
           onClick={enableNotifications}
           disabled={notifStatus === 'loading' || notifStatus === 'done'}
-          style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1 }}
+          style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1 }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {notifStatus === 'denied' ? <BellOff size={18} color="#EF4444" /> : <Bell size={18} color={notifStatus === 'done' ? GREEN : TEXT_MUTED} />}
-            <span style={{ fontSize: '0.9rem', color: notifStatus === 'denied' ? '#EF4444' : TEXT_PRIMARY }}>
+            {notifStatus === 'denied' ? <BellOff size={18} color={RED} /> : <Bell size={18} color={notifStatus === 'done' ? GREEN : TEXT_MUTED} />}
+            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: notifStatus === 'denied' ? RED : TEXT_PRIMARY }}>
               {notifStatus === 'done' ? 'Notifications activées' : notifStatus === 'denied' ? 'Notifications refusées' : 'Activer les notifications'}
             </span>
           </div>
-          {notifStatus === 'done' && <span style={{ fontSize: '0.65rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 8, padding: '4px 8px' }}>Actif</span>}
+          {notifStatus === 'done' && <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GREEN, background: `${GREEN}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>Actif</span>}
           {notifStatus === 'idle' && <ChevronRight size={16} color={TEXT_MUTED} />}
         </button>
       </div>
 
-      {/* ── Reminder settings ── */}
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18, marginBottom: 8 }}>
-        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>
+      {/* Reminder settings */}
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
+        <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>
           Rappels d&apos;entraînement
         </div>
 
@@ -214,7 +217,7 @@ export default function ProfileTab({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Bell size={16} color={profile?.reminder_enabled ? GREEN : TEXT_MUTED} />
-            <span style={{ fontSize: '0.85rem', color: TEXT_PRIMARY }}>Activer les rappels</span>
+            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Activer les rappels</span>
           </div>
           <button
             onClick={async () => {
@@ -227,7 +230,7 @@ export default function ProfileTab({
             }}
             style={{
               width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: profile?.reminder_enabled ? GREEN : '#333',
+              background: profile?.reminder_enabled ? GOLD : '#333',
               position: 'relative', transition: 'background 200ms',
             }}
           >
@@ -244,7 +247,7 @@ export default function ProfileTab({
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <Clock size={16} color={TEXT_MUTED} />
-            <span style={{ fontSize: '0.8rem', color: TEXT_MUTED }}>Heure d&apos;entraînement</span>
+            <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED }}>Heure d&apos;entraînement</span>
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {['06:00', '08:00', '12:00', '17:00', '19:00'].map(time => {
@@ -254,11 +257,11 @@ export default function ProfileTab({
                   key={time}
                   onClick={() => updateReminderSettings({ preferred_training_time: time })}
                   style={{
-                    padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    background: isActive ? `${ORANGE}20` : BG_BASE,
-                    color: isActive ? ORANGE : TEXT_MUTED,
-                    fontSize: '0.78rem', fontWeight: isActive ? 700 : 500,
-                    outline: isActive ? `1.5px solid ${ORANGE}` : `1px solid ${BORDER}`,
+                    padding: '6px 12px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                    background: isActive ? `${GOLD}20` : BG_BASE,
+                    color: isActive ? GOLD : TEXT_MUTED,
+                    fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: isActive ? 700 : 500,
+                    outline: isActive ? `1.5px solid ${GOLD}` : `1px solid ${BORDER}`,
                   }}
                 >
                   {time}
@@ -272,7 +275,7 @@ export default function ProfileTab({
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <Calendar size={16} color={TEXT_MUTED} />
-            <span style={{ fontSize: '0.8rem', color: TEXT_MUTED }}>Rappel avant la séance</span>
+            <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED }}>Rappel avant la séance</span>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {[{ label: '15 min', value: 15 }, { label: '30 min', value: 30 }, { label: '1h', value: 60 }].map(opt => {
@@ -282,11 +285,11 @@ export default function ProfileTab({
                   key={opt.value}
                   onClick={() => updateReminderSettings({ reminder_minutes_before: opt.value })}
                   style={{
-                    padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    background: isActive ? `${ORANGE}20` : BG_BASE,
-                    color: isActive ? ORANGE : TEXT_MUTED,
-                    fontSize: '0.78rem', fontWeight: isActive ? 700 : 500,
-                    outline: isActive ? `1.5px solid ${ORANGE}` : `1px solid ${BORDER}`,
+                    padding: '6px 12px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                    background: isActive ? `${GOLD}20` : BG_BASE,
+                    color: isActive ? GOLD : TEXT_MUTED,
+                    fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: isActive ? 700 : 500,
+                    outline: isActive ? `1.5px solid ${GOLD}` : `1px solid ${BORDER}`,
                   }}
                 >
                   {opt.label}
@@ -299,10 +302,10 @@ export default function ProfileTab({
         {/* Preview */}
         {profile?.reminder_enabled && (
           <div style={{
-            background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10,
+            background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
             padding: '10px 14px', marginBottom: 12,
           }}>
-            <span style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>
+            <span style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>
               Tu recevras un rappel à{' '}
               <strong style={{ color: TEXT_PRIMARY }}>
                 {(() => {
@@ -327,19 +330,19 @@ export default function ProfileTab({
             onClick={regenerateWeekSchedule}
             style={{
               width: '100%', padding: '10px', background: BG_BASE,
-              border: `1px solid ${BORDER}`, borderRadius: 10, cursor: 'pointer',
-              fontSize: '0.78rem', color: TEXT_MUTED, fontWeight: 600,
+              border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer',
+              fontSize: '0.78rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 600,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
           >
-            🔄 Régénérer le planning de la semaine
+            Régénérer le planning de la semaine
           </button>
         )}
       </div>
 
       {/* Subscription */}
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
-        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>Mon abonnement</div>
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
+        <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Mon abonnement</div>
         {(() => {
           const st = profile?.subscription_status
           const subType = profile?.subscription_type
@@ -349,16 +352,16 @@ export default function ProfileTab({
           // Lifetime
           if (st === 'lifetime') return (
             <div>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 10, background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.25)', color: '#C9A84C', fontSize: '0.78rem', fontWeight: 700, marginBottom: 12 }}>Accès à vie ✦</span>
-              <p style={{ fontSize: '0.85rem', color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Tu bénéficies d&apos;un accès permanent à toutes les fonctionnalités MoovX.</p>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: RADIUS_CARD, background: 'rgba(201,168,76,0.12)', border: `1px solid ${GOLD_RULE}`, color: GOLD, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 700, marginBottom: 12 }}>Accès à vie</span>
+              <p style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Tu bénéficies d&apos;un accès permanent à toutes les fonctionnalités MoovX.</p>
             </div>
           )
 
           // Invited (via coach)
           if (st === 'invited' || subType === 'invited') return (
             <div>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 10, background: `${GREEN}15`, border: `1px solid ${GREEN}30`, color: GREEN, fontSize: '0.78rem', fontWeight: 700, marginBottom: 12 }}>Accès Coach</span>
-              <p style={{ fontSize: '0.85rem', color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Ton accès est inclus via ton coach.</p>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: RADIUS_CARD, background: `${GREEN}15`, border: `1px solid ${GREEN}30`, color: GREEN, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 700, marginBottom: 12 }}>Accès Coach</span>
+              <p style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Ton accès est inclus via ton coach.</p>
             </div>
           )
 
@@ -369,13 +372,13 @@ export default function ProfileTab({
               : 'Plan Mensuel — CHF 10/mois'
             return (
               <div>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 10, background: `${GREEN}15`, border: `1px solid ${GREEN}30`, color: GREEN, fontSize: '0.78rem', fontWeight: 700, marginBottom: 12 }}>{planLabel}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: RADIUS_CARD, background: `${GREEN}15`, border: `1px solid ${GREEN}30`, color: GREEN, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 700, marginBottom: 12 }}>{planLabel}</span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 800, color: '#C9A84C' }}>{days}</span>
-                  <span style={{ fontSize: '0.82rem', color: TEXT_MUTED }}>jours restants</span>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 800, color: GOLD }}>{days}</span>
+                  <span style={{ fontSize: '0.82rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>jours restants</span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginBottom: days <= 5 ? 4 : 0 }}>Renouvellement le {endDate}</div>
-                {days <= 5 && <div style={{ fontSize: '0.78rem', color: '#F59E0B', marginTop: 6, fontWeight: 600 }}>Ton abonnement expire bientôt</div>}
+                <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300, marginBottom: days <= 5 ? 4 : 0 }}>Renouvellement le {endDate}</div>
+                {days <= 5 && <div style={{ fontSize: '0.78rem', color: GOLD, marginTop: 6, fontFamily: FONT_ALT, fontWeight: 600 }}>Ton abonnement expire bientôt</div>}
               </div>
             )
           }
@@ -383,8 +386,8 @@ export default function ProfileTab({
           // No subscription
           return (
             <div>
-              <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
-              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #C9A84C, #D4AF37)', border: 'none', borderRadius: 12, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}>
+              <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5, fontFamily: FONT_BODY, fontWeight: 300 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
+              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: GOLD, border: 'none', borderRadius: 0, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
                 S&apos;abonner — Dès CHF 10/mois
               </button>
             </div>
@@ -392,20 +395,20 @@ export default function ProfileTab({
         })()}
       </div>
 
-      {/* ── Paywall modal ── */}
+      {/* Paywall modal */}
       {showPaywall && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 1000, overflowY: 'auto' }}>
-          <button onClick={() => setShowPaywall(false)} style={{ position: 'fixed', top: 16, right: 16, zIndex: 1001, width: 36, height: 36, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color="#6B7280" />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, overflowY: 'auto' }}>
+          <button onClick={() => setShowPaywall(false)} style={{ position: 'fixed', top: 16, right: 16, zIndex: 1001, width: 36, height: 36, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color={TEXT_MUTED} />
           </button>
           <Paywall role="client" userId={session?.user?.id} coachId={coachId} onSignOut={() => setShowPaywall(false)} />
         </div>
       )}
 
-      {/* ── Mon Coach section ── */}
+      {/* Mon Coach section */}
       <CoachSection supabase={supabase} session={session} coachId={coachId} />
 
-      {/* ── Payment history ── */}
+      {/* Payment history */}
       <PaymentHistory supabase={supabase} userId={session?.user?.id} />
 
       {/* Badges */}
@@ -420,24 +423,24 @@ export default function ProfileTab({
           { type: 'lifetime', icon: '⭐', label: 'À vie', desc: 'Abonnement lifetime' },
         ]
         return (
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18, marginBottom: 8 }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>Mes badges</div>
+          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
+            <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Mes badges</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {ALL_BADGES.map(b => {
                 const earned = badges.includes(b.type)
                 return (
                   <div key={b.type} style={{
                     background: BG_BASE,
-                    border: earned ? '1px solid #C9A84C' : `1px solid ${BORDER}`,
-                    borderRadius: 12,
+                    border: earned ? `1px solid ${GOLD}` : `1px solid ${BORDER}`,
+                    borderRadius: RADIUS_CARD,
                     padding: '12px 6px',
                     textAlign: 'center',
                     opacity: earned ? 1 : 0.3,
                     transition: 'opacity 0.3s ease',
                   }}>
                     <div style={{ fontSize: '1.4rem', marginBottom: 4 }}>{b.icon}</div>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: earned ? '#C9A84C' : TEXT_MUTED, marginBottom: 2 }}>{b.label}</div>
-                    <div style={{ fontSize: '0.55rem', color: TEXT_MUTED, lineHeight: 1.3 }}>{b.desc}</div>
+                    <div style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: earned ? GOLD : TEXT_MUTED, marginBottom: 2 }}>{b.label}</div>
+                    <div style={{ fontSize: '0.55rem', color: TEXT_MUTED, lineHeight: 1.3, fontFamily: FONT_BODY, fontWeight: 300 }}>{b.desc}</div>
                   </div>
                 )
               })}
@@ -447,18 +450,18 @@ export default function ProfileTab({
       })()}
 
       {/* Sign out */}
-      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} style={{ width: '100%', background: 'transparent', border: `1px solid #EF4444`, borderRadius: 14, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
-        <LogOut size={18} color="#EF4444" />
-        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#EF4444' }}>Déconnexion</span>
+      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} style={{ width: '100%', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 0, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
+        <LogOut size={18} color={RED} />
+        <span style={{ fontSize: '0.9rem', fontFamily: FONT_ALT, fontWeight: 700, color: RED }}>Déconnexion</span>
       </button>
 
-      {/* ── Delete account ── */}
+      {/* Delete account */}
       <DeleteAccountSection session={session} />
     </div>
   )
 }
 
-/* ── Coach Section (multi-coach) ── */
+/* Coach Section (multi-coach) */
 function CoachSection({ supabase, session, coachId }: { supabase: any; session: any; coachId: string | null }) {
   const [coachName, setCoachName] = useState<string | null>(null)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
@@ -480,44 +483,44 @@ function CoachSection({ supabase, session, coachId }: { supabase: any; session: 
   }
 
   return (
-    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18, marginTop: 12, marginBottom: 8 }}>
-      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>Mon coach</div>
+    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginTop: 12, marginBottom: 8 }}>
+      <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Mon coach</div>
       {coachId ? (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <Crown size={18} color={ORANGE} />
+            <Crown size={18} color={GOLD} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: TEXT_PRIMARY }}>{coachName || 'Coach'}</div>
-              <div style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>Coach actif</div>
+              <div style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>{coachName || 'Coach'}</div>
+              <div style={{ fontSize: '0.7rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>Coach actif</div>
             </div>
-            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 8, padding: '4px 8px' }}>Actif</span>
+            <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GREEN, background: `${GREEN}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>Actif</span>
           </div>
-          <button onClick={() => setShowLeaveModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.78rem', fontWeight: 600 }}>
+          <button onClick={() => setShowLeaveModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 600 }}>
             <UserMinus size={14} /> Changer de coach
           </button>
         </>
       ) : (
-        <div style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.5 }}>
+        <div style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.5, fontFamily: FONT_BODY, fontWeight: 300 }}>
           Aucun coach lié. Rejoins un coach via son lien d&apos;invitation.
         </div>
       )}
 
       {/* Leave coach modal */}
       {showLeaveModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, maxWidth: 400, width: '100%' }}>
-            <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: '0 0 12px' }}>Changer de coach</h3>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 8px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 400, width: '100%' }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 12px' }}>CHANGER DE COACH</h3>
+            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 8px', fontFamily: FONT_BODY, fontWeight: 300 }}>
               Pour changer de coach, tu as besoin d&apos;un nouveau lien d&apos;invitation. Contacte ton nouveau coach pour qu&apos;il te partage son lien.
             </p>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 16px' }}>
+            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 16px', fontFamily: FONT_BODY, fontWeight: 300 }}>
               Ton historique (poids, séances, mensurations) sera conservé.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={leaveCoach} disabled={leaving} style={{ width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, color: '#EF4444', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={leaveCoach} disabled={leaving} style={{ width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)', border: `1px solid ${RED}`, borderRadius: 0, color: RED, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>
                 {leaving ? 'En cours...' : 'Quitter mon coach actuel'}
               </button>
-              <button onClick={() => setShowLeaveModal(false)} style={{ width: '100%', padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_MUTED, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
+              <button onClick={() => setShowLeaveModal(false)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
             </div>
           </div>
         </div>
@@ -526,7 +529,7 @@ function CoachSection({ supabase, session, coachId }: { supabase: any; session: 
   )
 }
 
-/* ── Payment History ── */
+/* Payment History */
 function PaymentHistory({ supabase, userId }: { supabase: any; userId: string }) {
   const [payments, setPayments] = useState<any[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -540,22 +543,22 @@ function PaymentHistory({ supabase, userId }: { supabase: any; userId: string })
   if (!loaded) return null
 
   return (
-    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18, marginBottom: 8 }}>
-      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 12 }}>Historique des paiements</div>
+    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
+      <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Historique des paiements</div>
       {payments.length === 0 ? (
-        <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: 0 }}>Aucun paiement enregistré</p>
+        <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Aucun paiement enregistré</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {payments.map((p: any) => {
-            const statusColor = p.status === 'paid' ? GREEN : p.status === 'refunded' ? '#F59E0B' : '#EF4444'
+            const statusColor = p.status === 'paid' ? GREEN : p.status === 'refunded' ? GOLD : RED
             const statusLabel = p.status === 'paid' ? 'Payé' : p.status === 'refunded' ? 'Remboursé' : 'Échoué'
             return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: BG_BASE, borderRadius: 10, border: `1px solid ${BORDER}` }}>
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: BG_BASE, borderRadius: RADIUS_CARD, border: `1px solid ${BORDER}` }}>
                 <div>
-                  <div style={{ fontSize: '0.82rem', color: TEXT_PRIMARY, fontWeight: 600 }}>CHF {p.amount || 30}</div>
-                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2 }}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString('fr-FR') : '—'}</div>
+                  <div style={{ fontSize: '0.82rem', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 400 }}>CHF {p.amount || 30}</div>
+                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2, fontFamily: FONT_BODY, fontWeight: 300 }}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString('fr-FR') : '—'}</div>
                 </div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: statusColor, background: `${statusColor}20`, borderRadius: 8, padding: '4px 8px' }}>{statusLabel}</span>
+                <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: statusColor, background: `${statusColor}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>{statusLabel}</span>
               </div>
             )
           })}
@@ -565,7 +568,7 @@ function PaymentHistory({ supabase, userId }: { supabase: any; userId: string })
   )
 }
 
-/* ── Delete Account ── */
+/* Delete Account */
 function DeleteAccountSection({ session }: { session: any }) {
   const [showModal, setShowModal] = useState(false)
   const [confirmText, setConfirmText] = useState('')
@@ -595,23 +598,23 @@ function DeleteAccountSection({ session }: { session: any }) {
 
   return (
     <>
-      <button onClick={() => setShowModal(true)} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', marginTop: 24 }}>
-        <Trash2 size={16} color="#EF4444" />
-        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#EF4444' }}>Supprimer mon compte</span>
+      <button onClick={() => setShowModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 0, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', marginTop: 24 }}>
+        <Trash2 size={16} color={RED} />
+        <span style={{ fontSize: '0.82rem', fontFamily: FONT_ALT, fontWeight: 600, color: RED }}>Supprimer mon compte</span>
       </button>
 
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: BG_CARD, border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: 24, maxWidth: 400, width: '100%' }}>
-            <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: '#EF4444', margin: '0 0 12px' }}>Supprimer mon compte</h3>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 16px' }}>
+          <div style={{ background: BG_CARD, border: `1px solid ${RED}`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 400, width: '100%' }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, letterSpacing: '2px', color: RED, margin: '0 0 12px' }}>SUPPRIMER MON COMPTE</h3>
+            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 16px', fontFamily: FONT_BODY, fontWeight: 300 }}>
               Es-tu sûr de vouloir supprimer ton compte ? Toutes tes données seront supprimées définitivement. Cette action est irréversible.
             </p>
-            <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, margin: '0 0 8px' }}>Tape <strong style={{ color: '#EF4444' }}>SUPPRIMER</strong> pour confirmer :</p>
-            <input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="SUPPRIMER" style={{ width: '100%', background: BG_BASE, border: `1px solid ${confirmText === 'SUPPRIMER' ? '#EF4444' : BORDER}`, borderRadius: 10, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', marginBottom: 16 }} />
+            <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, margin: '0 0 8px', fontFamily: FONT_BODY }}>Tape <strong style={{ color: RED }}>SUPPRIMER</strong> pour confirmer :</p>
+            <input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="SUPPRIMER" style={{ width: '100%', background: BG_BASE, border: `1px solid ${confirmText === 'SUPPRIMER' ? RED : BORDER}`, borderRadius: 0, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', marginBottom: 16, fontFamily: FONT_BODY }} />
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => { setShowModal(false); setConfirmText('') }} style={{ flex: 1, padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_MUTED, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
-              <button onClick={deleteAccount} disabled={confirmText !== 'SUPPRIMER' || deleting} style={{ flex: 1, padding: '12px', background: confirmText === 'SUPPRIMER' ? '#EF4444' : '#333', borderRadius: 12, border: 'none', color: '#fff', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, cursor: confirmText === 'SUPPRIMER' ? 'pointer' : 'default', opacity: confirmText === 'SUPPRIMER' ? 1 : 0.5 }}>
+              <button onClick={() => { setShowModal(false); setConfirmText('') }} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
+              <button onClick={deleteAccount} disabled={confirmText !== 'SUPPRIMER' || deleting} style={{ flex: 1, padding: '12px', background: confirmText === 'SUPPRIMER' ? RED : '#333', borderRadius: 0, border: 'none', color: '#fff', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: confirmText === 'SUPPRIMER' ? 'pointer' : 'default', opacity: confirmText === 'SUPPRIMER' ? 1 : 0.5 }}>
                 {deleting ? 'Suppression...' : 'Supprimer'}
               </button>
             </div>

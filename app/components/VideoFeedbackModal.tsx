@@ -2,12 +2,16 @@
 import { useState, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { X, Video } from 'lucide-react'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED,
+  TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../lib/design-tokens'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
   (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 )
-const GOLD = '#C9A84C'
 
 interface Props {
   exerciseName: string
@@ -25,7 +29,7 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
   function handleVideoSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 50 * 1024 * 1024) { alert('Vidéo trop lourde (max 50 MB)'); return }
+    if (file.size > 50 * 1024 * 1024) { alert('Video trop lourde (max 50 MB)'); return }
     setVideoFile(file)
     setVideoPreview(URL.createObjectURL(file))
   }
@@ -63,35 +67,35 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
       })
       if (dbError) throw dbError
 
-      alert('Vidéo envoyée à ton coach !')
+      alert('Video envoyee a ton coach !')
       onClose()
     } catch (err: any) {
-      alert('Erreur : ' + (err.message || 'Upload échoué'))
+      alert('Erreur : ' + (err.message || 'Upload echoue'))
     }
     setUploading(false)
   }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
-      <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: 20, padding: 28, maxWidth: 420, width: '100%' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 28, maxWidth: 420, width: '100%' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: '#f8fafc', margin: 0, letterSpacing: 1 }}>ENVOYER UNE VIDÉO</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', padding: 4 }}><X size={18} /></button>
+          <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', textTransform: 'uppercase' }}>ENVOYER UNE VIDEO</h3>
+          <button onClick={onClose} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_MUTED, cursor: 'pointer', padding: 4, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
         </div>
-        <p style={{ color: '#666', fontSize: 14, margin: '0 0 20px', fontFamily: "'DM Sans', sans-serif" }}>Exercice : <span style={{ color: GOLD }}>{exerciseName}</span></p>
+        <p style={{ color: TEXT_MUTED, fontSize: 14, margin: '0 0 20px', fontFamily: FONT_BODY }}>Exercice : <span style={{ color: GOLD }}>{exerciseName}</span></p>
 
         <input ref={fileRef} type="file" accept="video/mp4,video/quicktime,video/webm" capture="environment" onChange={handleVideoSelect} style={{ display: 'none' }} />
 
         {!videoFile ? (
-          <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed rgba(201,168,76,0.3)', borderRadius: 12, padding: 36, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s' }}>
+          <div onClick={() => fileRef.current?.click()} style={{ border: `2px dashed ${GOLD_RULE}`, borderRadius: 0, padding: 36, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s' }}>
             <Video size={36} color={GOLD} style={{ marginBottom: 8 }} />
-            <p style={{ color: '#888', fontSize: 14, margin: '0 0 4px', fontFamily: "'DM Sans', sans-serif" }}>Appuie pour filmer ou choisir</p>
-            <p style={{ color: '#444', fontSize: 12, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>Max 30s · MP4, MOV, WebM · 50 MB</p>
+            <p style={{ color: TEXT_MUTED, fontSize: 14, margin: '0 0 4px', fontFamily: FONT_BODY }}>Appuie pour filmer ou choisir</p>
+            <p style={{ color: TEXT_DIM, fontSize: 12, margin: 0, fontFamily: FONT_BODY }}>Max 30s · MP4, MOV, WebM · 50 MB</p>
           </div>
         ) : (
           <div>
-            <video src={videoPreview!} controls style={{ width: '100%', borderRadius: 10, maxHeight: 240 }} />
-            <button onClick={() => { setVideoFile(null); setVideoPreview(null) }} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 12, cursor: 'pointer', marginTop: 8, fontFamily: "'DM Sans', sans-serif" }}>
+            <video src={videoPreview!} controls style={{ width: '100%', borderRadius: 0, maxHeight: 240 }} />
+            <button onClick={() => { setVideoFile(null); setVideoPreview(null) }} style={{ background: 'none', border: 'none', color: RED, fontSize: 12, cursor: 'pointer', marginTop: 8, fontFamily: FONT_BODY }}>
               Supprimer et recommencer
             </button>
           </div>
@@ -101,13 +105,13 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
           placeholder="Note pour ton coach (optionnel)..."
           value={clientNote}
           onChange={e => setClientNote(e.target.value)}
-          style={{ width: '100%', background: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: 10, padding: 12, color: '#f8fafc', fontSize: 14, marginTop: 16, minHeight: 56, resize: 'none', fontFamily: "'DM Sans', sans-serif", boxSizing: 'border-box' }}
+          style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: 12, color: TEXT_PRIMARY, fontSize: 14, marginTop: 16, minHeight: 56, resize: 'none', fontFamily: FONT_BODY, boxSizing: 'border-box' }}
         />
 
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          <button onClick={onClose} style={{ flex: 1, background: '#1a1a1a', border: '1px solid #333', borderRadius: 10, padding: 12, color: '#f8fafc', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>Annuler</button>
+          <button onClick={onClose} style={{ flex: 1, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, padding: 12, color: TEXT_PRIMARY, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>Annuler</button>
           <button onClick={handleSubmit} disabled={!videoFile || uploading}
-            style={{ flex: 1, background: uploading || !videoFile ? '#333' : `linear-gradient(135deg, ${GOLD}, #b8943f)`, border: 'none', borderRadius: 10, padding: 12, color: uploading || !videoFile ? '#666' : '#050505', fontWeight: 700, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+            style={{ flex: 1, background: uploading || !videoFile ? BORDER : GOLD, border: 'none', borderRadius: 0, padding: 12, color: uploading || !videoFile ? TEXT_MUTED : '#050505', fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
             {uploading ? 'Envoi...' : 'Envoyer au coach'}
           </button>
         </div>

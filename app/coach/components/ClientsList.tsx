@@ -7,6 +7,11 @@ import {
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../../lib/design-tokens'
 
 import { initials, statusFor, STATUS_META } from '../hooks/useCoachDashboard'
 import type { ClientRow, ScheduledSession } from '../hooks/useCoachDashboard'
@@ -48,12 +53,12 @@ export default function ClientsList({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <h2 className="section-title">Clients</h2>
           <div style={{ position: 'relative' }}>
-            <Search size={14} color="#6B7280" strokeWidth={2} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <Search size={14} color={TEXT_MUTED} strokeWidth={2} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             <input type="search" className="search-input" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} aria-label="Rechercher un client" />
           </div>
         </div>
 
-        <div className="client-table-wrap" style={{ overflowX: 'auto', borderRadius: '8px', background: '#111827' }}>
+        <div className="client-table-wrap" style={{ overflowX: 'auto', borderRadius: RADIUS_CARD, background: BG_CARD }}>
           <table className="data-table" aria-label="Liste des clients">
             <thead>
               <tr>
@@ -68,10 +73,10 @@ export default function ClientsList({
             <tbody>
               {loading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i}><td colSpan={6}><div style={{ height: '20px', background: '#374151', borderRadius: '4px', opacity: 0.5 }} /></td></tr>
+                  <tr key={i}><td colSpan={6}><div style={{ height: '20px', background: BORDER, borderRadius: RADIUS_CARD, opacity: 0.5 }} /></td></tr>
                 ))
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', color: '#6B7280', padding: '40px 16px' }}>
+                <tr><td colSpan={6} style={{ textAlign: 'center', color: TEXT_MUTED, padding: '40px 16px' }}>
                   {search ? 'Aucun client trouvé.' : "Aucun client pour l'instant."}
                 </td></tr>
               ) : (
@@ -93,16 +98,16 @@ export default function ClientsList({
                             ? <img src={p.avatar_url} alt="" style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                             : <div className="avatar-circle">{ini}</div>
                           }
-                          <span style={{ fontWeight: 500 }}>{name}</span>
+                          <span style={{ fontFamily: FONT_BODY, fontWeight: 500 }}>{name}</span>
                         </div>
                       </td>
-                      <td style={{ color: '#9CA3AF' }} onClick={() => window.location.href = `/client/${c.client_id}`}>{since}</td>
+                      <td style={{ color: TEXT_MUTED }} onClick={() => window.location.href = `/client/${c.client_id}`}>{since}</td>
                       <td onClick={() => window.location.href = `/client/${c.client_id}`}>{p?.current_weight ? `${p.current_weight} kg` : '—'}</td>
                       <td onClick={() => window.location.href = `/client/${c.client_id}`}><span className={`badge ${meta.cls}`}>{meta.label}</span></td>
                       <td>
                         <button
                           onClick={() => { setSection('messages'); openChat(c) }}
-                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: unread > 0 ? '#EF4444' : '#6B7280', padding: '4px 8px', borderRadius: 6 }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: unread > 0 ? RED : TEXT_MUTED, padding: '4px 8px', borderRadius: 0 }}
                         >
                           <MessageCircle size={15} />
                           {unread > 0 && <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>{unread}</span>}
@@ -127,10 +132,10 @@ export default function ClientsList({
         <div className="client-cards-m">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 14, height: 74, opacity: 0.5 }} />
+              <div key={i} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, height: 74, opacity: 0.5 }} />
             ))
           ) : filtered.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#6B7280', padding: '32px 0', fontSize: '0.875rem' }}>
+            <p style={{ textAlign: 'center', color: TEXT_MUTED, padding: '32px 0', fontSize: '0.875rem', fontFamily: FONT_BODY }}>
               {search ? 'Aucun client trouvé.' : "Aucun client pour l'instant."}
             </p>
           ) : (
@@ -169,10 +174,10 @@ export default function ClientsList({
                         onClick={e => { e.stopPropagation(); setSection('messages'); openChat(c) }}
                         aria-label="Messages"
                       >
-                        <MessageCircle size={20} color={unread > 0 ? '#EF4444' : '#6B7280'} />
+                        <MessageCircle size={20} color={unread > 0 ? RED : TEXT_MUTED} />
                         {unread > 0 && <span className="msg-badge">{unread > 9 ? '9+' : unread}</span>}
                       </button>
-                      <ChevronRight size={18} color="#4B5563" />
+                      <ChevronRight size={18} color={TEXT_DIM} />
                     </div>
                   </div>
                 </motion.div>
@@ -182,7 +187,7 @@ export default function ClientsList({
         </div>
 
         <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>
+          <span style={{ fontSize: '0.78rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>
             {loading ? '…' : `Affichage de ${filtered.length} client${filtered.length !== 1 ? 's' : ''}`}
           </span>
         </div>
@@ -203,10 +208,10 @@ export default function ClientsList({
 
             {showInvite && (
               <div className="invite-panel">
-                <p style={{ fontSize: '0.78rem', color: '#9CA3AF', marginBottom: '10px', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, marginBottom: '10px', lineHeight: 1.5, fontFamily: FONT_BODY }}>
                   Partage ce lien — le client sera lié à ton profil automatiquement.
                 </p>
-                <div style={{ background: '#111827', border: '1px solid #374151', borderRadius: '6px', padding: '8px 10px', fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: '10px' }}>
+                <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 10px', fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: '10px' }}>
                   {inviteLink || 'Chargement…'}
                 </div>
                 <button className="btn-primary btn-primary-orange" onClick={copyInviteLink} style={{ fontSize: '0.85rem', padding: '8px 16px' }}>
@@ -237,23 +242,23 @@ export default function ClientsList({
             const _todayStr = new Date().toISOString().split('T')[0]
             const todaySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(_todayStr))
             if (todaySessions.length === 0) {
-              return <p style={{ fontSize: '0.85rem', color: '#6B7280' }}>Aucune séance planifiée.</p>
+              return <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>Aucune séance planifiée.</p>
             }
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {todaySessions.map(s => {
-                  const color = SESSION_COLORS[s.session_type] ?? '#F97316'
+                  const color = SESSION_COLORS[s.session_type] ?? GOLD
                   const clientName = clients.find(c => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
                   const dt = new Date(s.scheduled_at)
                   return (
                     <div
                       key={s.id}
                       onClick={() => setSelectedSession(s)}
-                      style={{ background: `${color}18`, borderLeft: `3px solid ${color}`, borderRadius: 6, padding: '8px 10px', cursor: 'pointer' }}
+                      style={{ background: BG_CARD_2, borderLeft: `2px solid ${GOLD}`, borderRadius: RADIUS_CARD, padding: '8px 10px', cursor: 'pointer', border: `1px solid ${BORDER}`, borderLeftWidth: 2, borderLeftColor: GOLD }}
                     >
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.75rem', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.session_type}</div>
-                      <div style={{ fontSize: '0.82rem', color: '#F8FAFC', fontWeight: 500, marginTop: 2 }}>{clientName}</div>
-                      <div style={{ fontSize: '0.72rem', color: '#9CA3AF', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '1.5px' }}>{s.session_type}</div>
+                      <div style={{ fontSize: '0.82rem', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 500, marginTop: 2 }}>{clientName}</div>
+                      <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Clock size={10} />{format(dt, 'HH:mm')} · {s.duration_minutes}min
                       </div>
                     </div>

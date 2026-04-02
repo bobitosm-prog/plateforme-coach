@@ -1,45 +1,38 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Flame, Beef, Wheat, Droplets, Star } from 'lucide-react'
-import { ACTIVITY_LEVELS, calcMifflinStJeor } from '../../lib/design-tokens'
-
-const GOLD = '#C9A84C'
-const BG = '#0A0A0A'
-const CARD = '#1A1A1A'
-const BORDER = '#2A2A2A'
-const TEXT = '#F8FAFC'
-const MUTED = '#6B7280'
+import { ACTIVITY_LEVELS, calcMifflinStJeor, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
 
 const DIET_OPTIONS = [
   { id: 'omnivore', label: 'Omnivore', emoji: '🥩' },
-  { id: 'vegetarian', label: 'Végétarien', emoji: '🥗' },
+  { id: 'vegetarian', label: 'Vegetarien', emoji: '🥗' },
   { id: 'vegan', label: 'Vegan', emoji: '🌱' },
 ] as const
 
 const ALLERGY_OPTIONS = [
   { id: 'gluten', label: 'Gluten', emoji: '🌾' },
   { id: 'lactose', label: 'Lactose', emoji: '🥛' },
-  { id: 'nuts', label: 'Fruits à coque', emoji: '🥜' },
-  { id: 'eggs', label: 'Œufs', emoji: '🥚' },
+  { id: 'nuts', label: 'Fruits a coque', emoji: '🥜' },
+  { id: 'eggs', label: 'Oeufs', emoji: '🥚' },
   { id: 'soy', label: 'Soja', emoji: '🫘' },
-  { id: 'shellfish', label: 'Crustacés', emoji: '🦐' },
+  { id: 'shellfish', label: 'Crustaces', emoji: '🦐' },
 ] as const
 
 const MEAL_TABS = [
   { id: 'petit_dejeuner', label: 'Matin', emoji: '🌅' },
   { id: 'dejeuner', label: 'Midi', emoji: '☀️' },
   { id: 'collation', label: 'Collation', emoji: '🍎' },
-  { id: 'diner', label: 'Dîner', emoji: '🌙' },
+  { id: 'diner', label: 'Diner', emoji: '🌙' },
 ]
 
 const CATS = [
-  { key: 'proteines', label: 'Protéines', icon: '🥩', patterns: ['poulet', 'dinde', 'boeuf', 'bœuf', 'veau', 'porc', 'saumon', 'thon', 'cabillaud', 'crevette', 'oeuf', 'œuf', 'steak', 'filet', 'escalope', 'jambon', 'bacon', 'sardine', 'truite', 'canard', 'agneau', 'poisson', 'viande', 'seitan', 'tofu', 'tempeh'] },
+  { key: 'proteines', label: 'Proteines', icon: '🥩', patterns: ['poulet', 'dinde', 'boeuf', 'bœuf', 'veau', 'porc', 'saumon', 'thon', 'cabillaud', 'crevette', 'oeuf', 'œuf', 'steak', 'filet', 'escalope', 'jambon', 'bacon', 'sardine', 'truite', 'canard', 'agneau', 'poisson', 'viande', 'seitan', 'tofu', 'tempeh'] },
   { key: 'laitiers', label: 'Produits laitiers', icon: '🥛', patterns: ['yaourt', 'fromage', 'skyr', 'cottage', 'mozzarella', 'parmesan', 'lait', 'crème', 'ricotta', 'feta'] },
-  { key: 'feculents', label: 'Féculents', icon: '🍚', patterns: ['riz', 'pâtes', 'quinoa', 'patate', 'pomme de terre', 'pain', 'avoine', 'flocon', 'semoule', 'blé', 'sarrasin', 'lentille', 'pois chiche', 'haricot', 'maïs', 'galette', 'wrap', 'toast', 'muesli', 'céréale', 'granola'] },
-  { key: 'legumes', label: 'Légumes', icon: '🥦', patterns: ['brocoli', 'épinard', 'courgette', 'tomate', 'concombre', 'salade', 'carotte', 'poivron', 'aubergine', 'chou', 'haricot vert', 'asperge', 'champignon', 'avocat', 'légume', 'betterave'] },
+  { key: 'feculents', label: 'Feculents', icon: '🍚', patterns: ['riz', 'pâtes', 'quinoa', 'patate', 'pomme de terre', 'pain', 'avoine', 'flocon', 'semoule', 'blé', 'sarrasin', 'lentille', 'pois chiche', 'haricot', 'maïs', 'galette', 'wrap', 'toast', 'muesli', 'céréale', 'granola'] },
+  { key: 'legumes', label: 'Legumes', icon: '🥦', patterns: ['brocoli', 'épinard', 'courgette', 'tomate', 'concombre', 'salade', 'carotte', 'poivron', 'aubergine', 'chou', 'haricot vert', 'asperge', 'champignon', 'avocat', 'légume', 'betterave'] },
   { key: 'fruits', label: 'Fruits', icon: '🍎', patterns: ['banane', 'pomme', 'fraise', 'myrtille', 'orange', 'kiwi', 'mangue', 'ananas', 'poire', 'raisin', 'datte', 'figue', 'compote'] },
-  { key: 'oleagineux', label: 'Oléagineux', icon: '🥜', patterns: ['amande', 'noix', 'cacahuète', 'noisette', 'cajou', 'pistache', 'beurre de', 'graines', 'chia', 'lin'] },
-  { key: 'supplements', label: 'Suppléments', icon: '💪', patterns: ['whey', 'protéine en', 'caséine', 'barre', 'mass'] },
+  { key: 'oleagineux', label: 'Oleagineux', icon: '🥜', patterns: ['amande', 'noix', 'cacahuète', 'noisette', 'cajou', 'pistache', 'beurre de', 'graines', 'chia', 'lin'] },
+  { key: 'supplements', label: 'Supplements', icon: '💪', patterns: ['whey', 'protéine en', 'caséine', 'barre', 'mass'] },
 ]
 
 function categorize(name: string) {
@@ -117,15 +110,12 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   }, [profile?.current_weight, profile?.height, profile?.birth_date, profile?.gender, profile?.objective, activityLevel])
 
   function toggleFood(id: string) {
-    // Toggle in current meal and liked_foods
     setMealPrefs(prev => {
       const meal = prev[activeMeal] || []
       const updated = meal.includes(id) ? meal.filter(f => f !== id) : [...meal, id]
       const next = { ...prev, [activeMeal]: updated }
-      // Derive liked_foods from all meal prefs
       const allIds = [...new Set(Object.values(next).flat())]
       setLikedFoods(allIds)
-      // Auto-save with debounce
       clearTimeout(saveTimer.current)
       saveTimer.current = setTimeout(() => {
         supabase.from('profiles').update({ liked_foods: allIds, meal_preferences: next }).eq('id', userId)
@@ -160,20 +150,20 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   const autres = filtered.filter(f => f.cat === 'autres')
   if (autres.length > 0) grouped.push({ key: 'autres', label: 'Autres', icon: '🍽️', patterns: [], foods: autres })
 
-  const sectionTitle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }
+  const sectionTitle: React.CSSProperties = { fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Régime */}
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
-        <div style={sectionTitle}>Mon régime</div>
+      {/* Regime */}
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+        <div style={sectionTitle}>Mon regime</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {DIET_OPTIONS.map(opt => {
             const active = dietaryType === opt.id
             return (
-              <button key={opt.id} onClick={() => setDietaryType(opt.id)} style={{ flex: 1, padding: '12px 8px', borderRadius: 12, cursor: 'pointer', background: active ? `${GOLD}18` : BG, border: `2px solid ${active ? GOLD : BORDER}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 150ms' }}>
+              <button key={opt.id} onClick={() => setDietaryType(opt.id)} style={{ flex: 1, padding: '12px 8px', borderRadius: 0, cursor: 'pointer', background: active ? GOLD_DIM : BG_BASE, border: `2px solid ${active ? GOLD : BORDER}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 150ms' }}>
                 <span style={{ fontSize: '1.4rem' }}>{opt.emoji}</span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: active ? GOLD : TEXT }}>{opt.label}</span>
+                <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{opt.label}</span>
               </button>
             )
           })}
@@ -181,73 +171,73 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       </div>
 
       {/* Allergies */}
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
-        <div style={sectionTitle}>Allergies & intolérances</div>
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+        <div style={sectionTitle}>Allergies & intolerances</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
           {ALLERGY_OPTIONS.map(opt => {
             const active = allergies.includes(opt.id)
             return (
-              <button key={opt.id} onClick={() => setAllergies(prev => prev.includes(opt.id) ? prev.filter(a => a !== opt.id) : [...prev, opt.id])} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer', background: active ? 'rgba(239,68,68,0.08)' : BG, border: `1.5px solid ${active ? '#EF4444' : BORDER}`, transition: 'all 150ms' }}>
+              <button key={opt.id} onClick={() => setAllergies(prev => prev.includes(opt.id) ? prev.filter(a => a !== opt.id) : [...prev, opt.id])} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 0, cursor: 'pointer', background: active ? `${RED}12` : BG_BASE, border: `1.5px solid ${active ? RED : BORDER}`, transition: 'all 150ms' }}>
                 <span style={{ fontSize: '1.1rem' }}>{opt.emoji}</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: active ? '#EF4444' : TEXT, flex: 1, textAlign: 'left' }}>{opt.label}</span>
-                {active && <Check size={14} color="#EF4444" strokeWidth={3} />}
+                <span style={{ fontSize: '0.8rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? RED : TEXT_PRIMARY, flex: 1, textAlign: 'left' }}>{opt.label}</span>
+                {active && <Check size={14} color={RED} strokeWidth={3} />}
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Métabolisme */}
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
-        <div style={sectionTitle}>Mon métabolisme</div>
+      {/* Metabolisme */}
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+        <div style={sectionTitle}>Mon metabolisme</div>
         {profile && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
-            {[{ label: 'Âge', value: tdeeData ? `${tdeeData.age} ans` : '—' }, { label: 'Poids', value: profile.current_weight ? `${profile.current_weight} kg` : '—' }, { label: 'Taille', value: profile.height ? `${profile.height} cm` : '—' }, { label: 'Objectif', value: profile.objective || '—' }].map(({ label, value }) => (
-              <div key={label} style={{ background: BG, borderRadius: 10, padding: '8px 10px' }}>
-                <div style={{ fontSize: '0.6rem', color: MUTED, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.06em' }}>{label}</div>
-                <div style={{ fontSize: '0.85rem', color: TEXT, fontWeight: 600, marginTop: 2 }}>{value}</div>
+            {[{ label: 'Age', value: tdeeData ? `${tdeeData.age} ans` : '---' }, { label: 'Poids', value: profile.current_weight ? `${profile.current_weight} kg` : '---' }, { label: 'Taille', value: profile.height ? `${profile.height} cm` : '---' }, { label: 'Objectif', value: profile.objective || '---' }].map(({ label, value }) => (
+              <div key={label} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 2, padding: '8px 10px' }}>
+                <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '2px' }}>{label}</div>
+                <div style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_PRIMARY, fontWeight: 400, marginTop: 2 }}>{value}</div>
               </div>
             ))}
           </div>
         )}
-        <div style={{ fontSize: '0.65rem', color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Niveau d&apos;activité</div>
+        <div style={{ fontSize: '0.65rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 8 }}>Niveau d&apos;activite</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
           {ACTIVITY_LEVELS.map(lvl => {
             const active = activityLevel === lvl.id
             return (
-              <button key={lvl.id} onClick={() => setActivityLevel(lvl.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer', background: active ? `${GOLD}15` : BG, border: `1.5px solid ${active ? GOLD : BORDER}`, transition: 'all 150ms' }}>
+              <button key={lvl.id} onClick={() => setActivityLevel(lvl.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 0, cursor: 'pointer', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, transition: 'all 150ms' }}>
                 <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: active ? GOLD : TEXT }}>{lvl.label}</div>
-                  <div style={{ fontSize: '0.65rem', color: MUTED }}>{lvl.sub}</div>
+                  <div style={{ fontSize: '0.8rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? GOLD : TEXT_PRIMARY }}>{lvl.label}</div>
+                  <div style={{ fontSize: '0.65rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{lvl.sub}</div>
                 </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: active ? GOLD : MUTED }}>x{lvl.mult}</span>
+                <span style={{ fontSize: '0.7rem', fontFamily: FONT_DISPLAY, fontWeight: 700, color: active ? GOLD : TEXT_MUTED }}>x{lvl.mult}</span>
                 {active && <Check size={14} color={GOLD} strokeWidth={3} />}
               </button>
             )
           })}
         </div>
         {tdeeData ? (
-          <div style={{ background: `${GOLD}10`, border: `1.5px solid ${GOLD}40`, borderRadius: 14, padding: 16 }}>
+          <div style={{ background: GOLD_DIM, border: `1.5px solid ${GOLD_RULE}`, borderRadius: 2, padding: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              {[{ icon: Flame, label: 'Calories/jour', value: `${tdeeData.adjustedKcal}`, unit: 'kcal', color: '#EF4444' }, { icon: Beef, label: 'Protéines', value: `${tdeeData.proteinG}`, unit: 'g', color: '#3B82F6' }, { icon: Wheat, label: 'Glucides', value: `${tdeeData.carbsG}`, unit: 'g', color: '#F59E0B' }, { icon: Droplets, label: 'Lipides', value: `${tdeeData.fatG}`, unit: 'g', color: '#22C55E' }].map(({ icon: Icon, label, value, unit, color }) => (
+              {[{ icon: Flame, label: 'Calories/jour', value: `${tdeeData.adjustedKcal}`, unit: 'kcal', color: GOLD }, { icon: Beef, label: 'Proteines', value: `${tdeeData.proteinG}`, unit: 'g', color: GOLD }, { icon: Wheat, label: 'Glucides', value: `${tdeeData.carbsG}`, unit: 'g', color: GOLD }, { icon: Droplets, label: 'Lipides', value: `${tdeeData.fatG}`, unit: 'g', color: GOLD }].map(({ icon: Icon, label, value, unit, color }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={16} color={color} strokeWidth={2.5} /></div>
+                  <div style={{ width: 32, height: 32, borderRadius: 0, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={16} color={color} strokeWidth={2.5} /></div>
                   <div>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT, lineHeight: 1 }}>{value}<span style={{ fontSize: '0.7rem', color: MUTED, marginLeft: 2 }}>{unit}</span></div>
-                    <div style={{ fontSize: '0.6rem', color: MUTED }}>{label}</div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>{value}<span style={{ fontSize: '0.7rem', color: TEXT_MUTED, marginLeft: 2 }}>{unit}</span></div>
+                    <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: TEXT_MUTED, letterSpacing: '1px' }}>{label}</div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <p style={{ fontSize: '0.78rem', color: MUTED, textAlign: 'center', margin: 0 }}>Complète ton profil pour calculer ton métabolisme.</p>
+          <p style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>Complete ton profil pour calculer ton metabolisme.</p>
         )}
       </div>
 
       {/* Aliments par repas */}
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
-        <div style={sectionTitle}>Mes aliments par repas ({likedFoods.length} sélectionnés)</div>
+      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+        <div style={sectionTitle}>Mes aliments par repas ({likedFoods.length} selectionnes)</div>
 
         {/* Meal tabs */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
@@ -255,10 +245,10 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             const active = activeMeal === t.id
             const count = (mealPrefs[t.id] || []).length
             return (
-              <button key={t.id} onClick={() => setActiveMeal(t.id)} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: active ? `${GOLD}20` : BG, transition: 'all 150ms' }}>
+              <button key={t.id} onClick={() => setActiveMeal(t.id)} style={{ flex: 1, padding: '8px 4px', borderRadius: 0, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: active ? GOLD : BG_BASE, transition: 'all 150ms' }}>
                 <span style={{ fontSize: '1rem' }}>{t.emoji}</span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.62rem', fontWeight: 700, color: active ? GOLD : MUTED }}>{t.label}</span>
-                {count > 0 && <span style={{ fontSize: '0.52rem', color: GOLD, fontWeight: 700 }}>{count}</span>}
+                <span style={{ fontFamily: FONT_ALT, fontSize: '0.62rem', fontWeight: 800, color: active ? '#050505' : TEXT_MUTED, letterSpacing: '1px' }}>{t.label}</span>
+                {count > 0 && <span style={{ fontSize: '0.52rem', fontFamily: FONT_DISPLAY, color: active ? '#050505' : GOLD, fontWeight: 700 }}>{count}</span>}
               </button>
             )
           })}
@@ -270,30 +260,29 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
               {(mealPrefs[activeMeal] || []).map((id: string) => {
                 const food = foodMap[id]
-                if (!food) return <div key={String(id)} style={{ background: BG, borderRadius: 10, padding: '8px', fontSize: '0.7rem', color: MUTED }}>{String(id).slice(0, 8)}...</div>
+                if (!food) return <div key={String(id)} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 2, padding: '8px', fontSize: '0.7rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>{String(id).slice(0, 8)}...</div>
                 return <FoodCard key={id} food={food} active onClick={() => toggleFood(id)} />
               })}
             </div>
           </div>
         )}
         {(mealPrefs[activeMeal] || []).length === 0 && !loadingFoods && (
-          <p style={{ fontSize: '0.75rem', color: MUTED, textAlign: 'center', padding: '8px 0', marginBottom: 8, fontStyle: 'italic' }}>Aucun aliment pour ce repas. Sélectionne ci-dessous.</p>
+          <p style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED, textAlign: 'center', padding: '8px 0', marginBottom: 8, fontStyle: 'italic' }}>Aucun aliment pour ce repas. Selectionne ci-dessous.</p>
         )}
 
         {/* Search + all foods */}
         <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder={`Filtrer ${foods.length} aliments fitness...`}
-          style={{ width: '100%', padding: '10px 14px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT, fontSize: '0.82rem', outline: 'none', marginBottom: 12 }} />
+          style={{ width: '100%', padding: '10px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontSize: '0.82rem', fontFamily: FONT_BODY, outline: 'none', marginBottom: 12 }} />
 
         {loadingFoods ? (
-          <p style={{ fontSize: '0.82rem', color: MUTED, textAlign: 'center', padding: '20px 0' }}>Chargement...</p>
+          <p style={{ fontSize: '0.82rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center', padding: '20px 0' }}>Chargement...</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* By category */}
             {grouped.map(cat => (
               <div key={cat.key}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                   <span style={{ fontSize: '0.85rem' }}>{cat.icon}</span>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{cat.label} ({cat.foods.length})</span>
+                  <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '2px' }}>{cat.label} ({cat.foods.length})</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                   {cat.foods.map((food: any) => <FoodCard key={food.id} food={food} active={currentMealIds.includes(food.id)} onClick={() => toggleFood(food.id)} />)}
@@ -301,20 +290,20 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
               </div>
             ))}
             {searchQ.length >= 1 && filtered.length === 0 && (
-              <p style={{ fontSize: '0.78rem', color: MUTED, textAlign: 'center' }}>Aucun résultat</p>
+              <p style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center' }}>Aucun resultat</p>
             )}
           </div>
         )}
       </div>
 
       {/* Save */}
-      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, color: '#000', letterSpacing: '0.06em', textTransform: 'uppercase', opacity: saving ? 0.6 : 1 }}>
-        {saving ? 'Enregistrement...' : 'Enregistrer mes préférences'}
+      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '14px', borderRadius: 0, border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: '#050505', letterSpacing: '1px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+        {saving ? 'Enregistrement...' : 'Enregistrer mes preferences'}
       </button>
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: '#22C55E', color: '#000', padding: '10px 24px', borderRadius: 12, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.9rem', fontWeight: 700, zIndex: 999, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-          Préférences sauvegardées !
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: GREEN, color: '#050505', padding: '10px 24px', borderRadius: 0, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
+          Preferences sauvegardees !
         </div>
       )}
     </div>
@@ -323,14 +312,14 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
 function FoodCard({ food, active, onClick }: { food: any; active: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ background: active ? 'rgba(201,168,76,0.08)' : BG, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 10, padding: '8px 8px 6px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', position: 'relative' }}>
-      {active && <span style={{ position: 'absolute', top: 5, right: 6, color: GOLD, fontSize: '0.65rem', fontWeight: 700 }}>✓</span>}
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, color: TEXT, lineHeight: 1.2, marginBottom: 3, paddingRight: active ? 14 : 0 }}>{food.name}</div>
-      <div style={{ display: 'flex', gap: 5, fontSize: '0.55rem', fontWeight: 500 }}>
+    <button onClick={onClick} style={{ background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 2, padding: '8px 8px 6px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', position: 'relative' }}>
+      {active && <span style={{ position: 'absolute', top: 5, right: 6, color: GOLD, fontSize: '0.65rem', fontFamily: FONT_ALT, fontWeight: 800 }}>✓</span>}
+      <div style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY, lineHeight: 1.2, marginBottom: 3, paddingRight: active ? 14 : 0 }}>{food.name}</div>
+      <div style={{ display: 'flex', gap: 5, fontSize: '0.55rem', fontFamily: FONT_ALT, fontWeight: 700 }}>
         <span style={{ color: GOLD }}>{food.kcal}</span>
-        <span style={{ color: '#60a5fa' }}>P{food.p}</span>
-        <span style={{ color: '#4ade80' }}>G{food.g}</span>
-        <span style={{ color: '#f59e0b' }}>L{food.l}</span>
+        <span style={{ color: TEXT_MUTED }}>P{food.p}</span>
+        <span style={{ color: TEXT_MUTED }}>G{food.g}</span>
+        <span style={{ color: TEXT_MUTED }}>L{food.l}</span>
       </div>
     </button>
   )

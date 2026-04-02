@@ -7,7 +7,9 @@ import {
   Scale, Target, Dumbbell, Flame, Ruler, Camera, Zap, Moon, CheckCircle,
 } from 'lucide-react'
 import {
-  BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, ORANGE, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY,
   todayNutritionKey,
 } from '../../../lib/design-tokens'
 
@@ -130,17 +132,17 @@ export default function HomeTab({
       <div style={{ background: BG_CARD, padding: '20px 20px 16px', borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ fontSize: '0.72rem', color: TEXT_MUTED, margin: '0 0 4px', textTransform: 'capitalize' }}>
+            <p style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '2px' }}>
               {format(new Date(), 'EEEE d MMMM', { locale: fr })}
             </p>
-            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '0.03em' }}>
+            <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 48, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', lineHeight: 1 }}>
               Bonjour, {firstName}
             </h1>
           </div>
-          <button onClick={() => avatarRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: displayAvatar ? 'transparent' : ORANGE, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
+          <button onClick={() => avatarRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: displayAvatar ? 'transparent' : GOLD, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
             {displayAvatar
               ? <img src={displayAvatar} style={{ width: 48, height: 48, objectFit: 'cover' }} alt="Photo de profil" />
-              : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>{firstName.charAt(0).toUpperCase()}</span>
+              : <span style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>{firstName.charAt(0).toUpperCase()}</span>
             }
           </button>
           <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
@@ -149,24 +151,25 @@ export default function HomeTab({
 
       <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* 4 metric cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {/* 4 metric cards — Bauhaus 2x2 grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: BORDER, border: `1px solid ${BORDER}` }}>
           {[
-            { label: 'Poids actuel', value: currentWeight ? `${currentWeight} kg` : '—', sub: 'coach-assigned', color: ORANGE, icon: Scale },
-            { label: 'Objectif', value: profile?.target_weight ? `${profile.target_weight} kg` : '—', sub: 'cible', color: TEXT_MUTED, icon: Target },
-            { label: 'Séances', value: String(completedSessions), sub: 'total complétées', color: TEXT_MUTED, icon: Dumbbell },
-            { label: 'Streak', value: streak > 0 ? `${streak}j` : '—', sub: 'jours consécutifs', color: streak > 0 ? ORANGE : TEXT_MUTED, icon: Flame },
+            { label: 'Poids actuel', value: currentWeight ? `${currentWeight} kg` : '\u2014', color: GOLD, icon: Scale },
+            { label: 'Objectif', value: profile?.target_weight ? `${profile.target_weight} kg` : '\u2014', color: TEXT_MUTED, icon: Target },
+            { label: 'S\u00e9ances', value: String(completedSessions), color: TEXT_MUTED, icon: Dumbbell },
+            { label: 'Streak', value: streak > 0 ? `${streak}j` : '\u2014', color: streak > 0 ? GOLD : TEXT_MUTED, icon: Flame },
           ].map(({ label, value, color, icon: Icon }, i) => (
             <motion.div
               key={label}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 22, delay: i * 0.07 }}
-              style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px' }}
+              style={{ background: BG_CARD, padding: 24, cursor: 'default' }}
+              whileHover={{ backgroundColor: BG_CARD_2 }}
             >
               <Icon size={15} color={color} style={{ marginBottom: 8 }} />
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.6rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-              <div style={{ fontSize: '0.62rem', color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginTop: 4 }}>{label}</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 400, color: GOLD, lineHeight: 1 }}>{value}</div>
+              <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginTop: 4 }}>{label}</div>
             </motion.div>
           ))}
         </div>
@@ -175,29 +178,31 @@ export default function HomeTab({
         {(() => {
           const waterGoal = profile?.water_goal || 3000
           const pct = Math.min(100, Math.round((waterToday / waterGoal) * 100))
-          const msg = pct >= 100 ? 'Objectif atteint ! 💪' : pct >= 60 ? 'Tu es bien hydraté !' : pct >= 30 ? 'Continue comme ça !' : 'Pense à boire 💧'
+          const msg = pct >= 100 ? 'Objectif atteint !' : pct >= 60 ? 'Tu es bien hydrat\u00e9 !' : pct >= 30 ? 'Continue comme \u00e7a !' : 'Pense \u00e0 boire'
           return (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px' }}>
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: '1.1rem' }}>💧</span>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Hydratation</span>
+                  <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '2px' }}>Hydratation</span>
                 </div>
-                <span style={{ fontSize: '0.72rem', color: '#3B82F6', fontWeight: 600 }}>{(waterToday / 1000).toFixed(1)}L / {(waterGoal / 1000).toFixed(1)}L</span>
+                <span style={{ fontFamily: FONT_ALT, fontSize: 12, color: GOLD, fontWeight: 700 }}>{(waterToday / 1000).toFixed(1)}L / {(waterGoal / 1000).toFixed(1)}L</span>
               </div>
               {/* Progress bar */}
-              <div style={{ height: 8, background: '#1A1A1A', borderRadius: 4, overflow: 'hidden', marginBottom: 10 }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? '#22C55E' : '#3B82F6', borderRadius: 4, transition: 'width 0.5s ease' }} />
+              <div style={{ height: 2, background: TEXT_DIM, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: GOLD, transition: 'width 0.5s ease' }} />
               </div>
               {/* Quick add buttons */}
               <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
                 {[250, 500, 1000].map(ml => (
-                  <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, border: '1px solid rgba(59,130,246,0.2)', background: 'transparent', cursor: 'pointer', color: '#3B82F6', fontSize: '0.72rem', fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '8px 4px', borderRadius: 0, border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_MUTED, fontSize: 12, fontWeight: 700, fontFamily: FONT_ALT, transition: 'border-color 0.2s, color 0.2s' }}
+                    onMouseEnter={e => { (e.currentTarget.style.borderColor = GOLD); (e.currentTarget.style.color = GOLD) }}
+                    onMouseLeave={e => { (e.currentTarget.style.borderColor = GOLD_RULE); (e.currentTarget.style.color = TEXT_MUTED) }}
+                  >
                     +{ml >= 1000 ? `${ml / 1000}L` : `${ml}ml`}
                   </button>
                 ))}
               </div>
-              <p style={{ fontSize: '0.65rem', color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>{msg}</p>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>{msg}</p>
             </div>
           )
         })()}
@@ -205,28 +210,28 @@ export default function HomeTab({
         {/* Programme du jour */}
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: ORANGE }}>Programme du jour</span>
-            <button onClick={() => setActiveTab('training')} style={{ fontSize: '0.68rem', fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', letterSpacing: '0.06em' }}>Voir tout</button>
+            <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, textTransform: 'uppercase', letterSpacing: '2px', color: GOLD }}>Programme du jour</span>
+            <button onClick={() => setActiveTab('training')} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '2px' }}>Voir tout</button>
           </div>
           {!coachProgram ? (
-            <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Programme en attente de ton coach.</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Programme en attente de ton coach.</p>
           ) : todayCoachDay?.repos ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: BG_BASE, borderRadius: 12, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '12px 14px' }}>
               <Moon size={20} color={TEXT_MUTED} />
               <div>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: TEXT_PRIMARY }}>Jour de repos</div>
-                <div style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>Récupère bien, étirements bienvenus</div>
+                <div style={{ fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_PRIMARY }}>Jour de repos</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>R\u00e9cup\u00e8re bien, \u00e9tirements bienvenus</div>
               </div>
             </div>
           ) : !todayCoachDay?.exercises?.length ? (
-            <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, margin: 0 }}>Aucun exercice prévu.</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0 }}>Aucun exercice pr\u00e9vu.</p>
           ) : todaySession ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: `${GREEN}12`, border: `1px solid ${GREEN}40`, borderRadius: 12, padding: '16px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: `${GREEN}12`, border: `1px solid ${GREEN}40`, borderRadius: RADIUS_CARD, padding: '16px 14px' }}>
               <CheckCircle size={32} color={GREEN} style={{ flexShrink: 0 }} />
               <div>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '1rem', color: GREEN }}>Séance terminée !</div>
-                <div style={{ fontSize: '0.78rem', color: TEXT_PRIMARY, marginTop: 2 }}>Bravo ! Tu as terminé ta séance du jour</div>
-                <div style={{ fontSize: '0.68rem', color: TEXT_MUTED, marginTop: 4 }}>
+                <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 16, color: GREEN }}>S\u00e9ance termin\u00e9e !</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY, marginTop: 2 }}>Bravo ! Tu as termin\u00e9 ta s\u00e9ance du jour</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 4 }}>
                   {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
                 </div>
               </div>
@@ -235,24 +240,24 @@ export default function HomeTab({
             <>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
                 {(todayCoachDay.exercises as any[]).slice(0, 4).map((ex: any, i: number) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: BG_BASE, borderRadius: 10, padding: '10px 12px' }}>
-                    <div style={{ width: 26, height: 26, borderRadius: 8, background: `${ORANGE}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.8rem', color: ORANGE, flexShrink: 0 }}>{i + 1}</div>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '10px 12px' }}>
+                    <div style={{ width: 26, height: 26, borderRadius: RADIUS_CARD, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 16, color: GOLD, flexShrink: 0 }}>{i + 1}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, color: TEXT_PRIMARY, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</div>
-                      <div style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>{ex.sets} × {ex.reps} reps{ex.rest ? ` · repos ${ex.rest}` : ''}</div>
+                      <div style={{ fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_PRIMARY, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</div>
+                      <div style={{ fontFamily: FONT_BODY, fontWeight: 400, fontSize: 12, color: TEXT_MUTED }}>{ex.sets} \u00d7 {ex.reps} reps{ex.rest ? ` \u00b7 repos ${ex.rest}` : ''}</div>
                     </div>
                   </div>
                 ))}
                 {(todayCoachDay.exercises as any[]).length > 4 && (
-                  <div style={{ fontSize: '0.72rem', color: ORANGE, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, paddingLeft: 4 }}>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 12, color: GOLD, fontWeight: 700, paddingLeft: 4 }}>
                     +{(todayCoachDay.exercises as any[]).length - 4} autres exercices
                   </div>
                 )}
               </div>
               <button
                 onClick={() => startProgramWorkout({ day_name: todayKey }, todayCoachDay.exercises)}
-                style={{ width: '100%', background: GREEN, color: '#000', fontWeight: 700, padding: '13px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.95rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                Commencer la séance
+                style={{ width: '100%', background: GOLD, color: '#050505', fontWeight: 800, padding: '13px', borderRadius: 0, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 15, letterSpacing: '1.5px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+                Commencer la s\u00e9ance
               </button>
             </>
           )}
@@ -261,33 +266,33 @@ export default function HomeTab({
         {/* Nutrition du jour */}
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#C9A84C' }}>Nutrition du jour</span>
-            <button onClick={() => setActiveTab('nutrition')} style={{ fontSize: '0.68rem', fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', letterSpacing: '0.06em' }}>Voir plan</button>
+            <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, textTransform: 'uppercase', letterSpacing: '2px', color: GOLD }}>Nutrition du jour</span>
+            <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '2px' }}>Voir plan</button>
           </div>
           {/* Consumed vs target */}
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: '#C9A84C' }}>{consumedKcal}</span>
-              <span style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>/ {calorieGoal} kcal</span>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 400, color: GOLD }}>{consumedKcal}</span>
+              <span style={{ fontFamily: FONT_ALT, fontSize: 12, color: TEXT_MUTED }}>/ {calorieGoal} kcal</span>
             </div>
-            <div style={{ background: '#242424', borderRadius: 999, height: 6, overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, #C9A84C, #D4AF37)', width: `${Math.min(100, Math.round((consumedKcal / calorieGoal) * 100))}%`, transition: 'width 300ms ease' }} />
+            <div style={{ background: TEXT_DIM, height: 2, overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: GOLD, width: `${Math.min(100, Math.round((consumedKcal / calorieGoal) * 100))}%`, transition: 'width 300ms ease' }} />
             </div>
-            <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, marginTop: 3, textAlign: 'right' }}>
+            <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED, marginTop: 3, textAlign: 'right' }}>
               {consumedKcal > 0 ? `${Math.round((consumedKcal / calorieGoal) * 100)}% de l'objectif` : 'Coche tes repas dans l\'onglet Nutrition'}
             </div>
           </div>
           {/* Macro targets */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: BORDER }}>
             {[
-              { label: 'Cible', value: calorieGoal, color: '#C9A84C' },
-              { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '—', color: '#3B82F6' },
-              { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—', color: '#22C55E' },
-              { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—', color: '#F97316' },
+              { label: 'Cible', value: calorieGoal, color: GOLD },
+              { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '\u2014', color: '#3B82F6' },
+              { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '\u2014', color: '#22C55E' },
+              { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '\u2014', color: '#F97316' },
             ].map(({ label, value, color }) => (
-              <div key={label} style={{ background: BG_BASE, borderRadius: 10, padding: '8px 4px', textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, color }}>{value}</div>
-                <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700 }}>{label}</div>
+              <div key={label} style={{ background: BG_CARD, padding: '8px 4px', textAlign: 'center' }}>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 400, color }}>{value}</div>
+                <div style={{ fontFamily: FONT_ALT, fontSize: 10, color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '1px' }}>{label}</div>
               </div>
             ))}
           </div>
@@ -299,11 +304,11 @@ export default function HomeTab({
             { icon: Ruler, label: '+ Mesure', action: () => setModal('measure') },
             { icon: Camera, label: '+ Photo', action: () => photoRef.current?.click() },
             { icon: Zap, label: 'BMR', action: () => setModal('bmr') },
-            { icon: Camera, label: '📷 Scan', action: () => setModal('scan'), gold: true },
+            { icon: Camera, label: 'Scan', action: () => setModal('scan'), gold: true },
           ].map(({ icon: Icon, label, action, gold }) => (
-            <button key={label} onClick={action} style={{ background: (gold as any) ? 'rgba(201,168,76,0.06)' : BG_CARD, border: `1px solid ${(gold as any) ? 'rgba(201,168,76,0.25)' : BORDER}`, borderRadius: 14, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              {(gold as any) ? <span style={{ fontSize: '1.1rem' }}>📷</span> : <Icon size={18} color={TEXT_MUTED} />}
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: (gold as any) ? '#C9A84C' : TEXT_MUTED }}>{label}</span>
+            <button key={label} onClick={action} style={{ background: (gold as any) ? GOLD_DIM : BG_CARD, border: `1px solid ${(gold as any) ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <Icon size={18} color={(gold as any) ? GOLD : TEXT_MUTED} />
+              <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: (gold as any) ? GOLD : TEXT_MUTED }}>{label}</span>
             </button>
           ))}
           <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />

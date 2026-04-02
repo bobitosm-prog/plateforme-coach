@@ -5,9 +5,11 @@ import {
   ScheduledSession, SESSION_COLORS, SESSION_LABELS, SESSION_CATEGORY,
   DAY_LABELS_SHORT, getWeekDates, toDateStr, isSameDay,
 } from '../../lib/schedule-utils'
-import { BG_CARD, BORDER, TEXT_PRIMARY, TEXT_MUTED } from '../../lib/design-tokens'
-
-const GOLD = '#C9A84C'
+import {
+  BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GREEN, RED,
+  TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../lib/design-tokens'
 
 interface WeekCalendarProps {
   sessions: ScheduledSession[]
@@ -25,8 +27,8 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <h2 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em',
+          fontFamily: FONT_ALT,
+          fontSize: '0.72rem', fontWeight: 700, letterSpacing: '2px',
           textTransform: 'uppercase', color: GOLD, margin: 0,
         }}>
           Planning semaine
@@ -36,11 +38,12 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
             onClick={onToggleMonth}
             style={{
               background: 'transparent', border: `1px solid ${BORDER}`,
-              borderRadius: 8, padding: '4px 10px', cursor: 'pointer',
+              borderRadius: 0, padding: '4px 10px', cursor: 'pointer',
               fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 600,
+              fontFamily: FONT_ALT,
             }}
           >
-            📅 Voir le mois
+            Voir le mois
           </button>
         )}
       </div>
@@ -69,13 +72,11 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
               onClick={() => onSelectDate(date)}
               whileTap={{ scale: 0.95 }}
               style={{
-                background: isSelected ? `${mainColor}15` : BG_CARD,
+                background: isSelected ? GOLD : BG_CARD,
                 border: isToday
                   ? `2px solid ${GOLD}`
-                  : isSelected
-                    ? `2px solid ${mainColor}`
-                    : `1px solid ${BORDER}`,
-                borderRadius: 12,
+                  : `1px solid ${BORDER}`,
+                borderRadius: 0,
                 padding: '8px 2px 6px',
                 cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -85,17 +86,19 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
             >
               {/* Day label */}
               <span style={{
-                fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.05em',
-                color: isToday ? GOLD : TEXT_MUTED,
+                fontSize: '0.55rem', fontWeight: 700, letterSpacing: '2px',
+                color: isSelected ? '#050505' : isToday ? GOLD : TEXT_MUTED,
+                fontFamily: FONT_ALT,
+                textTransform: 'uppercase',
               }}>
                 {DAY_LABELS_SHORT[date.getDay()]}
               </span>
 
               {/* Day number */}
               <span style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: FONT_DISPLAY,
                 fontSize: '1rem', fontWeight: 700,
-                color: isToday ? GOLD : TEXT_PRIMARY,
+                color: isSelected ? '#050505' : isToday ? GOLD : TEXT_PRIMARY,
               }}>
                 {date.getDate()}
               </span>
@@ -104,8 +107,9 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
               {mainSession && (
                 <span style={{
                   fontSize: '0.5rem', fontWeight: 700,
-                  color: mainColor, letterSpacing: '0.02em',
+                  color: isSelected ? '#050505' : mainColor, letterSpacing: '0.02em',
                   lineHeight: 1.2, textAlign: 'center',
+                  fontFamily: FONT_ALT,
                 }}>
                   {SESSION_CATEGORY[mainSession.session_type]}
                 </span>
@@ -113,7 +117,8 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
               {mainSession && mainSession.session_type !== 'rest' && (
                 <span style={{
                   fontSize: '0.45rem', fontWeight: 600,
-                  color: `${mainColor}BB`,
+                  color: isSelected ? '#05050599' : `${mainColor}BB`,
+                  fontFamily: FONT_ALT,
                 }}>
                   {mainSession.session_type.includes('_') ? mainSession.session_type.split('_')[1].toUpperCase() : ''}
                 </span>
@@ -123,7 +128,7 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
               {mainSession && (
                 <div style={{
                   width: 6, height: 6, borderRadius: '50%',
-                  background: mainColor, marginTop: 1,
+                  background: isSelected ? '#050505' : GOLD, marginTop: 1,
                 }} />
               )}
 
@@ -134,10 +139,10 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
 
               {/* Completion status */}
               {allCompleted && daySessions.length > 0 && mainSession?.session_type !== 'rest' && (
-                <Check size={10} color="#22C55E" strokeWidth={3} style={{ marginTop: 1 }} />
+                <Check size={10} color={isSelected ? '#050505' : GREEN} strokeWidth={3} style={{ marginTop: 1 }} />
               )}
               {missed && (
-                <X size={10} color="#EF444480" strokeWidth={3} style={{ marginTop: 1 }} />
+                <X size={10} color={`${RED}80`} strokeWidth={3} style={{ marginTop: 1 }} />
               )}
             </motion.button>
           )

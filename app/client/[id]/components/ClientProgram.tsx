@@ -2,6 +2,11 @@
 import {
   Check, Plus, Minus, Moon, Save, Sparkles, Loader2,
 } from 'lucide-react'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '@/lib/design-tokens'
 
 type Exercise = { name: string; sets: number; reps: number; rest: string; notes: string }
 type DayData   = { repos: boolean; exercises: Exercise[]; day_name?: string }
@@ -37,7 +42,7 @@ export default function ClientProgram({
       <div style={{display:'flex',gap:8}}>
         <button
           onClick={()=>{setShowAiModal(true);setAiPreview(null)}}
-          style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'12px 16px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.9rem',fontWeight:700,letterSpacing:'0.04em',background:'linear-gradient(135deg,#7C3AED,#A855F7)',color:'#fff',minHeight:44}}
+          style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'12px 16px',borderRadius:0,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.9rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#050505',minHeight:44}}
         >
           <Sparkles size={14} strokeWidth={2.5}/>Générer avec l&apos;IA
         </button>
@@ -46,7 +51,7 @@ export default function ClientProgram({
         </button>
       </div>
       {programSaved && (
-        <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(34,197,94,.07)',border:'1px solid rgba(34,197,94,.18)',borderRadius:8,color:'#22C55E',fontSize:'0.78rem',fontWeight:600}}>
+        <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(74,222,128,.07)',border:`1px solid rgba(74,222,128,.18)`,borderRadius:RADIUS_CARD,color:GREEN,fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700}}>
           <Check size={12} strokeWidth={2.5}/>Programme sauvegardé
         </div>
       )}
@@ -63,14 +68,14 @@ export default function ClientProgram({
               className="day-chip"
               onClick={()=>setExpandedDay(isActive?null:day)}
               style={{
-                background: d.repos?'rgba(107,114,128,.1)':isActive?'#F97316':hasEx?'rgba(249,115,22,.12)':'#1A1A1A',
-                color: d.repos?'#6B7280':isActive?'#fff':hasEx?'#F97316':'#9CA3AF',
-                border: `1.5px solid ${isActive?'#F97316':d.repos?'#1E1E1E':hasEx?'rgba(249,115,22,.25)':'#242424'}`,
+                background: d.repos?'rgba(138,133,128,.1)':isActive?GOLD:hasEx?GOLD_DIM:BG_CARD_2,
+                color: d.repos?TEXT_MUTED:isActive?'#050505':hasEx?GOLD:TEXT_MUTED,
+                border: `1.5px solid ${isActive?GOLD:d.repos?BORDER:hasEx?GOLD_RULE:BORDER}`,
               }}
             >
               {DAY_LABELS[day]}
               {d.repos && <Moon size={9} style={{marginLeft:3}}/>}
-              {hasEx && <span style={{marginLeft:4,background:'rgba(249,115,22,.2)',borderRadius:999,padding:'0 4px',fontSize:'0.62rem'}}>{d.exercises.length}</span>}
+              {hasEx && <span style={{marginLeft:4,background:GOLD_DIM,borderRadius:0,padding:'0 4px',fontFamily:FONT_DISPLAY,fontSize:'0.62rem'}}>{d.exercises.length}</span>}
             </button>
           )
         })}
@@ -79,19 +84,19 @@ export default function ClientProgram({
       {/* Expanded day */}
       {expandedDay && (
         <div className="card" style={{padding:0,overflow:'hidden',animation:'fadeIn 150ms ease'}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',borderBottom:'1px solid #1E1E1E'}}>
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:700,color:'#F8FAFC'}}>{program[expandedDay].day_name ? `${DAY_FULL[expandedDay]} — ${program[expandedDay].day_name}` : DAY_FULL[expandedDay]}</span>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',borderBottom:`1px solid ${BORDER}`}}>
+            <span style={{fontFamily:FONT_DISPLAY,fontSize:'1.2rem',fontWeight:400,color:TEXT_PRIMARY,letterSpacing:'1px',textTransform:'uppercase'}}>{program[expandedDay].day_name ? `${DAY_FULL[expandedDay]} — ${program[expandedDay].day_name}` : DAY_FULL[expandedDay]}</span>
             <div style={{display:'flex',alignItems:'center',gap:6}}>
               <button
                 onClick={()=>toggleRepos(expandedDay)}
-                style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,background:program[expandedDay].repos?'rgba(107,114,128,.18)':'rgba(107,114,128,.08)',color:program[expandedDay].repos?'#9CA3AF':'#6B7280',minHeight:36}}
+                style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:0,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700,background:program[expandedDay].repos?'rgba(138,133,128,.18)':'rgba(138,133,128,.08)',color:program[expandedDay].repos?TEXT_MUTED:TEXT_DIM,minHeight:36}}
               >
                 <Moon size={11} strokeWidth={2}/>{program[expandedDay].repos?'Repos ✓':'Repos'}
               </button>
               {!program[expandedDay].repos && (
                 <button
                   onClick={()=>openExDbModal(expandedDay)}
-                  style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:'0.78rem',fontWeight:700,background:'rgba(249,115,22,.12)',color:'#F97316',minHeight:36}}
+                  style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:0,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700,background:GOLD_DIM,color:GOLD,minHeight:36}}
                 >
                   <Plus size={12} strokeWidth={2.5}/>Ajouter
                 </button>
@@ -100,11 +105,11 @@ export default function ClientProgram({
           </div>
 
           {program[expandedDay].repos ? (
-            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'28px 16px',color:'#6B7280'}}>
-              <Moon size={20} strokeWidth={1.5}/><span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1rem',fontWeight:600}}>Jour de repos</span>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'28px 16px',color:TEXT_MUTED}}>
+              <Moon size={20} strokeWidth={1.5}/><span style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,letterSpacing:'1px',textTransform:'uppercase'}}>Jour de repos</span>
             </div>
           ) : program[expandedDay].exercises.length === 0 ? (
-            <div style={{textAlign:'center',padding:'28px 16px',color:'#6B7280',fontSize:'0.85rem'}}>Aucun exercice — cliquez Ajouter</div>
+            <div style={{textAlign:'center',padding:'28px 16px',color:TEXT_MUTED,fontFamily:FONT_BODY,fontSize:'0.85rem'}}>Aucun exercice — cliquez Ajouter</div>
           ) : (
             <div style={{padding:'0 14px'}}>
               {program[expandedDay].exercises.map((ex,idx)=>(
@@ -115,11 +120,11 @@ export default function ClientProgram({
                       placeholder="Nom de l'exercice"
                       value={ex.name}
                       onChange={e=>updateExercise(expandedDay,idx,'name',e.target.value)}
-                      style={{flex:1,background:'#0A0A0A',border:'1px solid #242424',borderRadius:8,padding:'9px 11px',fontFamily:'Barlow,sans-serif',fontSize:'0.88rem',color:'#F8FAFC',outline:'none',minHeight:40}}
-                      onFocus={e=>{e.target.style.borderColor='#F97316'}}
-                      onBlur={e=>{e.target.style.borderColor='#242424'}}
+                      style={{flex:1,background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'9px 11px',fontFamily:FONT_BODY,fontSize:'0.88rem',color:TEXT_PRIMARY,outline:'none',minHeight:40}}
+                      onFocus={e=>{e.target.style.borderColor=GOLD}}
+                      onBlur={e=>{e.target.style.borderColor=BORDER}}
                     />
-                    <button onClick={()=>removeExercise(expandedDay,idx)} style={{background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.15)',cursor:'pointer',color:'#EF4444',padding:0,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0}}>
+                    <button onClick={()=>removeExercise(expandedDay,idx)} style={{background:'rgba(239,68,68,.08)',border:`1px solid rgba(239,68,68,.15)`,cursor:'pointer',color:RED,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0}}>
                       <Minus size={14} strokeWidth={2.5}/>
                     </button>
                   </div>
@@ -140,9 +145,9 @@ export default function ClientProgram({
                           value={val}
                           placeholder={field==='rest'?'60s':field==='notes'?'…':''}
                           onChange={e=>updateExercise(expandedDay,idx,field,type==='number'?parseInt(e.target.value)||1:e.target.value)}
-                          style={{width:'100%',background:'#0A0A0A',border:'1px solid #242424',borderRadius:7,padding:'7px 7px',fontFamily:'Barlow,sans-serif',fontSize:'0.8rem',color:'#F8FAFC',outline:'none',textAlign:type==='number'?'center':'left',minHeight:36}}
-                          onFocus={e=>{e.target.style.borderColor='#F97316'}}
-                          onBlur={e=>{e.target.style.borderColor='#242424'}}
+                          style={{width:'100%',background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'7px 7px',fontFamily:FONT_BODY,fontSize:'0.8rem',color:TEXT_PRIMARY,outline:'none',textAlign:type==='number'?'center':'left',minHeight:36}}
+                          onFocus={e=>{e.target.style.borderColor=GOLD}}
+                          onBlur={e=>{e.target.style.borderColor=BORDER}}
                         />
                       </div>
                     ))}
@@ -152,9 +157,9 @@ export default function ClientProgram({
               <div style={{padding:'10px 0'}}>
                 <button
                   onClick={()=>openExDbModal(expandedDay)}
-                  style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:'1.5px dashed #242424',borderRadius:10,padding:'10px 14px',cursor:'pointer',color:'#6B7280',fontFamily:'Barlow,sans-serif',fontSize:'0.82rem',width:'100%',justifyContent:'center',minHeight:44}}
-                  onFocus={e=>{e.currentTarget.style.borderColor='#F97316';e.currentTarget.style.color='#F97316'}}
-                  onBlur={e=>{e.currentTarget.style.borderColor='#242424';e.currentTarget.style.color='#6B7280'}}
+                  style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:`1.5px dashed ${BORDER}`,borderRadius:0,padding:'10px 14px',cursor:'pointer',color:TEXT_MUTED,fontFamily:FONT_BODY,fontSize:'0.82rem',width:'100%',justifyContent:'center',minHeight:44}}
+                  onFocus={e=>{e.currentTarget.style.borderColor=GOLD;e.currentTarget.style.color=GOLD}}
+                  onBlur={e=>{e.currentTarget.style.borderColor=BORDER;e.currentTarget.style.color=TEXT_MUTED}}
                 >
                   <Plus size={13} strokeWidth={2.5}/>Ajouter un exercice
                 </button>

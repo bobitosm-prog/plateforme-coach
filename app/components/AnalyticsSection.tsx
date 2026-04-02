@@ -8,11 +8,8 @@ import {
 } from 'recharts'
 import { Trophy, TrendingUp, Flame, Dumbbell, Download, Droplets } from 'lucide-react'
 import { downloadCsv } from '../../lib/exportCsv'
-import { BG_BASE, BG_CARD, BORDER, ORANGE, GREEN, TEXT_PRIMARY, TEXT_MUTED } from '../../lib/design-tokens'
+import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
 
-const GOLD = '#C9A84C'
-const RED = '#EF4444'
-const BLUE = '#3B82F6'
 const LIGHT_BLUE = '#7DD3FC'
 
 interface AnalyticsSectionProps {
@@ -35,7 +32,7 @@ type WeightPeriod = '30j' | '60j' | '90j' | 'tout'
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: '#111', border: `1px solid ${GOLD}`, borderRadius: 8, padding: '8px 12px', fontSize: '0.72rem' }}>
+    <div style={{ background: BG_CARD, border: `1px solid ${GOLD}`, borderRadius: 2, padding: '8px 12px', fontSize: '0.72rem', fontFamily: FONT_BODY }}>
       <div style={{ color: TEXT_MUTED, marginBottom: 4 }}>{label}</div>
       {payload.map((p: any, i: number) => (
         <div key={i} style={{ color: p.color || TEXT_PRIMARY, fontWeight: 600 }}>
@@ -53,7 +50,7 @@ export default function AnalyticsSection({
 }: AnalyticsSectionProps) {
   const [weightPeriod, setWeightPeriod] = useState<WeightPeriod>('30j')
 
-  // ── Weight chart data ──
+  // -- Weight chart data --
   const weightData = useMemo(() => {
     const source = weightPeriod === 'tout' ? weightHistoryFull : weightHistoryFull
     const now = Date.now()
@@ -72,7 +69,7 @@ export default function AnalyticsSection({
     })
   }, [weightHistoryFull, weightPeriod])
 
-  // ── Calories chart data ──
+  // -- Calories chart data --
   const calData = useMemo(() =>
     weeklyCalories.map(c => ({
       date: format(new Date(c.date), 'EEE', { locale: fr }),
@@ -82,18 +79,18 @@ export default function AnalyticsSection({
     [weeklyCalories, calorieGoal]
   )
 
-  // ── Macros chart data ──
+  // -- Macros chart data --
   const macroData = useMemo(() =>
     weeklyCalories.map(c => ({
       date: format(new Date(c.date), 'EEE', { locale: fr }),
-      Protéines: Math.round(c.proteins),
+      Proteines: Math.round(c.proteins),
       Glucides: Math.round(c.carbs),
       Lipides: Math.round(c.fats),
     })),
     [weeklyCalories]
   )
 
-  // ── Water chart data ──
+  // -- Water chart data --
   const waterData = useMemo(() =>
     weeklyWater.map(w => ({
       date: format(new Date(w.date), 'EEE', { locale: fr }),
@@ -102,7 +99,7 @@ export default function AnalyticsSection({
     [weeklyWater]
   )
 
-  // ── Volume chart data ──
+  // -- Volume chart data --
   const volumeData = useMemo(() =>
     weeklyVolume.map(v => ({
       week: `S${format(new Date(v.week), 'w', { locale: fr })}`,
@@ -111,7 +108,7 @@ export default function AnalyticsSection({
     [weeklyVolume]
   )
 
-  // ── Stats summary ──
+  // -- Stats summary --
   const monthWeightDiff = useMemo(() => {
     const thirtyDaysAgo = Date.now() - 30 * 86400000
     const recent = weightHistoryFull.filter(w => new Date(w.date).getTime() >= thirtyDaysAgo)
@@ -134,9 +131,9 @@ export default function AnalyticsSection({
     return personalRecords.filter(pr => pr.achieved_at >= cutoff).length
   }, [personalRecords])
 
-  // ── PR records grouped: show 1rm only, prioritize compound lifts ──
+  // -- PR records grouped: show 1rm only, prioritize compound lifts --
   const prRecords = useMemo(() => {
-    const priorityExercises = ['développé couché', 'bench press', 'squat', 'deadlift', 'soulevé de terre', 'overhead press', 'développé militaire', 'rowing', 'barbell row']
+    const priorityExercises = ['developpe couche', 'bench press', 'squat', 'deadlift', 'souleve de terre', 'overhead press', 'developpe militaire', 'rowing', 'barbell row']
     const rmRecords = personalRecords.filter(pr => pr.record_type === '1rm')
     return rmRecords.sort((a, b) => {
       const aP = priorityExercises.findIndex(e => a.exercise_name.toLowerCase().includes(e))
@@ -148,10 +145,9 @@ export default function AnalyticsSection({
     })
   }, [personalRecords])
 
-  // ── CSV export ──
+  // -- CSV export --
   function exportAnalytics() {
     const rows: (string | number | null)[][] = []
-    // Merge all data by date
     const allDates = new Set<string>()
     weightHistoryFull.forEach(w => allDates.add(w.date))
     weeklyCalories.forEach(c => allDates.add(c.date))
@@ -176,50 +172,50 @@ export default function AnalyticsSection({
 
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
     downloadCsv(`moovx_analytics_${today}.csv`,
-      ['Date', 'Poids (kg)', 'Calories', 'Protéines (g)', 'Glucides (g)', 'Lipides (g)', 'Eau (L)'],
+      ['Date', 'Poids (kg)', 'Calories', 'Proteines (g)', 'Glucides (g)', 'Lipides (g)', 'Eau (L)'],
       rows
     )
   }
 
-  const axisStyle = { fontSize: '0.55rem', fill: '#555' }
-  const gridColor = '#1a1a1a'
+  const axisStyle = { fontSize: '0.55rem', fill: TEXT_DIM }
+  const gridColor = BORDER
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-      {/* ══════ STATS SUMMARY ══════ */}
+      {/* STATS SUMMARY */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
         {[
           { icon: Flame, label: 'Streak', value: `${streak} jours`, color: streak > 0 ? GOLD : TEXT_MUTED },
-          { icon: TrendingUp, label: 'Poids', value: monthWeightDiff !== null ? `${monthWeightDiff > 0 ? '+' : ''}${monthWeightDiff} kg` : '—', color: monthWeightDiff !== null ? (monthWeightDiff <= 0 ? GREEN : RED) : TEXT_MUTED },
-          { icon: Dumbbell, label: 'Volume', value: volumeChange !== null ? `${volumeChange > 0 ? '+' : ''}${volumeChange}%` : '—', color: volumeChange !== null ? (volumeChange >= 0 ? GREEN : RED) : TEXT_MUTED },
+          { icon: TrendingUp, label: 'Poids', value: monthWeightDiff !== null ? `${monthWeightDiff > 0 ? '+' : ''}${monthWeightDiff} kg` : '---', color: monthWeightDiff !== null ? (monthWeightDiff <= 0 ? GREEN : RED) : TEXT_MUTED },
+          { icon: Dumbbell, label: 'Volume', value: volumeChange !== null ? `${volumeChange > 0 ? '+' : ''}${volumeChange}%` : '---', color: volumeChange !== null ? (volumeChange >= 0 ? GREEN : RED) : TEXT_MUTED },
           { icon: Trophy, label: 'Records', value: `${monthPRs} PR`, color: monthPRs > 0 ? GOLD : TEXT_MUTED },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} style={{
-            background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 14,
+            background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
             padding: '14px 12px', display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <Icon size={18} color={color} />
             <div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-              <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 2 }}>{label}</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: '0.58rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginTop: 2 }}>{label}</div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ══════ WEIGHT CHART ══════ */}
+      {/* WEIGHT CHART */}
       {weightHistoryFull.length > 1 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD }}>Poids</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Poids</span>
             <div style={{ display: 'flex', gap: 4 }}>
               {(['30j', '60j', '90j', 'tout'] as WeightPeriod[]).map(p => (
                 <button key={p} onClick={() => setWeightPeriod(p)} style={{
-                  padding: '4px 8px', borderRadius: 6, border: 'none', cursor: 'pointer',
-                  fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase',
-                  background: weightPeriod === p ? `${GOLD}25` : 'transparent',
-                  color: weightPeriod === p ? GOLD : TEXT_MUTED,
+                  padding: '4px 8px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                  fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', fontFamily: FONT_ALT, letterSpacing: '1px',
+                  background: weightPeriod === p ? GOLD : 'transparent',
+                  color: weightPeriod === p ? '#050505' : TEXT_MUTED,
                 }}>
                   {p}
                 </button>
@@ -242,10 +238,10 @@ export default function AnalyticsSection({
         </div>
       )}
 
-      {/* ══════ CALORIES CHART ══════ */}
+      {/* CALORIES CHART */}
       {calData.length > 0 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Calories (7 jours)</span>
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+          <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Calories (7 jours)</span>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={calData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
@@ -253,7 +249,7 @@ export default function AnalyticsSection({
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={calorieGoal} stroke={GREEN} strokeDasharray="6 4" label={{ value: `${calorieGoal}`, fill: GREEN, fontSize: 10, position: 'right' }} />
-              <Bar dataKey="calories" radius={[4, 4, 0, 0]} name="Calories">
+              <Bar dataKey="calories" radius={[2, 2, 0, 0]} name="Calories">
                 {calData.map((entry, i) => (
                   <Cell key={i} fill={entry.inTarget ? GREEN : RED} fillOpacity={0.7} />
                 ))}
@@ -263,36 +259,36 @@ export default function AnalyticsSection({
         </div>
       )}
 
-      {/* ══════ MACROS CHART ══════ */}
+      {/* MACROS CHART */}
       {macroData.length > 0 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Macros (7 jours)</span>
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+          <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Macros (7 jours)</span>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={macroData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="Protéines" stackId="macro" fill={BLUE} radius={[0, 0, 0, 0]} />
+              <Bar dataKey="Proteines" stackId="macro" fill={GOLD} radius={[0, 0, 0, 0]} />
               <Bar dataKey="Glucides" stackId="macro" fill={GREEN} radius={[0, 0, 0, 0]} />
-              <Bar dataKey="Lipides" stackId="macro" fill={ORANGE} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Lipides" stackId="macro" fill={GOLD} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8 }}>
-            {[{ label: 'Protéines', color: BLUE }, { label: 'Glucides', color: GREEN }, { label: 'Lipides', color: ORANGE }].map(l => (
+            {[{ label: 'Proteines', color: GOLD }, { label: 'Glucides', color: GREEN }, { label: 'Lipides', color: GOLD }].map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: l.color }} />
-                <span style={{ fontSize: '0.55rem', color: TEXT_MUTED }}>{l.label}</span>
+                <div style={{ width: 8, height: 8, borderRadius: 0, background: l.color }} />
+                <span style={{ fontSize: '0.55rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>{l.label}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* ══════ VOLUME CHART ══════ */}
+      {/* VOLUME CHART */}
       {volumeData.length > 0 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Volume d&apos;entraînement</span>
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+          <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Volume d&apos;entrainement</span>
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={volumeData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
@@ -305,12 +301,12 @@ export default function AnalyticsSection({
         </div>
       )}
 
-      {/* ══════ HYDRATION CHART ══════ */}
+      {/* HYDRATION CHART */}
       {waterData.length > 0 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <Droplets size={14} color={LIGHT_BLUE} />
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD }}>Hydratation (7 jours)</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Hydratation (7 jours)</span>
           </div>
           <ResponsiveContainer width="100%" height={120}>
             <BarChart data={waterData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
@@ -319,46 +315,46 @@ export default function AnalyticsSection({
               <YAxis tick={axisStyle} unit="L" />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={waterGoal / 1000} stroke={LIGHT_BLUE} strokeDasharray="6 4" />
-              <Bar dataKey="litres" fill={LIGHT_BLUE} fillOpacity={0.6} radius={[4, 4, 0, 0]} name="Eau (L)" />
+              <Bar dataKey="litres" fill={LIGHT_BLUE} fillOpacity={0.6} radius={[2, 2, 0, 0]} name="Eau (L)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
       )}
 
-      {/* ══════ PERSONAL RECORDS ══════ */}
+      {/* PERSONAL RECORDS */}
       {prRecords.length > 0 && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <Trophy size={16} color={GOLD} />
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD }}>Mes records</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Mes records</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
             {prRecords.map(pr => {
               const diff = pr.previous_value ? Math.round((pr.value - pr.previous_value) * 10) / 10 : null
               return (
                 <div key={pr.id} style={{
-                  background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 14,
+                  background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
                   padding: '14px 12px', borderLeft: `3px solid ${GOLD}`,
                 }}>
-                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
+                  <div style={{ fontSize: '0.65rem', fontFamily: FONT_BODY, color: TEXT_MUTED, fontWeight: 400, marginBottom: 4, lineHeight: 1.3 }}>
                     {pr.exercise_name}
                   </div>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
                     {pr.value} <span style={{ fontSize: '0.7rem', fontWeight: 600 }}>{pr.unit}</span>
                   </div>
-                  <div style={{ fontSize: '0.55rem', color: TEXT_MUTED, marginTop: 2 }}>
-                    1RM estimé
+                  <div style={{ fontSize: '0.55rem', fontFamily: FONT_ALT, color: TEXT_MUTED, marginTop: 2 }}>
+                    1RM estime
                   </div>
                   {diff !== null && diff > 0 ? (
-                    <div style={{ fontSize: '0.6rem', color: GREEN, fontWeight: 700, marginTop: 4 }}>
-                      +{diff} {pr.unit} vs précédent
+                    <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: GREEN, fontWeight: 700, marginTop: 4 }}>
+                      +{diff} {pr.unit} vs precedent
                     </div>
                   ) : diff === null ? (
-                    <div style={{ fontSize: '0.6rem', color: GOLD, fontWeight: 600, marginTop: 4 }}>
+                    <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: GOLD, fontWeight: 700, marginTop: 4 }}>
                       Premier record
                     </div>
                   ) : null}
-                  <div style={{ fontSize: '0.5rem', color: '#444', marginTop: 4 }}>
+                  <div style={{ fontSize: '0.5rem', fontFamily: FONT_BODY, color: TEXT_DIM, marginTop: 4 }}>
                     Atteint le {format(new Date(pr.achieved_at), 'd MMM yyyy', { locale: fr })}
                   </div>
                 </div>
@@ -368,18 +364,18 @@ export default function AnalyticsSection({
         </div>
       )}
 
-      {/* ══════ EXPORT ══════ */}
+      {/* EXPORT */}
       <button
         onClick={exportAnalytics}
         style={{
           width: '100%', padding: '14px', background: BG_CARD,
-          border: `1px solid ${BORDER}`, borderRadius: 14, cursor: 'pointer',
+          border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           marginTop: 8,
         }}
       >
         <Download size={16} color={TEXT_MUTED} />
-        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: TEXT_MUTED }}>Exporter mes données</span>
+        <span style={{ fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '1px', textTransform: 'uppercase' }}>Exporter mes donnees</span>
       </button>
     </div>
   )

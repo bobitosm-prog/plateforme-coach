@@ -5,9 +5,12 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import {
   ScheduledSession, SESSION_COLORS, getMonthDates, toDateStr, isSameDay,
 } from '../../lib/schedule-utils'
-import { BG_BASE, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_MUTED } from '../../lib/design-tokens'
+import {
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM,
+  TEXT_PRIMARY, TEXT_MUTED,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+} from '../../lib/design-tokens'
 
-const GOLD = '#C9A84C'
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
@@ -43,7 +46,7 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       style={{
-        background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16,
+        background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
         padding: 16, marginBottom: 16,
       }}
     >
@@ -53,8 +56,9 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
           <ChevronLeft size={18} color={TEXT_MUTED} />
         </button>
         <span style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontSize: '1rem', fontWeight: 700, color: TEXT_PRIMARY,
+          fontFamily: FONT_DISPLAY,
+          fontSize: '1.2rem', fontWeight: 700, color: TEXT_PRIMARY,
+          letterSpacing: '2px', textTransform: 'uppercase',
         }}>
           {MONTH_NAMES[viewMonth]} {viewYear}
         </span>
@@ -62,7 +66,7 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
           <button onClick={nextMonth} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
             <ChevronRight size={18} color={TEXT_MUTED} />
           </button>
-          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, cursor: 'pointer', padding: 4 }}>
+          <button onClick={onClose} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer', padding: 4, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={14} color={TEXT_MUTED} />
           </button>
         </div>
@@ -73,7 +77,8 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
         {DAY_HEADERS.map(d => (
           <div key={d} style={{
             textAlign: 'center', fontSize: '0.5rem', fontWeight: 700,
-            color: TEXT_MUTED, letterSpacing: '0.05em', padding: '2px 0',
+            color: TEXT_MUTED, letterSpacing: '2px', padding: '2px 0',
+            fontFamily: FONT_ALT, textTransform: 'uppercase',
           }}>
             {d}
           </div>
@@ -89,17 +94,17 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
           const isSelected = isSameDay(date, selectedDate)
           const daySessions = sessions.filter(s => s.scheduled_date === dateStr)
 
-          // Get unique session colors for dots
-          const dots = [...new Set(daySessions.map(s => SESSION_COLORS[s.session_type]))].slice(0, 3)
+          // GOLD dots for events
+          const hasSessions = daySessions.length > 0
 
           return (
             <button
               key={i}
               onClick={() => { onSelectDate(date); onClose() }}
               style={{
-                background: isSelected ? `${GOLD}20` : 'transparent',
+                background: isSelected ? GOLD : 'transparent',
                 border: isToday ? `1.5px solid ${GOLD}` : '1.5px solid transparent',
-                borderRadius: 8,
+                borderRadius: 0,
                 padding: '6px 2px 4px',
                 cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -107,18 +112,20 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
               }}
             >
               <span style={{
+                fontFamily: FONT_DISPLAY,
                 fontSize: '0.72rem', fontWeight: isToday ? 700 : 500,
-                color: isToday ? GOLD : TEXT_PRIMARY,
+                color: isSelected ? '#050505' : isToday ? GOLD : TEXT_PRIMARY,
               }}>
                 {date.getDate()}
               </span>
 
-              {/* Session dots */}
-              {dots.length > 0 && (
+              {/* Session dots — all GOLD */}
+              {hasSessions && (
                 <div style={{ display: 'flex', gap: 2 }}>
-                  {dots.map((color, j) => (
+                  {daySessions.slice(0, 3).map((_, j) => (
                     <div key={j} style={{
-                      width: 4, height: 4, borderRadius: '50%', background: color,
+                      width: 4, height: 4, borderRadius: '50%',
+                      background: isSelected ? '#050505' : GOLD,
                     }} />
                   ))}
                 </div>
