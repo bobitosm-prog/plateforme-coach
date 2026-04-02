@@ -205,11 +205,19 @@ export default function useClientDashboard() {
       const setsToInsert: any[] = []
       data.exercises.forEach((exo: any) => {
         exo.sets.forEach((s: any, i: number) => {
-          setsToInsert.push({ session_id: sess.id, user_id: session.user.id, exercise_name: exo.name, set_number: i + 1, reps: s.reps || 0, weight: s.weight || 0, completed: true })
+          setsToInsert.push({
+            session_id: sess.id, user_id: session.user.id,
+            exercise_name: exo.name, set_number: i + 1,
+            reps: Number(s.reps) || 0,
+            weight: Number(s.weight) || 0,
+            completed: true,
+          })
         })
       })
       if (setsToInsert.length > 0) await supabase.from('workout_sets').insert(setsToInsert)
     }
+    // Update last_workout_at
+    await supabase.from('profiles').update({ last_workout_at: new Date().toISOString() }).eq('id', session.user.id)
     toast.success('Séance terminée ! Bien joué 💪')
     fetchAll(true)
   }
