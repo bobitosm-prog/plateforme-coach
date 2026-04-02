@@ -6,6 +6,7 @@ import {
   MUSCLE_COLORS,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
+import { getExerciseGif } from '../../../lib/exercise-images'
 
 interface ExerciseDetailModalProps {
   exercise: any | null
@@ -61,12 +62,19 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
             <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE }}>
               <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block' }} src={exercise.video_url} />
             </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '28px 16px', marginBottom: 18, border: `1px solid ${BORDER}` }}>
-              <span style={{ fontSize: '1.8rem' }}>💪</span>
-              <span style={{ fontSize: '0.82rem', color: TEXT_MUTED, fontWeight: 500, fontFamily: FONT_BODY }}>Video bientot disponible</span>
-            </div>
-          )}
+          ) : (() => {
+            const gif = getExerciseGif(exercise.name)
+            return gif ? (
+              <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}` }}>
+                <img src={gif} alt={exercise.name} loading="lazy" style={{ width: '100%', display: 'block' }} onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '28px 16px', marginBottom: 18, border: `1px solid ${BORDER}` }}>
+                <span style={{ fontSize: '1.8rem' }}>💪</span>
+                <span style={{ fontSize: '0.82rem', color: TEXT_MUTED, fontWeight: 500, fontFamily: FONT_BODY }}>Vidéo bientôt disponible</span>
+              </div>
+            )
+          })()}
 
           {/* Tags */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>

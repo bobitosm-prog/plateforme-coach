@@ -6,6 +6,7 @@ import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS,
 } from '../../../../lib/design-tokens'
+import { getExerciseGif, ExercisePlaceholder } from '../../../../lib/exercise-images'
 
 interface PreviousSet {
   weight: number
@@ -97,7 +98,16 @@ export default function TrainingExerciseCard({
     >
       {/* ── Card Header ── */}
       <div style={{ padding: '14px 14px 10px', borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          {/* Exercise image */}
+          {(() => {
+            const gif = getExerciseGif(ex.name)
+            return gif ? (
+              <img src={gif} alt="" loading="lazy" style={{ width: 48, height: 48, objectFit: 'cover', border: `1px solid ${BORDER}`, flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            ) : (
+              <div style={{ flexShrink: 0 }}><ExercisePlaceholder /></div>
+            )
+          })()}
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Exercise name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

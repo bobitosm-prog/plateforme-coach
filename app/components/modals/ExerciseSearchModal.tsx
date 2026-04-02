@@ -7,6 +7,7 @@ import {
   MUSCLE_COLORS, MUSCLE_GROUPS_FILTER,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
+import { getExerciseGif, ExercisePlaceholder } from '../../../lib/exercise-images'
 
 interface ExerciseSearchModalProps {
   supabase: any
@@ -128,8 +129,17 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
                       }}
                       style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '0', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
                     >
-                      {/* Muscle color top bar */}
-                      <div style={{ height: 4, background: mgColor, width: '100%', flexShrink: 0 }} />
+                      {/* Exercise image or muscle color bar */}
+                      {(() => {
+                        const gif = getExerciseGif(ex.name)
+                        return gif ? (
+                          <div style={{ height: 80, overflow: 'hidden', flexShrink: 0 }}>
+                            <img src={gif} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
+                          </div>
+                        ) : (
+                          <div style={{ height: 4, background: mgColor, width: '100%', flexShrink: 0 }} />
+                        )
+                      })()}
                       <div style={{ padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
                         <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.88rem', color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '1px', lineHeight: 1.2 }}>
                           {ex.name}
