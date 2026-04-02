@@ -227,12 +227,25 @@ export default function useClientDashboard() {
   }
 
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return
-    const path = `${session.user.id}/avatar.${file.name.split('.').pop()}`
-    await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
-    await supabase.from('profiles').upsert({ id: session.user.id, avatar_url: publicUrl })
-    fetchAll(true)
+    const file = e.target.files?.[0]; if (!file || !session?.user?.id) return
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `${session.user.id}/avatar.${ext}`
+      // Remove old avatar first (ignore errors)
+      await supabase.storage.from('avatars').remove([path]).catch(() => {})
+      // Upload new avatar
+      const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type })
+      if (uploadErr) { toast.error('Erreur upload: ' + uploadErr.message); return }
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+      // Update profile
+      const { error: updateErr } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id)
+      if (updateErr) { toast.error('Erreur sauvegarde: ' + updateErr.message); return }
+      toast.success('Photo de profil mise à jour !')
+      fetchAll(true)
+    } catch (err: any) {
+      toast.error('Erreur: ' + (err?.message || 'Inconnue'))
+    }
   }
 
   async function uploadProgressPhoto(e: React.ChangeEvent<HTMLInputElement>) {

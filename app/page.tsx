@@ -94,7 +94,7 @@ export default function CoachApp() {
             const active = h.activeTab === id
             const badge = id === 'messages' && h.unreadCount > 0
             return (
-              <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 0, background: 'transparent', borderLeft: active ? `2px solid ${GOLD}` : '2px solid transparent', border: 'none', borderLeftStyle: 'solid', borderLeftWidth: 2, borderLeftColor: active ? GOLD : 'transparent', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms' }}>
+              <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 0, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms' }}>
                 <div style={{ position: 'relative' }}>
                   <Icon size={20} color={active ? GOLD : TEXT_MUTED} strokeWidth={2} />
                   {badge && <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 14, height: 14, background: '#EF4444', borderRadius: 7, fontSize: '0.5rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{h.unreadCount > 9 ? '9+' : h.unreadCount}</span>}
@@ -274,6 +274,18 @@ export default function CoachApp() {
         </div>
       )}
 
+      {/* ── TOP HEADER BAR ── */}
+      <div style={{ flexShrink: 0, padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+        <button onClick={() => h.setActiveTab('messages')} style={{ position: 'relative', background: 'transparent', border: 'none', cursor: 'pointer', padding: 8 }}>
+          <MessageCircle size={22} color={h.activeTab === 'messages' ? GOLD : (h.unreadCount > 0 ? GOLD : TEXT_MUTED)} strokeWidth={1.5} />
+          {h.unreadCount > 0 && (
+            <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: GOLD, color: '#050505', fontFamily: FONT_DISPLAY, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {h.unreadCount > 9 ? '9+' : h.unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* ── TRIAL BANNER ── */}
       {h.isInTrial && (
         <div style={{ flexShrink: 0, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: h.trialDaysLeft <= 3 ? 'rgba(239,68,68,0.05)' : GOLD_DIM, border: `1px solid ${h.trialDaysLeft <= 3 ? 'rgba(239,68,68,0.15)' : GOLD_RULE}`, borderLeft: 'none', borderRight: 'none' }}>
@@ -312,19 +324,14 @@ export default function CoachApp() {
           { id: 'training', icon: Dumbbell, label: 'Training' },
           { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
           { id: 'progress', icon: TrendingUp, label: 'Progress' },
-          { id: 'messages', icon: MessageCircle, label: 'Messages' },
           { id: 'profil', icon: User, label: 'Profil' },
         ] as const).map(({ id, icon: Icon, label }) => {
           const active = h.activeTab === id
-          const badge = id === 'messages' && h.unreadCount > 0
           return (
             <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 6px', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}>
-              {active && <motion.div layoutId="navIndicator" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 24, height: 3, background: GOLD, borderRadius: 0 }} transition={{ type: 'spring', stiffness: 420, damping: 30 }} />}
-              <div style={{ position: 'relative' }}>
-                <Icon size={20} color={active ? GOLD : TEXT_DIM} />
-                {badge && <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 16, height: 16, background: '#EF4444', borderRadius: 8, fontSize: '0.55rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{h.unreadCount > 9 ? '9+' : h.unreadCount}</span>}
-              </div>
-              <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: active ? GOLD : TEXT_DIM, fontFamily: FONT_ALT }}>{label}</span>
+              {active && <motion.div layoutId="navIndicator" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 24, height: 2, background: GOLD, borderRadius: 0 }} transition={{ type: 'spring', stiffness: 420, damping: 30 }} />}
+              <Icon size={20} color={active ? GOLD : TEXT_DIM} />
+              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: active ? GOLD : TEXT_DIM, fontFamily: FONT_ALT }}>{label}</span>
             </button>
           )
         })}

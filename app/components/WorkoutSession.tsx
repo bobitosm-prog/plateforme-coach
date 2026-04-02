@@ -190,7 +190,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 export default function WorkoutSession({ sessionName, exercises: raw, onFinish, onClose }: WorkoutSessionProps) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name, muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes, videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true })))
+  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || e.rest || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true })))
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
@@ -206,7 +206,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
 
   // Fetch previous performance for all exercises
   useEffect(() => {
-    const names = raw.map(e => e.exercise_name).filter(Boolean)
+    const names = raw.map(e => e.exercise_name || e.name).filter(Boolean)
     if (!names.length) return
     const fetchPrev = async () => {
       const prev: Record<string, { weight: number; reps: number }[]> = {}
@@ -274,7 +274,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
 
   const finish = () => { if (elT.current) clearInterval(elT.current); setDone(true); onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) }) }
 
-  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(exercises.map(e => ({ id: uid(), name: e.exercise_name, muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || 90, tempo: undefined, rir: null, notes: e.notes, videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))); setMode('session') }} onCancel={() => setMode('session')} />
+  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || e.rest || 90, tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))); setMode('session') }} onCancel={() => setMode('session')} />
 
   if (done) return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center" style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
@@ -550,7 +550,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                   onMouseEnter={e => { e.currentTarget.style.background = BG_CARD_2; e.currentTarget.style.borderColor = GOLD_RULE }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = TEXT_DIM }}
                   >
-                    <Plus size={13} /> + Ajouter un set
+                    <Plus size={13} /> Ajouter un set
                   </button>
                 </div>
               )}
