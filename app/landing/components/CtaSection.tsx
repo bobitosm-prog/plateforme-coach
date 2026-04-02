@@ -2,67 +2,143 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { RevealProps } from './shared';
+import { useReveal } from './shared';
 
-export default function CtaSection({ revealRef, visible }: RevealProps) {
+export default function CtaSection() {
+  const { ref, visible } = useReveal();
+
   return (
-    <div ref={revealRef}>
-      <section style={{
-        padding: '120px 24px',
-        textAlign: 'center',
-        position: 'relative',
+    <section
+      ref={ref}
+      id="cta"
+      style={{
+        width: '100%',
+        padding: '120px 64px',
+        textAlign: 'center' as const,
+        position: 'relative' as const,
         overflow: 'hidden',
-      }}>
-        {/* Gold orb */}
-        <div style={{
+      }}
+    >
+      {/* Ghost text */}
+      <div
+        style={{
           position: 'absolute',
-          top: '50%', left: '50%',
+          top: '50%',
+          left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 600, height: 600,
-          background: 'radial-gradient(circle, rgba(201,168,76,0.1) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-        <h2 style={{
-          fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: 'clamp(32px, 5vw, 56px)',
-          color: '#f8fafc',
-          margin: '0 0 16px',
+          fontFamily: 'var(--font-display)',
+          fontSize: 'clamp(120px, 18vw, 240px)',
+          color: 'rgba(201,168,76,0.03)',
+          pointerEvents: 'none' as const,
+          letterSpacing: 4,
+          whiteSpace: 'nowrap' as const,
+          userSelect: 'none' as const,
+          lineHeight: 1,
+        }}
+      >
+        MOOVX
+      </div>
+
+      {/* Tag */}
+      <span
+        style={{
+          display: 'inline-block',
+          fontFamily: 'var(--font-alt)',
+          fontSize: 13,
+          fontWeight: 600,
           letterSpacing: 2,
-          position: 'relative',
+          color: 'var(--gold)',
+          textTransform: 'uppercase' as const,
+          border: '1px solid var(--gold-rule)',
+          padding: '6px 16px',
+          margin: '0 auto 32px',
+          position: 'relative' as const,
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0)' : 'translateY(20px)',
           transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}>
-          PR&Ecirc;T &Agrave; TRANSFORMER TON CORPS ?
-        </h2>
-        <p style={{
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: 17,
-          color: '#6b7280',
-          margin: '0 0 32px',
-          position: 'relative',
+        }}
+      >
+        Commence maintenant
+      </span>
+
+      {/* Heading */}
+      <h2
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 'clamp(48px, 7vw, 96px)',
+          color: 'var(--text)',
+          letterSpacing: 3,
+          lineHeight: 0.95,
+          margin: '0 0 24px',
+          position: 'relative' as const,
           opacity: visible ? 1 : 0,
-          transition: 'opacity 0.6s 0.15s',
-        }}>
-          Rejoins MoovX et commence ta transformation d&egrave;s aujourd&apos;hui.
-        </p>
-        <div style={{ position: 'relative', opacity: visible ? 1 : 0, transition: 'opacity 0.6s 0.3s' }}>
-          <Link href="/register-client" className="gold-btn" style={{ fontSize: 16, padding: '16px 40px' }}>
-            Commencer — 10 jours gratuits
-          </Link>
-        </div>
-        <p style={{
-          fontFamily: "'DM Sans', sans-serif",
+          transform: visible ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s',
+        }}
+      >
+        PRÊT À TRANSFORMER TON CORPS ?
+      </h2>
+
+      {/* Subtitle */}
+      <p
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 16,
+          color: 'var(--text-muted)',
+          fontWeight: 300,
+          margin: '0 0 40px',
+          position: 'relative' as const,
+          opacity: visible ? 1 : 0,
+          transition: 'opacity 0.6s ease 0.2s',
+        }}
+      >
+        Rejoins MoovX et commence ta transformation dès aujourd&apos;hui.
+      </p>
+
+      {/* CTA Button */}
+      <div
+        style={{
+          position: 'relative' as const,
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0)' : 'translateY(10px)',
+          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
+          marginBottom: 20,
+        }}
+      >
+        <Link
+          href="/register-client"
+          style={{
+            display: 'inline-block',
+            background: 'var(--gold)',
+            color: '#050505',
+            fontFamily: 'var(--font-alt)',
+            fontWeight: 800,
+            fontSize: 16,
+            letterSpacing: 1.5,
+            padding: '18px 56px',
+            textDecoration: 'none',
+            textTransform: 'uppercase' as const,
+            clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+          }}
+        >
+          Commencer — 10 jours gratuits
+        </Link>
+      </div>
+
+      {/* Fine print */}
+      <p
+        style={{
+          fontFamily: 'var(--font-body)',
           fontSize: 13,
-          color: '#555',
-          marginTop: 16,
-          position: 'relative',
+          color: 'var(--text-dim)',
+          margin: 0,
+          position: 'relative' as const,
           opacity: visible ? 1 : 0,
-          transition: 'opacity 0.6s 0.45s',
-        }}>
-          Sans engagement &middot; R&eacute;siliable &agrave; tout moment
-        </p>
-      </section>
-    </div>
+          transition: 'opacity 0.6s ease 0.4s',
+        }}
+      >
+        Sans engagement · Résiliable à tout moment · 100% Swiss Made
+      </p>
+    </section>
   );
 }

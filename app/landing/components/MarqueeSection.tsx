@@ -1,35 +1,63 @@
 'use client';
 
 import React from 'react';
-import { RevealProps } from './shared';
+import { useReveal } from './shared';
 
-export default function MarqueeSection({ revealRef, visible }: RevealProps) {
+const MARQUEE_TEXT = 'Nutrition IA \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Chat IA \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Feedback Vid\u00e9o \u2726 Swiss Made \u2726 Coaching Connect\u00e9 \u2726 ';
+
+export default function MarqueeSection() {
+  const { ref, visible } = useReveal();
+
   return (
-    <div ref={revealRef} style={{
-      borderTop: '1px solid rgba(201,168,76,0.2)',
-      borderBottom: '1px solid rgba(201,168,76,0.2)',
-      padding: '16px 0',
-      overflow: 'hidden',
-      opacity: visible ? 1 : 0,
-      transition: 'opacity 0.6s',
-    }}>
-      <div style={{
-        display: 'flex',
-        animation: 'marqueeScroll 30s linear infinite',
-        whiteSpace: 'nowrap',
-      }}>
-        {[1, 2].map(n => (
-          <span key={n} style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: 18,
-            color: '#C9A84C',
-            letterSpacing: 4,
-            paddingRight: 0,
-          }}>
-            {'Nutrition IA \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Liste de Courses \u2726 Chat IA \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Remplacement IA \u2726 Feedback Vid\u00e9o \u2726 Templates Coach \u2726 Swiss Made \u2726 Coaching Connect\u00e9 \u2726 '}
-          </span>
-        ))}
+    <>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+      <div
+        ref={ref}
+        style={{
+          borderTop: '1px solid var(--gold-rule)',
+          borderBottom: '1px solid var(--gold-rule)',
+          padding: '14px 0',
+          background: 'var(--surface)',
+          overflow: 'hidden',
+          opacity: visible ? 1 : 0,
+          transition: 'opacity 0.6s ease',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            whiteSpace: 'nowrap',
+            animation: 'marquee 35s linear infinite',
+          }}
+        >
+          {[0, 1].map((n) => (
+            <span
+              key={n}
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 14,
+                letterSpacing: 4,
+                color: 'var(--gold)',
+                flexShrink: 0,
+              }}
+            >
+              {MARQUEE_TEXT.split('\u2726').map((segment, i, arr) => (
+                <React.Fragment key={i}>
+                  {segment}
+                  {i < arr.length - 1 && (
+                    <span style={{ color: 'var(--text-dim)' }}>{'\u2726'}</span>
+                  )}
+                </React.Fragment>
+              ))}
+            </span>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -4,7 +4,20 @@
   --background: #0a0a0a;
   --foreground: #ededed;
   --gold: #C9A84C;
+  --gold-light: #E8C97A;
+  --gold-dim: rgba(201,168,76,0.15);
+  --gold-rule: rgba(201,168,76,0.25);
   --gold-glow: rgba(201,168,76,0.2);
+  --bg: #050505;
+  --surface: #0D0C0B;
+  --surface-2: #141310;
+  --text: #F0EDE8;
+  --text-muted: #8A8580;
+  --text-dim: #3D3B38;
+  --green: #4ade80;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-alt: 'Barlow Condensed', sans-serif;
+  --font-body: 'Outfit', sans-serif;
 }
 
 @theme inline {

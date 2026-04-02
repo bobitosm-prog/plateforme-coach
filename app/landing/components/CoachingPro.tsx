@@ -4,21 +4,21 @@ import React, { useState } from 'react';
 import { useReveal } from './shared';
 
 const FEATURES = [
-  { num: '01', title: 'Analytics avancé', desc: '5 graphiques interactifs : poids, calories, macros, volume d\u2019entraînement, hydratation. Export CSV.' },
-  { num: '02', title: 'Photos avant/après', desc: 'Comparateur slider intégré. Superpose tes photos pour voir ta transformation en temps réel.' },
-  { num: '03', title: 'Records personnels', desc: 'Détection automatique des PR via la formule Epley. Historique complet de ta progression.' },
-  { num: '04', title: 'Streak & gamification', desc: '7 badges à débloquer. Série de jours consécutifs. La motivation par les récompenses.' },
-  { num: '05', title: 'Hydratation', desc: 'Compteur d\u2019eau quotidien avec objectif personnalisé selon ton poids et ton activité physique.' },
-  { num: '06', title: 'Tes données t\u2019appartiennent', desc: 'Export CSV complet à tout moment. Conformité RGPD. Hébergé en Europe sur Supabase.' },
+  { num: '01', title: 'Messagerie temps réel', desc: 'Chat direct avec chaque client. Read receipts et notifications push intégrées.' },
+  { num: '02', title: 'Plans IA pour tes clients', desc: 'Génère nutrition et programmes personnalisés pour chaque client en quelques secondes.' },
+  { num: '03', title: 'Alertes clients inactifs', desc: 'Détection automatique des clients qui ne s\u2019entraînent plus depuis 3 jours. Relance en un clic.' },
+  { num: '04', title: 'Templates de programmes', desc: 'Crée tes programmes modèles (PPL, Full Body, Perte de poids) et assigne-les en un clic.' },
+  { num: '05', title: 'Feedback vidéo', desc: 'Le client filme son exécution, tu commentes et corriges la forme directement dans l\u2019app.' },
+  { num: '06', title: 'Export CSV', desc: 'Clients, paiements, progressions — toutes tes données accessibles et exportables.' },
 ];
 
-export default function TrackingSection() {
+export default function CoachingPro() {
   const { ref, visible } = useReveal();
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
     <section
-      id="tracking"
+      id="coaching"
       ref={ref}
       style={{
         opacity: visible ? 1 : 0,
@@ -41,7 +41,7 @@ export default function TrackingSection() {
             padding: '5px 14px',
             textTransform: 'uppercase',
           }}>
-            03 — Suivi
+            05 — Coaching Pro
           </span>
           <h2 style={{
             fontFamily: 'var(--font-display)',
@@ -51,7 +51,7 @@ export default function TrackingSection() {
             color: 'var(--text)',
             margin: '20px 0 0',
           }}>
-            MESURE CHAQUE PROGRÈS
+            OUTILS POUR LES COACHES
           </h2>
           <p style={{
             fontSize: 16,
@@ -59,7 +59,7 @@ export default function TrackingSection() {
             fontWeight: 300,
             margin: '16px 0 0',
           }}>
-            Graphiques, badges, photos — toute ta progression en un coup d&apos;œil
+            Dashboard complet, messagerie, plans IA, feedback vidéo
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export default function TrackingSection() {
                   transition: 'background 0.3s ease',
                 }}
               >
-                {/* Gold gradient bottom line (::before equivalent) */}
+                {/* Gold gradient bottom line */}
                 <div style={{
                   position: 'absolute',
                   bottom: 0,
@@ -139,15 +139,15 @@ export default function TrackingSection() {
         </div>
       </div>
 
-      {/* Responsive styles */}
+      {/* Responsive */}
       <style>{`
         @media (max-width: 1024px) {
-          #tracking > div > div:last-child {
+          #coaching > div > div:last-child {
             grid-template-columns: 1fr !important;
           }
         }
         @media (max-width: 768px) {
-          #tracking > div {
+          #coaching > div {
             padding: 80px 24px !important;
           }
         }

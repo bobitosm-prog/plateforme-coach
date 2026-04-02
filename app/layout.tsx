@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, DM_Sans, Barlow, Barlow_Condensed } from "next/font/google";
+import { Bebas_Neue, Barlow_Condensed, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
@@ -10,24 +10,17 @@ const bebasNeue = Bebas_Neue({
   display: "swap",
 });
 
-const dmSans = DM_Sans({
-  weight: ["200", "300", "400", "500", "600", "700"],
+const barlowCondensed = Barlow_Condensed({
+  weight: ["700", "800", "900"],
+  subsets: ["latin"],
+  variable: "--font-alt",
+  display: "swap",
+});
+
+const outfit = Outfit({
+  weight: ["300", "400", "500", "600"],
   subsets: ["latin"],
   variable: "--font-body",
-  display: "swap",
-});
-
-const barlow = Barlow({
-  weight: ["300", "400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-barlow",
-  display: "swap",
-});
-
-const barlowCondensed = Barlow_Condensed({
-  weight: ["400", "500", "600", "700", "800"],
-  subsets: ["latin"],
-  variable: "--font-barlow-condensed",
   display: "swap",
 });
 
@@ -42,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${bebasNeue.variable} ${dmSans.variable} ${barlow.variable} ${barlowCondensed.variable}`}>
+    <html lang="fr" className={`${bebasNeue.variable} ${barlowCondensed.variable} ${outfit.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#C9A84C" />
@@ -55,7 +48,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){for(var i=0;i<r.length;i++){r[i].unregister()}});if(window.caches){caches.keys().then(function(n){for(var i=0;i<n.length;i++){caches.delete(n[i])}})}}` }} />
       </head>
-      <body className="antialiased" style={{ fontFamily: "var(--font-body), 'DM Sans', sans-serif" }}>
+      <body className="antialiased" style={{ fontFamily: "var(--font-body), 'Outfit', sans-serif" }}>
         {children}
         <Toaster position="top-center" richColors theme="dark" />
       </body>
