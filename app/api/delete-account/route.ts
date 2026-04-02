@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const supabase = getServiceSupabase()
     if (!supabase) {
       return NextResponse.json(
-        { error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' },
+        { error: 'Service temporairement indisponible' },
         { status: 500 }
       )
     }

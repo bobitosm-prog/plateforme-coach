@@ -82,6 +82,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .eq('user_id', userId)
       .eq('date', today)
       .eq('is_completed', true)
+      .limit(50)
     if (data) {
       setCompletedMeals(new Set(data.map((r: any) => r.meal_type)))
     }
@@ -94,6 +95,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .eq('user_id', userId)
       .eq('date', today)
       .order('created_at', { ascending: true })
+      .limit(100)
     setMealLogs(data || [])
   }
 

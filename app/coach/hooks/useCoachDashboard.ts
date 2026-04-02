@@ -237,7 +237,7 @@ export default function useCoachDashboard(initialSession?: any) {
           setCoachProfile(data)
           const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
           const startOfYear = new Date(startOfMonth.getFullYear(), 0, 1, 0, 0, 0, 0)
-          supabase.from('payments').select('amount,paid_at').eq('status', 'paid').then(({ data: allPayments }) => {
+          supabase.from('payments').select('amount,paid_at').eq('status', 'paid').limit(200).then(({ data: allPayments }) => {
             if (!allPayments) return
             const monthStart = startOfMonth.toISOString()
             const yearStart = startOfYear.toISOString()
@@ -252,7 +252,7 @@ export default function useCoachDashboard(initialSession?: any) {
           })
         }
       })
-      supabase.from('coach_clients').select('client_id').eq('coach_id', session.user.id).then(({ data: links }) => {
+      supabase.from('coach_clients').select('client_id').eq('coach_id', session.user.id).limit(100).then(({ data: links }) => {
         setActiveSubscribers(links?.length || 0)
       })
     }
@@ -303,6 +303,7 @@ export default function useCoachDashboard(initialSession?: any) {
         .or(`sender_id.eq.${client.client_id},receiver_id.eq.${client.client_id}`)
         .gt('created_at', since)
         .order('created_at', { ascending: true })
+        .limit(100)
       if (data?.length) {
         setChatMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
       }
@@ -330,6 +331,7 @@ export default function useCoachDashboard(initialSession?: any) {
       .select('id, client_id, created_at')
       .eq('coach_id', coachId)
       .order('created_at', { ascending: false })
+      .limit(100)
 
     if (linksError || !links?.length) { setClients([]); setLoading(false); return }
 
@@ -338,6 +340,7 @@ export default function useCoachDashboard(initialSession?: any) {
       .from('profiles')
       .select('id, full_name, avatar_url, current_weight, calorie_goal')
       .in('id', clientIds)
+      .limit(100)
 
     const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
     const rows: ClientRow[] = links.map(l => ({
@@ -384,6 +387,7 @@ export default function useCoachDashboard(initialSession?: any) {
       .eq('receiver_id', coachId)
       .eq('read', false)
       .in('sender_id', clientIds)
+      .limit(100)
     const counts: Record<string, number> = {}
     for (const msg of data || []) {
       counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1
@@ -402,6 +406,7 @@ export default function useCoachDashboard(initialSession?: any) {
       .gte('scheduled_date', from.toISOString().split('T')[0])
       .lte('scheduled_date', to.toISOString().split('T')[0])
       .order('scheduled_date', { ascending: true })
+      .limit(500)
     setScheduledSessions(data ?? [])
   }
 
@@ -444,6 +449,7 @@ export default function useCoachDashboard(initialSession?: any) {
       .or(`sender_id.eq.${coachId},receiver_id.eq.${coachId}`)
       .or(`sender_id.eq.${clientId},receiver_id.eq.${clientId}`)
       .order('created_at', { ascending: true })
+      .limit(100)
     setChatMessages(data || [])
   }
 
@@ -511,7 +517,7 @@ export default function useCoachDashboard(initialSession?: any) {
     if (foodFilter === 'fitness') query = query.eq('source', 'fitness')
     else if (foodFilter === 'anses') query = query.eq('source', 'ANSES')
     else if (foodFilter === 'coach') query = query.eq('source', 'coach')
-    if (foodSearchQ.length >= 2) query = query.ilike('name', `%${foodSearchQ}%`)
+    if (foodSearchQ.length >= 2) query = query.ilike('name', `%${foodSearchQ}%`).limit(200)
     else query = query.limit(50)
     const { data } = await query
     setFoodList(data || [])

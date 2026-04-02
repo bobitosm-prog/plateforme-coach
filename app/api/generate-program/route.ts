@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY
 
     if (!apiKey) {
-      return NextResponse.json({ error: 'Configuration serveur manquante: ANTHROPIC_API_KEY' }, { status: 500 })
+      return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 500 })
     }
 
     const { objective, weight, targetWeight, level, equipment, trainingDays } = await req.json()

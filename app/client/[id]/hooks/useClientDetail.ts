@@ -381,7 +381,7 @@ export default function useClientDetail() {
     setProfile(p)
     const pLiked = Array.isArray(p.liked_foods) ? p.liked_foods : []
     if (pLiked.length) {
-      supabase.from('food_items').select('id,name').eq('source', 'fitness').in('id', pLiked)
+      supabase.from('food_items').select('id,name').eq('source', 'fitness').in('id', pLiked).limit(200)
         .then(({ data: foods }: any) => { if (foods) setResolvedFoods(foods.map((f: any) => ({ id: f.id, name: f.name, emoji: null }))) })
     }
     setEditName(p.full_name ?? ''); setEditEmail(p.email ?? ''); setEditPhone(p.phone ?? ''); setEditBirth(p.birth_date ?? ''); setEditGender(p.gender ?? '')
@@ -410,7 +410,7 @@ export default function useClientDetail() {
     const d = new Date(); const day = d.getDay()
     d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
     const mondayDate = d.toISOString().split('T')[0]
-    const { data: trackingData } = await supabase.from('meal_tracking').select('date,meal_type,is_completed').eq('user_id', id).gte('date', mondayDate).eq('is_completed', true)
+    const { data: trackingData } = await supabase.from('meal_tracking').select('date,meal_type,is_completed').eq('user_id', id).gte('date', mondayDate).eq('is_completed', true).limit(200)
     if (trackingData) {
       const map: Record<string, Set<string>> = {}
       for (const r of trackingData) { if (!map[r.date]) map[r.date] = new Set(); map[r.date].add(r.meal_type) }
@@ -427,6 +427,7 @@ export default function useClientDetail() {
     const { data } = await supabase.from('messages').select('*')
       .or(`and(sender_id.eq.${coachId},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${coachId})`)
       .order('created_at', { ascending: true })
+      .limit(100)
     setCoachMessages(data || [])
   }, [coachId, id])
 

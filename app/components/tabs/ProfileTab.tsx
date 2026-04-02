@@ -65,7 +65,7 @@ export default function ProfileTab({
 
   useEffect(() => {
     if (!session?.user?.id) return
-    supabase.from('user_badges').select('badge_type').eq('user_id', session.user.id)
+    supabase.from('user_badges').select('badge_type').eq('user_id', session.user.id).limit(100)
       .then(({ data }: any) => setBadges((data || []).map((b: any) => b.badge_type)))
   }, [session?.user?.id])
 

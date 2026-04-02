@@ -27,6 +27,7 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
       .gte('scheduled_date', toDateStr(monday))
       .lte('scheduled_date', toDateStr(sunday))
       .order('scheduled_date', { ascending: true })
+      .limit(500)
 
     let sessions = existing || []
 

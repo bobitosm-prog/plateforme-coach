@@ -243,7 +243,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                   </button>
                   <button
                     onClick={async () => {
-                      const { data } = await h.supabase.from('payments').select('*').eq('status', 'paid')
+                      const { data } = await h.supabase.from('payments').select('*').eq('status', 'paid').limit(200)
                       if (data?.length) downloadCSV(data, 'paiements')
                       setShowExportMenu(false)
                     }}

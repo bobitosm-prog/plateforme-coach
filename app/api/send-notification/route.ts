@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
     .from('push_subscriptions')
     .select('subscription')
     .eq('user_id', userId)
+    .limit(100)
 
 
   if (!rows?.length) return NextResponse.json({ sent: 0 })

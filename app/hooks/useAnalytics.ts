@@ -58,6 +58,7 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
       .eq('user_id', uid)
       .gte('created_at', fourWeeksAgo.toISOString())
       .eq('completed', true)
+      .limit(500)
 
     if (setsData && setsData.length > 0) {
       const volByWeek: Record<string, number> = {}

@@ -9,7 +9,8 @@ const LINKS = [
   { label: 'Tarifs', href: '#pricing', type: 'anchor' as const },
   { label: 'FAQ', href: '#faq', type: 'anchor' as const },
   { label: 'Contact', href: 'mailto:contact@moovx.ch', type: 'external' as const },
-  { label: 'CGU', href: '#', type: 'anchor' as const },
+  { label: 'CGU', href: '/cgu', type: 'internal' as const },
+  { label: 'Confidentialité', href: '/privacy', type: 'internal' as const },
 ];
 
 export default function FooterSection() {

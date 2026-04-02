@@ -49,6 +49,7 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
       .from('profiles')
       .select('id, full_name')
       .in('id', clientIds)
+      .limit(100)
 
     if (profiles) {
       const names: Record<string, string> = {}
