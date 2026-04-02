@@ -11,7 +11,7 @@ import {
   GREEN, RADIUS_CARD, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, JS_DAYS_FR,
 } from '../../../lib/design-tokens'
-import { playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
+import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
 import { toast } from 'sonner'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
@@ -207,6 +207,7 @@ export default function TrainingTab({
   }
 
   function toggleSet(exName: string, setIdx: number, totalSetsCount: number, restSecs: number) {
+    initAudio() // Unlock audio on iOS at user interaction
     const key  = `moovx-sets-${todayStr}-${exName}`
     const prev = completedSets[key] || Array.from({ length: totalSetsCount }, () => false)
     const next = [...prev]
@@ -305,15 +306,9 @@ export default function TrainingTab({
         .set-input::-webkit-inner-spin-button,
         .set-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .set-input:focus { border-color: ${GOLD} !important; }
-        @keyframes ttTimerFade {
-          0% { opacity: 0; transform: scale(0.95); }
-          10% { opacity: 1; transform: scale(1); }
-          80% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        @keyframes ttTimerPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.15); }
+        @keyframes ttPopIn {
+          0% { opacity: 0; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1); }
         }
         @media(max-width:480px){
           .set-grid{grid-template-columns:28px 1fr 70px 52px 28px!important;gap:2px!important;padding-left:8px!important;padding-right:8px!important}
@@ -321,29 +316,42 @@ export default function TrainingTab({
         }
       `}</style>
 
-      {/* ── TIMER COMPLETE ALERT ── */}
+      {/* ── TIMER COMPLETE POPUP ── */}
       {showTimerAlert && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(201,168,76,0.12)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, pointerEvents: 'none',
-          animation: 'ttTimerFade 3s ease-in-out forwards',
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: 24,
         }}>
           <div style={{
-            width: 80, height: 80, border: `2px solid ${GOLD}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 24, animation: 'ttTimerPulse 0.5s ease-in-out 3',
+            background: BG_CARD, border: `2px solid ${GOLD}`,
+            padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
+            animation: 'ttPopIn 0.3s ease-out',
           }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-              <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill={GOLD} />
-            </svg>
+            <div style={{
+              width: 64, height: 64, border: `2px solid ${GOLD}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px',
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill={GOLD}>
+                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
+              </svg>
+            </div>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 36, color: GOLD, letterSpacing: 3, margin: '0 0 8px' }}>
+              REPOS TERMINÉ
+            </h2>
+            <p style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 20, color: TEXT_PRIMARY, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 24px' }}>
+              {motivationalMsg}
+            </p>
+            <button onClick={() => setShowTimerAlert(false)} style={{
+              background: GOLD, color: '#050505', border: 'none',
+              fontFamily: FONT_ALT, fontWeight: 800, fontSize: 16, letterSpacing: 2,
+              padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
+              clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+            }}>
+              C&apos;EST PARTI !
+            </button>
           </div>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 42, color: GOLD, letterSpacing: 4, margin: '0 0 12px', textAlign: 'center' }}>
-            REPOS TERMINÉ
-          </p>
-          <p style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', margin: 0 }}>
-            {motivationalMsg}
-          </p>
         </div>
       )}
 

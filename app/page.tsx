@@ -106,9 +106,13 @@ export default function CoachApp() {
         </nav>
         {h.profile && (
           <div style={{ padding: '16px 20px', borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: '#000' }}>
-              {(h.profile.full_name || '?')[0]?.toUpperCase()}
-            </div>
+            {h.displayAvatar ? (
+              <img src={h.displayAvatar} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${BORDER}` }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            ) : (
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: BG_CARD_2, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD }}>
+                {(h.profile.full_name || 'U')[0]?.toUpperCase()}
+              </div>
+            )}
             <span style={{ fontSize: 13, color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>{h.profile.full_name || 'Utilisateur'}</span>
           </div>
         )}

@@ -1,4 +1,30 @@
-// Timer audio utilities — Web Audio API beeps (no MP3 needed)
+// Timer audio utilities — persistent AudioContext for iOS compatibility
+
+let audioCtx: AudioContext | null = null
+
+/** Initialize/unlock AudioContext — MUST be called during a user interaction (click/tap) */
+export function initAudio() {
+  if (typeof window === 'undefined') return
+  if (!audioCtx) {
+    const AC = window.AudioContext || (window as any).webkitAudioContext
+    if (!AC) return
+    audioCtx = new AC()
+  }
+  // Resume if suspended (iOS suspends on background)
+  if (audioCtx.state === 'suspended') audioCtx.resume()
+  // Play silent oscillator to unlock audio on iOS
+  if (audioCtx.state === 'running') {
+    try {
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+      gain.gain.value = 0
+      osc.start()
+      osc.stop(audioCtx.currentTime + 0.01)
+    } catch {}
+  }
+}
 
 export function isTimerSoundEnabled(): boolean {
   if (typeof window === 'undefined') return true
@@ -14,9 +40,10 @@ export function setTimerSoundEnabled(enabled: boolean) {
 export function playBeep() {
   if (!isTimerSoundEnabled()) return
   try {
-    const AC = window.AudioContext || (window as any).webkitAudioContext
-    if (!AC) return
-    const ctx = new AC()
+    if (!audioCtx) initAudio()
+    const ctx = audioCtx
+    if (!ctx) return
+    if (ctx.state === 'suspended') ctx.resume()
     const times = [0, 0.15, 0.3]
     times.forEach(delay => {
       const osc = ctx.createOscillator()
@@ -25,9 +52,9 @@ export function playBeep() {
       gain.connect(ctx.destination)
       osc.frequency.value = 880
       osc.type = 'sine'
-      gain.gain.value = 0.3
+      gain.gain.value = 0.4
       osc.start(ctx.currentTime + delay)
-      osc.stop(ctx.currentTime + delay + 0.1)
+      osc.stop(ctx.currentTime + delay + 0.12)
     })
   } catch {}
 }
@@ -35,16 +62,17 @@ export function playBeep() {
 export function playWarningTick() {
   if (!isTimerSoundEnabled()) return
   try {
-    const AC = window.AudioContext || (window as any).webkitAudioContext
-    if (!AC) return
-    const ctx = new AC()
+    if (!audioCtx) initAudio()
+    const ctx = audioCtx
+    if (!ctx) return
+    if (ctx.state === 'suspended') ctx.resume()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
     gain.connect(ctx.destination)
     osc.frequency.value = 440
     osc.type = 'sine'
-    gain.gain.value = 0.15
+    gain.gain.value = 0.2
     osc.start()
     osc.stop(ctx.currentTime + 0.08)
   } catch {}

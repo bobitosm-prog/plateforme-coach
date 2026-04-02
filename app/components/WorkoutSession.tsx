@@ -7,7 +7,7 @@ import {
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY
 } from '../../lib/design-tokens'
-import { playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
+import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -259,6 +259,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) =>
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
   const validate = (eid: string, sid: string) => {
+    initAudio() // Unlock audio on iOS at user interaction
     let r = 90
     setExos(p => p.map(e => { if (e.id !== eid) return e; r = e.rest; return { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) } }))
     startRest(r)
@@ -312,42 +313,49 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
         @media(max-width:420px){
           .ws-grid { grid-template-columns: 28px 1fr 64px 56px 36px !important; }
         }
-        @keyframes wsTimerFade {
-          0% { opacity: 0; transform: scale(0.95); }
-          10% { opacity: 1; transform: scale(1); }
-          80% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        @keyframes wsTimerPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.15); }
+        @keyframes wsPopIn {
+          0% { opacity: 0; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1); }
         }
       `}</style>
       {restOn && <RestOverlay secs={restSecs} max={restMax} onSkip={skipRest} />}
 
-      {/* Timer complete alert */}
+      {/* Timer complete popup */}
       {showTimerAlert && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(201,168,76,0.12)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, pointerEvents: 'none',
-          animation: 'wsTimerFade 3s ease-in-out forwards',
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: 24,
         }}>
           <div style={{
-            width: 80, height: 80, border: `2px solid ${GOLD}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 24, animation: 'wsTimerPulse 0.5s ease-in-out 3',
+            background: BG_CARD, border: `2px solid ${GOLD}`,
+            padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
+            animation: 'wsPopIn 0.3s ease-out',
           }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-              <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill={GOLD} />
-            </svg>
+            <div style={{
+              width: 64, height: 64, border: `2px solid ${GOLD}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px',
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill={GOLD}>
+                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
+              </svg>
+            </div>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 36, color: GOLD, letterSpacing: 3, margin: '0 0 8px' }}>
+              REPOS TERMINÉ
+            </h2>
+            <p style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 20, color: TEXT_PRIMARY, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 24px' }}>
+              {motivationalMsg}
+            </p>
+            <button onClick={() => setShowTimerAlert(false)} style={{
+              background: GOLD, color: '#050505', border: 'none',
+              fontFamily: FONT_ALT, fontWeight: 800, fontSize: 16, letterSpacing: 2,
+              padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
+              clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+            }}>
+              C&apos;EST PARTI !
+            </button>
           </div>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 42, color: GOLD, letterSpacing: 4, margin: '0 0 12px', textAlign: 'center' }}>
-            REPOS TERMINÉ
-          </p>
-          <p style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', margin: 0 }}>
-            {motivationalMsg}
-          </p>
         </div>
       )}
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
@@ -411,12 +419,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
               {/* ── Expanded Content ── */}
               {exo.open && (
                 <div>
-                  {/* Exercise name in gold + description + action icons */}
+                  {/* Description + action icons (name is in accordion header) */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <h3 style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 18, color: GOLD, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 4px', lineHeight: 1.2 }}>{exo.name}</h3>
                       {(exo.notes || exo.muscle) && (
-                        <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 12, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>
+                        <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>
                           {exo.notes || exo.muscle}
                         </p>
                       )}
