@@ -559,7 +559,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                   >
                     <Plus size={13} /> Ajouter un set
                   </button>
-                </>
+                </div>
               )}
             </div>
           )
