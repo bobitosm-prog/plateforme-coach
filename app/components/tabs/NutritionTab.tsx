@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import FoodSearch from '../FoodSearch'
@@ -26,7 +26,7 @@ const MEAL_TIMES: Record<string, string> = {
 }
 const MEAL_ORDER = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
 
-type SubTab = 'today' | 'plan' | 'prefs' | 'recipes'
+type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes'
 
 interface NutritionTabProps {
   coachMealPlan: any
@@ -431,43 +431,47 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         )}
       </div>
 
-      {/* Sub-tabs */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-        {[
-          { id: 'today' as SubTab, label: "Aujourd'hui", icon: Check },
-          { id: 'plan' as SubTab, label: 'Mon plan', icon: UtensilsCrossed },
+      {/* Sub-tabs — pills */}
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' as any, marginBottom: 20 }}>
+        {([
+          { id: 'today' as SubTab, label: "Aujourd'hui", icon: List },
+          { id: 'plan' as SubTab, label: 'Mon plan', icon: ClipboardList },
+          { id: 'scanner' as SubTab, label: 'Scanner', icon: Camera },
           { id: 'prefs' as SubTab, label: 'Préférences', icon: SlidersHorizontal },
-          { id: 'recipes' as SubTab, label: 'Recettes', icon: ChefHat },
-        ].map(({ id, label, icon: Icon }) => {
+          { id: 'recipes' as SubTab, label: 'Recettes', icon: Star },
+        ]).map(({ id, label, icon: Icon }) => {
           const active = subTab === id
           return (
             <button key={id} onClick={() => setSubTab(id)} style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-              padding: '10px 8px', borderRadius: 0, border: 'none', cursor: 'pointer',
-              fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700,
+              flexShrink: 0, display: 'flex', alignItems: 'center', gap: 7,
+              padding: '8px 16px', borderRadius: 0, border: 'none',
+              fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700,
               letterSpacing: '0.04em', textTransform: 'uppercase',
+              cursor: 'pointer', whiteSpace: 'nowrap' as any,
+              transition: 'all 0.15s',
               background: active ? GOLD : BG_CARD,
               color: active ? '#050505' : TEXT_MUTED,
-              transition: 'all 150ms',
             }}>
-              <Icon size={14} strokeWidth={2.5} />
+              <Icon size={14} strokeWidth={2} />
               {label}
             </button>
           )
         })}
       </div>
 
-      {/* Scanner button */}
-      <button onClick={() => setShowScanner(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '12px', clipPath: 'polygon(0 0, 100% 0, 97% 100%, 3% 100%)', border: 'none', background: GOLD, cursor: 'pointer', transition: 'all 150ms' }}>
-        <span style={{ fontSize: '1.1rem' }}>📷</span>
-        <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, color: '#050505', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Scanner un code-barres</span>
-      </button>
-
-      {/* Scanne ton frigo button */}
-      <button onClick={() => setShowFridgeScanner(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '10px', borderRadius: RADIUS_CARD, border: `1px solid ${BORDER}`, background: BG_CARD, cursor: 'pointer', transition: 'all 150ms', marginTop: 8 }}>
-        <span style={{ fontSize: '0.95rem' }}>🛒</span>
-        <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Scanne ton frigo</span>
-      </button>
+      {/* Scanner sub-tab */}
+      {subTab === 'scanner' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+          <button onClick={() => setShowScanner(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '14px', borderRadius: 0, border: `1px solid ${GOLD_RULE}`, background: GOLD_DIM, cursor: 'pointer', transition: 'all 150ms' }}>
+            <span style={{ fontSize: '1.1rem' }}>📷</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, color: GOLD, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Scanner un code-barres</span>
+          </button>
+          <button onClick={() => setShowFridgeScanner(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '12px', borderRadius: 0, border: `1px solid ${BORDER}`, background: BG_CARD, cursor: 'pointer', transition: 'all 150ms' }}>
+            <span style={{ fontSize: '0.95rem' }}>🛒</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Scanne ton frigo</span>
+          </button>
+        </div>
+      )}
 
       {/* Barcode scanner modal (single scan) */}
       {showScanner && (

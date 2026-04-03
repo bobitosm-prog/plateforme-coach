@@ -1,8 +1,7 @@
 'use client'
 import { motion } from 'framer-motion'
-import { Check, X } from 'lucide-react'
 import {
-  ScheduledSession, SESSION_COLORS, SESSION_LABELS, SESSION_CATEGORY,
+  ScheduledSession, SESSION_COLORS, SESSION_CATEGORY,
   DAY_LABELS_SHORT, getWeekDates, toDateStr, isSameDay,
 } from '../../lib/schedule-utils'
 import {
@@ -48,48 +47,69 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
         )}
       </div>
 
-      {/* Week strip */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4,
-        overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-      }}>
+      {/* Week list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {weekDates.map(date => {
           const dateStr = toDateStr(date)
           const isToday = isSameDay(date, today)
           const isSelected = isSameDay(date, selectedDate)
           const daySessions = sessions.filter(s => s.scheduled_date === dateStr)
           const mainSession = daySessions.find(s => !['hiit', 'liss'].includes(s.session_type)) || daySessions[0]
-          const hasCardio = daySessions.some(s => s.session_type === 'hiit' || s.session_type === 'liss')
           const allCompleted = daySessions.length > 0 && daySessions.every(s => s.completed)
           const isPast = date < today && !isSameDay(date, today)
-          const missed = isPast && daySessions.length > 0 && !allCompleted && mainSession?.session_type !== 'rest'
+          const isRest = !mainSession || mainSession.session_type === 'rest'
+          const missed = isPast && daySessions.length > 0 && !allCompleted && !isRest
+          const isFuture = date > today && !isToday
 
           const mainColor = mainSession ? SESSION_COLORS[mainSession.session_type] : BORDER
+
+          // Session label
+          let sessionLabel = 'Repos'
+          if (mainSession && mainSession.session_type !== 'rest') {
+            sessionLabel = mainSession.title || SESSION_CATEGORY[mainSession.session_type] || mainSession.session_type
+          }
+
+          // Badge
+          let badge: { label: string; bg: string; color: string } | null = null
+          if (isRest) {
+            badge = null
+          } else if (isToday) {
+            badge = { label: 'Aujourd\'hui', bg: `${GOLD}20`, color: GOLD }
+          } else if (isPast && allCompleted) {
+            badge = { label: 'Fait', bg: 'rgba(34,197,94,0.15)', color: '#22C55E' }
+          } else if (missed) {
+            badge = { label: 'Manqué', bg: 'rgba(239,68,68,0.15)', color: '#EF4444' }
+          } else if (isFuture) {
+            badge = { label: 'À venir', bg: 'rgba(251,191,36,0.1)', color: '#FBBF24' }
+          }
 
           return (
             <motion.button
               key={dateStr}
               onClick={() => onSelectDate(date)}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.98 }}
               style={{
-                background: isSelected ? GOLD : BG_CARD,
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 14px', borderRadius: 0,
+                background: isSelected ? GOLD : (isToday ? GOLD_DIM : BG_CARD),
                 border: isToday
-                  ? `2px solid ${GOLD}`
-                  : `1px solid ${BORDER}`,
-                borderRadius: 0,
-                padding: '8px 2px 6px',
+                  ? `1px solid ${GOLD}`
+                  : isSelected
+                    ? `1px solid ${mainColor}60`
+                    : `1px solid ${BORDER}`,
                 cursor: 'pointer',
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                gap: 2, minWidth: 0,
-                position: 'relative',
+                opacity: isPast && !isToday ? 0.5 : 1,
+                width: '100%',
+                textAlign: 'left',
               }}
             >
-              {/* Day label */}
+              {/* Day abbrev */}
               <span style={{
-                fontSize: '0.55rem', fontWeight: 700, letterSpacing: '2px',
-                color: isSelected ? '#050505' : isToday ? GOLD : TEXT_MUTED,
                 fontFamily: FONT_ALT,
-                textTransform: 'uppercase',
+                fontSize: '0.72rem', fontWeight: 700,
+                color: isSelected ? '#050505' : isToday ? GOLD : TEXT_MUTED,
+                width: 28, flexShrink: 0,
+                textTransform: 'uppercase', letterSpacing: '2px',
               }}>
                 {DAY_LABELS_SHORT[date.getDay()]}
               </span>
@@ -99,50 +119,41 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
                 fontFamily: FONT_DISPLAY,
                 fontSize: '1rem', fontWeight: 700,
                 color: isSelected ? '#050505' : isToday ? GOLD : TEXT_PRIMARY,
+                width: 24, flexShrink: 0, textAlign: 'center',
               }}>
                 {date.getDate()}
               </span>
 
-              {/* Session badge */}
-              {mainSession && (
+              {/* Color dot + session type */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                {mainSession && (
+                  <div style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: mainColor, flexShrink: 0,
+                  }} />
+                )}
                 <span style={{
-                  fontSize: '0.5rem', fontWeight: 700,
-                  color: isSelected ? '#050505' : mainColor, letterSpacing: '0.02em',
-                  lineHeight: 1.2, textAlign: 'center',
+                  fontSize: '0.78rem', fontWeight: 700,
+                  color: isSelected ? '#050505' : (isRest ? TEXT_MUTED : (isToday ? TEXT_PRIMARY : `${TEXT_PRIMARY}CC`)),
+                  letterSpacing: '0.02em',
                   fontFamily: FONT_ALT,
                 }}>
-                  {SESSION_CATEGORY[mainSession.session_type]}
+                  {sessionLabel}
                 </span>
-              )}
-              {mainSession && mainSession.session_type !== 'rest' && (
+              </div>
+
+              {/* Badge */}
+              {badge && (
                 <span style={{
-                  fontSize: '0.45rem', fontWeight: 600,
-                  color: isSelected ? '#05050599' : `${mainColor}BB`,
+                  fontSize: '0.6rem', fontWeight: 700,
+                  padding: '3px 8px', borderRadius: 0,
+                  background: badge.bg, color: isSelected ? '#05050599' : badge.color,
+                  flexShrink: 0, letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
                   fontFamily: FONT_ALT,
                 }}>
-                  {mainSession.session_type.includes('_') ? mainSession.session_type.split('_')[1].toUpperCase() : ''}
+                  {badge.label}
                 </span>
-              )}
-
-              {/* Color dot */}
-              {mainSession && (
-                <div style={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: isSelected ? '#050505' : GOLD, marginTop: 1,
-                }} />
-              )}
-
-              {/* Cardio indicator */}
-              {hasCardio && mainSession?.session_type !== 'hiit' && mainSession?.session_type !== 'liss' && (
-                <span style={{ fontSize: '0.5rem', marginTop: -1 }}>🏃</span>
-              )}
-
-              {/* Completion status */}
-              {allCompleted && daySessions.length > 0 && mainSession?.session_type !== 'rest' && (
-                <Check size={10} color={isSelected ? '#050505' : GREEN} strokeWidth={3} style={{ marginTop: 1 }} />
-              )}
-              {missed && (
-                <X size={10} color={`${RED}80`} strokeWidth={3} style={{ marginTop: 1 }} />
               )}
             </motion.button>
           )

@@ -1,8 +1,8 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3 } from 'lucide-react'
+import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import { toast } from 'sonner'
 import {
@@ -10,6 +10,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
 import AnalyticsSection from '../AnalyticsSection'
+import AbsCalculator from '../progress/AbsCalculator'
 
 const MEASURE_FIELDS = [
   { key: 'waist',  label: 'Tour de taille',   unit: 'cm', dbKey: 'waist' },
@@ -44,6 +45,8 @@ interface ProgressTabProps {
   chartMin: number
   chartMax: number
   onRefresh: () => void
+  profile: any
+  coachId: string | null
   // Analytics
   personalRecords: any[]
   weeklyCalories: { date: string; calories: number; proteins: number; carbs: number; fats: number }[]
@@ -62,6 +65,7 @@ export default function ProgressTab({
   supabase, session, weightHistory30, measurements, progressPhotos,
   photoRef, photoUploading, uploadProgressPhoto, deletePhoto,
   setModal, chartMin, chartMax, onRefresh,
+  profile, coachId,
   personalRecords, weeklyCalories, weeklyWater, weeklyVolume,
   weightHistoryFull, wSessions, calorieGoal, goalWeight, waterGoal,
   streak, currentWeight,
@@ -92,6 +96,119 @@ export default function ProgressTab({
   const [measureForm, setMeasureForm] = useState<Record<string, string>>({ waist: '', hips: '', chest: '', arms: '', thighs: '' })
   const [measureDate, setMeasureDate] = useState(() => new Date().toISOString().split('T')[0])
   const [savingMeasure, setSavingMeasure] = useState(false)
+
+  // AI Analysis
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null)
+  const [expandedAnalysis, setExpandedAnalysis] = useState<string | null>(null)
+  const [analyses, setAnalyses] = useState<Record<string, string>>({})
+  const [sharingId, setSharingId] = useState<string | null>(null)
+
+  // Signed URLs for private bucket
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
+  const photoIds = useMemo(
+    () => progressPhotos.map((p: any) => p.id).join(','),
+    [progressPhotos]
+  )
+  useEffect(() => {
+    if (!progressPhotos.length) return
+    let cancelled = false
+    async function generateUrls() {
+      const urls: Record<string, string> = {}
+      for (const photo of progressPhotos) {
+        if (cancelled) return
+        const { data } = await supabase.storage.from('progress-photos').createSignedUrl(photo.photo_url, 3600)
+        if (data?.signedUrl) urls[photo.id] = data.signedUrl
+      }
+      if (!cancelled) setSignedUrls(prev => {
+        const isSame = JSON.stringify(prev) === JSON.stringify(urls)
+        return isSame ? prev : urls
+      })
+    }
+    generateUrls()
+    return () => { cancelled = true }
+  }, [photoIds])
+
+  // Load cached analyses from progressPhotos
+  React.useEffect(() => {
+    const cached: Record<string, string> = {}
+    progressPhotos.forEach((p: any) => { if (p.ai_analysis) cached[p.id] = p.ai_analysis })
+    setAnalyses(prev => ({ ...prev, ...cached }))
+  }, [progressPhotos])
+
+  async function analyzePhoto(photo: any, index: number) {
+    if (analyzingId) return
+    // Check if already analyzed
+    if (analyses[photo.id]) { setExpandedAnalysis(expandedAnalysis === photo.id ? null : photo.id); return }
+
+    setAnalyzingId(photo.id)
+    setExpandedAnalysis(photo.id)
+    try {
+      // Use signed URLs for private bucket
+      const photoUrl = signedUrls[photo.id]
+      if (!photoUrl) { toast.error('URL de la photo non disponible'); setExpandedAnalysis(null); setAnalyzingId(null); return }
+      const prevPhoto = progressPhotos[index + 1]
+      const previousPhotoUrl = prevPhoto ? signedUrls[prevPhoto.id] : undefined
+
+      // Compute weight trend from 30-day history
+      const w30 = weightHistory30 || []
+      let weightTrend = 'stable'
+      let weightDelta30d = 0
+      if (w30.length >= 2) {
+        weightDelta30d = Math.round((w30[w30.length - 1].poids - w30[0].poids) * 10) / 10
+        weightTrend = weightDelta30d > 0.5 ? 'gaining' : weightDelta30d < -0.5 ? 'losing' : 'stable'
+      }
+      // Latest waist measurement
+      const latestM = measurements?.[0]
+      // Previous analysis for coherence
+      const prevAnalyzedPhoto = progressPhotos.find((pp: any, i: number) => i > index && analyses[pp.id])
+      const lastAnalysis = prevAnalyzedPhoto ? analyses[prevAnalyzedPhoto.id] : undefined
+
+      const res = await fetch('/api/analyze-progress-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          photoUrl,
+          profileData: profile ? {
+            full_name: profile.full_name, current_weight: profile.current_weight,
+            target_weight: profile.target_weight, gender: profile.gender,
+            height: profile.height, objective: profile.objective,
+            fitness_score: profile.fitness_score, fitness_level: profile.fitness_level,
+            calorie_goal: profile.calorie_goal, tdee: profile.tdee,
+            protein_goal: profile.protein_goal, carbs_goal: profile.carbs_goal,
+            fat_goal: profile.fat_goal, activity_level: profile.activity_level,
+            body_fat: latestM?.body_fat || null,
+            waist: latestM?.waist || null,
+            weight_trend: weightTrend,
+            weight_delta_30d: weightDelta30d,
+            last_analysis: lastAnalysis,
+          } : {},
+          previousPhotoUrl,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+
+      setAnalyses(prev => ({ ...prev, [photo.id]: data.analysis }))
+
+      // Save to DB
+      await supabase.from('progress_photos').update({ ai_analysis: data.analysis, ai_analyzed_at: new Date().toISOString() }).eq('id', photo.id)
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur lors de l\'analyse')
+      setExpandedAnalysis(null)
+    } finally {
+      setAnalyzingId(null)
+    }
+  }
+
+  async function shareAnalysis(photoId: string) {
+    if (!coachId || !session?.user?.id || sharingId) return
+    setSharingId(photoId)
+    const text = `📸 Analyse IA de ma photo de progression :\n\n${analyses[photoId]}`
+    const { error } = await supabase.from('messages').insert({ sender_id: session.user.id, receiver_id: coachId, content: text })
+    if (error) toast.error('Erreur lors de l\'envoi')
+    else toast.success('Analyse partagée avec ton coach !')
+    setSharingId(null)
+  }
 
   // Evolution
   const [evoMetric, setEvoMetric] = useState('poids')
@@ -288,18 +405,61 @@ export default function ProgressTab({
                 ? <div style={{ width: 24, height: 24, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
                 : <><Plus size={22} color={TEXT_MUTED} /><span style={{ fontSize: '0.55rem', color: TEXT_MUTED, fontWeight: 600 }}>Ajouter</span></>}
             </button>
-            {progressPhotos.map((p: any) => {
-              const imgSrc = supabase.storage.from('progress-photos').getPublicUrl(p.photo_url).data.publicUrl
+            {progressPhotos.map((p: any, idx: number) => {
+              const imgSrc = signedUrls[p.id] || ''
+              const isAnalyzing = analyzingId === p.id
+              const isExpanded = expandedAnalysis === p.id
+              const hasAnalysis = !!analyses[p.id]
               return (
-                <div key={p.id} style={{ aspectRatio: '1', borderRadius: RADIUS_CARD, overflow: 'hidden', position: 'relative', border: `1px solid ${BORDER}` }} className="photo-cell">
-                  <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Photo de progression" />
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '16px 8px 6px', fontSize: '0.55rem', color: '#fff', fontWeight: 600 }}>
-                    {p.date ? format(new Date(p.date), 'd MMM', { locale: fr }) : ''}
+                <React.Fragment key={p.id}>
+                  <div style={{ aspectRatio: '1', borderRadius: RADIUS_CARD, overflow: 'hidden', position: 'relative', border: `1px solid ${BORDER}` }} className="photo-cell">
+                    <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Photo de progression" />
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '16px 8px 6px', fontSize: '0.55rem', color: '#fff', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                      <span>{p.date ? format(new Date(p.date), 'd MMM', { locale: fr }) : ''}</span>
+                      <button onClick={(e) => { e.stopPropagation(); analyzePhoto(p, idx) }}
+                        style={{ background: hasAnalysis ? `${GOLD}30` : `${GOLD}CC`, border: 'none', borderRadius: 0, padding: '3px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <Sparkles size={10} color={hasAnalysis ? GOLD : '#000'} />
+                        <span style={{ fontSize: '0.5rem', fontWeight: 700, color: hasAnalysis ? GOLD : '#000' }}>IA</span>
+                      </button>
+                    </div>
+                    <button onClick={() => deletePhoto(p)} className="photo-delete-btn" style={{ position: 'absolute', top: 6, right: 6, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 200ms' }}>
+                      <Trash2 size={13} color="#fff" />
+                    </button>
                   </div>
-                  <button onClick={() => deletePhoto(p)} className="photo-delete-btn" style={{ position: 'absolute', top: 6, right: 6, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 200ms' }}>
-                    <Trash2 size={13} color="#fff" />
-                  </button>
-                </div>
+                  {/* Analysis panel — spans full row */}
+                  {isExpanded && (
+                    <div style={{ gridColumn: '1 / -1', background: BG_CARD, border: `1px solid ${GOLD}30`, borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {isAnalyzing ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '20px 0' }}>
+                          <div style={{ width: 20, height: 20, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                          <span style={{ fontSize: '0.82rem', color: GOLD, fontWeight: 600 }}>Analyse en cours...</span>
+                        </div>
+                      ) : hasAnalysis ? (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <Sparkles size={14} color={GOLD} />
+                              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', fontWeight: 700, color: GOLD, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Analyse IA</span>
+                            </div>
+                            <button onClick={() => setExpandedAnalysis(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
+                              <X size={14} color={TEXT_MUTED} />
+                            </button>
+                          </div>
+                          <AnalysisDisplay text={analyses[p.id]} />
+                          {coachId && (
+                            <button onClick={() => shareAnalysis(p.id)} disabled={sharingId === p.id}
+                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: `1px solid ${GOLD}40`, background: `${GOLD}08`, cursor: 'pointer', width: '100%' }}>
+                              <Send size={14} color={GOLD} />
+                              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: GOLD }}>
+                                {sharingId === p.id ? 'Envoi...' : 'Partager avec mon coach'}
+                              </span>
+                            </button>
+                          )}
+                        </>
+                      ) : null}
+                    </div>
+                  )}
+                </React.Fragment>
               )
             })}
           </div>
@@ -329,8 +489,8 @@ export default function ProgressTab({
         const beforePhoto = progressPhotos[compareIdx[0]]
         const afterPhoto = progressPhotos[compareIdx[1]]
         if (!beforePhoto || !afterPhoto) return null
-        const beforeUrl = supabase.storage.from('progress-photos').getPublicUrl(beforePhoto.photo_url).data.publicUrl
-        const afterUrl = supabase.storage.from('progress-photos').getPublicUrl(afterPhoto.photo_url).data.publicUrl
+        const beforeUrl = signedUrls[beforePhoto.id] || ''
+        const afterUrl = signedUrls[afterPhoto.id] || ''
         const beforeDate = beforePhoto.date ? format(new Date(beforePhoto.date), 'd MMM yyyy', { locale: fr }) : ''
         const afterDate = afterPhoto.date ? format(new Date(afterPhoto.date), 'd MMM yyyy', { locale: fr }) : ''
 
@@ -485,6 +645,14 @@ export default function ProgressTab({
 
       {/* ═══ ANALYTICS SUB-TAB ═══ */}
       {subTab === 'analytics' && (
+        <>
+        <AbsCalculator
+          currentWeight={currentWeight}
+          height={profile?.height}
+          bodyFat={latestMeasure?.body_fat}
+          deficit={profile?.calorie_goal && profile?.tdee ? profile.calorie_goal - profile.tdee : 0}
+          objective={profile?.objective}
+        />
         <AnalyticsSection
           personalRecords={personalRecords}
           weeklyCalories={weeklyCalories}
@@ -499,6 +667,7 @@ export default function ProgressTab({
           streak={streak}
           currentWeight={currentWeight}
         />
+        </>
       )}
 
       <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
@@ -557,6 +726,49 @@ export default function ProgressTab({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ── Analysis Display ── */
+function AnalysisDisplay({ text }: { text: string }) {
+  const sections = [
+    { title: 'ANALYSE VISUELLE', color: '#60A5FA', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)' },
+    { title: 'COHÉRENCE PROGRAMME', color: '#A78BFA', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
+    { title: 'POINTS POSITIFS', color: '#34D399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
+    { title: 'AXES DE PROGRESSION', color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.2)' },
+    { title: 'RECOMMANDATION PRIORITAIRE', color: '#C9A84C', bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)' },
+  ]
+
+  // Try to split by numbered sections
+  const parts: { title: string; content: string; color: string; bg: string; border: string }[] = []
+  for (let i = 0; i < sections.length; i++) {
+    const s = sections[i]
+    // Match patterns like "1.", "1. 👁 ANALYSE", "**1.**", emoji prefixes, etc.
+    const regex = new RegExp(`(?:^|\\n)\\**${i + 1}\\.\\s*(?:[👁⚖️✅🎯🚀]\\s*)?(?:\\**${s.title.split(' ')[0]}[^\\n]*)?[:\\s]*`, 'i')
+    const nextRegex = i < sections.length - 1 ? new RegExp(`(?:^|\\n)\\**${i + 2}\\.\\s*`, 'i') : null
+    const match = text.match(regex)
+    if (match) {
+      const startIdx = (match.index || 0) + match[0].length
+      const endIdx = nextRegex ? text.slice(startIdx).search(nextRegex) : -1
+      const content = endIdx >= 0 ? text.slice(startIdx, startIdx + endIdx).trim() : (i === sections.length - 1 ? text.slice(startIdx).trim() : '')
+      if (content) parts.push({ ...s, content })
+    }
+  }
+
+  // Fallback: show raw text if parsing failed
+  if (parts.length === 0) {
+    return <div style={{ fontSize: '0.82rem', color: '#D1D5DB', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{text}</div>
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {parts.map(({ title, content, color, bg, border }) => (
+        <div key={title} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, color, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{title}</div>
+          <p style={{ fontSize: '0.78rem', color: '#D1D5DB', lineHeight: 1.55, margin: 0 }}>{content}</p>
+        </div>
+      ))}
     </div>
   )
 }

@@ -4,13 +4,29 @@ import { X, Send, Bot, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
 
-const SUGGESTIONS = [
-  'Comment atteindre mes macros ?',
-  'Quel exercice pour les pectoraux ?',
-  'Comment perdre du gras ?',
-  'Combien de protéines par jour ?',
-  'Remplacer un aliment du plan ?',
-]
+function getSuggestions(): string[] {
+  const h = new Date().getHours()
+  if (h >= 6 && h < 12) return [
+    'Que manger avant ma séance ce matin ?',
+    'Comment bien m\'échauffer ?',
+    'Mon programme du jour ?',
+  ]
+  if (h >= 12 && h < 18) return [
+    'Repas post-entraînement idéal ?',
+    'Comment optimiser ma récupération ?',
+    'Mes macros pour ce soir ?',
+  ]
+  if (h >= 18 && h < 23) return [
+    'Que manger avant de dormir ?',
+    'Comment améliorer mon sommeil pour progresser ?',
+    'Bilan de ma journée nutritionnelle ?',
+  ]
+  return [
+    'Comment atteindre mes macros ?',
+    'Combien de protéines par jour ?',
+    'Mon programme du jour ?',
+  ]
+}
 
 const STORAGE_KEY = 'moovx_chat_history'
 const RATE_KEY = 'moovx_chat_rate'
@@ -39,14 +55,14 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY)
-      if (saved) setMessages(JSON.parse(saved).slice(-20))
+      if (saved) setMessages(JSON.parse(saved).slice(-30))
     } catch {}
   }, [])
 
   // Save history
   useEffect(() => {
     if (messages.length > 0) {
-      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-20))) } catch {}
+      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-30))) } catch {}
     }
   }, [messages])
 
@@ -62,7 +78,7 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
       const data = raw ? JSON.parse(raw) : { count: 0, hour: 0 }
       const currentHour = Math.floor(Date.now() / 3600000)
       if (data.hour !== currentHour) return true // new hour
-      return data.count < 20
+      return data.count < 40
     } catch { return true }
   }
 
@@ -82,7 +98,7 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
   async function sendMessage(text?: string) {
     const msg = (text || input).trim()
     if (!msg || loading) return
-    if (!checkRate()) { setError('Limite atteinte (20/h). Réessaie dans quelques minutes.'); return }
+    if (!checkRate()) { setError('Limite atteinte (40/h). Réessaie dans quelques minutes.'); return }
 
     setInput('')
     setError('')
@@ -104,6 +120,10 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
             carbs_goal: profile.carbs_goal, fat_goal: profile.fat_goal,
             objective: profile.objective, activity_level: profile.activity_level,
             dietary_type: profile.dietary_type, gender: profile.gender, tdee: profile.tdee,
+            fitness_score: profile.fitness_score, fitness_level: profile.fitness_level,
+            sessions_per_week: profile.sessions_per_week,
+            onboarding_answers: profile.onboarding_answers,
+            fitness_objectives: profile.fitness_objectives,
           } : {},
         }),
       })
@@ -204,7 +224,7 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
         {/* Suggestions */}
         {messages.length === 0 && (
           <div style={{ padding: '0 16px 8px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {SUGGESTIONS.map(s => (
+            {getSuggestions().map(s => (
               <button key={s} onClick={() => sendMessage(s)} style={{ fontSize: '0.7rem', fontWeight: 700, fontFamily: FONT_ALT, color: GOLD, background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '6px 12px', cursor: 'pointer', transition: 'all 150ms', letterSpacing: '0.5px' }}>{s}</button>
             ))}
           </div>

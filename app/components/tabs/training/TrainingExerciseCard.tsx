@@ -92,8 +92,10 @@ export default function TrainingExerciseCard({
         background: BG_CARD,
         border: `1px solid ${allDone ? GREEN + '50' : BORDER}`,
         borderRadius: RADIUS_CARD,
+        padding: 0,
         overflow: 'hidden',
         transition: 'border-color 0.4s ease',
+        marginBottom: 0,
       }}
     >
       {/* ── Card Header ── */}

@@ -11,8 +11,8 @@ export async function POST(req: NextRequest) {
     if (!message?.trim()) return NextResponse.json({ error: 'Message vide' }, { status: 400 })
 
     const p = profile || {}
+    const onboarding = p.onboarding_answers || {}
     const systemPrompt = `Tu es un coach fitness et nutritionniste professionnel certifié travaillant pour MoovX à Genève. Ne mentionne JAMAIS que tu es une intelligence artificielle, un chatbot, ou un assistant IA. Réponds toujours comme un vrai coach humain professionnel. Utilise 'je' et 'mon expérience de coach'. Signe tes messages 'Ton coach MoovX'.
-
 Tu réponds en français, de manière concise, motivante et professionnelle.
 Tu es expert en nutrition sportive, musculation/hypertrophie, et perte/prise de poids.
 
@@ -22,6 +22,10 @@ PROFIL DU CLIENT :
 - Taille : ${p.height || '?'} cm | Genre : ${p.gender || '?'}
 - TDEE : ${p.tdee || '?'} kcal | Objectif calorique : ${p.calorie_goal || '?'} kcal/jour
 - Macros : P${p.protein_goal || '?'}g / G${p.carbs_goal || '?'}g / L${p.fat_goal || '?'}g
+- Score de forme : ${p.fitness_score || '?'}/100 (niveau : ${p.fitness_level || '?'})
+- Séances/semaine : ${p.sessions_per_week || '?'}
+- Expérience : ${onboarding.experience || 'non renseigné'}
+- Objectifs IA : ${p.fitness_objectives || 'non défini'}
 - Objectif : ${p.objective || 'non défini'}
 - Activité : ${p.activity_level || 'non défini'}
 - Régime : ${p.dietary_type || 'omnivore'}
@@ -37,7 +41,12 @@ RÈGLES :
 8. Recommande des aliments de la base fitness MoovX (170 aliments)
 9. Pour les exercices, recommande le programme PPL (Push/Pull/Legs)
 10. Réponds en français uniquement
-11. Ne mentionne JAMAIS l'intelligence artificielle, l'IA, ou le fait d'être un chatbot/assistant. Tu es un coach humain.`
+11. Ne mentionne JAMAIS l'intelligence artificielle, l'IA, ou le fait d'être un chatbot/assistant. Tu es un coach humain.
+12. Tu connais le score de forme du client (0-100) — adapte l'intensité de tes conseils en conséquence
+13. Si le client parle de douleur ou blessure → recommande d'en parler au coach humain via l'onglet Messages
+14. Tu peux donner des conseils de récupération (sommeil, stress, hydratation)
+15. Si le client demande à modifier son programme → dis-lui d'utiliser le bouton "Adapter la séance" dans l'onglet Entraînement
+16. Termine chaque réponse par une question de suivi pour maintenir l'engagement`
 
     // Build messages with last 5 from history
     const messages = [
@@ -56,8 +65,8 @@ RÈGLES :
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
         system: systemPrompt,
         messages,
       }),

@@ -14,7 +14,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 interface ExSet { id: string; num: number; weight: number | ''; reps: number | ''; done: boolean }
-interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; sets: ExSet[]; open: boolean }
+interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; sets: ExSet[]; open: boolean }
 interface WorkoutSessionProps { sessionName: string; exercises: any[]; onFinish: (data: any) => void; onClose: () => void }
 
 const uid = () => Math.random().toString(36).slice(2)
@@ -191,7 +191,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 export default function WorkoutSession({ sessionName, exercises: raw, onFinish, onClose }: WorkoutSessionProps) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || e.rest || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true })))
+  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || e.rest || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, sets: makeSets(e.sets || 3), open: true })))
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
@@ -418,7 +418,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
               {/* ── Expanded Content ── */}
               {exo.open && (
                 <div>
-                  {/* Description + action icons (name is in accordion header) */}
+                  {/* Description + action icons */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       {(exo.notes || exo.muscle) && (
@@ -559,7 +559,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                   >
                     <Plus size={13} /> Ajouter un set
                   </button>
-                </div>
+                </>
               )}
             </div>
           )
