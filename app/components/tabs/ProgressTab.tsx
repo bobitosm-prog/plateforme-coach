@@ -412,14 +412,19 @@ export default function ProgressTab({
               const hasAnalysis = !!analyses[p.id]
               return (
                 <React.Fragment key={p.id}>
-                  <div style={{ aspectRatio: '1', borderRadius: RADIUS_CARD, overflow: 'hidden', position: 'relative', border: `1px solid ${BORDER}` }} className="photo-cell">
-                    <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Photo de progression" />
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '16px 8px 6px', fontSize: '0.55rem', color: '#fff', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                  <div style={{ aspectRatio: '1', borderRadius: RADIUS_CARD, overflow: 'hidden', position: 'relative', border: `1px solid ${BORDER}`, background: BG_CARD }} className="photo-cell">
+                    {imgSrc && <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Photo de progression" />}
+                    {!imgSrc && (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Camera size={24} color={TEXT_MUTED} />
+                      </div>
+                    )}
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', padding: '20px 8px 6px', fontSize: '0.55rem', color: '#fff', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 2 }}>
                       <span>{p.date ? format(new Date(p.date), 'd MMM', { locale: fr }) : ''}</span>
                       <button onClick={(e) => { e.stopPropagation(); analyzePhoto(p, idx) }}
-                        style={{ background: hasAnalysis ? `${GOLD}30` : `${GOLD}CC`, border: 'none', borderRadius: 0, padding: '3px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                        style={{ background: hasAnalysis ? `${GOLD}30` : GOLD, border: 'none', borderRadius: 4, padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, zIndex: 3 }}>
                         <Sparkles size={10} color={hasAnalysis ? GOLD : '#000'} />
-                        <span style={{ fontSize: '0.5rem', fontWeight: 700, color: hasAnalysis ? GOLD : '#000' }}>IA</span>
+                        <span style={{ fontSize: '0.55rem', fontWeight: 700, color: hasAnalysis ? GOLD : '#000' }}>IA</span>
                       </button>
                     </div>
                     <button onClick={() => deletePhoto(p)} className="photo-delete-btn" style={{ position: 'absolute', top: 6, right: 6, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 200ms' }}>

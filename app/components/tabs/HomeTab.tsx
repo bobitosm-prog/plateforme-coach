@@ -354,21 +354,6 @@ export default function HomeTab({
           </div>
         </div>
 
-        {/* ── Quick actions ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-          {[
-            { icon: Ruler, label: '+ Mesure', action: () => setModal('measure') },
-            { icon: Camera, label: '+ Photo', action: () => photoRef.current?.click() },
-            { icon: Zap, label: 'BMR', action: () => setModal('bmr') },
-            { icon: Camera, label: 'Scan', action: () => setModal('scan'), gold: true },
-          ].map(({ icon: Icon, label, action, gold }) => (
-            <button key={label} onClick={action} style={{ background: gold ? GOLD_DIM : BG_CARD, border: `1px solid ${gold ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              <Icon size={18} color={gold ? GOLD : TEXT_MUTED} />
-              <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: gold ? GOLD : TEXT_MUTED }}>{label}</span>
-            </button>
-          ))}
-          <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
-        </div>
 
       </div>
     </div>
