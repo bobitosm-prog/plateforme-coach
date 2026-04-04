@@ -11,6 +11,7 @@ import {
 } from '../../../lib/design-tokens'
 import AnalyticsSection from '../AnalyticsSection'
 import AbsCalculator from '../progress/AbsCalculator'
+import BodyAssessment from '../progress/BodyAssessment'
 
 const MEASURE_FIELDS = [
   { key: 'waist',  label: 'Tour de taille',   unit: 'cm', dbKey: 'waist' },
@@ -71,6 +72,7 @@ export default function ProgressTab({
   streak, currentWeight,
 }: ProgressTabProps) {
   const [subTab, setSubTab] = useState<SubTab>('mesures')
+  const [showAssessment, setShowAssessment] = useState(false)
   const [showCompare, setShowCompare] = useState(false)
   const [compareIdx, setCompareIdx] = useState<[number, number]>([0, 0])
   const [sliderValue, setSliderValue] = useState(50)
@@ -396,8 +398,32 @@ export default function ProgressTab({
       )}
 
       {/* ═══ PHOTOS SUB-TAB ═══ */}
+      {showAssessment && (
+        <BodyAssessment
+          supabase={supabase}
+          session={session}
+          profile={profile}
+          onClose={() => setShowAssessment(false)}
+          onRefresh={onRefresh}
+        />
+      )}
+
       {subTab === 'photos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Body assessment CTA */}
+          <button
+            onClick={() => setShowAssessment(true)}
+            style={{
+              width: '100%', padding: '16px', marginBottom: 16,
+              background: 'transparent', border: `1px solid ${GOLD}`,
+              color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16,
+              letterSpacing: '1px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              borderRadius: 10,
+            }}
+          >
+            BILAN CORPOREL COMPLET (3 ANGLES)
+          </button>
           {/* Photo grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             <button onClick={() => photoRef.current?.click()} style={{ aspectRatio: '1', border: `2px dashed ${BORDER}`, borderRadius: RADIUS_CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: BG_CARD, cursor: 'pointer' }}>

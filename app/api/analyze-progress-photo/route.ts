@@ -5,10 +5,8 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { photoUrl, profileData, previousPhotoUrl } = await req.json()
-    if (!photoUrl) return NextResponse.json({ error: 'Photo URL manquante' }, { status: 400 })
-
-    const p = profileData || {}
+    const body = await req.json()
+    const { photoUrl, profileData, previousPhotoUrl, mode, photoFrontUrl, photoBackUrl, photoSideUrl } = body
 
     // Fetch photo as base64 with detailed error handling
     const fetchImage = async (url: string): Promise<{ base64: string; mediaType: string }> => {
@@ -38,6 +36,102 @@ export async function POST(req: NextRequest) {
       console.log(`[analyze-progress-photo] Image fetched: ${(buffer.byteLength / 1024).toFixed(0)}KB, type: ${mediaType}`)
       return { base64, mediaType }
     }
+
+    // ── Assessment mode (3 photos) ──
+    if (mode === 'assessment') {
+      const [frontImg, backImg, sideImg] = await Promise.all([
+        fetchImage(photoFrontUrl),
+        fetchImage(photoBackUrl),
+        fetchImage(photoSideUrl),
+      ])
+
+      const p = profileData || {}
+      const currentWeight = parseFloat(p.current_weight) || 0
+      const height = parseFloat(p.height) || 0
+      const bmi = height > 0 ? currentWeight / ((height / 100) ** 2) : 0
+
+      const assessmentSystem = `Tu es un coach physique professionnel avec 20 ans d'expérience en musculation, powerlifting et transformation physique.
+Tu analyses des photos de progression comme un vrai coach lors d'un bilan physique complet.
+Tu es expert en détection de déséquilibres musculaires, en morphologie et en programmation corrective.
+Tu réponds en français, de manière professionnelle et bienveillante.
+Tu es direct et précis — une analyse vague est inutile pour le client.`
+
+      const assessmentPrompt = `Voici 3 photos du client ${p.full_name || 'le client'} :
+- Photo 1 : vue de face
+- Photo 2 : vue de dos
+- Photo 3 : vue latérale
+
+Profil : ${p.gender || '?'}, ${currentWeight || '?'}kg, ${height || '?'}cm
+IMC : ${bmi > 0 ? bmi.toFixed(1) : '?'}
+Objectif : ${p.objective || 'non défini'}
+Score de forme : ${p.fitness_score || '?'}/100
+
+Effectue un BILAN CORPOREL COMPLET comme un coach professionnel.
+
+Structure ta réponse en 6 parties exactes :
+
+1. VUE D'ENSEMBLE
+Morphologie dominante (ectomorphe/mésomorphe/endomorphe ou mixte).
+Estime visuellement le taux de graisse (X-Y%).
+Impression générale en 2-3 phrases.
+
+2. GROUPES MUSCULAIRES DÉVELOPPÉS
+Liste précise des groupes musculaires bien développés que tu observes sur les 3 photos.
+Pour chaque groupe : niveau estimé (correct/bien développé/très développé)
+
+3. ZONES EN RETARD
+Liste précise des groupes musculaires sous-développés.
+Pour chaque zone : ce que tu observes, l'impact esthétique, l'impact fonctionnel si pertinent.
+
+4. DÉSÉQUILIBRES DÉTECTÉS
+Compare les vues face/dos/latéral pour identifier :
+- Déséquilibres gauche/droite
+- Déséquilibres avant/arrière (push vs pull)
+- Problèmes posturaux visibles
+
+5. PROGRAMME CORRECTIF PRIORITAIRE
+4-5 exercices prioritaires avec : nom, sets × reps, fréquence hebdomadaire, pourquoi cet exercice.
+
+6. OBJECTIF 12 SEMAINES
+Projection réaliste si le client suit le programme correctif. Sois concret.
+
+Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
+
+      const content = [
+        { type: 'image', source: { type: 'base64', media_type: frontImg.mediaType, data: frontImg.base64 } },
+        { type: 'image', source: { type: 'base64', media_type: backImg.mediaType, data: backImg.base64 } },
+        { type: 'image', source: { type: 'base64', media_type: sideImg.mediaType, data: sideImg.base64 } },
+        { type: 'text', text: assessmentPrompt },
+      ]
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 2048,
+          system: assessmentSystem,
+          messages: [{ role: 'user', content }],
+        }),
+      })
+
+      if (!res.ok) {
+        const err = await res.text()
+        return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
+      }
+
+      const data = await res.json()
+      const analysis = data.content?.[0]?.text || 'Analyse indisponible.'
+      return NextResponse.json({ analysis })
+    }
+
+    if (!photoUrl) return NextResponse.json({ error: 'Photo URL manquante' }, { status: 400 })
+
+    const p = profileData || {}
 
     let mainImage: { base64: string; mediaType: string }
     try {
