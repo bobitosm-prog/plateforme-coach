@@ -272,19 +272,19 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             return (
               <div key={mealType} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY }}>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY }}>
                     {MEAL_LABELS[mealType]}
                   </span>
                   <span style={{ fontFamily: FONT_DISPLAY, fontSize: '0.85rem', color: GOLD }}>{mealKcal} kcal</span>
                 </div>
                 <div style={{ padding: '8px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', gap: 12 }}>
                   {[
-                    { l: 'P', v: foodList.reduce((s: number, f: any) => s + (f.proteines || 0), 0) },
-                    { l: 'G', v: foodList.reduce((s: number, f: any) => s + (f.glucides || 0), 0) },
-                    { l: 'L', v: foodList.reduce((s: number, f: any) => s + (f.lipides || 0), 0) },
-                  ].map(({ l, v }) => (
+                    { l: 'P', v: foodList.reduce((s: number, f: any) => s + (f.proteines || 0), 0), color: GOLD },
+                    { l: 'G', v: foodList.reduce((s: number, f: any) => s + (f.glucides || 0), 0), color: '#60A5FA' },
+                    { l: 'L', v: foodList.reduce((s: number, f: any) => s + (f.lipides || 0), 0), color: '#F97316' },
+                  ].map(({ l, v, color }) => (
                     <span key={l} style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', fontWeight: 700, color: TEXT_MUTED }}>
-                      <span style={{ color: GOLD }}>{l}</span> {Math.round(v)}g
+                      <span style={{ color }}>{l}</span> {Math.round(v)}g
                     </span>
                   ))}
                 </div>
@@ -368,17 +368,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 return (
                   <div key={mi} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
                     <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY }}>{meal.name}</span>
+                      <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY }}>{meal.name}</span>
                       <span style={{ fontFamily: FONT_DISPLAY, fontSize: '0.85rem', color: GOLD }}>{mealKcal} kcal</span>
                     </div>
                     <div style={{ padding: '8px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', gap: 12 }}>
                       {[
-                        { label: 'P', value: `${Math.round(mealProt)}g` },
-                        { label: 'G', value: `${Math.round(mealCarb)}g` },
-                        { label: 'L', value: `${Math.round(mealFat)}g` },
-                      ].map(({ label, value }) => (
+                        { label: 'P', value: `${Math.round(mealProt)}g`, color: GOLD },
+                        { label: 'G', value: `${Math.round(mealCarb)}g`, color: '#60A5FA' },
+                        { label: 'L', value: `${Math.round(mealFat)}g`, color: '#F97316' },
+                      ].map(({ label, value, color }) => (
                         <span key={label} style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', fontWeight: 700, color: TEXT_MUTED }}>
-                          <span style={{ color: GOLD }}>{label}</span> {value}
+                          <span style={{ color }}>{label}</span> {value}
                         </span>
                       ))}
                     </div>
@@ -411,7 +411,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   return (
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.6rem', fontWeight: 800, letterSpacing: '2px', margin: 0, textTransform: 'uppercase' }}>NUTRITION</h1>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 40, fontWeight: 400, letterSpacing: '2px', margin: 0, textTransform: 'uppercase', color: TEXT_PRIMARY }}>NUTRITION</h1>
         {coachMealPlan && (
           <button onClick={() => {
             const rows: (string | number)[][] = []
@@ -531,8 +531,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               {/* Calories bar */}
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: '2.5rem', color: GOLD }}>{consumed.kcal}</span>
-                  <span style={{ fontFamily: FONT_BODY, fontSize: '0.7rem', color: TEXT_MUTED }}>/ {targetKcal} kcal</span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                    <span style={{ fontFamily: FONT_DISPLAY, fontSize: '3rem', color: GOLD }}>{consumed.kcal}</span>
+                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: GOLD, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>KCAL</span>
+                  </div>
+                  <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.08em', textTransform: 'uppercase' }}>OBJECTIF {targetKcal.toLocaleString('fr-FR')}</span>
                 </div>
                 <div style={{ background: BORDER, height: 2, overflow: 'hidden' }}>
                   <div style={{ height: '100%', background: GOLD, width: `${pctKcal}%`, transition: 'width 300ms ease' }} />
@@ -541,19 +544,19 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               {/* Macros */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: BORDER, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
                 {[
-                  { label: 'Protéines', current: consumed.protein, target: targetP },
-                  { label: 'Glucides', current: consumed.carbs, target: targetG },
-                  { label: 'Lipides', current: consumed.fat, target: targetL },
-                ].map(({ label, current, target }) => {
+                  { label: 'Protéines', current: consumed.protein, target: targetP, color: GOLD },
+                  { label: 'Glucides', current: consumed.carbs, target: targetG, color: '#60A5FA' },
+                  { label: 'Lipides', current: consumed.fat, target: targetL, color: '#F97316' },
+                ].map(({ label, current, target, color }) => {
                   const pct = Math.min(100, Math.round((current / target) * 100))
                   return (
                     <div key={label} style={{ background: BG_CARD, padding: '12px 10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
                         <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</span>
                       </div>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GOLD, marginBottom: 4 }}>{current}g</div>
-                      <div style={{ background: BORDER, height: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', background: GOLD, width: `${pct}%`, transition: 'width 300ms ease' }} />
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color, marginBottom: 4 }}>{current}g</div>
+                      <div style={{ background: BORDER, height: 3, borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', background: color, width: `${pct}%`, transition: 'width 300ms ease', borderRadius: 2 }} />
                       </div>
                       <div style={{ fontFamily: FONT_BODY, fontSize: '0.55rem', color: TEXT_MUTED, textAlign: 'right', marginTop: 2 }}>/ {target}g</div>
                     </div>
@@ -580,7 +583,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       <Check size={16} color={done ? '#000' : '#4B5563'} strokeWidth={3} />
                     </button>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: '2px', textTransform: 'uppercase', color: done ? GREEN : TEXT_PRIMARY, textDecoration: done ? 'line-through' : 'none' }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: done ? GREEN : TEXT_PRIMARY, textDecoration: done ? 'line-through' : 'none' }}>
                         {MEAL_LABELS[mealType]}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -599,7 +602,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                           <div style={{ fontFamily: FONT_BODY, fontSize: '0.62rem', color: TEXT_MUTED }}>{food.quantite_g}g</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '0.68rem', color: GOLD }}>{food.kcal} kcal</div>
+                          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '0.85rem', color: GOLD }}>{food.kcal} kcal</div>
                           <div style={{ fontFamily: FONT_BODY, fontSize: '0.58rem', color: TEXT_MUTED }}>P{food.proteines || 0} G{food.glucides || 0} L{food.lipides || 0}</div>
                         </div>
                       </div>

@@ -5,7 +5,7 @@ import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Trash2, UserMinus, Dow
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
 } from '../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
@@ -116,16 +116,21 @@ export default function ProfileTab({
 
       {/* Avatar + name */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24, gap: 12 }}>
-        <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: RADIUS_CARD, background: displayAvatar ? 'transparent' : GOLD, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative' }}>
+        <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: '50%', background: displayAvatar ? 'transparent' : BG_CARD_2, border: `2px solid ${GOLD}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative' }}>
           {displayAvatar
             ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt="Photo de profil" />
-            : <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '2rem', color: '#080808' }}>{firstName.charAt(0).toUpperCase()}</span>
+            : <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: GOLD }}>{firstName.charAt(0).toUpperCase()}</span>
           }
         </button>
         <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.5rem', fontWeight: 800, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '2px', lineHeight: 1.1 }}>{fullName}</div>
           <div style={{ fontSize: '0.8rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>{session.user.email}</div>
+          {profile?.fitness_level && (
+            <div style={{ display: 'inline-block', marginTop: 8, background: GOLD_DIM, border: `1px solid ${GOLD}`, borderRadius: 20, padding: '4px 14px' }}>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: '0.75rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '1px' }}>{profile.fitness_level}</span>
+            </div>
+          )}
           {profile?.created_at && (
             <div style={{ fontSize: '10px', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 6 }}>
               MEMBRE DEPUIS {new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
@@ -142,8 +147,8 @@ export default function ProfileTab({
           { label: 'Kcal/j', value: calorieGoal ? `${calorieGoal}` : '—', color: TEXT_MUTED },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 8px', textAlign: 'center' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 800, color }}>{value}</div>
-            <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginTop: 4 }}>{label}</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 800, color }}>{value}</div>
+            <div style={{ fontSize: 9, fontFamily: FONT_BODY, fontWeight: 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: TEXT_MUTED, marginTop: 4 }}>{label}</div>
           </div>
         ))}
       </div>
@@ -173,12 +178,12 @@ export default function ProfileTab({
 
       {/* BMR calculator */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-        <button onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')} onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)} onClick={() => setModal('bmr')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 150ms', width: '100%' }}>
+        <button onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')} onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)} onClick={() => setModal('bmr')} style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 0, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 150ms', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Zap size={18} color={TEXT_MUTED} />
-            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Calculateur BMR</span>
+            <span style={{ fontSize: 14, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Calculateur BMR</span>
           </div>
-          <ChevronRight size={16} color={TEXT_MUTED} />
+          <ChevronRight size={16} color={TEXT_DIM} />
         </button>
       </div>
 
@@ -203,16 +208,16 @@ export default function ProfileTab({
           disabled={notifStatus === 'loading' || notifStatus === 'done'}
           onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')}
           onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)}
-          style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1, transition: 'background 150ms', width: '100%' }}
+          style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 0, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1, transition: 'background 150ms', width: '100%' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {notifStatus === 'denied' ? <BellOff size={18} color={RED} /> : <Bell size={18} color={notifStatus === 'done' ? GREEN : TEXT_MUTED} />}
-            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: notifStatus === 'denied' ? RED : TEXT_PRIMARY }}>
+            <span style={{ fontSize: 14, fontFamily: FONT_BODY, fontWeight: 400, color: notifStatus === 'denied' ? RED : TEXT_PRIMARY }}>
               {notifStatus === 'done' ? 'Notifications activées' : notifStatus === 'denied' ? 'Notifications refusées' : 'Activer les notifications'}
             </span>
           </div>
           {notifStatus === 'done' && <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GREEN, background: `${GREEN}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>Actif</span>}
-          {notifStatus === 'idle' && <ChevronRight size={16} color={TEXT_MUTED} />}
+          {notifStatus === 'idle' && <ChevronRight size={16} color={TEXT_DIM} />}
         </button>
       </div>
 
@@ -482,9 +487,9 @@ export default function ProfileTab({
       })()}
 
       {/* Sign out */}
-      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} style={{ width: '100%', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 0, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
-        <LogOut size={18} color={RED} />
-        <span style={{ fontSize: '0.9rem', fontFamily: FONT_ALT, fontWeight: 700, color: RED }}>Déconnexion</span>
+      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 0, padding: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
+        <LogOut size={18} color={TEXT_MUTED} />
+        <span style={{ fontSize: '1rem', fontFamily: FONT_DISPLAY, fontWeight: 700, letterSpacing: '1px', color: TEXT_MUTED }}>Déconnexion</span>
       </button>
 
       {/* Delete account */}

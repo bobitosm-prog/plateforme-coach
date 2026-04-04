@@ -160,202 +160,211 @@ export default function HomeTab({
       .then(({ data }: any) => setWeekSessions(data?.length || 0))
   }, [session?.user?.id])
 
+  const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
+  const ringSize = 140
+  const ringStroke = 8
+  const ringRadius = (ringSize - ringStroke) / 2
+  const ringCircum = 2 * Math.PI * ringRadius
+  const ringOffset = ringCircum - (calPct / 100) * ringCircum
+
+  const todayExercises = todayCoachDay?.exercises || []
+  const sessionTitle = todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
+
+  // Weekly bar chart data
+  const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+  const todayDow = new Date().getDay() // 0=Sun
+  const barData = dayLabels.map((d, i) => {
+    const match = caloriesWeekData[i]
+    return { label: d, value: match?.calories || 0, isToday: i === (todayDow === 0 ? 6 : todayDow - 1) }
+  })
+  const barMax = Math.max(1, ...barData.map(b => b.value))
+
   return (
     <div style={{ background: BG_BASE, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
+      <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
-      {/* Header */}
-      <div style={{ background: BG_CARD, padding: '20px 20px 16px', borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <p style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '2px' }}>
-              {format(new Date(), 'EEEE d MMMM', { locale: fr })}
-            </p>
-            <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', lineHeight: 1 }}>
-              <span style={{ fontSize: 32 }}>Bonjour,</span>{' '}
-              <span style={{ fontSize: 56, color: GOLD }}>{firstName}</span>
-            </h1>
+      {/* ═══ HEADER ═══ */}
+      <div style={{ padding: '20px 24px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button onClick={() => avatarRef.current?.click()} style={{ width: 36, height: 36, borderRadius: '50%', background: displayAvatar ? 'transparent' : BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
+              {displayAvatar
+                ? <img src={displayAvatar} style={{ width: 36, height: 36, objectFit: 'cover' }} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{firstName.charAt(0).toUpperCase()}</span>}
+            </button>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: GOLD, letterSpacing: '0.15em' }}>MOOVX</span>
           </div>
-          <button onClick={() => avatarRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: displayAvatar ? 'transparent' : BG_CARD_2, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
-            {displayAvatar
-              ? <img src={displayAvatar} style={{ width: 48, height: 48, objectFit: 'cover' }} alt="Photo de profil" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.style.background = BG_CARD_2 }} />
-              : <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 22, color: GOLD }}>{firstName.charAt(0).toUpperCase()}</span>
-            }
+          <button onClick={() => setActiveTab('profil')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEXT_MUTED} strokeWidth="1.5"><path d="M12 15.5A3.5 3.5 0 1012 8.5a3.5 3.5 0 000 7z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           </button>
-          <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
         </div>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+          {format(new Date(), 'EEEE d MMMM', { locale: fr })}
+        </p>
+        <h1 style={{ fontFamily: FONT_DISPLAY, margin: 0, lineHeight: 1, letterSpacing: '2px' }}>
+          <span style={{ fontSize: 36, color: TEXT_PRIMARY }}>BONJOUR, </span>
+          <span style={{ fontSize: 56, color: GOLD }}>{firstName.toUpperCase()}</span>
+        </h1>
       </div>
 
-      <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* ── Résumé semaine ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: BG_CARD, border: `1px solid ${BORDER}`, padding: '16px 20px' }}>
-          {[
-            { value: currentWeight ? String(currentWeight) : '—', label: 'KG', color: GOLD },
-            { value: String(weekSessions), label: 'SÉANCES', color: TEXT_PRIMARY },
-            { value: streak > 0 ? `${streak}j` : '—', label: 'STREAK', color: TEXT_PRIMARY },
-            { value: weekVolume > 1000 ? `${(weekVolume / 1000).toFixed(1)}k` : String(weekVolume), label: 'KG VOL.', color: GOLD },
-          ].map((stat, i) => (
-            <React.Fragment key={stat.label}>
-              {i > 0 && <div style={{ width: 1, height: 36, background: TEXT_DIM }} />}
-              <div style={{ textAlign: 'center', flex: 1, ...(stat.label === 'STREAK' ? { borderLeft: '2px solid #C9A84C', paddingLeft: 8 } : (stat.label === 'KG' || stat.label === 'KG VOL.') ? { borderLeft: '2px solid #60A5FA', paddingLeft: 8 } : {}) }}>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: stat.color, lineHeight: 1 }}>{stat.value}</div>
-                <div style={{ fontFamily: FONT_ALT, fontSize: 10, color: TEXT_MUTED, letterSpacing: '2px', textTransform: 'uppercase', marginTop: 2 }}>{stat.label}</div>
+        {/* ═══ CALORIE RING + STATS BENTO ═══ */}
+        <div style={{ display: 'grid', gridTemplateColumns: `${ringSize + 32}px 1fr`, gap: 16 }}>
+          {/* Ring */}
+          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16, position: 'relative' }}>
+            <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={ringStroke} />
+              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={GOLD} strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+            </svg>
+            <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: GOLD, lineHeight: 1 }}>{calPct}%</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Objectif</span>
+            </div>
+          </div>
+          {/* Right stats */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Calories</span>
+              <div><span style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: GOLD }}>{consumedKcal}</span><span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginLeft: 4 }}>kcal</span></div>
+            </div>
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Hydratation</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: '#60A5FA' }}>{(waterToday / 1000).toFixed(1)}</span>
+                <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>/ {((profile?.water_goal || 3000) / 1000).toFixed(1)}L</span>
               </div>
-            </React.Fragment>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ SÉANCE DU JOUR — Stitch Card ═══ */}
+        <div style={{ background: BG_CARD, border: `2px solid ${GOLD}`, position: 'relative', overflow: 'hidden' }}>
+          {/* Background image overlay */}
+          <div style={{ height: todayExercises.length > 0 && !todaySession ? 160 : 0, position: 'relative', overflow: 'hidden' }}>
+            {todayExercises.length > 0 && !todaySession && (
+              <>
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 0%, ${BG_CARD} 100%)`, zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%)` }} />
+                {(() => {
+                  const firstEx = todayExercises[0]
+                  if (!firstEx) return null
+                  return <ExercisePreview name={firstEx.name} size={160} animate={false} />
+                })()}
+              </>
+            )}
+            <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, background: GOLD, padding: '4px 12px' }}>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700, color: '#080808', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Séance du jour</span>
+            </div>
+          </div>
+          <div style={{ padding: '16px 20px 20px' }}>
+            {!coachProgram ? (
+              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Programme en attente de ton coach.</p>
+            ) : todayCoachDay?.repos ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Moon size={24} color={TEXT_MUTED} />
+                <div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: '1px' }}>JOUR DE REPOS</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>Récupère bien, étirements bienvenus</div>
+                </div>
+              </div>
+            ) : !todayExercises.length ? (
+              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0 }}>Aucun exercice prévu.</p>
+            ) : todaySession ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <CheckCircle size={32} color={GREEN} style={{ flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GREEN, letterSpacing: '1px' }}>SÉANCE TERMINÉE</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginTop: 2 }}>
+                    {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: TEXT_PRIMARY, letterSpacing: '1px', lineHeight: 1, margin: '0 0 8px' }}>
+                  {sessionTitle.toUpperCase()}
+                </h3>
+                <div style={{ display: 'flex', gap: 16, fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
+                  <span>{todayExercises.length} exercices</span>
+                  <span>·</span>
+                  <span>~45 min</span>
+                </div>
+                <button
+                  onClick={() => startProgramWorkout({ day_name: todayKey }, todayExercises)}
+                  style={{ width: '100%', background: GOLD, color: '#080808', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 0, cursor: 'pointer' }}>
+                  COMMENCER
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ═══ STATS BAR — 4 metrics ═══ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, border: `1px solid ${BORDER}` }}>
+          {[
+            { value: currentWeight ? String(currentWeight) : '—', label: 'KG' },
+            { value: String(weekSessions), label: 'SÉANCES' },
+            { value: streak > 0 ? `${streak}j` : '—', label: 'STREAK' },
+            { value: weekVolume > 1000 ? `${(weekVolume / 1000).toFixed(1)}k` : String(weekVolume), label: 'KG VOL.' },
+          ].map((stat, i) => (
+            <div key={stat.label} style={{ background: BG_CARD, padding: '16px 8px', textAlign: 'center', borderLeft: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: GOLD, lineHeight: 1 }}>{stat.value}</div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>{stat.label}</div>
+            </div>
           ))}
         </div>
 
-        {/* ── Mini weight chart ── */}
-        {weightData.length >= 2 && (
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, color: TEXT_MUTED, letterSpacing: '2px', textTransform: 'uppercase' }}>Courbe de poids</span>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: GOLD }}>{currentWeight || '—'} KG</span>
-            </div>
-            <ResponsiveContainer width="100%" height={80}>
-              <AreaChart data={weightData}>
-                <defs>
-                  <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={GOLD} stopOpacity={0.3} />
-                    <stop offset="100%" stopColor={GOLD} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Area type="monotone" dataKey="poids" stroke={GOLD} strokeWidth={1.5} fill="url(#goldGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
+        {/* ═══ PERFORMANCE HEBDOMADAIRE — Bar chart ═══ */}
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: '1px' }}>PERFORMANCE HEBDOMADAIRE</span>
+            <button onClick={() => setActiveTab('progress')} style={{ fontFamily: FONT_BODY, fontSize: 10, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir tout</button>
           </div>
-        )}
-
-        {/* ── Mini calories chart ── */}
-        {caloriesWeekData.length > 0 && (
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, color: TEXT_MUTED, letterSpacing: '2px', textTransform: 'uppercase' }}>Calories 7 jours</span>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: GOLD }}>{consumedKcal} / {calorieGoal}</span>
-            </div>
-            <ResponsiveContainer width="100%" height={60}>
-              <BarChart data={caloriesWeekData}>
-                <Bar dataKey="calories" fill={GOLD} radius={[2, 2, 0, 0]} />
-                <ReferenceLine y={calorieGoal} stroke={TEXT_DIM} strokeDasharray="3 3" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* ── Water intake ── */}
-        {(() => {
-          const waterGoal = profile?.water_goal || 3000
-          const pct = Math.min(100, Math.round((waterToday / waterGoal) * 100))
-          return (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '2px' }}>Hydratation</span>
-                <span style={{ fontFamily: FONT_ALT, fontSize: 12, color: GOLD, fontWeight: 700 }}>{(waterToday / 1000).toFixed(1)}L / {(waterGoal / 1000).toFixed(1)}L</span>
-              </div>
-              <div style={{ height: 2, background: TEXT_DIM, overflow: 'hidden', marginBottom: 10 }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: GOLD, transition: 'width 0.5s ease' }} />
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {[250, 500, 1000].map(ml => (
-                  <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '8px 4px', borderRadius: 0, border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_MUTED, fontSize: 12, fontWeight: 700, fontFamily: FONT_ALT, transition: 'border-color 0.2s, color 0.2s' }}
-                    onMouseEnter={e => { (e.currentTarget.style.borderColor = GOLD); (e.currentTarget.style.color = GOLD) }}
-                    onMouseLeave={e => { (e.currentTarget.style.borderColor = GOLD_RULE); (e.currentTarget.style.color = TEXT_MUTED) }}
-                  >
-                    +{ml >= 1000 ? `${ml / 1000}L` : `${ml}ml`}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* ── Programme du jour ── */}
-        <div style={{ background: BG_CARD, border: `2px solid #C9A84C`, borderRadius: RADIUS_CARD, padding: 18 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, textTransform: 'uppercase', letterSpacing: '2px', color: GOLD }}>Programme du jour</span>
-            <button onClick={() => setActiveTab('training')} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '2px' }}>Voir tout</button>
-          </div>
-          {!coachProgram ? (
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Programme en attente de ton coach.</p>
-          ) : todayCoachDay?.repos ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '12px 14px' }}>
-              <Moon size={20} color={TEXT_MUTED} />
-              <div>
-                <div style={{ fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_PRIMARY }}>Jour de repos</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>Récupère bien, étirements bienvenus</div>
-              </div>
-            </div>
-          ) : !todayCoachDay?.exercises?.length ? (
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0 }}>Aucun exercice prévu.</p>
-          ) : todaySession ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: `${GREEN}12`, border: `1px solid ${GREEN}40`, borderRadius: RADIUS_CARD, padding: '16px 14px' }}>
-              <CheckCircle size={32} color={GREEN} style={{ flexShrink: 0 }} />
-              <div>
-                <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 16, color: GREEN }}>Séance terminée !</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY, marginTop: 2 }}>Bravo ! Tu as terminé ta séance du jour</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 4 }}>
-                  {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-                {(todayCoachDay.exercises as any[]).slice(0, 4).map((ex: any, i: number) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '10px 12px' }}>
-                    <ExercisePreview name={ex.name} size={36} animate={false} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_PRIMARY, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</div>
-                      <div style={{ fontFamily: FONT_BODY, fontWeight: 400, fontSize: 12, color: TEXT_MUTED }}>{ex.sets} × {ex.reps} reps</div>
-                    </div>
-                  </div>
-                ))}
-                {(todayCoachDay.exercises as any[]).length > 4 && (
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 12, color: GOLD, fontWeight: 700, paddingLeft: 4 }}>
-                    +{(todayCoachDay.exercises as any[]).length - 4} autres exercices
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => startProgramWorkout({ day_name: todayKey }, todayCoachDay.exercises)}
-                style={{ width: '100%', background: GOLD, color: '#080808', fontWeight: 800, padding: '13px', borderRadius: 0, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 15, letterSpacing: '1.5px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
-                Commencer la séance
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* ── Nutrition du jour ── */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, textTransform: 'uppercase', letterSpacing: '2px', color: GOLD }}>Nutrition du jour</span>
-            <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '2px' }}>Voir plan</button>
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 400, color: GOLD }}>{consumedKcal}</span>
-              <span style={{ fontFamily: FONT_ALT, fontSize: 12, color: TEXT_MUTED }}>/ {calorieGoal} kcal</span>
-            </div>
-            <div style={{ background: TEXT_DIM, height: 2, overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: GOLD, width: `${Math.min(100, Math.round((consumedKcal / calorieGoal) * 100))}%`, transition: 'width 300ms ease' }} />
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: BORDER }}>
-            {[
-              { label: 'Cible', value: calorieGoal, color: GOLD },
-              { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '—', color: GOLD },
-              { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—', color: GOLD },
-              { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—', color: GOLD },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ background: BG_CARD, padding: '8px 4px', textAlign: 'center' }}>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 400, color }}>{value}</div>
-                <div style={{ fontFamily: FONT_ALT, fontSize: 10, color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '1px' }}>{label}</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 6 }}>
+            {barData.map((b, i) => (
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: '100%', height: Math.max(4, (b.value / barMax) * 80), background: b.isToday ? GOLD : b.value > 0 ? `${GOLD}60` : TEXT_DIM, transition: 'height 0.5s ease' }} />
+                <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: b.isToday ? GOLD : TEXT_MUTED }}>{b.label}</span>
               </div>
             ))}
           </div>
         </div>
 
+        {/* ═══ WATER QUICK ADD ═══ */}
+        <div style={{ display: 'flex', gap: 6 }}>
+          {[250, 500, 1000].map(ml => (
+            <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '12px 4px', border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_MUTED, fontSize: 12, fontWeight: 600, fontFamily: FONT_BODY, transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = GOLD_RULE; e.currentTarget.style.color = TEXT_MUTED }}
+            >
+              +{ml >= 1000 ? `${ml / 1000}L` : `${ml}ml`}
+            </button>
+          ))}
+        </div>
 
+        {/* ═══ NUTRITION MACROS ═══ */}
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: TEXT_PRIMARY, letterSpacing: '1px' }}>NUTRITION</span>
+            <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: FONT_BODY, fontSize: 10, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir plan</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: BORDER }}>
+            {[
+              { label: 'Cible', value: calorieGoal },
+              { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '—' },
+              { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—' },
+              { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—' },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ background: BG_CARD, padding: '10px 4px', textAlign: 'center' }}>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GOLD }}>{value}</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ height: 20 }} />
       </div>
     </div>
   )

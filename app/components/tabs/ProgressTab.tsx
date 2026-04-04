@@ -278,7 +278,7 @@ export default function ProgressTab({
   return (
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>PROGRESSION</h1>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>PALMARÈS & ANALYTICS</h1>
         <div style={{ display: 'flex', gap: 6 }}>
           {subTab === 'mesures' && displayWeights.length > 0 && (
             <button onClick={() => {
@@ -314,8 +314,9 @@ export default function ProgressTab({
               padding: '10px 8px', borderRadius: 0, border: 'none', cursor: 'pointer',
               fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700,
               letterSpacing: '0.04em', textTransform: 'uppercase',
-              background: active ? GOLD : BG_CARD,
-              color: active ? '#080808' : TEXT_MUTED, transition: 'all 150ms',
+              background: BG_CARD,
+              borderBottom: active ? '2px solid #C9A84C' : '2px solid transparent',
+              color: active ? GOLD : TEXT_MUTED, transition: 'all 150ms',
             }}>
               <Icon size={14} strokeWidth={2.5} />
               {label}
@@ -332,7 +333,7 @@ export default function ProgressTab({
             <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderLeft: '2px solid #60A5FA', borderRadius: RADIUS_CARD, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED }}>Poids (30j)</span>
-                <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 28, color: GOLD }}>{displayWeights[displayWeights.length - 1]?.poids} kg</span>
+                <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: '3rem', color: GOLD }}>{displayWeights[displayWeights.length - 1]?.poids}<span style={{ fontFamily: FONT_BODY, fontSize: '1rem', color: TEXT_MUTED, marginLeft: 4 }}>KG</span></span>
               </div>
               <svg viewBox="0 0 300 90" style={{ width: '100%', height: 90, overflow: 'visible' }} preserveAspectRatio="none">
                 <polyline points={displayWeights.map((p, i) => { const x = (i / (displayWeights.length - 1)) * 300; const y = 90 - ((p.poids - cMin) / ((cMax - cMin) || 1)) * 86; return `${x.toFixed(1)},${y.toFixed(1)}` }).join(' ')} fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
@@ -414,10 +415,10 @@ export default function ProgressTab({
           <button
             onClick={() => setShowAssessment(true)}
             style={{
-              width: '100%', padding: '16px', marginBottom: 16,
-              background: 'transparent', border: `1px solid ${GOLD}`,
-              color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16,
-              letterSpacing: '1px', cursor: 'pointer',
+              width: '100%', padding: '18px 16px', marginBottom: 16,
+              background: GOLD_DIM, border: `2px solid ${GOLD}`,
+              color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 18,
+              letterSpacing: '2px', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
               borderRadius: 10,
             }}

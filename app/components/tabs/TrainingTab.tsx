@@ -344,7 +344,7 @@ export default function TrainingTab({
               {motivationalMsg}
             </p>
             <button onClick={() => setShowTimerAlert(false)} style={{
-              background: GOLD, color: '#050505', border: 'none',
+              background: GOLD, color: '#080808', border: 'none',
               fontFamily: FONT_ALT, fontWeight: 800, fontSize: 16, letterSpacing: 2,
               padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
               clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
@@ -361,8 +361,8 @@ export default function TrainingTab({
       {/* ── PAGE HEADER ── */}
       <div style={{ padding: '20px 16px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>ENTRAÎNEMENT</h1>
-          <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textTransform: 'capitalize' }}>{format(new Date(), 'EEE d MMM', { locale: fr })}</span>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 40, fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>ENTRAÎNEMENT</h1>
+          <span style={{ fontSize: '0.68rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{format(new Date(), 'EEE d MMM', { locale: fr })}</span>
         </div>
       </div>
 
@@ -535,9 +535,9 @@ export default function TrainingTab({
                   onClick={() => startProgramWorkout(trainingDayData, trainingExercises)}
                   style={{
                     width: '100%', background: GOLD, color: '#080808',
-                    fontWeight: 400, padding: '16px', borderRadius: 0, border: 'none',
+                    fontWeight: 400, padding: '18px', borderRadius: 0, border: 'none',
                     cursor: 'pointer',
-                    fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '2px',
+                    fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: '0.15em',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   }}
                 >
@@ -551,14 +551,14 @@ export default function TrainingTab({
                   whileTap={{ scale: 0.97 }}
                   onClick={finishTrainingWorkout}
                   style={{
-                    width: '100%', background: GREEN, color: '#050505',
+                    width: '100%', background: GREEN, color: '#080808',
                     fontWeight: 700, padding: '16px', borderRadius: RADIUS_CARD, border: 'none',
                     cursor: 'pointer',
                     fontFamily: FONT_ALT, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   }}
                 >
-                  <Award size={18} color="#050505" />
+                  <Award size={18} color="#080808" />
                   Terminer la séance
                 </motion.button>
               )}

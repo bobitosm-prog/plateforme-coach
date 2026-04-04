@@ -132,11 +132,11 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
   }
 
   return (
-    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
+    <div style={{ background: BG_CARD, border: '1px solid #C9A84C', borderRadius: 16, padding: 20, marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         <Target size={18} color={GOLD} />
-        <span style={{ fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-          Chemin vers les abdos
+        <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          ALGORITHME PRÉDICTIF
         </span>
       </div>
 

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Plus, MoreHorizontal, Timer, Video, RefreshCw, Info, BarChart2 } from 'lucide-react'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS,
 } from '../../../../lib/design-tokens'
 import ExercisePreview from '../../ExercisePreview'
@@ -107,9 +107,9 @@ export default function TrainingExerciseCard({
             {/* Exercise name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span onClick={() => onExerciseInfo(ex)} style={{
-                fontFamily: FONT_BODY,
+                fontFamily: FONT_DISPLAY,
                 fontWeight: 500, fontSize: 15,
-                color: allDone ? GREEN : TEXT_PRIMARY,
+                color: allDone ? GREEN : BLUE,
                 letterSpacing: '0.02em',
                 transition: 'color 0.3s', cursor: 'pointer',
               }}>{ex.name}</span>
@@ -348,7 +348,7 @@ export default function TrainingExerciseCard({
                       transition: 'all 200ms', flexShrink: 0,
                     }}
                   >
-                    <Check size={14} color={done ? '#050505' : TEXT_DIM} strokeWidth={2.5} />
+                    <Check size={14} color={done ? '#080808' : TEXT_DIM} strokeWidth={2.5} />
                   </motion.button>
                 </div>
               </motion.div>
