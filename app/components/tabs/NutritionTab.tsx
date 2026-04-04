@@ -49,6 +49,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [showScanner, setShowScanner] = useState(false)
   const [showFridgeScanner, setShowFridgeScanner] = useState(false)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
+  const [dailyLogs, setDailyLogs] = useState<any[]>([])
+  const [importingMeal, setImportingMeal] = useState<string | null>(null)
   const today = new Date().toISOString().split('T')[0]
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
@@ -58,7 +60,57 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     fetchActiveMealPlan()
     fetchTodayTracking()
     fetchTodayMealLogs()
+    fetchDailyLogs()
   }, [userId])
+
+  async function fetchDailyLogs() {
+    const { data } = await supabase
+      .from('daily_food_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date', today)
+      .order('created_at', { ascending: true })
+    setDailyLogs(data || [])
+  }
+
+  async function deleteDailyLog(id: string) {
+    await supabase.from('daily_food_logs').delete().eq('id', id)
+    setDailyLogs(prev => prev.filter(l => l.id !== id))
+  }
+
+  async function importMealFromPlan(mealType: string) {
+    const todayPlan = getTodayPlanData()
+    if (!todayPlan) return
+    const foods = Array.isArray(todayPlan.planData.repas?.[mealType]) ? todayPlan.planData.repas[mealType] : []
+    if (!foods.length) return
+    setImportingMeal(null)
+    const inserts = foods.map((f: any) => ({
+      user_id: userId, date: today, meal_type: mealType,
+      custom_name: f.aliment || 'Aliment', quantity_g: f.quantite_g || 100,
+      calories: f.kcal || 0, protein: f.proteines || 0, carbs: f.glucides || 0, fat: f.lipides || 0,
+    }))
+    await supabase.from('daily_food_logs').insert(inserts)
+    fetchDailyLogs()
+  }
+
+  function getDailyLogsMacros() {
+    const r = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
+    for (const l of dailyLogs) { r.kcal += l.calories || 0; r.protein += l.protein || 0; r.carbs += l.carbs || 0; r.fat += l.fat || 0 }
+    return r
+  }
+
+  function getMealRecommendation(mealType: string) {
+    const todayPlan = getTodayPlanData()
+    if (!todayPlan) return null
+    const foods = Array.isArray(todayPlan.planData.repas?.[mealType]) ? todayPlan.planData.repas[mealType] : []
+    if (!foods.length) return null
+    return foods.reduce((acc: any, f: any) => ({ kcal: acc.kcal + (f.kcal || 0), protein: acc.protein + (f.proteines || 0), carbs: acc.carbs + (f.glucides || 0), fat: acc.fat + (f.lipides || 0) }), { kcal: 0, protein: 0, carbs: 0, fat: 0 })
+  }
+
+  function getMealConsumed(mealType: string) {
+    const logs = dailyLogs.filter(l => l.meal_type === mealType)
+    return logs.reduce((acc, l) => ({ kcal: acc.kcal + (l.calories || 0), protein: acc.protein + (l.protein || 0), carbs: acc.carbs + (l.carbs || 0), fat: acc.fat + (l.fat || 0) }), { kcal: 0, protein: 0, carbs: 0, fat: 0 })
+  }
 
   async function fetchActiveMealPlan() {
     setLoadingPlan(true)
@@ -461,23 +513,13 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         />
       )}
 
-      {/* MON PLAN TAB — Yazio ring + meals */}
+      {/* MON PLAN TAB — daily logs as source of truth */}
       {subTab === 'today' && (() => {
-        const todayPlan = getTodayPlanData()
-        if (!todayPlan) return renderWaitingScreen()
-        const { planData: dayData, planId } = todayPlan
-        const planMacros = getConsumedMacros(dayData)
-        const logMacros = getMealLogsMacros()
-        const consumed = {
-          kcal: planMacros.kcal + logMacros.kcal,
-          protein: planMacros.protein + logMacros.protein,
-          carbs: planMacros.carbs + logMacros.carbs,
-          fat: planMacros.fat + logMacros.fat,
-        }
-        const targetKcal = dayData.total_kcal || profile?.calorie_goal || 2000
-        const targetP = dayData.total_protein || profile?.protein_goal || 140
-        const targetG = dayData.total_carbs || profile?.carbs_goal || 200
-        const targetL = dayData.total_fat || profile?.fat_goal || 60
+        const consumed = getDailyLogsMacros()
+        const targetKcal = profile?.calorie_goal || 2000
+        const targetP = profile?.protein_goal || 140
+        const targetG = profile?.carbs_goal || 200
+        const targetL = profile?.fat_goal || 60
         const remaining = Math.max(0, targetKcal - consumed.kcal)
         const pctKcal = Math.min(100, Math.round((consumed.kcal / targetKcal) * 100))
 
@@ -486,6 +528,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         const ringRadius = (ringSize - ringStroke) / 2
         const ringCircum = 2 * Math.PI * ringRadius
         const ringOffset = ringCircum - (pctKcal / 100) * ringCircum
+        const EMOJIS: Record<string, string> = { petit_dejeuner: '🌅', dejeuner: '☀️', collation: '🍎', diner: '🌙' }
 
         return (
           <div style={{ padding: '0 20px' }}>
@@ -515,7 +558,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 return (
                   <div key={label} style={{ textAlign: 'center' }}>
                     <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED, letterSpacing: '0.1em', marginBottom: 4 }}>{label}</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color }}>{current}<span style={{ fontSize: 12, color: TEXT_MUTED }}>/{target}g</span></div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: TEXT_MUTED }}>/{target}g</span></div>
                     <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
                       <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 2, transition: 'width 300ms' }} />
                     </div>
@@ -524,100 +567,108 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               })}
             </div>
 
-            {/* Meal sections */}
+            {/* Meal sections — start empty, import IA optional */}
             {MEAL_ORDER.map(mealType => {
-              const foods = Array.isArray(dayData.repas?.[mealType]) ? dayData.repas[mealType] : []
-              if (foods.length === 0) return null
-              const done = completedMeals.has(mealType)
-              const mealKcal = foods.reduce((s: number, f: any) => s + (f.kcal || 0), 0)
-              const EMOJIS: Record<string, string> = { petit_dejeuner: '🌅', dejeuner: '☀️', collation: '🍎', diner: '🌙' }
+              const rec = getMealRecommendation(mealType)
+              const con = getMealConsumed(mealType)
+              const logs = dailyLogs.filter(l => l.meal_type === mealType)
+              const hasPlanFoods = !!rec
 
               return (
-                <div key={mealType} style={{ background: BG_CARD, border: `1px solid ${done ? 'rgba(52,211,153,0.3)' : BORDER}`, marginBottom: 12, overflow: 'hidden' }}>
+                <div key={mealType} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, marginBottom: 12, overflow: 'hidden' }}>
                   {/* Meal header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: `1px solid ${BORDER}` }}>
-                    <button onClick={() => toggleMeal(mealType, planId)} style={{
-                      width: 32, height: 32, border: 'none', cursor: 'pointer',
-                      background: done ? GREEN : '#1a1a1a',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <Check size={16} color={done ? '#000' : '#4B5563'} strokeWidth={3} />
-                    </button>
-                    <span style={{ fontSize: 16 }}>{EMOJIS[mealType] || '🍽'}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '1px', color: done ? GREEN : TEXT_PRIMARY, textDecoration: done ? 'line-through' : 'none' }}>
-                        {MEAL_LABELS[mealType]}
-                      </div>
+                  <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 16 }}>{EMOJIS[mealType] || '🍽'}</span>
+                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '1px', color: TEXT_PRIMARY }}>{MEAL_LABELS[mealType]}</span>
+                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD, marginLeft: 'auto' }}>{con.kcal} kcal</span>
                     </div>
-                    <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: done ? GREEN : GOLD }}>{mealKcal} kcal</span>
+                    {rec && (
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, fontStyle: 'italic' }}>
+                        Recommandé : {rec.kcal} kcal · P:{Math.round(rec.protein)}g · G:{Math.round(rec.carbs)}g · L:{Math.round(rec.fat)}g
+                      </div>
+                    )}
+                    {logs.length > 0 && (
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: con.kcal > (rec?.kcal || 9999) ? '#EF4444' : GOLD, marginTop: 2 }}>
+                        Consommé : {con.kcal} kcal · P:{Math.round(con.protein)}g · G:{Math.round(con.carbs)}g · L:{Math.round(con.fat)}g
+                      </div>
+                    )}
                   </div>
 
-                  {/* Foods */}
+                  {/* Daily food logs for this meal */}
                   <div style={{ padding: '0 16px' }}>
-                    {foods.map((food: any, fi: number) => (
-                      <div key={fi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: fi > 0 ? `1px solid ${BORDER}` : 'none', opacity: done ? 0.5 : 1 }}>
-                        <div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{food.aliment}</div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{food.quantite_g}g · P:{food.proteines||0}g G:{food.glucides||0}g L:{food.lipides||0}g</div>
+                    {logs.map(log => (
+                      <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{log.custom_name || log.food_name || 'Aliment'}</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{log.quantity_g}g · P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</div>
                         </div>
-                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD, flexShrink: 0 }}>{food.kcal} kcal</span>
-                      </div>
-                    ))}
-                    {/* Manual food logs for this meal */}
-                    {mealLogs.filter(l => l.meal_type === mealType).map(log => (
-                      <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: `1px solid ${BORDER}` }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: GOLD }}>{log.food_name}</div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{log.quantity_g}g</div>
-                        </div>
-                        <div style={{ textAlign: 'right', marginRight: 8 }}>
-                          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: GOLD }}>{Math.round(log.calories)} kcal</span>
-                        </div>
-                        <button onClick={() => deleteMealLog(log.id)} style={{ width: 28, height: 28, background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD, flexShrink: 0, marginRight: 8 }}>{Math.round(log.calories)} kcal</span>
+                        <button onClick={() => deleteDailyLog(log.id)} style={{ width: 28, height: 28, background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <Trash2 size={12} color="#EF4444" />
                         </button>
                       </div>
                     ))}
-                    {/* Add food */}
-                    <button onClick={() => setShowFoodSearch(mealType)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px', margin: '4px 0 8px', border: `1px dashed ${BORDER}`, background: 'transparent', cursor: 'pointer', fontFamily: FONT_BODY, color: GOLD, fontSize: 12 }}>
-                      <Plus size={12} strokeWidth={2.5} /> Ajouter un aliment
-                    </button>
+
+                    {logs.length === 0 && (
+                      <div style={{ padding: '16px 0', textAlign: 'center' }}>
+                        <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_DIM }}>Aucun aliment ajouté</span>
+                      </div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px' }}>
+                      {hasPlanFoods && logs.length === 0 && (
+                        <button onClick={() => setImportingMeal(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px solid ${GOLD_RULE}`, background: GOLD_DIM, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 11, color: GOLD }}>
+                          🤖 Importer le plan IA
+                        </button>
+                      )}
+                      <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${BORDER}`, background: 'transparent', cursor: 'pointer', fontFamily: FONT_BODY, color: TEXT_MUTED, fontSize: 11 }}>
+                        <Plus size={12} strokeWidth={2.5} /> Ajouter un aliment
+                      </button>
+                    </div>
                   </div>
                 </div>
               )
             })}
 
-            {/* Day navigation for plan view */}
-            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginTop: 16, marginBottom: 16 }}>
-              {NUTRITION_DAYS.map(({ key, label }) => {
-                const isActive = nutritionDay === key
-                const isToday = key === todayKey
-                return (
-                  <button key={key} onClick={() => setNutritionDay(key)} style={{
-                    flexShrink: 0, padding: '8px 14px', border: 'none', cursor: 'pointer',
-                    fontFamily: FONT_DISPLAY, fontSize: 14,
-                    background: isActive ? GOLD : BG_CARD,
-                    color: isActive ? '#080808' : isToday ? GOLD : TEXT_MUTED,
-                    borderBottom: isToday && !isActive ? `2px solid ${GOLD}` : 'none',
-                  }}>
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
+            {/* Import confirmation modal */}
+            {importingMeal && (() => {
+              const todayPlan = getTodayPlanData()
+              const foods = todayPlan ? (Array.isArray(todayPlan.planData.repas?.[importingMeal]) ? todayPlan.planData.repas[importingMeal] : []) : []
+              return (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 70, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setImportingMeal(null)}>
+                  <div onClick={e => e.stopPropagation()} style={{ background: BG_CARD, borderTop: `2px solid ${GOLD}`, width: '100%', maxWidth: 480, maxHeight: '70vh', overflowY: 'auto', padding: '24px 20px' }}>
+                    <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, margin: '0 0 4px' }}>IMPORTER LE PLAN IA</h3>
+                    <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, margin: '0 0 16px' }}>Ajouter les aliments recommandés pour {MEAL_LABELS[importingMeal]} ?</p>
+                    {foods.map((f: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${BORDER}` }}>
+                        <div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY }}>{f.aliment}</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{f.quantite_g}g</div>
+                        </div>
+                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: GOLD }}>{f.kcal} kcal</span>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                      <button onClick={() => setImportingMeal(null)} style={{ flex: 1, padding: 14, border: `1px solid ${BORDER}`, background: 'transparent', color: TEXT_MUTED, fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer' }}>ANNULER</button>
+                      <button onClick={() => importMealFromPlan(importingMeal)} style={{ flex: 1, padding: 14, border: 'none', background: GOLD, color: '#080808', fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer' }}>IMPORTER</button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
-            {/* Shopping + Export row */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-              {(activeMealPlan?.plan_data || coachMealPlan) && (
-                <button onClick={() => setShowShoppingModal(true)} style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '12px', border: `1px solid ${GOLD_RULE}`, background: GOLD_DIM, cursor: 'pointer',
-                  fontFamily: FONT_BODY, fontSize: 12, color: GOLD,
-                }}>
-                  <ShoppingCart size={14} /> Liste de courses
-                </button>
-              )}
-            </div>
+            {/* Shopping button */}
+            {(activeMealPlan?.plan_data || coachMealPlan) && (
+              <button onClick={() => setShowShoppingModal(true)} style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '12px', border: `1px solid ${GOLD_RULE}`, background: GOLD_DIM, cursor: 'pointer',
+                fontFamily: FONT_BODY, fontSize: 12, color: GOLD, marginBottom: 20,
+              }}>
+                <ShoppingCart size={14} /> Liste de courses
+              </button>
+            )}
           </div>
         )
       })()}
