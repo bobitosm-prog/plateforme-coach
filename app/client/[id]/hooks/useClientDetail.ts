@@ -19,7 +19,7 @@ export type Profile = {
   height: number | null; target_weight: number | null
   body_fat_pct: number | null; objective: string | null; status: string | null
   dietary_type: string | null; allergies: string[] | null; liked_foods: string[] | null
-  meal_preferences: Record<string, string[]> | null
+  disliked_foods: string[] | null; meal_preferences: Record<string, string[]> | null
   activity_level: string | null; tdee: number | null; protein_goal: number | null
   carbs_goal: number | null; fat_goal: number | null
 }
@@ -266,8 +266,13 @@ export default function useClientDetail() {
           carbs_goal: profile.carbs_goal || carbTarget,
           fat_goal: profile.fat_goal || fatTarget,
           dietary_type: profile.dietary_type, allergies: profile.allergies,
+          disliked_foods: profile.disliked_foods,
           objective: profile.objective, available_foods: availableFoods,
           meal_food_names: mealFoodNames, scanned_foods: scannedFoods,
+          objective_mode: profile.objective === 'weight_loss' ? 'seche' : profile.objective === 'mass' ? 'bulk' : 'maintien',
+          caloric_adjustment: (profile.calorie_goal || 0) - (profile.tdee || profile.calorie_goal || 0),
+          tdee: profile.tdee,
+          activity_level: profile.activity_level,
         }),
       })
 
@@ -366,7 +371,7 @@ export default function useClientDetail() {
     setLoading(true); setError(null)
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes] = await Promise.all([
-      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
+      supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,disliked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),

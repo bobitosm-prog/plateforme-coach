@@ -18,12 +18,47 @@ function buildSystemPrompt(params: any) {
   const dinKcal = Math.round(kcal * 0.30)
 
   const diet = params.dietary_type || 'omnivore'
+
+  // Objective context
+  const objMode = params.objective_mode || 'maintien'
+  const caloricAdj = params.caloric_adjustment || 0
+  const tdee = params.tdee || kcal
+  const objectiveBlock = objMode === 'seche'
+    ? `SÈCHE — Perte de graisse. Déficit de ${Math.abs(caloricAdj)} kcal/jour sous le TDEE (${tdee} kcal). Priorité : maintien musculaire, protéines hautes. Favorise les aliments rassasiants (légumes verts, protéines maigres, fibres).`
+    : objMode === 'bulk'
+    ? `BULK — Prise de masse. Surplus de ${caloricAdj} kcal/jour au-dessus du TDEE (${tdee} kcal). Priorité : glucides élevés pour performance. Portions généreuses de féculents, collation dense.`
+    : `MAINTIEN — Stabilité du poids. Calories = TDEE (${tdee} kcal). Équilibre macro.`
+
+  // Dietary-specific rules
+  const dietaryRules = diet === 'keto'
+    ? `\nRÈGLES RÉGIME KETO : glucides MAXIMUM 50g/jour total.
+Pas de riz, pâtes, pain, pommes de terre, fruits sucrés.
+Privilégie : viandes grasses, poissons, oeufs, fromages, légumes verts, avocat, noix, huile d'olive, beurre.
+Les lipides doivent représenter 65-75% des calories.`
+    : diet === 'paleo'
+    ? `\nRÈGLES RÉGIME PALÉO : Interdit céréales, légumineuses, produits laitiers, sucres raffinés, huiles végétales transformées.
+Autorisé : viandes, poissons, oeufs, légumes, fruits, noix, huile d'olive/coco, patate douce, miel.`
+    : diet === 'mediterraneen'
+    ? `\nRÈGLES RÉGIME MÉDITERRANÉEN : Beaucoup de poissons, légumes, légumineuses, huile d'olive, céréales complètes, fruits.
+Viande rouge max 2x/semaine. Peu de produits transformés. Privilégie huile d'olive comme matière grasse principale.`
+    : diet === 'halal'
+    ? `\nRÈGLES HALAL : Pas de porc ni de dérivés (jambon, bacon, lardons, gélatine de porc). Pas d'alcool dans les recettes. Viandes halal uniquement.`
+    : diet === 'kosher'
+    ? `\nRÈGLES KOSHER : Pas de porc ni crustacés. Ne jamais mélanger viande et produits laitiers dans le même repas. Poissons à écailles uniquement.`
+    : diet === 'gluten_free' || diet === 'sans_gluten'
+    ? `\nRÈGLES SANS GLUTEN : Pas de blé, orge, seigle, épeautre. Pas de pain, pâtes, couscous, boulghour classiques.
+Remplace par : riz, quinoa, sarrasin, maïs, pommes de terre, patate douce, légumineuses.`
+    : diet === 'lactose_free' || diet === 'sans_lactose'
+    ? `\nRÈGLES SANS LACTOSE : Pas de lait, fromage frais, crème, yaourt classique.
+Remplace par : lait d'amande/soja/avoine, yaourt végétal, fromages affinés (souvent tolérés).`
+    : ''
+
   const proteinRules = diet === 'vegan'
     ? `- Petit-déjeuner : tofu brouillé, protéine végétale en poudre, ou beurre de cacahuète
 - Déjeuner : TOUJOURS inclure tofu, tempeh, ou seitan comme source principale (150-250g)
 - Collation : protéine végétale, amandes, edamame
 - Dîner : TOUJOURS inclure une source différente du déjeuner (tofu au déj → tempeh au dîner)`
-    : diet === 'vegetarien'
+    : diet === 'vegetarian' || diet === 'vegetarien'
     ? `- Petit-déjeuner : oeufs, yaourt grec, fromage blanc, ou whey
 - Déjeuner : TOUJOURS inclure oeufs, tofu, ou fromage comme source principale
 - Collation : whey, yaourt grec, fromage blanc, amandes
@@ -33,12 +68,17 @@ function buildSystemPrompt(params: any) {
 - Déjeuner : TOUJOURS inclure du POISSON comme source principale (saumon, thon, cabillaud, crevettes — 150-250g)
 - Collation : whey, yaourt grec, fromage blanc, oeufs
 - Dîner : TOUJOURS inclure du POISSON DIFFÉRENT du déjeuner (saumon au déj → cabillaud au dîner)`
+    : diet === 'keto'
+    ? `- Petit-déjeuner : oeufs (2-3), bacon, avocat, fromage — PAS de pain ni céréales
+- Déjeuner : VIANDE ou POISSON gras (150-250g) + légumes verts sautés à l'huile + avocat/fromage
+- Collation : fromage, noix, olives, oeuf dur
+- Dîner : VIANDE ou POISSON (150-250g) + légumes verts + source lipidique (huile, beurre, avocat)`
     : `- Petit-déjeuner : oeufs, yaourt grec, fromage blanc, ou whey
 - Déjeuner : TOUJOURS inclure une VIANDE ou POISSON comme plat principal (poulet, boeuf, dinde, saumon, thon — 150-250g pour 30-50g de protéines)
 - Collation : whey, yaourt grec, fromage blanc, amandes, oeufs
 - Dîner : TOUJOURS inclure une VIANDE ou POISSON DIFFÉRENTE du déjeuner (si poulet au déj → poisson ou boeuf au dîner)`
 
-  const weeklyVariety = diet === 'omnivore' ? `
+  const weeklyVariety = diet === 'omnivore' || diet === 'halal' || diet === 'kosher' || diet === 'paleo' || diet === 'mediterraneen' ? `
 VARIÉTÉ PROTÉINES SUR LA SEMAINE :
 - Alterner viande blanche (poulet, dinde), viande rouge (boeuf, steak haché), poisson (saumon, thon, cabillaud, crevettes)
 - Ne JAMAIS répéter la même protéine principale 2 jours de suite au même repas
@@ -49,6 +89,10 @@ VARIÉTÉ PROTÉINES SUR LA SEMAINE :
 ═══ OBJECTIF CALORIQUE DU CLIENT : ${kcal} KCAL/JOUR ═══
 Protéines : ${prot}g | Glucides : ${carbs}g | Lipides : ${fat}g
 Régime : ${diet}
+
+OBJECTIF DU CLIENT : ${objectiveBlock}
+${params.activity_level ? `Niveau d'activité : ${params.activity_level}` : ''}
+${dietaryRules}
 
 C'est un objectif de ${kcal} kcal, PAS 2000 kcal. Adapte les QUANTITÉS en conséquence.
 ${kcal > 2500 ? `Pour atteindre ${kcal} kcal, utilise des portions GÉNÉREUSES (150-250g de féculents, 200g+ de protéines, ajout d'huile/beurre de cacahuète).` : ''}
@@ -164,10 +208,21 @@ async function generateOneDay(
     mfn.dinner?.length ? `Dîner favori : ${mfn.dinner.join(', ')}` : '',
   ].filter(Boolean).join('\n')
 
+  const objMode = params.objective_mode || 'maintien'
+  const caloricAdj = params.caloric_adjustment || 0
+  const objReminder = objMode === 'seche'
+    ? `Rappel objectif : SÈCHE — déficit de ${Math.abs(caloricAdj)} kcal vs TDEE. Aliments rassasiants, protéines hautes.`
+    : objMode === 'bulk'
+    ? `Rappel objectif : BULK — surplus de +${caloricAdj} kcal vs TDEE. Portions généreuses, glucides élevés.`
+    : `Rappel objectif : MAINTIEN — calories = TDEE.`
+
   const userPrompt = `Génère le plan pour ${day.toUpperCase()}.
+
+${objReminder}
 
 OBJECTIFS STRICTS : ${kcal} kcal (±50 MAX), ${params.protein_goal}g P, ${params.carbs_goal}g G, ${params.fat_goal}g L
 Allergènes : ${(params.allergies || []).join(', ') || 'aucun'}
+${params.disliked_foods?.length ? `Aliments à ÉVITER (le client n'aime pas) : ${params.disliked_foods.join(', ')}` : ''}
 
 ${prefHint ? `PRÉFÉRENCES DU CLIENT :\n${prefHint}\nUtilise ces aliments en VARIANT chaque jour. Ne répète PAS le même petit-déjeuner 2 jours de suite.\n` : ''}ALIMENTS DISPONIBLES (valeurs /100g) :
 ${foodListStr || 'Utilise des aliments fitness classiques.'}

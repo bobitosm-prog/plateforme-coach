@@ -226,6 +226,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   async function regeneratePlan() {
     setRegenerating(true)
     try {
+      const objMap: Record<ObjectiveType, string> = { cut: 'seche', maintain: 'maintien', bulk: 'bulk' }
       const res = await fetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -236,6 +237,11 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           fat_goal: finalMacros.fat,
           dietary_type: dietaryType,
           allergies,
+          disliked_foods: dislikedFoods,
+          objective_mode: objMap[objective],
+          caloric_adjustment: objective === 'maintain' ? 0 : adjustment,
+          tdee,
+          activity_level: activityLevel,
         }),
       })
       const reader = res.body?.getReader()

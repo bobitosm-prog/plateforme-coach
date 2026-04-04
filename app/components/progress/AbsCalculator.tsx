@@ -91,6 +91,11 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
         fat_goal,
         dietary_type: profile?.dietary_type || 'omnivore',
         allergies: profile?.allergies || [],
+        disliked_foods: profile?.disliked_foods || [],
+        objective_mode: profile?.objective === 'weight_loss' ? 'seche' : profile?.objective === 'mass' ? 'bulk' : 'maintien',
+        caloric_adjustment: newCalories - (profile?.tdee || newCalories),
+        tdee: profile?.tdee,
+        activity_level: profile?.activity_level,
       }
 
       const res = await fetch('/api/generate-meal-plan', {

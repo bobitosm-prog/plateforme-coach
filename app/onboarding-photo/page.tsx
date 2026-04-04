@@ -125,6 +125,11 @@ export default function OnboardingPhotoPage() {
       fat_goal: profileData.fat_goal || 70,
       dietary_type: profileData.dietary_type || 'omnivore',
       allergies: profileData.allergies || [],
+      disliked_foods: profileData.disliked_foods || [],
+      objective_mode: profileData.objective === 'weight_loss' ? 'seche' : profileData.objective === 'mass' ? 'bulk' : 'maintien',
+      caloric_adjustment: (profileData.calorie_goal || 0) - (profileData.tdee || profileData.calorie_goal || 0),
+      tdee: profileData.tdee,
+      activity_level: profileData.activity_level,
     }
     if (analysisForPlan) params.ai_photo_analysis = analysisForPlan
 
