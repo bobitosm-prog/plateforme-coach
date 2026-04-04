@@ -220,14 +220,23 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     })
   }
 
-  // Debounced food search via API
+  // Debounced food search via authenticated supabase client
   useEffect(() => {
     if (mealSearchQuery.length < 2) { setMealSearchResults([]); return }
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/food-search?q=${encodeURIComponent(mealSearchQuery)}&limit=8`)
-        const data = await res.json()
-        setMealSearchResults(data.results || [])
+        const { data } = await supabase
+          .from('food_items')
+          .select('id, name, energy_kcal, proteins, carbohydrates, fat')
+          .ilike('name', `%${mealSearchQuery}%`)
+          .limit(8)
+        const results = (data || []).map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          calories_per_100g: Math.round(f.energy_kcal || 0),
+          protein_per_100g: Math.round((f.proteins || 0) * 10) / 10,
+        }))
+        setMealSearchResults(results)
       } catch { setMealSearchResults([]) }
     }, 300)
     return () => clearTimeout(timer)
