@@ -14,7 +14,7 @@ const LIGHT_BLUE = '#7DD3FC'
 
 interface AnalyticsSectionProps {
   personalRecords: any[]
-  weeklyCalories: { date: string; calories: number; proteins: number; carbs: number; fats: number }[]
+  weeklyCalories: { date: string; calories: number; protein: number; carbs: number; fat: number }[]
   weeklyWater: { date: string; ml: number }[]
   weeklyVolume: { week: string; volume: number }[]
   weightHistoryFull: { date: string; poids: number }[]
@@ -83,9 +83,9 @@ export default function AnalyticsSection({
   const macroData = useMemo(() =>
     weeklyCalories.map(c => ({
       date: format(new Date(c.date), 'EEE', { locale: fr }),
-      Proteines: Math.round(c.proteins),
+      Proteines: Math.round(c.protein),
       Glucides: Math.round(c.carbs),
-      Lipides: Math.round(c.fats),
+      Lipides: Math.round(c.fat),
     })),
     [weeklyCalories]
   )
@@ -163,9 +163,9 @@ export default function AnalyticsSection({
         date,
         weightMap[date] ?? null,
         calMap[date]?.calories ?? null,
-        calMap[date]?.proteins ?? null,
+        calMap[date]?.protein ?? null,
         calMap[date]?.carbs ?? null,
-        calMap[date]?.fats ?? null,
+        calMap[date]?.fat ?? null,
         waterMap[date] ? Math.round(waterMap[date] / 1000 * 10) / 10 : null,
       ])
     }

@@ -69,7 +69,7 @@ export default function HomeTab({
     Promise.all([
       supabase.from('meal_tracking').select('meal_type').eq('user_id', uid).eq('date', todayDate).eq('is_completed', true).limit(20),
       supabase.from('meal_plans').select('plan_data').eq('user_id', uid).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('meal_logs').select('calories').eq('user_id', uid).eq('date', todayDate).limit(20),
+      supabase.from('daily_food_logs').select('calories').eq('user_id', uid).eq('date', todayDate).limit(20),
     ]).then(([trackingRes, planRes, logsRes]) => {
       let planKcal = 0
       const completedTypes = new Set((trackingRes.data || []).map((r: any) => r.meal_type))
@@ -131,8 +131,8 @@ export default function HomeTab({
       .gte('date', twoWeeksAgo).order('date', { ascending: true }).limit(14)
       .then(({ data }: any) => setWeightData(data || []))
 
-    // Calories 7 days (from meal_logs)
-    supabase.from('meal_logs').select('calories, date').eq('user_id', userId)
+    // Calories 7 days (from daily_food_logs)
+    supabase.from('daily_food_logs').select('calories, date').eq('user_id', userId)
       .gte('date', new Date(now.getTime() - 7 * 86400000).toISOString().split('T')[0]).limit(200)
       .then(({ data }: any) => {
         const calByDay: Record<string, number> = {}

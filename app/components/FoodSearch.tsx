@@ -86,11 +86,10 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
     const prot = Math.round(((selected.proteines * quantity) / 100) * 10) / 10
     const gluc = Math.round(((selected.glucides * quantity) / 100) * 10) / 10
     const lip = Math.round(((selected.lipides * quantity) / 100) * 10) / 10
-    await supabase.from('meal_logs').insert({
+    await supabase.from('daily_food_logs').insert({
       user_id: userId, date: today, meal_type: mealType,
-      food_item_id: selected.id, food_name: selected.nom,
-      quantity_g: quantity, calories: cal, proteines: prot, glucides: gluc, lipides: lip,
-      source: selected.source,
+      custom_name: selected.nom,
+      quantity_g: quantity, calories: cal, protein: prot, carbs: gluc, fat: lip,
     })
     setSaving(false)
     onAdded()

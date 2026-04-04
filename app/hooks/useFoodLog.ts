@@ -45,12 +45,12 @@ export default function useFoodLog({ supabase, userId, onMutate }: UseFoodLogPar
     const prot = isCustom ? selectedFood.proteins_per_100g : selectedFood.proteins || 0
     const carb = isCustom ? selectedFood.carbs_per_100g : selectedFood.carbohydrates || selectedFood.carbs || 0
     const fat = isCustom ? selectedFood.fats_per_100g : selectedFood.fat || selectedFood.fats || 0
-    await supabase.from('meal_logs').insert({
-      user_id: userId, meal_type: mealType,
-      name: `${selectedFood.name}${selectedFood.brand ? ` (${selectedFood.brand})` : ''} ${qty}g`,
-      calories: Math.round(cals * qty / 100), proteins: Math.round(prot * qty / 100 * 10) / 10,
-      carbs: Math.round(carb * qty / 100 * 10) / 10, fats: Math.round(fat * qty / 100 * 10) / 10,
-      quantity_g: qty, ...(isCustom ? { custom_food_id: selectedFood.id } : { food_id: selectedFood.id }),
+    await supabase.from('daily_food_logs').insert({
+      user_id: userId, meal_type: mealType, date: new Date().toISOString().split('T')[0],
+      custom_name: `${selectedFood.name}${selectedFood.brand ? ` (${selectedFood.brand})` : ''} ${qty}g`,
+      calories: Math.round(cals * qty / 100), protein: Math.round(prot * qty / 100 * 10) / 10,
+      carbs: Math.round(carb * qty / 100 * 10) / 10, fat: Math.round(fat * qty / 100 * 10) / 10,
+      quantity_g: qty,
     })
     setSelectedFood(null); setFoodSearch(''); setFoodResults([])
     toast.success('Aliment ajouté !')

@@ -1,45 +1,58 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Flame, Beef, Wheat, Droplets, Star } from 'lucide-react'
-import { ACTIVITY_LEVELS, calcMifflinStJeor, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
+import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, ChevronDown, ChevronUp } from 'lucide-react'
+import { ACTIVITY_LEVELS, calcMifflinStJeor, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
+
+// ─── Constants ───
+
+const OBJECTIVES = [
+  { id: 'cut', label: 'SECHE', emoji: '\u{1F525}', desc: 'Perdre du gras', sub: '-300 a -500 kcal' },
+  { id: 'maintain', label: 'MAINTIEN', emoji: '\u2696\uFE0F', desc: 'Maintenir le poids', sub: 'TDEE exact' },
+  { id: 'bulk', label: 'BULK', emoji: '\u{1F4AA}', desc: 'Prendre du muscle', sub: '+200 a +400 kcal' },
+] as const
 
 const DIET_OPTIONS = [
-  { id: 'omnivore', label: 'Omnivore', emoji: '🥩' },
-  { id: 'vegetarian', label: 'Vegetarien', emoji: '🥗' },
-  { id: 'vegan', label: 'Vegan', emoji: '🌱' },
+  { id: 'omnivore', label: 'Omnivore', desc: 'Tout' },
+  { id: 'vegetarian', label: 'Vegetarien', desc: 'Sans viande' },
+  { id: 'vegan', label: 'Vegan', desc: 'Sans produits animaux' },
+  { id: 'gluten_free', label: 'Sans gluten', desc: '' },
+  { id: 'lactose_free', label: 'Sans lactose', desc: '' },
+  { id: 'keto', label: 'Keto / Low-carb', desc: 'Glucides < 50g/jour' },
+  { id: 'paleo', label: 'Paleo', desc: '' },
+  { id: 'mediterranean', label: 'Mediterraneen', desc: '' },
+  { id: 'halal', label: 'Halal', desc: '' },
+  { id: 'kosher', label: 'Kosher', desc: '' },
 ] as const
 
 const ALLERGY_OPTIONS = [
-  { id: 'gluten', label: 'Gluten', emoji: '🌾' },
-  { id: 'lactose', label: 'Lactose', emoji: '🥛' },
-  { id: 'nuts', label: 'Fruits a coque', emoji: '🥜' },
-  { id: 'eggs', label: 'Oeufs', emoji: '🥚' },
-  { id: 'soy', label: 'Soja', emoji: '🫘' },
-  { id: 'shellfish', label: 'Crustaces', emoji: '🦐' },
+  { id: 'gluten', label: 'Gluten' },
+  { id: 'lactose', label: 'Lactose' },
+  { id: 'eggs', label: 'Oeufs' },
+  { id: 'tree_nuts', label: 'Fruits a coque' },
+  { id: 'peanuts', label: 'Arachides' },
+  { id: 'soy', label: 'Soja' },
+  { id: 'fish', label: 'Poisson' },
+  { id: 'shellfish', label: 'Crustaces' },
+  { id: 'sesame', label: 'Sesame' },
 ] as const
 
-const MEAL_TABS = [
-  { id: 'petit_dejeuner', label: 'Matin', emoji: '🌅' },
-  { id: 'dejeuner', label: 'Midi', emoji: '☀️' },
-  { id: 'collation', label: 'Collation', emoji: '🍎' },
-  { id: 'diner', label: 'Diner', emoji: '🌙' },
-]
+type MacroMode = 'auto' | 'manual' | 'ratio'
+type ObjectiveType = 'cut' | 'maintain' | 'bulk'
 
-const CATS = [
-  { key: 'proteines', label: 'Proteines', icon: '🥩', patterns: ['poulet', 'dinde', 'boeuf', 'bœuf', 'veau', 'porc', 'saumon', 'thon', 'cabillaud', 'crevette', 'oeuf', 'œuf', 'steak', 'filet', 'escalope', 'jambon', 'bacon', 'sardine', 'truite', 'canard', 'agneau', 'poisson', 'viande', 'seitan', 'tofu', 'tempeh'] },
-  { key: 'laitiers', label: 'Produits laitiers', icon: '🥛', patterns: ['yaourt', 'fromage', 'skyr', 'cottage', 'mozzarella', 'parmesan', 'lait', 'crème', 'ricotta', 'feta'] },
-  { key: 'feculents', label: 'Feculents', icon: '🍚', patterns: ['riz', 'pâtes', 'quinoa', 'patate', 'pomme de terre', 'pain', 'avoine', 'flocon', 'semoule', 'blé', 'sarrasin', 'lentille', 'pois chiche', 'haricot', 'maïs', 'galette', 'wrap', 'toast', 'muesli', 'céréale', 'granola'] },
-  { key: 'legumes', label: 'Legumes', icon: '🥦', patterns: ['brocoli', 'épinard', 'courgette', 'tomate', 'concombre', 'salade', 'carotte', 'poivron', 'aubergine', 'chou', 'haricot vert', 'asperge', 'champignon', 'avocat', 'légume', 'betterave'] },
-  { key: 'fruits', label: 'Fruits', icon: '🍎', patterns: ['banane', 'pomme', 'fraise', 'myrtille', 'orange', 'kiwi', 'mangue', 'ananas', 'poire', 'raisin', 'datte', 'figue', 'compote'] },
-  { key: 'oleagineux', label: 'Oleagineux', icon: '🥜', patterns: ['amande', 'noix', 'cacahuète', 'noisette', 'cajou', 'pistache', 'beurre de', 'graines', 'chia', 'lin'] },
-  { key: 'supplements', label: 'Supplements', icon: '💪', patterns: ['whey', 'protéine en', 'caséine', 'barre', 'mass'] },
-]
+// ─── Helpers ───
 
-function categorize(name: string) {
-  const n = name.toLowerCase()
-  for (const cat of CATS) { if (cat.patterns.some(p => n.includes(p))) return cat.key }
-  return 'autres'
+function normalizeObjective(obj: string | undefined): ObjectiveType {
+  if (!obj) return 'maintain'
+  if (['cut', 'seche', 'perte_poids', 'weight_loss'].includes(obj)) return 'cut'
+  if (['bulk', 'prise_masse', 'mass'].includes(obj)) return 'bulk'
+  return 'maintain'
 }
+
+function clamp(v: number, min: number, max: number) { return Math.max(min, Math.min(max, v)) }
+
+function fmtNum(n: number) { return n.toLocaleString('fr-CH') }
+
+// ─── Component ───
 
 interface NutritionPreferencesProps {
   profile: any
@@ -49,278 +62,591 @@ interface NutritionPreferencesProps {
 }
 
 export default function NutritionPreferences({ profile, supabase, userId, onSaved }: NutritionPreferencesProps) {
+  // ─── Body Data ───
+  const [weight, setWeight] = useState<number>(profile?.current_weight || 0)
+  const [targetWeight, setTargetWeight] = useState<number>(profile?.target_weight || 0)
+  const [height, setHeight] = useState<number>(profile?.height || 0)
+  const [gender, setGender] = useState<string>(profile?.gender || 'male')
+
+  // ─── Metabolisme ───
+  const [activityLevel, setActivityLevel] = useState<string>(profile?.activity_level || 'moderate')
+  const [objective, setObjective] = useState<ObjectiveType>(normalizeObjective(profile?.objective))
+  const [adjustment, setAdjustment] = useState<number>(() => {
+    const obj = normalizeObjective(profile?.objective)
+    if (obj === 'cut') return -400
+    if (obj === 'bulk') return 300
+    return 0
+  })
+
+  // ─── Macros ───
+  const [macroMode, setMacroMode] = useState<MacroMode>('auto')
+  const [manualProtein, setManualProtein] = useState<number>(profile?.protein_goal || 150)
+  const [manualCarbs, setManualCarbs] = useState<number>(profile?.carbs_goal || 200)
+  const [manualFat, setManualFat] = useState<number>(profile?.fat_goal || 60)
+  const [ratioProtein, setRatioProtein] = useState(30)
+  const [ratioCarbs, setRatioCarbs] = useState(45)
+  const [ratioFat, setRatioFat] = useState(25)
+
+  // ─── Diet ───
   const [dietaryType, setDietaryType] = useState<string>(profile?.dietary_type || 'omnivore')
   const [allergies, setAllergies] = useState<string[]>(profile?.allergies || [])
-  const [likedFoods, setLikedFoods] = useState<string[]>(() => {
-    const lf = profile?.liked_foods
-    return Array.isArray(lf) ? lf : []
-  })
-  const [mealPrefs, setMealPrefs] = useState<Record<string, string[]>>(() => {
-    const mp = profile?.meal_preferences
-    if (mp && typeof mp === 'object' && !Array.isArray(mp)) return mp
-    return { petit_dejeuner: [], dejeuner: [], collation: [], diner: [] }
-  })
-  const [activityLevel, setActivityLevel] = useState<string>(profile?.activity_level || 'moderate')
-  const [foods, setFoods] = useState<any[]>([])
-  const [foodMap, setFoodMap] = useState<Record<string, any>>({})
-  const [loadingFoods, setLoadingFoods] = useState(true)
+  const [dislikedFoods, setDislikedFoods] = useState<string[]>(profile?.disliked_foods || [])
+  const [dislikedInput, setDislikedInput] = useState('')
+
+  // ─── UI State ───
   const [saving, setSaving] = useState(false)
-  const [toast, setToast] = useState(false)
-  const [searchQ, setSearchQ] = useState('')
-  const [activeMeal, setActiveMeal] = useState('petit_dejeuner')
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [toastMsg, setToastMsg] = useState('')
+  const [showRegenCard, setShowRegenCard] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
-  useEffect(() => {
-    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').order('name').limit(200).then(({ data }: any) => {
-      const mapped = (data || []).map((f: any) => ({
-        id: f.id, name: f.name || '',
-        kcal: Math.round(f.energy_kcal ?? 0),
-        p: Math.round((f.proteins ?? 0) * 10) / 10,
-        g: Math.round((f.carbohydrates ?? 0) * 10) / 10,
-        l: Math.round((f.fat ?? 0) * 10) / 10,
-        cat: categorize(f.name || ''),
-      }))
-      setFoods(mapped)
-      const map: Record<string, any> = {}
-      mapped.forEach((f: any) => { map[f.id] = f })
-      setFoodMap(map)
-      setLoadingFoods(false)
-    })
-  }, [])
+  // ─── Age Calculation ───
+  const age = useMemo(() => {
+    const bd = profile?.birth_date
+    if (!bd) return 0
+    return Math.floor((Date.now() - new Date(bd).getTime()) / 31557600000)
+  }, [profile?.birth_date])
 
-  const tdeeData = useMemo(() => {
-    const w = profile?.current_weight
-    const h = profile?.height
-    const gender = profile?.gender || 'male'
-    const birthDate = profile?.birth_date
-    if (!w || !h || !birthDate) return null
-    const age = Math.floor((Date.now() - new Date(birthDate).getTime()) / 31557600000)
-    if (age <= 0) return null
-    const bmr = calcMifflinStJeor(w, h, age, gender)
-    const mult = ACTIVITY_LEVELS.find(l => l.id === activityLevel)?.mult || 1.55
-    const tdee = Math.round(bmr * mult)
-    const objective = profile?.objective || 'maintenance'
-    let adjustedKcal = tdee
-    if (objective === 'seche' || objective === 'perte_poids' || objective === 'weight_loss') adjustedKcal = tdee - 300
-    else if (objective === 'prise_masse' || objective === 'mass') adjustedKcal = tdee + 300
-    const proteinG = Math.round(2 * w)
-    const fatG = Math.round((adjustedKcal * 0.25) / 9)
-    const carbsG = Math.round((adjustedKcal - proteinG * 4 - fatG * 9) / 4)
-    return { bmr: Math.round(bmr), tdee, adjustedKcal, proteinG, carbsG, fatG, age }
-  }, [profile?.current_weight, profile?.height, profile?.birth_date, profile?.gender, profile?.objective, activityLevel])
+  // ─── BMR & TDEE ───
+  const bmr = useMemo(() => {
+    if (!weight || !height || !age) return 0
+    return Math.round(calcMifflinStJeor(weight, height, age, gender))
+  }, [weight, height, age, gender])
 
-  function toggleFood(id: string) {
-    setMealPrefs(prev => {
-      const meal = prev[activeMeal] || []
-      const updated = meal.includes(id) ? meal.filter(f => f !== id) : [...meal, id]
-      const next = { ...prev, [activeMeal]: updated }
-      const allIds = [...new Set(Object.values(next).flat())]
-      setLikedFoods(allIds)
-      clearTimeout(saveTimer.current)
-      saveTimer.current = setTimeout(() => {
-        supabase.from('profiles').update({ liked_foods: allIds, meal_preferences: next }).eq('id', userId)
-        setToast(true)
-        setTimeout(() => setToast(false), 1500)
-        onSaved()
-      }, 800)
-      return next
-    })
+  const actMult = ACTIVITY_LEVELS.find(l => l.id === activityLevel)?.mult || 1.55
+  const tdee = Math.round(bmr * actMult)
+
+  // ─── Objective Calories ───
+  const objectiveKcal = useMemo(() => {
+    if (!tdee) return 0
+    if (objective === 'maintain') return tdee
+    return tdee + adjustment
+  }, [tdee, objective, adjustment])
+
+  // ─── Auto Macros ───
+  const autoMacros = useMemo(() => {
+    if (!objectiveKcal || !weight) return { protein: 0, carbs: 0, fat: 0 }
+    let protMultiplier = 2.0
+    let fatPct = 0.30
+    if (objective === 'cut') { protMultiplier = 2.4; fatPct = 0.25 }
+    else if (objective === 'bulk') { protMultiplier = 2.2; fatPct = 0.25 }
+    const protein = Math.round(protMultiplier * weight)
+    const fat = Math.round((objectiveKcal * fatPct) / 9)
+    const carbs = Math.round((objectiveKcal - protein * 4 - fat * 9) / 4)
+    return { protein, carbs: Math.max(carbs, 0), fat }
+  }, [objectiveKcal, weight, objective])
+
+  // ─── Ratio Macros ───
+  const ratioMacros = useMemo(() => {
+    const protein = Math.round((objectiveKcal * ratioProtein / 100) / 4)
+    const carbs = Math.round((objectiveKcal * ratioCarbs / 100) / 4)
+    const fat = Math.round((objectiveKcal * ratioFat / 100) / 9)
+    return { protein, carbs, fat }
+  }, [objectiveKcal, ratioProtein, ratioCarbs, ratioFat])
+
+  // ─── Final Macros (based on mode) ───
+  const finalMacros = macroMode === 'auto' ? autoMacros : macroMode === 'ratio' ? ratioMacros : { protein: manualProtein, carbs: manualCarbs, fat: manualFat }
+  const manualTotalKcal = finalMacros.protein * 4 + finalMacros.carbs * 4 + finalMacros.fat * 9
+  const kcalDiff = Math.abs(manualTotalKcal - objectiveKcal)
+
+  // ─── Weekly estimate ───
+  const weeklyChange = useMemo(() => {
+    if (objective === 'maintain') return null
+    const dailyDiff = objective === 'cut' ? adjustment : adjustment
+    const weeklyKg = Math.round(Math.abs(dailyDiff) * 7 / 7700 * 10) / 10
+    return weeklyKg
+  }, [objective, adjustment])
+
+  // ─── Handlers ───
+  function handleObjectiveChange(obj: ObjectiveType) {
+    setObjective(obj)
+    if (obj === 'cut') setAdjustment(-400)
+    else if (obj === 'bulk') setAdjustment(300)
+    else setAdjustment(0)
   }
 
+  function addDislikedFood(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return
+    const val = dislikedInput.trim()
+    if (!val || dislikedFoods.includes(val)) return
+    setDislikedFoods(prev => [...prev, val])
+    setDislikedInput('')
+  }
+
+  function handleRatioChange(which: 'protein' | 'carbs' | 'fat', val: number) {
+    if (which === 'protein') {
+      const remaining = 100 - val
+      const carbsNew = Math.round(remaining * ratioCarbs / (ratioCarbs + ratioFat) || remaining / 2)
+      setRatioProtein(val)
+      setRatioCarbs(carbsNew)
+      setRatioFat(remaining - carbsNew)
+    } else if (which === 'carbs') {
+      const remaining = 100 - val
+      const protNew = Math.round(remaining * ratioProtein / (ratioProtein + ratioFat) || remaining / 2)
+      setRatioCarbs(val)
+      setRatioProtein(protNew)
+      setRatioFat(remaining - protNew)
+    } else {
+      const remaining = 100 - val
+      const protNew = Math.round(remaining * ratioProtein / (ratioProtein + ratioCarbs) || remaining / 2)
+      setRatioFat(val)
+      setRatioProtein(protNew)
+      setRatioCarbs(remaining - protNew)
+    }
+  }
+
+  // ─── Save ───
   async function save() {
     setSaving(true)
-    const update: Record<string, any> = { dietary_type: dietaryType, allergies, liked_foods: likedFoods, meal_preferences: mealPrefs, activity_level: activityLevel }
-    if (tdeeData) {
-      update.tdee = tdeeData.adjustedKcal
-      update.calorie_goal = tdeeData.adjustedKcal
-      update.protein_goal = tdeeData.proteinG
-      update.carbs_goal = tdeeData.carbsG
-      update.fat_goal = tdeeData.fatG
-    }
-    await supabase.from('profiles').update(update).eq('id', userId)
+    const objMap: Record<ObjectiveType, string> = { cut: 'weight_loss', maintain: 'maintenance', bulk: 'mass' }
+    await supabase.from('profiles').update({
+      calorie_goal: objectiveKcal,
+      protein_goal: finalMacros.protein,
+      carbs_goal: finalMacros.carbs,
+      fat_goal: finalMacros.fat,
+      tdee,
+      objective: objMap[objective],
+      activity_level: activityLevel,
+      dietary_type: dietaryType,
+      allergies,
+      disliked_foods: dislikedFoods,
+      current_weight: weight,
+      target_weight: targetWeight,
+      height,
+      gender,
+    }).eq('id', userId)
     setSaving(false)
-    setToast(true)
+    setToastMsg('Preferences sauvegardees !')
+    setTimeout(() => setToastMsg(''), 2500)
     onSaved()
-    setTimeout(() => setToast(false), 2500)
+    setShowRegenCard(true)
   }
 
-  const currentMealIds = mealPrefs[activeMeal] || []
-  const filtered = searchQ.length >= 1 ? foods.filter(f => f.name.toLowerCase().includes(searchQ.toLowerCase())) : foods
-  const grouped = CATS.map(cat => ({ ...cat, foods: filtered.filter(f => f.cat === cat.key) })).filter(g => g.foods.length > 0)
-  const autres = filtered.filter(f => f.cat === 'autres')
-  if (autres.length > 0) grouped.push({ key: 'autres', label: 'Autres', icon: '🍽️', patterns: [], foods: autres })
+  // ─── Regenerate Meal Plan ───
+  async function regeneratePlan() {
+    setRegenerating(true)
+    try {
+      const res = await fetch('/api/generate-meal-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          calorie_goal: objectiveKcal,
+          protein_goal: finalMacros.protein,
+          carbs_goal: finalMacros.carbs,
+          fat_goal: finalMacros.fat,
+          dietary_type: dietaryType,
+          allergies,
+        }),
+      })
+      const reader = res.body?.getReader()
+      if (!reader) throw new Error('No reader')
+      const decoder = new TextDecoder()
+      let planData: any = null
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const text = decoder.decode(value)
+        for (const line of text.split('\n')) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const parsed = JSON.parse(line.slice(6))
+            if (parsed.type === 'done') planData = parsed.plan
+          } catch {}
+        }
+      }
+      if (planData) {
+        await supabase.from('meal_plans').insert({
+          user_id: userId,
+          plan_data: planData,
+          is_active: true,
+          source: 'ai',
+        })
+        // Deactivate old plans
+        await supabase.from('meal_plans').update({ is_active: false }).eq('user_id', userId).neq('is_active', false)
+        setToastMsg('Plan regenere !')
+        setTimeout(() => setToastMsg(''), 2500)
+        onSaved()
+      }
+    } catch {
+      setToastMsg('Erreur lors de la generation')
+      setTimeout(() => setToastMsg(''), 3000)
+    }
+    setRegenerating(false)
+    setShowRegenCard(false)
+  }
 
-  const sectionTitle: React.CSSProperties = { fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }
+  // ─── Styles ───
+  const sectionTitle: React.CSSProperties = { fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 14 }
+  const cardStyle: React.CSSProperties = { background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16, marginBottom: 16 }
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontSize: '0.88rem', fontFamily: FONT_BODY, outline: 'none' }
+  const sliderThumbGold = `
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: ${GOLD}; cursor: pointer; border: 2px solid #080808; }
+    input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: ${GOLD}; cursor: pointer; border: 2px solid #080808; }
+    input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: ${BORDER}; outline: none; }
+    input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; }
+  `
+
+  const canCalc = weight > 0 && height > 0 && age > 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Regime */}
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-        <div style={sectionTitle}>Mon regime</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {DIET_OPTIONS.map(opt => {
-            const active = dietaryType === opt.id
-            return (
-              <button key={opt.id} onClick={() => setDietaryType(opt.id)} style={{ flex: 1, padding: '12px 8px', borderRadius: 0, cursor: 'pointer', background: active ? GOLD_DIM : BG_BASE, border: `2px solid ${active ? GOLD : BORDER}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 150ms' }}>
-                <span style={{ fontSize: '1.4rem' }}>{opt.emoji}</span>
-                <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{opt.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <style>{sliderThumbGold}</style>
 
-      {/* Allergies */}
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-        <div style={sectionTitle}>Allergies & intolerances</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-          {ALLERGY_OPTIONS.map(opt => {
-            const active = allergies.includes(opt.id)
-            return (
-              <button key={opt.id} onClick={() => setAllergies(prev => prev.includes(opt.id) ? prev.filter(a => a !== opt.id) : [...prev, opt.id])} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 0, cursor: 'pointer', background: active ? `${RED}12` : BG_BASE, border: `1.5px solid ${active ? RED : BORDER}`, transition: 'all 150ms' }}>
-                <span style={{ fontSize: '1.1rem' }}>{opt.emoji}</span>
-                <span style={{ fontSize: '0.8rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? RED : TEXT_PRIMARY, flex: 1, textAlign: 'left' }}>{opt.label}</span>
-                {active && <Check size={14} color={RED} strokeWidth={3} />}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      {/* ═══ SECTION 1 — METABOLISME & OBJECTIF ═══ */}
+      <div style={cardStyle}>
+        <div style={sectionTitle}>Metabolisme & Objectif</div>
 
-      {/* Metabolisme */}
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-        <div style={sectionTitle}>Mon metabolisme</div>
-        {profile && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
-            {[{ label: 'Age', value: tdeeData ? `${tdeeData.age} ans` : '---' }, { label: 'Poids', value: profile.current_weight ? `${profile.current_weight} kg` : '---' }, { label: 'Taille', value: profile.height ? `${profile.height} cm` : '---' }, { label: 'Objectif', value: profile.objective || '---' }].map(({ label, value }) => (
-              <div key={label} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 2, padding: '8px 10px' }}>
-                <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: TEXT_MUTED, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '2px' }}>{label}</div>
-                <div style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_PRIMARY, fontWeight: 400, marginTop: 2 }}>{value}</div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div style={{ fontSize: '0.65rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 8 }}>Niveau d&apos;activite</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
-          {ACTIVITY_LEVELS.map(lvl => {
-            const active = activityLevel === lvl.id
-            return (
-              <button key={lvl.id} onClick={() => setActivityLevel(lvl.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 0, cursor: 'pointer', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, transition: 'all 150ms' }}>
-                <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontSize: '0.8rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? GOLD : TEXT_PRIMARY }}>{lvl.label}</div>
-                  <div style={{ fontSize: '0.65rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{lvl.sub}</div>
-                </div>
-                <span style={{ fontSize: '0.7rem', fontFamily: FONT_DISPLAY, fontWeight: 700, color: active ? GOLD : TEXT_MUTED }}>x{lvl.mult}</span>
-                {active && <Check size={14} color={GOLD} strokeWidth={3} />}
-              </button>
-            )
-          })}
-        </div>
-        {tdeeData ? (
-          <div style={{ background: GOLD_DIM, border: `1.5px solid ${GOLD_RULE}`, borderRadius: 2, padding: 16 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              {[{ icon: Flame, label: 'Calories/jour', value: `${tdeeData.adjustedKcal}`, unit: 'kcal', color: GOLD }, { icon: Beef, label: 'Proteines', value: `${tdeeData.proteinG}`, unit: 'g', color: GOLD }, { icon: Wheat, label: 'Glucides', value: `${tdeeData.carbsG}`, unit: 'g', color: GOLD }, { icon: Droplets, label: 'Lipides', value: `${tdeeData.fatG}`, unit: 'g', color: GOLD }].map(({ icon: Icon, label, value, unit, color }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 0, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={16} color={color} strokeWidth={2.5} /></div>
-                  <div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>{value}<span style={{ fontSize: '0.7rem', color: TEXT_MUTED, marginLeft: 2 }}>{unit}</span></div>
-                    <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: TEXT_MUTED, letterSpacing: '1px' }}>{label}</div>
-                  </div>
-                </div>
-              ))}
+        {canCalc ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+            <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, padding: 14 }}>
+              <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 4 }}>Metabolisme de base (BMR)</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.5rem', color: TEXT_PRIMARY, lineHeight: 1 }}>{fmtNum(bmr)} <span style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>kcal/jour</span></div>
+            </div>
+            <div style={{ background: GOLD_DIM, border: `1.5px solid ${GOLD_RULE}`, padding: 14 }}>
+              <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: GOLD, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 4 }}>Depense totale (TDEE)</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.5rem', color: TEXT_PRIMARY, lineHeight: 1 }}>{fmtNum(tdee)} <span style={{ fontSize: '0.7rem', color: TEXT_MUTED }}>kcal/jour</span></div>
+              <div style={{ fontSize: '0.62rem', fontFamily: FONT_BODY, color: TEXT_MUTED, marginTop: 4 }}>Base sur : {ACTIVITY_LEVELS.find(l => l.id === activityLevel)?.label}</div>
             </div>
           </div>
         ) : (
-          <p style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center', margin: 0 }}>Complete ton profil pour calculer ton metabolisme.</p>
+          <p style={{ fontSize: '0.82rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center', marginBottom: 16 }}>Remplis tes donnees corporelles pour calculer ton metabolisme.</p>
         )}
-      </div>
 
-      {/* Aliments par repas */}
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-        <div style={sectionTitle}>Mes aliments par repas ({likedFoods.length} selectionnes)</div>
-
-        {/* Meal tabs */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-          {MEAL_TABS.map(t => {
-            const active = activeMeal === t.id
-            const count = (mealPrefs[t.id] || []).length
+        {/* Objective Cards */}
+        <div style={{ fontSize: '0.65rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 10 }}>Objectif</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
+          {OBJECTIVES.map(obj => {
+            const active = objective === obj.id
             return (
-              <button key={t.id} onClick={() => setActiveMeal(t.id)} style={{ flex: 1, padding: '8px 4px', borderRadius: 0, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: active ? GOLD : BG_BASE, transition: 'all 150ms' }}>
-                <span style={{ fontSize: '1rem' }}>{t.emoji}</span>
-                <span style={{ fontFamily: FONT_ALT, fontSize: '0.62rem', fontWeight: 800, color: active ? '#050505' : TEXT_MUTED, letterSpacing: '1px' }}>{t.label}</span>
-                {count > 0 && <span style={{ fontSize: '0.52rem', fontFamily: FONT_DISPLAY, color: active ? '#050505' : GOLD, fontWeight: 700 }}>{count}</span>}
+              <button key={obj.id} onClick={() => handleObjectiveChange(obj.id)} style={{ padding: '14px 8px', background: active ? GOLD_DIM : BG_BASE, border: `2px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 150ms' }}>
+                <span style={{ fontSize: '1.6rem' }}>{obj.emoji}</span>
+                <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{obj.label}</span>
+                <span style={{ fontSize: '0.65rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center', lineHeight: 1.2 }}>{obj.desc}</span>
+                <span style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: active ? GOLD : TEXT_DIM, fontWeight: 700, letterSpacing: '0.5px' }}>{obj.sub}</span>
               </button>
             )
           })}
         </div>
 
-        {/* Current meal's foods */}
-        {(mealPrefs[activeMeal] || []).length > 0 && (
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {(mealPrefs[activeMeal] || []).map((id: string) => {
-                const food = foodMap[id]
-                if (!food) return <div key={String(id)} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 2, padding: '8px', fontSize: '0.7rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>{String(id).slice(0, 8)}...</div>
-                return <FoodCard key={id} food={food} active onClick={() => toggleFood(id)} />
-              })}
+        {/* Adjustment Slider */}
+        {objective === 'cut' && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: '0.68rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 700, letterSpacing: '1px' }}>DEFICIT</span>
+              <span style={{ fontSize: '0.8rem', fontFamily: FONT_DISPLAY, color: GOLD }}>{adjustment} kcal</span>
             </div>
+            <input type="range" min={-700} max={-200} step={50} value={adjustment} onChange={e => setAdjustment(Number(e.target.value))} style={{ width: '100%' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+              <span style={{ fontSize: '0.58rem', fontFamily: FONT_BODY, color: TEXT_DIM }}>Seche douce (-200)</span>
+              <span style={{ fontSize: '0.58rem', fontFamily: FONT_BODY, color: TEXT_DIM }}>Agressive (-700)</span>
+            </div>
+            {adjustment < -500 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '8px 10px', background: `${RED}12`, border: `1px solid ${RED}30` }}>
+                <AlertTriangle size={14} color={RED} />
+                <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: RED }}>Risque de perte musculaire</span>
+              </div>
+            )}
           </div>
         )}
-        {(mealPrefs[activeMeal] || []).length === 0 && !loadingFoods && (
-          <p style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED, textAlign: 'center', padding: '8px 0', marginBottom: 8, fontStyle: 'italic' }}>Aucun aliment pour ce repas. Selectionne ci-dessous.</p>
+
+        {objective === 'bulk' && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: '0.68rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 700, letterSpacing: '1px' }}>SURPLUS</span>
+              <span style={{ fontSize: '0.8rem', fontFamily: FONT_DISPLAY, color: GOLD }}>+{adjustment} kcal</span>
+            </div>
+            <input type="range" min={150} max={500} step={50} value={adjustment} onChange={e => setAdjustment(Number(e.target.value))} style={{ width: '100%' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+              <span style={{ fontSize: '0.58rem', fontFamily: FONT_BODY, color: TEXT_DIM }}>Lean bulk (+150)</span>
+              <span style={{ fontSize: '0.58rem', fontFamily: FONT_BODY, color: TEXT_DIM }}>Agressif (+500)</span>
+            </div>
+            {adjustment > 400 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '8px 10px', background: `${RED}12`, border: `1px solid ${RED}30` }}>
+                <AlertTriangle size={14} color={RED} />
+                <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: RED }}>Prise de gras accrue</span>
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Search + all foods */}
-        <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder={`Filtrer ${foods.length} aliments fitness...`}
-          style={{ width: '100%', padding: '10px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontSize: '0.82rem', fontFamily: FONT_BODY, outline: 'none', marginBottom: 12 }} />
-
-        {loadingFoods ? (
-          <p style={{ fontSize: '0.82rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center', padding: '20px 0' }}>Chargement...</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {grouped.map(cat => (
-              <div key={cat.key}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <span style={{ fontSize: '0.85rem' }}>{cat.icon}</span>
-                  <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '2px' }}>{cat.label} ({cat.foods.length})</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                  {cat.foods.map((food: any) => <FoodCard key={food.id} food={food} active={currentMealIds.includes(food.id)} onClick={() => toggleFood(food.id)} />)}
-                </div>
+        {/* Result */}
+        {canCalc && objectiveKcal > 0 && (
+          <div style={{ background: GOLD_DIM, border: `1.5px solid ${GOLD_RULE}`, padding: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Zap size={16} color={GOLD} />
+              <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 800, color: GOLD, letterSpacing: '1px', textTransform: 'uppercase' }}>Objectif calorique</span>
+            </div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.8rem', color: TEXT_PRIMARY, lineHeight: 1 }}>{fmtNum(objectiveKcal)} <span style={{ fontSize: '0.8rem', color: TEXT_MUTED }}>kcal/jour</span></div>
+            {objective !== 'maintain' && weeklyChange !== null && (
+              <div style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_MUTED, marginTop: 6 }}>
+                {objective === 'cut' ? `Deficit : ${adjustment} kcal/jour` : `Surplus : +${adjustment} kcal/jour`} &middot; {objective === 'cut' ? 'Perte' : 'Prise'} estimee : ~{weeklyChange} kg/semaine
               </div>
-            ))}
-            {searchQ.length >= 1 && filtered.length === 0 && (
-              <p style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center' }}>Aucun resultat</p>
             )}
           </div>
         )}
       </div>
 
-      {/* Save */}
-      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '14px', borderRadius: 0, border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: '#050505', letterSpacing: '1px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
-        {saving ? 'Enregistrement...' : 'Enregistrer mes preferences'}
+      {/* ═══ SECTION 2 — REPARTITION DES MACROS ═══ */}
+      <div style={cardStyle}>
+        <div style={sectionTitle}>Repartition des macros</div>
+
+        {/* Mode Tabs */}
+        <div style={{ display: 'flex', gap: 0, marginBottom: 16, border: `1px solid ${BORDER}` }}>
+          {([['auto', 'AUTO'], ['manual', 'MANUEL'], ['ratio', 'PAR RATIO']] as const).map(([id, label]) => {
+            const active = macroMode === id
+            return (
+              <button key={id} onClick={() => setMacroMode(id as MacroMode)} style={{ flex: 1, padding: '10px 8px', background: active ? GOLD : BG_BASE, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '1px', color: active ? '#050505' : TEXT_MUTED, transition: 'all 150ms' }}>
+                {label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* AUTO Mode */}
+        {macroMode === 'auto' && (
+          <div>
+            <p style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.4 }}>
+              Calcul automatique selon ton objectif ({objective === 'cut' ? 'Seche' : objective === 'bulk' ? 'Bulk' : 'Maintien'}).
+            </p>
+            <MacroDisplay protein={autoMacros.protein} carbs={autoMacros.carbs} fat={autoMacros.fat} targetKcal={objectiveKcal} />
+          </div>
+        )}
+
+        {/* MANUAL Mode */}
+        {macroMode === 'manual' && (
+          <div>
+            <MacroSlider label="Proteines" value={manualProtein} min={80} max={300} unit="g" color={GOLD} onChange={setManualProtein} />
+            <MacroSlider label="Glucides" value={manualCarbs} min={50} max={500} unit="g" color={BLUE} onChange={setManualCarbs} />
+            <MacroSlider label="Lipides" value={manualFat} min={30} max={150} unit="g" color="#F97316" onChange={setManualFat} />
+            <div style={{ marginTop: 12 }}>
+              <MacroDisplay protein={manualProtein} carbs={manualCarbs} fat={manualFat} targetKcal={objectiveKcal} />
+            </div>
+            {macroMode === 'manual' && kcalDiff > 50 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '8px 10px', background: `rgba(249,115,22,0.1)`, border: `1px solid rgba(249,115,22,0.3)` }}>
+                <AlertTriangle size={14} color="#F97316" />
+                <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: '#F97316' }}>
+                  Total macros : {fmtNum(manualTotalKcal)} kcal ({manualTotalKcal > objectiveKcal ? '+' : ''}{manualTotalKcal - objectiveKcal} vs objectif)
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* RATIO Mode */}
+        {macroMode === 'ratio' && (
+          <div>
+            <MacroSlider label="Proteines" value={ratioProtein} min={15} max={45} unit="%" color={GOLD} onChange={v => handleRatioChange('protein', v)} />
+            <MacroSlider label="Glucides" value={ratioCarbs} min={20} max={60} unit="%" color={BLUE} onChange={v => handleRatioChange('carbs', v)} />
+            <MacroSlider label="Lipides" value={ratioFat} min={15} max={40} unit="%" color="#F97316" onChange={v => handleRatioChange('fat', v)} />
+            <div style={{ textAlign: 'center', fontSize: '0.68rem', fontFamily: FONT_ALT, fontWeight: 800, letterSpacing: '1px', color: ratioProtein + ratioCarbs + ratioFat === 100 ? GREEN : RED, marginTop: 4, marginBottom: 12 }}>
+              TOTAL : {ratioProtein + ratioCarbs + ratioFat}%
+            </div>
+            <MacroDisplay protein={ratioMacros.protein} carbs={ratioMacros.carbs} fat={ratioMacros.fat} targetKcal={objectiveKcal} />
+          </div>
+        )}
+      </div>
+
+      {/* ═══ SECTION 3 — REGIME ALIMENTAIRE ═══ */}
+      <div style={cardStyle}>
+        <div style={sectionTitle}>Mon regime</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {DIET_OPTIONS.map(opt => {
+            const active = dietaryType === opt.id
+            return (
+              <button key={opt.id} onClick={() => setDietaryType(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', transition: 'all 150ms' }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${active ? GOLD : TEXT_DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {active && <div style={{ width: 10, height: 10, borderRadius: '50%', background: GOLD }} />}
+                </div>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <span style={{ fontSize: '0.82rem', fontFamily: FONT_BODY, fontWeight: 500, color: active ? GOLD : TEXT_PRIMARY }}>{opt.label}</span>
+                  {opt.desc && <span style={{ fontSize: '0.68rem', fontFamily: FONT_BODY, color: TEXT_MUTED, marginLeft: 8 }}>{opt.desc}</span>}
+                </div>
+                {active && <Check size={14} color={GOLD} strokeWidth={3} />}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ═══ SECTION 4 — ALLERGIES & EXCLUSIONS ═══ */}
+      <div style={cardStyle}>
+        <div style={sectionTitle}>Allergies & aliments exclus</div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 16 }}>
+          {ALLERGY_OPTIONS.map(opt => {
+            const active = allergies.includes(opt.id)
+            return (
+              <button key={opt.id} onClick={() => setAllergies(prev => prev.includes(opt.id) ? prev.filter(a => a !== opt.id) : [...prev, opt.id])} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', background: active ? `${RED}15` : BG_BASE, border: `1.5px solid ${active ? RED : BORDER}`, borderRadius: 0, cursor: 'pointer', transition: 'all 150ms' }}>
+                <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? RED : TEXT_DIM}`, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? RED : 'transparent' }}>
+                  {active && <Check size={10} color="#fff" strokeWidth={3} />}
+                </div>
+                <span style={{ fontSize: '0.7rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? RED : TEXT_PRIMARY }}>{opt.label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div style={{ fontSize: '0.65rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8 }}>Aliments que tu n&apos;aimes pas</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+          {dislikedFoods.map(food => (
+            <span key={food} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: BG_CARD_2, border: `1px solid ${BORDER}`, fontSize: '0.75rem', fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>
+              {food}
+              <button onClick={() => setDislikedFoods(prev => prev.filter(f => f !== food))} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex' }}><X size={12} color={TEXT_MUTED} /></button>
+            </span>
+          ))}
+        </div>
+        <input
+          value={dislikedInput}
+          onChange={e => setDislikedInput(e.target.value)}
+          onKeyDown={addDislikedFood}
+          placeholder="Tape un aliment + Entree"
+          style={inputStyle}
+        />
+      </div>
+
+      {/* ═══ SECTION 5 — ACTIVITE PHYSIQUE ═══ */}
+      <div style={cardStyle}>
+        <div style={sectionTitle}>Niveau d&apos;activite</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {ACTIVITY_LEVELS.map(lvl => {
+            const active = activityLevel === lvl.id
+            return (
+              <button key={lvl.id} onClick={() => setActivityLevel(lvl.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', transition: 'all 150ms' }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${active ? GOLD : TEXT_DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {active && <div style={{ width: 10, height: 10, borderRadius: '50%', background: GOLD }} />}
+                </div>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontSize: '0.82rem', fontFamily: FONT_BODY, fontWeight: 500, color: active ? GOLD : TEXT_PRIMARY }}>{lvl.label}</div>
+                  <div style={{ fontSize: '0.68rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>{lvl.sub}</div>
+                </div>
+                <span style={{ fontSize: '0.72rem', fontFamily: FONT_DISPLAY, fontWeight: 700, color: active ? GOLD : TEXT_MUTED }}>x{lvl.mult}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ═══ SECTION 6 — DONNEES CORPORELLES ═══ */}
+      <div style={cardStyle}>
+        <div style={sectionTitle}>Mes donnees</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div>
+            <label style={{ fontSize: '0.62rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Poids actuel (kg)</label>
+            <input type="number" value={weight || ''} onChange={e => setWeight(Number(e.target.value))} style={inputStyle} />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.62rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Poids cible (kg)</label>
+            <input type="number" value={targetWeight || ''} onChange={e => setTargetWeight(Number(e.target.value))} style={inputStyle} />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.62rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Taille (cm)</label>
+            <input type="number" value={height || ''} onChange={e => setHeight(Number(e.target.value))} style={inputStyle} />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.62rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Age</label>
+            <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', color: TEXT_MUTED }}>{age > 0 ? `${age} ans` : '---'}</div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <label style={{ fontSize: '0.62rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Genre</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[{ id: 'male', label: 'Homme' }, { id: 'female', label: 'Femme' }].map(g => {
+              const active = gender === g.id
+              return (
+                <button key={g.id} onClick={() => setGender(g.id)} style={{ flex: 1, padding: '10px', background: active ? GOLD_DIM : BG_BASE, border: `2px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px', transition: 'all 150ms' }}>
+                  {g.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ SAVE BUTTON ═══ */}
+      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 0, border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)', marginBottom: 8 }}>
+        {saving ? 'Enregistrement...' : 'Sauvegarder & recalculer'}
       </button>
 
-      {toast && (
+      {/* ═══ REGEN CARD ═══ */}
+      {showRegenCard && (
+        <div style={{ background: BG_CARD, border: `1.5px solid ${GOLD_RULE}`, padding: 16, marginTop: 8 }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_PRIMARY, margin: '0 0 14px', lineHeight: 1.5 }}>
+            Ton objectif a change. Veux-tu regenerer ton plan alimentaire avec ces nouveaux parametres ?
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setShowRegenCard(false)} style={{ flex: 1, padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '1px' }}>
+              Non merci
+            </button>
+            <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: GOLD, border: 'none', borderRadius: 0, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: '#050505', letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
+              {regenerating ? 'Generation...' : 'Regenerer mon plan IA'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toastMsg && (
         <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: GREEN, color: '#050505', padding: '10px 24px', borderRadius: 0, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
-          Preferences sauvegardees !
+          {toastMsg}
         </div>
       )}
     </div>
   )
 }
 
-function FoodCard({ food, active, onClick }: { food: any; active: boolean; onClick: () => void }) {
+// ─── Macro Display Card ───
+function MacroDisplay({ protein, carbs, fat, targetKcal }: { protein: number; carbs: number; fat: number; targetKcal: number }) {
+  const total = protein * 4 + carbs * 4 + fat * 9
+  const pPct = total > 0 ? Math.round(protein * 4 / total * 100) : 0
+  const cPct = total > 0 ? Math.round(carbs * 4 / total * 100) : 0
+  const fPct = total > 0 ? Math.round(fat * 9 / total * 100) : 0
+
   return (
-    <button onClick={onClick} style={{ background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 2, padding: '8px 8px 6px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', position: 'relative' }}>
-      {active && <span style={{ position: 'absolute', top: 5, right: 6, color: GOLD, fontSize: '0.65rem', fontFamily: FONT_ALT, fontWeight: 800 }}>✓</span>}
-      <div style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY, lineHeight: 1.2, marginBottom: 3, paddingRight: active ? 14 : 0 }}>{food.name}</div>
-      <div style={{ display: 'flex', gap: 5, fontSize: '0.55rem', fontFamily: FONT_ALT, fontWeight: 700 }}>
-        <span style={{ color: GOLD }}>{food.kcal}</span>
-        <span style={{ color: TEXT_MUTED }}>P{food.p}</span>
-        <span style={{ color: TEXT_MUTED }}>G{food.g}</span>
-        <span style={{ color: TEXT_MUTED }}>L{food.l}</span>
+    <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, padding: 14 }}>
+      {/* Macro bar */}
+      <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: 14 }}>
+        <div style={{ width: `${pPct}%`, background: GOLD, transition: 'width 300ms' }} />
+        <div style={{ width: `${cPct}%`, background: BLUE, transition: 'width 300ms' }} />
+        <div style={{ width: `${fPct}%`, background: '#F97316', transition: 'width 300ms' }} />
       </div>
-    </button>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+        <MacroItem icon={Beef} label="Proteines" grams={protein} pct={pPct} color={GOLD} />
+        <MacroItem icon={Wheat} label="Glucides" grams={carbs} pct={cPct} color={BLUE} />
+        <MacroItem icon={Droplets} label="Lipides" grams={fat} pct={fPct} color="#F97316" />
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: 10, fontFamily: FONT_BODY, fontSize: '0.68rem', color: TEXT_MUTED }}>
+        Total : {fmtNum(total)} kcal
+        {targetKcal > 0 && Math.abs(total - targetKcal) <= 50 && <span style={{ color: GREEN, marginLeft: 6 }}>&#10003; aligne</span>}
+      </div>
+    </div>
+  )
+}
+
+function MacroItem({ icon: Icon, label, grams, pct, color }: { icon: any; label: string; grams: number; pct: number; color: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon size={14} color={color} strokeWidth={2.5} />
+      </div>
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.1rem', color: TEXT_PRIMARY, lineHeight: 1 }}>{grams}<span style={{ fontSize: '0.65rem', color: TEXT_MUTED }}>g</span></div>
+      <div style={{ fontSize: '0.58rem', fontFamily: FONT_ALT, color: TEXT_MUTED, letterSpacing: '1px' }}>{label}</div>
+      <div style={{ fontSize: '0.58rem', fontFamily: FONT_BODY, color, fontWeight: 600 }}>{pct}%</div>
+    </div>
+  )
+}
+
+// ─── Macro Slider ───
+function MacroSlider({ label, value, min, max, unit, color, onChange }: { label: string; value: number; min: number; max: number; unit: string; color: string; onChange: (v: number) => void }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: '0.72rem', fontFamily: FONT_ALT, color, fontWeight: 700, letterSpacing: '1px' }}>{label}</span>
+        <span style={{ fontSize: '0.82rem', fontFamily: FONT_DISPLAY, color: TEXT_PRIMARY }}>{value}{unit}</span>
+      </div>
+      <input type="range" min={min} max={max} step={1} value={value} onChange={e => onChange(Number(e.target.value))} style={{ width: '100%' }} />
+    </div>
   )
 }

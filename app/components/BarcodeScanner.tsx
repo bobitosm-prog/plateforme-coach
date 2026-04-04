@@ -127,7 +127,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
     }
 
     if (continuousMode) {
-      // In continuous mode: save to preferences, DON'T add to meal_logs
+      // In continuous mode: save to preferences, DON'T add to daily_food_logs
       // Increment scan count if already exists
       try {
         await supabase.rpc('increment_scan_count', { p_user_id: userId, p_barcode: product.barcode }).catch(() => {})
@@ -139,13 +139,13 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
       // Restart scanner
       startCamera()
     } else {
-      // Normal mode: add to meal_logs and close
-      await supabase.from('meal_logs').insert({
+      // Normal mode: add to daily_food_logs and close
+      await supabase.from('daily_food_logs').insert({
         user_id: userId, date: new Date().toISOString().split('T')[0],
         meal_type: mealType,
-        name: `${product.name}${product.brand ? ` (${product.brand})` : ''} ${quantity}g`,
-        calories: cal, proteins: prot, carbs: gluc, fats: lip,
-        quantity_g: quantity, source: 'barcode',
+        custom_name: `${product.name}${product.brand ? ` (${product.brand})` : ''} ${quantity}g`,
+        calories: cal, protein: prot, carbs: gluc, fat: lip,
+        quantity_g: quantity,
       })
       setSaving(false)
       onProductAdded()

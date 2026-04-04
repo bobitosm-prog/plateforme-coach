@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       { table: 'workout_sets', column: 'user_id' },
       { table: 'workout_sessions', column: 'user_id' },
       { table: 'weight_logs', column: 'user_id' },
-      { table: 'meal_logs', column: 'user_id' },
+      { table: 'daily_food_logs', column: 'user_id' },
       { table: 'meal_tracking', column: 'user_id' },
       { table: 'body_measurements', column: 'user_id' },
       { table: 'custom_foods', column: 'user_id' },

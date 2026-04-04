@@ -8,7 +8,7 @@ interface UseAnalyticsParams {
 
 export default function useAnalytics({ supabase }: UseAnalyticsParams) {
   const [personalRecords, setPersonalRecords] = useState<any[]>([])
-  const [weeklyCalories, setWeeklyCalories] = useState<{ date: string; calories: number; proteins: number; carbs: number; fats: number }[]>([])
+  const [weeklyCalories, setWeeklyCalories] = useState<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]>([])
   const [weeklyWater, setWeeklyWater] = useState<{ date: string; ml: number }[]>([])
   const [weeklyVolume, setWeeklyVolume] = useState<{ week: string; volume: number }[]>([])
   const [weightHistoryFull, setWeightHistoryFull] = useState<{ date: string; poids: number }[]>([])
@@ -22,7 +22,7 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
 
     const [prRes, calsRes, waterRes, weightsFullRes] = await Promise.all([
       supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50),
-      supabase.from('meal_logs').select('date, calories, proteins, carbs, fats').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
+      supabase.from('daily_food_logs').select('date, calories, protein, carbs, fat').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
       supabase.from('water_intake').select('date, amount_ml').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(30),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date', { ascending: true }).limit(100),
     ])
@@ -31,13 +31,13 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
     setWeightHistoryFull(weightsFullRes.data || [])
 
     // Aggregate calories by day
-    const calsByDay: Record<string, { calories: number; proteins: number; carbs: number; fats: number }> = {}
+    const calsByDay: Record<string, { calories: number; protein: number; carbs: number; fat: number }> = {}
     for (const m of (calsRes.data || [])) {
-      if (!calsByDay[m.date]) calsByDay[m.date] = { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+      if (!calsByDay[m.date]) calsByDay[m.date] = { calories: 0, protein: 0, carbs: 0, fat: 0 }
       calsByDay[m.date].calories += m.calories || 0
-      calsByDay[m.date].proteins += m.proteins || 0
+      calsByDay[m.date].protein += m.protein || 0
       calsByDay[m.date].carbs += m.carbs || 0
-      calsByDay[m.date].fats += m.fats || 0
+      calsByDay[m.date].fat += m.fat || 0
     }
     const calArr = Object.entries(calsByDay).map(([date, v]) => ({ date, ...v })).sort((a, b) => a.date.localeCompare(b.date))
     setWeeklyCalories(calArr)

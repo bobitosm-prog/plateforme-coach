@@ -50,7 +50,7 @@ interface ProgressTabProps {
   coachId: string | null
   // Analytics
   personalRecords: any[]
-  weeklyCalories: { date: string; calories: number; proteins: number; carbs: number; fats: number }[]
+  weeklyCalories: { date: string; calories: number; protein: number; carbs: number; fat: number }[]
   weeklyWater: { date: string; ml: number }[]
   weeklyVolume: { week: string; volume: number }[]
   weightHistoryFull: { date: string; poids: number }[]

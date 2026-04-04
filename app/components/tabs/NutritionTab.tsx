@@ -64,27 +64,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   }, [userId])
 
   async function fetchDailyLogs() {
-    // Fetch from both daily_food_logs AND meal_logs for compatibility
-    const [dailyRes, mealRes] = await Promise.all([
-      supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', today).order('created_at', { ascending: true }),
-      supabase.from('meal_logs').select('*').eq('user_id', userId).eq('date', today).order('created_at', { ascending: true }),
-    ])
-    const daily = (dailyRes.data || []).map((l: any) => ({ ...l, _source: 'daily' }))
-    const meals = (mealRes.data || []).map((l: any) => ({
-      ...l, _source: 'meal',
-      custom_name: l.food_name, quantity_g: l.quantity_g,
-      calories: l.calories || 0, protein: l.proteines || 0, carbs: l.glucides || 0, fat: l.lipides || 0,
-    }))
-    setDailyLogs([...daily, ...meals])
+    const { data } = await supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', today).order('created_at', { ascending: true })
+    setDailyLogs(data || [])
   }
 
   async function deleteDailyLog(id: string) {
-    const log = dailyLogs.find(l => l.id === id)
-    if (log?._source === 'meal') {
-      await supabase.from('meal_logs').delete().eq('id', id)
-    } else {
-      await supabase.from('daily_food_logs').delete().eq('id', id)
-    }
+    await supabase.from('daily_food_logs').delete().eq('id', id)
     setDailyLogs(prev => prev.filter(l => l.id !== id))
   }
 
@@ -152,7 +137,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
   async function fetchTodayMealLogs() {
     const { data } = await supabase
-      .from('meal_logs')
+      .from('daily_food_logs')
       .select('*')
       .eq('user_id', userId)
       .eq('date', today)
@@ -162,18 +147,18 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   }
 
   async function deleteMealLog(id: string) {
-    await supabase.from('meal_logs').delete().eq('id', id)
+    await supabase.from('daily_food_logs').delete().eq('id', id)
     setMealLogs(prev => prev.filter(l => l.id !== id))
   }
 
-  // Get meal_logs macros for today
+  // Get daily_food_logs macros for today
   function getMealLogsMacros(): { kcal: number; protein: number; carbs: number; fat: number } {
     const result = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
     for (const log of mealLogs) {
       result.kcal += log.calories || 0
-      result.protein += log.proteines || 0
-      result.carbs += log.glucides || 0
-      result.fat += log.lipides || 0
+      result.protein += log.protein || 0
+      result.carbs += log.carbs || 0
+      result.fat += log.fat || 0
     }
     return result
   }
@@ -709,10 +694,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {subTab === 'prefs' && (
         <div style={{ padding: '0 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <Sparkles size={18} color={GOLD} />
-            <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Personnalise ton plan</h2>
+            <SlidersHorizontal size={18} color={GOLD} />
+            <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Preferences nutrition</h2>
           </div>
-          <p style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 16px', lineHeight: 1.5 }}>Indique tes preferences pour que ton coach puisse creer un plan adapte.</p>
           <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} />
         </div>
       )}
