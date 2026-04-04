@@ -294,14 +294,17 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   // ─── Regenerate Meal Plan ───
   async function regeneratePlan() {
     setRegenerating(true)
+    setToastMsg('Generation en cours...')
     try {
       const objMap: Record<ObjectiveType, string> = { cut: 'seche', maintain: 'maintien', bulk: 'bulk' }
+      const kcal = objectiveKcal || profile?.calorie_goal || 2200
+      console.log('=== REGEN START ===', { kcal, protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat })
       const res = await fetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          calorie_goal: objectiveKcal,
-          protein_goal: finalMacros.protein,
+          calorie_goal: objectiveKcal || profile?.calorie_goal || 2200,
+          protein_goal: finalMacros.protein || profile?.protein_goal || 150,
           carbs_goal: finalMacros.carbs,
           fat_goal: finalMacros.fat,
           dietary_type: dietaryType,
@@ -332,6 +335,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           if (!line.startsWith('data: ')) continue
           try {
             const parsed = JSON.parse(line.slice(6))
+            if (parsed.type === 'progress') setToastMsg(`Generation ${parsed.day}... (${parsed.index}/7)`)
             if (parsed.type === 'done') planData = parsed.plan
           } catch {}
         }
@@ -340,22 +344,29 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         // Deactivate old plans first
         await supabase.from('meal_plans').update({ is_active: false }).eq('user_id', userId).eq('is_active', true)
         // Insert new plan
-        await supabase.from('meal_plans').insert({
+        const { error: insertErr } = await supabase.from('meal_plans').insert({
           user_id: userId,
           plan_data: planData,
           is_active: true,
-          source: 'ai',
         })
-        setToastMsg('Plan regenere !')
-        setTimeout(() => setToastMsg(''), 2500)
-        onSaved()
-        onPlanRegenerated?.()
+        if (insertErr) {
+          console.error('Insert meal_plans error:', insertErr)
+          setToastMsg('Erreur: ' + insertErr.message)
+          setTimeout(() => setToastMsg(''), 3000)
+        } else {
+          setToastMsg('Plan regenere !')
+          setTimeout(() => setToastMsg(''), 2500)
+          onSaved()
+          onPlanRegenerated?.()
+        }
       }
-    } catch {
+    } catch (err) {
+      console.error('Regen error:', err)
       setToastMsg('Erreur lors de la generation')
       setTimeout(() => setToastMsg(''), 3000)
     }
     setRegenerating(false)
+    setToastMsg('')
     setShowRegenCard(false)
   }
 
