@@ -78,7 +78,15 @@ export default function TrainingTab({
 
   const todayStr         = new Date().toISOString().split('T')[0]
   const trainingIsToday  = trainingDay === todayKey
-  const trainingDayData  = coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null
+  // Priorité : programme custom actif > programme coach
+  const customDayData = (() => {
+    if (!activeCustomProgram?.days?.length) return null
+    const dayIndex = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
+    const customDay = activeCustomProgram.days[dayIndex] || activeCustomProgram.days.find((d: any) => d.day_number === dayIndex + 1)
+    if (!customDay) return null
+    return { repos: false, exercises: (customDay.exercises || []).map((ex: any) => ({ name: ex.exercise_name || ex.custom_name || ex.name || 'Exercice', sets: ex.sets || 3, reps: ex.reps || 10, rest_seconds: ex.rest_seconds || 90, muscle_group: ex.muscle_group || customDay.focus || '' })) }
+  })()
+  const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
   const trainingExercises: any[] = trainingDayData?.exercises || []
 
   const trainingTotalSets = trainingExercises.reduce((s: number, ex: any) => {
@@ -171,16 +179,27 @@ export default function TrainingTab({
   }, [])
 
   async function activateProgram(programId: string) {
-    await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id)
-    await supabase.from('custom_programs').update({ is_active: true }).eq('id', programId)
+    // Désactive tous d'abord
+    await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).neq('id', programId)
+    // Active celui-ci
+    const { error } = await supabase.from('custom_programs').update({ is_active: true }).eq('id', programId).eq('user_id', session.user.id)
+    if (error) { toast.error('Erreur: ' + error.message); return }
     const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId }))
     setCustomPrograms(updated)
     setActiveCustomProgram(updated.find(p => p.id === programId) || null)
     toast.success('Programme activé !')
   }
 
+  async function deactivateProgram(programId: string) {
+    await supabase.from('custom_programs').update({ is_active: false }).eq('id', programId).eq('user_id', session.user.id)
+    const updated = customPrograms.map(p => ({ ...p, is_active: false }))
+    setCustomPrograms(updated)
+    setActiveCustomProgram(null)
+    toast.success('Programme désactivé — retour au programme coach')
+  }
+
   async function deleteProgram(programId: string) {
-    await supabase.from('custom_programs').delete().eq('id', programId)
+    await supabase.from('custom_programs').delete().eq('id', programId).eq('user_id', session.user.id)
     setCustomPrograms(prev => prev.filter(p => p.id !== programId))
     if (activeCustomProgram?.id === programId) setActiveCustomProgram(null)
     toast.success('Programme supprimé')
@@ -428,7 +447,9 @@ export default function TrainingTab({
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  {!prog.is_active && (
+                  {prog.is_active ? (
+                    <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: GREEN, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>DÉSACTIVER</button>
+                  ) : (
                     <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: GOLD_DIM, border: `1px solid ${GOLD}`, color: GOLD, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>ACTIVER</button>
                   )}
                   <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>ÉDITER</button>

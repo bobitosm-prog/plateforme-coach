@@ -112,6 +112,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
 
   /* ─── AI generate ─── */
   async function generateAI() {
+    console.log('[ProgramBuilder] Génération démarrée', { objective: aiObjective, level: aiLevel, daysPerWeek: aiDays, duration: aiDuration, equipment: aiEquipment, priorities: aiPriorities, exercises: dbExercises.length })
     setAiGenerating(true)
     try {
       const res = await fetch('/api/generate-custom-program', {
@@ -123,16 +124,20 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
           notes: aiNotes, availableExercises: dbExercises,
         }),
       })
+      console.log('[ProgramBuilder] API response status:', res.status)
       const data = await res.json()
+      console.log('[ProgramBuilder] API response data:', JSON.stringify(data).substring(0, 500))
       if (data.program) {
         setAiResult(data.program)
         setProgramName(data.program.program_name || 'Programme IA')
         setProgramDays(data.program.days || [])
+        toast.success('Programme généré !')
       } else {
         toast.error(data.error || 'Erreur de génération')
       }
-    } catch {
-      toast.error('Erreur réseau')
+    } catch (e: any) {
+      console.error('[ProgramBuilder] Fetch error:', e)
+      toast.error('Erreur réseau: ' + (e.message || 'inconnue'))
     }
     setAiGenerating(false)
   }
@@ -787,7 +792,10 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
 
             {/* Exercise list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-              {(programDays[editingDayIndex]?.exercises || []).map((ex: any, exIdx: number) => (
+              {(programDays[editingDayIndex]?.exercises || []).map((ex: any, exIdx: number) => {
+                const exerciseName = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || 'Exercice inconnu'
+                const exerciseMuscle = ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group || ''
+                return (
                 <div
                   key={exIdx}
                   style={{
@@ -796,14 +804,14 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: BLUE }}>{ex.name}</div>
-                      {ex.muscle_group && (
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY }}>{exerciseName}</div>
+                      {exerciseMuscle && (
                         <span style={{
                           fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase',
                           padding: '2px 8px', background: GOLD_DIM, color: GOLD,
-                          letterSpacing: '0.05em',
+                          letterSpacing: '0.05em', marginTop: 4, display: 'inline-block',
                         }}>
-                          {ex.muscle_group}
+                          {exerciseMuscle}
                         </span>
                       )}
                     </div>
@@ -848,7 +856,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
 
             {/* Add exercise button */}

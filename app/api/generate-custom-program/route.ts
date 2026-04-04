@@ -2,53 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json()
+    const { objective, level, daysPerWeek, duration, equipment, priorities, notes } = body
+
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
-    if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
-
-    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, availableExercises } = await req.json()
-
-    const systemPrompt = `Tu es un coach fitness expert en programmation sportive.
-Tu crées des programmes d'entraînement structurés, progressifs et adaptés.
-Tu réponds UNIQUEMENT en JSON valide, sans markdown, sans commentaires.`
-
-    const userPrompt = `Crée un programme d'entraînement pour ce client :
-- Objectif : ${objective}
-- Niveau : ${level}
-- Jours/semaine : ${daysPerWeek}
-- Durée par séance : ${duration} min
-- Équipement : ${equipment}
-- Zones prioritaires : ${(priorities || []).join(', ') || 'aucune'}
-- Contraintes : ${notes || 'aucune'}
-
-Utilise UNIQUEMENT des exercices de cette base quand possible :
-${JSON.stringify((availableExercises || []).slice(0, 100).map((e: any) => ({ name: e.name, muscle_group: e.muscle_group })))}
-
-Si un exercice nécessaire n'existe pas dans la base, utilise le champ "custom_name".
-
-Réponds avec ce JSON exact :
-{
-  "program_name": "string",
-  "description": "string court",
-  "days": [
-    {
-      "day_number": 1,
-      "name": "Push A",
-      "focus": "Poitrine, Épaules, Triceps",
-      "exercises": [
-        {
-          "exercise_name": "Nom exact de la base ou custom",
-          "custom_name": null,
-          "sets": 4,
-          "reps": 10,
-          "rest_seconds": 90,
-          "notes": "optionnel"
-        }
-      ]
+    if (!apiKey) {
+      return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
     }
-  ]
-}
 
-Crée exactement ${daysPerWeek} jours. Maximum 8 exercices par jour. Inclus un warmup et cooldown si pertinent.`
+    const prompt = `Crée un programme d'entraînement en JSON.
+Objectif: ${objective}, Niveau: ${level}, ${daysPerWeek} jours/semaine, ${duration}min/séance, Équipement: ${equipment}, Zones: ${(priorities || []).join(', ')}, Notes: ${notes || 'aucune'}.
+
+Réponds UNIQUEMENT avec ce JSON valide, rien d'autre:
+{"program_name":"string","description":"string","days":[{"day_number":1,"name":"string","focus":"string","exercises":[{"custom_name":"string","sets":3,"reps":10,"rest_seconds":90}]}]}`
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -58,30 +24,31 @@ Crée exactement ${daysPerWeek} jours. Maximum 8 exercices par jour. Inclus un w
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 2048,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2000,
+        temperature: 0,
+        system: 'Tu es un coach fitness. Réponds UNIQUEMENT avec du JSON valide, aucun texte avant ou après.',
+        messages: [{ role: 'user', content: prompt }],
       }),
     })
 
-    if (!res.ok) {
-      const err = await res.text()
-      console.error('[generate-custom-program] API error:', res.status, err.slice(0, 200))
-      return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
+    const json = await res.json()
+    const raw = json.content?.[0]?.text || ''
+
+    const start = raw.indexOf('{')
+    const end = raw.lastIndexOf('}')
+    if (start === -1 || end === -1) {
+      return NextResponse.json({ error: 'JSON introuvable dans la réponse' }, { status: 500 })
     }
 
-    const data = await res.json()
-    const rawText = data.content?.[0]?.text || ''
-    const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) return NextResponse.json({ error: 'Pas de JSON dans la réponse' }, { status: 500 })
+    let cleaned = raw.slice(start, end + 1)
+    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1')
 
-    const program = JSON.parse(jsonMatch[0])
+    const program = JSON.parse(cleaned)
     return NextResponse.json({ program })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Erreur inattendue'
-    console.error('[generate-custom-program] Error:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+
+  } catch (e: any) {
+    console.error('[generate-custom-program] ERROR:', e.message)
+    return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
