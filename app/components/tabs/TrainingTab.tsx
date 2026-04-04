@@ -549,12 +549,50 @@ export default function TrainingTab({
         fmtElapsed={fmtElapsed}
       />
 
-      {/* ── NO PROGRAM ── */}
+      {/* ── NO COACH PROGRAM → show custom programs ── */}
       {!coachProgram ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '80px 20px', textAlign: 'center' }}>
-          <Dumbbell size={56} color={TEXT_MUTED} strokeWidth={1.5} />
-          <p style={{ fontFamily: FONT_ALT, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Programme en préparation</p>
-          <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0, maxWidth: 260 }}>Ton coach prépare ton programme. Tu seras notifié dès qu'il est prêt.</p>
+        <div style={{ padding: '20px 16px' }}>
+          {customPrograms.length > 0 ? (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: '1px' }}>MES PROGRAMMES</span>
+                <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
+                  style={{ fontFamily: FONT_BODY, fontSize: 11, color: GOLD, background: 'transparent', border: `1px solid ${GOLD}`, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  + CREER
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {customPrograms.map((prog: any) => (
+                  <div key={prog.id} style={{ background: BG_CARD, border: `1px solid ${prog.is_active ? GOLD : BORDER}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: prog.is_active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{prog.name}</div>
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>
+                        {(prog.days || []).length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
+                        {prog.is_active && <span style={{ color: GREEN, marginLeft: 8 }}>● Actif</span>}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {prog.is_active ? (
+                        <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: GREEN, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>DESACTIVER</button>
+                      ) : (
+                        <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: GOLD_DIM, border: `1px solid ${GOLD}`, color: GOLD, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>ACTIVER</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '60px 20px', textAlign: 'center' }}>
+              <Dumbbell size={56} color={TEXT_MUTED} strokeWidth={1.5} />
+              <p style={{ fontFamily: FONT_ALT, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Aucun programme</p>
+              <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0, maxWidth: 280 }}>Cree ton premier programme avec l&apos;IA en 2 minutes.</p>
+              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
+                style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+                Creer mon programme
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <>
