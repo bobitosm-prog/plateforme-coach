@@ -366,7 +366,6 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       setTimeout(() => setToastMsg(''), 3000)
     }
     setRegenerating(false)
-    setToastMsg('')
     setShowRegenCard(false)
   }
 

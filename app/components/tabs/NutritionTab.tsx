@@ -128,7 +128,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .maybeSingle()
     console.log('=== FETCH MEAL PLAN ===', { found: !!data, id: data?.id, is_active: data?.is_active, days: data?.plan_data ? Object.keys(data.plan_data) : [] })
     setActiveMealPlan(data)
-    if (data && !coachMealPlan) setSubTab('today')
+    if (data && !coachMealPlan) setSubTab('plan')
     setLoadingPlan(false)
   }
 
@@ -193,7 +193,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   function getTodayPlanData(): { planData: any; planId: string | null } | null {
     if (activeMealPlan?.plan_data) {
       const dayKey = todayNutritionKey()
-      const dayData = activeMealPlan.plan_data[dayKey]
+      const dayData = findDayData(activeMealPlan.plan_data, dayKey)
       if (dayData) return { planData: dayData, planId: activeMealPlan.id }
     }
     return null
@@ -219,26 +219,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   function renderWaitingScreen() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
-        <div className="animate-pulse-gold" style={{ fontSize: '3.5rem', marginBottom: 24 }}>⏳</div>
-        <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: '0 0 10px' }}>Plan en cours de préparation</h2>
+        <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🍽️</div>
+        <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: '0 0 10px' }}>Aucun plan alimentaire</h2>
         <p style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
-          Ton coach analyse ton profil et prépare ton plan alimentaire personnalisé.
+          Configure tes preferences puis genere ton plan IA personnalise.
         </p>
-        <div className="animate-pulse-gold" style={{ padding: '8px 18px', borderRadius: 0, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, marginBottom: 24 }}>
-          <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: GOLD, letterSpacing: '2px', textTransform: 'uppercase' }}>En attente de validation du coach</span>
-        </div>
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 18px', width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[
-            { icon: '✅', text: 'Profil complété', done: true },
-            { icon: '✅', text: 'Préférences enregistrées', done: true },
-            { icon: '⏳', text: 'Plan alimentaire — en attente', done: false },
-          ].map(({ icon, text, done }) => (
-            <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: '1rem' }}>{icon}</span>
-              <span style={{ fontSize: '0.82rem', color: done ? GREEN : GOLD, fontWeight: 500 }}>{text}</span>
-            </div>
-          ))}
-        </div>
+        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+          Configurer mes preferences
+        </button>
       </div>
     )
   }
@@ -262,13 +250,35 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
   }
 
+  // Case-insensitive day lookup in plan_data
+  function findDayData(planData: any, dayKey: string) {
+    if (!planData) return null
+    if (planData[dayKey]) return planData[dayKey]
+    const lower = dayKey.toLowerCase()
+    if (planData[lower]) return planData[lower]
+    // Try matching any key case-insensitively
+    const match = Object.keys(planData).find(k => k.toLowerCase() === lower)
+    if (match) return planData[match]
+    return null
+  }
+
   // Render the AI-generated meal plan (from meal_plans table)
   function renderAiPlan(plan: any) {
     const planData = plan.plan_data
     if (!planData) return null
 
-    const dayData = planData[nutritionDay]
-    if (!dayData) return null
+    const dayData = findDayData(planData, nutritionDay)
+    if (!dayData) {
+      // Show available days for debugging + prompt to pick one
+      const availableDays = Object.keys(planData)
+      console.log('No data for', nutritionDay, '— available:', availableDays)
+      return (
+        <div style={{ padding: 20, textAlign: 'center' }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_MUTED, marginBottom: 12 }}>Pas de plan pour {nutritionDay}.</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: '0.75rem', color: TEXT_DIM }}>Jours disponibles : {availableDays.join(', ')}</p>
+        </div>
+      )
+    }
 
     return (
       <>
@@ -292,7 +302,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           {NUTRITION_DAYS.map(({ key, label }) => {
             const isActive = nutritionDay === key
             const isToday = key === todayKey
-            const dayKcal = planData[key]?.total_kcal || 0
+            const dayKcal = findDayData(planData, key)?.total_kcal || 0
             return (
               <button key={key} onClick={() => setNutritionDay(key)} style={{
                 flexShrink: 0, padding: '8px 14px', borderRadius: 0, border: 'none', cursor: 'pointer',
@@ -472,11 +482,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 40, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>NUTRITION</h1>
       </div>
 
-      {/* PILLS NAVIGATION — 3 pills */}
-      <div style={{ display: 'flex', gap: 8, padding: '12px 20px', marginBottom: 16 }}>
+      {/* PILLS NAVIGATION */}
+      <div style={{ display: 'flex', gap: 6, padding: '12px 20px', marginBottom: 16 }}>
         {[
-          { id: 'today' as SubTab, label: 'MON PLAN' },
-          { id: 'prefs' as SubTab, label: 'PREFERENCES' },
+          { id: 'today' as SubTab, label: 'JOURNAL' },
+          { id: 'plan' as SubTab, label: 'PLAN IA' },
+          { id: 'prefs' as SubTab, label: 'PREFS' },
           { id: 'recipes' as SubTab, label: 'RECETTES' },
         ].map(({ id, label }) => {
           const active = subTab === id
@@ -707,7 +718,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <SlidersHorizontal size={18} color={GOLD} />
             <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Preferences nutrition</h2>
           </div>
-          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
+          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('plan') }} />
         </div>
       )}
 
