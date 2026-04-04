@@ -412,6 +412,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 40, fontWeight: 400, letterSpacing: '2px', margin: 0, textTransform: 'uppercase', color: TEXT_PRIMARY }}>NUTRITION</h1>
+      </div>
+      <div style={{ height: 120, overflow: 'hidden', margin: '12px 0', position: 'relative' }}>
+        <img src="/images/nutrition-hero.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4, filter: 'grayscale(60%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, #080808 100%)' }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         {coachMealPlan && (
           <button onClick={() => {
             const rows: (string | number)[][] = []

@@ -362,19 +362,20 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       {/* HEADER */}
-      <div className="sticky top-0 z-40 border-b" style={{ background: '#080808', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '40px 16px 12px' }}>
-        <div className="flex items-center justify-between mb-2">
+      <div className="sticky top-0 z-40 border-b" style={{ background: '#080808', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '40px 16px 12px', position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/stitch-barbell.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, pointerEvents: 'none' }} />
+        <div className="flex items-center justify-between mb-2" style={{ position: 'relative', zIndex: 1 }}>
           <h1 className="text-xl truncate" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', margin: 0 }}>{sessionName}</h1>
           <div className="flex items-center gap-2 px-3 py-1.5" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}>
             <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: GREEN }} />
             <span className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY }}>{dur(elapsed)}</span>
           </div>
         </div>
-        <div className="flex justify-between items-center mb-1.5">
+        <div className="flex justify-between items-center mb-1.5" style={{ position: 'relative', zIndex: 1 }}>
           <span className="text-[10px]" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>Progression</span>
           <span className="text-[11px]" style={{ color: GOLD, fontFamily: FONT_DISPLAY }}>{completed}/{total} sets</span>
         </div>
-        <div className="overflow-hidden" style={{ height: 2, background: TEXT_DIM }}>
+        <div className="overflow-hidden" style={{ height: 2, background: TEXT_DIM, position: 'relative', zIndex: 1 }}>
           <div className="h-full transition-all duration-500" style={{ width: `${pct}%`, background: GOLD }} />
         </div>
       </div>

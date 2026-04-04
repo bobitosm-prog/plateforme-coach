@@ -246,11 +246,7 @@ export default function HomeTab({
               <>
                 <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 0%, ${BG_CARD} 100%)`, zIndex: 1 }} />
                 <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%)` }} />
-                {(() => {
-                  const firstEx = todayExercises[0]
-                  if (!firstEx) return null
-                  return <ExercisePreview name={firstEx.name} size={160} animate={false} />
-                })()}
+                <img src="/images/stitch-gym.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'grayscale(100%)' }} />
               </>
             )}
             <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, background: GOLD, padding: '4px 12px' }}>

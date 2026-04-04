@@ -412,6 +412,11 @@ export default function ProgressTab({
       {subTab === 'photos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Body assessment CTA */}
+          <div style={{ height: 140, overflow: 'hidden', marginBottom: 16, position: 'relative' }}>
+            <img src="/images/progress-hero.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'grayscale(40%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, #080808 100%)' }} />
+            <div style={{ position: 'absolute', bottom: 12, left: 16, fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: '#C9A84C', letterSpacing: '1px' }}>PROGRESSION VISUELLE</div>
+          </div>
           <button
             onClick={() => setShowAssessment(true)}
             style={{
