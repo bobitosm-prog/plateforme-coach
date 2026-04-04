@@ -63,6 +63,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     fetchDailyLogs()
   }, [userId])
 
+  useEffect(() => {
+    console.log('=== NUTRITION TAB STATE ===')
+    console.log('activeMealPlan:', activeMealPlan ? { id: activeMealPlan.id, is_active: activeMealPlan.is_active, has_plan_data: !!activeMealPlan.plan_data, days: activeMealPlan.plan_data ? Object.keys(activeMealPlan.plan_data) : [] } : null)
+    console.log('coachMealPlan:', !!coachMealPlan)
+    console.log('nutritionDay:', nutritionDay, 'todayKey:', todayKey)
+    console.log('profile calorie_goal:', profile?.calorie_goal, 'tdee:', profile?.tdee)
+    console.log('subTab:', subTab, 'hasPlan:', hasPlan)
+  }, [activeMealPlan, subTab])
+
   async function fetchDailyLogs() {
     const { data } = await supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', today).order('created_at', { ascending: true })
     setDailyLogs(data || [])
@@ -117,6 +126,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
+    console.log('=== FETCH MEAL PLAN ===', { found: !!data, id: data?.id, is_active: data?.is_active, days: data?.plan_data ? Object.keys(data.plan_data) : [] })
     setActiveMealPlan(data)
     if (data && !coachMealPlan) setSubTab('today')
     setLoadingPlan(false)

@@ -10,30 +10,37 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ results: [] })
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!).trim()
-    )
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) {
+      console.error('[food-search] Missing SUPABASE_URL or key')
+      return NextResponse.json({ results: [], error: 'config' })
+    }
 
-    // Search in community_foods by name (ilike for simplicity)
-    const { data, error } = await supabase
+    const supabase = createClient(url, key.trim())
+
+    // Search in community_foods
+    const { data: communityData, error: communityError } = await supabase
       .from('community_foods')
       .select('*')
       .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
       .order('uses_count', { ascending: false })
       .limit(limit)
 
-    if (error) {
-      console.error('[food-search] Error:', error.message)
-      return NextResponse.json({ results: [] })
+    if (communityError) {
+      console.error('[food-search] community_foods error:', communityError.message)
     }
 
-    // Also search in food_items (existing fitness foods)
-    const { data: fitnessData } = await supabase
+    // Search in food_items (fitness foods)
+    const { data: fitnessData, error: fitnessError } = await supabase
       .from('food_items')
       .select('id, name, energy_kcal, proteins, carbohydrates, fat')
       .ilike('name', `%${q}%`)
-      .limit(5)
+      .limit(Math.max(5, limit))
+
+    if (fitnessError) {
+      console.error('[food-search] food_items error:', fitnessError.message)
+    }
 
     const fitnessResults = (fitnessData || []).map((f: any) => ({
       id: f.id,
@@ -48,11 +55,11 @@ export async function GET(req: NextRequest) {
       source: 'fitness',
     }))
 
-    const communityResults = (data || []).map((f: any) => ({ ...f, source: 'community' }))
+    const communityResults = (communityData || []).map((f: any) => ({ ...f, source: 'community' }))
 
     return NextResponse.json({ results: [...communityResults, ...fitnessResults].slice(0, limit) })
   } catch (e: any) {
-    console.error('[food-search] Error:', e.message)
-    return NextResponse.json({ results: [] })
+    console.error('[food-search] Caught error:', e.message)
+    return NextResponse.json({ results: [], error: e.message })
   }
 }

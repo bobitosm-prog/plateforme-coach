@@ -247,7 +247,12 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   async function save() {
     setSaving(true)
     const objMap: Record<ObjectiveType, string> = { cut: 'weight_loss', maintain: 'maintenance', bulk: 'mass' }
-    const { error } = await supabase.from('profiles').update({
+    console.log('=== SAVE START ===')
+    console.log('userId:', userId)
+    console.log('meal_preferences:', JSON.stringify(mealPrefs))
+    console.log('calorie_goal:', objectiveKcal, 'protein:', finalMacros.protein, 'carbs:', finalMacros.carbs, 'fat:', finalMacros.fat)
+    console.log('objective:', objMap[objective], 'activity:', activityLevel, 'diet:', dietaryType)
+    const { data, error } = await supabase.from('profiles').update({
       calorie_goal: objectiveKcal,
       protein_goal: finalMacros.protein,
       carbs_goal: finalMacros.carbs,
@@ -262,7 +267,8 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       target_weight: targetWeight,
       height,
       gender,
-    }).eq('id', userId)
+    }).eq('id', userId).select()
+    console.log('=== SAVE RESULT ===', { data, error })
     setSaving(false)
     if (error) {
       console.error('Save error:', error)
