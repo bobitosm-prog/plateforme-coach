@@ -119,13 +119,18 @@ export default function ProfileTab({
         <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: RADIUS_CARD, background: displayAvatar ? 'transparent' : GOLD, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative' }}>
           {displayAvatar
             ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt="Photo de profil" />
-            : <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '2rem', color: '#050505' }}>{firstName.charAt(0).toUpperCase()}</span>
+            : <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '2rem', color: '#080808' }}>{firstName.charAt(0).toUpperCase()}</span>
           }
         </button>
         <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: FONT_ALT, fontSize: '1.4rem', fontWeight: 700, color: TEXT_PRIMARY }}>{fullName}</div>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.5rem', fontWeight: 800, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '2px', lineHeight: 1.1 }}>{fullName}</div>
           <div style={{ fontSize: '0.8rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>{session.user.email}</div>
+          {profile?.created_at && (
+            <div style={{ fontSize: '10px', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 6 }}>
+              MEMBRE DEPUIS {new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
+            </div>
+          )}
         </div>
       </div>
 
@@ -137,7 +142,7 @@ export default function ProfileTab({
           { label: 'Kcal/j', value: calorieGoal ? `${calorieGoal}` : '—', color: TEXT_MUTED },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 8px', textAlign: 'center' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, color }}>{value}</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 800, color }}>{value}</div>
             <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginTop: 4 }}>{label}</div>
           </div>
         ))}
@@ -155,7 +160,7 @@ export default function ProfileTab({
               placeholder="+33 6 00 00 00 00"
               style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 12px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', fontFamily: FONT_BODY }}
             />
-            <button onClick={savePhone} style={{ background: GOLD, border: 'none', borderRadius: 0, padding: '8px 14px', color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>OK</button>
+            <button onClick={savePhone} style={{ background: GOLD, border: 'none', borderRadius: 0, padding: '8px 14px', color: '#080808', fontFamily: FONT_ALT, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>OK</button>
             <button onClick={() => { setPhoneEditing(false); setPhoneForm(profile?.phone || '') }} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 12px', color: TEXT_MUTED, fontSize: '0.8rem', cursor: 'pointer', fontFamily: FONT_ALT }}>✕</button>
           </div>
         ) : (
@@ -168,7 +173,7 @@ export default function ProfileTab({
 
       {/* BMR calculator */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-        <button onClick={() => setModal('bmr')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+        <button onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')} onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)} onClick={() => setModal('bmr')} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 150ms', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Zap size={18} color={TEXT_MUTED} />
             <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Calculateur BMR</span>
@@ -196,7 +201,9 @@ export default function ProfileTab({
         <button
           onClick={enableNotifications}
           disabled={notifStatus === 'loading' || notifStatus === 'done'}
-          style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1 }}
+          onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')}
+          onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)}
+          style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1, transition: 'background 150ms', width: '100%' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {notifStatus === 'denied' ? <BellOff size={18} color={RED} /> : <Bell size={18} color={notifStatus === 'done' ? GREEN : TEXT_MUTED} />}
@@ -412,7 +419,7 @@ export default function ProfileTab({
           return (
             <div>
               <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5, fontFamily: FONT_BODY, fontWeight: 300 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
-              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: GOLD, border: 'none', borderRadius: 0, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: GOLD, border: 'none', borderRadius: 0, color: '#080808', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
                 S&apos;abonner — Dès CHF 10/mois
               </button>
             </div>

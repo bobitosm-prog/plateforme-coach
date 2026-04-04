@@ -362,16 +362,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       {/* HEADER */}
-      <div className="sticky top-0 z-40 pt-10 pb-4 border-b" style={{ background: 'rgba(5,5,5,0.97)', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '40px 16px 16px' }}>
-        <div className="flex items-center justify-between mb-3">
-          <button onClick={onClose} className="flex items-center gap-1.5 text-xs" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700 }}><ArrowLeft size={14} /> Abandonner</button>
+      <div className="sticky top-0 z-40 border-b" style={{ background: '#080808', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '40px 16px 12px' }}>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-xl truncate" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', margin: 0 }}>{sessionName}</h1>
           <div className="flex items-center gap-2 px-3 py-1.5" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}>
             <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: GREEN }} />
             <span className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={finish} className="text-[11px] uppercase px-4 py-2 active:scale-95" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 0, border: 'none', cursor: 'pointer', letterSpacing: '1px' }}>Terminer</button>
         </div>
-        <h1 className="text-xl mb-2 truncate" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px' }}>{sessionName}</h1>
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-[10px]" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>Progression</span>
           <span className="text-[11px]" style={{ color: GOLD, fontFamily: FONT_DISPLAY }}>{completed}/{total} sets</span>
@@ -397,15 +395,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
           return (
-            <div key={exo.id} style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24 }}>
+            <div key={exo.id} className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
               {/* ── Accordion Header ── */}
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
-                <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <ExercisePreview name={exo.name} size={40} animate={false} />
-                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)' }}><Check size={16} color="#050505" strokeWidth={3} /></div>}
+                <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden' }}>
+                  <ExercisePreview name={exo.name} size={50} animate={false} />
+                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={18} color="#050505" strokeWidth={3} /></div>}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 15, color: TEXT_PRIMARY, letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.2 }}>{exo.name}</h3>
+                  <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <span style={{ fontSize: 9, padding: '2px 8px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.targetSets}×{exo.targetReps}</span>
@@ -576,17 +574,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       </div>
 
       {/* BARRE BAS */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 py-4 z-30 border-t" style={{ background: 'rgba(5,5,5,0.97)', backdropFilter: 'blur(20px)', borderColor: BORDER }}>
-        <div className="flex justify-between items-center">
-          <div className="flex gap-5">
-            {[['Volume', `${Math.round(volume)}kg`], ['Sets', `${completed}/${total}`], ['Durée', dur(elapsed)]].map(([l, v]) => (
-              <div key={l}>
-                <div className="text-[9px]" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{l}</div>
-                <div className="text-lg" style={{ color: l === 'Sets' ? GOLD : TEXT_PRIMARY, fontFamily: FONT_DISPLAY }}>{v}</div>
-              </div>
-            ))}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, background: '#0a0a0a', borderTop: `1px solid ${BORDER}`, minHeight: 70, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center' }}>
+          <button onClick={onClose} className="active:scale-95" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '10px 16px', color: '#EF4444', fontSize: 13, fontWeight: 500, fontFamily: FONT_BODY, cursor: 'pointer' }}>Abandonner</button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>TEMPS</span>
+            <span style={{ fontSize: 24, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          {!allDone && <button onClick={finish} className="text-[10px] uppercase px-4 py-2.5" style={{ background: 'transparent', border: `1px solid ${GOLD_RULE}`, color: TEXT_MUTED, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', cursor: 'pointer' }}>Terminer quand même</button>}
+          <button onClick={finish} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#080808', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
         </div>
       </div>
     </div>

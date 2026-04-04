@@ -30,6 +30,30 @@ export async function proxy(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   const { pathname } = request.nextUrl
 
+  // Chained onboarding redirect — applies to authenticated clients on /
+  if (session && pathname === '/') {
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('role, onboarding_completed_at, full_name, onboarding_photo_completed_at')
+      .eq('id', session.user.id)
+      .single()
+    if (prof?.role === 'client') {
+      // Étape 1 : fitness onboarding
+      if (!prof.onboarding_completed_at) {
+        return NextResponse.redirect(new URL('/onboarding-fitness', request.url))
+      }
+      // Étape 2 : repas/profil onboarding
+      const fn = prof.full_name?.trim()
+      if (!fn || fn === 'Athlete') {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+      // Étape 3 : photo + analyse IA
+      if (!prof.onboarding_photo_completed_at) {
+        return NextResponse.redirect(new URL('/onboarding-photo', request.url))
+      }
+    }
+  }
+
   // Determine which protected prefix applies
   const matchedPrefix = Object.keys(PROTECTED).find(p => pathname.startsWith(p))
   if (!matchedPrefix) return response
@@ -58,5 +82,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/coach/:path*', '/client/:path*'],
+  matcher: ['/', '/admin/:path*', '/coach/:path*', '/client/:path*'],
 }

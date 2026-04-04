@@ -170,8 +170,9 @@ export default function HomeTab({
             <p style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '2px' }}>
               {format(new Date(), 'EEEE d MMMM', { locale: fr })}
             </p>
-            <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 48, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', lineHeight: 1 }}>
-              Bonjour, {firstName}
+            <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', lineHeight: 1 }}>
+              <span style={{ fontSize: 32 }}>Bonjour,</span>{' '}
+              <span style={{ fontSize: 56, color: GOLD }}>{firstName}</span>
             </h1>
           </div>
           <button onClick={() => avatarRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: displayAvatar ? 'transparent' : BG_CARD_2, border: `2px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
@@ -196,7 +197,7 @@ export default function HomeTab({
           ].map((stat, i) => (
             <React.Fragment key={stat.label}>
               {i > 0 && <div style={{ width: 1, height: 36, background: TEXT_DIM }} />}
-              <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ textAlign: 'center', flex: 1, ...(stat.label === 'STREAK' ? { borderLeft: '2px solid #C9A84C', paddingLeft: 8 } : (stat.label === 'KG' || stat.label === 'KG VOL.') ? { borderLeft: '2px solid #60A5FA', paddingLeft: 8 } : {}) }}>
                 <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: stat.color, lineHeight: 1 }}>{stat.value}</div>
                 <div style={{ fontFamily: FONT_ALT, fontSize: 10, color: TEXT_MUTED, letterSpacing: '2px', textTransform: 'uppercase', marginTop: 2 }}>{stat.label}</div>
               </div>
@@ -269,7 +270,7 @@ export default function HomeTab({
         })()}
 
         {/* ── Programme du jour ── */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
+        <div style={{ background: BG_CARD, border: `2px solid #C9A84C`, borderRadius: RADIUS_CARD, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, textTransform: 'uppercase', letterSpacing: '2px', color: GOLD }}>Programme du jour</span>
             <button onClick={() => setActiveTab('training')} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '2px' }}>Voir tout</button>
@@ -317,7 +318,7 @@ export default function HomeTab({
               </div>
               <button
                 onClick={() => startProgramWorkout({ day_name: todayKey }, todayCoachDay.exercises)}
-                style={{ width: '100%', background: GOLD, color: '#050505', fontWeight: 800, padding: '13px', borderRadius: 0, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 15, letterSpacing: '1.5px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+                style={{ width: '100%', background: GOLD, color: '#080808', fontWeight: 800, padding: '13px', borderRadius: 0, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 15, letterSpacing: '1.5px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
                 Commencer la séance
               </button>
             </>

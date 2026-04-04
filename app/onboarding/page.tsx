@@ -9,7 +9,7 @@ import { ACTIVITY_LEVELS, calcMifflinStJeor, BG_BASE, BG_CARD, BORDER, GOLD, GOL
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
-const TOTAL_STEPS = 8
+const TOTAL_STEPS = 6
 
 const ALLERGY_OPTIONS = [
   { id: 'gluten', label: 'Gluten', emoji: '🌾' },
@@ -20,6 +20,20 @@ const ALLERGY_OPTIONS = [
   { id: 'shellfish', label: 'Crustacés', emoji: '🦐' },
 ]
 
+// Map fitness onboarding activity_score → ACTIVITY_LEVELS id
+function mapActivityScore(score: number): string {
+  if (score >= 7) return 'active'
+  if (score >= 5) return 'moderate'
+  if (score >= 3) return 'light'
+  return 'sedentary'
+}
+
+// Map fitness onboarding goal label → objective key
+function mapGoalToObjective(goal: string): string {
+  if (goal === 'Perdre du poids') return 'weight_loss'
+  if (goal === 'Prendre du muscle') return 'mass'
+  return 'maintenance'
+}
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0 }),
@@ -42,15 +56,15 @@ export default function OnboardingPage() {
   const [weight, setWeight] = useState('')
   const [height, setHeight] = useState('')
   const [goalWeight, setGoalWeight] = useState('')
-  const [objective, setObjective] = useState('')
-  const [fitnessLevel, setFitnessLevel] = useState('')
+  // Pre-filled from fitness onboarding
+  const [objective, setObjective] = useState('maintenance')
   const [activityLevel, setActivityLevel] = useState('moderate')
   const [dietaryType, setDietaryType] = useState('omnivore')
   const [allergies, setAllergies] = useState<string[]>([])
   const [mealPrefs, setMealPrefs] = useState<Record<string, string[]>>({
     petit_dejeuner: [], dejeuner: [], collation: [], diner: [],
   })
-  const [mealTab, setMealTab] = useState('petit_dejeuner')
+  const [mealSubStep, setMealSubStep] = useState(0) // 0=petit_dej, 1=dejeuner, 2=collation, 3=diner
   const [foodQuery, setFoodQuery] = useState('')
   const [fitnessFoods, setFitnessFoods] = useState<any[]>([])
   const [fitnessFoodsLoaded, setFitnessFoodsLoaded] = useState(false)
@@ -62,11 +76,23 @@ export default function OnboardingPage() {
       setSession(session)
       const meta = session.user.user_metadata
       if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
+
+      // Pre-fill from fitness onboarding data
+      supabase.from('profiles').select('onboarding_answers').eq('id', session.user.id).single().then(({ data: profile }) => {
+        if (profile?.onboarding_answers) {
+          const answers = profile.onboarding_answers as any
+          if (answers.goal) setObjective(mapGoalToObjective(answers.goal))
+          if (answers.activity_score) setActivityLevel(mapActivityScore(answers.activity_score))
+        }
+      })
     })
   }, [])
 
   function goNext() { setDir(1); setStep(s => s + 1) }
-  function goBack() { setDir(-1); setStep(s => s - 1) }
+  function goBack() {
+    if (step === 5 && mealSubStep > 0) { setFoodQuery(''); setMealSubStep(s => s - 1); return }
+    setDir(-1); setStep(s => s - 1)
+  }
 
   // TDEE calculation
   const tdeeData = useMemo(() => {
@@ -108,7 +134,7 @@ export default function OnboardingPage() {
       height: height ? parseFloat(height) : null,
       target_weight: goalWeight ? parseFloat(goalWeight) : null,
       objective: objective || null,
-      fitness_level: fitnessLevel || null,
+      // fitness_level intentionally omitted — already set by onboarding-fitness
       activity_level: activityLevel,
       dietary_type: dietaryType,
       allergies: allergies.length > 0 ? allergies : null,
@@ -137,7 +163,7 @@ export default function OnboardingPage() {
       )
     }
     setSaving(false)
-    router.replace('/')
+    router.replace('/onboarding-photo')
   }
 
   return (
@@ -180,7 +206,7 @@ export default function OnboardingPage() {
                 <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: '0 0 8px', letterSpacing: '2px' }}>
                   Bienvenue{firstName ? `, ${firstName}` : ''} !
                 </h1>
-                <p style={{ color: TEXT_MUTED, fontSize: '1rem', margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Configurons ton profil en 2 minutes</p>
+                <p style={{ color: TEXT_MUTED, fontSize: '1rem', margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Finalisons ton profil nutritionnel</p>
               </motion.div>
               <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} whileTap={{ scale: 0.97 }} onClick={goNext}
                 style={{ width: '100%', maxWidth: 320, padding: '18px', background: GOLD, border: 'none', borderRadius: 0, color: BG_BASE, fontSize: '1.1rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
@@ -239,76 +265,9 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* Step 4: Objectif */}
+          {/* Step 4: Régime & Allergies */}
           {step === 4 && (
             <motion.div key="s4" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 24, maxWidth: 480, width: '100%', margin: '0 auto' }}>
-              <div><h2 style={h2Style}>Ton objectif</h2><p style={subStyle}>Qu'est-ce qui te motive ?</p></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                {[
-                  { k: 'weight_loss', l: 'Perdre du poids', e: '🔥', c: GOLD },
-                  { k: 'mass', l: 'Prendre de la masse', e: '💪', c: GOLD },
-                  { k: 'maintenance', l: 'Maintien', e: '⚖️', c: GOLD },
-                  { k: 'performance', l: 'Performance', e: '🏃', c: GOLD },
-                ].map(o => {
-                  const sel = objective === o.k
-                  return (
-                    <button key={o.k} onClick={() => setObjective(o.k)}
-                      style={{ padding: '20px 12px', borderRadius: 0, border: `2px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'all 200ms' }}>
-                      <span style={{ fontSize: '2rem' }}>{o.e}</span>
-                      <span style={{ fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: sel ? GOLD : TEXT_PRIMARY, textAlign: 'center' }}>{o.l}</span>
-                    </button>
-                  )
-                })}
-              </div>
-              <div style={{ marginTop: 'auto' }}><NextBtn onClick={goNext} disabled={!objective} /></div>
-            </motion.div>
-          )}
-
-          {/* Step 5: Niveau & Activité */}
-          {step === 5 && (
-            <motion.div key="s5" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 20, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
-              <div><h2 style={h2Style}>Ton niveau</h2><p style={subStyle}>Pour adapter l'intensité</p></div>
-              <div>
-                <label style={labelStyle}>Niveau fitness</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {[{ k: 'beginner', l: 'Débutant' }, { k: 'intermediate', l: 'Intermédiaire' }, { k: 'advanced', l: 'Avancé' }].map(lv => {
-                    const sel = fitnessLevel === lv.k
-                    return (
-                      <button key={lv.k} onClick={() => setFitnessLevel(lv.k)}
-                        style={{ flex: 1, padding: '12px 8px', borderRadius: 0, border: `2px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, color: sel ? GOLD : TEXT_PRIMARY, transition: 'all 200ms' }}>
-                        {lv.l}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Niveau d'activité</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {ACTIVITY_LEVELS.map(lvl => {
-                    const sel = activityLevel === lvl.id
-                    return (
-                      <button key={lvl.id} onClick={() => setActivityLevel(lvl.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 0, border: `1.5px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', transition: 'all 200ms' }}>
-                        <div style={{ flex: 1, textAlign: 'left' }}>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: sel ? GOLD : TEXT_PRIMARY, fontFamily: FONT_ALT }}>{lvl.label}</div>
-                          <div style={{ fontSize: '0.68rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>{lvl.sub}</div>
-                        </div>
-                        {sel && <Check size={16} color={GOLD} strokeWidth={3} />}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              <div style={{ marginTop: 'auto', paddingTop: 8 }}><NextBtn onClick={goNext} disabled={!fitnessLevel} /></div>
-            </motion.div>
-          )}
-
-          {/* Step 6: Régime & Allergies */}
-          {step === 6 && (
-            <motion.div key="s6" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 20, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
               <div><h2 style={h2Style}>Ton alimentation</h2><p style={subStyle}>Ces infos personnaliseront ton plan</p></div>
 
@@ -357,19 +316,17 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* Step 7: Mes repas (fitness food cards) */}
-          {step === 7 && (() => {
-            const MEAL_TABS = [
-              { id: 'petit_dejeuner', label: 'Matin', emoji: '🌅' },
-              { id: 'dejeuner', label: 'Midi', emoji: '☀️' },
-              { id: 'collation', label: 'Collation', emoji: '🍎' },
-              { id: 'diner', label: 'Dîner', emoji: '🌙' },
+          {/* Step 5: Mes repas — sequential sub-steps */}
+          {step === 5 && (() => {
+            const MEALS = [
+              { id: 'petit_dejeuner', label: 'PETIT-DÉJEUNER', emoji: '🌅' },
+              { id: 'dejeuner', label: 'DÉJEUNER', emoji: '☀️' },
+              { id: 'collation', label: 'COLLATION', emoji: '🍎' },
+              { id: 'diner', label: 'DÎNER', emoji: '🌙' },
             ]
-            const currentIds = mealPrefs[mealTab] || []
-            const totalFoods = Object.values(mealPrefs).flat().length
-            const mealsWithFood = Object.values(mealPrefs).filter(ids => ids.length > 0).length
+            const currentMeal = MEALS[mealSubStep]
+            const currentIds = mealPrefs[currentMeal.id] || []
 
-            // Category helper
             const CATS = [
               { key: 'proteines', label: 'Protéines', icon: '🥩', patterns: ['poulet', 'dinde', 'boeuf', 'bœuf', 'veau', 'porc', 'saumon', 'thon', 'cabillaud', 'crevette', 'oeuf', 'œuf', 'steak', 'filet', 'escalope', 'jambon', 'bacon', 'merlu', 'sardine', 'truite', 'canard', 'agneau', 'poisson', 'viande'] },
               { key: 'laitiers', label: 'Produits laitiers', icon: '🥛', patterns: ['yaourt', 'fromage', 'skyr', 'cottage', 'mozzarella', 'parmesan', 'emmental', 'gruyère', 'lait', 'beurre', 'crème'] },
@@ -386,7 +343,6 @@ export default function OnboardingPage() {
               return 'autres'
             }
 
-            // Load fitness foods once
             if (!fitnessFoodsLoaded) {
               setFitnessFoodsLoaded(true)
               supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').order('name').limit(200).then(({ data }) => {
@@ -399,7 +355,6 @@ export default function OnboardingPage() {
                   cat: categorize(f.name || ''),
                 }))
                 setFitnessFoods(mapped)
-                // Pre-populate resolvedNames
                 const names: Record<string, string> = {}
                 mapped.forEach((f: any) => { names[f.id] = f.nom })
                 setResolvedNames(prev => ({ ...prev, ...names }))
@@ -411,59 +366,60 @@ export default function OnboardingPage() {
               : fitnessFoods
 
             const toggleFood = (food: any) => {
+              const mealId = currentMeal.id
               if (currentIds.includes(food.id)) {
-                setMealPrefs(prev => ({ ...prev, [mealTab]: (prev[mealTab] || []).filter((x: string) => x !== food.id) }))
+                setMealPrefs(prev => ({ ...prev, [mealId]: (prev[mealId] || []).filter((x: string) => x !== food.id) }))
               } else {
-                setMealPrefs(prev => ({ ...prev, [mealTab]: [...(prev[mealTab] || []), food.id] }))
+                setMealPrefs(prev => ({ ...prev, [mealId]: [...(prev[mealId] || []), food.id] }))
                 setResolvedNames(prev => ({ ...prev, [food.id]: food.nom }))
               }
             }
 
-            // Group by category
-            const grouped = CATS.map(cat => ({
-              ...cat,
-              foods: filtered.filter(f => f.cat === cat.key),
-            })).filter(g => g.foods.length > 0)
+            const grouped = CATS.map(cat => ({ ...cat, foods: filtered.filter(f => f.cat === cat.key) })).filter(g => g.foods.length > 0)
             const autres = filtered.filter(f => f.cat === 'autres')
             if (autres.length > 0) grouped.push({ key: 'autres', label: 'Autres', icon: '🍽️', patterns: [], foods: autres })
 
-            return (
-              <motion.div key="s7" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 20px 32px', gap: 12, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
-                <div><h2 style={h2Style}>Tes habitudes alimentaires</h2><p style={subStyle}>Sélectionne ce que tu aimes manger</p></div>
+            const advanceMeal = () => {
+              setFoodQuery('')
+              if (mealSubStep < 3) { setMealSubStep(s => s + 1) }
+              else { goNext() }
+            }
 
-                {/* Meal tabs */}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {MEAL_TABS.map(t => {
-                    const active = mealTab === t.id
-                    const count = (mealPrefs[t.id] || []).length
-                    return (
-                      <button key={t.id} onClick={() => setMealTab(t.id)}
-                        style={{ flex: 1, padding: '10px 4px', borderRadius: 0, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: active ? GOLD_DIM : BG_CARD, transition: 'all 150ms' }}>
-                        <span style={{ fontSize: '1.1rem' }}>{t.emoji}</span>
-                        <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: active ? GOLD : TEXT_MUTED }}>{t.label}</span>
-                        {count > 0 && <span style={{ fontSize: '0.55rem', color: GOLD, fontWeight: 700 }}>{count}</span>}
-                      </button>
-                    )
-                  })}
+            return (
+              <motion.div key={`s5-${mealSubStep}`} custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 20px 32px', gap: 12, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
+
+                {/* Sub-step progress */}
+                <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                  {MEALS.map((_, i) => (
+                    <div key={i} style={{ flex: 1, height: 3, background: i <= mealSubStep ? GOLD : BORDER, transition: 'background 300ms' }} />
+                  ))}
+                </div>
+                <div style={{ fontSize: '0.68rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>
+                  {mealSubStep + 1}/4 repas
                 </div>
 
-                {/* Search filter */}
+                {/* Meal title */}
+                <div>
+                  <h2 style={{ ...h2Style, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: '1.8rem' }}>{currentMeal.emoji}</span> {currentMeal.label}
+                  </h2>
+                  <p style={subStyle}>Sélectionne les aliments que tu manges habituellement</p>
+                </div>
+
+                {/* Search */}
                 <div style={{ position: 'relative' }}>
-                  <input value={foodQuery} onChange={e => setFoodQuery(e.target.value)} placeholder={`Filtrer ${fitnessFoods.length} aliments fitness...`}
+                  <input value={foodQuery} onChange={e => setFoodQuery(e.target.value)} placeholder={`Filtrer ${fitnessFoods.length} aliments...`}
                     style={{ ...inputStyle, paddingLeft: 38, padding: '10px 14px 10px 38px', fontSize: '0.82rem' }} />
                   <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: GOLD, fontSize: '0.82rem' }}>🔍</span>
                 </div>
 
-                {/* Meal summary */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 12, fontSize: '0.62rem', color: TEXT_MUTED }}>
-                  {MEAL_TABS.map(t => {
-                    const c = (mealPrefs[t.id] || []).length
-                    return <span key={t.id} style={{ color: c > 0 ? GOLD : TEXT_MUTED, fontWeight: c > 0 ? 700 : 400 }}>{t.emoji} {c}</span>
-                  })}
+                {/* Selected count */}
+                <div style={{ fontSize: '0.72rem', color: currentIds.length > 0 ? GOLD : TEXT_MUTED, fontWeight: 600, fontFamily: FONT_ALT }}>
+                  {currentIds.length} aliment{currentIds.length !== 1 ? 's' : ''} sélectionné{currentIds.length !== 1 ? 's' : ''}
                 </div>
 
-                {/* Food cards by category */}
+                {/* Food cards */}
                 <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 8 }}>
                   {fitnessFoods.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '20px 0' }}>
@@ -503,21 +459,18 @@ export default function OnboardingPage() {
                   )}
                 </div>
 
-                {/* Validation + next */}
+                {/* Next / Skip */}
                 <div style={{ flexShrink: 0, paddingTop: 4 }}>
-                  <div style={{ fontSize: '0.68rem', color: mealsWithFood >= 2 ? GOLD : TEXT_MUTED, fontWeight: 600, textAlign: 'center', marginBottom: 6, fontFamily: FONT_ALT }}>
-                    {totalFoods} aliments · {mealsWithFood}/4 repas {mealsWithFood < 2 && '(min. 2)'}
-                  </div>
-                  <NextBtn onClick={goNext} disabled={mealsWithFood < 2} />
-                  <button onClick={goNext} style={{ width: '100%', marginTop: 6, padding: '8px', background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'underline', fontFamily: FONT_BODY }}>Passer cette étape</button>
+                  <NextBtn onClick={advanceMeal} label={mealSubStep < 3 ? 'Suivant' : 'Continuer'} />
+                  <button onClick={advanceMeal} style={{ width: '100%', marginTop: 6, padding: '8px', background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'underline', fontFamily: FONT_BODY }}>Passer ce repas</button>
                 </div>
               </motion.div>
             )
           })()}
 
-          {/* Step 8: Récapitulatif */}
-          {step === 8 && (
-            <motion.div key="s8" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
+          {/* Step 6: Récapitulatif */}
+          {step === 6 && (
+            <motion.div key="s6" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 20, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
               <div><h2 style={h2Style}>Récapitulatif</h2><p style={subStyle}>Vérifie tes informations</p></div>
 
@@ -527,7 +480,7 @@ export default function OnboardingPage() {
                   { l: 'Genre', v: gender === 'male' ? 'Homme' : gender === 'female' ? 'Femme' : '—' },
                   { l: 'Poids', v: weight ? `${weight} kg` : '—' },
                   { l: 'Taille', v: height ? `${height} cm` : '—' },
-                  { l: 'Objectif', v: { weight_loss: 'Perte de poids', mass: 'Prise de masse', maintenance: 'Maintien', performance: 'Performance' }[objective] || '—' },
+                  { l: 'Régime', v: { omnivore: 'Omnivore', vegetarian: 'Végétarien', vegan: 'Vegan' }[dietaryType] || '—' },
                   { l: 'Poids cible', v: goalWeight ? `${goalWeight} kg` : '—' },
                 ].map(({ l, v }) => (
                   <div key={l}>

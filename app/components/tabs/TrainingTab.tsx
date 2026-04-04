@@ -528,6 +528,23 @@ export default function TrainingTab({
                 <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 800, color: GOLD, letterSpacing: '2px', textTransform: 'uppercase' }}>Découvrir les exercices</span>
               </motion.button>
 
+              {/* ── Start Workout Button ── */}
+              {trainingIsToday && !todaySessionDone && (
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => startProgramWorkout(trainingDayData, trainingExercises)}
+                  style={{
+                    width: '100%', background: GOLD, color: '#080808',
+                    fontWeight: 400, padding: '16px', borderRadius: 0, border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '2px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  }}
+                >
+                  DÉMARRER LA SÉANCE
+                </motion.button>
+              )}
+
               {/* ── Bottom Finish Button (when session not yet started but sets done) ── */}
               {trainingIsToday && !workoutStarted && trainingDoneSets > 0 && (
                 <motion.button

@@ -81,7 +81,14 @@ VÉRIFICATION OBLIGATOIRE avant de retourner le JSON :
 - Si total > ${kcal + 50} : réduis les portions de féculents (-20-30g)
 - Le total FINAL doit être entre ${kcal - 50} et ${kcal + 50}
 
-FORMAT JSON UNIQUE (pas de texte) :
+${params.ai_photo_analysis ? `
+ANALYSE VISUELLE DU CLIENT :
+${params.ai_photo_analysis}
+
+Tiens compte de cette analyse pour affiner le plan alimentaire.
+Si l'analyse détecte un taux de graisse élevé → favorise un déficit modéré.
+Si l'analyse détecte une morphologie athlétique → maintiens les apports protéiques élevés.
+` : ''}FORMAT JSON UNIQUE (pas de texte) :
 {
   "total_kcal": ${kcal},
   "total_protein": ${prot},

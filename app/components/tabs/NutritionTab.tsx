@@ -241,7 +241,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 flexShrink: 0, padding: '8px 14px', borderRadius: 0, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
                 background: isActive ? GOLD : BG_CARD,
-                color: isActive ? '#050505' : isToday ? GOLD : TEXT_MUTED,
+                color: isActive ? '#080808' : isToday ? GOLD : TEXT_MUTED,
                 outline: isToday && !isActive ? `2px solid ${GOLD}` : 'none',
               }}>
                 {label}
@@ -339,7 +339,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 flexShrink: 0, padding: '8px 14px', borderRadius: 0, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
                 background: isActive ? GOLD : BG_CARD,
-                color: isActive ? '#050505' : isToday ? GOLD : TEXT_MUTED,
+                color: isActive ? '#080808' : isToday ? GOLD : TEXT_MUTED,
                 outline: isToday && !isActive ? `2px solid ${GOLD}` : 'none',
               }}>
                 {label}
@@ -450,7 +450,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               cursor: 'pointer', whiteSpace: 'nowrap' as any,
               transition: 'all 0.15s',
               background: active ? GOLD : BG_CARD,
-              color: active ? '#050505' : TEXT_MUTED,
+              color: active ? '#080808' : TEXT_MUTED,
             }}>
               <Icon size={14} strokeWidth={2} />
               {label}
@@ -531,7 +531,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               {/* Calories bar */}
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: GOLD }}>{consumed.kcal}</span>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: '2.5rem', color: GOLD }}>{consumed.kcal}</span>
                   <span style={{ fontFamily: FONT_BODY, fontSize: '0.7rem', color: TEXT_MUTED }}>/ {targetKcal} kcal</span>
                 </div>
                 <div style={{ background: BORDER, height: 2, overflow: 'hidden' }}>
@@ -549,7 +549,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   return (
                     <div key={label} style={{ background: BG_CARD, padding: '12px 10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                        <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '2px' }}>{label}</span>
+                        <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</span>
                       </div>
                       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GOLD, marginBottom: 4 }}>{current}g</div>
                       <div style={{ background: BORDER, height: 2, overflow: 'hidden' }}>

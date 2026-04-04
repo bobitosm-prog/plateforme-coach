@@ -1,20 +1,21 @@
-// ─── Bauhaus/Swiss Design System ───
-export const BG_BASE = '#050505'
-export const BG_CARD = '#0D0C0B'
-export const BG_CARD_2 = '#141310'
-export const BORDER = '#3D3B38'
+// ─── Stitch Design System ───
+export const BG_BASE = '#080808'
+export const BG_CARD = '#0e0e0e'
+export const BG_CARD_2 = '#1c1b1b'
+export const BORDER = 'rgba(255,255,255,0.08)'
 export const GOLD = '#C9A84C'
 export const GOLD_DIM = 'rgba(201,168,76,0.15)'
 export const GOLD_RULE = 'rgba(201,168,76,0.25)'
 export const GREEN = '#4ade80'
 export const RED = '#ef4444'
-export const TEXT_PRIMARY = '#F0EDE8'
-export const TEXT_MUTED = '#8A8580'
-export const TEXT_DIM = '#3D3B38'
-export const RADIUS_CARD = 2
+export const BLUE = '#60A5FA'
+export const TEXT_PRIMARY = '#e5e2e1'
+export const TEXT_MUTED = '#6B7280'
+export const TEXT_DIM = '#353534'
+export const RADIUS_CARD = 0
 export const FONT_DISPLAY = "'Bebas Neue', sans-serif"
 export const FONT_ALT = "'Barlow Condensed', sans-serif"
-export const FONT_BODY = "'Outfit', sans-serif"
+export const FONT_BODY = "'DM Sans', var(--font-dm-sans), sans-serif"
 
 // Legacy aliases (to avoid breaking imports)
 export const ORANGE = GOLD

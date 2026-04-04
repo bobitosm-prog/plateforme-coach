@@ -135,8 +135,20 @@ export default function useClientDashboard() {
       if (!profRes.data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
       // Coach with completed onboarding → proceed to dashboard
     } else {
+      // Étape 1 : onboarding fitness pas encore fait ?
+      if (!profRes.data.onboarding_completed_at) {
+        router.replace('/onboarding-fitness'); return
+      }
+      // Étape 2 : onboarding repas pas encore fait ?
       const fn = profRes.data.full_name?.trim()
-      if (!fn || fn === 'Athlete') { router.replace('/onboarding'); return }
+      if (!fn || fn === 'Athlete') {
+        router.replace('/onboarding'); return
+      }
+      // Étape 3 : onboarding photo pas encore fait ?
+      if (!profRes.data.onboarding_photo_completed_at) {
+        router.replace('/onboarding-photo'); return
+      }
+      // Les trois sont complétés → on laisse passer
     }
 
     const profileData = profRes.data
