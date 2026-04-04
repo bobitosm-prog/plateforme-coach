@@ -321,8 +321,8 @@ export default function CoachApp() {
       <BugReport session={h.session} profile={h.profile} />
       <ChatAI session={h.session} profile={h.profile} />
 
-      {/* ── BOTTOM NAV (fixed on mobile, hidden on desktop via CSS) ── */}
-      <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 'calc(64px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)', background: BG_BASE, borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 999 }}>
+      {/* ── BOTTOM NAV (fixed on mobile, hidden on desktop via CSS, hidden during workout) ── */}
+      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 'calc(64px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)', background: BG_BASE, borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 999 }}>
         {([
           { id: 'home', icon: BarChart2, label: 'Home' },
           { id: 'training', icon: Dumbbell, label: 'Training' },
@@ -339,7 +339,7 @@ export default function CoachApp() {
             </button>
           )
         })}
-      </nav>
+      </nav>}
     </div>
   )
 }

@@ -381,7 +381,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       </div>
 
       {/* EXERCICES */}
-      <div className="py-4 pb-36" style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px 140px' }}>
+      <div className="py-4" style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px 200px' }}>
         <button onClick={() => setMode('custom')} className="flex items-center gap-3 p-4 active:scale-[0.98]"
           style={{ background: GOLD_DIM, border: `1px dashed ${GOLD_RULE}`, borderRadius: RADIUS_CARD, marginBottom: 24, margin: '0 4px 24px', width: 'calc(100% - 8px)' }}>
           <Plus size={18} style={{ color: GOLD }} />
@@ -399,9 +399,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
             <div key={exo.id} className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
               {/* ── Accordion Header ── */}
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
-                <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden' }}>
-                  <ExercisePreview name={exo.name} size={50} animate={false} />
-                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={18} color="#050505" strokeWidth={3} /></div>}
+                <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
+                  <ExercisePreview name={exo.name} size={80} animate={false} />
+                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={22} color="#050505" strokeWidth={3} /></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
@@ -575,7 +575,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       </div>
 
       {/* BARRE BAS */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, background: '#0a0a0a', borderTop: `1px solid ${BORDER}`, minHeight: 70, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0a0a0a', borderTop: `1px solid ${BORDER}`, minHeight: 70, padding: '12px 16px', paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center' }}>
           <button onClick={onClose} className="active:scale-95" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '10px 16px', color: '#EF4444', fontSize: 13, fontWeight: 500, fontFamily: FONT_BODY, cursor: 'pointer' }}>Abandonner</button>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>

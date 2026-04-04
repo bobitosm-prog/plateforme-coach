@@ -28,6 +28,7 @@ import TrainingSessionDone from './training/TrainingSessionDone'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
+import ProgramBuilder from '../training/ProgramBuilder'
 
 interface TrainingTabProps {
   supabase: any
@@ -67,6 +68,10 @@ export default function TrainingTab({
   const [elapsedSecs, setElapsedSecs]   = useState(0)
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
+  const [customPrograms, setCustomPrograms] = useState<any[]>([])
+  const [showProgramBuilder, setShowProgramBuilder] = useState(false)
+  const [activeCustomProgram, setActiveCustomProgram] = useState<any>(null)
+  const [editingProgram, setEditingProgram] = useState<any>(null)
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
@@ -145,6 +150,17 @@ export default function TrainingTab({
     setSetInputs(loadedInputs)
   }, [trainingDay, coachProgram])
 
+  // ── Load custom programs ──
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase.from('custom_programs').select('*').eq('user_id', session.user.id).order('updated_at', { ascending: false })
+      .then(({ data }: any) => {
+        setCustomPrograms(data || [])
+        const active = (data || []).find((p: any) => p.is_active)
+        if (active) setActiveCustomProgram(active)
+      })
+  }, [session?.user?.id])
+
   // ── Load exercises_db cache ──
   useEffect(() => {
     if (exercisesCacheLoaded.current) return
@@ -153,6 +169,31 @@ export default function TrainingTab({
       setExercisesCache(data || [])
     })
   }, [])
+
+  async function activateProgram(programId: string) {
+    await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id)
+    await supabase.from('custom_programs').update({ is_active: true }).eq('id', programId)
+    const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId }))
+    setCustomPrograms(updated)
+    setActiveCustomProgram(updated.find(p => p.id === programId) || null)
+    toast.success('Programme activé !')
+  }
+
+  async function deleteProgram(programId: string) {
+    await supabase.from('custom_programs').delete().eq('id', programId)
+    setCustomPrograms(prev => prev.filter(p => p.id !== programId))
+    if (activeCustomProgram?.id === programId) setActiveCustomProgram(null)
+    toast.success('Programme supprimé')
+  }
+
+  function refreshPrograms() {
+    supabase.from('custom_programs').select('*').eq('user_id', session.user.id).order('updated_at', { ascending: false })
+      .then(({ data }: any) => {
+        setCustomPrograms(data || [])
+        const active = (data || []).find((p: any) => p.is_active)
+        setActiveCustomProgram(active || null)
+      })
+  }
 
   function findExercise(name: string) {
     if (!name || exercisesCache.length === 0) return null
@@ -364,6 +405,44 @@ export default function TrainingTab({
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 40, fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>ENTRAÎNEMENT</h1>
           <span style={{ fontSize: '0.68rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{format(new Date(), 'EEE d MMM', { locale: fr })}</span>
         </div>
+      </div>
+
+      {/* ── MES PROGRAMMES ── */}
+      <div style={{ padding: '0 16px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: '1px' }}>MES PROGRAMMES</span>
+          <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
+            style={{ fontFamily: FONT_BODY, fontSize: 11, color: GOLD, background: 'transparent', border: `1px solid ${GOLD}`, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            + CRÉER
+          </button>
+        </div>
+        {customPrograms.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {customPrograms.map((prog: any) => (
+              <div key={prog.id} style={{ background: BG_CARD, border: `1px solid ${prog.is_active ? GOLD : BORDER}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: prog.is_active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{prog.name}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>
+                    {(prog.days || []).length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
+                    {prog.is_active && <span style={{ color: GREEN, marginLeft: 8 }}>● Actif</span>}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {!prog.is_active && (
+                    <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: GOLD_DIM, border: `1px solid ${GOLD}`, color: GOLD, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>ACTIVER</button>
+                  )}
+                  <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>ÉDITER</button>
+                  <button onClick={() => deleteProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, color: '#EF4444', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>×</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
+            style={{ width: '100%', padding: 16, background: GOLD_DIM, border: `1px dashed ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            CRÉER UN PROGRAMME +
+          </button>
+        )}
       </div>
 
       {/* ── WEEK CALENDAR ── */}
@@ -605,6 +684,16 @@ export default function TrainingTab({
       {/* Video Feedback History */}
       {session?.user?.id && (
         <VideoFeedbackHistory userId={session.user.id} />
+      )}
+
+      {showProgramBuilder && (
+        <ProgramBuilder
+          supabase={supabase}
+          session={session}
+          onClose={() => { setShowProgramBuilder(false); setEditingProgram(null) }}
+          onSave={refreshPrograms}
+          editProgram={editingProgram}
+        />
       )}
     </div>
   )
