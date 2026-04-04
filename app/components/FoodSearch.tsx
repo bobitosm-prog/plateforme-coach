@@ -82,10 +82,10 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
   async function addFood() {
     if (!selected || saving) return
     setSaving(true)
-    const cal = Math.round((selected.calories / 100) * quantity)
-    const prot = Math.round((selected.proteines / 100) * quantity * 10) / 10
-    const gluc = Math.round((selected.glucides / 100) * quantity * 10) / 10
-    const lip = Math.round((selected.lipides / 100) * quantity * 10) / 10
+    const cal = Math.round((selected.calories * quantity) / 100)
+    const prot = Math.round(((selected.proteines * quantity) / 100) * 10) / 10
+    const gluc = Math.round(((selected.glucides * quantity) / 100) * 10) / 10
+    const lip = Math.round(((selected.lipides * quantity) / 100) * 10) / 10
     await supabase.from('meal_logs').insert({
       user_id: userId, date: today, meal_type: mealType,
       food_item_id: selected.id, food_name: selected.nom,
@@ -98,10 +98,11 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
 
   // Quantity modal for selected food
   if (selected) {
-    const cal = Math.round((selected.calories / 100) * quantity)
-    const prot = Math.round((selected.proteines / 100) * quantity * 10) / 10
-    const gluc = Math.round((selected.glucides / 100) * quantity * 10) / 10
-    const lip = Math.round((selected.lipides / 100) * quantity * 10) / 10
+    // All selected.* values are per 100g from normalizeFoodItem
+    const cal = Math.round((selected.calories * quantity) / 100)
+    const prot = Math.round(((selected.proteines * quantity) / 100) * 10) / 10
+    const gluc = Math.round(((selected.glucides * quantity) / 100) * 10) / 10
+    const lip = Math.round(((selected.lipides * quantity) / 100) * 10) / 10
     return (
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'flex-end' }}>
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '2px 2px 0 0', padding: '24px 20px 40px', width: '100%' }}>
