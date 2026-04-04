@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, ChevronDown, ChevronUp, Search, Plus } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus } from 'lucide-react'
 import { ACTIVITY_LEVELS, calcMifflinStJeor, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
 
 // ─── Constants ───
@@ -56,8 +56,6 @@ function normalizeObjective(obj: string | undefined): ObjectiveType {
   return 'maintain'
 }
 
-function clamp(v: number, min: number, max: number) { return Math.max(min, Math.min(max, v)) }
-
 function fmtNum(n: number) { return n.toLocaleString('fr-CH') }
 
 // ─── Component ───
@@ -99,7 +97,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   // ─── Diet ───
   const [dietaryType, setDietaryType] = useState<string>(profile?.dietary_type || 'omnivore')
   const [allergies, setAllergies] = useState<string[]>(profile?.allergies || [])
-  const [dislikedFoods, setDislikedFoods] = useState<string[]>(profile?.disliked_foods || [])
+  const [dislikedFoods, setDislikedFoods] = useState<string[]>(profile?.meal_preferences?.disliked_foods || [])
   const [dislikedInput, setDislikedInput] = useState('')
 
   // ─── Meal Preferences ───
@@ -111,14 +109,12 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   const [mealSearchQuery, setMealSearchQuery] = useState('')
   const [mealSearchResults, setMealSearchResults] = useState<any[]>([])
   const [activeMealTab, setActiveMealTab] = useState<string>('breakfast')
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // ─── UI State ───
   const [saving, setSaving] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
   const [showRegenCard, setShowRegenCard] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
-  const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
   // ─── Age Calculation ───
   const age = useMemo(() => {
@@ -224,15 +220,18 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     })
   }
 
-  function searchCommunityFoods(q: string) {
-    setMealSearchQuery(q)
-    clearTimeout(searchTimer.current)
-    if (q.length < 2) { setMealSearchResults([]); return }
-    searchTimer.current = setTimeout(async () => {
-      const { data } = await supabase.from('community_foods').select('id, nom').ilike('nom', `%${q}%`).limit(8)
-      setMealSearchResults(data || [])
+  // Debounced food search via API
+  useEffect(() => {
+    if (mealSearchQuery.length < 2) { setMealSearchResults([]); return }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/food-search?q=${encodeURIComponent(mealSearchQuery)}&limit=8`)
+        const data = await res.json()
+        setMealSearchResults(data.results || [])
+      } catch { setMealSearchResults([]) }
     }, 300)
-  }
+    return () => clearTimeout(timer)
+  }, [mealSearchQuery])
 
   function addSearchedFood(name: string) {
     setMealPrefs(prev => {
@@ -248,7 +247,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   async function save() {
     setSaving(true)
     const objMap: Record<ObjectiveType, string> = { cut: 'weight_loss', maintain: 'maintenance', bulk: 'mass' }
-    await supabase.from('profiles').update({
+    const { error } = await supabase.from('profiles').update({
       calorie_goal: objectiveKcal,
       protein_goal: finalMacros.protein,
       carbs_goal: finalMacros.carbs,
@@ -258,14 +257,19 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       activity_level: activityLevel,
       dietary_type: dietaryType,
       allergies,
-      disliked_foods: dislikedFoods,
-      meal_preferences: mealPrefs,
+      meal_preferences: { ...mealPrefs, disliked_foods: dislikedFoods },
       current_weight: weight,
       target_weight: targetWeight,
       height,
       gender,
     }).eq('id', userId)
     setSaving(false)
+    if (error) {
+      console.error('Save error:', error)
+      setToastMsg('Erreur: ' + error.message)
+      setTimeout(() => setToastMsg(''), 3000)
+      return
+    }
     setToastMsg('Preferences sauvegardees !')
     setTimeout(() => setToastMsg(''), 2500)
     onSaved()
@@ -288,6 +292,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           dietary_type: dietaryType,
           allergies,
           disliked_foods: dislikedFoods,
+          // disliked_foods is sent to the API but not stored as a column in profiles
           objective_mode: objMap[objective],
           caloric_adjustment: objective === 'maintain' ? 0 : adjustment,
           tdee,
@@ -680,7 +685,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             <Search size={14} color={TEXT_MUTED} style={{ marginLeft: 12 }} />
             <input
               value={mealSearchQuery}
-              onChange={e => searchCommunityFoods(e.target.value)}
+              onChange={e => setMealSearchQuery(e.target.value)}
               placeholder="Ajouter un aliment..."
               style={{ flex: 1, padding: '10px 14px 10px 0', background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontSize: '0.82rem', fontFamily: FONT_BODY, outline: 'none' }}
             />
@@ -688,9 +693,9 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           {mealSearchResults.length > 0 && (
             <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: BG_CARD, border: `1px solid ${BORDER}`, zIndex: 10, maxHeight: 200, overflowY: 'auto' }}>
               {mealSearchResults.map((r: any) => (
-                <button key={r.id} onClick={() => addSearchedFood(r.nom)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${BORDER}`, cursor: 'pointer', textAlign: 'left' }}>
+                <button key={r.id} onClick={() => addSearchedFood(r.name)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${BORDER}`, cursor: 'pointer', textAlign: 'left' }}>
                   <Plus size={12} color={GOLD} />
-                  <span style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{r.nom}</span>
+                  <span style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{r.name}</span>
                 </button>
               ))}
             </div>
