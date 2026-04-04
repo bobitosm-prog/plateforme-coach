@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, ChevronDown, ChevronUp } from 'lucide-react'
+import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, ChevronDown, ChevronUp, Search, Plus } from 'lucide-react'
 import { ACTIVITY_LEVELS, calcMifflinStJeor, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
 
 // ─── Constants ───
@@ -36,6 +36,14 @@ const ALLERGY_OPTIONS = [
   { id: 'sesame', label: 'Sesame' },
 ] as const
 
+const MEAL_PRESETS: Record<string, { label: string; emoji: string; defaults: string[] }> = {
+  breakfast: { label: 'Petit-dejeuner', emoji: '\u{1F305}', defaults: ["Flocons d'avoine", 'Skyr nature', 'Yaourt grec', 'Banane', 'Oeufs', 'Pain complet', 'Fromage blanc', 'Myrtilles', 'Whey proteine', 'Beurre de cacahuete', 'Lait', 'Miel'] },
+  snack: { label: 'Collation', emoji: '\u{1F34E}', defaults: ['Pomme', 'Amandes', 'Yaourt grec', 'Fromage blanc', 'Whey proteine', 'Banane', 'Barre proteinee', 'Cottage cheese', 'Fruits secs', 'Noix'] },
+  lunch: { label: 'Dejeuner', emoji: '\u2600\uFE0F', defaults: ['Blanc de poulet', 'Riz basmati', 'Pates completes', 'Patate douce', 'Saumon', 'Brocoli', 'Quinoa', 'Lentilles', 'Thon', 'Epinards', 'Boeuf hache', 'Legumes verts'] },
+  dinner: { label: 'Diner', emoji: '\u{1F319}', defaults: ['Blanc de poulet', 'Poisson blanc', 'Dinde', 'Legumes vapeur', 'Oeufs', 'Riz basmati', 'Saumon', 'Brocoli', 'Boeuf', 'Patate douce', 'Crevettes', 'Salade verte'] },
+}
+const MEAL_KEYS = ['breakfast', 'snack', 'lunch', 'dinner'] as const
+
 type MacroMode = 'auto' | 'manual' | 'ratio'
 type ObjectiveType = 'cut' | 'maintain' | 'bulk'
 
@@ -59,9 +67,10 @@ interface NutritionPreferencesProps {
   supabase: any
   userId: string
   onSaved: () => void
+  onPlanRegenerated?: () => void
 }
 
-export default function NutritionPreferences({ profile, supabase, userId, onSaved }: NutritionPreferencesProps) {
+export default function NutritionPreferences({ profile, supabase, userId, onSaved, onPlanRegenerated }: NutritionPreferencesProps) {
   // ─── Body Data ───
   const [weight, setWeight] = useState<number>(profile?.current_weight || 0)
   const [targetWeight, setTargetWeight] = useState<number>(profile?.target_weight || 0)
@@ -92,6 +101,17 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   const [allergies, setAllergies] = useState<string[]>(profile?.allergies || [])
   const [dislikedFoods, setDislikedFoods] = useState<string[]>(profile?.disliked_foods || [])
   const [dislikedInput, setDislikedInput] = useState('')
+
+  // ─── Meal Preferences ───
+  const [mealPrefs, setMealPrefs] = useState<Record<string, string[]>>(() => {
+    const mp = profile?.meal_preferences
+    if (mp && typeof mp === 'object' && !Array.isArray(mp)) return mp
+    return { breakfast: [], snack: [], lunch: [], dinner: [] }
+  })
+  const [mealSearchQuery, setMealSearchQuery] = useState('')
+  const [mealSearchResults, setMealSearchResults] = useState<any[]>([])
+  const [activeMealTab, setActiveMealTab] = useState<string>('breakfast')
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // ─── UI State ───
   const [saving, setSaving] = useState(false)
@@ -195,6 +215,35 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     }
   }
 
+  // ─── Meal Prefs Handlers ───
+  function toggleMealFood(meal: string, food: string) {
+    setMealPrefs(prev => {
+      const list = prev[meal] || []
+      const updated = list.includes(food) ? list.filter(f => f !== food) : [...list, food]
+      return { ...prev, [meal]: updated }
+    })
+  }
+
+  function searchCommunityFoods(q: string) {
+    setMealSearchQuery(q)
+    clearTimeout(searchTimer.current)
+    if (q.length < 2) { setMealSearchResults([]); return }
+    searchTimer.current = setTimeout(async () => {
+      const { data } = await supabase.from('community_foods').select('id, nom').ilike('nom', `%${q}%`).limit(8)
+      setMealSearchResults(data || [])
+    }, 300)
+  }
+
+  function addSearchedFood(name: string) {
+    setMealPrefs(prev => {
+      const list = prev[activeMealTab] || []
+      if (list.includes(name)) return prev
+      return { ...prev, [activeMealTab]: [...list, name] }
+    })
+    setMealSearchQuery('')
+    setMealSearchResults([])
+  }
+
   // ─── Save ───
   async function save() {
     setSaving(true)
@@ -210,6 +259,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       dietary_type: dietaryType,
       allergies,
       disliked_foods: dislikedFoods,
+      meal_preferences: mealPrefs,
       current_weight: weight,
       target_weight: targetWeight,
       height,
@@ -242,6 +292,12 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           caloric_adjustment: objective === 'maintain' ? 0 : adjustment,
           tdee,
           activity_level: activityLevel,
+          meal_food_names: {
+            morning: mealPrefs.breakfast || [],
+            lunch: mealPrefs.lunch || [],
+            snack: mealPrefs.snack || [],
+            dinner: mealPrefs.dinner || [],
+          },
         }),
       })
       const reader = res.body?.getReader()
@@ -261,17 +317,19 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         }
       }
       if (planData) {
+        // Deactivate old plans first
+        await supabase.from('meal_plans').update({ is_active: false }).eq('user_id', userId).eq('is_active', true)
+        // Insert new plan
         await supabase.from('meal_plans').insert({
           user_id: userId,
           plan_data: planData,
           is_active: true,
           source: 'ai',
         })
-        // Deactivate old plans
-        await supabase.from('meal_plans').update({ is_active: false }).eq('user_id', userId).neq('is_active', false)
         setToastMsg('Plan regenere !')
         setTimeout(() => setToastMsg(''), 2500)
         onSaved()
+        onPlanRegenerated?.()
       }
     } catch {
       setToastMsg('Erreur lors de la generation')
@@ -566,6 +624,77 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
               )
             })}
           </div>
+        </div>
+      </div>
+
+      {/* ═══ SECTION 7 — ALIMENTS PAR REPAS ═══ */}
+      <div style={cardStyle}>
+        <div style={sectionTitle}>Mes aliments preferes par repas</div>
+
+        {/* Meal tabs */}
+        <div style={{ display: 'flex', gap: 0, marginBottom: 14, border: `1px solid ${BORDER}` }}>
+          {MEAL_KEYS.map(key => {
+            const m = MEAL_PRESETS[key]
+            const active = activeMealTab === key
+            const count = (mealPrefs[key] || []).length
+            return (
+              <button key={key} onClick={() => { setActiveMealTab(key); setMealSearchQuery(''); setMealSearchResults([]) }} style={{ flex: 1, padding: '8px 4px', background: active ? GOLD : BG_BASE, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, transition: 'all 150ms' }}>
+                <span style={{ fontSize: '1rem' }}>{m.emoji}</span>
+                <span style={{ fontFamily: FONT_ALT, fontSize: '0.58rem', fontWeight: 800, color: active ? '#050505' : TEXT_MUTED, letterSpacing: '0.5px' }}>{m.label}</span>
+                {count > 0 && <span style={{ fontSize: '0.52rem', fontFamily: FONT_DISPLAY, color: active ? '#050505' : GOLD, fontWeight: 700 }}>{count}</span>}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Selected foods for active meal */}
+        {(mealPrefs[activeMealTab] || []).length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+            {(mealPrefs[activeMealTab] || []).filter(f => !MEAL_PRESETS[activeMealTab].defaults.includes(f)).map(food => (
+              <span key={food} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, fontSize: '0.72rem', fontFamily: FONT_BODY, color: GOLD }}>
+                {food}
+                <button onClick={() => toggleMealFood(activeMealTab, food)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex' }}><X size={11} color={GOLD} /></button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Preset checkboxes */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
+          {MEAL_PRESETS[activeMealTab].defaults.map(food => {
+            const active = (mealPrefs[activeMealTab] || []).includes(food)
+            return (
+              <button key={food} onClick={() => toggleMealFood(activeMealTab, food)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', transition: 'all 150ms' }}>
+                <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? GOLD : TEXT_DIM}`, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? GOLD : 'transparent' }}>
+                  {active && <Check size={10} color="#050505" strokeWidth={3} />}
+                </div>
+                <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? GOLD : TEXT_PRIMARY, textAlign: 'left' }}>{food}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search community foods */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...inputStyle, padding: 0 }}>
+            <Search size={14} color={TEXT_MUTED} style={{ marginLeft: 12 }} />
+            <input
+              value={mealSearchQuery}
+              onChange={e => searchCommunityFoods(e.target.value)}
+              placeholder="Ajouter un aliment..."
+              style={{ flex: 1, padding: '10px 14px 10px 0', background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontSize: '0.82rem', fontFamily: FONT_BODY, outline: 'none' }}
+            />
+          </div>
+          {mealSearchResults.length > 0 && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: BG_CARD, border: `1px solid ${BORDER}`, zIndex: 10, maxHeight: 200, overflowY: 'auto' }}>
+              {mealSearchResults.map((r: any) => (
+                <button key={r.id} onClick={() => addSearchedFood(r.nom)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${BORDER}`, cursor: 'pointer', textAlign: 'left' }}>
+                  <Plus size={12} color={GOLD} />
+                  <span style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{r.nom}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

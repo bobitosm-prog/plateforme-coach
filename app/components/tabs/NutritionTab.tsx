@@ -697,7 +697,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <SlidersHorizontal size={18} color={GOLD} />
             <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Preferences nutrition</h2>
           </div>
-          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} />
+          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
         </div>
       )}
 
