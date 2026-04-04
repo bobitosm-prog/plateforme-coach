@@ -64,17 +64,27 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   }, [userId])
 
   async function fetchDailyLogs() {
-    const { data } = await supabase
-      .from('daily_food_logs')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .order('created_at', { ascending: true })
-    setDailyLogs(data || [])
+    // Fetch from both daily_food_logs AND meal_logs for compatibility
+    const [dailyRes, mealRes] = await Promise.all([
+      supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', today).order('created_at', { ascending: true }),
+      supabase.from('meal_logs').select('*').eq('user_id', userId).eq('date', today).order('created_at', { ascending: true }),
+    ])
+    const daily = (dailyRes.data || []).map((l: any) => ({ ...l, _source: 'daily' }))
+    const meals = (mealRes.data || []).map((l: any) => ({
+      ...l, _source: 'meal',
+      custom_name: l.food_name, quantity_g: l.quantity_g,
+      calories: l.calories || 0, protein: l.proteines || 0, carbs: l.glucides || 0, fat: l.lipides || 0,
+    }))
+    setDailyLogs([...daily, ...meals])
   }
 
   async function deleteDailyLog(id: string) {
-    await supabase.from('daily_food_logs').delete().eq('id', id)
+    const log = dailyLogs.find(l => l.id === id)
+    if (log?._source === 'meal') {
+      await supabase.from('meal_logs').delete().eq('id', id)
+    } else {
+      await supabase.from('daily_food_logs').delete().eq('id', id)
+    }
     setDailyLogs(prev => prev.filter(l => l.id !== id))
   }
 
@@ -508,7 +518,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           supabase={supabase}
           userId={userId}
           defaultMealType={showFoodSearch}
-          onAdded={() => { setShowFoodSearch(null); fetchTodayMealLogs() }}
+          onAdded={() => { setShowFoodSearch(null); fetchTodayMealLogs(); fetchDailyLogs() }}
           onClose={() => setShowFoodSearch(null)}
         />
       )}
