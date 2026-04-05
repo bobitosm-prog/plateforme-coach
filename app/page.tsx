@@ -3,7 +3,7 @@ import React from 'react'
 import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  BarChart2, Dumbbell, UtensilsCrossed, TrendingUp,
+  Home, Dumbbell, UtensilsCrossed, TrendingUp,
   User, MessageCircle, Bot, Plus, ChevronRight, Search, X,
 } from 'lucide-react'
 
@@ -84,7 +84,7 @@ export default function CoachApp() {
         </div>
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 12px' }}>
           {([
-            { id: 'home', icon: BarChart2, label: 'Home' },
+            { id: 'home', icon: Home, label: 'Home' },
             { id: 'training', icon: Dumbbell, label: 'Training' },
             { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
             { id: 'progress', icon: TrendingUp, label: 'Progress' },
@@ -279,16 +279,26 @@ export default function CoachApp() {
       )}
 
       {/* ── TOP HEADER BAR ── */}
-      <div style={{ flexShrink: 0, padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
-        <button onClick={() => h.setActiveTab('messages')} style={{ position: 'relative', background: 'transparent', border: 'none', cursor: 'pointer', padding: 8 }}>
-          <MessageCircle size={22} color={h.activeTab === 'messages' ? GOLD : (h.unreadCount > 0 ? GOLD : TEXT_MUTED)} strokeWidth={1.5} />
-          {h.unreadCount > 0 && (
-            <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: GOLD, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {h.unreadCount > 9 ? '9+' : h.unreadCount}
-            </span>
-          )}
-        </button>
-      </div>
+      <header style={{ flexShrink: 0, padding: '12px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Left: Logo + Swiss Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 26, letterSpacing: 5, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>MOOVX</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: GOLD, color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 7, letterSpacing: 1.5, padding: '2px 6px', borderRadius: 3 }}>SWISS</span>
+        </div>
+        {/* Right: Progress + Messages + Avatar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={() => h.setActiveTab('progress')} style={{ width: 36, height: 36, borderRadius: 12, background: h.activeTab === 'progress' ? GOLD_DIM : 'transparent', border: h.activeTab === 'progress' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s ease' }}>
+            <TrendingUp size={18} color={h.activeTab === 'progress' ? GOLD : TEXT_MUTED} strokeWidth={h.activeTab === 'progress' ? 2.5 : 1.5} />
+          </button>
+          <button onClick={() => h.setActiveTab(h.hasRealCoach ? 'messages' : 'coachIA')} style={{ width: 36, height: 36, borderRadius: 12, background: (h.activeTab === 'messages' || h.activeTab === 'coachIA') ? GOLD_DIM : 'transparent', border: (h.activeTab === 'messages' || h.activeTab === 'coachIA') ? `1px solid ${GOLD_RULE}` : '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease' }}>
+            {h.hasRealCoach ? <MessageCircle size={18} color={(h.activeTab === 'messages') ? GOLD : TEXT_MUTED} strokeWidth={(h.activeTab === 'messages') ? 2.5 : 1.5} /> : <Bot size={18} color={h.activeTab === 'coachIA' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />}
+            {h.unreadCount > 0 && <div style={{ position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: '50%', background: RED, border: `2px solid ${BG_BASE}` }} />}
+          </button>
+          <button onClick={() => h.setActiveTab('profil')} style={{ width: 36, height: 36, borderRadius: '50%', border: h.activeTab === 'profil' ? `2px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: BG_CARD, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', transition: 'all 0.3s ease', padding: 0 }}>
+            {h.displayAvatar ? <img src={h.displayAvatar} alt="Profil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={16} color={h.activeTab === 'profil' ? GOLD : TEXT_MUTED} />}
+          </button>
+        </div>
+      </header>
 
       {/* ── TRIAL BANNER ── */}
       {h.isInTrial && (
@@ -327,24 +337,19 @@ export default function CoachApp() {
         hideFloatingButton={!h.hasRealCoach}
       />
 
-      {/* ── BOTTOM NAV (fixed on mobile, hidden on desktop via CSS, hidden during workout) ── */}
-      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 'calc(64px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)', background: BG_BASE, borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 999 }}>
+      {/* ── BOTTOM NAV — 3 centered tabs ── */}
+      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(212,168,67,0.1)', paddingBottom: 'env(safe-area-inset-bottom, 20px)', paddingTop: 12, display: 'flex', justifyContent: 'center', gap: 48, zIndex: 999 }}>
         {([
-          { id: 'home', icon: BarChart2, label: 'Home' },
-          { id: 'training', icon: Dumbbell, label: 'Training' },
-          { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
-          { id: 'progress', icon: TrendingUp, label: 'Progress' },
-          ...(h.hasRealCoach
-            ? [{ id: 'messages', icon: MessageCircle, label: 'Messages' }]
-            : [{ id: 'coachIA', icon: Bot, label: 'Coach IA' }]),
-          { id: 'profil', icon: User, label: 'Profil' },
-        ] as { id: Tab; icon: any; label: string }[]).map(({ id, icon: Icon, label }) => {
+          { id: 'home' as Tab, Icon: Home, label: 'Home' },
+          { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
+          { id: 'nutrition' as Tab, Icon: UtensilsCrossed, label: 'Nutrition' },
+        ]).map(({ id, Icon, label }) => {
           const active = h.activeTab === id
           return (
-            <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 6px', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}>
-              {active && <motion.div layoutId="navIndicator" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 24, height: 2, background: GOLD, borderRadius: 12 }} transition={{ type: 'spring', stiffness: 420, damping: 30 }} />}
-              <Icon size={20} color={active ? GOLD : TEXT_DIM} />
-              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: active ? GOLD : TEXT_DIM, fontFamily: FONT_ALT }}>{label}</span>
+            <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: '0 16px' }}>
+              <Icon size={22} color={active ? GOLD : TEXT_DIM} strokeWidth={active ? 2.5 : 1.5} style={{ transition: 'all 0.3s ease' }} />
+              <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: active ? GOLD : TEXT_DIM, transition: 'color 0.3s ease' }}>{label}</span>
+              {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: GOLD, boxShadow: '0 0 8px rgba(212,168,67,0.5)' }} />}
             </button>
           )
         })}
