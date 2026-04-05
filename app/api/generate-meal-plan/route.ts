@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 
-export const runtime = 'edge'
-export const maxDuration = 60
+export const maxDuration = 300
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
@@ -271,6 +270,8 @@ export async function POST(req: NextRequest) {
 
     const params = await req.json()
     const encoder = new TextEncoder()
+    const startTime = Date.now()
+    console.log('[meal-plan] Starting generation, kcal:', params.calorie_goal)
     const stream = new ReadableStream({
       async start(controller) {
         const plan: Record<string, any> = {}
@@ -278,18 +279,21 @@ export async function POST(req: NextRequest) {
 
         for (let i = 0; i < DAYS.length; i++) {
           const day = DAYS[i]
+          const dayStart = Date.now()
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: i + 1, total: 7 })}\n\n`))
 
           try {
             const dayPlan = await generateOneDay(apiKey, day, params, proteinsUsed)
             plan[day] = dayPlan
             proteinsUsed.push(...extractProteins(dayPlan))
+            console.log(`[meal-plan] ${day} OK (${Math.round((Date.now() - dayStart) / 1000)}s) — ${dayPlan.total_kcal} kcal`)
           } catch (e) {
             console.error(`[meal-plan] Error generating ${day}:`, e)
             plan[day] = { total_kcal: 0, total_protein: 0, total_carbs: 0, total_fat: 0, repas: {} }
           }
         }
 
+        console.log(`[meal-plan] All 7 days done in ${Math.round((Date.now() - startTime) / 1000)}s, keys:`, Object.keys(plan))
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', plan })}\n\n`))
         controller.close()
       },

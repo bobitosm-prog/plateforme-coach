@@ -323,24 +323,37 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           },
         }),
       })
+      if (!res.ok) {
+        const errText = await res.text()
+        console.error('generate-meal-plan HTTP error:', res.status, errText)
+        throw new Error(`HTTP ${res.status}`)
+      }
       const reader = res.body?.getReader()
       if (!reader) throw new Error('No reader')
       const decoder = new TextDecoder()
       let planData: any = null
+      let buffer = ''
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        const text = decoder.decode(value)
-        for (const line of text.split('\n')) {
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           try {
             const parsed = JSON.parse(line.slice(6))
             if (parsed.type === 'progress') setToastMsg(`Generation ${parsed.day}... (${parsed.index}/7)`)
-            if (parsed.type === 'done') planData = parsed.plan
-          } catch {}
+            if (parsed.type === 'done') { planData = parsed.plan; console.log('=== PLAN RECEIVED ===', Object.keys(planData || {})) }
+            if (parsed.type === 'error') { console.error('SSE error:', parsed.error); throw new Error(parsed.error) }
+          } catch (e) { if (e instanceof Error && e.message !== 'Unexpected end of JSON input') throw e }
         }
       }
-      if (planData) {
+      console.log('=== STREAM DONE ===', { hasPlan: !!planData, days: planData ? Object.keys(planData).length : 0 })
+      if (!planData) {
+        setToastMsg('Generation echouee — aucun plan recu')
+        setTimeout(() => setToastMsg(''), 3000)
+      } else {
         // Deactivate old plans first
         await supabase.from('meal_plans').update({ is_active: false }).eq('user_id', userId).eq('is_active', true)
         // Insert new plan
