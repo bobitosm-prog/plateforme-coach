@@ -40,10 +40,17 @@ interface ChatMessage {
 interface ChatAIProps {
   session: any
   profile: any
+  externalOpen?: boolean
+  onExternalClose?: () => void
+  hideFloatingButton?: boolean
 }
 
-export default function ChatAI({ session, profile }: ChatAIProps) {
+export default function ChatAI({ session, profile, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (externalOpen) setOpen(true)
+  }, [externalOpen])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -141,8 +148,15 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
     }
   }
 
+  // Handle close — notify parent if externally opened
+  function handleClose() {
+    handleClose()
+    onExternalClose?.()
+  }
+
   // Floating button
   if (!open) {
+    if (hideFloatingButton) return null
     return (
       <button onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 300) }}
         style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 0, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
@@ -175,7 +189,7 @@ export default function ChatAI({ session, profile }: ChatAIProps) {
               </div>
             </div>
           </div>
-          <button onClick={() => setOpen(false)} style={{ width: 32, height: 32, borderRadius: 0, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => handleClose()} style={{ width: 32, height: 32, borderRadius: 0, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={TEXT_MUTED} />
           </button>
         </div>

@@ -14,7 +14,7 @@ import useFoodLog from './useFoodLog'
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
-export type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'profil' | 'messages'
+export type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'profil' | 'messages' | 'coachIA'
 
 export default function useClientDashboard() {
   const router = useRouter()
@@ -44,6 +44,7 @@ export default function useClientDashboard() {
 
   // Coach link
   const [coachId, setCoachId] = useState<string | null>(null)
+  const [isDefaultCoach, setIsDefaultCoach] = useState(false)
 
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
@@ -189,16 +190,18 @@ export default function useClientDashboard() {
   }
 
   async function resolveCoachLink(uid: string) {
+    const defaultEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
+    const { data: defaultCoachProfile } = await supabase.from('profiles').select('id').eq('email', defaultEmail).single()
+    const defaultCoachId = defaultCoachProfile?.id || null
+
     const { data: coachLink } = await supabase.from('coach_clients').select('coach_id').eq('client_id', uid).maybeSingle()
     if (coachLink?.coach_id) {
       setCoachId(coachLink.coach_id)
-    } else {
-      const defaultEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
-      const { data: defaultCoach } = await supabase.from('profiles').select('id').eq('email', defaultEmail).single()
-      if (defaultCoach?.id) {
-        await supabase.from('coach_clients').insert({ coach_id: defaultCoach.id, client_id: uid }).select().maybeSingle()
-        setCoachId(defaultCoach.id)
-      }
+      setIsDefaultCoach(!!defaultCoachId && coachLink.coach_id === defaultCoachId)
+    } else if (defaultCoachId) {
+      await supabase.from('coach_clients').insert({ coach_id: defaultCoachId, client_id: uid }).select().maybeSingle()
+      setCoachId(defaultCoachId)
+      setIsDefaultCoach(true)
     }
   }
 
@@ -374,7 +377,7 @@ export default function useClientDashboard() {
     photoUploading, photoRef, avatarRef,
     uploadAvatar, uploadProgressPhoto, deletePhoto,
     // Messages (from sub-hook)
-    coachId,
+    coachId, isDefaultCoach, hasRealCoach: !isDefaultCoach && !!coachId,
     messages: messagesHook.messages, msgInput: messagesHook.msgInput,
     setMsgInput: messagesHook.setMsgInput, unreadCount: messagesHook.unreadCount,
     msgEndRef: messagesHook.msgEndRef, sendMessage: messagesHook.sendMessage,

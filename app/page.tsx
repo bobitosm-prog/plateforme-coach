@@ -4,10 +4,10 @@ import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   BarChart2, Dumbbell, UtensilsCrossed, TrendingUp,
-  User, MessageCircle, Plus, ChevronRight, Search, X,
+  User, MessageCircle, Bot, Plus, ChevronRight, Search, X,
 } from 'lucide-react'
 
-import useClientDashboard from './hooks/useClientDashboard'
+import useClientDashboard, { type Tab } from './hooks/useClientDashboard'
 import Paywall from './components/Paywall'
 import BugReport from './components/BugReport'
 import ChatAI from './components/ChatAI'
@@ -319,7 +319,13 @@ export default function CoachApp() {
       </div>{/* end main-content-area */}
 
       <BugReport session={h.session} profile={h.profile} />
-      <ChatAI session={h.session} profile={h.profile} />
+      <ChatAI
+        session={h.session}
+        profile={h.profile}
+        externalOpen={h.activeTab === 'coachIA'}
+        onExternalClose={() => h.setActiveTab('home')}
+        hideFloatingButton={!h.hasRealCoach}
+      />
 
       {/* ── BOTTOM NAV (fixed on mobile, hidden on desktop via CSS, hidden during workout) ── */}
       {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 'calc(64px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)', background: BG_BASE, borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 999 }}>
@@ -328,8 +334,11 @@ export default function CoachApp() {
           { id: 'training', icon: Dumbbell, label: 'Training' },
           { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
           { id: 'progress', icon: TrendingUp, label: 'Progress' },
+          ...(h.hasRealCoach
+            ? [{ id: 'messages', icon: MessageCircle, label: 'Messages' }]
+            : [{ id: 'coachIA', icon: Bot, label: 'Coach IA' }]),
           { id: 'profil', icon: User, label: 'Profil' },
-        ] as const).map(({ id, icon: Icon, label }) => {
+        ] as { id: Tab; icon: any; label: string }[]).map(({ id, icon: Icon, label }) => {
           const active = h.activeTab === id
           return (
             <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 6px', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}>
