@@ -95,13 +95,16 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
   const [ceReps, setCeReps] = useState(10)
   const [ceRest, setCeRest] = useState(90)
   const [saving, setSaving] = useState(false)
+  const [userGender, setUserGender] = useState('male')
 
-  /* ─── Load exercises ─── */
+  /* ─── Load exercises + profile gender ─── */
   useEffect(() => {
     supabase.from('exercises_db').select('id, name, muscle_group').order('name').limit(200)
       .then(({ data }: any) => setDbExercises(data || []))
     supabase.from('custom_exercises').select('*').eq('user_id', session.user.id).order('name')
       .then(({ data }: any) => setCustomExercises(data || []))
+    supabase.from('profiles').select('gender').eq('id', session.user.id).single()
+      .then(({ data }: any) => { if (data?.gender) setUserGender(data.gender) })
     if (editProgram) {
       setProgramName(editProgram.name)
       setProgramDays(editProgram.days || [])
@@ -121,7 +124,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
         body: JSON.stringify({
           objective: aiObjective, level: aiLevel, daysPerWeek: aiDays,
           duration: aiDuration, equipment: aiEquipment, priorities: aiPriorities,
-          notes: aiNotes, availableExercises: dbExercises,
+          notes: aiNotes, gender: userGender,
         }),
       })
       console.log('[ProgramBuilder] API response status:', res.status)
