@@ -128,7 +128,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .maybeSingle()
     console.log('=== FETCH MEAL PLAN ===', { found: !!data, id: data?.id, is_active: data?.is_active, days: data?.plan_data ? Object.keys(data.plan_data) : [] })
     setActiveMealPlan(data)
-    if (data && !coachMealPlan) setSubTab('plan')
+    if (data && !coachMealPlan) setSubTab('today')
     setLoadingPlan(false)
   }
 
@@ -718,7 +718,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <SlidersHorizontal size={18} color={GOLD} />
             <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Preferences nutrition</h2>
           </div>
-          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('plan') }} />
+          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
         </div>
       )}
 
