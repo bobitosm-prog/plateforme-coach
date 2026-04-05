@@ -4,19 +4,14 @@ import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import {
-  Ruler, Camera, Zap, Moon, CheckCircle,
+  Ruler, Camera, Zap, Moon, CheckCircle, Flame, Dumbbell, TrendingUp, Droplets,
 } from 'lucide-react'
 import ExercisePreview from '../ExercisePreview'
-import {
-  AreaChart, Area, BarChart, Bar, ResponsiveContainer, ReferenceLine,
-} from 'recharts'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
   todayNutritionKey,
 } from '../../../lib/design-tokens'
-import MetallicRing from '../ui/MetallicRing'
-import StatCircle from '../ui/StatCircle'
 import SwissBadge from '../ui/SwissBadge'
 
 interface HomeTabProps {
@@ -186,52 +181,85 @@ export default function HomeTab({
       <div style={{ padding: '20px 24px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button onClick={() => avatarRef.current?.click()} style={{ width: 36, height: 36, borderRadius: '50%', background: displayAvatar ? 'transparent' : BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
-              {displayAvatar
-                ? <img src={displayAvatar} style={{ width: 36, height: 36, objectFit: 'cover' }} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{firstName.charAt(0).toUpperCase()}</span>}
-            </button>
             <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: GOLD, letterSpacing: '0.15em' }}>MOOVX</span>
             <SwissBadge variant="outline" />
           </div>
-          <button onClick={() => setActiveTab('profil')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEXT_MUTED} strokeWidth="1.5"><path d="M12 15.5A3.5 3.5 0 1012 8.5a3.5 3.5 0 000 7z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <button onClick={() => avatarRef.current?.click()} style={{ width: 36, height: 36, borderRadius: '50%', background: displayAvatar ? 'transparent' : BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
+            {displayAvatar
+              ? <img src={displayAvatar} style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: '50%' }} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{firstName.charAt(0).toUpperCase()}</span>}
           </button>
         </div>
-        <p style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+        <p style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 3, textTransform: 'uppercase', margin: '0 0 4px' }}>
           {format(new Date(), 'EEEE d MMMM', { locale: fr })}
         </p>
-        <h1 style={{ fontFamily: FONT_DISPLAY, margin: 0, lineHeight: 1, letterSpacing: '2px' }}>
-          <span style={{ fontSize: 36, color: TEXT_PRIMARY }}>BONJOUR, </span>
-          <span style={{ fontSize: 56, color: GOLD }}>{firstName.toUpperCase()}</span>
+        <h1 style={{ fontFamily: FONT_DISPLAY, margin: '0 0 4px', lineHeight: 1, letterSpacing: '2px' }}>
+          <span style={{ fontSize: 30, color: TEXT_PRIMARY }}>BONJOUR, </span>
+          <span style={{ fontSize: 30, color: GOLD }}>{firstName.toUpperCase()}</span>
         </h1>
       </div>
 
-      <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* ═══ CALORIE RING ═══ */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          <MetallicRing progress={calPct / 100} value={`${consumedKcal}`} label="KCAL" size={200} />
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
-            <StatCircle value={consumedKcal} label="KCAL" icon={'\uD83D\uDD25'} />
-            <StatCircle value={weekSessions} label="SEANCES" icon={'\uD83C\uDFCB\uFE0F'} />
-            <StatCircle value={`+${streak}`} label="STREAK" icon={'\uD83D\uDCC8'} />
-            <StatCircle value={`${(waterToday / 1000).toFixed(1)}L`} label="EAU" icon={'\uD83D\uDCA7'} />
+        {/* ═══ HERO CARD — Ring + Stats side by side ═══ */}
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 20, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,168,67,0.5), transparent)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            {/* Compact Ring 130px */}
+            <div style={{ position: 'relative', width: 130, height: 130, flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: '50%', left: '50%', width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,67,0.07) 0%, transparent 70%)', transform: 'translate(-50%, -50%)', animation: 'goldPulse 4s ease-in-out infinite' }} />
+              <svg viewBox="0 0 140 140" width={130} height={130} style={{ filter: 'drop-shadow(0 0 12px rgba(212,168,67,0.12))', position: 'relative', zIndex: 1 }}>
+                <defs>
+                  <linearGradient id="heroGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#E8C97A" /><stop offset="40%" stopColor="#D4A843" /><stop offset="70%" stopColor="#C9A84C" /><stop offset="100%" stopColor="#8B6914" />
+                  </linearGradient>
+                  <filter id="heroGlow"><feGaussianBlur stdDeviation="2.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                </defs>
+                <circle cx="70" cy="70" r="56" fill="none" stroke="rgba(212,168,67,0.1)" strokeWidth="8" />
+                <circle cx="70" cy="70" r="56" fill="none" stroke="url(#heroGold)" strokeWidth="8" strokeLinecap="round" filter="url(#heroGlow)" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - calPct / 100)} transform="rotate(-90 70 70)" style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
+                <text x="70" y="64" textAnchor="middle" fill={GOLD} fontSize="32" fontFamily={FONT_DISPLAY} letterSpacing="1">{consumedKcal}</text>
+                <text x="70" y="82" textAnchor="middle" fill={TEXT_MUTED} fontSize="9" fontFamily={FONT_ALT} fontWeight="700" letterSpacing="2.5">KCAL</text>
+              </svg>
+            </div>
+            {/* Stats grid 2x2 */}
+            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                { icon: <Flame size={16} color={GOLD} />, value: consumedKcal, label: 'Kcal' },
+                { icon: <Dumbbell size={16} color={GOLD} />, value: weekSessions, label: 'Seances' },
+                { icon: <TrendingUp size={16} color={GOLD} />, value: `+${streak}`, label: 'Streak' },
+                { icon: <Droplets size={16} color={GOLD} />, value: `${(waterToday / 1000).toFixed(1)}L`, label: 'Eau' },
+              ].map((stat, i) => (
+                <div key={i} style={{ background: BG_CARD_2, border: `1px solid ${GOLD_DIM}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{stat.icon}</div>
+                  <div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: GOLD, lineHeight: 1 }}>{stat.value}</div>
+                    <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: TEXT_MUTED, textTransform: 'uppercase', marginTop: 1 }}>{stat.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* ═══ COACHING BANNER ═══ */}
-        <div style={{ height: 160, borderRadius: 16, overflow: 'hidden', border: `1px solid ${BORDER}`, position: 'relative' }}>
-          <img src="/images/hero-coaching.png" alt="Coach personnel MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.85) 0%, rgba(13,11,8,0.3) 100%)' }} />
-          <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
-            <span style={{ fontFamily: FONT_ALT, fontSize: 10, letterSpacing: 3, color: GOLD, fontWeight: 700, textTransform: 'uppercase' }}>COACHING PERSONNEL</span>
-            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, letterSpacing: 2, lineHeight: 1.1, marginTop: 4 }}>VOTRE COACH VOUS ACCOMPAGNE</span>
+        {/* ═══ COACH BANNER ═══ */}
+        <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: `1px solid ${BORDER}`, cursor: 'pointer' }}>
+          <img src="/images/hero-coaching.png" alt="Coaching personnalise" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.92) 0%, rgba(13,11,8,0.5) 50%, rgba(13,11,8,0.15) 100%)' }} />
+          <div style={{ position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)' }}>
+            <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 3, color: GOLD, textTransform: 'uppercase', marginBottom: 3 }}>Coaching personnel</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY, lineHeight: 1.15 }}>VOTRE COACH<br />VOUS ACCOMPAGNE</div>
           </div>
         </div>
 
-        {/* ═══ SÉANCE DU JOUR — Stitch Card ═══ */}
-        <div style={{ background: BG_CARD, border: `2px solid ${GOLD}`, position: 'relative', overflow: 'hidden' }}>
+        {/* ═══ PROGRAMME — Title with line ═══ */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: -4 }}>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 3, color: TEXT_PRIMARY }}>PROGRAMME</span>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
+          <button onClick={() => setActiveTab('training')} style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: GOLD, textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}>Voir tout</button>
+        </div>
+
+        {/* ═══ SÉANCE DU JOUR ═══ */}
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, position: 'relative', overflow: 'hidden' }}>
           {/* Background image overlay */}
           <div style={{ height: todayExercises.length > 0 && !todaySession ? 160 : 0, position: 'relative', overflow: 'hidden' }}>
             {todayExercises.length > 0 && !todaySession && (
@@ -288,17 +316,17 @@ export default function HomeTab({
           </div>
         </div>
 
-        {/* ═══ PERFORMANCE HEBDOMADAIRE — Bar chart ═══ */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: '1px' }}>PERFORMANCE HEBDOMADAIRE</span>
-            <button onClick={() => setActiveTab('progress')} style={{ fontFamily: FONT_BODY, fontSize: 10, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir tout</button>
+        {/* ═══ PERFORMANCE HEBDO ═══ */}
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, color: TEXT_PRIMARY }}>PERFORMANCE HEBDO</span>
+            <button onClick={() => setActiveTab('progress')} style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: GOLD, textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}>Voir tout</button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 60 }}>
             {barData.map((b, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: '100%', height: Math.max(4, (b.value / barMax) * 80), background: b.isToday ? GOLD : b.value > 0 ? `${GOLD}60` : TEXT_DIM, transition: 'height 0.5s ease' }} />
-                <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: b.isToday ? GOLD : TEXT_MUTED }}>{b.label}</span>
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <div style={{ width: '100%', height: Math.max(4, (b.value / barMax) * 55), borderRadius: '4px 4px 0 0', background: b.isToday ? TEXT_DIM : b.value > 40 ? 'linear-gradient(180deg, #E8C97A, #D4A843)' : GOLD, opacity: b.value < 10 && b.value > 0 ? 0.5 : b.value === 0 ? 0.15 : 1, transition: 'height 0.5s ease' }} />
+                <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 600, letterSpacing: 1, color: b.isToday ? GOLD : TEXT_DIM }}>{b.label}</span>
               </div>
             ))}
           </div>
@@ -307,7 +335,7 @@ export default function HomeTab({
         {/* ═══ WATER QUICK ADD ═══ */}
         <div style={{ display: 'flex', gap: 6 }}>
           {[250, 500, 1000].map(ml => (
-            <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '12px 4px', border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_MUTED, fontSize: 12, fontWeight: 600, fontFamily: FONT_BODY, transition: 'all 0.2s' }}
+            <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '12px 4px', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, background: 'transparent', cursor: 'pointer', color: TEXT_MUTED, fontSize: 12, fontWeight: 600, fontFamily: FONT_BODY, transition: 'all 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = GOLD_RULE; e.currentTarget.style.color = TEXT_MUTED }}
             >
@@ -317,7 +345,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ NUTRITION MACROS ═══ */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 18 }}>
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: TEXT_PRIMARY, letterSpacing: '1px' }}>NUTRITION</span>
             <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: FONT_BODY, fontSize: 10, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir plan</button>
