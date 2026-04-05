@@ -61,7 +61,7 @@ export default function CoachProfile({
         <div style={{ fontSize: '0.82rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>{session.user.email}</div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
           <span className="badge badge-active">Coach</span>
-          {coachProfile?.stripe_account_id ? <span style={{ padding: '3px 9px', borderRadius: 2, fontSize: '0.65rem', fontWeight: 700, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const, background: `rgba(74,222,128,0.12)`, color: GREEN, border: `1px solid rgba(74,222,128,0.2)` }}>Stripe connecté</span> : <span style={{ padding: '3px 9px', borderRadius: 2, fontSize: '0.65rem', fontWeight: 700, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}` }}>Stripe manquant</span>}
+          {coachProfile?.stripe_account_id ? <span style={{ padding: '3px 9px', borderRadius: 12, fontSize: '0.65rem', fontWeight: 700, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const, background: `rgba(74,222,128,0.12)`, color: GREEN, border: `1px solid rgba(74,222,128,0.2)` }}>Stripe connecté</span> : <span style={{ padding: '3px 9px', borderRadius: 12, fontSize: '0.65rem', fontWeight: 700, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}` }}>Stripe manquant</span>}
         </div>
       </div>
 
@@ -71,7 +71,7 @@ export default function CoachProfile({
           {coachProfile.coach_speciality?.length > 0 && (
             <div><div style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 6 }}>Spécialités</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {coachProfile.coach_speciality.map((s: string) => <span key={s} style={{ padding: '3px 10px', borderRadius: 2, fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}`, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{s}</span>)}
+                {coachProfile.coach_speciality.map((s: string) => <span key={s} style={{ padding: '3px 10px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}`, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{s}</span>)}
               </div>
             </div>
           )}

@@ -209,7 +209,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               <div style={{
                 maxWidth: '85%', padding: '10px 14px', fontSize: '0.85rem', lineHeight: 1.55, color: TEXT_PRIMARY,
                 fontFamily: FONT_BODY, fontWeight: 300,
-                borderRadius: 2,
+                borderRadius: 12,
                 background: msg.role === 'user' ? GOLD_DIM : BG_CARD_2,
                 border: msg.role === 'user' ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
                 whiteSpace: 'pre-wrap', wordBreak: 'break-word',
@@ -221,7 +221,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
 
           {loading && (
             <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <div style={{ padding: '10px 14px', borderRadius: 2, background: BG_CARD_2, border: `1px solid ${BORDER}` }}>
+              <div style={{ padding: '10px 14px', borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}` }}>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {[0, 1, 2].map(i => (
                     <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD, opacity: 0.5, animation: `dotPulse 1.2s ${i * 0.2}s ease-in-out infinite` }} />

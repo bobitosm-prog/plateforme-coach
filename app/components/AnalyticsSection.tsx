@@ -32,7 +32,7 @@ type WeightPeriod = '30j' | '60j' | '90j' | 'tout'
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: BG_CARD, border: `1px solid ${GOLD}`, borderRadius: 2, padding: '8px 12px', fontSize: '0.72rem', fontFamily: FONT_BODY }}>
+    <div style={{ background: BG_CARD, border: `1px solid ${GOLD}`, borderRadius: 12, padding: '8px 12px', fontSize: '0.72rem', fontFamily: FONT_BODY }}>
       <div style={{ color: TEXT_MUTED, marginBottom: 4 }}>{label}</div>
       {payload.map((p: any, i: number) => (
         <div key={i} style={{ color: p.color || TEXT_PRIMARY, fontWeight: 600 }}>

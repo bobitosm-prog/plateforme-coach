@@ -213,10 +213,10 @@ export default function HomeTab({
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <MetallicRing progress={calPct / 100} value={`${consumedKcal}`} label="KCAL" size={200} />
           <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
-            <StatCircle value={consumedKcal} label="KCAL" icon="\u{1F525}" />
-            <StatCircle value={weekSessions} label="SEANCES" icon="\u{1F3CB}\uFE0F" />
-            <StatCircle value={`+${streak}`} label="STREAK" icon="\u{1F4C8}" />
-            <StatCircle value={`${(waterToday / 1000).toFixed(1)}L`} label="EAU" icon="\u{1F4A7}" />
+            <StatCircle value={consumedKcal} label="KCAL" icon={'\uD83D\uDD25'} />
+            <StatCircle value={weekSessions} label="SEANCES" icon={'\uD83C\uDFCB\uFE0F'} />
+            <StatCircle value={`+${streak}`} label="STREAK" icon={'\uD83D\uDCC8'} />
+            <StatCircle value={`${(waterToday / 1000).toFixed(1)}L`} label="EAU" icon={'\uD83D\uDCA7'} />
           </div>
         </div>
 

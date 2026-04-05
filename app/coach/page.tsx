@@ -56,7 +56,7 @@ function WheelPicker({ items, value, onChange, label, width = 72 }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
       {label && <div style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: TEXT_MUTED, marginBottom: 4, height: 14 }}>{label}</div>}
-      <div style={{ position: 'relative', height: WP_ITEM_H * 5, width, overflow: 'hidden', borderRadius: 2, background: BG_BASE }}>
+      <div style={{ position: 'relative', height: WP_ITEM_H * 5, width, overflow: 'hidden', borderRadius: 12, background: BG_BASE }}>
         <div style={{ position: 'absolute', top: WP_ITEM_H * 2, height: WP_ITEM_H, inset: '0 0 auto', left: 0, right: 0, background: GOLD_DIM, borderTop: `1px solid ${GOLD_RULE}`, borderBottom: `1px solid ${GOLD_RULE}`, pointerEvents: 'none', zIndex: 2 }} />
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: WP_ITEM_H * 2, background: `linear-gradient(to bottom, ${BG_BASE} 40%, transparent)`, pointerEvents: 'none', zIndex: 3 }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: WP_ITEM_H * 2, background: `linear-gradient(to top, ${BG_BASE} 40%, transparent)`, pointerEvents: 'none', zIndex: 3 }} />
@@ -314,14 +314,14 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
                       <label className="form-label">Début</label>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, background: BG_BASE, borderRadius: 2, padding: '4px 0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, background: BG_BASE, borderRadius: 12, padding: '4px 0' }}>
                         <WheelPicker width={60} label="H" items={WP_HOURS} value={hS.padStart(2,'0')} onChange={hv => h.setNsStartTime(`${hv}:${mS}`)} />
                         <WheelPicker width={60} label="Min" items={WP_MINS} value={mSR} onChange={m => h.setNsStartTime(`${hS}:${m}`)} />
                       </div>
                     </div>
                     <div>
                       <label className="form-label">Fin</label>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, background: BG_BASE, borderRadius: 2, padding: '4px 0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, background: BG_BASE, borderRadius: 12, padding: '4px 0' }}>
                         <WheelPicker width={60} label="H" items={WP_HOURS} value={hE.padStart(2,'0')} onChange={hv => h.setNsEndTime(`${hv}:${mE}`)} />
                         <WheelPicker width={60} label="Min" items={WP_MINS} value={mER} onChange={m => h.setNsEndTime(`${hE}:${m}`)} />
                       </div>

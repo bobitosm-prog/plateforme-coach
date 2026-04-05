@@ -84,7 +84,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
 
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 40, animation: 'fadeUp 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
-        <div style={{ width: 64, height: 64, background: GOLD, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+        <div style={{ width: 64, height: 64, background: GOLD, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
           {role === 'coach' ? <Crown size={30} color="#0D0B08" strokeWidth={2} /> : <Sparkles size={30} color="#0D0B08" strokeWidth={2} />}
         </div>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(1.8rem,4vw,2.6rem)', letterSpacing: '3px', color: TEXT_PRIMARY, margin: '0 0 8px' }}>

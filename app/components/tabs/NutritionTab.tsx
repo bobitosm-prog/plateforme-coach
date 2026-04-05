@@ -581,8 +581,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   <div key={label} style={{ textAlign: 'center' }}>
                     <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED, letterSpacing: '0.1em', marginBottom: 4 }}>{label}</div>
                     <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: TEXT_MUTED }}>/{target}g</span></div>
-                    <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
-                      <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 2, transition: 'width 300ms' }} />
+                    <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, overflow: 'hidden', marginTop: 4 }}>
+                      <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 12, transition: 'width 300ms' }} />
                     </div>
                   </div>
                 )

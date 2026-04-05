@@ -131,7 +131,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
               { l: 'Gluc', v: `${gluc}g`, c: GOLD },
               { l: 'Lip', v: `${lip}g`, c: GOLD },
             ].map(m => (
-              <div key={m.l} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 2, padding: '8px 4px', textAlign: 'center' }}>
+              <div key={m.l} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 4px', textAlign: 'center' }}>
                 <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.1rem', fontWeight: 700, color: m.c }}>{m.v}</div>
                 <div style={{ fontSize: '0.55rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>{m.l}</div>
               </div>

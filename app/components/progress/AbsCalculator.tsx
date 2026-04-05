@@ -291,7 +291,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
                     {weeks} sem<span style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginLeft: 6 }}>≈ {months} mois</span>
                   </span>
                 </div>
-                <div style={{ height: 4, background: '#222', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: 4, background: '#222', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${Math.min(100, Math.max(5, ((bf - parseFloat(targetBf)) / bf) * 100))}%`, background: `linear-gradient(90deg, ${GOLD}, #D4AF37)`, borderRadius: 2 }} />
                 </div>
                 <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 4 }}>

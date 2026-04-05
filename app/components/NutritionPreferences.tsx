@@ -584,7 +584,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             const active = allergies.includes(opt.id)
             return (
               <button key={opt.id} onClick={() => setAllergies(prev => prev.includes(opt.id) ? prev.filter(a => a !== opt.id) : [...prev, opt.id])} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', background: active ? `${RED}15` : BG_BASE, border: `1.5px solid ${active ? RED : BORDER}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
-                <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? RED : TEXT_DIM}`, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? RED : 'transparent' }}>
+                <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? RED : TEXT_DIM}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? RED : 'transparent' }}>
                   {active && <Check size={10} color="#fff" strokeWidth={3} />}
                 </div>
                 <span style={{ fontSize: '0.7rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? RED : TEXT_PRIMARY }}>{opt.label}</span>
@@ -708,7 +708,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             const active = (mealPrefs[activeMealTab] || []).includes(food)
             return (
               <button key={food} onClick={() => toggleMealFood(activeMealTab, food)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
-                <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? GOLD : TEXT_DIM}`, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? GOLD : 'transparent' }}>
+                <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? GOLD : TEXT_DIM}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? GOLD : 'transparent' }}>
                   {active && <Check size={10} color="#0D0B08" strokeWidth={3} />}
                 </div>
                 <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? GOLD : TEXT_PRIMARY, textAlign: 'left' }}>{food}</span>

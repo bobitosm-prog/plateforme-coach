@@ -107,7 +107,7 @@ export default function CoachCalendar({
                     </span>
                   </div>
                   {daySessions.length > 0 && (
-                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 2, padding: '2px 7px', letterSpacing: '1px' }}>
+                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '2px 7px', letterSpacing: '1px' }}>
                       {daySessions.length}
                     </span>
                   )}
@@ -138,7 +138,7 @@ export default function CoachCalendar({
                         style={{ borderLeft: `2px solid ${GOLD}` }}
                       >
                         {/* Type icon */}
-                        <div style={{ width: 38, height: 38, borderRadius: 2, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, flexShrink: 0 }}>
+                        <div style={{ width: 38, height: 38, borderRadius: 12, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, flexShrink: 0 }}>
                           {TYPE_ICONS[s.session_type] ?? <Dumbbell size={15} />}
                         </div>
                         {/* Info */}
@@ -157,7 +157,7 @@ export default function CoachCalendar({
                               {avatarInitials}
                             </div>
                           </div>
-                          <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 2, padding: '2px 7px', letterSpacing: '0.5px' }}>
+                          <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '2px 7px', letterSpacing: '0.5px' }}>
                             {s.duration_minutes}min
                           </span>
                         </div>
