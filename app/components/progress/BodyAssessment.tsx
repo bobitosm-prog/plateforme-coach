@@ -222,8 +222,8 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
                 <div
                   onClick={() => !uploading[key] && fileRefs[key].current?.click()}
                   style={{
-                    border: photos[key] ? `2px solid ${GOLD}` : '1px dashed rgba(201,168,76,0.3)',
-                    borderRadius: 12,
+                    border: photos[key] ? `2px solid ${GOLD}` : '2px dashed rgba(201,168,76,0.4)',
+                    borderRadius: 20,
                     aspectRatio: '3/4',
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     gap: 8, cursor: 'pointer', position: 'relative', overflow: 'hidden',
