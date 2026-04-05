@@ -71,17 +71,20 @@ export default function LoginPage() {
   )
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: FONT_BODY }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: FONT_BODY, position: 'relative' }}>
+      {/* Hero gym background */}
+      <img src="/images/hero-gym.png" alt="Gym luxe Geneve" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
         @keyframes panelIn{from{opacity:0}to{opacity:1}}
-        .auth-input{width:100%;background:${BG_BASE};border:1px solid ${BORDER};border-radius:0;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${FONT_BODY}}
+        .auth-input{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${FONT_BODY}}
         .auth-input:focus{border-color:${GOLD};box-shadow:none}
         .auth-input::placeholder{color:${TEXT_DIM}}
-        .oauth-btn{width:100%;padding:14px 20px;border-radius:0;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s}
+        .oauth-btn{width:100%;padding:14px 20px;border-radius:12px;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s}
         .oauth-btn:hover{transform:translateY(-1px)}
-        .gold-btn{width:100%;padding:15px 20px;background:${GOLD};border:none;border-radius:0;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${FONT_ALT};clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);transition:transform 0.2s,box-shadow 0.2s}
+        .gold-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, #C9A84C 70%, #8B6914 100%);border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 24px rgba(212,168,67,0.25)}
         .gold-btn:hover{transform:translateY(-2px)}
         .gold-btn:disabled{opacity:0.6;cursor:wait;transform:none;box-shadow:none}
         @media(max-width:768px){.auth-left{display:none!important}.auth-right{min-height:100dvh!important}}
@@ -89,7 +92,7 @@ export default function LoginPage() {
 
       <LeftPanel />
 
-      <div className="auth-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', background: BG_BASE, overflowY: 'auto' }}>
+      <div className="auth-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', overflowY: 'auto', position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 400, width: '100%' }}>
 
           {/* Mobile logo */}

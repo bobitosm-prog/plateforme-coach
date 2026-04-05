@@ -220,6 +220,16 @@ export default function HomeTab({
           </div>
         </div>
 
+        {/* ═══ COACHING BANNER ═══ */}
+        <div style={{ height: 160, borderRadius: 16, overflow: 'hidden', border: `1px solid ${BORDER}`, position: 'relative' }}>
+          <img src="/images/hero-coaching.png" alt="Coach personnel MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.85) 0%, rgba(13,11,8,0.3) 100%)' }} />
+          <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
+            <span style={{ fontFamily: FONT_ALT, fontSize: 10, letterSpacing: 3, color: GOLD, fontWeight: 700, textTransform: 'uppercase' }}>COACHING PERSONNEL</span>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, letterSpacing: 2, lineHeight: 1.1, marginTop: 4 }}>VOTRE COACH VOUS ACCOMPAGNE</span>
+          </div>
+        </div>
+
         {/* ═══ SÉANCE DU JOUR — Stitch Card ═══ */}
         <div style={{ background: BG_CARD, border: `2px solid ${GOLD}`, position: 'relative', overflow: 'hidden' }}>
           {/* Background image overlay */}

@@ -477,9 +477,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
   return (
     <div style={{ minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
-      {/* HEADER */}
-      <div style={{ padding: '20px 20px 0' }}>
-        <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 40, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>NUTRITION</h1>
+      {/* HERO BANNER */}
+      <div style={{ margin: '0 20px 0', height: 180, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
+        <img src="/images/hero-nutrition.png" alt="Plan nutritionnel MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
+        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 3, margin: 0, color: TEXT_PRIMARY, lineHeight: 1 }}>VOTRE PLAN NUTRITIONNEL</h1>
+          <span style={{ fontFamily: FONT_ALT, fontSize: 12, color: GOLD, fontWeight: 700, letterSpacing: 2 }}>Personnalise par IA</span>
+        </div>
       </div>
 
       {/* PILLS NAVIGATION */}

@@ -418,11 +418,13 @@ export default function TrainingTab({
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
       <WorkoutCelebration visible={workoutFinished} />
 
-      {/* ── PAGE HEADER ── */}
-      <div style={{ padding: '20px 16px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 40, fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>ENTRAÎNEMENT</h1>
-          <span style={{ fontSize: '0.68rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{format(new Date(), 'EEE d MMM', { locale: fr })}</span>
+      {/* ── HERO BANNER ── */}
+      <div style={{ margin: '0 16px', height: 180, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
+        <img src="/images/hero-athlete.png" alt="Athlete MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
+        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 3, margin: 0, color: TEXT_PRIMARY, lineHeight: 1 }}>VOTRE PROGRAMME</h1>
+          <span style={{ fontFamily: FONT_ALT, fontSize: 12, color: GOLD, fontWeight: 700, letterSpacing: 2 }}>{format(new Date(), 'EEE d MMM', { locale: fr }).toUpperCase()} — Semaine en cours</span>
         </div>
       </div>
 
