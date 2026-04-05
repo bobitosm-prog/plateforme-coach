@@ -80,21 +80,21 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 28, maxWidth: 420, width: '100%' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', textTransform: 'uppercase' }}>ENVOYER UNE VIDEO</h3>
-          <button onClick={onClose} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_MUTED, cursor: 'pointer', padding: 4, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
+          <button onClick={onClose} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_MUTED, cursor: 'pointer', padding: 4, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
         </div>
         <p style={{ color: TEXT_MUTED, fontSize: 14, margin: '0 0 20px', fontFamily: FONT_BODY }}>Exercice : <span style={{ color: GOLD }}>{exerciseName}</span></p>
 
         <input ref={fileRef} type="file" accept="video/mp4,video/quicktime,video/webm" capture="environment" onChange={handleVideoSelect} style={{ display: 'none' }} />
 
         {!videoFile ? (
-          <div onClick={() => fileRef.current?.click()} style={{ border: `2px dashed ${GOLD_RULE}`, borderRadius: 0, padding: 36, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s' }}>
+          <div onClick={() => fileRef.current?.click()} style={{ border: `2px dashed ${GOLD_RULE}`, borderRadius: 12, padding: 36, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s' }}>
             <Video size={36} color={GOLD} style={{ marginBottom: 8 }} />
             <p style={{ color: TEXT_MUTED, fontSize: 14, margin: '0 0 4px', fontFamily: FONT_BODY }}>Appuie pour filmer ou choisir</p>
             <p style={{ color: TEXT_DIM, fontSize: 12, margin: 0, fontFamily: FONT_BODY }}>Max 30s · MP4, MOV, WebM · 50 MB</p>
           </div>
         ) : (
           <div>
-            <video src={videoPreview!} controls style={{ width: '100%', borderRadius: 0, maxHeight: 240 }} />
+            <video src={videoPreview!} controls style={{ width: '100%', borderRadius: 12, maxHeight: 240 }} />
             <button onClick={() => { setVideoFile(null); setVideoPreview(null) }} style={{ background: 'none', border: 'none', color: RED, fontSize: 12, cursor: 'pointer', marginTop: 8, fontFamily: FONT_BODY }}>
               Supprimer et recommencer
             </button>
@@ -105,13 +105,13 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
           placeholder="Note pour ton coach (optionnel)..."
           value={clientNote}
           onChange={e => setClientNote(e.target.value)}
-          style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: 12, color: TEXT_PRIMARY, fontSize: 14, marginTop: 16, minHeight: 56, resize: 'none', fontFamily: FONT_BODY, boxSizing: 'border-box' }}
+          style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, color: TEXT_PRIMARY, fontSize: 14, marginTop: 16, minHeight: 56, resize: 'none', fontFamily: FONT_BODY, boxSizing: 'border-box' }}
         />
 
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          <button onClick={onClose} style={{ flex: 1, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, padding: 12, color: TEXT_PRIMARY, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>Annuler</button>
+          <button onClick={onClose} style={{ flex: 1, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, color: TEXT_PRIMARY, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>Annuler</button>
           <button onClick={handleSubmit} disabled={!videoFile || uploading}
-            style={{ flex: 1, background: uploading || !videoFile ? BORDER : GOLD, border: 'none', borderRadius: 0, padding: 12, color: uploading || !videoFile ? TEXT_MUTED : '#050505', fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
+            style={{ flex: 1, background: uploading || !videoFile ? BORDER : GOLD, border: 'none', borderRadius: 12, padding: 12, color: uploading || !videoFile ? TEXT_MUTED : '#050505', fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
             {uploading ? 'Envoi...' : 'Envoyer au coach'}
           </button>
         </div>

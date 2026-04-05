@@ -48,7 +48,7 @@ export default function CoachRevenue({
       {coachProfile && !coachProfile.stripe_onboarding_complete && (
         <div style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.85rem', color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Connecte ton compte Stripe pour recevoir les paiements de tes clients</span>
-          <button onClick={handleStripeConnect} disabled={stripeConnecting} style={{ padding: '8px 16px', background: GOLD, border: 'none', borderRadius: 0, color: BG_BASE, fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0, letterSpacing: '1px', textTransform: 'uppercase' as const }}>
+          <button onClick={handleStripeConnect} disabled={stripeConnecting} style={{ padding: '8px 16px', background: GOLD, border: 'none', borderRadius: 12, color: BG_BASE, fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0, letterSpacing: '1px', textTransform: 'uppercase' as const }}>
             {stripeConnecting ? '...' : 'Connecter Stripe'}
           </button>
         </div>
@@ -73,7 +73,7 @@ export default function CoachRevenue({
                 </div>
                 <button
                   onClick={() => setSection('messages')}
-                  style={{ background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 0, padding: '6px 14px', color: RED, fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const }}
+                  style={{ background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 12, padding: '6px 14px', color: RED, fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const }}
                 >
                   Envoyer un message
                 </button>

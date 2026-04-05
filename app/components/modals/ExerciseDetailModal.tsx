@@ -45,7 +45,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
             <div style={{ flex: 1, paddingRight: 12 }}>
               {exercise.muscle_group && (
-                <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: MUSCLE_COLORS[exercise.muscle_group] || GOLD, background: `${MUSCLE_COLORS[exercise.muscle_group] || GOLD}20`, borderRadius: 0, padding: '2px 8px', display: 'inline-block', fontFamily: FONT_ALT, letterSpacing: '2px' }}>
+                <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: MUSCLE_COLORS[exercise.muscle_group] || GOLD, background: `${MUSCLE_COLORS[exercise.muscle_group] || GOLD}20`, borderRadius: 12, padding: '2px 8px', display: 'inline-block', fontFamily: FONT_ALT, letterSpacing: '2px' }}>
                   {exercise.muscle_group}
                 </span>
               )}
@@ -53,7 +53,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
                 {exercise.name}
               </h3>
             </div>
-            <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 0, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <X size={14} color={TEXT_MUTED} />
             </button>
           </div>
@@ -80,16 +80,16 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
           {/* Tags */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
             {exercise.secondary_muscles && (
-              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD_2, borderRadius: 0, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{exercise.secondary_muscles}</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD_2, borderRadius: 12, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{exercise.secondary_muscles}</span>
             )}
             {exercise.equipment && (
-              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD_2, borderRadius: 0, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{exercise.equipment}</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD_2, borderRadius: 12, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{exercise.equipment}</span>
             )}
             {exercise.difficulty && (
-              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: dc, background: `${dc}18`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{exercise.difficulty}</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: dc, background: `${dc}18`, borderRadius: 12, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{exercise.difficulty}</span>
             )}
             {exercise.category && (
-              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: GOLD, background: `${GOLD}18`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{exercise.category}</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: GOLD, background: `${GOLD}18`, borderRadius: 12, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{exercise.category}</span>
             )}
           </div>
 
@@ -135,7 +135,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
           )}
 
           <button onClick={onClose}
-            style={{ width: '100%', background: BG_BASE, color: TEXT_MUTED, fontWeight: 800, padding: '14px', borderRadius: 0, border: `1px solid ${BORDER}`, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', letterSpacing: '2px', textTransform: 'uppercase' }}>
+            style={{ width: '100%', background: BG_BASE, color: TEXT_MUTED, fontWeight: 800, padding: '14px', borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', letterSpacing: '2px', textTransform: 'uppercase' }}>
             Fermer
           </button>
         </motion.div>

@@ -24,7 +24,7 @@ export default function TrainingDayChips({ trainingDay, todayKey, coachProgram, 
           return (
             <button key={day} onClick={() => onSelectDay(day)} style={{
               flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-              padding: '10px 14px', borderRadius: 0, cursor: 'pointer',
+              padding: '10px 14px', borderRadius: 12, cursor: 'pointer',
               background: isActive ? GOLD : 'transparent',
               border: isActive ? 'none' : `1px solid ${BORDER}`,
               borderLeft: isActive && isToday ? `3px solid ${GOLD}` : undefined,

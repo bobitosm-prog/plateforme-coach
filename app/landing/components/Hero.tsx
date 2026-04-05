@@ -270,7 +270,7 @@ export default function Hero() {
                 position: 'relative',
                 overflow: 'hidden',
                 transition: 'transform 0.2s, box-shadow 0.2s',
-                clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+                
                 textDecoration: 'none',
               }}
             >
@@ -292,7 +292,7 @@ export default function Hero() {
                 border: '1px solid var(--gold-rule)',
                 cursor: 'none',
                 transition: 'all 0.3s',
-                clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+                
                 textDecoration: 'none',
               }}
             >

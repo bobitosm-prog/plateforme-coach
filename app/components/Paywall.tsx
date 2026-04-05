@@ -116,7 +116,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
                 ))}
               </div>
               <button onClick={handleCoachCheckout} disabled={loading !== null}
-                style={{ width: '100%', padding: '15px 20px', borderRadius: 0, border: 'none', cursor: loading ? 'wait' : 'pointer', background: GOLD, color: '#050505', fontSize: '0.9rem', fontWeight: 800, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)', opacity: loading && loading !== 'coach' ? 0.5 : 1 }}>
+                style={{ width: '100%', padding: '15px 20px', borderRadius: 12, border: 'none', cursor: loading ? 'wait' : 'pointer', background: GOLD, color: '#050505', fontSize: '0.9rem', fontWeight: 800, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase', opacity: loading && loading !== 'coach' ? 0.5 : 1 }}>
                 {loading === 'coach' ? 'Redirection...' : `S'abonner -- CHF ${coachData.rate}/mois`}
               </button>
             </div>
@@ -173,7 +173,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
 
                 <button onClick={() => handleSelect(plan.id)} disabled={loading !== null}
                   style={{
-                    width: '100%', padding: '15px 20px', borderRadius: 0, border: isHighlight ? 'none' : `1px solid ${GOLD_RULE}`, cursor: loading ? 'wait' : 'pointer',
+                    width: '100%', padding: '15px 20px', borderRadius: 12, border: isHighlight ? 'none' : `1px solid ${GOLD_RULE}`, cursor: loading ? 'wait' : 'pointer',
                     background: isHighlight ? GOLD : 'transparent',
                     color: isHighlight ? '#050505' : TEXT_PRIMARY,
                     fontSize: '0.9rem', fontWeight: 800, fontFamily: FONT_ALT,

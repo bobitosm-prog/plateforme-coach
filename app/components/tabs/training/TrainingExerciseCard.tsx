@@ -120,7 +120,7 @@ export default function TrainingExerciseCard({
                   fontFamily: FONT_ALT, fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase',
                   color: MUSCLE_COLORS[ex.muscle_group] || GOLD,
                   background: `${MUSCLE_COLORS[ex.muscle_group] || GOLD}20`,
-                  borderRadius: 0, padding: '2px 7px', flexShrink: 0,
+                  borderRadius: 12, padding: '2px 7px', flexShrink: 0,
                 }}>{ex.muscle_group}</span>
               )}
 
@@ -129,7 +129,7 @@ export default function TrainingExerciseCard({
                 <motion.span
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  style={{ fontFamily: FONT_ALT, fontSize: '0.58rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 0, padding: '2px 7px', flexShrink: 0 }}
+                  style={{ fontFamily: FONT_ALT, fontSize: '0.58rem', fontWeight: 700, color: GREEN, background: `${GREEN}20`, borderRadius: 12, padding: '2px 7px', flexShrink: 0 }}
                 >✓ TERMINÉ</motion.span>
               )}
             </div>
@@ -160,7 +160,7 @@ export default function TrainingExerciseCard({
               style={{
                 background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px',
                 color: TEXT_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                minWidth: 32, minHeight: 32, borderRadius: 0, flexShrink: 0,
+                minWidth: 32, minHeight: 32, borderRadius: 12, flexShrink: 0,
               }}
             >
               <MoreHorizontal size={16} />
@@ -302,7 +302,7 @@ export default function TrainingExerciseCard({
                   style={{
                     background: done ? 'rgba(74,222,128,0.08)' : BG_BASE,
                     border: `1px solid ${done ? GREEN + '40' : TEXT_DIM}`,
-                    borderRadius: 0, padding: '7px 4px',
+                    borderRadius: 12, padding: '7px 4px',
                     fontSize: 16, fontFamily: FONT_BODY,
                     fontWeight: 500, color: done ? GREEN : TEXT_PRIMARY,
                     textAlign: 'center', width: 80, outline: 'none',
@@ -324,7 +324,7 @@ export default function TrainingExerciseCard({
                   style={{
                     background: done ? 'rgba(74,222,128,0.08)' : BG_BASE,
                     border: `1px solid ${done ? GREEN + '40' : TEXT_DIM}`,
-                    borderRadius: 0, padding: '7px 4px',
+                    borderRadius: 12, padding: '7px 4px',
                     fontSize: 16, fontFamily: FONT_BODY,
                     fontWeight: 500, color: done ? GREEN : TEXT_PRIMARY,
                     textAlign: 'center', width: '100%', outline: 'none',
@@ -340,7 +340,7 @@ export default function TrainingExerciseCard({
                     whileTap={{ scale: 1.1 }}
                     onClick={() => trainingIsToday ? onToggleSet(ex.name, si, numSets, restSecs) : undefined}
                     style={{
-                      width: 28, height: 28, borderRadius: 0,
+                      width: 28, height: 28, borderRadius: 12,
                       border: `1px solid ${done ? GOLD : TEXT_DIM}`,
                       background: done ? GOLD : 'transparent',
                       cursor: trainingIsToday ? 'pointer' : 'default',

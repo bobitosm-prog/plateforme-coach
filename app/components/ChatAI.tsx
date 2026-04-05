@@ -159,7 +159,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     if (hideFloatingButton) return null
     return (
       <button onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 300) }}
-        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 0, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998,  }}>
         <Bot size={24} color="#050505" strokeWidth={2.5} />
       </button>
     )
@@ -179,7 +179,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 0, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Bot size={20} color="#050505" strokeWidth={2.5} />
             </div>
             <div>
@@ -189,7 +189,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               </div>
             </div>
           </div>
-          <button onClick={() => handleClose()} style={{ width: 32, height: 32, borderRadius: 0, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => handleClose()} style={{ width: 32, height: 32, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={TEXT_MUTED} />
           </button>
         </div>
@@ -239,7 +239,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         {messages.length === 0 && (
           <div style={{ padding: '0 16px 8px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {getSuggestions().map(s => (
-              <button key={s} onClick={() => sendMessage(s)} style={{ fontSize: '0.7rem', fontWeight: 700, fontFamily: FONT_ALT, color: GOLD, background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '6px 12px', cursor: 'pointer', transition: 'all 150ms', letterSpacing: '0.5px' }}>{s}</button>
+              <button key={s} onClick={() => sendMessage(s)} style={{ fontSize: '0.7rem', fontWeight: 700, fontFamily: FONT_ALT, color: GOLD, background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '6px 12px', cursor: 'pointer', transition: 'all 150ms', letterSpacing: '0.5px' }}>{s}</button>
             ))}
           </div>
         )}
@@ -250,10 +250,10 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
             placeholder="Pose ta question..."
             rows={1}
-            style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, fontFamily: FONT_BODY }}
+            style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, fontFamily: FONT_BODY }}
           />
           <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
-            style={{ width: 40, height: 40, borderRadius: 0, background: input.trim() ? GOLD : BG_CARD_2, border: input.trim() ? 'none' : `1px solid ${BORDER}`, cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms' }}>
+            style={{ width: 40, height: 40, borderRadius: 12, background: input.trim() ? GOLD : BG_CARD_2, border: input.trim() ? 'none' : `1px solid ${BORDER}`, cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms' }}>
             <Send size={18} color={input.trim() ? '#050505' : TEXT_MUTED} strokeWidth={2.5} />
           </button>
         </div>

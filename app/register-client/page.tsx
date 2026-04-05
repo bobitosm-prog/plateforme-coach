@@ -161,7 +161,7 @@ function RegisterContent() {
           <p style={{ color: TEXT_MUTED, fontSize: '0.78rem', margin: '0 0 32px', lineHeight: 1.5, fontFamily: FONT_BODY }}>
             Clique sur le lien pour activer ton compte et commencer.
           </p>
-          <button onClick={() => { setEmailSent(false); setPassword(''); setConfirmPassword('') }} style={{ background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '12px 32px', color: TEXT_MUTED, fontSize: '0.85rem', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700, transition: 'border-color 0.3s' }}>Retour</button>
+          <button onClick={() => { setEmailSent(false); setPassword(''); setConfirmPassword('') }} style={{ background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '12px 32px', color: TEXT_MUTED, fontSize: '0.85rem', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700, transition: 'border-color 0.3s' }}>Retour</button>
         </div>
       </div>
     </div>
@@ -246,7 +246,7 @@ function RegisterContent() {
                     </span>
                   ))}
                 </div>
-                <span style={{ fontSize: 12, color: GOLD, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '4px 12px', fontWeight: 600, fontFamily: FONT_ALT }}>CHF 50/mois</span>
+                <span style={{ fontSize: 12, color: GOLD, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '4px 12px', fontWeight: 600, fontFamily: FONT_ALT }}>CHF 50/mois</span>
                 <button className="ghost-btn" style={{ marginTop: 4 }} onClick={e => { e.stopPropagation(); setSelectedRole('coach'); setStep('coach') }}>
                   Devenir Coach Pro
                 </button>

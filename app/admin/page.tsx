@@ -33,7 +33,7 @@ function RolePill({ role }: { role: Role | null }) {
   const r = role ?? 'client'
   const m = ROLE_META[r]
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 0, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', background: m.bg, color: m.color }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', background: m.bg, color: m.color }}>
       {m.label}
     </span>
   )
@@ -57,7 +57,7 @@ function RoleSelect({ profileId, current, onChanged }: { profileId: string; curr
         defaultValue={current ?? 'client'}
         onChange={e => assign(e.target.value as Role)}
         disabled={saving}
-        style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.8rem', padding: '5px 28px 5px 10px', cursor: 'pointer', appearance: 'none', outline: 'none' }}
+        style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.8rem', padding: '5px 28px 5px 10px', cursor: 'pointer', appearance: 'none', outline: 'none' }}
       >
         <option value="client">Client</option>
         <option value="coach">Coach</option>
@@ -190,7 +190,7 @@ export default function AdminPage() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .nav-dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; padding: 6px; min-width: 220px; box-shadow: 0 16px 32px rgba(0,0,0,0.4); z-index: 100; }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 0; text-decoration: none; color: ${TEXT_MUTED}; font-family: ${FONT_BODY}; font-size: 0.875rem; font-weight: 300; transition: background 150ms, color 150ms; cursor: pointer; border: none; background: transparent; width: 100%; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; text-decoration: none; color: ${TEXT_MUTED}; font-family: ${FONT_BODY}; font-size: 0.875rem; font-weight: 300; transition: background 150ms, color 150ms; cursor: pointer; border: none; background: transparent; width: 100%; }
         .nav-item:hover { background: ${BG_CARD_2}; color: ${TEXT_PRIMARY}; }
         .nav-card { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; padding: 20px; text-decoration: none; color: ${TEXT_PRIMARY}; display: flex; flex-direction: column; gap: 10px; transition: background 150ms, border-color 150ms, transform 150ms; cursor: pointer; }
         .nav-card:hover { background: ${BG_CARD_2}; border-color: ${GOLD_RULE}; transform: translateY(-2px); }
@@ -199,7 +199,7 @@ export default function AdminPage() {
         .data-table tbody tr { border-bottom: 1px solid ${BG_CARD}; transition: background 150ms; }
         .data-table tbody tr:hover { background: ${BG_CARD}; }
         .data-table tbody td { padding: 13px 16px; font-size: 0.875rem; font-weight: 300; }
-        .tab-btn { background: transparent; border: none; cursor: pointer; font-family: ${FONT_ALT}; font-size: 0.9rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 8px 16px; border-radius: 0; transition: background 150ms, color 150ms; }
+        .tab-btn { background: transparent; border: none; cursor: pointer; font-family: ${FONT_ALT}; font-size: 0.9rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 8px 16px; border-radius: 12px; transition: background 150ms, color 150ms; }
         select:focus { border-color: ${GOLD} !important; }
       `}</style>
 
@@ -210,8 +210,8 @@ export default function AdminPage() {
             {/* Logo + dropdown trigger */}
             <div style={{ position: 'relative' }}>
               <button onClick={() => setNavOpen(v => !v)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 8px 4px 0', borderRadius: 0 }}>
-                <div style={{ width: '32px', height: '32px', background: GOLD, borderRadius: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 8px 4px 0', borderRadius: 12 }}>
+                <div style={{ width: '32px', height: '32px', background: GOLD, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Zap size={18} color={BG_BASE} strokeWidth={2.5} />
                 </div>
                 <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.35rem', fontWeight: 400, letterSpacing: '3px', color: GOLD }}>MOOVX</span>
@@ -246,7 +246,7 @@ export default function AdminPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '0.8rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{session?.user?.email}</span>
             <button onClick={() => supabase.auth.signOut().then(() => window.location.href = '/landing')}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontWeight: 300, fontSize: '0.875rem', padding: '8px 12px', borderRadius: 0 }}>
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontWeight: 300, fontSize: '0.875rem', padding: '8px 12px', borderRadius: 12 }}>
               <LogOut size={15} strokeWidth={2} /> Deconnexion
             </button>
           </div>
@@ -261,14 +261,14 @@ export default function AdminPage() {
         </div>
 
         {/* Section tabs */}
-        <div style={{ display: 'flex', gap: 4, background: BG_BASE, borderRadius: 0, padding: 4, marginBottom: 24, width: 'fit-content', border: `1px solid ${BORDER}` }}>
+        <div style={{ display: 'flex', gap: 4, background: BG_BASE, borderRadius: 12, padding: 4, marginBottom: 24, width: 'fit-content', border: `1px solid ${BORDER}` }}>
           {([['users', 'Utilisateurs', Users], ['logs', 'Logs', AlertTriangle], ['reports', 'Rapports', Bug]] as const).map(([id, label, Icon]) => {
             const active = section === id
             const badge = id === 'reports' ? reports.filter(r => r.status === 'nouveau').length : 0
             return (
               <button key={id} onClick={() => setSection(id)} className="tab-btn" style={{ color: active ? TEXT_PRIMARY : TEXT_MUTED, background: active ? BG_CARD : 'transparent', display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
                 <Icon size={14} /> {label}
-                {badge > 0 && <span style={{ minWidth: 16, height: 16, background: RED, borderRadius: 0, fontSize: '0.55rem', fontWeight: 700, fontFamily: FONT_ALT, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{badge}</span>}
+                {badge > 0 && <span style={{ minWidth: 16, height: 16, background: RED, borderRadius: 12, fontSize: '0.55rem', fontWeight: 700, fontFamily: FONT_ALT, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{badge}</span>}
               </button>
             )
           })}
@@ -286,7 +286,7 @@ export default function AdminPage() {
             <div key={s.label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED }}>{s.label}</span>
-                <div style={{ width: '36px', height: '36px', background: s.accent, borderRadius: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{s.icon}</div>
+                <div style={{ width: '36px', height: '36px', background: s.accent, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{s.icon}</div>
               </div>
               <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.75rem', fontWeight: 400, lineHeight: 1, letterSpacing: '2px' }}>{loading ? '—' : s.value}</div>
             </div>
@@ -298,7 +298,7 @@ export default function AdminPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.15rem', fontWeight: 400, letterSpacing: '2px', textTransform: 'uppercase' }}>Utilisateurs</h2>
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: '4px', background: BG_BASE, borderRadius: 0, padding: '4px', border: `1px solid ${BORDER}` }}>
+            <div style={{ display: 'flex', gap: '4px', background: BG_BASE, borderRadius: 12, padding: '4px', border: `1px solid ${BORDER}` }}>
               {([['all', 'Tous'], ['coaches', 'Coachs'], ['clients', 'Clients']] as const).map(([v, l]) => (
                 <button key={v} className="tab-btn" onClick={() => setTab(v)}
                   style={{ color: tab === v ? TEXT_PRIMARY : TEXT_MUTED, background: tab === v ? BG_CARD : 'transparent' }}>
@@ -308,7 +308,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div style={{ overflowX: 'auto', borderRadius: 0, background: BG_BASE }}>
+          <div style={{ overflowX: 'auto', borderRadius: 12, background: BG_BASE }}>
             <table className="data-table">
               <thead>
                 <tr>
@@ -321,7 +321,7 @@ export default function AdminPage() {
               <tbody>
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}><td colSpan={4}><div style={{ height: '18px', background: BORDER, borderRadius: 0, opacity: 0.4 }} /></td></tr>
+                    <tr key={i}><td colSpan={4}><div style={{ height: '18px', background: BORDER, borderRadius: 12, opacity: 0.4 }} /></td></tr>
                   ))
                 ) : fetchError ? (
                   <tr><td colSpan={4} style={{ textAlign: 'center', color: RED, padding: '40px', fontFamily: 'monospace', fontSize: '0.8rem' }}>Erreur RLS : {fetchError}</td></tr>
@@ -373,28 +373,28 @@ export default function AdminPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
               <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.15rem', fontWeight: 400, letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>Logs applicatifs</h2>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: 4, background: BG_BASE, borderRadius: 0, padding: 4, border: `1px solid ${BORDER}` }}>
+                <div style={{ display: 'flex', gap: 4, background: BG_BASE, borderRadius: 12, padding: 4, border: `1px solid ${BORDER}` }}>
                   {(['all', 'error', 'warning', 'critical'] as const).map(f => (
                     <button key={f} className="tab-btn" onClick={() => { setLogFilter(f); setLogPage(0) }} style={{ color: logFilter === f ? TEXT_PRIMARY : TEXT_MUTED, background: logFilter === f ? BG_CARD : 'transparent', fontSize: '0.78rem', padding: '6px 12px' }}>
                       {f === 'all' ? 'Tous' : f.charAt(0).toUpperCase() + f.slice(1)}
                     </button>
                   ))}
                 </div>
-                <button onClick={purgeLogs} style={{ padding: '6px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 0, color: RED, fontSize: '0.7rem', fontFamily: FONT_ALT, fontWeight: 700, cursor: 'pointer', letterSpacing: '1px' }}>Purger &gt;30j</button>
+                <button onClick={purgeLogs} style={{ padding: '6px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: RED, fontSize: '0.7rem', fontFamily: FONT_ALT, fontWeight: 700, cursor: 'pointer', letterSpacing: '1px' }}>Purger &gt;30j</button>
               </div>
             </div>
-            <div style={{ overflowX: 'auto', borderRadius: 0, background: BG_BASE }}>
+            <div style={{ overflowX: 'auto', borderRadius: 12, background: BG_BASE }}>
               <table className="data-table">
                 <thead><tr><th>Date</th><th>Niveau</th><th>Message</th><th>User</th><th>Page</th></tr></thead>
                 <tbody>
-                  {logsLoading ? <tr><td colSpan={5}><div style={{ height: 18, background: BORDER, borderRadius: 0, opacity: 0.4 }} /></td></tr>
+                  {logsLoading ? <tr><td colSpan={5}><div style={{ height: 18, background: BORDER, borderRadius: 12, opacity: 0.4 }} /></td></tr>
                   : logs.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: TEXT_MUTED, padding: 40, fontFamily: FONT_BODY, fontWeight: 300 }}>Aucun log</td></tr>
                   : logs.map(l => {
                     const lvlColor = l.level === 'critical' ? '#DC2626' : l.level === 'error' ? RED : l.level === 'warning' ? '#F59E0B' : '#3B82F6'
                     return (
                       <tr key={l.id} onClick={() => setSelectedLog(l)} style={{ cursor: 'pointer' }}>
                         <td style={{ color: TEXT_MUTED, fontSize: '0.78rem', whiteSpace: 'nowrap' }}>{new Date(l.created_at).toLocaleString('fr-FR')}</td>
-                        <td><span style={{ padding: '3px 10px', borderRadius: 0, fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, background: `${lvlColor}20`, color: lvlColor, textTransform: 'uppercase', letterSpacing: '1px' }}>{l.level}</span></td>
+                        <td><span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, background: `${lvlColor}20`, color: lvlColor, textTransform: 'uppercase', letterSpacing: '1px' }}>{l.level}</span></td>
                         <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.message}</td>
                         <td style={{ color: TEXT_MUTED, fontSize: '0.78rem' }}>{l.user_email || '—'}</td>
                         <td style={{ color: TEXT_DIM, fontSize: '0.72rem', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.page_url || '—'}</td>
@@ -406,9 +406,9 @@ export default function AdminPage() {
             </div>
             {/* Pagination */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-              <button onClick={() => setLogPage(p => Math.max(0, p - 1))} disabled={logPage === 0} style={{ padding: '6px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: logPage === 0 ? TEXT_DIM : TEXT_MUTED, cursor: logPage === 0 ? 'default' : 'pointer', fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><ChevronLeft size={14} /> Precedent</button>
+              <button onClick={() => setLogPage(p => Math.max(0, p - 1))} disabled={logPage === 0} style={{ padding: '6px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: logPage === 0 ? TEXT_DIM : TEXT_MUTED, cursor: logPage === 0 ? 'default' : 'pointer', fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><ChevronLeft size={14} /> Precedent</button>
               <span style={{ fontSize: '0.75rem', fontFamily: FONT_ALT, fontWeight: 600, color: TEXT_MUTED }}>Page {logPage + 1}</span>
-              <button onClick={() => setLogPage(p => p + 1)} disabled={logs.length < 20} style={{ padding: '6px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: logs.length < 20 ? TEXT_DIM : TEXT_MUTED, cursor: logs.length < 20 ? 'default' : 'pointer', fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>Suivant <ChevronRight size={14} /></button>
+              <button onClick={() => setLogPage(p => p + 1)} disabled={logs.length < 20} style={{ padding: '6px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: logs.length < 20 ? TEXT_DIM : TEXT_MUTED, cursor: logs.length < 20 ? 'default' : 'pointer', fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>Suivant <ChevronRight size={14} /></button>
             </div>
           </div>
         )}
@@ -430,7 +430,7 @@ export default function AdminPage() {
                 {selectedLog.details && (
                   <div>
                     <span style={{ color: TEXT_MUTED }}>Details :</span>
-                    <pre style={{ background: BG_BASE, borderRadius: 0, padding: 12, marginTop: 6, fontSize: '0.72rem', color: TEXT_MUTED, overflow: 'auto', maxHeight: 300, border: `1px solid ${BORDER}` }}>{JSON.stringify(selectedLog.details, null, 2)}</pre>
+                    <pre style={{ background: BG_BASE, borderRadius: 12, padding: 12, marginTop: 6, fontSize: '0.72rem', color: TEXT_MUTED, overflow: 'auto', maxHeight: 300, border: `1px solid ${BORDER}` }}>{JSON.stringify(selectedLog.details, null, 2)}</pre>
                   </div>
                 )}
               </div>
@@ -446,14 +446,14 @@ export default function AdminPage() {
                 Rapports ({reports.filter(r => r.status === 'nouveau').length} nouveaux)
               </h2>
               <div style={{ display: 'flex', gap: 6 }}>
-                <div style={{ display: 'flex', gap: 4, background: BG_BASE, borderRadius: 0, padding: 4, border: `1px solid ${BORDER}` }}>
+                <div style={{ display: 'flex', gap: 4, background: BG_BASE, borderRadius: 12, padding: 4, border: `1px solid ${BORDER}` }}>
                   {(['all', 'bug', 'amelioration', 'autre'] as const).map(f => (
                     <button key={f} className="tab-btn" onClick={() => setReportFilter(f)} style={{ color: reportFilter === f ? TEXT_PRIMARY : TEXT_MUTED, background: reportFilter === f ? BG_CARD : 'transparent', fontSize: '0.72rem', padding: '5px 10px' }}>
                       {f === 'all' ? 'Tous' : f === 'amelioration' ? 'Amelio.' : f.charAt(0).toUpperCase() + f.slice(1)}
                     </button>
                   ))}
                 </div>
-                <div style={{ display: 'flex', gap: 4, background: BG_BASE, borderRadius: 0, padding: 4, border: `1px solid ${BORDER}` }}>
+                <div style={{ display: 'flex', gap: 4, background: BG_BASE, borderRadius: 12, padding: 4, border: `1px solid ${BORDER}` }}>
                   {(['all', 'nouveau', 'en_cours', 'resolu'] as const).map(f => (
                     <button key={f} className="tab-btn" onClick={() => setReportStatusFilter(f)} style={{ color: reportStatusFilter === f ? TEXT_PRIMARY : TEXT_MUTED, background: reportStatusFilter === f ? BG_CARD : 'transparent', fontSize: '0.72rem', padding: '5px 10px' }}>
                       {f === 'all' ? 'Tous' : f === 'en_cours' ? 'En cours' : f === 'resolu' ? 'Resolu' : f.charAt(0).toUpperCase() + f.slice(1)}
@@ -462,11 +462,11 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
-            <div style={{ overflowX: 'auto', borderRadius: 0, background: BG_BASE }}>
+            <div style={{ overflowX: 'auto', borderRadius: 12, background: BG_BASE }}>
               <table className="data-table">
                 <thead><tr><th>Date</th><th>Type</th><th>Titre</th><th>Utilisateur</th><th>Statut</th><th>Priorite</th></tr></thead>
                 <tbody>
-                  {reportsLoading ? <tr><td colSpan={6}><div style={{ height: 18, background: BORDER, borderRadius: 0, opacity: 0.4 }} /></td></tr>
+                  {reportsLoading ? <tr><td colSpan={6}><div style={{ height: 18, background: BORDER, borderRadius: 12, opacity: 0.4 }} /></td></tr>
                   : reports.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', color: TEXT_MUTED, padding: 40, fontFamily: FONT_BODY, fontWeight: 300 }}>Aucun rapport</td></tr>
                   : reports.map(r => {
                     const typeColor = r.type === 'bug' ? RED : r.type === 'amelioration' ? '#3B82F6' : TEXT_MUTED
@@ -475,11 +475,11 @@ export default function AdminPage() {
                     return (
                       <tr key={r.id} onClick={() => { setSelectedReport(r); setEditStatus(r.status); setEditPriority(r.priority); setEditNotes(r.admin_notes || '') }} style={{ cursor: 'pointer' }}>
                         <td style={{ color: TEXT_MUTED, fontSize: '0.78rem', whiteSpace: 'nowrap' }}>{new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
-                        <td><span style={{ padding: '3px 10px', borderRadius: 0, fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, background: `${typeColor}20`, color: typeColor, textTransform: 'uppercase', letterSpacing: '1px' }}>{r.type}</span></td>
+                        <td><span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, background: `${typeColor}20`, color: typeColor, textTransform: 'uppercase', letterSpacing: '1px' }}>{r.type}</span></td>
                         <td style={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</td>
                         <td style={{ color: TEXT_MUTED, fontSize: '0.78rem' }}>{r.user_email || '—'}<br /><span style={{ fontSize: '0.65rem', color: TEXT_DIM }}>{r.user_role}</span></td>
-                        <td><span style={{ padding: '3px 10px', borderRadius: 0, fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, background: `${statusColor}20`, color: statusColor, letterSpacing: '1px' }}>{r.status}</span></td>
-                        <td><span style={{ padding: '3px 8px', borderRadius: 0, fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, background: `${prioColor}15`, color: prioColor }}>{r.priority}</span></td>
+                        <td><span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, background: `${statusColor}20`, color: statusColor, letterSpacing: '1px' }}>{r.status}</span></td>
+                        <td><span style={{ padding: '3px 8px', borderRadius: 12, fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, background: `${prioColor}15`, color: prioColor }}>{r.priority}</span></td>
                       </tr>
                     )
                   })}
@@ -499,7 +499,7 @@ export default function AdminPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: '0.85rem', fontFamily: FONT_BODY }}>
                 <div style={{ fontWeight: 700, fontSize: '1rem' }}>{selectedReport.title}</div>
-                <div style={{ color: TEXT_MUTED, fontWeight: 300, lineHeight: 1.6, background: BG_BASE, borderRadius: 0, padding: 14, border: `1px solid ${BORDER}` }}>{selectedReport.description}</div>
+                <div style={{ color: TEXT_MUTED, fontWeight: 300, lineHeight: 1.6, background: BG_BASE, borderRadius: 12, padding: 14, border: `1px solid ${BORDER}` }}>{selectedReport.description}</div>
                 <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', color: TEXT_MUTED, fontWeight: 300, flexWrap: 'wrap' }}>
                   <span>Par : {selectedReport.user_email} ({selectedReport.user_role})</span>
                   <span>Page : {selectedReport.page_url || '—'}</span>
@@ -508,22 +508,22 @@ export default function AdminPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div>
                     <label style={{ fontSize: 11, fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', display: 'block', marginBottom: 4 }}>Statut</label>
-                    <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 12px', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}>
+                    <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}>
                       {['nouveau', 'en_cours', 'resolu', 'rejete'].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', display: 'block', marginBottom: 4 }}>Priorite</label>
-                    <select value={editPriority} onChange={e => setEditPriority(e.target.value)} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 12px', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}>
+                    <select value={editPriority} onChange={e => setEditPriority(e.target.value)} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}>
                       {['basse', 'normal', 'haute', 'critique'].map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', display: 'block', marginBottom: 4 }}>Notes admin</label>
-                  <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={3} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 12px', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 300, fontSize: '0.85rem', outline: 'none', resize: 'vertical' }} placeholder="Notes internes..." />
+                  <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={3} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 300, fontSize: '0.85rem', outline: 'none', resize: 'vertical' }} placeholder="Notes internes..." />
                 </div>
-                <button onClick={() => updateReport(selectedReport.id)} style={{ width: '100%', padding: 12, background: GOLD, border: 'none', borderRadius: 0, color: BG_BASE, fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', clipPath: 'polygon(0 0,100% 0,96% 100%,0 100%)' }}>Sauvegarder</button>
+                <button onClick={() => updateReport(selectedReport.id)} style={{ width: '100%', padding: 12, background: GOLD, border: 'none', borderRadius: 12, color: BG_BASE, fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px',  }}>Sauvegarder</button>
               </div>
             </div>
           </div>

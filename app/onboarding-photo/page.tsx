@@ -369,7 +369,7 @@ export default function OnboardingPhotoPage() {
               width: '100%', padding: 18,
               background: generating ? 'rgba(255,255,255,0.05)' : GOLD_C,
               color: generating ? TEXT_MUTED : '#0a0a0a',
-              border: 'none', borderRadius: 0,
+              border: 'none', borderRadius: 12,
               fontFamily: FONT_BEBAS, fontSize: 22, letterSpacing: '0.08em',
               cursor: generating ? 'wait' : 'pointer',
               opacity: generating ? 0.6 : 1,

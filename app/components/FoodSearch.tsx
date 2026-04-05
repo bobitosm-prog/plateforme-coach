@@ -107,12 +107,12 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '2px 2px 0 0', padding: '24px 20px 40px', width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3 style={{ fontFamily: FONT_ALT, fontSize: '1.2rem', fontWeight: 800, margin: 0, color: TEXT_PRIMARY, letterSpacing: '1px', textTransform: 'uppercase' }}>{selected.nom}</h3>
-            <button onClick={() => setSelected(null)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 0, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setSelected(null)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={14} color={TEXT_MUTED} />
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 20 }}>
-            <button onClick={() => setQuantity(q => Math.max(5, q - 25))} style={{ width: 44, height: 44, borderRadius: 0, background: BG_BASE, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setQuantity(q => Math.max(5, q - 25))} style={{ width: 44, height: 44, borderRadius: 12, background: BG_BASE, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Minus size={18} color={TEXT_PRIMARY} />
             </button>
             <div style={{ textAlign: 'center' }}>
@@ -120,7 +120,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
                 style={{ width: 80, background: 'transparent', border: 'none', color: GOLD, fontSize: '2.4rem', fontFamily: FONT_DISPLAY, fontWeight: 700, textAlign: 'center', outline: 'none' }} />
               <div style={{ fontSize: '0.72rem', fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_MUTED, marginTop: -4, letterSpacing: '1px', textTransform: 'uppercase' }}>grammes</div>
             </div>
-            <button onClick={() => setQuantity(q => q + 25)} style={{ width: 44, height: 44, borderRadius: 0, background: BG_BASE, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setQuantity(q => q + 25)} style={{ width: 44, height: 44, borderRadius: 12, background: BG_BASE, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Plus size={18} color={TEXT_PRIMARY} />
             </button>
           </div>
@@ -140,7 +140,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
           <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
             {MEAL_OPTIONS.map(m => (
               <button key={m.id} onClick={() => setMealType(m.id)} style={{
-                flex: 1, padding: '8px 4px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                flex: 1, padding: '8px 4px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 800,
                 letterSpacing: '1px', textTransform: 'uppercase',
                 background: mealType === m.id ? GOLD : BG_BASE, color: mealType === m.id ? '#050505' : TEXT_MUTED,
@@ -148,11 +148,11 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
             ))}
           </div>
           <button onClick={addFood} disabled={saving} style={{
-            width: '100%', padding: '16px', borderRadius: 0, border: 'none', cursor: saving ? 'wait' : 'pointer',
+            width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: saving ? 'wait' : 'pointer',
             background: GOLD, color: '#050505',
             fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800,
             letterSpacing: '1px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1,
-            clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)',
+            
           }}>{saving ? 'Ajout...' : 'Ajouter au repas'}</button>
         </div>
       </div>
@@ -166,10 +166,10 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
         <div style={{ flex: 1, position: 'relative' }}>
           <Search size={16} color={GOLD} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
           <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder={`Filtrer ${allFoods.length} aliments fitness...`}
-            style={{ width: '100%', padding: '12px 12px 12px 38px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontSize: '0.9rem', fontFamily: FONT_BODY, outline: 'none' }} />
+            style={{ width: '100%', padding: '12px 12px 12px 38px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: '0.9rem', fontFamily: FONT_BODY, outline: 'none' }} />
         </div>
-        <button onClick={() => setShowScanner(true)} style={{ width: 42, height: 42, borderRadius: 0, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>📷</button>
-        <button onClick={onClose} style={{ padding: '8px 14px', background: 'none', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, color: TEXT_PRIMARY, cursor: 'pointer', fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.5px' }}>Fermer</button>
+        <button onClick={() => setShowScanner(true)} style={{ width: 42, height: 42, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>📷</button>
+        <button onClick={onClose} style={{ padding: '8px 14px', background: 'none', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: TEXT_PRIMARY, cursor: 'pointer', fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.5px' }}>Fermer</button>
       </div>
 
       {/* Barcode Scanner */}

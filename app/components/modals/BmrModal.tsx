@@ -57,11 +57,11 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: '0 0 2px', color: TEXT_PRIMARY }}>CALCULATEUR BMR</h3>
             <p style={{ fontSize: '0.7rem', color: TEXT_MUTED, margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Mifflin-St Jeor · Katch-McArdle · Harris-Benedict</p>
           </div>
-          <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 0, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
+          <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           {[['weight', 'Poids', 'kg'], ['height', 'Taille', 'cm'], ['age', 'Âge', 'ans'], ['body_fat', '% Graisse (opt.)', '%']].map(([key, label, unit]) => (
-            <div key={key} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 12px' }}>
+            <div key={key} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px' }}>
               <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 4 }}>{label}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <input
@@ -79,7 +79,7 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
           {[['male', 'Homme'], ['female', 'Femme']].map(([val, label]) => (
             <button key={val} onClick={() => setBmrForm(p => ({ ...p, gender: val }))}
-              style={{ border: `1px solid ${bmrForm.gender === val ? GOLD : BORDER}`, background: bmrForm.gender === val ? `${GOLD}18` : BG_BASE, borderRadius: 0, padding: '12px', fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, color: bmrForm.gender === val ? GOLD : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>
+              style={{ border: `1px solid ${bmrForm.gender === val ? GOLD : BORDER}`, background: bmrForm.gender === val ? `${GOLD}18` : BG_BASE, borderRadius: 12, padding: '12px', fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, color: bmrForm.gender === val ? GOLD : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>
               {label}
             </button>
           ))}
@@ -88,7 +88,7 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
           <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 8 }}>Niveau d'activité</div>
           {ACTIVITY_LEVELS.map(l => (
             <button key={l.id} onClick={() => setBmrForm(p => ({ ...p, activity: l.id }))}
-              style={{ width: '100%', border: `1px solid ${bmrForm.activity === l.id ? GOLD + '80' : BORDER}`, background: bmrForm.activity === l.id ? `${GOLD}10` : BG_BASE, borderRadius: 0, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, cursor: 'pointer', transition: 'all 200ms' }}>
+              style={{ width: '100%', border: `1px solid ${bmrForm.activity === l.id ? GOLD + '80' : BORDER}`, background: bmrForm.activity === l.id ? `${GOLD}10` : BG_BASE, borderRadius: 12, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, cursor: 'pointer', transition: 'all 200ms' }}>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, color: bmrForm.activity === l.id ? GOLD : TEXT_PRIMARY }}>{l.label}</div>
                 <div style={{ fontSize: '0.7rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>{l.sub}</div>
@@ -97,7 +97,7 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
             </button>
           ))}
         </div>
-        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 0, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>Calculer mon TDEE</button>
+        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,  }}>Calculer mon TDEE</button>
         {bmrResult && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: 20 }}>

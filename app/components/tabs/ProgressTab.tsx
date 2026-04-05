@@ -311,7 +311,7 @@ export default function ProgressTab({
           return (
             <button key={id} onClick={() => setSubTab(id)} style={{
               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-              padding: '10px 8px', borderRadius: 0, border: 'none', cursor: 'pointer',
+              padding: '10px 8px', borderRadius: 12, border: 'none', cursor: 'pointer',
               fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700,
               letterSpacing: '0.04em', textTransform: 'uppercase',
               background: BG_CARD,
@@ -596,7 +596,7 @@ export default function ProgressTab({
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
             {EVOLUTION_METRICS.map(m => (
               <button key={m.key} onClick={() => setEvoMetric(m.key)} style={{
-                flexShrink: 0, padding: '8px 14px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700,
                 background: evoMetric === m.key ? GOLD : BG_CARD,
                 color: evoMetric === m.key ? '#080808' : TEXT_MUTED, transition: 'all 150ms',

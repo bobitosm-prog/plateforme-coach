@@ -58,14 +58,14 @@ export default function CoachCalendar({
       <div style={{ position: 'sticky', top: 0, zIndex: 30, background: BG_BASE, borderBottom: `1px solid ${BORDER}`, padding: '12px 16px 10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button onClick={() => setSection('dashboard')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 0, background: BG_CARD, border: `1px solid ${BORDER}`, cursor: 'pointer', color: TEXT_MUTED }}>
+            <button onClick={() => setSection('dashboard')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 12, background: BG_CARD, border: `1px solid ${BORDER}`, cursor: 'pointer', color: TEXT_MUTED }}>
               <ChevronLeft size={16} strokeWidth={2.5} />
             </button>
             <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '3px', color: TEXT_PRIMARY, margin: 0, textTransform: 'uppercase' }}>CALENDRIER</h1>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => setCalWeekOffset(0)} style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Aujourd&apos;hui</button>
-            <button onClick={() => setShowNewSession(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: BG_BASE, background: GOLD, border: 'none', borderRadius: 0, padding: '5px 12px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
+            <button onClick={() => setCalWeekOffset(0)} style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Aujourd&apos;hui</button>
+            <button onClick={() => setShowNewSession(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: BG_BASE, background: GOLD, border: 'none', borderRadius: 12, padding: '5px 12px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
               <Plus size={12} strokeWidth={2.5} /> Séance
             </button>
           </div>
@@ -73,14 +73,14 @@ export default function CoachCalendar({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             onClick={() => setCalWeekOffset(o => o - 1)}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '9px 12px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, minHeight: 44, letterSpacing: '1px' }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '9px 12px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, minHeight: 44, letterSpacing: '1px' }}
           ><ChevronLeft size={14} /> Précédente</button>
           <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, color: TEXT_MUTED, textAlign: 'center', flexShrink: 0, minWidth: 110, letterSpacing: '1px' }}>
             {format(days[0], 'd', { locale: fr })} – {format(days[6], 'd MMM yyyy', { locale: fr })}
           </span>
           <button
             onClick={() => setCalWeekOffset(o => o + 1)}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '9px 12px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, minHeight: 44, letterSpacing: '1px' }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '9px 12px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, minHeight: 44, letterSpacing: '1px' }}
           >Suivante <ChevronRight size={14} /></button>
         </div>
       </div>
@@ -175,7 +175,7 @@ export default function CoachCalendar({
       <div style={{ display: 'flex', gap: 12, padding: '0 16px 16px', flexWrap: 'wrap' }}>
         {SESSION_TYPES.map(t => (
           <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 0, background: SESSION_COLORS[t] }} />
+            <div style={{ width: 8, height: 8, borderRadius: 12, background: SESSION_COLORS[t] }} />
             <span style={{ fontSize: '0.7rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 600, letterSpacing: '1px' }}>{t}</span>
           </div>
         ))}

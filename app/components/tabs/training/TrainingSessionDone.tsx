@@ -44,7 +44,7 @@ export default function TrainingSessionDone({ todayKey, coachProgram }: Training
                 <div style={{ fontFamily: FONT_ALT, fontSize: '0.62rem', color: TEXT_MUTED, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 3 }}>Prochaine séance</div>
                 <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1rem', fontWeight: 700, color: TEXT_PRIMARY, textTransform: 'capitalize' }}>{nextDay}</div>
               </div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '0.75rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 0, padding: '4px 10px' }}>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '0.75rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '4px 10px' }}>
                 {(coachProgram?.[nextDay]?.exercises || []).length} exercices
               </div>
             </div>

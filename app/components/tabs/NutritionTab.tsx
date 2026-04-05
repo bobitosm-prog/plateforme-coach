@@ -224,7 +224,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <p style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
           Configure tes preferences puis genere ton plan IA personnalise.
         </p>
-        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase',  }}>
           Configurer mes preferences
         </button>
       </div>
@@ -305,7 +305,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             const dayKcal = findDayData(planData, key)?.total_kcal || 0
             return (
               <button key={key} onClick={() => setNutritionDay(key)} style={{
-                flexShrink: 0, padding: '8px 14px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
                 background: isActive ? GOLD : BG_CARD,
                 color: isActive ? '#080808' : isToday ? GOLD : TEXT_MUTED,
@@ -403,7 +403,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             const dayKcal = dayMeals.reduce((s: number, m: any) => s + (m.foods || []).reduce((fs: number, f: any) => fs + (f.kcal || 0), 0), 0)
             return (
               <button key={key} onClick={() => setNutritionDay(key)} style={{
-                flexShrink: 0, padding: '8px 14px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
                 background: isActive ? GOLD : BG_CARD,
                 color: isActive ? '#080808' : isToday ? GOLD : TEXT_MUTED,

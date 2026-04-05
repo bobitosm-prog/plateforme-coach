@@ -177,8 +177,8 @@ export default function OnboardingPage() {
       {step > 1 && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', gap: 4, padding: '8px 16px' }}>
           {Array.from({ length: TOTAL_STEPS - 1 }, (_, i) => (
-            <div key={i} style={{ flex: 1, height: 3, borderRadius: 0, background: BORDER, overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 0, background: GOLD, width: i < step - 1 ? '100%' : '0%', transition: 'width 400ms ease' }} />
+            <div key={i} style={{ flex: 1, height: 3, borderRadius: 12, background: BORDER, overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 12, background: GOLD, width: i < step - 1 ? '100%' : '0%', transition: 'width 400ms ease' }} />
             </div>
           ))}
         </div>
@@ -209,7 +209,7 @@ export default function OnboardingPage() {
                 <p style={{ color: TEXT_MUTED, fontSize: '1rem', margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Finalisons ton profil nutritionnel</p>
               </motion.div>
               <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} whileTap={{ scale: 0.97 }} onClick={goNext}
-                style={{ width: '100%', maxWidth: 320, padding: '18px', background: GOLD, border: 'none', borderRadius: 0, color: BG_BASE, fontSize: '1.1rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+                style={{ width: '100%', maxWidth: 320, padding: '18px', background: GOLD, border: 'none', borderRadius: 12, color: BG_BASE, fontSize: '1.1rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,  }}>
                 C'est parti <ChevronRight size={20} strokeWidth={2.5} />
               </motion.button>
             </motion.div>
@@ -228,7 +228,7 @@ export default function OnboardingPage() {
                   <div style={{ display: 'flex', gap: 10 }}>
                     {[{ k: 'male', l: 'Homme', icon: '♂️' }, { k: 'female', l: 'Femme', icon: '♀️' }].map(g => (
                       <button key={g.k} onClick={() => setGender(g.k as any)}
-                        style={{ flex: 1, padding: '16px', borderRadius: 0, border: `2px solid ${gender === g.k ? GOLD : BORDER}`, background: gender === g.k ? GOLD_DIM : BG_CARD, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 200ms' }}>
+                        style={{ flex: 1, padding: '16px', borderRadius: 12, border: `2px solid ${gender === g.k ? GOLD : BORDER}`, background: gender === g.k ? GOLD_DIM : BG_CARD, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 200ms' }}>
                         <span style={{ fontSize: '1.6rem' }}>{g.icon}</span>
                         <span style={{ fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, color: gender === g.k ? GOLD : TEXT_PRIMARY }}>{g.l}</span>
                       </button>
@@ -282,7 +282,7 @@ export default function OnboardingPage() {
                     const sel = dietaryType === o.k
                     return (
                       <button key={o.k} onClick={() => setDietaryType(o.k)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 0, border: `2px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', transition: 'all 200ms' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, border: `2px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', transition: 'all 200ms' }}>
                         <span style={{ fontSize: '1.4rem' }}>{o.e}</span>
                         <div style={{ flex: 1, textAlign: 'left' }}>
                           <div style={{ fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, color: sel ? GOLD : TEXT_PRIMARY }}>{o.l}</div>
@@ -302,7 +302,7 @@ export default function OnboardingPage() {
                     const sel = allergies.includes(a.id)
                     return (
                       <button key={a.id} onClick={() => setAllergies(prev => sel ? prev.filter(x => x !== a.id) : [...prev, a.id])}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 0, border: `1.5px solid ${sel ? RED : BORDER}`, background: sel ? 'rgba(239,68,68,0.08)' : BG_CARD, cursor: 'pointer', transition: 'all 200ms' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${sel ? RED : BORDER}`, background: sel ? 'rgba(239,68,68,0.08)' : BG_CARD, cursor: 'pointer', transition: 'all 200ms' }}>
                         <span style={{ fontSize: '1.1rem' }}>{a.emoji}</span>
                         <span style={{ fontSize: '0.82rem', fontWeight: 600, color: sel ? RED : TEXT_PRIMARY, flex: 1, textAlign: 'left', fontFamily: FONT_BODY }}>{a.label}</span>
                         {sel && <Check size={14} color={RED} strokeWidth={3} />}
@@ -439,7 +439,7 @@ export default function OnboardingPage() {
                           const selected = currentIds.includes(food.id)
                           return (
                             <button key={food.id} onClick={() => toggleFood(food)}
-                              style={{ background: selected ? GOLD_DIM : BG_BASE, border: `1px solid ${selected ? GOLD : BORDER}`, borderRadius: 0, padding: '10px 10px 8px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', position: 'relative' }}>
+                              style={{ background: selected ? GOLD_DIM : BG_BASE, border: `1px solid ${selected ? GOLD : BORDER}`, borderRadius: 12, padding: '10px 10px 8px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', position: 'relative' }}>
                               {selected && <span style={{ position: 'absolute', top: 6, right: 8, color: GOLD, fontSize: '0.7rem', fontWeight: 700 }}>✓</span>}
                               <div style={{ fontSize: '0.76rem', fontWeight: 600, color: TEXT_PRIMARY, lineHeight: 1.3, marginBottom: 4, paddingRight: selected ? 16 : 0, fontFamily: FONT_BODY }}>{food.nom}</div>
                               <div style={{ display: 'flex', gap: 6, fontSize: '0.58rem', fontWeight: 500 }}>
@@ -492,15 +492,15 @@ export default function OnboardingPage() {
 
               {/* Diet / allergies / foods badges */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                <span style={{ padding: '3px 10px', borderRadius: 0, fontSize: '0.68rem', fontWeight: 700, fontFamily: FONT_ALT, background: dietaryType === 'vegan' ? 'rgba(34,197,94,0.12)' : dietaryType === 'vegetarian' ? 'rgba(249,115,22,0.12)' : GOLD_DIM, color: dietaryType === 'vegan' ? GREEN : dietaryType === 'vegetarian' ? '#F97316' : GOLD, border: `1px solid ${dietaryType === 'vegan' ? 'rgba(34,197,94,0.2)' : dietaryType === 'vegetarian' ? 'rgba(249,115,22,0.2)' : GOLD_RULE}`, textTransform: 'uppercase' }}>
+                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: FONT_ALT, background: dietaryType === 'vegan' ? 'rgba(34,197,94,0.12)' : dietaryType === 'vegetarian' ? 'rgba(249,115,22,0.12)' : GOLD_DIM, color: dietaryType === 'vegan' ? GREEN : dietaryType === 'vegetarian' ? '#F97316' : GOLD, border: `1px solid ${dietaryType === 'vegan' ? 'rgba(34,197,94,0.2)' : dietaryType === 'vegetarian' ? 'rgba(249,115,22,0.2)' : GOLD_RULE}`, textTransform: 'uppercase' }}>
                   {dietaryType === 'omnivore' ? '🍖 Omnivore' : dietaryType === 'vegetarian' ? '🥗 Végétarien' : '🌱 Vegan'}
                 </span>
                 {allergies.map(a => (
-                  <span key={a} style={{ padding: '3px 10px', borderRadius: 0, fontSize: '0.68rem', fontWeight: 700, fontFamily: FONT_ALT, background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.2)', textTransform: 'uppercase' }}>
+                  <span key={a} style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: FONT_ALT, background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.2)', textTransform: 'uppercase' }}>
                     {ALLERGY_OPTIONS.find(o => o.id === a)?.emoji} {a}
                   </span>
                 ))}
-                <span style={{ padding: '3px 10px', borderRadius: 0, fontSize: '0.68rem', fontWeight: 700, fontFamily: FONT_ALT, background: 'rgba(156,163,175,0.08)', color: TEXT_MUTED, border: '1px solid rgba(156,163,175,0.12)' }}>
+                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: FONT_ALT, background: 'rgba(156,163,175,0.08)', color: TEXT_MUTED, border: '1px solid rgba(156,163,175,0.12)' }}>
                   {[...new Set(Object.values(mealPrefs).flat())].length} aliments · {Object.values(mealPrefs).filter(ids => ids.length > 0).length}/4 repas
                 </span>
               </div>
@@ -532,7 +532,7 @@ export default function OnboardingPage() {
 
               <div style={{ marginTop: 'auto' }}>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={finish} disabled={saving}
-                  style={{ width: '100%', padding: '18px', background: saving ? BORDER : GOLD, border: 'none', borderRadius: 0, color: saving ? TEXT_MUTED : BG_BASE, fontSize: '1.05rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 200ms, color 200ms', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+                  style={{ width: '100%', padding: '18px', background: saving ? BORDER : GOLD, border: 'none', borderRadius: 12, color: saving ? TEXT_MUTED : BG_BASE, fontSize: '1.05rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 200ms, color 200ms',  }}>
                   {saving ? <><div style={{ width: 18, height: 18, border: '2px solid #fff4', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Enregistrement...</>
                     : <>Valider mon profil <Check size={20} strokeWidth={2.5} /></>}
                 </motion.button>
@@ -549,7 +549,7 @@ export default function OnboardingPage() {
 const h2Style: React.CSSProperties = { fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: '0 0 4px', letterSpacing: '2px' }
 const subStyle: React.CSSProperties = { color: TEXT_MUTED, fontSize: '0.9rem', margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }
 const labelStyle: React.CSSProperties = { display: 'block', color: TEXT_MUTED, fontSize: 11, fontWeight: 700, fontFamily: FONT_ALT, marginBottom: 8, letterSpacing: '2px', textTransform: 'uppercase' }
-const inputStyle: React.CSSProperties = { width: '100%', padding: '14px 16px', background: BG_BASE, border: `1.5px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontSize: '1rem', fontFamily: FONT_BODY, outline: 'none', transition: 'border-color 200ms, box-shadow 200ms' }
+const inputStyle: React.CSSProperties = { width: '100%', padding: '14px 16px', background: BG_BASE, border: `1.5px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: '1rem', fontFamily: FONT_BODY, outline: 'none', transition: 'border-color 200ms, box-shadow 200ms' }
 
 function InputField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (<div><label style={labelStyle}>{label}</label><input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={inputStyle} /></div>)
@@ -569,7 +569,7 @@ function NumField({ label, value, onChange, unit, placeholder }: { label: string
 function NextBtn({ onClick, disabled, label = 'Continuer' }: { onClick: () => void; disabled?: boolean; label?: string }) {
   return (
     <motion.button whileTap={disabled ? {} : { scale: 0.97 }} onClick={onClick} disabled={disabled}
-      style={{ width: '100%', padding: '18px', background: disabled ? BORDER : GOLD, border: 'none', borderRadius: 0, color: disabled ? TEXT_MUTED : BG_BASE, fontSize: '1.05rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: disabled ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 200ms, color 200ms', clipPath: disabled ? 'none' : 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+      style={{ width: '100%', padding: '18px', background: disabled ? BORDER : GOLD, border: 'none', borderRadius: 12, color: disabled ? TEXT_MUTED : BG_BASE, fontSize: '1.05rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: disabled ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 200ms, color 200ms', clipPath: disabled ? 'none' : 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
       {label} <ChevronRight size={20} strokeWidth={2.5} />
     </motion.button>
   )

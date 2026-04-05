@@ -50,7 +50,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
       {/* Floating button */}
       <button onClick={() => setOpen(true)} style={{
         position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16,
-        width: 44, height: 44, borderRadius: 0, background: BG_CARD, border: `1px solid ${GOLD_RULE}`,
+        width: 44, height: 44, borderRadius: 12, background: BG_CARD, border: `1px solid ${GOLD_RULE}`,
         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 900, boxShadow: '0 4px 16px rgba(0,0,0,0.4)', transition: 'transform 0.2s',
       }}>
@@ -65,7 +65,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', letterSpacing: '3px', color: TEXT_PRIMARY, margin: 0 }}>SIGNALER</h3>
-              <button onClick={() => setOpen(false)} style={{ width: 32, height: 32, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => setOpen(false)} style={{ width: 32, height: 32, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={14} color={TEXT_MUTED} />
               </button>
             </div>
@@ -78,7 +78,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
                 return (
                   <button key={t.id} onClick={() => setType(t.id)} style={{
                     flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    padding: '10px 8px', borderRadius: 0, cursor: 'pointer',
+                    padding: '10px 8px', borderRadius: 12, cursor: 'pointer',
                     background: active ? `${t.color}15` : BG_BASE,
                     border: `1px solid ${active ? t.color + '40' : BORDER}`,
                     color: active ? t.color : TEXT_MUTED,
@@ -93,13 +93,13 @@ export default function BugReport({ session, profile }: BugReportProps) {
 
             {/* Title */}
             <input value={title} onChange={e => setTitle(e.target.value.slice(0, 100))} placeholder="Titre (obligatoire)"
-              style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '13px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', marginBottom: 10, transition: 'border-color 0.3s', fontFamily: FONT_BODY }}
+              style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '13px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', marginBottom: 10, transition: 'border-color 0.3s', fontFamily: FONT_BODY }}
               onFocus={e => e.target.style.borderColor = GOLD} onBlur={e => e.target.style.borderColor = BORDER} />
             <div style={{ textAlign: 'right', fontSize: '0.6rem', color: TEXT_DIM, fontFamily: FONT_BODY, marginBottom: 8, marginTop: -6 }}>{title.length}/100</div>
 
             {/* Description */}
             <textarea value={desc} onChange={e => setDesc(e.target.value.slice(0, 1000))} placeholder="Decris le probleme ou l'idee en detail..."
-              rows={5} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '13px 16px', color: TEXT_PRIMARY, fontSize: '0.85rem', outline: 'none', resize: 'vertical', minHeight: 100, fontFamily: FONT_BODY, transition: 'border-color 0.3s', lineHeight: 1.6 }}
+              rows={5} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '13px 16px', color: TEXT_PRIMARY, fontSize: '0.85rem', outline: 'none', resize: 'vertical', minHeight: 100, fontFamily: FONT_BODY, transition: 'border-color 0.3s', lineHeight: 1.6 }}
               onFocus={e => e.target.style.borderColor = GOLD} onBlur={e => e.target.style.borderColor = BORDER} />
             <div style={{ textAlign: 'right', fontSize: '0.6rem', color: TEXT_DIM, fontFamily: FONT_BODY, marginBottom: 16, marginTop: 4 }}>{desc.length}/1000</div>
 
@@ -111,7 +111,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
             {/* Send */}
             <button onClick={handleSend} disabled={!title.trim() || !desc.trim() || sending}
               style={{
-                width: '100%', padding: '15px', borderRadius: 0, border: 'none', cursor: (title.trim() && desc.trim() && !sending) ? 'pointer' : 'default',
+                width: '100%', padding: '15px', borderRadius: 12, border: 'none', cursor: (title.trim() && desc.trim() && !sending) ? 'pointer' : 'default',
                 background: (title.trim() && desc.trim()) ? GOLD : BG_CARD_2,
                 color: (title.trim() && desc.trim()) ? '#050505' : TEXT_MUTED,
                 fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800,

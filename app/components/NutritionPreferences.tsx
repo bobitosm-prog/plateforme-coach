@@ -385,7 +385,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   // ─── Styles ───
   const sectionTitle: React.CSSProperties = { fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 14 }
   const cardStyle: React.CSSProperties = { background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16, marginBottom: 16 }
-  const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontSize: '0.88rem', fontFamily: FONT_BODY, outline: 'none' }
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: '0.88rem', fontFamily: FONT_BODY, outline: 'none' }
   const sliderThumbGold = `
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: ${GOLD}; cursor: pointer; border: 2px solid #080808; }
     input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: ${GOLD}; cursor: pointer; border: 2px solid #080808; }
@@ -425,7 +425,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           {OBJECTIVES.map(obj => {
             const active = objective === obj.id
             return (
-              <button key={obj.id} onClick={() => handleObjectiveChange(obj.id)} style={{ padding: '14px 8px', background: active ? GOLD_DIM : BG_BASE, border: `2px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 150ms' }}>
+              <button key={obj.id} onClick={() => handleObjectiveChange(obj.id)} style={{ padding: '14px 8px', background: active ? GOLD_DIM : BG_BASE, border: `2px solid ${active ? GOLD : BORDER}`, borderRadius: 12, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 150ms' }}>
                 <span style={{ fontSize: '1.6rem' }}>{obj.emoji}</span>
                 <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{obj.label}</span>
                 <span style={{ fontSize: '0.65rem', fontFamily: FONT_BODY, color: TEXT_MUTED, textAlign: 'center', lineHeight: 1.2 }}>{obj.desc}</span>
@@ -560,7 +560,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           {DIET_OPTIONS.map(opt => {
             const active = dietaryType === opt.id
             return (
-              <button key={opt.id} onClick={() => setDietaryType(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', transition: 'all 150ms' }}>
+              <button key={opt.id} onClick={() => setDietaryType(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
                 <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${active ? GOLD : TEXT_DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {active && <div style={{ width: 10, height: 10, borderRadius: '50%', background: GOLD }} />}
                 </div>
@@ -583,7 +583,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           {ALLERGY_OPTIONS.map(opt => {
             const active = allergies.includes(opt.id)
             return (
-              <button key={opt.id} onClick={() => setAllergies(prev => prev.includes(opt.id) ? prev.filter(a => a !== opt.id) : [...prev, opt.id])} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', background: active ? `${RED}15` : BG_BASE, border: `1.5px solid ${active ? RED : BORDER}`, borderRadius: 0, cursor: 'pointer', transition: 'all 150ms' }}>
+              <button key={opt.id} onClick={() => setAllergies(prev => prev.includes(opt.id) ? prev.filter(a => a !== opt.id) : [...prev, opt.id])} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', background: active ? `${RED}15` : BG_BASE, border: `1.5px solid ${active ? RED : BORDER}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
                 <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? RED : TEXT_DIM}`, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? RED : 'transparent' }}>
                   {active && <Check size={10} color="#fff" strokeWidth={3} />}
                 </div>
@@ -618,7 +618,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           {ACTIVITY_LEVELS.map(lvl => {
             const active = activityLevel === lvl.id
             return (
-              <button key={lvl.id} onClick={() => setActivityLevel(lvl.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', transition: 'all 150ms' }}>
+              <button key={lvl.id} onClick={() => setActivityLevel(lvl.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
                 <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${active ? GOLD : TEXT_DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {active && <div style={{ width: 10, height: 10, borderRadius: '50%', background: GOLD }} />}
                 </div>
@@ -661,7 +661,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             {[{ id: 'male', label: 'Homme' }, { id: 'female', label: 'Femme' }].map(g => {
               const active = gender === g.id
               return (
-                <button key={g.id} onClick={() => setGender(g.id)} style={{ flex: 1, padding: '10px', background: active ? GOLD_DIM : BG_BASE, border: `2px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px', transition: 'all 150ms' }}>
+                <button key={g.id} onClick={() => setGender(g.id)} style={{ flex: 1, padding: '10px', background: active ? GOLD_DIM : BG_BASE, border: `2px solid ${active ? GOLD : BORDER}`, borderRadius: 12, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px', transition: 'all 150ms' }}>
                   {g.label}
                 </button>
               )
@@ -707,7 +707,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           {MEAL_PRESETS[activeMealTab].defaults.map(food => {
             const active = (mealPrefs[activeMealTab] || []).includes(food)
             return (
-              <button key={food} onClick={() => toggleMealFood(activeMealTab, food)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 0, cursor: 'pointer', transition: 'all 150ms' }}>
+              <button key={food} onClick={() => toggleMealFood(activeMealTab, food)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
                 <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? GOLD : TEXT_DIM}`, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? GOLD : 'transparent' }}>
                   {active && <Check size={10} color="#050505" strokeWidth={3} />}
                 </div>
@@ -742,7 +742,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       </div>
 
       {/* ═══ SAVE BUTTON ═══ */}
-      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 0, border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)', marginBottom: 8 }}>
+      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, marginBottom: 8 }}>
         {saving ? 'Enregistrement...' : 'Sauvegarder & recalculer'}
       </button>
 
@@ -753,10 +753,10 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             Ton objectif a change. Veux-tu regenerer ton plan alimentaire avec ces nouveaux parametres ?
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setShowRegenCard(false)} style={{ flex: 1, padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '1px' }}>
+            <button onClick={() => setShowRegenCard(false)} style={{ flex: 1, padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '1px' }}>
               Non merci
             </button>
-            <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: GOLD, border: 'none', borderRadius: 0, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: '#050505', letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
+            <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: GOLD, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: '#050505', letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
               {regenerating ? 'Generation...' : 'Regenerer mon plan IA'}
             </button>
           </div>
@@ -765,7 +765,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* Toast */}
       {toastMsg && (
-        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: GREEN, color: '#050505', padding: '10px 24px', borderRadius: 0, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: GREEN, color: '#050505', padding: '10px 24px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
           {toastMsg}
         </div>
       )}

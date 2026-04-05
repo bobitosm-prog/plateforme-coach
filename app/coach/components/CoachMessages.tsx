@@ -138,7 +138,7 @@ export default function CoachMessages({
             />
             <button
               onClick={sendMessage}
-              style={{ width: 44, height: 44, borderRadius: 0, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              style={{ width: 44, height: 44, borderRadius: 12, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
               <Send size={17} color={msgInput.trim() ? BG_BASE : TEXT_MUTED} />
             </button>

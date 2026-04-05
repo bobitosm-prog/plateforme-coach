@@ -83,7 +83,7 @@ export default function GenevaSection() {
         </div>
 
         {/* Right: image */}
-        <div style={{ overflow: 'hidden', borderRadius: 0 }}>
+        <div style={{ overflow: 'hidden', borderRadius: 12 }}>
           <img
             src="https://images.unsplash.com/photo-1573108037329-37aa135a142e?w=800&q=80"
             alt="Coaching fitness Genève"

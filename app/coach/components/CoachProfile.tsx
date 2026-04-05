@@ -88,11 +88,11 @@ export default function CoachProfile({
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <input type="number" inputMode="decimal" value={rate} onChange={e => { setRate(e.target.value); setRateSaved(false) }}
-              style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 50px 10px 14px', color: TEXT_PRIMARY, fontSize: '1rem', fontFamily: FONT_BODY, outline: 'none' }} />
+              style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 50px 10px 14px', color: TEXT_PRIMARY, fontSize: '1rem', fontFamily: FONT_BODY, outline: 'none' }} />
             <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, fontSize: '0.85rem', pointerEvents: 'none' }}>CHF</span>
           </div>
           <button onClick={saveRate} disabled={rateSaving}
-            style={{ padding: '10px 16px', background: rateSaved ? `rgba(74,222,128,0.15)` : GOLD, border: rateSaved ? `1px solid rgba(74,222,128,0.3)` : 'none', borderRadius: 0, color: rateSaved ? GREEN : BG_BASE, fontWeight: 700, fontSize: '0.82rem', cursor: rateSaving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT_ALT, whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const, clipPath: 'polygon(0 0, 100% 0, 94% 100%, 0% 100%)' }}>
+            style={{ padding: '10px 16px', background: rateSaved ? `rgba(74,222,128,0.15)` : GOLD, border: rateSaved ? `1px solid rgba(74,222,128,0.3)` : 'none', borderRadius: 12, color: rateSaved ? GREEN : BG_BASE, fontWeight: 700, fontSize: '0.82rem', cursor: rateSaving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT_ALT, whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const,  }}>
             {rateSaved ? '✓ Sauvé' : rateSaving ? '...' : <><Save size={14} /> Sauver</>}
           </button>
         </div>
@@ -103,13 +103,13 @@ export default function CoachProfile({
         <button className="btn-secondary" onClick={() => setSection('dashboard')}>
           <Users size={16} /> Tableau de bord
         </button>
-        <button onClick={supabaseSignOut} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(239,68,68,0.08)', color: RED, border: `1px solid rgba(239,68,68,0.3)`, padding: '11px 20px', borderRadius: 0, fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer', width: '100%', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
+        <button onClick={supabaseSignOut} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(239,68,68,0.08)', color: RED, border: `1px solid rgba(239,68,68,0.3)`, padding: '11px 20px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer', width: '100%', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
           <LogOut size={16} /> Se déconnecter
         </button>
       </div>
 
       {/* Delete account */}
-      <button onClick={() => setShowDelete(true)} style={{ width: '100%', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 0, padding: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', marginTop: 32 }}>
+      <button onClick={() => setShowDelete(true)} style={{ width: '100%', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 12, padding: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', marginTop: 32 }}>
         <Trash2 size={14} color={RED} />
         <span style={{ fontSize: '0.82rem', fontWeight: 700, color: RED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const }}>Supprimer mon compte</span>
       </button>
@@ -122,10 +122,10 @@ export default function CoachProfile({
               Es-tu sûr de vouloir supprimer ton compte ? Toutes tes données seront supprimées définitivement. Cette action est irréversible.
             </p>
             <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, margin: '0 0 8px', fontFamily: FONT_BODY }}>Tape <strong style={{ color: RED }}>SUPPRIMER</strong> pour confirmer :</p>
-            <input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="SUPPRIMER" style={{ width: '100%', background: BG_BASE, border: `1px solid ${confirmText === 'SUPPRIMER' ? RED : BORDER}`, borderRadius: 0, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.9rem', fontFamily: FONT_BODY, outline: 'none', marginBottom: 16 }} />
+            <input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="SUPPRIMER" style={{ width: '100%', background: BG_BASE, border: `1px solid ${confirmText === 'SUPPRIMER' ? RED : BORDER}`, borderRadius: 12, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.9rem', fontFamily: FONT_BODY, outline: 'none', marginBottom: 16 }} />
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => { setShowDelete(false); setConfirmText('') }} style={{ flex: 1, padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_MUTED, fontSize: '0.85rem', fontFamily: FONT_BODY, cursor: 'pointer' }}>Annuler</button>
-              <button onClick={deleteAccount} disabled={confirmText !== 'SUPPRIMER' || deleting} style={{ flex: 1, padding: '12px', background: confirmText === 'SUPPRIMER' ? RED : BORDER, borderRadius: 0, border: 'none', color: '#fff', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: confirmText === 'SUPPRIMER' ? 'pointer' : 'default', opacity: confirmText === 'SUPPRIMER' ? 1 : 0.5, letterSpacing: '1px', textTransform: 'uppercase' as const }}>
+              <button onClick={() => { setShowDelete(false); setConfirmText('') }} style={{ flex: 1, padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_MUTED, fontSize: '0.85rem', fontFamily: FONT_BODY, cursor: 'pointer' }}>Annuler</button>
+              <button onClick={deleteAccount} disabled={confirmText !== 'SUPPRIMER' || deleting} style={{ flex: 1, padding: '12px', background: confirmText === 'SUPPRIMER' ? RED : BORDER, borderRadius: 12, border: 'none', color: '#fff', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: confirmText === 'SUPPRIMER' ? 'pointer' : 'default', opacity: confirmText === 'SUPPRIMER' ? 1 : 0.5, letterSpacing: '1px', textTransform: 'uppercase' as const }}>
                 {deleting ? 'Suppression...' : 'Supprimer'}
               </button>
             </div>

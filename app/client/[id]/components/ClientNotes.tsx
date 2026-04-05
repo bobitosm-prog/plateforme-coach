@@ -43,7 +43,7 @@ export default function ClientNotes({ notes, notesSaved, notesSaving, onNotesCha
           value={notes}
           onChange={e => onNotesChange(e.target.value)}
           placeholder="Ajoutez vos observations, programmes, remarques…"
-          style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '12px 14px', fontFamily: FONT_BODY, fontSize: '0.9rem', color: TEXT_PRIMARY, resize: 'vertical', minHeight: 120, lineHeight: 1.6, outline: 'none' }}
+          style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 14px', fontFamily: FONT_BODY, fontSize: '0.9rem', color: TEXT_PRIMARY, resize: 'vertical', minHeight: 120, lineHeight: 1.6, outline: 'none' }}
         />
         <button className="btn-secondary" style={{ width: '100%', marginTop: 10 }} onClick={saveNotes} disabled={notesSaving}>
           <Save size={13} strokeWidth={2.5} />{notesSaving ? 'Sauvegarde…' : 'Sauvegarder les notes'}

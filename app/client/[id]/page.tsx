@@ -423,16 +423,16 @@ export default function ClientProfilePage() {
                     <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', textTransform: 'uppercase' }}>BASE D&apos;EXERCICES</h3>
                     {h.exDbTargetDay && <p style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: '2px 0 0', textTransform: 'capitalize' }}>Ajouter à · {h.exDbTargetDay}</p>}
                   </div>
-                  <button onClick={() => h.setShowExDbModal(false)} style={{ width: 32, height: 32, borderRadius: 0, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
+                  <button onClick={() => h.setShowExDbModal(false)} style={{ width: 32, height: 32, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
                 </div>
                 <div style={{ position: 'relative', marginBottom: 10 }}>
                   <Search size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
-                  <input value={h.exDbSearch} onChange={e => h.setExDbSearch(e.target.value)} placeholder="Rechercher un exercice..." autoFocus style={{ ...inputStyle, paddingLeft: 40, borderRadius: 0, fontSize: '0.88rem' }} />
+                  <input value={h.exDbSearch} onChange={e => h.setExDbSearch(e.target.value)} placeholder="Rechercher un exercice..." autoFocus style={{ ...inputStyle, paddingLeft: 40, borderRadius: 12, fontSize: '0.88rem' }} />
                 </div>
                 <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 14 }}>
                   {MUSCLE_FILTERS.map(mg => {
                     const active = h.exDbFilter === mg; const color = MUSCLE_COLORS[mg] ?? GOLD
-                    return (<button key={mg} onClick={() => h.setExDbFilter(mg)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 0, border: `1px solid ${active ? color : BORDER}`, background: active ? `${color}22` : BG_CARD_2, color: active ? color : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, cursor: 'pointer', transition: 'all 150ms', letterSpacing: '1px', textTransform: 'uppercase' }}>{mg}</button>)
+                    return (<button key={mg} onClick={() => h.setExDbFilter(mg)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 12, border: `1px solid ${active ? color : BORDER}`, background: active ? `${color}22` : BG_CARD_2, color: active ? color : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, cursor: 'pointer', transition: 'all 150ms', letterSpacing: '1px', textTransform: 'uppercase' }}>{mg}</button>)
                   })}
                 </div>
               </div>
@@ -459,9 +459,9 @@ export default function ClientProfilePage() {
                             <div style={{ padding: '10px 10px 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
                               <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.88rem', color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.03em', lineHeight: 1.2 }}>{ex.name}</div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                {ex.muscle_group && <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: mgColor, background: `${mgColor}20`, borderRadius: 0, padding: '2px 6px', display: 'inline-block', width: 'fit-content' }}>{ex.muscle_group}</span>}
-                                {ex.equipment && <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD, borderRadius: 0, padding: '2px 6px', display: 'inline-block', width: 'fit-content', letterSpacing: '1px', textTransform: 'uppercase' }}>{ex.equipment}</span>}
-                                {ex.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, color: diffColor, background: `${diffColor}18`, borderRadius: 0, padding: '2px 6px', display: 'inline-block', width: 'fit-content', letterSpacing: '1px', textTransform: 'uppercase' }}>{ex.difficulty}</span>}
+                                {ex.muscle_group && <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: mgColor, background: `${mgColor}20`, borderRadius: 12, padding: '2px 6px', display: 'inline-block', width: 'fit-content' }}>{ex.muscle_group}</span>}
+                                {ex.equipment && <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD, borderRadius: 12, padding: '2px 6px', display: 'inline-block', width: 'fit-content', letterSpacing: '1px', textTransform: 'uppercase' }}>{ex.equipment}</span>}
+                                {ex.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, color: diffColor, background: `${diffColor}18`, borderRadius: 12, padding: '2px 6px', display: 'inline-block', width: 'fit-content', letterSpacing: '1px', textTransform: 'uppercase' }}>{ex.difficulty}</span>}
                               </div>
                             </div>
                           </motion.button>
@@ -487,18 +487,18 @@ export default function ClientProfilePage() {
               style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, width: '100%', maxWidth: 520, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: `1px solid ${BORDER}`, background: GOLD_DIM }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 0, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="#050505" strokeWidth={2} /></div>
+                  <div style={{ width: 36, height: 36, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="#050505" strokeWidth={2} /></div>
                   <div>
                     <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', textTransform: 'uppercase' }}>GÉNÉRER AVEC L&apos;IA</h2>
                     <p style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0 }}>Claude génère un programme personnalisé</p>
                   </div>
                 </div>
-                {!h.aiGenerating && <button onClick={() => h.setShowAiModal(false)} style={{ width: 32, height: 32, borderRadius: 0, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>}
+                {!h.aiGenerating && <button onClick={() => h.setShowAiModal(false)} style={{ width: 32, height: 32, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>}
               </div>
               <div style={{ overflowY: 'auto', flex: 1 }}>
                 {h.aiGenerating && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '56px 24px' }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 0, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'spin 1s linear infinite' }}><Loader2 size={28} color="#050505" strokeWidth={2} /></div>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'spin 1s linear infinite' }}><Loader2 size={28} color="#050505" strokeWidth={2} /></div>
                     <div style={{ textAlign: 'center' }}>
                       <p style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '1px', textTransform: 'uppercase' }}>L&apos;IA génère votre programme…</p>
                       <p style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_MUTED, marginTop: 6 }}>Cela prend quelques secondes</p>
@@ -520,7 +520,7 @@ export default function ClientProfilePage() {
                             </div>
                             {!day.repos && day.exercises.length > 0 && (
                               <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                {day.exercises.map((ex, i) => <span key={i} style={{ fontFamily: FONT_BODY, fontSize: '0.68rem', background: GOLD_DIM, color: GOLD, borderRadius: 0, padding: '2px 8px' }}>{ex.name}</span>)}
+                                {day.exercises.map((ex, i) => <span key={i} style={{ fontFamily: FONT_BODY, fontSize: '0.68rem', background: GOLD_DIM, color: GOLD, borderRadius: 12, padding: '2px 8px' }}>{ex.name}</span>)}
                               </div>
                             )}
                           </div>
@@ -528,8 +528,8 @@ export default function ClientProfilePage() {
                       })}
                     </div>
                     <div style={{ display: 'flex', gap: 10 }}>
-                      <button onClick={h.generateAiProgram} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 0, border: `1px solid ${GOLD_RULE}`, background: 'transparent', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700 }}><Sparkles size={13} /> Régénérer</button>
-                      <button onClick={h.acceptAiPreview} style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 0, border: 'none', background: GOLD, color: '#050505', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.04em' }}><Check size={15} strokeWidth={2.5} /> Accepter ce programme</button>
+                      <button onClick={h.generateAiProgram} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: `1px solid ${GOLD_RULE}`, background: 'transparent', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700 }}><Sparkles size={13} /> Régénérer</button>
+                      <button onClick={h.acceptAiPreview} style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: 'none', background: GOLD, color: '#050505', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.04em' }}><Check size={15} strokeWidth={2.5} /> Accepter ce programme</button>
                     </div>
                   </div>
                 )}
@@ -546,7 +546,7 @@ export default function ClientProfilePage() {
                     <div>
                       <label style={{ display: 'block', fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8 }}>Niveau</label>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        {h.AI_LEVELS.map(l => <button key={l} onClick={() => h.setAiLevel(l)} style={{ flex: 1, padding: '8px 4px', borderRadius: 0, border: `1px solid ${h.aiLevel === l ? GOLD : BORDER}`, background: h.aiLevel === l ? GOLD_DIM : 'transparent', color: h.aiLevel === l ? GOLD : TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, transition: 'all 150ms' }}>{l}</button>)}
+                        {h.AI_LEVELS.map(l => <button key={l} onClick={() => h.setAiLevel(l)} style={{ flex: 1, padding: '8px 4px', borderRadius: 12, border: `1px solid ${h.aiLevel === l ? GOLD : BORDER}`, background: h.aiLevel === l ? GOLD_DIM : 'transparent', color: h.aiLevel === l ? GOLD : TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, transition: 'all 150ms' }}>{l}</button>)}
                       </div>
                     </div>
                     <div>
@@ -554,8 +554,8 @@ export default function ClientProfilePage() {
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {h.AI_EQUIPMENT.map(item => {
                           const checked = h.aiEquipment.includes(item)
-                          return (<button key={item} onClick={() => h.toggleAiEquipment(item)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 0, border: `1px solid ${checked ? GOLD : BORDER}`, background: checked ? GOLD_DIM : 'transparent', color: checked ? GOLD : TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: '0.82rem', fontWeight: checked ? 700 : 500, transition: 'all 150ms' }}>
-                            <div style={{ width: 14, height: 14, borderRadius: 0, border: `2px solid ${checked ? GOLD : TEXT_DIM}`, background: checked ? GOLD : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>{checked && <Check size={9} color="#050505" strokeWidth={3} />}</div>
+                          return (<button key={item} onClick={() => h.toggleAiEquipment(item)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 12, border: `1px solid ${checked ? GOLD : BORDER}`, background: checked ? GOLD_DIM : 'transparent', color: checked ? GOLD : TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: '0.82rem', fontWeight: checked ? 700 : 500, transition: 'all 150ms' }}>
+                            <div style={{ width: 14, height: 14, borderRadius: 12, border: `2px solid ${checked ? GOLD : TEXT_DIM}`, background: checked ? GOLD : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>{checked && <Check size={9} color="#050505" strokeWidth={3} />}</div>
                             {item}
                           </button>)
                         })}
@@ -578,7 +578,7 @@ export default function ClientProfilePage() {
               {!h.aiGenerating && !h.aiPreview && (
                 <div style={{ padding: '16px 24px', borderTop: `1px solid ${BORDER}` }}>
                   <button onClick={h.generateAiProgram} disabled={h.aiEquipment.length === 0}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 20px', borderRadius: 0, border: 'none', background: h.aiEquipment.length === 0 ? BG_CARD_2 : GOLD, color: h.aiEquipment.length === 0 ? TEXT_DIM : '#050505', cursor: h.aiEquipment.length === 0 ? 'not-allowed' : 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 20px', borderRadius: 12, border: 'none', background: h.aiEquipment.length === 0 ? BG_CARD_2 : GOLD, color: h.aiEquipment.length === 0 ? TEXT_DIM : '#050505', cursor: h.aiEquipment.length === 0 ? 'not-allowed' : 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, letterSpacing: '0.05em' }}>
                     <Sparkles size={16} strokeWidth={2} />Générer le programme
                   </button>
                 </div>

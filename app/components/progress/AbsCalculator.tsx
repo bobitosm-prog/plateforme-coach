@@ -239,7 +239,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
                 onClick={applyDeficit}
                 disabled={applying || regenerating}
                 style={{
-                  width: '100%', padding: 14, border: 'none', borderRadius: 0,
+                  width: '100%', padding: 14, border: 'none', borderRadius: 12,
                   background: applied ? GREEN : GOLD,
                   color: '#080808', cursor: applying || regenerating ? 'wait' : 'pointer',
                   fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px',

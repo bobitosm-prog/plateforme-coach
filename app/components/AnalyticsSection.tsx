@@ -212,7 +212,7 @@ export default function AnalyticsSection({
             <div style={{ display: 'flex', gap: 4 }}>
               {(['30j', '60j', '90j', 'tout'] as WeightPeriod[]).map(p => (
                 <button key={p} onClick={() => setWeightPeriod(p)} style={{
-                  padding: '4px 8px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                  padding: '4px 8px', borderRadius: 12, border: 'none', cursor: 'pointer',
                   fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', fontFamily: FONT_ALT, letterSpacing: '1px',
                   background: weightPeriod === p ? GOLD : 'transparent',
                   color: weightPeriod === p ? '#050505' : TEXT_MUTED,
@@ -277,7 +277,7 @@ export default function AnalyticsSection({
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8 }}>
             {[{ label: 'Proteines', color: GOLD }, { label: 'Glucides', color: GREEN }, { label: 'Lipides', color: GOLD }].map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 0, background: l.color }} />
+                <div style={{ width: 8, height: 8, borderRadius: 12, background: l.color }} />
                 <span style={{ fontSize: '0.55rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>{l.label}</span>
               </div>
             ))}

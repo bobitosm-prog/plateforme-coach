@@ -130,12 +130,12 @@ export default function MessagesTab({
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
               placeholder="Écrire un message..."
               rows={1}
-              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: FONT_BODY, fontWeight: 400 }}
+              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: FONT_BODY, fontWeight: 400 }}
             />
             <button
               onClick={sendMessage}
               disabled={!msgInput.trim()}
-              style={{ width: 40, height: 40, borderRadius: 0, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              style={{ width: 40, height: 40, borderRadius: 12, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
               <Send size={16} color={msgInput.trim() ? '#050505' : TEXT_MUTED} />
             </button>

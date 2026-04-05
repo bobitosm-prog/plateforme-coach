@@ -407,7 +407,7 @@ export default function TrainingTab({
               background: GOLD, color: '#080808', border: 'none',
               fontFamily: FONT_ALT, fontWeight: 800, fontSize: 16, letterSpacing: 2,
               padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
-              clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+              
             }}>
               C&apos;EST PARTI !
             </button>
@@ -518,7 +518,7 @@ export default function TrainingTab({
                   {daySessions.filter(s => s.session_type !== 'rest').map(s => (
                     <div key={s.id} style={{
                       display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '2px 10px', borderRadius: 0,
+                      padding: '2px 10px', borderRadius: 12,
                       background: GOLD_DIM,
                       border: `1px solid ${GOLD_RULE}`,
                     }}>
@@ -588,7 +588,7 @@ export default function TrainingTab({
               <p style={{ fontFamily: FONT_ALT, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Aucun programme</p>
               <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0, maxWidth: 280 }}>Cree ton premier programme avec l&apos;IA en 2 minutes.</p>
               <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-                style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+                style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase',  }}>
                 Creer mon programme
               </button>
             </div>
@@ -673,7 +673,7 @@ export default function TrainingTab({
                   onClick={() => startProgramWorkout(trainingDayData, trainingExercises)}
                   style={{
                     width: '100%', background: GOLD, color: '#080808',
-                    fontWeight: 400, padding: '18px', borderRadius: 0, border: 'none',
+                    fontWeight: 400, padding: '18px', borderRadius: 12, border: 'none',
                     cursor: 'pointer',
                     fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: '0.15em',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,

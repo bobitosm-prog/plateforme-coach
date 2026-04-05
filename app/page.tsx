@@ -94,7 +94,7 @@ export default function CoachApp() {
             const active = h.activeTab === id
             const badge = id === 'messages' && h.unreadCount > 0
             return (
-              <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 0, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms' }}>
+              <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms' }}>
                 <div style={{ position: 'relative' }}>
                   <Icon size={20} color={active ? GOLD : TEXT_MUTED} strokeWidth={2} />
                   {badge && <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 14, height: 14, background: '#EF4444', borderRadius: 7, fontSize: '0.5rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{h.unreadCount > 9 ? '9+' : h.unreadCount}</span>}
@@ -156,11 +156,11 @@ export default function CoachApp() {
           <div style={{ background: BG_CARD, borderRadius: 2, padding: '20px 16px 40px', marginTop: 40, minHeight: 'min(90vh, calc(100dvh - 40px))', border: `1px solid ${BORDER}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontFamily: FONT_ALT, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>AJOUTER ALIMENT</h3>
-              <button onClick={() => { h.setModal(null); h.setSelectedFood(null); h.setFoodSearch('') }} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 0, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
+              <button onClick={() => { h.setModal(null); h.setSelectedFood(null); h.setFoodSearch('') }} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
               {MEAL_TYPES.map(m => (
-                <button key={m.id} onClick={() => h.setMealType(m.id)} style={{ border: `1px solid ${h.mealType === m.id ? GOLD : BORDER}`, background: h.mealType === m.id ? GOLD_DIM : BG_BASE, borderRadius: 0, padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', transition: 'all 200ms' }}>
+                <button key={m.id} onClick={() => h.setMealType(m.id)} style={{ border: `1px solid ${h.mealType === m.id ? GOLD : BORDER}`, background: h.mealType === m.id ? GOLD_DIM : BG_BASE, borderRadius: 12, padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', transition: 'all 200ms' }}>
                   <span style={{ fontSize: '1.2rem' }}>{m.icon}</span>
                   <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: h.mealType === m.id ? GOLD : TEXT_MUTED }}>{m.label}</span>
                 </button>
@@ -168,15 +168,15 @@ export default function CoachApp() {
             </div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
               {[['fitness', 'Fitness'], ['anses', 'ANSES'], ['custom', 'Mes aliments']].map(([id, label]) => (
-                <button key={id} onClick={() => { h.setSearchTab(id as any); h.setFoodSearch(''); h.setSelectedFood(null) }} style={{ flex: 1, border: `1px solid ${h.searchTab === id ? GOLD : BORDER}`, background: h.searchTab === id ? GOLD_DIM : BG_BASE, borderRadius: 0, padding: '8px 6px', fontSize: '0.7rem', fontWeight: 700, color: h.searchTab === id ? GOLD : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>{label}</button>
+                <button key={id} onClick={() => { h.setSearchTab(id as any); h.setFoodSearch(''); h.setSelectedFood(null) }} style={{ flex: 1, border: `1px solid ${h.searchTab === id ? GOLD : BORDER}`, background: h.searchTab === id ? GOLD_DIM : BG_BASE, borderRadius: 12, padding: '8px 6px', fontSize: '0.7rem', fontWeight: 700, color: h.searchTab === id ? GOLD : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>{label}</button>
               ))}
-              <button onClick={() => { h.setModal('scan') }} style={{ border: `1px solid ${BORDER}`, background: BG_BASE, borderRadius: 0, padding: '8px 10px', fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms', flexShrink: 0 }}>📷</button>
+              <button onClick={() => { h.setModal('scan') }} style={{ border: `1px solid ${BORDER}`, background: BG_BASE, borderRadius: 12, padding: '8px 10px', fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms', flexShrink: 0 }}>📷</button>
             </div>
             {!h.selectedFood ? (
               <>
                 <div style={{ position: 'relative', marginBottom: 16 }}>
                   <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED }} />
-                  <input value={h.foodSearch} onChange={e => h.setFoodSearch(e.target.value)} placeholder={h.searchTab === 'fitness' ? 'Rechercher un aliment fitness...' : h.searchTab !== 'custom' ? 'Rechercher dans la base ANSES...' : 'Rechercher mes aliments...'} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, paddingLeft: 40, paddingRight: 16, paddingTop: 12, paddingBottom: 12, color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
+                  <input value={h.foodSearch} onChange={e => h.setFoodSearch(e.target.value)} placeholder={h.searchTab === 'fitness' ? 'Rechercher un aliment fitness...' : h.searchTab !== 'custom' ? 'Rechercher dans la base ANSES...' : 'Rechercher mes aliments...'} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, paddingLeft: 40, paddingRight: 16, paddingTop: 12, paddingBottom: 12, color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
                 </div>
                 {h.searchTab === 'custom' && (
                   <button onClick={() => h.setModal('custom_food')} style={{ width: '100%', border: `2px dashed ${BORDER}`, borderRadius: 2, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: TEXT_MUTED, fontSize: '0.8rem', fontWeight: 700, background: 'transparent', cursor: 'pointer', marginBottom: 12 }}><Plus size={14} /> Créer un aliment personnalisé</button>
@@ -243,7 +243,7 @@ export default function CoachApp() {
                     ))}
                   </div>
                 </div>
-                <button onClick={h.addFoodToMeal} style={{ width: '100%', background: GREEN, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 0, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>Ajouter au repas</button>
+                <button onClick={h.addFoodToMeal} style={{ width: '100%', background: GREEN, color: '#000', fontWeight: 700, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase',  }}>Ajouter au repas</button>
               </div>
             )}
           </div>
@@ -256,14 +256,14 @@ export default function CoachApp() {
           <div style={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, borderRadius: 2, padding: '20px 20px 40px', width: '100%', border: `1px solid ${BORDER}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontFamily: FONT_ALT, fontSize: '1.3rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>NOUVEL ALIMENT</h3>
-              <button onClick={() => h.setModal('food')} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 0, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
+              <button onClick={() => h.setModal('food')} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input value={h.customFoodForm.name} onChange={e => h.setCustomFoodForm(p => ({ ...p, name: e.target.value }))} placeholder="Nom de l'aliment *" style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
-              <input value={h.customFoodForm.brand} onChange={e => h.setCustomFoodForm(p => ({ ...p, brand: e.target.value }))} placeholder="Marque (optionnel)" style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
+              <input value={h.customFoodForm.name} onChange={e => h.setCustomFoodForm(p => ({ ...p, name: e.target.value }))} placeholder="Nom de l'aliment *" style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
+              <input value={h.customFoodForm.brand} onChange={e => h.setCustomFoodForm(p => ({ ...p, brand: e.target.value }))} placeholder="Marque (optionnel)" style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {[['calories_per_100g', 'Calories *', 'kcal'], ['proteins_per_100g', 'Protéines', 'g'], ['carbs_per_100g', 'Glucides', 'g'], ['fats_per_100g', 'Lipides', 'g']].map(([k, l, u]) => (
-                  <div key={k} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px 12px' }}>
+                  <div key={k} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px' }}>
                     <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', marginBottom: 4 }}>{l} /100g</div>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <input type="number" value={(h.customFoodForm as any)[k]} onChange={e => h.setCustomFoodForm(p => ({ ...p, [k]: e.target.value }))} placeholder="0" style={{ background: 'transparent', color: TEXT_PRIMARY, fontSize: '0.9rem', fontWeight: 700, flex: 1, outline: 'none', border: 'none', width: '100%' }} />
@@ -273,7 +273,7 @@ export default function CoachApp() {
                 ))}
               </div>
             </div>
-            <button onClick={h.addCustomFood} style={{ width: '100%', background: GOLD, color: '#050505', fontWeight: 700, padding: '16px', borderRadius: 0, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 16 }}>Créer l&apos;aliment</button>
+            <button onClick={h.addCustomFood} style={{ width: '100%', background: GOLD, color: '#050505', fontWeight: 700, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 16 }}>Créer l&apos;aliment</button>
           </div>
         </div>
       )}
@@ -296,7 +296,7 @@ export default function CoachApp() {
           <span style={{ fontSize: '0.78rem', fontWeight: 600, color: h.trialDaysLeft <= 3 ? RED : GOLD }}>
             {h.trialDaysLeft <= 3 ? `Plus que ${h.trialDaysLeft} jour${h.trialDaysLeft !== 1 ? 's' : ''} !` : `Période d'essai — ${h.trialDaysLeft} jours restants`}
           </span>
-          <button onClick={() => h.handleSubscribe('client_monthly')} style={{ padding: '6px 14px', background: h.trialDaysLeft <= 3 ? RED : GOLD, border: 'none', borderRadius: 0, color: h.trialDaysLeft <= 3 ? '#fff' : '#050505', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT_ALT, letterSpacing: '0.04em', flexShrink: 0, clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+          <button onClick={() => h.handleSubscribe('client_monthly')} style={{ padding: '6px 14px', background: h.trialDaysLeft <= 3 ? RED : GOLD, border: 'none', borderRadius: 12, color: h.trialDaysLeft <= 3 ? '#fff' : '#050505', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT_ALT, letterSpacing: '0.04em', flexShrink: 0,  }}>
             S&apos;abonner
           </button>
         </div>
@@ -342,7 +342,7 @@ export default function CoachApp() {
           const active = h.activeTab === id
           return (
             <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 6px', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}>
-              {active && <motion.div layoutId="navIndicator" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 24, height: 2, background: GOLD, borderRadius: 0 }} transition={{ type: 'spring', stiffness: 420, damping: 30 }} />}
+              {active && <motion.div layoutId="navIndicator" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 24, height: 2, background: GOLD, borderRadius: 12 }} transition={{ type: 'spring', stiffness: 420, damping: 30 }} />}
               <Icon size={20} color={active ? GOLD : TEXT_DIM} />
               <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: active ? GOLD : TEXT_DIM, fontFamily: FONT_ALT }}>{label}</span>
             </button>

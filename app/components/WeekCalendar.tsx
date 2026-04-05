@@ -37,7 +37,7 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
             onClick={onToggleMonth}
             style={{
               background: 'transparent', border: `1px solid ${BORDER}`,
-              borderRadius: 0, padding: '4px 10px', cursor: 'pointer',
+              borderRadius: 12, padding: '4px 10px', cursor: 'pointer',
               fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 600,
               fontFamily: FONT_ALT,
             }}
@@ -90,7 +90,7 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
               whileTap={{ scale: 0.98 }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 14px', borderRadius: 0,
+                padding: '10px 14px', borderRadius: 12,
                 background: isSelected ? GOLD : (isToday ? GOLD_DIM : BG_CARD),
                 border: isToday
                   ? `1px solid ${GOLD}`
@@ -146,7 +146,7 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
               {badge && (
                 <span style={{
                   fontSize: '0.6rem', fontWeight: 700,
-                  padding: '3px 8px', borderRadius: 0,
+                  padding: '3px 8px', borderRadius: 12,
                   background: badge.bg, color: isSelected ? '#05050599' : badge.color,
                   flexShrink: 0, letterSpacing: '0.02em',
                   textTransform: 'uppercase',

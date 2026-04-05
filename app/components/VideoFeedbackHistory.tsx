@@ -60,14 +60,14 @@ export default function VideoFeedbackHistory({ userId }: { userId: string }) {
                   <span style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>{fb.exercise_name}</span>
                   <span style={{ fontSize: 11, color: TEXT_DIM, marginLeft: 8, fontFamily: FONT_BODY }}>{new Date(fb.created_at).toLocaleDateString('fr-CH')}</span>
                 </div>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: info.color, background: `${info.color}15`, border: `1px solid ${info.color}30`, borderRadius: 0, padding: '3px 10px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: info.color, background: `${info.color}15`, border: `1px solid ${info.color}30`, borderRadius: 12, padding: '3px 10px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
                   {info.icon} {info.label}
                 </span>
               </div>
 
               {isExpanded && (
                 <div style={{ marginTop: 12 }}>
-                  <video src={fb.video_url} controls style={{ width: '100%', borderRadius: 0, maxHeight: 200, marginBottom: 8 }} />
+                  <video src={fb.video_url} controls style={{ width: '100%', borderRadius: 12, maxHeight: 200, marginBottom: 8 }} />
                   {fb.client_note && (
                     <p style={{ fontSize: 12, color: TEXT_MUTED, fontStyle: 'italic', margin: '0 0 8px', fontFamily: FONT_BODY }}>Toi : "{fb.client_note}"</p>
                   )}

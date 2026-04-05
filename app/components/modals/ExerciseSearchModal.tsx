@@ -65,7 +65,7 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <button
                 onClick={() => { onClose(); }}
-                style={{ width: 36, height: 36, borderRadius: 0, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                style={{ width: 36, height: 36, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
               >
                 <X size={16} color={TEXT_MUTED} />
               </button>
@@ -79,7 +79,7 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
                 onChange={e => setExSearch(e.target.value)}
                 placeholder="Rechercher un exercice..."
                 autoFocus
-                style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '13px 16px 13px 46px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', fontFamily: FONT_BODY }}
+                style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '13px 16px 13px 46px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', fontFamily: FONT_BODY }}
               />
             </div>
             {/* Filter chips */}
@@ -89,7 +89,7 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
                 const color = MUSCLE_COLORS[mg] || GOLD
                 return (
                   <button key={mg} onClick={() => setExDbMuscleFilter(mg)} style={{
-                    flexShrink: 0, padding: '6px 14px', borderRadius: 0,
+                    flexShrink: 0, padding: '6px 14px', borderRadius: 12,
                     border: `1px solid ${isActive ? color : BORDER}`,
                     background: isActive ? `${color}22` : BG_CARD,
                     color: isActive ? color : TEXT_MUTED,
@@ -146,17 +146,17 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                           {ex.muscle_group && (
-                            <span style={{ fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: mgColor, background: `${mgColor}20`, borderRadius: 0, padding: '2px 6px', display: 'inline-block', width: 'fit-content', fontFamily: FONT_ALT, letterSpacing: '1px' }}>
+                            <span style={{ fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: mgColor, background: `${mgColor}20`, borderRadius: 12, padding: '2px 6px', display: 'inline-block', width: 'fit-content', fontFamily: FONT_ALT, letterSpacing: '1px' }}>
                               {ex.muscle_group}
                             </span>
                           )}
                           {ex.equipment && (
-                            <span style={{ fontSize: '0.58rem', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD_2, borderRadius: 0, padding: '2px 6px', display: 'inline-block', width: 'fit-content', fontFamily: FONT_ALT, letterSpacing: '1px' }}>
+                            <span style={{ fontSize: '0.58rem', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD_2, borderRadius: 12, padding: '2px 6px', display: 'inline-block', width: 'fit-content', fontFamily: FONT_ALT, letterSpacing: '1px' }}>
                               {ex.equipment}
                             </span>
                           )}
                           {ex.difficulty && (
-                            <span style={{ fontSize: '0.58rem', fontWeight: 700, color: diffColor, background: `${diffColor}18`, borderRadius: 0, padding: '2px 6px', display: 'inline-block', width: 'fit-content', fontFamily: FONT_ALT, letterSpacing: '1px' }}>
+                            <span style={{ fontSize: '0.58rem', fontWeight: 700, color: diffColor, background: `${diffColor}18`, borderRadius: 12, padding: '2px 6px', display: 'inline-block', width: 'fit-content', fontFamily: FONT_ALT, letterSpacing: '1px' }}>
                               {ex.difficulty}
                             </span>
                           )}
@@ -195,7 +195,7 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div style={{ flex: 1, paddingRight: 12 }}>
                   {selectedExDb.muscle_group && (
-                    <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: MUSCLE_COLORS[selectedExDb.muscle_group] || GOLD, background: `${MUSCLE_COLORS[selectedExDb.muscle_group] || GOLD}20`, borderRadius: 0, padding: '2px 8px', display: 'inline-block', fontFamily: FONT_ALT, letterSpacing: '2px' }}>
+                    <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: MUSCLE_COLORS[selectedExDb.muscle_group] || GOLD, background: `${MUSCLE_COLORS[selectedExDb.muscle_group] || GOLD}20`, borderRadius: 12, padding: '2px 8px', display: 'inline-block', fontFamily: FONT_ALT, letterSpacing: '2px' }}>
                       {selectedExDb.muscle_group}
                     </span>
                   )}
@@ -203,7 +203,7 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
                     {selectedExDb.name}
                   </h3>
                 </div>
-                <button onClick={() => setSelectedExDb(null)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 0, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <button onClick={() => setSelectedExDb(null)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <X size={14} color={TEXT_MUTED} />
                 </button>
               </div>
@@ -211,11 +211,11 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
               {/* Tags */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
                 {selectedExDb.equipment && (
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD_2, borderRadius: 0, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{selectedExDb.equipment}</span>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, background: BG_CARD_2, borderRadius: 12, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{selectedExDb.equipment}</span>
                 )}
                 {selectedExDb.difficulty && (() => {
                   const dc = selectedExDb.difficulty === 'Avance' ? '#EF4444' : selectedExDb.difficulty === 'Intermediaire' ? '#F97316' : '#22C55E'
-                  return <span style={{ fontSize: '0.7rem', fontWeight: 700, color: dc, background: `${dc}18`, borderRadius: 0, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{selectedExDb.difficulty}</span>
+                  return <span style={{ fontSize: '0.7rem', fontWeight: 700, color: dc, background: `${dc}18`, borderRadius: 12, padding: '4px 10px', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{selectedExDb.difficulty}</span>
                 })()}
               </div>
 
@@ -250,7 +250,7 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
               {/* Close button */}
               <button
                 onClick={() => setSelectedExDb(null)}
-                style={{ width: '100%', background: BG_BASE, color: TEXT_MUTED, fontWeight: 800, padding: '14px', borderRadius: 0, border: `1px solid ${BORDER}`, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', letterSpacing: '2px', textTransform: 'uppercase' }}
+                style={{ width: '100%', background: BG_BASE, color: TEXT_MUTED, fontWeight: 800, padding: '14px', borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', letterSpacing: '2px', textTransform: 'uppercase' }}
               >
                 Fermer
               </button>

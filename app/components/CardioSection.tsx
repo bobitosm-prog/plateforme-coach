@@ -42,8 +42,8 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: '1.1rem' }}>🏃</span>
           <span style={{ fontFamily: FONT_ALT, fontSize: '0.92rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>Cardio</span>
-          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 0, padding: '2px 7px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>HIIT</span>
-          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 0, padding: '2px 7px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>LISS</span>
+          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '2px 7px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>HIIT</span>
+          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '2px 7px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>LISS</span>
         </div>
         {expanded ? <ChevronUp size={16} color={TEXT_MUTED} /> : <ChevronDown size={16} color={TEXT_MUTED} />}
       </button>
@@ -66,7 +66,7 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
             <>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[['all', 'Tout'], ['hiit', 'HIIT'], ['liss', 'LISS']].map(([k, l]) => (
-                  <button key={k} onClick={() => setFilter(k as any)} style={{ padding: '6px 12px', borderRadius: 0, border: `1px solid ${filter === k ? GOLD_RULE : BORDER}`, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700, background: filter === k ? GOLD_DIM : BG_BASE, color: filter === k ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>{l}</button>
+                  <button key={k} onClick={() => setFilter(k as any)} style={{ padding: '6px 12px', borderRadius: 12, border: `1px solid ${filter === k ? GOLD_RULE : BORDER}`, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700, background: filter === k ? GOLD_DIM : BG_BASE, color: filter === k ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>{l}</button>
                 ))}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -85,7 +85,7 @@ function WorkoutCard({ workout, weight, onStart }: { workout: CardioWorkout; wei
   return (
     <button onClick={onStart} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '12px 10px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: '0.55rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 0, padding: '1px 5px', textTransform: 'uppercase', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{workout.type}</span>
+        <span style={{ fontSize: '0.55rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '1px 5px', textTransform: 'uppercase', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{workout.type}</span>
         <span style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>🕐 {workout.duration_min} min</span>
       </div>
       <div style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1.2, fontFamily: FONT_ALT }}>{workout.name}</div>
@@ -181,7 +181,7 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{Math.round(elapsed / 60)}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>MINUTES</div></div>
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>KCAL</div></div>
         </div>
-        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 0, border: 'none', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
+        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
       </div>
     )
   }
@@ -275,7 +275,7 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{mins}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>MINUTES</div></div>
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>KCAL</div></div>
         </div>
-        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 0, border: 'none', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
+        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
       </div>
     )
   }

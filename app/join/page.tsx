@@ -108,7 +108,7 @@ function JoinContent() {
   if (emailSent) return (
     <div style={{ minHeight: '100vh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 420, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 40, textAlign: 'center' }}>
-        <div style={{ width: 64, height: 64, borderRadius: 0, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+        <div style={{ width: 64, height: 64, borderRadius: 12, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
         <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: TEXT_PRIMARY, margin: '0 0 12px', letterSpacing: '2px' }}>VERIFIE TA BOITE MAIL</h2>
@@ -129,7 +129,7 @@ function JoinContent() {
 
         {/* Logo + header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/logo-moovx.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 0, marginBottom: 16 }} />
+          <img src="/logo-moovx.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 12, marginBottom: 16 }} />
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 8px', letterSpacing: '2px' }}>REJOINS MOOVX</h1>
           {coachName && (
             <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 15, color: GOLD, margin: 0 }}>
@@ -143,7 +143,7 @@ function JoinContent() {
 
         {/* Google */}
         <button onClick={handleGoogleSignUp}
-          style={{ width: '100%', background: '#fff', border: 'none', borderRadius: 0, padding: '12px 16px', color: '#000', fontSize: 14, fontWeight: 600, fontFamily: FONT_BODY, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 24, transition: 'transform 0.2s' }}>
+          style={{ width: '100%', background: '#fff', border: 'none', borderRadius: 12, padding: '12px 16px', color: '#000', fontSize: 14, fontWeight: 600, fontFamily: FONT_BODY, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 24, transition: 'transform 0.2s' }}>
           <GoogleIcon /> Continuer avec Google
         </button>
 
@@ -173,14 +173,14 @@ function JoinContent() {
 
         {/* Error */}
         {error && (
-          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 0, padding: '10px 14px', marginBottom: 16 }}>
+          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 16 }}>
             <p style={{ color: RED, fontSize: 13, fontFamily: FONT_BODY, fontWeight: 300, margin: 0 }}>{error}</p>
           </div>
         )}
 
         {/* Submit */}
         <button onClick={handleSignUp} disabled={loading}
-          style={{ width: '100%', background: loading ? BORDER : GOLD, color: loading ? TEXT_MUTED : BG_BASE, border: 'none', borderRadius: 0, padding: '14px', fontSize: 15, fontWeight: 800, fontFamily: FONT_ALT, cursor: loading ? 'wait' : 'pointer', transition: 'all 0.2s', letterSpacing: '1px', clipPath: loading ? 'none' : 'polygon(0 0,100% 0,96% 100%,0 100%)' }}>
+          style={{ width: '100%', background: loading ? BORDER : GOLD, color: loading ? TEXT_MUTED : BG_BASE, border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 800, fontFamily: FONT_ALT, cursor: loading ? 'wait' : 'pointer', transition: 'all 0.2s', letterSpacing: '1px', clipPath: loading ? 'none' : 'polygon(0 0,100% 0,96% 100%,0 100%)' }}>
           {loading ? 'Creation du compte...' : 'Creer mon compte gratuit'}
         </button>
 

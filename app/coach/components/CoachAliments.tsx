@@ -38,7 +38,7 @@ export default function CoachAliments({
       `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.8rem', fontWeight: 700, letterSpacing: '3px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>ALIMENTS</h1>
-        <button onClick={() => setShowAddFood(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 0, border: 'none', cursor: 'pointer', background: GOLD, color: BG_BASE, fontFamily: FONT_ALT, fontSize: '0.8rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const, clipPath: 'polygon(0 0, 100% 0, 94% 100%, 0% 100%)' }}>
+        <button onClick={() => setShowAddFood(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, color: BG_BASE, fontFamily: FONT_ALT, fontSize: '0.8rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const,  }}>
           <Plus size={14} strokeWidth={2.5} /> Ajouter
         </button>
       </div>
@@ -47,7 +47,7 @@ export default function CoachAliments({
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         {([['fitness', 'Fitness'], ['anses', 'ANSES'], ['coach', 'Mes ajouts']] as const).map(([k, l]) => (
           <button key={k} onClick={() => { setFoodFilter(k); setTimeout(loadFoods, 0) }} style={{
-            padding: '8px 14px', borderRadius: 0, border: 'none', cursor: 'pointer',
+            padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
             fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const,
             background: foodFilter === k ? GOLD_DIM : BG_CARD,
             color: foodFilter === k ? GOLD : TEXT_MUTED,
@@ -59,7 +59,7 @@ export default function CoachAliments({
       <div style={{ position: 'relative', marginBottom: 14 }}>
         <Search size={16} color={GOLD} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
         <input value={foodSearchQ} onChange={e => { setFoodSearchQ(e.target.value); setTimeout(loadFoods, 300) }} placeholder="Rechercher..."
-          style={{ width: '100%', padding: '10px 12px 10px 38px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: '0.85rem', outline: 'none' }} />
+          style={{ width: '100%', padding: '10px 12px 10px 38px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: '0.85rem', outline: 'none' }} />
       </div>
 
       {/* Table */}
@@ -82,7 +82,7 @@ export default function CoachAliments({
               <span className="food-col-hide" style={{ fontSize: '0.78rem', color: GOLD, fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.carbohydrates || 0)}</span>
               <span className="food-col-hide" style={{ fontSize: '0.78rem', color: GREEN, fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.fat || 0)}</span>
               {f.source === 'coach' ? (
-                <button onClick={() => deleteFood(f.id)} style={{ width: 32, height: 32, borderRadius: 0, background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button onClick={() => deleteFood(f.id)} style={{ width: 32, height: 32, borderRadius: 12, background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trash2 size={13} color={RED} />
                 </button>
               ) : <div />}
@@ -98,11 +98,11 @@ export default function CoachAliments({
           <div style={{ background: BG_CARD, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', width: '100%', maxWidth: 'min(480px, calc(100vw - 32px))', margin: '0 auto', border: `1px solid ${BORDER}`, borderBottom: 'none' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, margin: 0, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>Nouvel aliment</h3>
-              <button onClick={() => setShowAddFood(false)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 0, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
+              <button onClick={() => setShowAddFood(false)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <input value={newFood.name} onChange={e => setNewFood((p: any) => ({ ...p, name: e.target.value }))} placeholder="Nom de l'aliment *"
-                style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: '0.9rem', outline: 'none' }} />
+                style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: '0.9rem', outline: 'none' }} />
               <div style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '1.5px' }}>Valeurs pour 100g</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                 {([
@@ -114,18 +114,18 @@ export default function CoachAliments({
                   <div key={k}>
                     <label style={{ display: 'block', fontFamily: FONT_ALT, fontSize: '0.68rem', color: TEXT_MUTED, marginBottom: 4, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{l}</label>
                     <input type="number" inputMode="decimal" value={newFood[k]} onChange={e => setNewFood((p: any) => ({ ...p, [k]: e.target.value }))} placeholder="0"
-                      style={{ width: '100%', padding: '10px 12px', background: BG_BASE, border: `1px solid ${newFood[k] ? c + '60' : BORDER}`, borderRadius: 0, color: c, fontSize: '1rem', fontFamily: FONT_DISPLAY, fontWeight: 700, outline: 'none', textAlign: 'center' }} />
+                      style={{ width: '100%', padding: '10px 12px', background: BG_BASE, border: `1px solid ${newFood[k] ? c + '60' : BORDER}`, borderRadius: 12, color: c, fontSize: '1rem', fontFamily: FONT_DISPLAY, fontWeight: 700, outline: 'none', textAlign: 'center' }} />
                   </div>
                 ))}
               </div>
               {/* Cooked toggle */}
-              <button onClick={() => setNewFood((p: any) => ({ ...p, is_cooked: !p.is_cooked }))} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 0, background: newFood.is_cooked ? GOLD_DIM : BG_BASE, border: `1px solid ${newFood.is_cooked ? GOLD_RULE : BORDER}`, cursor: 'pointer' }}>
-                <div style={{ width: 20, height: 20, borderRadius: 0, background: newFood.is_cooked ? GOLD : BORDER, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => setNewFood((p: any) => ({ ...p, is_cooked: !p.is_cooked }))} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 12, background: newFood.is_cooked ? GOLD_DIM : BG_BASE, border: `1px solid ${newFood.is_cooked ? GOLD_RULE : BORDER}`, cursor: 'pointer' }}>
+                <div style={{ width: 20, height: 20, borderRadius: 12, background: newFood.is_cooked ? GOLD : BORDER, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {newFood.is_cooked && <Check size={12} color={BG_BASE} strokeWidth={3} />}
                 </div>
                 <span style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_PRIMARY }}>Aliment cuit</span>
               </button>
-              <button onClick={saveNewFood} disabled={!newFood.name.trim()} style={{ width: '100%', padding: '14px', borderRadius: 0, border: 'none', cursor: newFood.name.trim() ? 'pointer' : 'default', background: newFood.name.trim() ? GOLD : BORDER, color: newFood.name.trim() ? BG_BASE : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', clipPath: 'polygon(0 0, 100% 0, 97% 100%, 0% 100%)' }}>
+              <button onClick={saveNewFood} disabled={!newFood.name.trim()} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: newFood.name.trim() ? 'pointer' : 'default', background: newFood.name.trim() ? GOLD : BORDER, color: newFood.name.trim() ? BG_BASE : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase',  }}>
                 Enregistrer
               </button>
             </div>

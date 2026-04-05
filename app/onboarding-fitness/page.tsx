@@ -204,7 +204,7 @@ export default function OnboardingFitnessPage() {
     padding: '16px 20px',
     background: selected ? GOLD_BG : 'rgba(255,255,255,0.03)',
     border: `1.5px solid ${selected ? GOLD_BORDER : 'rgba(255,255,255,0.08)'}`,
-    borderRadius: 0,
+    borderRadius: 12,
     cursor: 'pointer',
     fontFamily: FONT_DM,
     fontSize: 15,
@@ -220,7 +220,7 @@ export default function OnboardingFitnessPage() {
     background: disabled ? 'rgba(255,255,255,0.05)' : GOLD_C,
     color: disabled ? TEXT_MUTED : '#0a0a0a',
     border: 'none',
-    borderRadius: 0,
+    borderRadius: 12,
     fontFamily: FONT_BEBAS,
     fontSize: 20,
     letterSpacing: '0.08em',
@@ -293,7 +293,7 @@ export default function OnboardingFitnessPage() {
                 padding: '14px 16px',
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 0,
+                borderRadius: 12,
               }}>
                 <div style={{ fontFamily: FONT_DM, fontSize: 11, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
                   {c.label}
@@ -317,7 +317,7 @@ export default function OnboardingFitnessPage() {
                   padding: '12px 16px',
                   background: 'rgba(201,168,76,0.06)',
                   border: '1px solid rgba(201,168,76,0.15)',
-                  borderRadius: 0,
+                  borderRadius: 12,
                 }}>
                   <span style={{ color: GOLD_C, fontSize: 16, flexShrink: 0 }}>&#9654;</span>
                   <span style={{ fontFamily: FONT_DM, fontSize: 14, color: TEXT_PRIMARY }}>{obj}</span>
@@ -430,7 +430,7 @@ export default function OnboardingFitnessPage() {
 
         {/* Progress bar */}
         <div style={{ paddingTop: 20, marginBottom: 8 }}>
-          <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 0, overflow: 'hidden' }}>
+          <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden' }}>
             <motion.div
               animate={{ width: `${progressPct}%` }}
               transition={{ duration: 0.3 }}
@@ -472,7 +472,7 @@ export default function OnboardingFitnessPage() {
                 padding: '16px 24px',
                 background: 'transparent',
                 border: `1.5px solid rgba(255,255,255,0.1)`,
-                borderRadius: 0,
+                borderRadius: 12,
                 color: TEXT_MUTED,
                 fontFamily: FONT_BEBAS,
                 fontSize: 18,
@@ -530,7 +530,7 @@ function StepChoices({
               padding: '16px 20px',
               background: selected === i ? 'rgba(201,168,76,0.10)' : 'rgba(255,255,255,0.03)',
               border: `1.5px solid ${selected === i ? 'rgba(201,168,76,0.5)' : 'rgba(255,255,255,0.08)'}`,
-              borderRadius: 0,
+              borderRadius: 12,
               cursor: 'pointer',
               fontFamily: "'DM Sans', var(--font-dm-sans), sans-serif",
               fontSize: 15,

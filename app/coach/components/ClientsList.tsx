@@ -107,7 +107,7 @@ export default function ClientsList({
                       <td>
                         <button
                           onClick={() => { setSection('messages'); openChat(c) }}
-                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: unread > 0 ? RED : TEXT_MUTED, padding: '4px 8px', borderRadius: 0 }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: unread > 0 ? RED : TEXT_MUTED, padding: '4px 8px', borderRadius: 12 }}
                         >
                           <MessageCircle size={15} />
                           {unread > 0 && <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>{unread}</span>}
@@ -211,7 +211,7 @@ export default function ClientsList({
                 <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, marginBottom: '10px', lineHeight: 1.5, fontFamily: FONT_BODY }}>
                   Partage ce lien — le client sera lié à ton profil automatiquement.
                 </p>
-                <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 10px', fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: '10px' }}>
+                <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 10px', fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: '10px' }}>
                   {inviteLink || 'Chargement…'}
                 </div>
                 <button className="btn-primary btn-primary-orange" onClick={copyInviteLink} style={{ fontSize: '0.85rem', padding: '8px 16px' }}>

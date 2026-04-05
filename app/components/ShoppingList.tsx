@@ -105,10 +105,10 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
           <div style={{ fontSize: '0.65rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{totalItems} articles -- {checkedCount}/{totalItems} coches</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={copyToClipboard} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 0, border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+          <button onClick={copyToClipboard} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.5px' }}>
             <Copy size={13} /> Copier
           </button>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 0, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={TEXT_MUTED} />
           </button>
         </div>
@@ -146,7 +146,7 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
       {/* Footer */}
       {checkedCount > 0 && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))', background: 'rgba(5,5,5,0.95)', borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'center' }}>
-          <button onClick={resetAll} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 0, border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+          <button onClick={resetAll} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 12, border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.5px' }}>
             <RotateCcw size={14} /> Tout decocher
           </button>
         </div>

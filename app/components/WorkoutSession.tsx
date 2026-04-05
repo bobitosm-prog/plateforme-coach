@@ -44,7 +44,7 @@ function RestOverlay({ secs, max, onSkip }: { secs: number; max: number; onSkip:
           </div>
         </div>
         <button onClick={onSkip} className="relative z-10 w-full py-4 active:scale-95"
-          style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 0, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Passer →</button>
+          style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Passer →</button>
         <p className="text-[10px] relative z-10" style={{ color: TEXT_DIM, fontFamily: FONT_BODY }}>Recommandé : {fmt(max)}</p>
       </div>
     </div>
@@ -89,24 +89,24 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
           <h2 className="text-sm uppercase tracking-wider" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px' }}>{step === 'build' ? 'Choisir les exercices' : 'Configurer'}</h2>
           {step === 'build'
             ? <button onClick={goConfig} disabled={!selected.length} className="text-[11px] uppercase px-4 py-2 active:scale-95"
-                style={{ background: selected.length ? GOLD : BG_CARD, color: selected.length ? '#050505' : TEXT_DIM, fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 0, border: selected.length ? 'none' : `1px solid ${BORDER}` }}>Suite ({selected.length})</button>
-            : <button onClick={launch} className="text-[11px] uppercase px-4 py-2 active:scale-95" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 0, border: 'none' }}>Lancer !</button>}
+                style={{ background: selected.length ? GOLD : BG_CARD, color: selected.length ? '#050505' : TEXT_DIM, fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: selected.length ? 'none' : `1px solid ${BORDER}` }}>Suite ({selected.length})</button>
+            : <button onClick={launch} className="text-[11px] uppercase px-4 py-2 active:scale-95" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none' }}>Lancer !</button>}
         </div>
         {step === 'build' && <>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Nom de la séance..."
             className="w-full px-4 py-3 text-sm font-bold mb-3 outline-none"
-            style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_BODY }} />
+            style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY }} />
           <div className="relative mb-3">
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: TEXT_DIM }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un exercice..."
               className="w-full pl-9 pr-4 py-3 text-sm outline-none"
-              style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_BODY }} />
+              style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY }} />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {['Tous', ...muscles].map(m => (
               <button key={m} onClick={() => setFilter(m === 'Tous' ? '' : (filter === m ? '' : m))}
                 className="flex-shrink-0 px-3 py-1.5 text-[10px] uppercase"
-                style={{ background: (m === 'Tous' && !filter) || filter === m ? GOLD : BG_BASE, color: (m === 'Tous' && !filter) || filter === m ? '#050505' : TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', borderRadius: 0 }}>
+                style={{ background: (m === 'Tous' && !filter) || filter === m ? GOLD : BG_BASE, color: (m === 'Tous' && !filter) || filter === m ? '#050505' : TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', borderRadius: 12 }}>
                 {m}
               </button>
             ))}
@@ -122,7 +122,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
               <div className="flex flex-wrap gap-1.5">
                 {selected.map(e => (
                   <button key={e.id} onClick={() => toggle(e)} className="flex items-center gap-1 px-2.5 py-1 text-[10px]"
-                    style={{ background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}`, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700 }}>
+                    style={{ background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, fontFamily: FONT_ALT, fontWeight: 700 }}>
                     {e.name} <X size={9} />
                   </button>
                 ))}
@@ -142,8 +142,8 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
                   <div className="flex-1 min-w-0">
                     <div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.name}</div>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="text-[10px] px-2 py-0.5" style={{ background: BG_BASE, color: TEXT_MUTED, border: `1px solid ${BORDER}`, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.muscle_group}</span>
-                      <span className="text-[9px] px-1.5 py-0.5" style={{ color: dc(e.difficulty), background: `${dc(e.difficulty)}18`, borderRadius: 0, fontFamily: FONT_ALT, fontWeight: 700 }}>
+                      <span className="text-[10px] px-2 py-0.5" style={{ background: BG_BASE, color: TEXT_MUTED, border: `1px solid ${BORDER}`, borderRadius: 12, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.muscle_group}</span>
+                      <span className="text-[9px] px-1.5 py-0.5" style={{ color: dc(e.difficulty), background: `${dc(e.difficulty)}18`, borderRadius: 12, fontFamily: FONT_ALT, fontWeight: 700 }}>
                         {e.difficulty === 'debutant' ? 'Débutant' : e.difficulty === 'intermediaire' ? 'Intermédiaire' : 'Avancé'}
                       </span>
                       {e.equipment && <span className="text-[9px]" style={{ color: TEXT_DIM, fontFamily: FONT_BODY }}>{e.equipment}</span>}
@@ -171,7 +171,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {[['SETS', 'targetSets', 'number'], ['REPS', 'targetReps', 'text'], ['REPOS s', 'rest', 'number']].map(([label, key, type]) => (
-                  <div key={key} className="p-3" style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0 }}>
+                  <div key={key} className="p-3" style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12 }}>
                     <div className="text-[9px] mb-1.5" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{label}</div>
                     <input type={type} value={(e as any)[key]}
                       onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))}
@@ -299,7 +299,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
         <div className="w-full space-y-2 mb-7">
           {exos.map(e => { const d = e.sets.filter(s => s.done); if (!d.length) return null; const best = Math.max(...d.map(s => Number(s.weight) || 0)); return (<div key={e.id} className="px-4 py-3 flex justify-between items-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}><div><div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.name}</div><div className="text-[10px]" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{d.length} sets · {e.muscle}</div></div><div className="text-right"><div className="text-sm" style={{ color: GOLD, fontFamily: FONT_DISPLAY }}>{best > 0 ? `${best} kg` : '—'}</div><div className="text-[9px]" style={{ color: TEXT_DIM, fontFamily: FONT_ALT, fontWeight: 700 }}>max</div></div></div>) })}
         </div>
-        <button onClick={onClose} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 0, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Dashboard</button>
+        <button onClick={onClose} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Dashboard</button>
       </div>
     </div>
   )
@@ -352,7 +352,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
               background: GOLD, color: '#050505', border: 'none',
               fontFamily: FONT_ALT, fontWeight: 800, fontSize: 16, letterSpacing: 2,
               padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
-              clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+              
             }}>
               C&apos;EST PARTI !
             </button>
@@ -498,7 +498,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                               width: '100%', height: 44, textAlign: 'center',
                               background: set.done ? GOLD_DIM : BG_BASE,
                               border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
-                              borderRadius: 0, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
+                              borderRadius: 12, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
                               color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none',
                               opacity: set.done ? 0.7 : 1, transition: 'border-color 0.2s, opacity 0.3s',
                             }}
@@ -516,7 +516,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                               width: '100%', height: 44, textAlign: 'center',
                               background: set.done ? GOLD_DIM : BG_BASE,
                               border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
-                              borderRadius: 0, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
+                              borderRadius: 12, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
                               color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none',
                               opacity: set.done ? 0.7 : 1, transition: 'border-color 0.2s, opacity 0.3s',
                             }}
@@ -527,13 +527,13 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                             {set.done ? (
                               <button onClick={() => unvalidate(exo.id, set.id)} style={{
                                 width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 0, cursor: 'pointer',
+                                background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, cursor: 'pointer',
                               }}><RotateCcw size={14} style={{ color: GOLD }} /></button>
                             ) : (
                               <button onClick={() => ok ? validate(exo.id, set.id) : undefined} style={{
                                 width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 background: ok ? GOLD : 'transparent', border: `1px solid ${ok ? 'transparent' : TEXT_DIM}`,
-                                borderRadius: 0, cursor: ok ? 'pointer' : 'default',
+                                borderRadius: 12, cursor: ok ? 'pointer' : 'default',
                                 transition: 'all 0.2s', transform: 'scale(1)',
                               }}
                               onMouseDown={e => { if (ok) (e.currentTarget.style.transform = 'scale(1.05)') }}
@@ -549,7 +549,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                   {/* Add set button */}
                   <button onClick={() => addSet(exo.id)} style={{
                     width: '100%', marginTop: 10, padding: '12px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    background: 'transparent', border: `1px solid ${TEXT_DIM}`, borderRadius: 0, cursor: 'pointer',
+                    background: 'transparent', border: `1px solid ${TEXT_DIM}`, borderRadius: 12, cursor: 'pointer',
                     fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, color: TEXT_MUTED, letterSpacing: '1px', textTransform: 'uppercase' as const,
                     transition: 'background 0.15s, border-color 0.15s', minHeight: 44,
                   }}
@@ -569,7 +569,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
             <Trophy size={32} className="mx-auto mb-2" style={{ color: GOLD }} />
             <p className="text-base mb-1" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px' }}>Séance complète ! 🔥</p>
             <p className="text-sm mb-4" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{dur(elapsed)} · {Math.round(volume)} kg</p>
-            <button onClick={finish} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 0, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>🏆 Terminer</button>
+            <button onClick={finish} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>🏆 Terminer</button>
           </div>
         )}
       </div>

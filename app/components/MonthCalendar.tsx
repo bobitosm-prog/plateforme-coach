@@ -66,7 +66,7 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
           <button onClick={nextMonth} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
             <ChevronRight size={18} color={TEXT_MUTED} />
           </button>
-          <button onClick={onClose} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer', padding: 4, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={onClose} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', padding: 4, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={14} color={TEXT_MUTED} />
           </button>
         </div>
@@ -104,7 +104,7 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
               style={{
                 background: isSelected ? GOLD : 'transparent',
                 border: isToday ? `1.5px solid ${GOLD}` : '1.5px solid transparent',
-                borderRadius: 0,
+                borderRadius: 12,
                 padding: '6px 2px 4px',
                 cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',

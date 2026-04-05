@@ -133,21 +133,21 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         .badge-warning { background: ${GOLD_DIM}; color: ${GOLD}; }
         .badge-inactive { background: rgba(138,133,128,0.12); color: ${TEXT_MUTED}; }
         .avatar-circle { width: 34px; height: 34px; border-radius: 50%; background: ${GOLD}; display: flex; align-items: center; justify-content: center; font-family: ${FONT_DISPLAY}; font-weight: 700; font-size: 0.85rem; color: ${BG_BASE}; flex-shrink: 0; }
-        .btn-primary { display: flex; align-items: center; gap: 8px; background: ${GOLD}; color: ${BG_BASE}; padding: 11px 20px; border-radius: 0; font-family: ${FONT_ALT}; font-size: 0.95rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 200ms ease, transform 200ms ease; width: 100%; justify-content: center; clipPath: 'polygon(0 0, 100% 0, 96% 100%, 0% 100%)'; }
+        .btn-primary { display: flex; align-items: center; gap: 8px; background: ${GOLD}; color: ${BG_BASE}; padding: 11px 20px; border-radius: 12px; font-family: ${FONT_ALT}; font-size: 0.95rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 200ms ease, transform 200ms ease; width: 100%; justify-content: center; ; }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-primary-orange { background: ${GOLD}; color: ${BG_BASE}; }
-        .btn-secondary { display: flex; align-items: center; gap: 8px; background: transparent; color: ${GOLD}; border: 2px solid ${GOLD}; padding: 9px 20px; border-radius: 0; font-family: ${FONT_ALT}; font-size: 0.95rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background 200ms ease, color 200ms ease; width: 100%; justify-content: center; }
+        .btn-secondary { display: flex; align-items: center; gap: 8px; background: transparent; color: ${GOLD}; border: 2px solid ${GOLD}; padding: 9px 20px; border-radius: 12px; font-family: ${FONT_ALT}; font-size: 0.95rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background 200ms ease, color 200ms ease; width: 100%; justify-content: center; }
         .btn-secondary:hover { background: ${GOLD}; color: ${BG_BASE}; }
-        .btn-ghost { display: flex; align-items: center; gap: 6px; background: transparent; color: ${TEXT_MUTED}; border: none; padding: 8px 12px; border-radius: 0; font-family: ${FONT_BODY}; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 150ms ease, color 150ms ease; white-space: nowrap; }
+        .btn-ghost { display: flex; align-items: center; gap: 6px; background: transparent; color: ${TEXT_MUTED}; border: none; padding: 8px 12px; border-radius: 12px; font-family: ${FONT_BODY}; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 150ms ease, color 150ms ease; white-space: nowrap; }
         .btn-ghost:hover { background: ${BG_CARD_2}; color: ${TEXT_PRIMARY}; }
         .divider { border: none; border-top: 1px solid ${BORDER}; margin: 16px 0; }
-        .search-input { background: ${BG_BASE}; border: 1px solid ${BORDER}; border-radius: 0; padding: 7px 12px 7px 32px; font-family: ${FONT_BODY}; font-size: 0.85rem; color: ${TEXT_PRIMARY}; width: 180px; transition: border-color 200ms ease; outline: none; }
+        .search-input { background: ${BG_BASE}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 7px 12px 7px 32px; font-family: ${FONT_BODY}; font-size: 0.85rem; color: ${TEXT_PRIMARY}; width: 180px; transition: border-color 200ms ease; outline: none; }
         .search-input:focus { border-color: ${GOLD}; }
         .invite-panel { background: ${GOLD_DIM}; border: 1px solid ${GOLD_RULE}; border-radius: ${RADIUS_CARD}px; padding: 16px; margin-top: 12px; }
         .client-chat-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid ${BORDER}; cursor: pointer; transition: background 150ms; }
         .client-chat-row:hover { background: ${BG_CARD_2}; }
         .client-chat-row.active { background: ${GOLD_DIM}; border-left: 2px solid ${GOLD}; }
-        .msg-input { flex: 1; background: ${BG_BASE}; border: 1px solid ${BORDER}; border-radius: 0; padding: 10px 18px; font-family: ${FONT_BODY}; font-size: 0.9rem; color: ${TEXT_PRIMARY}; outline: none; transition: border-color 200ms; }
+        .msg-input { flex: 1; background: ${BG_BASE}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 10px 18px; font-family: ${FONT_BODY}; font-size: 0.9rem; color: ${TEXT_PRIMARY}; outline: none; transition: border-color 200ms; }
         .msg-input:focus { border-color: ${GOLD}; }
         @media (max-width: 640px) { .hide-sm { display: none !important; } }
         @media(max-width:768px){
@@ -166,7 +166,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         .client-card-name { font-family: ${FONT_BODY}; font-weight: 600; font-size: 0.95rem; color: ${TEXT_PRIMARY}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .client-card-sub { font-family: ${FONT_BODY}; font-size: 0.72rem; color: ${TEXT_MUTED}; margin-top: 4px; }
         .client-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-        .client-card-msg-btn { position: relative; background: transparent; border: none; cursor: pointer; padding: 8px; color: ${TEXT_MUTED}; display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 0; transition: color 150ms; }
+        .client-card-msg-btn { position: relative; background: transparent; border: none; cursor: pointer; padding: 8px; color: ${TEXT_MUTED}; display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 12px; transition: color 150ms; }
         .client-card-msg-btn:active { color: ${GOLD}; }
         .msg-badge { position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; background: ${RED}; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
         .bottom-nav { display: none; }
@@ -180,19 +180,19 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         .nav-badge { position: absolute; top: 2px; right: calc(50% - 20px); min-width: 16px; height: 16px; background: ${RED}; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
         .chat-fullscreen { position: fixed; inset: 0; background: ${BG_BASE}; z-index: 200; display: flex; flex-direction: column; overflow: hidden; width: 100vw; height: 100vh; }
         .cal-day-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 8px; }
-        .cal-day-label { display: inline-flex; align-items: baseline; gap: 6px; border-radius: 0; padding: 4px 10px; }
+        .cal-day-label { display: inline-flex; align-items: baseline; gap: 6px; border-radius: 12px; padding: 4px 10px; }
         .cal-day-label.today { background: ${GOLD_DIM}; border: 1px solid ${GOLD_RULE}; }
         .cal-session-card { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 150ms; min-height: 64px; }
         .cal-session-card:hover { background: ${BG_CARD_2}; }
         .cal-empty { padding: 10px 14px; color: ${TEXT_DIM}; font-family: ${FONT_BODY}; font-size: 0.78rem; font-style: italic; background: ${BG_BASE}; border-radius: ${RADIUS_CARD}px; border: 1px solid ${BORDER}; }
-        .cal-add-day { display: flex; align-items: center; gap: 4px; background: transparent; border: 1px dashed ${BORDER}; border-radius: 0; padding: 6px 10px; color: ${TEXT_MUTED}; cursor: pointer; font-family: ${FONT_ALT}; font-size: 0.72rem; font-weight: 600; min-height: 36px; transition: border-color 150ms, color 150ms; }
+        .cal-add-day { display: flex; align-items: center; gap: 4px; background: transparent; border: 1px dashed ${BORDER}; border-radius: 12px; padding: 6px 10px; color: ${TEXT_MUTED}; cursor: pointer; font-family: ${FONT_ALT}; font-size: 0.72rem; font-weight: 600; min-height: 36px; transition: border-color 150ms, color 150ms; }
         .cal-add-day:hover { border-color: ${GOLD}; color: ${GOLD}; }
         .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
         .modal-box { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.4); }
         .form-label { font-family: ${FONT_ALT}; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: ${TEXT_MUTED}; display: block; margin-bottom: 6px; }
-        .form-input { width: 100%; background: ${BG_BASE}; border: 1px solid ${BORDER}; border-radius: 0; padding: 10px 14px; font-family: ${FONT_BODY}; font-size: 0.9rem; color: ${TEXT_PRIMARY}; outline: none; transition: border-color 200ms; }
+        .form-input { width: 100%; background: ${BG_BASE}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 10px 14px; font-family: ${FONT_BODY}; font-size: 0.9rem; color: ${TEXT_PRIMARY}; outline: none; transition: border-color 200ms; }
         .form-input:focus { border-color: ${GOLD}; }
-        .type-chip { border-radius: 0; padding: 7px 14px; font-family: ${FONT_ALT}; font-size: 0.82rem; font-weight: 700; letter-spacing: 1px; cursor: pointer; border: 2px solid transparent; transition: all 150ms; }
+        .type-chip { border-radius: 12px; padding: 7px 14px; font-family: ${FONT_ALT}; font-size: 0.82rem; font-weight: 700; letter-spacing: 1px; cursor: pointer; border: 2px solid transparent; transition: all 150ms; }
         @keyframes spin { to { transform: rotate(360deg) } }
       `}</style>
 
@@ -205,7 +205,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           </a>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button onClick={() => h.setSection(s => s === 'messages' ? 'dashboard' : 'messages')}
-              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, background: h.section === 'messages' ? GOLD_DIM : 'transparent', color: h.section === 'messages' ? GOLD : TEXT_MUTED, border: h.section === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', padding: '7px 14px', borderRadius: 0, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' as const, transition: 'all 200ms' }}>
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, background: h.section === 'messages' ? GOLD_DIM : 'transparent', color: h.section === 'messages' ? GOLD : TEXT_MUTED, border: h.section === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', padding: '7px 14px', borderRadius: 12, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' as const, transition: 'all 200ms' }}>
               <MessageCircle size={16} strokeWidth={2} /><span className="hide-sm">Messages</span>
               {h.totalUnread > 0 && <span style={{ position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: '0.65rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{h.totalUnread > 9 ? '9+' : h.totalUnread}</span>}
             </button>
@@ -215,7 +215,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
               <span style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', fontWeight: 500, color: TEXT_MUTED }}>{h.coachName}</span>
               <button
                 onClick={() => setShowExportMenu(v => !v)}
-                style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 0, padding: '6px 12px', color: GOLD, fontFamily: FONT_ALT, fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '1px', whiteSpace: 'nowrap', textTransform: 'uppercase' as const }}
+                style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '6px 12px', color: GOLD, fontFamily: FONT_ALT, fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '1px', whiteSpace: 'nowrap', textTransform: 'uppercase' as const }}
               >
                 Exporter CSV
               </button>
@@ -235,7 +235,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                       downloadCSV(data, 'clients')
                       setShowExportMenu(false)
                     }}
-                    style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '10px 14px', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderRadius: 0 }}
+                    style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '10px 14px', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderRadius: 12 }}
                     onMouseEnter={e => (e.currentTarget.style.background = BG_CARD_2)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
@@ -247,7 +247,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                       if (data?.length) downloadCSV(data, 'paiements')
                       setShowExportMenu(false)
                     }}
-                    style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '10px 14px', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderRadius: 0 }}
+                    style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '10px 14px', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderRadius: 12 }}
                     onMouseEnter={e => (e.currentTarget.style.background = BG_CARD_2)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
@@ -269,7 +269,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         <div style={{ background: GOLD_DIM, borderBottom: `1px solid ${GOLD_RULE}`, padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <span style={{ color: GOLD, fontSize: 13, fontFamily: FONT_BODY }}>{h.coachProfile?.stripe_account_id ? 'Configuration Stripe incomplète' : 'Stripe non connecté'} — configure Stripe pour recevoir les paiements</span>
           <button onClick={h.handleStripeConnect} disabled={h.stripeConnecting}
-            style={{ background: GOLD, color: BG_BASE, border: 'none', padding: '5px 14px', borderRadius: 0, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: FONT_ALT }}>
+            style={{ background: GOLD, color: BG_BASE, border: 'none', padding: '5px 14px', borderRadius: 12, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: FONT_ALT }}>
             {h.stripeConnecting ? 'Connexion...' : 'Configurer'}
           </button>
         </div>
@@ -348,7 +348,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                 <textarea value={h.nsNotes} onChange={e => h.setNsNotes(e.target.value)} rows={3} placeholder="Objectifs, exercices prévus…" className="form-input" style={{ resize: 'vertical', minHeight: 80 }} />
               </div>
               <button onClick={h.saveNewSession} disabled={!h.nsClientId || !h.nsDate || h.nsSaving === 'saving'}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: h.nsSaving === 'done' ? GREEN : GOLD, color: BG_BASE, border: 'none', borderRadius: 0, padding: '13px 20px', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', opacity: (!h.nsClientId || !h.nsDate) ? 0.5 : 1, transition: 'background 200ms', clipPath: 'polygon(0 0, 100% 0, 96% 100%, 0% 100%)' }}>
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: h.nsSaving === 'done' ? GREEN : GOLD, color: BG_BASE, border: 'none', borderRadius: 12, padding: '13px 20px', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', opacity: (!h.nsClientId || !h.nsDate) ? 0.5 : 1, transition: 'background 200ms',  }}>
                 {h.nsSaving === 'done' ? <><Check size={16} /> Enregistré !</> : h.nsSaving === 'saving' ? 'Enregistrement…' : <><Plus size={16} /> Créer la séance</>}
               </button>
             </div>
@@ -378,7 +378,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={14} /><span>{format(dt, 'HH:mm', { locale: fr })} · {h.selectedSession.duration_minutes} min</span></div>
                   {h.selectedSession.notes && <div style={{ background: BG_BASE, borderRadius: RADIUS_CARD, padding: '10px 14px', color: TEXT_PRIMARY, marginTop: 4, border: `1px solid ${BORDER}` }}>{h.selectedSession.notes}</div>}
                 </div>
-                <button onClick={() => h.setSelectedSession(null)} style={{ marginTop: 20, width: '100%', background: BG_CARD_2, color: TEXT_PRIMARY, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Fermer</button>
+                <button onClick={() => h.setSelectedSession(null)} style={{ marginTop: 20, width: '100%', background: BG_CARD_2, color: TEXT_PRIMARY, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Fermer</button>
               </div>
             </div>
           </div>

@@ -294,7 +294,7 @@ export default function HomeTab({
                 </div>
                 <button
                   onClick={() => startProgramWorkout({ day_name: todayKey }, todayExercises)}
-                  style={{ width: '100%', background: GOLD, color: '#080808', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 0, cursor: 'pointer' }}>
+                  style={{ width: '100%', background: GOLD, color: '#080808', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
                   COMMENCER
                 </button>
               </>

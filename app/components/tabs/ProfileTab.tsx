@@ -163,22 +163,22 @@ export default function ProfileTab({
               value={phoneForm}
               onChange={e => setPhoneForm(e.target.value)}
               placeholder="+33 6 00 00 00 00"
-              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 12px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', fontFamily: FONT_BODY }}
+              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', fontFamily: FONT_BODY }}
             />
-            <button onClick={savePhone} style={{ background: GOLD, border: 'none', borderRadius: 0, padding: '8px 14px', color: '#080808', fontFamily: FONT_ALT, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>OK</button>
-            <button onClick={() => { setPhoneEditing(false); setPhoneForm(profile?.phone || '') }} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0, padding: '8px 12px', color: TEXT_MUTED, fontSize: '0.8rem', cursor: 'pointer', fontFamily: FONT_ALT }}>✕</button>
+            <button onClick={savePhone} style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '8px 14px', color: '#080808', fontFamily: FONT_ALT, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>OK</button>
+            <button onClick={() => { setPhoneEditing(false); setPhoneForm(profile?.phone || '') }} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', color: TEXT_MUTED, fontSize: '0.8rem', cursor: 'pointer', fontFamily: FONT_ALT }}>✕</button>
           </div>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: profile?.phone ? TEXT_PRIMARY : TEXT_MUTED }}>{profile?.phone || 'Ajouter un numéro'}</span>
-            <button onClick={() => setPhoneEditing(true)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 0, padding: '4px 10px', color: TEXT_MUTED, fontSize: '0.72rem', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>Modifier</button>
+            <button onClick={() => setPhoneEditing(true)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '4px 10px', color: TEXT_MUTED, fontSize: '0.72rem', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>Modifier</button>
           </div>
         )}
       </div>
 
       {/* BMR calculator */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-        <button onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')} onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)} onClick={() => setModal('bmr')} style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 0, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 150ms', width: '100%' }}>
+        <button onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')} onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)} onClick={() => setModal('bmr')} style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 12, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 150ms', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Zap size={18} color={TEXT_MUTED} />
             <span style={{ fontSize: 14, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Calculateur BMR</span>
@@ -208,7 +208,7 @@ export default function ProfileTab({
           disabled={notifStatus === 'loading' || notifStatus === 'done'}
           onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')}
           onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)}
-          style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 0, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1, transition: 'background 150ms', width: '100%' }}
+          style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 12, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1, transition: 'background 150ms', width: '100%' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {notifStatus === 'denied' ? <BellOff size={18} color={RED} /> : <Bell size={18} color={notifStatus === 'done' ? GREEN : TEXT_MUTED} />}
@@ -294,7 +294,7 @@ export default function ProfileTab({
                   key={time}
                   onClick={() => updateReminderSettings({ preferred_training_time: time })}
                   style={{
-                    padding: '6px 12px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                    padding: '6px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
                     background: isActive ? `${GOLD}20` : BG_BASE,
                     color: isActive ? GOLD : TEXT_MUTED,
                     fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: isActive ? 700 : 500,
@@ -322,7 +322,7 @@ export default function ProfileTab({
                   key={opt.value}
                   onClick={() => updateReminderSettings({ reminder_minutes_before: opt.value })}
                   style={{
-                    padding: '6px 12px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                    padding: '6px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
                     background: isActive ? `${GOLD}20` : BG_BASE,
                     color: isActive ? GOLD : TEXT_MUTED,
                     fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: isActive ? 700 : 500,
@@ -367,7 +367,7 @@ export default function ProfileTab({
             onClick={regenerateWeekSchedule}
             style={{
               width: '100%', padding: '10px', background: BG_BASE,
-              border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer',
+              border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer',
               fontSize: '0.78rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 600,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
@@ -424,7 +424,7 @@ export default function ProfileTab({
           return (
             <div>
               <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5, fontFamily: FONT_BODY, fontWeight: 300 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
-              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: GOLD, border: 'none', borderRadius: 0, color: '#080808', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#080808', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer',  }}>
                 S&apos;abonner — Dès CHF 10/mois
               </button>
             </div>
@@ -435,7 +435,7 @@ export default function ProfileTab({
       {/* Paywall modal */}
       {showPaywall && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, overflowY: 'auto' }}>
-          <button onClick={() => setShowPaywall(false)} style={{ position: 'fixed', top: 16, right: 16, zIndex: 1001, width: 36, height: 36, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => setShowPaywall(false)} style={{ position: 'fixed', top: 16, right: 16, zIndex: 1001, width: 36, height: 36, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={TEXT_MUTED} />
           </button>
           <Paywall role="client" userId={session?.user?.id} coachId={coachId} onSignOut={() => setShowPaywall(false)} />
@@ -487,7 +487,7 @@ export default function ProfileTab({
       })()}
 
       {/* Sign out */}
-      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 0, padding: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
+      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
         <LogOut size={18} color={TEXT_MUTED} />
         <span style={{ fontSize: '1rem', fontFamily: FONT_DISPLAY, fontWeight: 700, letterSpacing: '1px', color: TEXT_MUTED }}>Déconnexion</span>
       </button>
@@ -532,7 +532,7 @@ function CoachSection({ supabase, session, coachId }: { supabase: any; session: 
             </div>
             <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GREEN, background: `${GREEN}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>Actif</span>
           </div>
-          <button onClick={() => setShowLeaveModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 0, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 600 }}>
+          <button onClick={() => setShowLeaveModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 600 }}>
             <UserMinus size={14} /> Changer de coach
           </button>
         </>
@@ -554,10 +554,10 @@ function CoachSection({ supabase, session, coachId }: { supabase: any; session: 
               Ton historique (poids, séances, mensurations) sera conservé.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={leaveCoach} disabled={leaving} style={{ width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)', border: `1px solid ${RED}`, borderRadius: 0, color: RED, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={leaveCoach} disabled={leaving} style={{ width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)', border: `1px solid ${RED}`, borderRadius: 12, color: RED, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>
                 {leaving ? 'En cours...' : 'Quitter mon coach actuel'}
               </button>
-              <button onClick={() => setShowLeaveModal(false)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
+              <button onClick={() => setShowLeaveModal(false)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
             </div>
           </div>
         </div>
@@ -635,7 +635,7 @@ function DeleteAccountSection({ session }: { session: any }) {
 
   return (
     <>
-      <button onClick={() => setShowModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 0, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', marginTop: 24 }}>
+      <button onClick={() => setShowModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 12, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', marginTop: 24 }}>
         <Trash2 size={16} color={RED} />
         <span style={{ fontSize: '0.82rem', fontFamily: FONT_ALT, fontWeight: 600, color: RED }}>Supprimer mon compte</span>
       </button>
@@ -648,10 +648,10 @@ function DeleteAccountSection({ session }: { session: any }) {
               Es-tu sûr de vouloir supprimer ton compte ? Toutes tes données seront supprimées définitivement. Cette action est irréversible.
             </p>
             <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, margin: '0 0 8px', fontFamily: FONT_BODY }}>Tape <strong style={{ color: RED }}>SUPPRIMER</strong> pour confirmer :</p>
-            <input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="SUPPRIMER" style={{ width: '100%', background: BG_BASE, border: `1px solid ${confirmText === 'SUPPRIMER' ? RED : BORDER}`, borderRadius: 0, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', marginBottom: 16, fontFamily: FONT_BODY }} />
+            <input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="SUPPRIMER" style={{ width: '100%', background: BG_BASE, border: `1px solid ${confirmText === 'SUPPRIMER' ? RED : BORDER}`, borderRadius: 12, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', marginBottom: 16, fontFamily: FONT_BODY }} />
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => { setShowModal(false); setConfirmText('') }} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 0, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
-              <button onClick={deleteAccount} disabled={confirmText !== 'SUPPRIMER' || deleting} style={{ flex: 1, padding: '12px', background: confirmText === 'SUPPRIMER' ? RED : '#333', borderRadius: 0, border: 'none', color: '#fff', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: confirmText === 'SUPPRIMER' ? 'pointer' : 'default', opacity: confirmText === 'SUPPRIMER' ? 1 : 0.5 }}>
+              <button onClick={() => { setShowModal(false); setConfirmText('') }} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
+              <button onClick={deleteAccount} disabled={confirmText !== 'SUPPRIMER' || deleting} style={{ flex: 1, padding: '12px', background: confirmText === 'SUPPRIMER' ? RED : '#333', borderRadius: 12, border: 'none', color: '#fff', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: confirmText === 'SUPPRIMER' ? 'pointer' : 'default', opacity: confirmText === 'SUPPRIMER' ? 1 : 0.5 }}>
                 {deleting ? 'Suppression...' : 'Supprimer'}
               </button>
             </div>
