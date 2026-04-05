@@ -55,11 +55,11 @@ export default function MessagesTab({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div style={{ background: BG_CARD, padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: RADIUS_CARD, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: '#0D0B08' }}>C</div>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: '#0D0B08' }}>C</div>
         <div>
           <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>MON COACH</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 6, height: 6, borderRadius: RADIUS_CARD, background: '#22C55E' }} />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E' }} />
             <span style={{ fontSize: '0.62rem', color: '#22C55E', fontWeight: 600, fontFamily: FONT_BODY }}>En ligne</span>
           </div>
         </div>
@@ -101,11 +101,11 @@ export default function MessagesTab({
                   <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
                     <div style={{
                       maxWidth: '78%',
-                      background: isMine ? GOLD_DIM : BG_CARD_2,
-                      color: isMine ? TEXT_PRIMARY : TEXT_PRIMARY,
-                      borderRadius: RADIUS_CARD,
+                      background: isMine ? 'linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, #C9A84C 70%, #8B6914 100%)' : BG_CARD_2,
+                      color: isMine ? '#0D0B08' : TEXT_PRIMARY,
+                      borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                       padding: '10px 14px',
-                      border: isMine ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
+                      border: isMine ? 'none' : `1px solid ${BORDER}`,
                     }}>
                       <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.45, whiteSpace: 'pre-wrap', fontFamily: FONT_BODY, fontWeight: 400 }}>{msg.content}</p>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 3 }}>
@@ -130,12 +130,12 @@ export default function MessagesTab({
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
               placeholder="Écrire un message..."
               rows={1}
-              style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: FONT_BODY, fontWeight: 400 }}
+              style={{ flex: 1, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 24, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: FONT_BODY, fontWeight: 400 }}
             />
             <button
               onClick={sendMessage}
               disabled={!msgInput.trim()}
-              style={{ width: 40, height: 40, borderRadius: 12, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              style={{ width: 40, height: 40, borderRadius: '50%', background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
               <Send size={16} color={msgInput.trim() ? '#0D0B08' : TEXT_MUTED} />
             </button>

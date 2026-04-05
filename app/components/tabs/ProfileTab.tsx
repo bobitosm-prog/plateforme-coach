@@ -9,6 +9,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
 } from '../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
+import SwissBadge from '../ui/SwissBadge'
 
 const ORANGE = GOLD
 
@@ -125,7 +126,8 @@ export default function ProfileTab({
         <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.5rem', fontWeight: 800, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '2px', lineHeight: 1.1 }}>{fullName}</div>
-          <div style={{ fontSize: '0.8rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>{session.user.email}</div>
+          <div style={{ fontSize: '0.8rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300, marginBottom: 6 }}>{session.user.email}</div>
+          <SwissBadge variant="solid" />
           {profile?.fitness_level && (
             <div style={{ display: 'inline-block', marginTop: 8, background: GOLD_DIM, border: `1px solid ${GOLD}`, borderRadius: 20, padding: '4px 14px' }}>
               <span style={{ fontFamily: FONT_DISPLAY, fontSize: '0.75rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '1px' }}>{profile.fitness_level}</span>

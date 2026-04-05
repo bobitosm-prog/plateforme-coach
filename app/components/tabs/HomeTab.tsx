@@ -202,38 +202,38 @@ export default function HomeTab({
       <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* ═══ HERO CARD — Ring + Stats side by side ═══ */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 20, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 16, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,168,67,0.5), transparent)' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            {/* Compact Ring 130px */}
-            <div style={{ position: 'relative', width: 130, height: 130, flexShrink: 0 }}>
-              <div style={{ position: 'absolute', top: '50%', left: '50%', width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,67,0.07) 0%, transparent 70%)', transform: 'translate(-50%, -50%)', animation: 'goldPulse 4s ease-in-out infinite' }} />
-              <svg viewBox="0 0 140 140" width={130} height={130} style={{ filter: 'drop-shadow(0 0 12px rgba(212,168,67,0.12))', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Compact Ring 110px */}
+            <div style={{ position: 'relative', width: 110, height: 110, flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: '50%', left: '50%', width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,67,0.07) 0%, transparent 70%)', transform: 'translate(-50%, -50%)' }} />
+              <svg viewBox="0 0 140 140" width={110} height={110} style={{ filter: 'drop-shadow(0 0 10px rgba(212,168,67,0.12))', position: 'relative', zIndex: 1 }}>
                 <defs>
                   <linearGradient id="heroGold" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#E8C97A" /><stop offset="40%" stopColor="#D4A843" /><stop offset="70%" stopColor="#C9A84C" /><stop offset="100%" stopColor="#8B6914" />
                   </linearGradient>
-                  <filter id="heroGlow"><feGaussianBlur stdDeviation="2.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                  <filter id="heroGlow"><feGaussianBlur stdDeviation="2" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
-                <circle cx="70" cy="70" r="56" fill="none" stroke="rgba(212,168,67,0.1)" strokeWidth="8" />
-                <circle cx="70" cy="70" r="56" fill="none" stroke="url(#heroGold)" strokeWidth="8" strokeLinecap="round" filter="url(#heroGlow)" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - calPct / 100)} transform="rotate(-90 70 70)" style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
-                <text x="70" y="64" textAnchor="middle" fill={GOLD} fontSize="32" fontFamily={FONT_DISPLAY} letterSpacing="1">{consumedKcal}</text>
-                <text x="70" y="82" textAnchor="middle" fill={TEXT_MUTED} fontSize="9" fontFamily={FONT_ALT} fontWeight="700" letterSpacing="2.5">KCAL</text>
+                <circle cx="70" cy="70" r="56" fill="none" stroke="rgba(212,168,67,0.1)" strokeWidth="7" />
+                <circle cx="70" cy="70" r="56" fill="none" stroke="url(#heroGold)" strokeWidth="7" strokeLinecap="round" filter="url(#heroGlow)" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - calPct / 100)} transform="rotate(-90 70 70)" style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
+                <text x="70" y="64" textAnchor="middle" fill={GOLD} fontSize="30" fontFamily={FONT_DISPLAY} letterSpacing="1">{consumedKcal}</text>
+                <text x="70" y="80" textAnchor="middle" fill={TEXT_MUTED} fontSize="9" fontFamily={FONT_ALT} fontWeight="700" letterSpacing="2">KCAL</text>
               </svg>
             </div>
             {/* Stats grid 2x2 */}
-            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
               {[
-                { icon: <Flame size={16} color={GOLD} />, value: consumedKcal, label: 'Kcal' },
-                { icon: <Dumbbell size={16} color={GOLD} />, value: weekSessions, label: 'Seances' },
-                { icon: <TrendingUp size={16} color={GOLD} />, value: `+${streak}`, label: 'Streak' },
-                { icon: <Droplets size={16} color={GOLD} />, value: `${(waterToday / 1000).toFixed(1)}L`, label: 'Eau' },
+                { icon: <Flame size={14} color={GOLD} />, value: consumedKcal, label: 'Kcal' },
+                { icon: <Dumbbell size={14} color={GOLD} />, value: weekSessions, label: 'Seances' },
+                { icon: <TrendingUp size={14} color={GOLD} />, value: `+${streak}`, label: 'Streak' },
+                { icon: <Droplets size={14} color={GOLD} />, value: `${(waterToday / 1000).toFixed(1)}L`, label: 'Eau' },
               ].map((stat, i) => (
-                <div key={i} style={{ background: BG_CARD_2, border: `1px solid ${GOLD_DIM}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{stat.icon}</div>
-                  <div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: GOLD, lineHeight: 1 }}>{stat.value}</div>
-                    <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: TEXT_MUTED, textTransform: 'uppercase', marginTop: 1 }}>{stat.label}</div>
+                <div key={i} style={{ background: BG_CARD_2, border: `1px solid ${GOLD_DIM}`, borderRadius: 10, padding: '8px 8px', display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{stat.icon}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: GOLD, lineHeight: 1 }}>{stat.value}</div>
+                    <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 1, color: TEXT_MUTED, textTransform: 'uppercase' }}>{stat.label}</div>
                   </div>
                 </div>
               ))}
