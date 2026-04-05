@@ -1,17 +1,20 @@
-// ─── Stitch Design System ───
+// ─── Stitch Design System v2 — Gold Luxury ───
 export const BG_BASE = '#080808'
-export const BG_CARD = '#0e0e0e'
+export const BG_CARD = '#141414'
 export const BG_CARD_2 = '#1c1b1b'
-export const BORDER = 'rgba(255,255,255,0.08)'
+export const SURFACE_HIGH = '#2a2a2a'
+export const BORDER = 'rgba(201,168,76,0.15)'
 export const GOLD = '#C9A84C'
-export const GOLD_DIM = 'rgba(201,168,76,0.15)'
+export const GOLD_BRIGHT = '#E8C97A'
+export const GOLD_DIM = 'rgba(201,168,76,0.10)'
 export const GOLD_RULE = 'rgba(201,168,76,0.25)'
+export const GOLD_GLOW = '0 0 20px rgba(201,168,76,0.15)'
 export const GREEN = '#4ade80'
 export const RED = '#ef4444'
 export const BLUE = '#60A5FA'
 export const TEXT_PRIMARY = '#e5e2e1'
-export const TEXT_MUTED = '#6B7280'
-export const TEXT_DIM = '#353534'
+export const TEXT_MUTED = '#d0c5b2'
+export const TEXT_DIM = '#4d4637'
 export const RADIUS_CARD = 0
 export const FONT_DISPLAY = "'Bebas Neue', sans-serif"
 export const FONT_ALT = "'Barlow Condensed', sans-serif"

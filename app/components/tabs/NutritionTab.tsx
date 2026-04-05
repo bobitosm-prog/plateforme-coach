@@ -540,7 +540,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         const pctKcal = Math.min(100, Math.round((consumed.kcal / targetKcal) * 100))
 
         const ringSize = 180
-        const ringStroke = 10
+        const ringStroke = 12
         const ringRadius = (ringSize - ringStroke) / 2
         const ringCircum = 2 * Math.PI * ringRadius
         const ringOffset = ringCircum - (pctKcal / 100) * ringCircum
@@ -552,8 +552,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
               <div style={{ position: 'relative' }}>
                 <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={ringStroke} />
-                  <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke={GOLD} strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+                  <defs>
+                    <linearGradient id="nutRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#E8C97A" />
+                      <stop offset="100%" stopColor="#C9A84C" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke="#1c1b1b" strokeWidth={ringStroke} />
+                  <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke="url(#nutRingGrad)" strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))' }} />
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontFamily: FONT_DISPLAY, fontSize: 40, color: GOLD, lineHeight: 1 }}>{consumed.kcal}</span>

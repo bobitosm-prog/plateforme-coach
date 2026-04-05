@@ -162,7 +162,7 @@ export default function HomeTab({
 
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
   const ringSize = 140
-  const ringStroke = 8
+  const ringStroke = 12
   const ringRadius = (ringSize - ringStroke) / 2
   const ringCircum = 2 * Math.PI * ringRadius
   const ringOffset = ringCircum - (calPct / 100) * ringCircum
@@ -214,8 +214,14 @@ export default function HomeTab({
           {/* Ring */}
           <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16, position: 'relative' }}>
             <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)' }}>
-              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={ringStroke} />
-              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={GOLD} strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+              <defs>
+                <linearGradient id="goldRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#E8C97A" />
+                  <stop offset="100%" stopColor="#C9A84C" />
+                </linearGradient>
+              </defs>
+              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="#1c1b1b" strokeWidth={ringStroke} />
+              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="url(#goldRingGrad)" strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))' }} />
             </svg>
             <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: GOLD, lineHeight: 1 }}>{calPct}%</span>
