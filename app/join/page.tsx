@@ -129,7 +129,7 @@ function JoinContent() {
 
         {/* Logo + header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/logo-moovx.svg" alt="MoovX" width={56} height={56} style={{ borderRadius: 12, marginBottom: 16 }} />
+          <img src="/logo-moovx.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 12, marginBottom: 16 }} />
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 8px', letterSpacing: '2px' }}>REJOINS MOOVX</h1>
           {coachName && (
             <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 15, color: GOLD, margin: 0 }}>
