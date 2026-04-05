@@ -54,7 +54,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const today = new Date().toISOString().split('T')[0]
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
-  const [subTab, setSubTab] = useState<SubTab>(hasPlan ? 'today' : 'prefs')
+  const [subTab, setSubTab] = useState<SubTab>('today')
 
   useEffect(() => {
     fetchActiveMealPlan()
