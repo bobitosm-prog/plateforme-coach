@@ -215,7 +215,7 @@ export default function AnalyticsSection({
                   padding: '4px 8px', borderRadius: 12, border: 'none', cursor: 'pointer',
                   fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', fontFamily: FONT_ALT, letterSpacing: '1px',
                   background: weightPeriod === p ? GOLD : 'transparent',
-                  color: weightPeriod === p ? '#050505' : TEXT_MUTED,
+                  color: weightPeriod === p ? '#0D0B08' : TEXT_MUTED,
                 }}>
                   {p}
                 </button>

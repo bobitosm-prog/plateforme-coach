@@ -259,7 +259,7 @@ export default function Hero() {
                 alignItems: 'center',
                 gap: 10,
                 background: 'var(--gold)',
-                color: '#050505',
+                color: '#0D0B08',
                 fontFamily: 'var(--font-alt)',
                 fontWeight: 800,
                 fontSize: 15,
@@ -371,8 +371,8 @@ export default function Hero() {
           }}
         >
           <svg width="16" height="24" viewBox="0 0 16 24" fill="none">
-            <rect x="1" y="1" width="14" height="22" rx="7" stroke="#C9A84C" strokeWidth="1.2" />
-            <circle cx="8" cy="7" r="2.5" fill="#C9A84C">
+            <rect x="1" y="1" width="14" height="22" rx="7" stroke="#D4A843" strokeWidth="1.2" />
+            <circle cx="8" cy="7" r="2.5" fill="#D4A843">
               <animate attributeName="cy" from="7" to="16" dur="1.5s" repeatCount="indefinite" />
               <animate attributeName="opacity" from="1" to="0" dur="1.5s" repeatCount="indefinite" />
             </circle>

@@ -85,7 +85,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 40, animation: 'fadeUp 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
         <div style={{ width: 64, height: 64, background: GOLD, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-          {role === 'coach' ? <Crown size={30} color="#050505" strokeWidth={2} /> : <Sparkles size={30} color="#050505" strokeWidth={2} />}
+          {role === 'coach' ? <Crown size={30} color="#0D0B08" strokeWidth={2} /> : <Sparkles size={30} color="#0D0B08" strokeWidth={2} />}
         </div>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(1.8rem,4vw,2.6rem)', letterSpacing: '3px', color: TEXT_PRIMARY, margin: '0 0 8px' }}>
           {role === 'coach' ? 'ACTIVE TON DASHBOARD' : 'CHOISIS TON PLAN'}
@@ -100,7 +100,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
         <div style={{ maxWidth: 400, width: '100%', marginBottom: 32, animation: 'fadeUp 0.6s 0.1s cubic-bezier(0.16,1,0.3,1) both' }}>
           <div style={{ borderRadius: RADIUS_CARD, border: `2px solid ${GOLD}`, background: BG_CARD }}>
             <div style={{ padding: '32px 28px', position: 'relative' }}>
-              <span style={{ position: 'absolute', top: 0, right: 24, background: GOLD, color: '#050505', fontSize: '0.62rem', fontFamily: FONT_ALT, fontWeight: 800, padding: '4px 14px', borderRadius: '0 0 2px 2px', letterSpacing: '1px', textTransform: 'uppercase' }}>Recommande</span>
+              <span style={{ position: 'absolute', top: 0, right: 24, background: GOLD, color: '#0D0B08', fontSize: '0.62rem', fontFamily: FONT_ALT, fontWeight: 800, padding: '4px 14px', borderRadius: '0 0 2px 2px', letterSpacing: '1px', textTransform: 'uppercase' }}>Recommande</span>
               <div style={{ fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase', fontFamily: FONT_ALT, fontWeight: 700, color: GOLD, marginBottom: 12 }}>Coaching avec {coachData.name}</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 16 }}>
                 <span style={{ fontSize: '0.75rem', color: TEXT_DIM, alignSelf: 'flex-start', marginTop: 16, fontFamily: FONT_BODY }}>CHF</span>
@@ -116,7 +116,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
                 ))}
               </div>
               <button onClick={handleCoachCheckout} disabled={loading !== null}
-                style={{ width: '100%', padding: '15px 20px', borderRadius: 12, border: 'none', cursor: loading ? 'wait' : 'pointer', background: GOLD, color: '#050505', fontSize: '0.9rem', fontWeight: 800, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase', opacity: loading && loading !== 'coach' ? 0.5 : 1 }}>
+                style={{ width: '100%', padding: '15px 20px', borderRadius: 12, border: 'none', cursor: loading ? 'wait' : 'pointer', background: GOLD, color: '#0D0B08', fontSize: '0.9rem', fontWeight: 800, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase', opacity: loading && loading !== 'coach' ? 0.5 : 1 }}>
                 {loading === 'coach' ? 'Redirection...' : `S'abonner -- CHF ${coachData.rate}/mois`}
               </button>
             </div>
@@ -145,7 +145,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
               }}>
                 {/* Badge */}
                 {plan.badge && (
-                  <span style={{ position: 'absolute', top: -1, right: 24, background: isBest ? '#4ade80' : GOLD, color: '#050505', fontSize: '0.62rem', fontFamily: FONT_ALT, fontWeight: 800, padding: '4px 14px', borderRadius: '0 0 2px 2px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  <span style={{ position: 'absolute', top: -1, right: 24, background: isBest ? '#4ade80' : GOLD, color: '#0D0B08', fontSize: '0.62rem', fontFamily: FONT_ALT, fontWeight: 800, padding: '4px 14px', borderRadius: '0 0 2px 2px', letterSpacing: '1px', textTransform: 'uppercase' }}>
                     {plan.badge}
                   </span>
                 )}
@@ -175,7 +175,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
                   style={{
                     width: '100%', padding: '15px 20px', borderRadius: 12, border: isHighlight ? 'none' : `1px solid ${GOLD_RULE}`, cursor: loading ? 'wait' : 'pointer',
                     background: isHighlight ? GOLD : 'transparent',
-                    color: isHighlight ? '#050505' : TEXT_PRIMARY,
+                    color: isHighlight ? '#0D0B08' : TEXT_PRIMARY,
                     fontSize: '0.9rem', fontWeight: 800, fontFamily: FONT_ALT,
                     letterSpacing: '1px', textTransform: 'uppercase',
                     clipPath: isHighlight ? 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' : 'none',

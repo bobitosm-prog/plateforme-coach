@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Camera, Search, Plus } from 'lucide-react'
 
-const GOLD = '#C9A84C'
+const GOLD = '#D4A843'
 const BG = '#0A0A0A'
 const CARD = '#1A1A1A'
 const BORDER = '#2A2A2A'

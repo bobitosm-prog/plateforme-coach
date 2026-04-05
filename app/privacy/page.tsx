@@ -1,8 +1,8 @@
 export default function Privacy() {
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#F0EDE8', fontFamily: "'Outfit', sans-serif", padding: '80px 24px' }}>
+    <div style={{ minHeight: '100vh', background: '#0D0B08', color: '#F0EDE8', fontFamily: "'Outfit', sans-serif", padding: '80px 24px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
-        <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 48, color: '#C9A84C', letterSpacing: 2, marginBottom: 32 }}>POLITIQUE DE CONFIDENTIALITÉ</h1>
+        <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 48, color: '#D4A843', letterSpacing: 2, marginBottom: 32 }}>POLITIQUE DE CONFIDENTIALITÉ</h1>
         <p style={{ color: '#8A8580', marginBottom: 16, lineHeight: 1.8 }}>Dernière mise à jour : Avril 2026</p>
 
         <h2 style={{ fontFamily: "'Barlow Condensed'", fontSize: 20, color: '#F0EDE8', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginTop: 40, marginBottom: 16 }}>1. DONNÉES COLLECTÉES</h2>

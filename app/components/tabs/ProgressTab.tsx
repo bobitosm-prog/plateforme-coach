@@ -415,7 +415,7 @@ export default function ProgressTab({
           <div style={{ height: 140, overflow: 'hidden', marginBottom: 16, position: 'relative' }}>
             <img src="/images/progress-hero.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'grayscale(40%)' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, #080808 100%)' }} />
-            <div style={{ position: 'absolute', bottom: 12, left: 16, fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: '#C9A84C', letterSpacing: '1px' }}>PROGRESSION VISUELLE</div>
+            <div style={{ position: 'absolute', bottom: 12, left: 16, fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: '#D4A843', letterSpacing: '1px' }}>PROGRESSION VISUELLE</div>
           </div>
           <button
             onClick={() => setShowAssessment(true)}
@@ -599,7 +599,7 @@ export default function ProgressTab({
                 flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700,
                 background: evoMetric === m.key ? GOLD : BG_CARD,
-                color: evoMetric === m.key ? '#080808' : TEXT_MUTED, transition: 'all 150ms',
+                color: evoMetric === m.key ? '#0D0B08' : TEXT_MUTED, transition: 'all 150ms',
               }}>
                 {m.label}
               </button>
@@ -777,7 +777,7 @@ function AnalysisDisplay({ text }: { text: string }) {
     { title: 'COHÉRENCE PROGRAMME', color: '#A78BFA', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
     { title: 'POINTS POSITIFS', color: '#34D399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
     { title: 'AXES DE PROGRESSION', color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.2)' },
-    { title: 'RECOMMANDATION PRIORITAIRE', color: '#C9A84C', bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)' },
+    { title: 'RECOMMANDATION PRIORITAIRE', color: '#D4A843', bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)' },
   ]
 
   // Try to split by numbered sections

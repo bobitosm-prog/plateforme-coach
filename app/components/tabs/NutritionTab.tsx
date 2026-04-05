@@ -224,7 +224,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <p style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
           Configure tes preferences puis genere ton plan IA personnalise.
         </p>
-        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase',  }}>
+        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
           Configurer mes preferences
         </button>
       </div>
@@ -308,7 +308,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
                 background: isActive ? GOLD : BG_CARD,
-                color: isActive ? '#080808' : isToday ? GOLD : TEXT_MUTED,
+                color: isActive ? '#0D0B08' : isToday ? GOLD : TEXT_MUTED,
                 outline: isToday && !isActive ? `2px solid ${GOLD}` : 'none',
               }}>
                 {label}
@@ -406,7 +406,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
                 background: isActive ? GOLD : BG_CARD,
-                color: isActive ? '#080808' : isToday ? GOLD : TEXT_MUTED,
+                color: isActive ? '#0D0B08' : isToday ? GOLD : TEXT_MUTED,
                 outline: isToday && !isActive ? `2px solid ${GOLD}` : 'none',
               }}>
                 {label}
@@ -496,7 +496,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               flex: 1, padding: '10px 8px', border: 'none', cursor: 'pointer',
               fontFamily: FONT_DISPLAY, fontSize: 14, letterSpacing: '1px',
               background: active ? GOLD : BG_CARD,
-              color: active ? '#080808' : TEXT_MUTED,
+              color: active ? '#0D0B08' : TEXT_MUTED,
             }}>
               {label}
             </button>
@@ -555,7 +555,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   <defs>
                     <linearGradient id="nutRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#E8C97A" />
-                      <stop offset="100%" stopColor="#C9A84C" />
+                      <stop offset="100%" stopColor="#D4A843" />
                     </linearGradient>
                   </defs>
                   <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke="#1c1b1b" strokeWidth={ringStroke} />
@@ -674,7 +674,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     ))}
                     <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                       <button onClick={() => setImportingMeal(null)} style={{ flex: 1, padding: 14, border: `1px solid ${BORDER}`, background: 'transparent', color: TEXT_MUTED, fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer' }}>ANNULER</button>
-                      <button onClick={() => importMealFromPlan(importingMeal)} style={{ flex: 1, padding: 14, border: 'none', background: GOLD, color: '#080808', fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer' }}>IMPORTER</button>
+                      <button onClick={() => importMealFromPlan(importingMeal)} style={{ flex: 1, padding: 14, border: 'none', background: GOLD, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer' }}>IMPORTER</button>
                     </div>
                   </div>
                 </div>

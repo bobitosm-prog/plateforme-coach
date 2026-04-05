@@ -42,7 +42,7 @@ export default function ClientProgram({
       <div style={{display:'flex',gap:8}}>
         <button
           onClick={()=>{setShowAiModal(true);setAiPreview(null)}}
-          style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'12px 16px',borderRadius:0,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.9rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#050505',minHeight:44}}
+          style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'12px 16px',borderRadius:0,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.9rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#0D0B08',minHeight:44}}
         >
           <Sparkles size={14} strokeWidth={2.5}/>Générer avec l&apos;IA
         </button>
@@ -69,7 +69,7 @@ export default function ClientProgram({
               onClick={()=>setExpandedDay(isActive?null:day)}
               style={{
                 background: d.repos?'rgba(138,133,128,.1)':isActive?GOLD:hasEx?GOLD_DIM:BG_CARD_2,
-                color: d.repos?TEXT_MUTED:isActive?'#050505':hasEx?GOLD:TEXT_MUTED,
+                color: d.repos?TEXT_MUTED:isActive?'#0D0B08':hasEx?GOLD:TEXT_MUTED,
                 border: `1.5px solid ${isActive?GOLD:d.repos?BORDER:hasEx?GOLD_RULE:BORDER}`,
               }}
             >

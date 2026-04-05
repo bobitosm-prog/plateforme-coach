@@ -114,7 +114,7 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
               <span style={{
                 fontFamily: FONT_DISPLAY,
                 fontSize: '0.72rem', fontWeight: isToday ? 700 : 500,
-                color: isSelected ? '#050505' : isToday ? GOLD : TEXT_PRIMARY,
+                color: isSelected ? '#0D0B08' : isToday ? GOLD : TEXT_PRIMARY,
               }}>
                 {date.getDate()}
               </span>
@@ -125,7 +125,7 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
                   {daySessions.slice(0, 3).map((_, j) => (
                     <div key={j} style={{
                       width: 4, height: 4, borderRadius: '50%',
-                      background: isSelected ? '#050505' : GOLD,
+                      background: isSelected ? '#0D0B08' : GOLD,
                     }} />
                   ))}
                 </div>

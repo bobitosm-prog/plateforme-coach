@@ -7,8 +7,8 @@ import { GOLD, FONT_DISPLAY, TEXT_PRIMARY, TEXT_MUTED, BORDER } from '../../lib/
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
-const BG = '#0a0a0a'
-const GOLD_C = '#C9A84C'
+const BG = '#0D0B08'
+const GOLD_C = '#D4A843'
 const GOLD_BG = 'rgba(201,168,76,0.10)'
 const GOLD_BORDER = 'rgba(201,168,76,0.5)'
 const FONT_DM = "'DM Sans', var(--font-dm-sans), sans-serif"
@@ -218,7 +218,7 @@ export default function OnboardingFitnessPage() {
     width: '100%',
     padding: '16px',
     background: disabled ? 'rgba(255,255,255,0.05)' : GOLD_C,
-    color: disabled ? TEXT_MUTED : '#0a0a0a',
+    color: disabled ? TEXT_MUTED : '#0D0B08',
     border: 'none',
     borderRadius: 12,
     fontFamily: FONT_BEBAS,
@@ -535,7 +535,7 @@ function StepChoices({
               fontFamily: "'DM Sans', var(--font-dm-sans), sans-serif",
               fontSize: 15,
               fontWeight: selected === i ? 600 : 400,
-              color: selected === i ? '#C9A84C' : TEXT_PRIMARY,
+              color: selected === i ? '#D4A843' : TEXT_PRIMARY,
               transition: 'all 0.2s ease',
               textAlign: 'left' as const,
             }}

@@ -107,7 +107,7 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
               <span style={{
                 fontFamily: FONT_ALT,
                 fontSize: '0.72rem', fontWeight: 700,
-                color: isSelected ? '#050505' : isToday ? GOLD : TEXT_MUTED,
+                color: isSelected ? '#0D0B08' : isToday ? GOLD : TEXT_MUTED,
                 width: 28, flexShrink: 0,
                 textTransform: 'uppercase', letterSpacing: '2px',
               }}>
@@ -118,7 +118,7 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
               <span style={{
                 fontFamily: FONT_DISPLAY,
                 fontSize: '1rem', fontWeight: 700,
-                color: isSelected ? '#050505' : isToday ? GOLD : TEXT_PRIMARY,
+                color: isSelected ? '#0D0B08' : isToday ? GOLD : TEXT_PRIMARY,
                 width: 24, flexShrink: 0, textAlign: 'center',
               }}>
                 {date.getDate()}
@@ -134,7 +134,7 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
                 )}
                 <span style={{
                   fontSize: '0.78rem', fontWeight: 700,
-                  color: isSelected ? '#050505' : (isRest ? TEXT_MUTED : (isToday ? TEXT_PRIMARY : `${TEXT_PRIMARY}CC`)),
+                  color: isSelected ? '#0D0B08' : (isRest ? TEXT_MUTED : (isToday ? TEXT_PRIMARY : `${TEXT_PRIMARY}CC`)),
                   letterSpacing: '0.02em',
                   fontFamily: FONT_ALT,
                 }}>

@@ -1,23 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --gold: #C9A84C;
+  --background: #0D0B08;
+  --foreground: #F5EDD8;
+  --gold: #D4A843;
   --gold-light: #E8C97A;
-  --gold-dim: rgba(201,168,76,0.15);
-  --gold-rule: rgba(201,168,76,0.25);
-  --gold-glow: rgba(201,168,76,0.2);
-  --bg: #050505;
-  --surface: #0D0C0B;
-  --surface-2: #141310;
-  --text: #F0EDE8;
-  --text-muted: #8A8580;
-  --text-dim: #3D3B38;
+  --gold-dim: rgba(212,168,67,0.12);
+  --gold-rule: rgba(212,168,67,0.25);
+  --gold-glow: rgba(212,168,67,0.2);
+  --bg: #0D0B08;
+  --surface: #141209;
+  --surface-2: #1A1712;
+  --text: #F5EDD8;
+  --text-muted: #8A8070;
+  --text-dim: #3A3528;
   --green: #4ade80;
   --font-display: 'Bebas Neue', sans-serif;
   --font-alt: 'Barlow Condensed', sans-serif;
   --font-body: 'Outfit', sans-serif;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(212,168,67,0.15); }
+  50% { box-shadow: 0 0 28px rgba(212,168,67,0.4); }
 }
 
 @theme inline {

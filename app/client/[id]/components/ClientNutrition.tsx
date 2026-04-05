@@ -88,7 +88,7 @@ export default function ClientNutrition({
         <button
           onClick={generateAiMealPlan}
           disabled={aiMealGenerating}
-          style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:0,border:'none',cursor:aiMealGenerating?'wait':'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#050505',minHeight:38,opacity:aiMealGenerating?0.6:1}}
+          style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:0,border:'none',cursor:aiMealGenerating?'wait':'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#0D0B08',minHeight:38,opacity:aiMealGenerating?0.6:1}}
         >
           {aiMealGenerating ? <Loader2 size={13} strokeWidth={2.5} style={{animation:'spin 0.7s linear infinite'}}/> : <Sparkles size={13} strokeWidth={2.5}/>}
           {aiMealGenerating ? 'Génération...' : 'Générer plan IA'}
@@ -136,7 +136,7 @@ export default function ClientNutrition({
                 padding:'6px 10px',borderRadius:0,border:'none',cursor:'pointer',
                 fontFamily:FONT_ALT,fontSize:'0.72rem',fontWeight:700,
                 background:aiMealPreviewDay===d?GOLD:BG_CARD_2,
-                color:aiMealPreviewDay===d?'#050505':TEXT_MUTED,flexShrink:0,
+                color:aiMealPreviewDay===d?'#0D0B08':TEXT_MUTED,flexShrink:0,
               }}>{DAY_LABELS[d]}</button>
             ))}
           </div>
@@ -180,7 +180,7 @@ export default function ClientNutrition({
             <button onClick={generateAiMealPlan} disabled={aiMealGenerating} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:0,border:`1px solid ${GOLD_RULE}`,background:'transparent',color:TEXT_MUTED,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:700}}>
               <Sparkles size={13}/>Régénérer
             </button>
-            <button onClick={acceptAiMealPlan} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:0,border:'none',background:GOLD,color:'#050505',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:800}}>
+            <button onClick={acceptAiMealPlan} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:0,border:'none',background:GOLD,color:'#0D0B08',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:800}}>
               <Check size={13} strokeWidth={3}/>Valider et envoyer
             </button>
           </div>
@@ -203,7 +203,7 @@ export default function ClientNutrition({
                   padding:'6px 10px',borderRadius:0,border:'none',cursor:'pointer',
                   fontFamily:FONT_ALT,fontSize:'0.72rem',fontWeight:700,
                   background:clientActivePlanDay===d?GREEN:BG_CARD_2,
-                  color:clientActivePlanDay===d?'#050505':TEXT_MUTED,flexShrink:0,
+                  color:clientActivePlanDay===d?'#0D0B08':TEXT_MUTED,flexShrink:0,
                 }}>
                   {DAY_LABELS[d]}
                   {dayData?.total_kcal && <span style={{display:'block',fontSize:'0.55rem',opacity:0.8}}>{dayData.total_kcal}</span>}
@@ -385,7 +385,7 @@ export default function ClientNutrition({
                   onClick={()=>setExpandedMealDay(isActive?null:day)}
                   style={{
                     background: isActive?GREEN:hasFoods?'rgba(74,222,128,.12)':BG_CARD_2,
-                    color: isActive?'#050505':hasFoods?GREEN:TEXT_MUTED,
+                    color: isActive?'#0D0B08':hasFoods?GREEN:TEXT_MUTED,
                     border: `1.5px solid ${isActive?GREEN:hasFoods?'rgba(74,222,128,.25)':BORDER}`,
                   }}
                 >

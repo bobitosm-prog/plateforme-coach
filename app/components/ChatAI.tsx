@@ -160,7 +160,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     return (
       <button onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 300) }}
         style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998,  }}>
-        <Bot size={24} color="#050505" strokeWidth={2.5} />
+        <Bot size={24} color="#0D0B08" strokeWidth={2.5} />
       </button>
     )
   }
@@ -180,7 +180,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Bot size={20} color="#050505" strokeWidth={2.5} />
+              <Bot size={20} color="#0D0B08" strokeWidth={2.5} />
             </div>
             <div>
               <div style={{ fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>COACH PERSONNEL</div>
@@ -254,7 +254,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           />
           <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
             style={{ width: 40, height: 40, borderRadius: 12, background: input.trim() ? GOLD : BG_CARD_2, border: input.trim() ? 'none' : `1px solid ${BORDER}`, cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms' }}>
-            <Send size={18} color={input.trim() ? '#050505' : TEXT_MUTED} strokeWidth={2.5} />
+            <Send size={18} color={input.trim() ? '#0D0B08' : TEXT_MUTED} strokeWidth={2.5} />
           </button>
         </div>
 

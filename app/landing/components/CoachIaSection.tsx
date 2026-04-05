@@ -91,12 +91,12 @@ export default function CoachIaSection() {
               flexShrink: 0,
             }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <rect x="3" y="7" width="16" height="12" rx="3" stroke="#C9A84C" strokeWidth="1.2"/>
-                <circle cx="8" cy="13" r="2" stroke="#C9A84C" strokeWidth="1"/>
-                <circle cx="14" cy="13" r="2" stroke="#C9A84C" strokeWidth="1"/>
-                <path d="M11 4V7" stroke="#C9A84C" strokeWidth="1.2"/>
-                <circle cx="11" cy="3" r="1.5" stroke="#C9A84C" strokeWidth="1"/>
-                <path d="M2 12H3M19 12H20" stroke="#C9A84C" strokeWidth="1.2" strokeLinecap="round"/>
+                <rect x="3" y="7" width="16" height="12" rx="3" stroke="#D4A843" strokeWidth="1.2"/>
+                <circle cx="8" cy="13" r="2" stroke="#D4A843" strokeWidth="1"/>
+                <circle cx="14" cy="13" r="2" stroke="#D4A843" strokeWidth="1"/>
+                <path d="M11 4V7" stroke="#D4A843" strokeWidth="1.2"/>
+                <circle cx="11" cy="3" r="1.5" stroke="#D4A843" strokeWidth="1"/>
+                <path d="M2 12H3M19 12H20" stroke="#D4A843" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
             </div>
 

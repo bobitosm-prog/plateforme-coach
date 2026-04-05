@@ -143,13 +143,13 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
                 flex: 1, padding: '8px 4px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 800,
                 letterSpacing: '1px', textTransform: 'uppercase',
-                background: mealType === m.id ? GOLD : BG_BASE, color: mealType === m.id ? '#050505' : TEXT_MUTED,
+                background: mealType === m.id ? GOLD : BG_BASE, color: mealType === m.id ? '#0D0B08' : TEXT_MUTED,
               }}>{m.label}</button>
             ))}
           </div>
           <button onClick={addFood} disabled={saving} style={{
             width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: saving ? 'wait' : 'pointer',
-            background: GOLD, color: '#050505',
+            background: GOLD, color: '#0D0B08',
             fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800,
             letterSpacing: '1px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1,
             

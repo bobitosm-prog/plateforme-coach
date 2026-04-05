@@ -112,7 +112,7 @@ export default function Navbar() {
               alignItems: 'center',
               gap: 10,
               background: 'var(--gold)',
-              color: '#050505',
+              color: '#0D0B08',
               fontFamily: 'var(--font-alt)',
               fontWeight: 800,
               fontSize: 13,

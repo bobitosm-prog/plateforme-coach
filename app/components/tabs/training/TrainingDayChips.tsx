@@ -32,7 +32,7 @@ export default function TrainingDayChips({ trainingDay, todayKey, coachProgram, 
               opacity: isPast && !isActive ? 0.4 : 1,
               transition: 'all 200ms',
             }}>
-              <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: isActive ? '#080808' : isToday ? GOLD : TEXT_MUTED, textTransform: 'capitalize' }}>
+              <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: isActive ? '#0D0B08' : isToday ? GOLD : TEXT_MUTED, textTransform: 'capitalize' }}>
                 {day.slice(0, 3)}
               </span>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: hasWork ? (isActive ? '#08080860' : GOLD) : 'transparent', transition: 'background 200ms' }} />

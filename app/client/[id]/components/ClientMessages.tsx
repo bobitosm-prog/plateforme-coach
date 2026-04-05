@@ -72,7 +72,7 @@ export default function ClientMessages({ coachMessages, coachMsgInput, setCoachM
           style={{flex:1,background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'10px 16px',color:TEXT_PRIMARY,fontSize:'0.88rem',fontFamily:FONT_BODY,outline:'none',resize:'none',maxHeight:100,lineHeight:1.4}}/>
         <button onClick={sendCoachMessage} disabled={!coachMsgInput.trim()}
           style={{width:40,height:40,borderRadius:0,background:coachMsgInput.trim()?GOLD:BORDER,border:'none',cursor:coachMsgInput.trim()?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-          <Send size={16} color={coachMsgInput.trim()?'#050505':TEXT_MUTED}/>
+          <Send size={16} color={coachMsgInput.trim()?'#0D0B08':TEXT_MUTED}/>
         </button>
       </div>
     </div>

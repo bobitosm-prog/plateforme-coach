@@ -156,7 +156,7 @@ export default function PricingSection() {
                   fontSize: 10,
                   letterSpacing: 2,
                   background: 'var(--gold, #C9A84C)',
-                  color: '#050505',
+                  color: '#0D0B08',
                   padding: '4px 16px',
                   textTransform: 'uppercase',
                   whiteSpace: 'nowrap',
@@ -256,7 +256,7 @@ export default function PricingSection() {
                 ...(p.featured
                   ? {
                       background: 'var(--gold, #C9A84C)',
-                      color: '#050505',
+                      color: '#0D0B08',
                       border: '1px solid var(--gold, #C9A84C)',
                     }
                   : {

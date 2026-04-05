@@ -7,8 +7,8 @@ import { GOLD, GOLD_DIM, GOLD_RULE, BG_BASE, BG_CARD, BORDER, TEXT_PRIMARY, TEXT
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
-const BG = '#0a0a0a'
-const GOLD_C = '#C9A84C'
+const BG = '#0D0B08'
+const GOLD_C = '#D4A843'
 const FONT_DM = "'DM Sans', var(--font-dm-sans), sans-serif"
 const FONT_BEBAS = FONT_DISPLAY
 
@@ -368,7 +368,7 @@ export default function OnboardingPhotoPage() {
             style={{
               width: '100%', padding: 18,
               background: generating ? 'rgba(255,255,255,0.05)' : GOLD_C,
-              color: generating ? TEXT_MUTED : '#0a0a0a',
+              color: generating ? TEXT_MUTED : '#0D0B08',
               border: 'none', borderRadius: 12,
               fontFamily: FONT_BEBAS, fontSize: 22, letterSpacing: '0.08em',
               cursor: generating ? 'wait' : 'pointer',

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { AlertTriangle, CheckCircle, Target, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-const GOLD = '#C9A84C'
+const GOLD = '#D4A843'
 const BG_CARD = '#1A1A1A'
 const BG_BASE = '#0F0F0F'
 const BORDER = '#2A2A2A'
@@ -241,7 +241,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
                 style={{
                   width: '100%', padding: 14, border: 'none', borderRadius: 12,
                   background: applied ? GREEN : GOLD,
-                  color: '#080808', cursor: applying || regenerating ? 'wait' : 'pointer',
+                  color: '#0D0B08', cursor: applying || regenerating ? 'wait' : 'pointer',
                   fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   opacity: applying || regenerating ? 0.7 : 1,

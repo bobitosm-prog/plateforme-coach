@@ -15,6 +15,9 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
   todayNutritionKey,
 } from '../../../lib/design-tokens'
+import MetallicRing from '../ui/MetallicRing'
+import StatCircle from '../ui/StatCircle'
+import SwissBadge from '../ui/SwissBadge'
 
 interface HomeTabProps {
   supabase: any
@@ -161,11 +164,7 @@ export default function HomeTab({
   }, [session?.user?.id])
 
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
-  const ringSize = 140
-  const ringStroke = 12
-  const ringRadius = (ringSize - ringStroke) / 2
-  const ringCircum = 2 * Math.PI * ringRadius
-  const ringOffset = ringCircum - (calPct / 100) * ringCircum
+  // Ring values used by MetallicRing via calPct
 
   const todayExercises = todayCoachDay?.exercises || []
   const sessionTitle = todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
@@ -193,6 +192,7 @@ export default function HomeTab({
                 : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{firstName.charAt(0).toUpperCase()}</span>}
             </button>
             <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: GOLD, letterSpacing: '0.15em' }}>MOOVX</span>
+            <SwissBadge variant="outline" />
           </div>
           <button onClick={() => setActiveTab('profil')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEXT_MUTED} strokeWidth="1.5"><path d="M12 15.5A3.5 3.5 0 1012 8.5a3.5 3.5 0 000 7z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -209,38 +209,14 @@ export default function HomeTab({
 
       <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* ═══ CALORIE RING + STATS BENTO ═══ */}
-        <div style={{ display: 'grid', gridTemplateColumns: `${ringSize + 32}px 1fr`, gap: 16 }}>
-          {/* Ring */}
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16, position: 'relative' }}>
-            <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)' }}>
-              <defs>
-                <linearGradient id="goldRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#E8C97A" />
-                  <stop offset="100%" stopColor="#C9A84C" />
-                </linearGradient>
-              </defs>
-              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="#1c1b1b" strokeWidth={ringStroke} />
-              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="url(#goldRingGrad)" strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))' }} />
-            </svg>
-            <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: GOLD, lineHeight: 1 }}>{calPct}%</span>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Objectif</span>
-            </div>
-          </div>
-          {/* Right stats */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Calories</span>
-              <div><span style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: GOLD }}>{consumedKcal}</span><span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginLeft: 4 }}>kcal</span></div>
-            </div>
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Hydratation</span>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: '#60A5FA' }}>{(waterToday / 1000).toFixed(1)}</span>
-                <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>/ {((profile?.water_goal || 3000) / 1000).toFixed(1)}L</span>
-              </div>
-            </div>
+        {/* ═══ CALORIE RING ═══ */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <MetallicRing progress={calPct / 100} value={`${consumedKcal}`} label="KCAL" size={200} />
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
+            <StatCircle value={consumedKcal} label="KCAL" icon="\u{1F525}" />
+            <StatCircle value={weekSessions} label="SEANCES" icon="\u{1F3CB}\uFE0F" />
+            <StatCircle value={`+${streak}`} label="STREAK" icon="\u{1F4C8}" />
+            <StatCircle value={`${(waterToday / 1000).toFixed(1)}L`} label="EAU" icon="\u{1F4A7}" />
           </div>
         </div>
 
@@ -256,7 +232,7 @@ export default function HomeTab({
               </>
             )}
             <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, background: GOLD, padding: '4px 12px' }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700, color: '#080808', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Séance du jour</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700, color: '#0D0B08', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Séance du jour</span>
             </div>
           </div>
           <div style={{ padding: '16px 20px 20px' }}>
@@ -294,27 +270,12 @@ export default function HomeTab({
                 </div>
                 <button
                   onClick={() => startProgramWorkout({ day_name: todayKey }, todayExercises)}
-                  style={{ width: '100%', background: GOLD, color: '#080808', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
+                  style={{ width: '100%', background: GOLD, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
                   COMMENCER
                 </button>
               </>
             )}
           </div>
-        </div>
-
-        {/* ═══ STATS BAR — 4 metrics ═══ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, border: `1px solid ${BORDER}` }}>
-          {[
-            { value: currentWeight ? String(currentWeight) : '—', label: 'KG' },
-            { value: String(weekSessions), label: 'SÉANCES' },
-            { value: streak > 0 ? `${streak}j` : '—', label: 'STREAK' },
-            { value: weekVolume > 1000 ? `${(weekVolume / 1000).toFixed(1)}k` : String(weekVolume), label: 'KG VOL.' },
-          ].map((stat, i) => (
-            <div key={stat.label} style={{ background: BG_CARD, padding: '16px 8px', textAlign: 'center', borderLeft: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: GOLD, lineHeight: 1 }}>{stat.value}</div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>{stat.label}</div>
-            </div>
-          ))}
         </div>
 
         {/* ═══ PERFORMANCE HEBDOMADAIRE — Bar chart ═══ */}

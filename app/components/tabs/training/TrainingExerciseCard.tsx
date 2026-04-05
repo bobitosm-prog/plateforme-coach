@@ -348,7 +348,7 @@ export default function TrainingExerciseCard({
                       transition: 'all 200ms', flexShrink: 0,
                     }}
                   >
-                    <Check size={14} color={done ? '#080808' : TEXT_DIM} strokeWidth={2.5} />
+                    <Check size={14} color={done ? '#0D0B08' : TEXT_DIM} strokeWidth={2.5} />
                   </motion.button>
                 </div>
               </motion.div>

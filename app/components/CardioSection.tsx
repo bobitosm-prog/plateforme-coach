@@ -181,7 +181,7 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{Math.round(elapsed / 60)}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>MINUTES</div></div>
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>KCAL</div></div>
         </div>
-        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
+        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
       </div>
     )
   }
@@ -275,7 +275,7 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{mins}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>MINUTES</div></div>
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>KCAL</div></div>
         </div>
-        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
+        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
       </div>
     )
   }

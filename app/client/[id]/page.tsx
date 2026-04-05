@@ -138,7 +138,7 @@ export default function ClientProfilePage() {
       {/* ── DESKTOP SIDEBAR ── */}
       <div className="desktop-sidebar-client">
         <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,marginBottom:24}}>
-          <div style={{width:72,height:72,borderRadius:0,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontSize:'1.8rem',fontWeight:400,color:'#050505',letterSpacing:'2px'}}>{initials(profile.full_name)}</div>
+          <div style={{width:72,height:72,borderRadius:0,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontSize:'1.8rem',fontWeight:400,color:'#0D0B08',letterSpacing:'2px'}}>{initials(profile.full_name)}</div>
           <div style={{textAlign:'center'}}>
             <div style={{fontFamily:FONT_DISPLAY,fontSize:'1.4rem',fontWeight:400,color:TEXT_PRIMARY,letterSpacing:'1px',textTransform:'uppercase'}}>{profile.full_name}</div>
             {profile.email && <div style={{fontSize:'0.72rem',fontFamily:FONT_BODY,color:TEXT_MUTED}}>{profile.email}</div>}
@@ -155,7 +155,7 @@ export default function ClientProfilePage() {
           </div>
         )}
         <div style={{marginTop:'auto',paddingTop:16,display:'flex',flexDirection:'column',gap:8}}>
-          <button onClick={h.generateAiMealPlan} disabled={h.aiMealGenerating} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:0,border:'none',cursor:'pointer',background:GOLD,color:'#050505',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:800,width:'100%'}}>
+          <button onClick={h.generateAiMealPlan} disabled={h.aiMealGenerating} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:0,border:'none',cursor:'pointer',background:GOLD,color:'#0D0B08',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:800,width:'100%'}}>
             <Sparkles size={14}/>Générer plan IA
           </button>
           <button onClick={()=>h.router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:0,border:`1px solid ${GOLD_RULE}`,background:'transparent',color:TEXT_MUTED,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:700,width:'100%'}}>
@@ -170,7 +170,7 @@ export default function ClientProfilePage() {
       {/* ── DESKTOP HEADER ── */}
       <div className="desktop-header-client">
         <button onClick={()=>h.router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,borderRadius:0,background:BG_CARD,border:`1px solid ${BORDER}`,cursor:'pointer',color:TEXT_MUTED}}><ArrowLeft size={16} strokeWidth={2.5}/></button>
-        <div style={{width:32,height:32,borderRadius:0,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontWeight:400,fontSize:'0.8rem',color:'#050505'}}>{initials(profile.full_name)}</div>
+        <div style={{width:32,height:32,borderRadius:0,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontWeight:400,fontSize:'0.8rem',color:'#0D0B08'}}>{initials(profile.full_name)}</div>
         <span style={{fontFamily:FONT_DISPLAY,fontSize:'1.2rem',fontWeight:400,color:TEXT_PRIMARY,letterSpacing:'1px',textTransform:'uppercase'}}>{profile.full_name}</span>
       </div>
 
@@ -190,11 +190,11 @@ export default function ClientProfilePage() {
         </button>
         <div style={{display:'flex',alignItems:'center',gap:7}}>
           <div style={{width:22,height:22,background:GOLD,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            <Zap size={12} color="#050505" strokeWidth={2.5}/>
+            <Zap size={12} color="#0D0B08" strokeWidth={2.5}/>
           </div>
           <span style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,color:TEXT_PRIMARY,letterSpacing:'2px',textTransform:'uppercase'}}>MOOVX</span>
         </div>
-        <div style={{width:36,height:36,borderRadius:0,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontWeight:400,fontSize:'0.8rem',color:'#050505',flexShrink:0}}>
+        <div style={{width:36,height:36,borderRadius:0,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontWeight:400,fontSize:'0.8rem',color:'#0D0B08',flexShrink:0}}>
           {initials(profile.full_name)}
         </div>
       </header>
@@ -487,7 +487,7 @@ export default function ClientProfilePage() {
               style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, width: '100%', maxWidth: 520, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: `1px solid ${BORDER}`, background: GOLD_DIM }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="#050505" strokeWidth={2} /></div>
+                  <div style={{ width: 36, height: 36, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="#0D0B08" strokeWidth={2} /></div>
                   <div>
                     <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', textTransform: 'uppercase' }}>GÉNÉRER AVEC L&apos;IA</h2>
                     <p style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0 }}>Claude génère un programme personnalisé</p>
@@ -498,7 +498,7 @@ export default function ClientProfilePage() {
               <div style={{ overflowY: 'auto', flex: 1 }}>
                 {h.aiGenerating && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '56px 24px' }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'spin 1s linear infinite' }}><Loader2 size={28} color="#050505" strokeWidth={2} /></div>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'spin 1s linear infinite' }}><Loader2 size={28} color="#0D0B08" strokeWidth={2} /></div>
                     <div style={{ textAlign: 'center' }}>
                       <p style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '1px', textTransform: 'uppercase' }}>L&apos;IA génère votre programme…</p>
                       <p style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_MUTED, marginTop: 6 }}>Cela prend quelques secondes</p>
@@ -529,7 +529,7 @@ export default function ClientProfilePage() {
                     </div>
                     <div style={{ display: 'flex', gap: 10 }}>
                       <button onClick={h.generateAiProgram} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: `1px solid ${GOLD_RULE}`, background: 'transparent', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700 }}><Sparkles size={13} /> Régénérer</button>
-                      <button onClick={h.acceptAiPreview} style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: 'none', background: GOLD, color: '#050505', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.04em' }}><Check size={15} strokeWidth={2.5} /> Accepter ce programme</button>
+                      <button onClick={h.acceptAiPreview} style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: 'none', background: GOLD, color: '#0D0B08', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.04em' }}><Check size={15} strokeWidth={2.5} /> Accepter ce programme</button>
                     </div>
                   </div>
                 )}
@@ -555,7 +555,7 @@ export default function ClientProfilePage() {
                         {h.AI_EQUIPMENT.map(item => {
                           const checked = h.aiEquipment.includes(item)
                           return (<button key={item} onClick={() => h.toggleAiEquipment(item)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 12, border: `1px solid ${checked ? GOLD : BORDER}`, background: checked ? GOLD_DIM : 'transparent', color: checked ? GOLD : TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: '0.82rem', fontWeight: checked ? 700 : 500, transition: 'all 150ms' }}>
-                            <div style={{ width: 14, height: 14, borderRadius: 12, border: `2px solid ${checked ? GOLD : TEXT_DIM}`, background: checked ? GOLD : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>{checked && <Check size={9} color="#050505" strokeWidth={3} />}</div>
+                            <div style={{ width: 14, height: 14, borderRadius: 12, border: `2px solid ${checked ? GOLD : TEXT_DIM}`, background: checked ? GOLD : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>{checked && <Check size={9} color="#0D0B08" strokeWidth={3} />}</div>
                             {item}
                           </button>)
                         })}
@@ -578,7 +578,7 @@ export default function ClientProfilePage() {
               {!h.aiGenerating && !h.aiPreview && (
                 <div style={{ padding: '16px 24px', borderTop: `1px solid ${BORDER}` }}>
                   <button onClick={h.generateAiProgram} disabled={h.aiEquipment.length === 0}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 20px', borderRadius: 12, border: 'none', background: h.aiEquipment.length === 0 ? BG_CARD_2 : GOLD, color: h.aiEquipment.length === 0 ? TEXT_DIM : '#050505', cursor: h.aiEquipment.length === 0 ? 'not-allowed' : 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 20px', borderRadius: 12, border: 'none', background: h.aiEquipment.length === 0 ? BG_CARD_2 : GOLD, color: h.aiEquipment.length === 0 ? TEXT_DIM : '#0D0B08', cursor: h.aiEquipment.length === 0 ? 'not-allowed' : 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, letterSpacing: '0.05em' }}>
                     <Sparkles size={16} strokeWidth={2} />Générer le programme
                   </button>
                 </div>

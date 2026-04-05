@@ -111,7 +111,7 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button onClick={onClose} style={{ flex: 1, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, color: TEXT_PRIMARY, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>Annuler</button>
           <button onClick={handleSubmit} disabled={!videoFile || uploading}
-            style={{ flex: 1, background: uploading || !videoFile ? BORDER : GOLD, border: 'none', borderRadius: 12, padding: 12, color: uploading || !videoFile ? TEXT_MUTED : '#050505', fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
+            style={{ flex: 1, background: uploading || !videoFile ? BORDER : GOLD, border: 'none', borderRadius: 12, padding: 12, color: uploading || !videoFile ? TEXT_MUTED : '#0D0B08', fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
             {uploading ? 'Envoi...' : 'Envoyer au coach'}
           </button>
         </div>

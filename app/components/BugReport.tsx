@@ -113,7 +113,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
               style={{
                 width: '100%', padding: '15px', borderRadius: 12, border: 'none', cursor: (title.trim() && desc.trim() && !sending) ? 'pointer' : 'default',
                 background: (title.trim() && desc.trim()) ? GOLD : BG_CARD_2,
-                color: (title.trim() && desc.trim()) ? '#050505' : TEXT_MUTED,
+                color: (title.trim() && desc.trim()) ? '#0D0B08' : TEXT_MUTED,
                 fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800,
                 letterSpacing: '1px', textTransform: 'uppercase',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

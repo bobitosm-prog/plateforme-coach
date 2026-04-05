@@ -85,7 +85,7 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
           <button
             onClick={handleSave}
             disabled={!hasValue}
-            style={{ flex: 2, background: hasValue ? GOLD : '#2A2A2A', color: hasValue ? '#050505' : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: hasValue ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 200ms',  }}
+            style={{ flex: 2, background: hasValue ? GOLD : '#2A2A2A', color: hasValue ? '#0D0B08' : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: hasValue ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 200ms',  }}
           >
             Sauvegarder
           </button>

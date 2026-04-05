@@ -191,12 +191,12 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
           <div style={{ fontSize: '0.68rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 8 }}>Categorie</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {CATEGORIES.filter(c => c.id !== 'all').map(c => (
-              <button key={c.id} onClick={() => setGenCategory(c.id)} style={{ padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800, background: genCategory === c.id ? GOLD : BG_BASE, color: genCategory === c.id ? '#050505' : TEXT_MUTED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>{c.label}</button>
+              <button key={c.id} onClick={() => setGenCategory(c.id)} style={{ padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800, background: genCategory === c.id ? GOLD : BG_BASE, color: genCategory === c.id ? '#0D0B08' : TEXT_MUTED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>{c.label}</button>
             ))}
           </div>
         </div>
 
-        <button onClick={generateRecipe} disabled={generating} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', opacity: generating ? 0.6 : 1,  }}>
+        <button onClick={generateRecipe} disabled={generating} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', opacity: generating ? 0.6 : 1,  }}>
           {generating ? 'Notre chef prepare ta recette...' : 'Generer la recette'}
         </button>
       </div>
@@ -209,7 +209,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>Recettes fitness</h2>
-        <button onClick={() => setShowGenerate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, color: '#050505', fontSize: '0.72rem', fontWeight: 800, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase',  }}>
+        <button onClick={() => setShowGenerate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, color: '#0D0B08', fontSize: '0.72rem', fontWeight: 800, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase',  }}>
           <Sparkles size={13} /> Generer
         </button>
       </div>
@@ -217,7 +217,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       {/* Category filter */}
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
         {CATEGORIES.map(c => (
-          <button key={c.id} onClick={() => setFilter(c.id)} style={{ padding: '6px 12px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 800, whiteSpace: 'nowrap', background: filter === c.id ? GOLD : BG_CARD, color: filter === c.id ? '#050505' : TEXT_MUTED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>{c.label}</button>
+          <button key={c.id} onClick={() => setFilter(c.id)} style={{ padding: '6px 12px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 800, whiteSpace: 'nowrap', background: filter === c.id ? GOLD : BG_CARD, color: filter === c.id ? '#0D0B08' : TEXT_MUTED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>{c.label}</button>
         ))}
       </div>
 

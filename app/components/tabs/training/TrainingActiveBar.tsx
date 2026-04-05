@@ -48,7 +48,7 @@ export default function TrainingActiveBar({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={onFinish}
-            style={{ background: GREEN, color: '#050505', border: 'none', borderRadius: 12, padding: '10px 20px', fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ background: GREEN, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '10px 20px', fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
             <Check size={15} strokeWidth={3} /> Terminer
           </motion.button>

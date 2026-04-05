@@ -45,7 +45,7 @@ export default function RootLayout({
     <html lang="fr" className={`${bebasNeue.variable} ${barlowCondensed.variable} ${outfit.variable} ${dmSans.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#C9A84C" />
+        <meta name="theme-color" content="#D4A843" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

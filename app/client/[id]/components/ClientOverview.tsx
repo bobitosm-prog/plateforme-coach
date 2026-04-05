@@ -110,7 +110,7 @@ export default function ClientOverview({
               </span>
             ))}
             {resolvedFoods.length > 10 && !showAllFoods && (
-              <button onClick={()=>setShowAllFoods(true)} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(201,168,76,0.1)',color:'#C9A84C',border:'1px solid rgba(201,168,76,0.2)',cursor:'pointer'}}>
+              <button onClick={()=>setShowAllFoods(true)} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(201,168,76,0.1)',color:'#D4A843',border:'1px solid rgba(201,168,76,0.2)',cursor:'pointer'}}>
                 +{resolvedFoods.length - 10} autres
               </button>
             )}

@@ -38,10 +38,10 @@ export default function CoachApp() {
 
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#050505', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0D0B08', gap: 24 }}>
       <img src="/logo-moovx.png" alt="MoovX Logo" width={80} height={80} style={{ borderRadius: 20 }} />
       <span style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 800, color: GOLD, letterSpacing: '0.15em' }}>MOOVX</span>
-      <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#D4A843', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
   )
 
@@ -57,7 +57,7 @@ export default function CoachApp() {
 
   /* ── Trial expired OR no subscription → paywall ── */
   if (h.profile && !h.isSubActive) return (
-    <div style={{ minHeight: '100dvh', background: '#050505', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', background: '#0D0B08', display: 'flex', flexDirection: 'column' }}>
       {h.trialExpired && (
         <div style={{ textAlign: 'center', padding: '40px 24px 0' }}>
           <img src="/logo-moovx.png" alt="MoovX Logo" width={56} height={56} style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block' }} />
@@ -273,7 +273,7 @@ export default function CoachApp() {
                 ))}
               </div>
             </div>
-            <button onClick={h.addCustomFood} style={{ width: '100%', background: GOLD, color: '#050505', fontWeight: 700, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 16 }}>Créer l&apos;aliment</button>
+            <button onClick={h.addCustomFood} style={{ width: '100%', background: GOLD, color: '#0D0B08', fontWeight: 700, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 16 }}>Créer l&apos;aliment</button>
           </div>
         </div>
       )}
@@ -283,7 +283,7 @@ export default function CoachApp() {
         <button onClick={() => h.setActiveTab('messages')} style={{ position: 'relative', background: 'transparent', border: 'none', cursor: 'pointer', padding: 8 }}>
           <MessageCircle size={22} color={h.activeTab === 'messages' ? GOLD : (h.unreadCount > 0 ? GOLD : TEXT_MUTED)} strokeWidth={1.5} />
           {h.unreadCount > 0 && (
-            <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: GOLD, color: '#050505', fontFamily: FONT_DISPLAY, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: GOLD, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {h.unreadCount > 9 ? '9+' : h.unreadCount}
             </span>
           )}
@@ -296,7 +296,7 @@ export default function CoachApp() {
           <span style={{ fontSize: '0.78rem', fontWeight: 600, color: h.trialDaysLeft <= 3 ? RED : GOLD }}>
             {h.trialDaysLeft <= 3 ? `Plus que ${h.trialDaysLeft} jour${h.trialDaysLeft !== 1 ? 's' : ''} !` : `Période d'essai — ${h.trialDaysLeft} jours restants`}
           </span>
-          <button onClick={() => h.handleSubscribe('client_monthly')} style={{ padding: '6px 14px', background: h.trialDaysLeft <= 3 ? RED : GOLD, border: 'none', borderRadius: 12, color: h.trialDaysLeft <= 3 ? '#fff' : '#050505', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT_ALT, letterSpacing: '0.04em', flexShrink: 0,  }}>
+          <button onClick={() => h.handleSubscribe('client_monthly')} style={{ padding: '6px 14px', background: h.trialDaysLeft <= 3 ? RED : GOLD, border: 'none', borderRadius: 12, color: h.trialDaysLeft <= 3 ? '#fff' : '#0D0B08', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT_ALT, letterSpacing: '0.04em', flexShrink: 0,  }}>
             S&apos;abonner
           </button>
         </div>

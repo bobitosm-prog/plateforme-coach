@@ -28,7 +28,7 @@ const SECTIONS = [
   { title: 'ZONES EN RETARD', color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.2)' },
   { title: 'DÉSÉQUILIBRES DÉTECTÉS', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' },
   { title: 'PROGRAMME CORRECTIF', color: '#A78BFA', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
-  { title: 'OBJECTIF 12 SEMAINES', color: '#C9A84C', bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)' },
+  { title: 'OBJECTIF 12 SEMAINES', color: '#D4A843', bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)' },
 ]
 
 const ANALYSIS_MESSAGES = [

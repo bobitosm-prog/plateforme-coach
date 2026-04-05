@@ -55,7 +55,7 @@ export default function MessagesTab({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div style={{ background: BG_CARD, padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: RADIUS_CARD, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: '#050505' }}>C</div>
+        <div style={{ width: 36, height: 36, borderRadius: RADIUS_CARD, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: '#0D0B08' }}>C</div>
         <div>
           <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>MON COACH</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -137,7 +137,7 @@ export default function MessagesTab({
               disabled={!msgInput.trim()}
               style={{ width: 40, height: 40, borderRadius: 12, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
-              <Send size={16} color={msgInput.trim() ? '#050505' : TEXT_MUTED} />
+              <Send size={16} color={msgInput.trim() ? '#0D0B08' : TEXT_MUTED} />
             </button>
           </div>
         </>

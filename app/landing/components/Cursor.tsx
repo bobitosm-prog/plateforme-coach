@@ -38,7 +38,7 @@ export default function Cursor() {
           height: 1,
           top: '50%',
           left: 0,
-          background: '#C9A84C',
+          background: '#D4A843',
           transform: 'translateY(-50%)',
         }}
       />
@@ -49,7 +49,7 @@ export default function Cursor() {
           width: 1,
           left: '50%',
           top: 0,
-          background: '#C9A84C',
+          background: '#D4A843',
           transform: 'translateX(-50%)',
         }}
       />

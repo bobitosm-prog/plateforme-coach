@@ -426,7 +426,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
               disabled={aiGenerating}
               style={{
                 width: '100%', padding: '16px', background: aiGenerating ? GOLD_DIM : GOLD,
-                color: '#080808', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
                 cursor: aiGenerating ? 'not-allowed' : 'pointer', opacity: aiGenerating ? 0.6 : 1,
               }}
             >
@@ -456,7 +456,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
               disabled={saving}
               style={{
                 width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
-                color: '#080808', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
                 cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
               }}
             >
@@ -522,7 +522,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                     setManualStep(1)
                   }}
                   style={{
-                    width: '100%', padding: '16px', background: GOLD, color: '#080808',
+                    width: '100%', padding: '16px', background: GOLD, color: '#0D0B08',
                     border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18, cursor: 'pointer',
                   }}
                 >
@@ -540,7 +540,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                   disabled={saving}
                   style={{
                     width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
-                    color: '#080808', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                    color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
                     cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
                   }}
                 >
@@ -626,7 +626,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
               disabled={saving || !ceName.trim()}
               style={{
                 width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
-                color: '#080808', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
                 cursor: saving || !ceName.trim() ? 'not-allowed' : 'pointer',
                 opacity: !ceName.trim() ? 0.5 : 1,
               }}
@@ -771,7 +771,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 padding: '10px 16px', whiteSpace: 'nowrap', cursor: 'pointer',
                 fontFamily: FONT_DISPLAY, fontSize: 16,
                 background: editingDayIndex === i ? GOLD : BG_CARD,
-                color: editingDayIndex === i ? '#080808' : TEXT_PRIMARY,
+                color: editingDayIndex === i ? '#0D0B08' : TEXT_PRIMARY,
                 border: `1px solid ${editingDayIndex === i ? GOLD : BORDER}`,
               }}
             >

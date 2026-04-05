@@ -26,7 +26,7 @@ export default function ExercisePreview({ name, size = 56, animate = true }: Pro
         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, borderRadius: 8,
       }}>
         <svg width={size * 0.45} height={size * 0.45} viewBox="0 0 24 24" fill="none">
-          <path d="M6 12H18M4 8H6V16H4V8ZM18 8H20V16H18V8Z" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M6 12H18M4 8H6V16H4V8ZM18 8H20V16H18V8Z" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     )

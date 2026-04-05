@@ -97,7 +97,7 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
             </button>
           ))}
         </div>
-        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,  }}>Calculer mon TDEE</button>
+        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,  }}>Calculer mon TDEE</button>
         {bmrResult && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: 20 }}>

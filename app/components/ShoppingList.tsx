@@ -130,7 +130,7 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
                   return (
                     <button key={item.name} onClick={() => toggle(item.name)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 2, border: 'none', background: done ? 'rgba(74,222,128,0.04)' : BG_CARD, cursor: 'pointer', textAlign: 'left', transition: 'all 150ms', width: '100%' }}>
                       <div style={{ width: 22, height: 22, borderRadius: 2, border: `2px solid ${done ? GREEN : BORDER}`, background: done ? GREEN : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>
-                        {done && <Check size={13} color="#050505" strokeWidth={3} />}
+                        {done && <Check size={13} color="#0D0B08" strokeWidth={3} />}
                       </div>
                       <span style={{ flex: 1, fontSize: '0.88rem', fontFamily: FONT_BODY, fontWeight: 400, color: done ? TEXT_MUTED : TEXT_PRIMARY, textDecoration: done ? 'line-through' : 'none', opacity: done ? 0.4 : 1, transition: 'all 150ms' }}>{item.name}</span>
                       <span style={{ fontSize: '0.78rem', fontFamily: FONT_DISPLAY, color: done ? TEXT_DIM : GOLD, fontWeight: 700, flexShrink: 0 }}>{item.display}</span>

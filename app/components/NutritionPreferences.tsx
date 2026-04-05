@@ -502,7 +502,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           {([['auto', 'AUTO'], ['manual', 'MANUEL'], ['ratio', 'PAR RATIO']] as const).map(([id, label]) => {
             const active = macroMode === id
             return (
-              <button key={id} onClick={() => setMacroMode(id as MacroMode)} style={{ flex: 1, padding: '10px 8px', background: active ? GOLD : BG_BASE, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '1px', color: active ? '#050505' : TEXT_MUTED, transition: 'all 150ms' }}>
+              <button key={id} onClick={() => setMacroMode(id as MacroMode)} style={{ flex: 1, padding: '10px 8px', background: active ? GOLD : BG_BASE, border: 'none', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '1px', color: active ? '#0D0B08' : TEXT_MUTED, transition: 'all 150ms' }}>
                 {label}
               </button>
             )
@@ -683,8 +683,8 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             return (
               <button key={key} onClick={() => { setActiveMealTab(key); setMealSearchQuery(''); setMealSearchResults([]) }} style={{ flex: 1, padding: '8px 4px', background: active ? GOLD : BG_BASE, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, transition: 'all 150ms' }}>
                 <span style={{ fontSize: '1rem' }}>{m.emoji}</span>
-                <span style={{ fontFamily: FONT_ALT, fontSize: '0.58rem', fontWeight: 800, color: active ? '#050505' : TEXT_MUTED, letterSpacing: '0.5px' }}>{m.label}</span>
-                {count > 0 && <span style={{ fontSize: '0.52rem', fontFamily: FONT_DISPLAY, color: active ? '#050505' : GOLD, fontWeight: 700 }}>{count}</span>}
+                <span style={{ fontFamily: FONT_ALT, fontSize: '0.58rem', fontWeight: 800, color: active ? '#0D0B08' : TEXT_MUTED, letterSpacing: '0.5px' }}>{m.label}</span>
+                {count > 0 && <span style={{ fontSize: '0.52rem', fontFamily: FONT_DISPLAY, color: active ? '#0D0B08' : GOLD, fontWeight: 700 }}>{count}</span>}
               </button>
             )
           })}
@@ -709,7 +709,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             return (
               <button key={food} onClick={() => toggleMealFood(activeMealTab, food)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: active ? GOLD_DIM : BG_BASE, border: `1.5px solid ${active ? GOLD : BORDER}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
                 <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? GOLD : TEXT_DIM}`, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? GOLD : 'transparent' }}>
-                  {active && <Check size={10} color="#050505" strokeWidth={3} />}
+                  {active && <Check size={10} color="#0D0B08" strokeWidth={3} />}
                 </div>
                 <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, fontWeight: 400, color: active ? GOLD : TEXT_PRIMARY, textAlign: 'left' }}>{food}</span>
               </button>
@@ -742,7 +742,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       </div>
 
       {/* ═══ SAVE BUTTON ═══ */}
-      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: '#050505', letterSpacing: '2px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, marginBottom: 8 }}>
+      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, marginBottom: 8 }}>
         {saving ? 'Enregistrement...' : 'Sauvegarder & recalculer'}
       </button>
 
@@ -756,7 +756,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             <button onClick={() => setShowRegenCard(false)} style={{ flex: 1, padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700, color: TEXT_MUTED, letterSpacing: '1px' }}>
               Non merci
             </button>
-            <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: GOLD, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: '#050505', letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
+            <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: GOLD, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
               {regenerating ? 'Generation...' : 'Regenerer mon plan IA'}
             </button>
           </div>
@@ -765,7 +765,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* Toast */}
       {toastMsg && (
-        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: GREEN, color: '#050505', padding: '10px 24px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: GREEN, color: '#0D0B08', padding: '10px 24px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
           {toastMsg}
         </div>
       )}

@@ -44,7 +44,7 @@ function RestOverlay({ secs, max, onSkip }: { secs: number; max: number; onSkip:
           </div>
         </div>
         <button onClick={onSkip} className="relative z-10 w-full py-4 active:scale-95"
-          style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Passer →</button>
+          style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Passer →</button>
         <p className="text-[10px] relative z-10" style={{ color: TEXT_DIM, fontFamily: FONT_BODY }}>Recommandé : {fmt(max)}</p>
       </div>
     </div>
@@ -89,8 +89,8 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
           <h2 className="text-sm uppercase tracking-wider" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px' }}>{step === 'build' ? 'Choisir les exercices' : 'Configurer'}</h2>
           {step === 'build'
             ? <button onClick={goConfig} disabled={!selected.length} className="text-[11px] uppercase px-4 py-2 active:scale-95"
-                style={{ background: selected.length ? GOLD : BG_CARD, color: selected.length ? '#050505' : TEXT_DIM, fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: selected.length ? 'none' : `1px solid ${BORDER}` }}>Suite ({selected.length})</button>
-            : <button onClick={launch} className="text-[11px] uppercase px-4 py-2 active:scale-95" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none' }}>Lancer !</button>}
+                style={{ background: selected.length ? GOLD : BG_CARD, color: selected.length ? '#0D0B08' : TEXT_DIM, fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: selected.length ? 'none' : `1px solid ${BORDER}` }}>Suite ({selected.length})</button>
+            : <button onClick={launch} className="text-[11px] uppercase px-4 py-2 active:scale-95" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none' }}>Lancer !</button>}
         </div>
         {step === 'build' && <>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Nom de la séance..."
@@ -106,7 +106,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
             {['Tous', ...muscles].map(m => (
               <button key={m} onClick={() => setFilter(m === 'Tous' ? '' : (filter === m ? '' : m))}
                 className="flex-shrink-0 px-3 py-1.5 text-[10px] uppercase"
-                style={{ background: (m === 'Tous' && !filter) || filter === m ? GOLD : BG_BASE, color: (m === 'Tous' && !filter) || filter === m ? '#050505' : TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', borderRadius: 12 }}>
+                style={{ background: (m === 'Tous' && !filter) || filter === m ? GOLD : BG_BASE, color: (m === 'Tous' && !filter) || filter === m ? '#0D0B08' : TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', borderRadius: 12 }}>
                 {m}
               </button>
             ))}
@@ -162,7 +162,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
             <div key={e.id} className="p-4" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 flex items-center justify-center" style={{ background: GOLD, borderRadius: RADIUS_CARD }}>
-                  <span className="text-xs" style={{ color: '#050505', fontFamily: FONT_DISPLAY, fontWeight: 700 }}>{i + 1}</span>
+                  <span className="text-xs" style={{ color: '#0D0B08', fontFamily: FONT_DISPLAY, fontWeight: 700 }}>{i + 1}</span>
                 </div>
                 <div>
                   <div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.name}</div>
@@ -299,7 +299,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
         <div className="w-full space-y-2 mb-7">
           {exos.map(e => { const d = e.sets.filter(s => s.done); if (!d.length) return null; const best = Math.max(...d.map(s => Number(s.weight) || 0)); return (<div key={e.id} className="px-4 py-3 flex justify-between items-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}><div><div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.name}</div><div className="text-[10px]" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{d.length} sets · {e.muscle}</div></div><div className="text-right"><div className="text-sm" style={{ color: GOLD, fontFamily: FONT_DISPLAY }}>{best > 0 ? `${best} kg` : '—'}</div><div className="text-[9px]" style={{ color: TEXT_DIM, fontFamily: FONT_ALT, fontWeight: 700 }}>max</div></div></div>) })}
         </div>
-        <button onClick={onClose} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Dashboard</button>
+        <button onClick={onClose} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Dashboard</button>
       </div>
     </div>
   )
@@ -349,7 +349,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
               {motivationalMsg}
             </p>
             <button onClick={() => setShowTimerAlert(false)} style={{
-              background: GOLD, color: '#050505', border: 'none',
+              background: GOLD, color: '#0D0B08', border: 'none',
               fontFamily: FONT_ALT, fontWeight: 800, fontSize: 16, letterSpacing: 2,
               padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
               
@@ -362,7 +362,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       {/* HEADER */}
-      <div className="sticky top-0 z-40 border-b" style={{ background: '#080808', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '40px 16px 12px', position: 'relative' }}>
+      <div className="sticky top-0 z-40 border-b" style={{ background: '#0D0B08', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '40px 16px 12px', position: 'relative' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/stitch-barbell.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, pointerEvents: 'none' }} />
         <div className="flex items-center justify-between mb-2" style={{ position: 'relative', zIndex: 1 }}>
           <h1 className="text-xl truncate" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', margin: 0 }}>{sessionName}</h1>
@@ -401,7 +401,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
                 <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
                   <ExercisePreview name={exo.name} size={80} animate={false} />
-                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={22} color="#050505" strokeWidth={3} /></div>}
+                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
@@ -538,7 +538,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                               }}
                               onMouseDown={e => { if (ok) (e.currentTarget.style.transform = 'scale(1.05)') }}
                               onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
-                              ><Check size={16} strokeWidth={3} style={{ color: ok ? '#050505' : TEXT_DIM }} /></button>
+                              ><Check size={16} strokeWidth={3} style={{ color: ok ? '#0D0B08' : TEXT_DIM }} /></button>
                             )}
                           </div>
                         </div>
@@ -569,20 +569,20 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
             <Trophy size={32} className="mx-auto mb-2" style={{ color: GOLD }} />
             <p className="text-base mb-1" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px' }}>Séance complète ! 🔥</p>
             <p className="text-sm mb-4" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{dur(elapsed)} · {Math.round(volume)} kg</p>
-            <button onClick={finish} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#050505', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>🏆 Terminer</button>
+            <button onClick={finish} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>🏆 Terminer</button>
           </div>
         )}
       </div>
 
       {/* BARRE BAS */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0a0a0a', borderTop: `1px solid ${BORDER}`, minHeight: 70, padding: '12px 16px', paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, minHeight: 70, padding: '12px 16px', paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center' }}>
           <button onClick={onClose} className="active:scale-95" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '10px 16px', color: '#EF4444', fontSize: 13, fontWeight: 500, fontFamily: FONT_BODY, cursor: 'pointer' }}>Abandonner</button>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>TEMPS</span>
             <span style={{ fontSize: 24, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={finish} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#080808', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
+          <button onClick={finish} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
         </div>
       </div>
     </div>

@@ -1,20 +1,21 @@
-// ─── Stitch Design System v2 — Gold Luxury ───
-export const BG_BASE = '#080808'
-export const BG_CARD = '#141414'
-export const BG_CARD_2 = '#1c1b1b'
+// ─── Swiss Luxury Dark Gold Design System ───
+export const BG_BASE = '#0D0B08'
+export const BG_CARD = '#141209'
+export const BG_CARD_2 = '#1A1712'
 export const SURFACE_HIGH = '#2a2a2a'
-export const BORDER = 'rgba(201,168,76,0.15)'
-export const GOLD = '#C9A84C'
+export const BORDER = 'rgba(212,168,67,0.25)'
+export const GOLD = '#D4A843'
 export const GOLD_BRIGHT = '#E8C97A'
-export const GOLD_DIM = 'rgba(201,168,76,0.10)'
-export const GOLD_RULE = 'rgba(201,168,76,0.25)'
-export const GOLD_GLOW = '0 0 20px rgba(201,168,76,0.15)'
+export const GOLD_DIM = 'rgba(212,168,67,0.12)'
+export const GOLD_RULE = 'rgba(212,168,67,0.25)'
+export const GOLD_GLOW = '0 0 20px rgba(212,168,67,0.15)'
+export const GOLD_BORDER_STRONG = 'rgba(212,168,67,0.5)'
 export const GREEN = '#4ade80'
 export const RED = '#ef4444'
 export const BLUE = '#60A5FA'
-export const TEXT_PRIMARY = '#e5e2e1'
-export const TEXT_MUTED = '#d0c5b2'
-export const TEXT_DIM = '#4d4637'
+export const TEXT_PRIMARY = '#F5EDD8'
+export const TEXT_MUTED = '#8A8070'
+export const TEXT_DIM = '#3A3528'
 export const RADIUS_CARD = 16
 export const RADIUS_BTN = 12
 export const RADIUS_INPUT = 10

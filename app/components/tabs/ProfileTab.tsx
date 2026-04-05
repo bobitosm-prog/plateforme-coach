@@ -165,7 +165,7 @@ export default function ProfileTab({
               placeholder="+33 6 00 00 00 00"
               style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', fontFamily: FONT_BODY }}
             />
-            <button onClick={savePhone} style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '8px 14px', color: '#080808', fontFamily: FONT_ALT, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>OK</button>
+            <button onClick={savePhone} style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '8px 14px', color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>OK</button>
             <button onClick={() => { setPhoneEditing(false); setPhoneForm(profile?.phone || '') }} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', color: TEXT_MUTED, fontSize: '0.8rem', cursor: 'pointer', fontFamily: FONT_ALT }}>✕</button>
           </div>
         ) : (
@@ -424,7 +424,7 @@ export default function ProfileTab({
           return (
             <div>
               <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5, fontFamily: FONT_BODY, fontWeight: 300 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
-              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#080808', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer',  }}>
+              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer',  }}>
                 S&apos;abonner — Dès CHF 10/mois
               </button>
             </div>

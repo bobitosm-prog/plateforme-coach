@@ -110,7 +110,7 @@ export default function CtaSection() {
           style={{
             display: 'inline-block',
             background: 'var(--gold)',
-            color: '#050505',
+            color: '#0D0B08',
             fontFamily: 'var(--font-alt)',
             fontWeight: 800,
             fontSize: 16,
