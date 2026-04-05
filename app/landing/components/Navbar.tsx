@@ -46,7 +46,7 @@ export default function Navbar() {
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img
-            src="https://app.moovx.ch/logo-moovx.png"
+            src="https://app.moovx.ch/logo-moovx.svg"
             alt="MoovX"
             style={{
               width: 32,

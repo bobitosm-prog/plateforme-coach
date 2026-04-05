@@ -177,19 +177,8 @@ export default function HomeTab({
     <div style={{ background: BG_BASE, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
-      {/* ═══ HEADER ═══ */}
-      <div style={{ padding: '20px 24px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: GOLD, letterSpacing: '0.15em' }}>MOOVX</span>
-            <SwissBadge variant="outline" />
-          </div>
-          <button onClick={() => avatarRef.current?.click()} style={{ width: 36, height: 36, borderRadius: '50%', background: displayAvatar ? 'transparent' : BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
-            {displayAvatar
-              ? <img src={displayAvatar} style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: '50%' }} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-              : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{firstName.charAt(0).toUpperCase()}</span>}
-          </button>
-        </div>
+      {/* ═══ GREETING ═══ */}
+      <div style={{ padding: '8px 24px 0' }}>
         <p style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 3, textTransform: 'uppercase', margin: '0 0 4px' }}>
           {format(new Date(), 'EEEE d MMMM', { locale: fr })}
         </p>

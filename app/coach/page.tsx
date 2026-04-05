@@ -98,7 +98,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: BG_BASE, gap: 24 }}>
-      <img src="/logo-moovx.png" alt="MoovX" width={80} height={80} style={{ borderRadius: 2 }} />
+      <img src="/logo-moovx.svg" alt="MoovX" width={80} height={80} style={{ borderRadius: 2 }} />
       <span style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 800, color: GOLD, letterSpacing: '3px' }}>MOOVX</span>
       <div style={{ width: 32, height: 32, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
@@ -200,7 +200,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
       <nav style={{ background: BG_BASE, borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <img src="/logo-moovx.png" alt="MoovX" width={32} height={32} style={{ borderRadius: 2 }} />
+            <img src="/logo-moovx.svg" alt="MoovX" width={32} height={32} style={{ borderRadius: 2 }} />
             <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.35rem', fontWeight: 700, color: GOLD, letterSpacing: '3px' }}>MOOVX</span>
           </a>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

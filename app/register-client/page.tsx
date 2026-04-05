@@ -201,7 +201,7 @@ function RegisterContent() {
 
         {/* Mobile logo */}
         <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-          <img src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
+          <img src="/logo-moovx.svg" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 3, color: GOLD }}>MOOVX</span>
         </div>
         <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
@@ -482,7 +482,7 @@ function LeftPanel() {
 
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 40px' }}>
-        <img src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px rgba(201,168,76,0.2)' }} />
+        <img src="/logo-moovx.svg" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px rgba(201,168,76,0.2)' }} />
         <div style={{ fontFamily: FONT_DISPLAY, fontSize: 32, letterSpacing: 3, color: GOLD, marginBottom: 8 }}>MOOVX</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
           <span style={{ fontSize: 14 }}>🇨🇭</span>

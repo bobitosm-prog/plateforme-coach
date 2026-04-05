@@ -55,7 +55,7 @@ export default function FooterSection() {
           {/* Brand row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <img
-              src="/logo-moovx.png"
+              src="/logo-moovx.svg"
               alt="MoovX"
               width={24}
               height={24}

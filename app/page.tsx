@@ -39,7 +39,7 @@ export default function CoachApp() {
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0D0B08', gap: 24 }}>
-      <img src="/logo-moovx.png" alt="MoovX Logo" width={80} height={80} style={{ borderRadius: 20 }} />
+      <img src="/logo-moovx.svg" alt="MoovX Logo" width={80} height={80} style={{ borderRadius: 20 }} />
       <span style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 800, color: GOLD, letterSpacing: '0.15em' }}>MOOVX</span>
       <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#D4A843', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
@@ -60,7 +60,7 @@ export default function CoachApp() {
     <div style={{ minHeight: '100dvh', background: '#0D0B08', display: 'flex', flexDirection: 'column' }}>
       {h.trialExpired && (
         <div style={{ textAlign: 'center', padding: '40px 24px 0' }}>
-          <img src="/logo-moovx.png" alt="MoovX Logo" width={56} height={56} style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block' }} />
+          <img src="/logo-moovx.svg" alt="MoovX Logo" width={56} height={56} style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block' }} />
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(1.6rem,4vw,2.2rem)', letterSpacing: 3, color: '#F8FAFC', margin: '0 0 8px' }}>TA PÉRIODE D&apos;ESSAI EST TERMINÉE</h1>
           <p style={{ color: '#555', fontSize: '0.88rem', margin: '0 0 4px', fontFamily: FONT_BODY, fontWeight: 300, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
             Ton essai gratuit de 10 jours est arrivé à son terme. Abonne-toi pour continuer à utiliser MoovX.
@@ -79,7 +79,7 @@ export default function CoachApp() {
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: BG_BASE, borderRight: `1px solid ${BORDER}`, zIndex: 50, padding: '24px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 20px', marginBottom: 32 }}>
-          <img src="/logo-moovx.png" alt="MoovX Logo" width={32} height={32} style={{ borderRadius: 8 }} />
+          <img src="/logo-moovx.svg" alt="MoovX Logo" width={32} height={32} style={{ borderRadius: 8 }} />
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 800, color: GOLD, letterSpacing: 3 }}>MOOVX</span>
         </div>
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 12px' }}>
@@ -283,7 +283,7 @@ export default function CoachApp() {
         {/* Left: Logo + Swiss Badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 26, letterSpacing: 5, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>MOOVX</span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: GOLD, color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 7, letterSpacing: 1.5, padding: '2px 6px', borderRadius: 3 }}>SWISS</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: GOLD, color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 7, letterSpacing: 1.5, padding: '2px 6px', borderRadius: 3 }}>{'\uD83C\uDDE8\uD83C\uDDED'} SWISS MADE</span>
         </div>
         {/* Right: Progress + Messages + Avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
