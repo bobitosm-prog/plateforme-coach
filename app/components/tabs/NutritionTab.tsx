@@ -664,6 +664,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               const todayPlan = getTodayPlanData()
               const foods = todayPlan ? (Array.isArray(todayPlan.planData.repas?.[importingMeal]) ? todayPlan.planData.repas[importingMeal] : []) : []
               return (
+                <>
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1100 }} onClick={() => setImportingMeal(null)} />
                 <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200, background: BG_CARD, border: `1px solid ${BORDER}`, borderBottom: 'none', borderRadius: '20px 20px 0 0', padding: '24px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 20px) + 24px)', maxHeight: '75vh', overflowY: 'auto' }}>
                   <div style={{ width: 40, height: 4, borderRadius: 2, background: GOLD_RULE, margin: '0 auto 16px' }} />
@@ -683,6 +684,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     <button onClick={() => importMealFromPlan(importingMeal)} style={{ flex: 1, padding: 14, border: 'none', background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer', boxShadow: '0 4px 20px rgba(212,168,67,0.2)' }}>IMPORTER</button>
                   </div>
                 </div>
+                </>
               )
             })()}
 
