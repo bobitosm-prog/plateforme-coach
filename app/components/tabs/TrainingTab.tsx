@@ -72,6 +72,15 @@ export default function TrainingTab({
   const [showProgramBuilder, setShowProgramBuilder] = useState(false)
   const [activeCustomProgram, setActiveCustomProgram] = useState<any>(null)
   const [editingProgram, setEditingProgram] = useState<any>(null)
+  // Feature: add exercise in session
+  const [addedExercises, setAddedExercises] = useState<any[]>([])
+  const [showAddExercise, setShowAddExercise] = useState(false)
+  const [exerciseSearchQ, setExerciseSearchQ] = useState('')
+  const [exerciseSearchResults, setExerciseSearchResults] = useState<any[]>([])
+  // Feature: save choice popup
+  const [showSaveChoice, setShowSaveChoice] = useState(false)
+  // Feature: swap exercise
+  const [swapping, setSwapping] = useState<string | null>(null)
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
@@ -87,7 +96,8 @@ export default function TrainingTab({
     return { repos: false, exercises: (customDay.exercises || []).map((ex: any) => ({ name: ex.exercise_name || ex.custom_name || ex.name || 'Exercice', sets: ex.sets || 3, reps: ex.reps || 10, rest_seconds: ex.rest_seconds || 90, muscle_group: ex.muscle_group || customDay.focus || '' })) }
   })()
   const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
-  const trainingExercises: any[] = trainingDayData?.exercises || []
+  const baseExercises: any[] = trainingDayData?.exercises || []
+  const trainingExercises: any[] = [...baseExercises, ...addedExercises]
 
   const trainingTotalSets = trainingExercises.reduce((s: number, ex: any) => {
     const key = `moovx-sets-${todayStr}-${ex.name}`
@@ -300,6 +310,84 @@ export default function TrainingTab({
     setRestTimer(0)
     setRestingSet(null)
     setActiveRestExName(null)
+  }
+
+  // ── Search exercises for add-to-session popup ──
+  useEffect(() => {
+    if (!showAddExercise) return
+    if (exerciseSearchQ.length < 1) {
+      supabase.from('exercises_db').select('id, name, muscle_group').order('name').limit(50)
+        .then(({ data }: any) => setExerciseSearchResults(data || []))
+      return
+    }
+    const t = setTimeout(async () => {
+      const { data } = await supabase.from('exercises_db').select('id, name, muscle_group').ilike('name', `%${exerciseSearchQ}%`).limit(30)
+      setExerciseSearchResults(data || [])
+    }, 200)
+    return () => clearTimeout(t)
+  }, [showAddExercise, exerciseSearchQ])
+
+  function addExerciseToSession(ex: any) {
+    const newEx = { name: ex.name, sets: 3, reps: 12, rest_seconds: 90, muscle_group: ex.muscle_group || '', isAdded: true }
+    setAddedExercises(prev => [...prev, newEx])
+    // Init localStorage for the new exercise
+    const key = `moovx-sets-${todayStr}-${newEx.name}`
+    const inputKey = `moovx-inputs-${todayStr}-${newEx.name}`
+    const setsArr = Array.from({ length: 3 }, () => false)
+    const inputsArr = Array.from({ length: 3 }, () => ({ kg: '', reps: '12' }))
+    setCompletedSets(prev => ({ ...prev, [key]: setsArr }))
+    setSetInputs(prev => ({ ...prev, [newEx.name]: inputsArr }))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(key, JSON.stringify(setsArr))
+      localStorage.setItem(inputKey, JSON.stringify(inputsArr))
+    }
+  }
+
+  async function handleSwapExercise(ex: any) {
+    setSwapping(ex.name)
+    try {
+      const res = await fetch('/api/suggest-exercise', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exerciseName: ex.name, muscleGroup: ex.muscle_group || '', reason: 'Remplacement rapide', availableEquipment: 'Salle complète' }),
+      })
+      const data = await res.json()
+      if (data.suggestions?.[0]) {
+        const suggestion = data.suggestions[0]
+        // Replace in added exercises if it was added
+        setAddedExercises(prev => prev.map(e => e.name === ex.name ? { ...e, name: suggestion.name } : e))
+        toast.success(`Remplacé par : ${suggestion.name}`)
+      }
+    } catch { toast.error('Erreur de remplacement') }
+    finally { setSwapping(null) }
+  }
+
+  function handleFinishWithCheck() {
+    if (addedExercises.length > 0) {
+      setShowSaveChoice(true)
+    } else {
+      finishTrainingWorkout()
+    }
+  }
+
+  async function saveWithModifications() {
+    // Save session + update the custom program with new exercises
+    await finishTrainingWorkout()
+    if (activeCustomProgram?.id) {
+      const dayIndex = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
+      const updatedDays = [...(activeCustomProgram.days || [])]
+      if (updatedDays[dayIndex]) {
+        const existingExs = updatedDays[dayIndex].exercises || []
+        const newExs = addedExercises.map(ex => ({ exercise_name: ex.name, custom_name: ex.name, sets: ex.sets, reps: ex.reps, rest_seconds: ex.rest_seconds, muscle_group: ex.muscle_group }))
+        updatedDays[dayIndex] = { ...updatedDays[dayIndex], exercises: [...existingExs, ...newExs] }
+        await supabase.from('custom_programs').update({ days: updatedDays }).eq('id', activeCustomProgram.id)
+      }
+    }
+    setAddedExercises([])
+  }
+
+  async function saveOriginal() {
+    await finishTrainingWorkout()
+    setAddedExercises([])
   }
 
   async function finishTrainingWorkout() {
@@ -547,7 +635,7 @@ export default function TrainingTab({
         elapsedSecs={elapsedSecs}
         trainingDoneSets={trainingDoneSets}
         trainingTotalSets={trainingTotalSets}
-        onFinish={finishTrainingWorkout}
+        onFinish={handleFinishWithCheck}
         fmtElapsed={fmtElapsed}
       />
 
@@ -658,6 +746,13 @@ export default function TrainingTab({
                 )
               })}
 
+              {/* ── Add Exercise to Session ── */}
+              {trainingIsToday && (workoutStarted || trainingDoneSets > 0) && (
+                <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 14, background: 'transparent', border: `1.5px dashed rgba(212,168,67,0.4)`, borderRadius: 12, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  + AJOUTER UN EXERCICE
+                </button>
+              )}
+
               {/* ── Browse Exercise DB ── */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -689,7 +784,7 @@ export default function TrainingTab({
               {trainingIsToday && !workoutStarted && trainingDoneSets > 0 && (
                 <motion.button
                   whileTap={{ scale: 0.97 }}
-                  onClick={finishTrainingWorkout}
+                  onClick={handleFinishWithCheck}
                   style={{
                     width: '100%', background: GREEN, color: '#0D0B08',
                     fontWeight: 700, padding: '16px', borderRadius: RADIUS_CARD, border: 'none',
@@ -755,6 +850,47 @@ export default function TrainingTab({
           onSave={refreshPrograms}
           editProgram={editingProgram}
         />
+      )}
+
+      {/* ═══ ADD EXERCISE POPUP ═══ */}
+      {showAddExercise && (
+        <>
+          <div onClick={() => setShowAddExercise(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 420, maxHeight: '70vh', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+            <div style={{ padding: '20px 20px 12px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY }}>AJOUTER UN EXERCICE</span>
+                <button onClick={() => setShowAddExercise(false)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 22, cursor: 'pointer' }}>✕</button>
+              </div>
+              <input type="text" placeholder="Rechercher..." value={exerciseSearchQ} onChange={e => setExerciseSearchQ(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 14, outline: 'none' }} />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 20px' }}>
+              {exerciseSearchResults.map((ex: any) => (
+                <button key={ex.id} onClick={() => { addExerciseToSession(ex); setShowAddExercise(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${GOLD_DIM}`, cursor: 'pointer', textAlign: 'left' }}>
+                  <div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{ex.name}</div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{ex.muscle_group || ''}</div>
+                  </div>
+                  <span style={{ color: GOLD, fontSize: 22 }}>+</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ═══ SAVE CHOICE POPUP ═══ */}
+      {showSaveChoice && (
+        <>
+          <div onClick={() => setShowSaveChoice(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 40px)', maxWidth: 380, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, zIndex: 1101, textAlign: 'center' }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: GOLD_DIM, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 16px' }}>💾</div>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>SEANCE MODIFIEE</h3>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 24 }}>Tu as ajoute des exercices. Veux-tu les garder pour les prochaines fois ?</p>
+            <button onClick={async () => { await saveWithModifications(); setShowSaveChoice(false) }} style={{ width: '100%', padding: 16, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, border: 'none', borderRadius: 12, cursor: 'pointer', marginBottom: 10, boxShadow: '0 4px 20px rgba(212,168,67,0.2)' }}>GARDER LES MODIFICATIONS</button>
+            <button onClick={async () => { await saveOriginal(); setShowSaveChoice(false) }} style={{ width: '100%', padding: 16, background: 'transparent', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, cursor: 'pointer' }}>GARDER LA SEANCE DE BASE</button>
+          </div>
+        </>
       )}
     </div>
   )
