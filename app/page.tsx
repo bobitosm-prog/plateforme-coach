@@ -282,8 +282,11 @@ export default function CoachApp() {
         <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18 }}>
           {/* Left: Coach IA + Messages */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3 }}>
-            <button onClick={() => h.setActiveTab(h.hasRealCoach ? 'messages' : 'coachIA')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: (h.activeTab === 'messages' || h.activeTab === 'coachIA') ? GOLD_DIM : 'transparent', border: (h.activeTab === 'messages' || h.activeTab === 'coachIA') ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s', position: 'relative' }}>
-              {h.hasRealCoach ? <MessageCircle size={19} color={(h.activeTab === 'messages') ? GOLD : TEXT_MUTED} strokeWidth={1.5} /> : <Bot size={19} color={h.activeTab === 'coachIA' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />}
+            <button onClick={() => h.setActiveTab('coachIA')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'coachIA' ? GOLD_DIM : 'transparent', border: h.activeTab === 'coachIA' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
+              <Bot size={19} color={h.activeTab === 'coachIA' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
+            </button>
+            <button onClick={() => h.setActiveTab('messages')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'messages' ? GOLD_DIM : 'transparent', border: h.activeTab === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s', position: 'relative' }}>
+              <MessageCircle size={19} color={h.activeTab === 'messages' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
               {h.unreadCount > 0 && <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: RED, border: '2px solid rgba(20,18,9,0.8)' }} />}
             </button>
           </div>
@@ -296,8 +299,8 @@ export default function CoachApp() {
             <button onClick={() => h.setActiveTab('progress')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'progress' ? GOLD_DIM : 'transparent', border: h.activeTab === 'progress' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
               <TrendingUp size={19} color={h.activeTab === 'progress' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
             </button>
-            <button onClick={() => h.setActiveTab('profil')} style={{ width: 34, height: 34, borderRadius: '50%', border: h.activeTab === 'profil' ? `1.5px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', transition: 'all 0.3s', padding: 0, marginLeft: 2 }}>
-              {h.displayAvatar ? <img src={h.displayAvatar} alt="Profil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={16} color={h.activeTab === 'profil' ? GOLD : TEXT_MUTED} />}
+            <button onClick={() => h.setActiveTab('profil')} style={{ width: 34, height: 34, borderRadius: '50%', border: h.activeTab === 'profil' ? `1.5px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: h.activeTab === 'profil' ? GOLD_DIM : 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s', padding: 0, marginLeft: 2 }}>
+              <User size={16} color={h.activeTab === 'profil' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
             </button>
           </div>
         </div>
