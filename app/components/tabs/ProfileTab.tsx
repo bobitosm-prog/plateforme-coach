@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Trash2, UserMinus, Download, X, Clock, Calendar, Volume2 } from 'lucide-react'
+import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Download, X, Clock, Calendar, Volume2 } from 'lucide-react'
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
 import {
@@ -10,6 +10,9 @@ import {
 } from '../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
 import SwissBadge from '../ui/SwissBadge'
+import CoachSection from './profile/CoachSection'
+import PaymentHistory from './profile/PaymentHistory'
+import DeleteAccountSection from './profile/DeleteAccountSection'
 
 const ORANGE = GOLD
 
@@ -501,165 +504,4 @@ export default function ProfileTab({
 }
 
 /* Coach Section (multi-coach) */
-function CoachSection({ supabase, session, coachId }: { supabase: any; session: any; coachId: string | null }) {
-  const [coachName, setCoachName] = useState<string | null>(null)
-  const [showLeaveModal, setShowLeaveModal] = useState(false)
-  const [leaving, setLeaving] = useState(false)
-
-  useEffect(() => {
-    if (!coachId) return
-    supabase.from('profiles').select('full_name').eq('id', coachId).single().then(({ data }: any) => {
-      if (data?.full_name) setCoachName(data.full_name)
-    })
-  }, [coachId])
-
-  async function leaveCoach() {
-    if (!coachId || !session?.user?.id) return
-    setLeaving(true)
-    await supabase.from('coach_clients').delete().eq('client_id', session.user.id).eq('coach_id', coachId)
-    setLeaving(false)
-    window.location.reload()
-  }
-
-  return (
-    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginTop: 12, marginBottom: 8 }}>
-      <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Mon coach</div>
-      {coachId ? (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <Crown size={18} color={GOLD} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>{coachName || 'Coach'}</div>
-              <div style={{ fontSize: '0.7rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>Coach actif</div>
-            </div>
-            <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GREEN, background: `${GREEN}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>Actif</span>
-          </div>
-          <button onClick={() => setShowLeaveModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: TEXT_MUTED, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 600 }}>
-            <UserMinus size={14} /> Changer de coach
-          </button>
-        </>
-      ) : (
-        <div style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.5, fontFamily: FONT_BODY, fontWeight: 300 }}>
-          Aucun coach lié. Rejoins un coach via son lien d&apos;invitation.
-        </div>
-      )}
-
-      {/* Leave coach modal */}
-      {showLeaveModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 400, width: '100%' }}>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 12px' }}>CHANGER DE COACH</h3>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 8px', fontFamily: FONT_BODY, fontWeight: 300 }}>
-              Pour changer de coach, tu as besoin d&apos;un nouveau lien d&apos;invitation. Contacte ton nouveau coach pour qu&apos;il te partage son lien.
-            </p>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 16px', fontFamily: FONT_BODY, fontWeight: 300 }}>
-              Ton historique (poids, séances, mensurations) sera conservé.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={leaveCoach} disabled={leaving} style={{ width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)', border: `1px solid ${RED}`, borderRadius: 12, color: RED, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>
-                {leaving ? 'En cours...' : 'Quitter mon coach actuel'}
-              </button>
-              <button onClick={() => setShowLeaveModal(false)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* Payment History */
-function PaymentHistory({ supabase, userId }: { supabase: any; userId: string }) {
-  const [payments, setPayments] = useState<any[]>([])
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    if (!userId) return
-    supabase.from('payments').select('*').eq('client_id', userId).order('paid_at', { ascending: false }).limit(20)
-      .then(({ data }: any) => { setPayments(data || []); setLoaded(true) })
-  }, [userId])
-
-  if (!loaded) return null
-
-  return (
-    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
-      <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Historique des paiements</div>
-      {payments.length === 0 ? (
-        <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Aucun paiement enregistré</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {payments.map((p: any) => {
-            const statusColor = p.status === 'paid' ? GREEN : p.status === 'refunded' ? GOLD : RED
-            const statusLabel = p.status === 'paid' ? 'Payé' : p.status === 'refunded' ? 'Remboursé' : 'Échoué'
-            return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: BG_BASE, borderRadius: RADIUS_CARD, border: `1px solid ${BORDER}` }}>
-                <div>
-                  <div style={{ fontSize: '0.82rem', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 400 }}>CHF {p.amount || 30}</div>
-                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2, fontFamily: FONT_BODY, fontWeight: 300 }}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString('fr-FR') : '—'}</div>
-                </div>
-                <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: statusColor, background: `${statusColor}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>{statusLabel}</span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* Delete Account */
-function DeleteAccountSection({ session }: { session: any }) {
-  const [showModal, setShowModal] = useState(false)
-  const [confirmText, setConfirmText] = useState('')
-  const [deleting, setDeleting] = useState(false)
-
-  async function deleteAccount() {
-    if (confirmText !== 'SUPPRIMER') return
-    setDeleting(true)
-    try {
-      const res = await fetch('/api/delete-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: session.user.id }),
-      })
-      if (res.ok) {
-        window.location.href = '/landing'
-      } else {
-        const { error } = await res.json()
-        alert(`Erreur : ${error || 'Échec de la suppression'}`)
-        setDeleting(false)
-      }
-    } catch {
-      alert('Erreur réseau')
-      setDeleting(false)
-    }
-  }
-
-  return (
-    <>
-      <button onClick={() => setShowModal(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 12, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', marginTop: 24 }}>
-        <Trash2 size={16} color={RED} />
-        <span style={{ fontSize: '0.82rem', fontFamily: FONT_ALT, fontWeight: 600, color: RED }}>Supprimer mon compte</span>
-      </button>
-
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: BG_CARD, border: `1px solid ${RED}`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 400, width: '100%' }}>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, letterSpacing: '2px', color: RED, margin: '0 0 12px' }}>SUPPRIMER MON COMPTE</h3>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 16px', fontFamily: FONT_BODY, fontWeight: 300 }}>
-              Es-tu sûr de vouloir supprimer ton compte ? Toutes tes données seront supprimées définitivement. Cette action est irréversible.
-            </p>
-            <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, margin: '0 0 8px', fontFamily: FONT_BODY }}>Tape <strong style={{ color: RED }}>SUPPRIMER</strong> pour confirmer :</p>
-            <input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="SUPPRIMER" style={{ width: '100%', background: BG_BASE, border: `1px solid ${confirmText === 'SUPPRIMER' ? RED : BORDER}`, borderRadius: 12, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', marginBottom: 16, fontFamily: FONT_BODY }} />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => { setShowModal(false); setConfirmText('') }} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>Annuler</button>
-              <button onClick={deleteAccount} disabled={confirmText !== 'SUPPRIMER' || deleting} style={{ flex: 1, padding: '12px', background: confirmText === 'SUPPRIMER' ? RED : '#333', borderRadius: 12, border: 'none', color: '#fff', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: confirmText === 'SUPPRIMER' ? 'pointer' : 'default', opacity: confirmText === 'SUPPRIMER' ? 1 : 0.5 }}>
-                {deleting ? 'Suppression...' : 'Supprimer'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  )
-}
+// CoachSection, PaymentHistory, DeleteAccountSection extracted to ./profile/
