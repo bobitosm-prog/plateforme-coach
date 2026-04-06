@@ -13,7 +13,8 @@ import {
   todayNutritionKey,
 } from '../../../lib/design-tokens'
 import SwissBadge from '../ui/SwissBadge'
-import { getLevelFromXP, getLevelTitle } from '../../../lib/gamification'
+import MuscleHeatMap, { calculateMuscleStatus } from '../ui/MuscleHeatMap'
+import { getLevelFromXP, getLevelTitle, addXP } from '../../../lib/gamification'
 
 const QUOTES: Record<string, string[]> = {
   bulk: [
@@ -120,6 +121,9 @@ export default function HomeTab({
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekSessions, setWeekSessions] = useState(0)
   const [xpData, setXpData] = useState<{ total_xp: number; current_streak: number } | null>(null)
+  const [muscleStatus, setMuscleStatus] = useState<Record<string, number>>({})
+  const [todayHabit, setTodayHabit] = useState<any>(null)
+  const [habitValues, setHabitValues] = useState<Record<string, number>>({})
 
   // Fetch today's consumed calories
   useEffect(() => {
@@ -224,6 +228,16 @@ export default function HomeTab({
     // Fetch XP data
     supabase.from('user_xp').select('total_xp, current_streak').eq('user_id', userId).maybeSingle()
       .then(({ data }: any) => { if (data) setXpData(data) })
+
+    // Fetch muscle status from recent workout sets
+    const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString()
+    supabase.from('workout_sets').select('exercise_name, created_at').eq('user_id', userId).gte('created_at', threeDaysAgo).limit(200)
+      .then(({ data }: any) => { if (data) setMuscleStatus(calculateMuscleStatus(data)) })
+
+    // Fetch today's habit check-in
+    const todayDate = new Date().toISOString().split('T')[0]
+    supabase.from('daily_habits').select('*').eq('user_id', userId).eq('date', todayDate).maybeSingle()
+      .then(({ data }: any) => { if (data) setTodayHabit(data) })
   }, [session?.user?.id])
 
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
@@ -455,6 +469,55 @@ export default function HomeTab({
             </button>
           ))}
         </div>
+
+        {/* ═══ MUSCLE HEAT MAP ═══ */}
+        <MuscleHeatMap muscleStatus={muscleStatus} />
+
+        {/* ═══ DAILY HABIT CHECK-IN ═══ */}
+        {!todayHabit ? (
+          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
+            <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 3, color: GOLD, marginBottom: 10 }}>CHECK-IN DU JOUR</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { key: 'mood', label: 'Humeur', emojis: ['\u{1F62B}','\u{1F615}','\u{1F610}','\u{1F60A}','\u{1F525}'] },
+                { key: 'energy', label: 'Energie', emojis: ['\u{1FAB4}','\u{1F634}','\u26A1','\u{1F4AA}','\u{1F680}'] },
+              ].map(({ key, label, emojis }) => (
+                <div key={key} style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 8, color: TEXT_MUTED, letterSpacing: 1, marginBottom: 6 }}>{label}</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                    {emojis.map((e, i) => (
+                      <button key={i} onClick={() => setHabitValues(prev => ({ ...prev, [key]: i + 1 }))} style={{ background: habitValues[key] === i + 1 ? GOLD_DIM : 'transparent', border: habitValues[key] === i + 1 ? `1px solid ${GOLD_RULE}` : '1px solid transparent', borderRadius: 6, width: 28, height: 28, fontSize: 14, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{e}</button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+              <span style={{ fontFamily: FONT_ALT, fontSize: 9, color: TEXT_MUTED, letterSpacing: 1 }}>SOMMEIL</span>
+              <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={habitValues.sleep_hours || ''} onChange={e => setHabitValues(prev => ({ ...prev, sleep_hours: parseFloat(e.target.value) }))} style={{ width: 60, padding: '6px 8px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 18, textAlign: 'center', outline: 'none' }} />
+              <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>heures</span>
+            </div>
+            <button onClick={async () => {
+              const todayDate = new Date().toISOString().split('T')[0]
+              await supabase.from('daily_habits').upsert({ user_id: session.user.id, date: todayDate, ...habitValues })
+              try { await addXP(session.user.id, 10, supabase) } catch {}
+              setTodayHabit({ ...habitValues })
+            }} style={{ width: '100%', padding: 12, marginTop: 12, background: Object.keys(habitValues).length >= 2 ? 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)' : BG_CARD_2, color: Object.keys(habitValues).length >= 2 ? '#0D0B08' : TEXT_DIM, fontFamily: FONT_DISPLAY, fontSize: 14, letterSpacing: 2, border: 'none', borderRadius: 10, cursor: 'pointer' }}>ENREGISTRER</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+            {[
+              { emoji: ['\u{1F62B}','\u{1F615}','\u{1F610}','\u{1F60A}','\u{1F525}'][((todayHabit.mood || 3) - 1)], label: 'HUMEUR' },
+              { emoji: ['\u{1FAB4}','\u{1F634}','\u26A1','\u{1F4AA}','\u{1F680}'][((todayHabit.energy || 3) - 1)], label: 'ENERGIE' },
+              { emoji: `${todayHabit.sleep_hours || '?'}h`, label: 'SOMMEIL', isText: true },
+            ].map(i => (
+              <div key={i.label} style={{ flex: 1, background: BG_CARD, borderRadius: 10, padding: '8px 10px', textAlign: 'center', border: `1px solid ${GOLD_DIM}` }}>
+                <div style={i.isText ? { fontFamily: FONT_DISPLAY, fontSize: 18, color: GOLD } : { fontSize: 18 }}>{i.emoji}</div>
+                <div style={{ fontFamily: FONT_ALT, fontSize: 8, color: TEXT_MUTED, letterSpacing: 1 }}>{i.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ═══ NUTRITION MACROS ═══ */}
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
