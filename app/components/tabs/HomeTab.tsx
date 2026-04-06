@@ -14,6 +14,68 @@ import {
 } from '../../../lib/design-tokens'
 import SwissBadge from '../ui/SwissBadge'
 
+const QUOTES: Record<string, string[]> = {
+  bulk: [
+    'Chaque calorie compte. Tu construis la meilleure version de toi-meme.',
+    'La masse se construit jour apres jour, rep apres rep.',
+    'Ton corps est une machine — donne-lui le carburant qu\'il merite.',
+    'Aujourd\'hui tu plantes, demain tu recoltes.',
+    'Chaque repas est une brique de plus dans ta construction.',
+    'Le volume d\'aujourd\'hui, c\'est la force de demain.',
+    'Les resultats viennent a ceux qui persistent.',
+    'Mange pour performer, pas pour survivre.',
+    'Le gain est un marathon, pas un sprint.',
+    'La discipline bat la motivation chaque jour de la semaine.',
+    'Ton futur toi te remerciera pour l\'effort d\'aujourd\'hui.',
+    'Construis le physique que tu merites.',
+    'La progression silencieuse est la plus puissante.',
+    'Le fer ne ment jamais. Le travail paie toujours.',
+    'La croissance commence la ou le confort s\'arrete.',
+  ],
+  cut: [
+    'Chaque jour de discipline te rapproche de la definition parfaite.',
+    'La seche, c\'est reveler le chef-d\'oeuvre que tu as construit.',
+    'Le sacrifice temporaire pour un resultat permanent.',
+    'Ta discipline d\'aujourd\'hui est ta fierte de demain.',
+    'Brule les doutes, pas juste les calories.',
+    'Chaque choix alimentaire est un vote pour ton objectif.',
+    'Le gras part, le muscle reste. Continue.',
+    'Tu n\'es pas au regime. Tu es en transformation.',
+    'Les abdos se revelent a ceux qui persistent.',
+    'Transforme la sueur en resultats.',
+    'Tu es plus fort que tes envies.',
+    'Reste focus. Le resultat arrive.',
+    'La version shredded de toi est juste derriere l\'effort.',
+    'Controle ton assiette, controle ta transformation.',
+    'La douleur est temporaire. Le regret est eternel.',
+  ],
+  maintain: [
+    'L\'equilibre est le vrai luxe. Tu l\'as trouve.',
+    'Maintenir, c\'est maitriser. Tu controles ton physique.',
+    'La constance silencieuse est la plus grande force.',
+    'Le maintien est l\'art de la regularite.',
+    'Ton corps est une oeuvre achevee. Entretiens-la.',
+    'Le vrai succes, c\'est maintenir ce que tu as gagne.',
+    'L\'excellence, c\'est la regularite.',
+    'Tu as atteint ton objectif. Maintenant, tiens-le.',
+    'Profite du trajet, pas seulement de la destination.',
+    'Tu es exactement la ou tu dois etre.',
+    'Ta routine est ta superpuissance.',
+    'Le physique se maintient comme une montre suisse — avec precision.',
+    'La regularite bat l\'intensite sur le long terme.',
+    'Continue comme ca. Tu es sur la bonne voie.',
+    'La meilleure version de toi se construit chaque jour.',
+  ],
+}
+
+function getDailyQuote(objective?: string): string {
+  const key = (objective === 'weight_loss' || objective === 'seche') ? 'cut'
+    : (objective === 'mass' || objective === 'bulk') ? 'bulk' : 'maintain'
+  const quotes = QUOTES[key]
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000)
+  return quotes[dayOfYear % quotes.length]
+}
+
 interface HomeTabProps {
   supabase: any
   session: any
@@ -173,6 +235,10 @@ export default function HomeTab({
   })
   const barMax = Math.max(1, ...barData.map(b => b.value))
 
+  // Objective label
+  const objLabel = profile?.objective === 'weight_loss' || profile?.objective === 'seche' ? 'cut'
+    : profile?.objective === 'mass' || profile?.objective === 'bulk' ? 'bulk' : 'maintain'
+
   return (
     <div style={{ background: BG_BASE, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
@@ -182,10 +248,13 @@ export default function HomeTab({
         <p style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 3, textTransform: 'uppercase', margin: '0 0 4px' }}>
           {format(new Date(), 'EEEE d MMMM', { locale: fr })}
         </p>
-        <h1 style={{ fontFamily: FONT_DISPLAY, margin: '0 0 4px', lineHeight: 1, letterSpacing: '2px' }}>
+        <h1 style={{ fontFamily: FONT_DISPLAY, margin: '0 0 8px', lineHeight: 1, letterSpacing: '2px' }}>
           <span style={{ fontSize: 30, color: TEXT_PRIMARY }}>BONJOUR, </span>
           <span style={{ fontSize: 30, color: GOLD }}>{firstName.toUpperCase()}</span>
         </h1>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontStyle: 'italic', color: TEXT_MUTED, lineHeight: 1.5, paddingLeft: 12, borderLeft: `2px solid ${GOLD_RULE}` }}>
+          &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
+        </div>
       </div>
 
       <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -229,6 +298,33 @@ export default function HomeTab({
             </div>
           </div>
         </div>
+
+        {/* ═══ WEIGHT + OBJECTIVE CARD ═══ */}
+        {currentWeight && (
+          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 3, color: GOLD, textTransform: 'uppercase', marginBottom: 4 }}>
+                {objLabel === 'bulk' && '\u{1F4AA} PRISE DE MASSE'}
+                {objLabel === 'cut' && '\u{1F525} SECHE'}
+                {objLabel === 'maintain' && '\u2696\uFE0F MAINTIEN'}
+              </div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, lineHeight: 1 }}>
+                {currentWeight} <span style={{ fontSize: 16, color: TEXT_MUTED }}>KG</span>
+              </div>
+            </div>
+            {goalWeight && (
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase', marginBottom: 4 }}>OBJECTIF</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: GOLD, lineHeight: 1 }}>
+                  {goalWeight} <span style={{ fontSize: 14, color: TEXT_MUTED }}>KG</span>
+                </div>
+              </div>
+            )}
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: objLabel === 'bulk' ? GOLD : objLabel === 'cut' ? GOLD : GREEN }}>
+              {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}
+            </div>
+          </div>
+        )}
 
         {/* ═══ COACH BANNER ═══ */}
         <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: `1px solid ${BORDER}`, cursor: 'pointer' }}>

@@ -147,6 +147,17 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
         calories: cal, protein: prot, carbs: gluc, fat: lip,
         quantity_g: quantity,
       })
+      // Save to community_foods for future searches (upsert by name)
+      const p100 = product.per_100g
+      const { data: existing } = await supabase.from('community_foods').select('id').eq('name', product.name).maybeSingle()
+      if (!existing) {
+        await supabase.from('community_foods').insert({
+          name: product.name, brand: product.brand || null,
+          calories_per_100g: Math.round(p100.calories), protein_per_100g: Math.round(p100.proteins * 10) / 10,
+          carbs_per_100g: Math.round(p100.carbs * 10) / 10, fat_per_100g: Math.round(p100.fat * 10) / 10,
+          barcode: product.barcode || null, created_by: userId,
+        }).then(() => {}).catch(() => {}) // silently ignore if fails
+      }
       setSaving(false)
       onProductAdded()
     }

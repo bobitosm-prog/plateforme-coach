@@ -42,6 +42,7 @@ interface FoodSearchProps {
 export default function FoodSearch({ supabase, userId, defaultMealType, onAdded, onClose }: FoodSearchProps) {
   const [query, setQuery] = useState('')
   const [allFoods, setAllFoods] = useState<any[]>([])
+  const [ansesResults, setAnsesResults] = useState<any[]>([])
   const [likedIds, setLikedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<any>(null)
@@ -50,6 +51,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
   const [saving, setSaving] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const today = new Date().toISOString().split('T')[0]
 
   // Load all fitness foods + user favorites once
@@ -67,6 +69,17 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
     setTimeout(() => inputRef.current?.focus(), 100)
   }, [])
 
+  // Live search ANSES/Ciqual when query >= 2 chars
+  useEffect(() => {
+    clearTimeout(searchTimer.current)
+    if (query.length < 2) { setAnsesResults([]); return }
+    searchTimer.current = setTimeout(async () => {
+      const { data } = await supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', `%${query}%`).limit(20)
+      setAnsesResults((data || []).map((f: any) => ({ ...normalizeFoodItem(f), cat: categorize(f.name || '') })))
+    }, 300)
+    return () => clearTimeout(searchTimer.current)
+  }, [query])
+
   const filtered = query.length >= 1
     ? allFoods.filter(f => f.nom.toLowerCase().includes(query.toLowerCase()))
     : allFoods
@@ -78,6 +91,10 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
   })).filter(g => g.foods.length > 0)
   const autres = filtered.filter(f => f.cat === 'autres' && !likedIds.includes(f.id))
   if (autres.length > 0) grouped.push({ key: 'autres', label: 'Autres', icon: '🍽️', patterns: [], foods: autres })
+  // Add ANSES results as a separate group when searching
+  if (query.length >= 2 && ansesResults.length > 0) {
+    grouped.push({ key: 'ciqual', label: 'Base Ciqual/ANSES', icon: '📊', patterns: [], foods: ansesResults })
+  }
 
   async function addFood() {
     if (!selected || saving) return
@@ -223,9 +240,10 @@ function FoodRow({ food, isFav, onSelect }: { food: any; isFav?: boolean; onSele
     <button onClick={onSelect}
       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '10px 0', background: 'none', border: 'none', borderBottom: `1px solid ${BORDER}`, cursor: 'pointer', textAlign: 'left' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '0.86rem', fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>
-          {isFav && <Star size={10} color={GOLD} fill={GOLD} style={{ marginRight: 4, verticalAlign: 'middle' }} />}
-          {food.nom}
+        <div style={{ fontSize: '0.86rem', fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {isFav && <Star size={10} color={GOLD} fill={GOLD} style={{ flexShrink: 0 }} />}
+          <span>{food.nom}</span>
+          {food.source === 'ANSES' && <span style={{ fontFamily: FONT_ALT, fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}`, flexShrink: 0 }}>CIQUAL</span>}
         </div>
         <div style={{ fontSize: '0.65rem', fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_MUTED, marginTop: 2, display: 'flex', gap: 6 }}>
           <span style={{ color: GOLD }}>{food.calories} kcal</span>
