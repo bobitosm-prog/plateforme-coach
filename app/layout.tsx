@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Bebas_Neue, Barlow_Condensed, Outfit, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -74,6 +76,8 @@ export default function RootLayout({
       <body className="antialiased" style={{ fontFamily: "var(--font-body), 'Outfit', sans-serif" }}>
         {children}
         <Toaster position="top-center" richColors theme="dark" />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
