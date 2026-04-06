@@ -280,8 +280,7 @@ export default function HomeTab({
       <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* ═══ HERO CARD — Ring + Stats side by side ═══ */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 16, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,168,67,0.5), transparent)' }} />
+        <div className="liquid-glass-strong" style={{ borderRadius: 20, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {/* Compact Ring 110px */}
             <div style={{ position: 'relative', width: 110, height: 110, flexShrink: 0 }}>
@@ -321,7 +320,7 @@ export default function HomeTab({
 
         {/* ═══ WEIGHT + OBJECTIVE CARD ═══ */}
         {currentWeight && (
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="liquid-glass" style={{ borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 3, color: GOLD, textTransform: 'uppercase', marginBottom: 4 }}>
                 {objLabel === 'bulk' && '\u{1F4AA} PRISE DE MASSE'}
@@ -352,7 +351,7 @@ export default function HomeTab({
           const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
           const title = getLevelTitle(level)
           return (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px' }}>
+            <div className="liquid-glass" style={{ borderRadius: 14, padding: '14px 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GOLD }}>LV.{level}</span>
@@ -443,7 +442,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ PERFORMANCE HEBDO ═══ */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
+        <div className="liquid-glass" style={{ borderRadius: 16, padding: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, color: TEXT_PRIMARY }}>PERFORMANCE HEBDO</span>
             <button onClick={() => setActiveTab('progress')} style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: GOLD, textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}>Voir tout</button>
@@ -545,7 +544,7 @@ export default function HomeTab({
         )}
 
         {/* ═══ NUTRITION MACROS ═══ */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
+        <div className="liquid-glass" style={{ borderRadius: 16, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: TEXT_PRIMARY, letterSpacing: '1px' }}>NUTRITION</span>
             <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: FONT_BODY, fontSize: 10, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir plan</button>

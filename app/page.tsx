@@ -337,7 +337,7 @@ export default function CoachApp() {
       />
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
-      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(212,168,67,0.1)', paddingBottom: 'env(safe-area-inset-bottom, 20px)', paddingTop: 12, display: 'flex', justifyContent: 'center', gap: 48, zIndex: 999 }}>
+      {!h.workoutSession && <nav className="mobile-nav liquid-glass-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, paddingBottom: 'env(safe-area-inset-bottom, 20px)', paddingTop: 12, display: 'flex', justifyContent: 'center', gap: 48, zIndex: 999 }}>
         {([
           { id: 'home' as Tab, Icon: Home, label: 'Home' },
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
