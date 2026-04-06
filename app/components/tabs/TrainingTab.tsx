@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { addXP, updateStreak } from '../../../lib/gamification'
 import {
   Dumbbell, Search, Award,
 } from 'lucide-react'
@@ -410,6 +411,9 @@ export default function TrainingTab({
       duration_minutes: Math.max(duration, 1),
       notes: `${doneSetsCount}/${totalSetsCount} séries · ${exs.length} exercices`,
     })
+
+    // Gamification: +100 XP for completing a workout
+    try { await addXP(session.user.id, 100, supabase); await updateStreak(session.user.id, supabase) } catch {}
 
     for (const ex of exs) {
       const inputs = setInputs[ex.name] || []

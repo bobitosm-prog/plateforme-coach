@@ -13,6 +13,7 @@ import {
   todayNutritionKey,
 } from '../../../lib/design-tokens'
 import SwissBadge from '../ui/SwissBadge'
+import { getLevelFromXP, getLevelTitle } from '../../../lib/gamification'
 
 const QUOTES: Record<string, string[]> = {
   bulk: [
@@ -118,6 +119,7 @@ export default function HomeTab({
   const [caloriesWeekData, setCaloriesWeekData] = useState<{ day: string; calories: number }[]>([])
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekSessions, setWeekSessions] = useState(0)
+  const [xpData, setXpData] = useState<{ total_xp: number; current_streak: number } | null>(null)
 
   // Fetch today's consumed calories
   useEffect(() => {
@@ -218,6 +220,10 @@ export default function HomeTab({
     supabase.from('workout_sessions').select('id').eq('user_id', userId)
       .gte('created_at', oneWeekAgo).eq('completed', true).limit(20)
       .then(({ data }: any) => setWeekSessions(data?.length || 0))
+
+    // Fetch XP data
+    supabase.from('user_xp').select('total_xp, current_streak').eq('user_id', userId).maybeSingle()
+      .then(({ data }: any) => { if (data) setXpData(data) })
   }, [session?.user?.id])
 
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
@@ -325,6 +331,27 @@ export default function HomeTab({
             </div>
           </div>
         )}
+
+        {/* ═══ XP BAR ═══ */}
+        {(() => {
+          const xp = xpData?.total_xp || 0
+          const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
+          const title = getLevelTitle(level)
+          return (
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GOLD }}>LV.{level}</span>
+                  <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>{title}</span>
+                </div>
+                <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{xpInLevel} / {xpForNext} XP</span>
+              </div>
+              <div style={{ width: '100%', height: 6, borderRadius: 3, background: BG_CARD_2, overflow: 'hidden' }}>
+                <div style={{ width: `${progress * 100}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #D4A843, #E8C97A)', transition: 'width 1s ease' }} />
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ═══ COACH BANNER ═══ */}
         <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: `1px solid ${BORDER}`, cursor: 'pointer' }}>

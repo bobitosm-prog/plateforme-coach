@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
@@ -52,6 +52,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [dailyLogs, setDailyLogs] = useState<any[]>([])
   const [importingMeal, setImportingMeal] = useState<string | null>(null)
+  const [showPhotoCapture, setShowPhotoCapture] = useState(false)
+  const [photoMealTarget, setPhotoMealTarget] = useState('')
+  const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
+  const [photoResults, setPhotoResults] = useState<any>(null)
+  const photoInputRef = React.useRef<HTMLInputElement>(null)
   const today = new Date().toISOString().split('T')[0]
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
@@ -75,6 +80,37 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   async function deleteDailyLog(id: string) {
     await supabase.from('daily_food_logs').delete().eq('id', id)
     setDailyLogs(prev => prev.filter(l => l.id !== id))
+  }
+
+  async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAnalyzingPhoto(true)
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const base64 = (reader.result as string).split(',')[1]
+      try {
+        const res = await fetch('/api/analyze-meal-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) })
+        const data = await res.json()
+        setPhotoResults(data)
+      } catch { setPhotoResults(null) }
+      finally { setAnalyzingPhoto(false) }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function addPhotoFoods() {
+    if (!photoResults?.foods) return
+    for (const food of photoResults.foods) {
+      await supabase.from('daily_food_logs').insert({
+        user_id: userId, date: today, meal_type: photoMealTarget,
+        custom_name: food.name, quantity_g: food.quantity_g || 100,
+        calories: food.calories || 0, protein: food.proteins || 0, carbs: food.carbs || 0, fat: food.fats || 0,
+      })
+    }
+    setShowPhotoCapture(false)
+    setPhotoResults(null)
+    fetchDailyLogs()
   }
 
   async function importMealFromPlan(mealType: string) {
@@ -644,7 +680,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                         </button>
                       )}
                       <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${BORDER}`, background: 'transparent', cursor: 'pointer', fontFamily: FONT_BODY, color: TEXT_MUTED, fontSize: 11 }}>
-                        <Plus size={12} strokeWidth={2.5} /> Ajouter un aliment
+                        <Plus size={12} strokeWidth={2.5} /> Ajouter
+                      </button>
+                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 14px', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 10, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 11, color: GOLD }}>
+                        📸 Photo
                       </button>
                     </div>
                   </div>
@@ -721,6 +760,58 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           planData={activeMealPlan?.plan_data || coachMealPlan}
           onClose={() => setShowShoppingModal(false)}
         />
+      )}
+
+      {/* ═══ PHOTO MEAL SCAN ═══ */}
+      {showPhotoCapture && (
+        <>
+          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+            <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY }}>SCANNER UN REPAS</span>
+              <button onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 22, cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+              <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
+              {!photoResults && !analyzingPhoto && (
+                <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: GOLD_DIM, border: `2px dashed ${GOLD_RULE}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 48 }}>📷</span>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: GOLD }}>PRENDRE UNE PHOTO</span>
+                  <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>ou choisir depuis la galerie</span>
+                </button>
+              )}
+              {analyzingPhoto && (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', border: `3px solid ${GOLD_DIM}`, borderTopColor: GOLD, animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: GOLD, letterSpacing: 2 }}>ANALYSE EN COURS...</div>
+                </div>
+              )}
+              {photoResults?.foods && (
+                <>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 3, color: GOLD, textTransform: 'uppercase', marginBottom: 12 }}>{photoResults.foods.length} aliments detectes</div>
+                  {photoResults.foods.map((f: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < photoResults.foods.length - 1 ? `1px solid ${GOLD_DIM}` : 'none' }}>
+                      <div>
+                        <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{f.name}</div>
+                        <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{f.quantity_g}g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</div>
+                      </div>
+                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{f.calories}</span>
+                    </div>
+                  ))}
+                  <div style={{ background: GOLD_DIM, borderRadius: 12, padding: '12px 16px', marginTop: 16, textAlign: 'center' }}>
+                    <span style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: GOLD }}>{photoResults.total_calories} KCAL</span>
+                  </div>
+                </>
+              )}
+            </div>
+            {photoResults?.foods && (
+              <div style={{ padding: '16px 20px', borderTop: `1px solid ${GOLD_DIM}`, display: 'flex', gap: 12, flexShrink: 0 }}>
+                <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>REPRENDRE</button>
+                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>AJOUTER TOUT</button>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   )
