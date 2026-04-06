@@ -59,6 +59,19 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [photoMealTarget, setPhotoMealTarget] = useState('')
   const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
   const [photoResults, setPhotoResults] = useState<any>(null)
+  // Meal save/copy/reuse
+  const [mealMenuOpen, setMealMenuOpen] = useState<string | null>(null)
+  const [showSaveMealPopup, setShowSaveMealPopup] = useState(false)
+  const [saveMealData, setSaveMealData] = useState<any>(null)
+  const [saveMealName, setSaveMealName] = useState('')
+  const [saveMealType, setSaveMealType] = useState<string | null>(null)
+  const [showCopyMealPopup, setShowCopyMealPopup] = useState(false)
+  const [copyMealData, setCopyMealData] = useState<any>(null)
+  const [copyTargetDate, setCopyTargetDate] = useState('')
+  const [copyTargetMealType, setCopyTargetMealType] = useState('')
+  const [showSavedMeals, setShowSavedMeals] = useState(false)
+  const [savedMeals, setSavedMeals] = useState<any[]>([])
+  const [useSavedMealTarget, setUseSavedMealTarget] = useState('')
   const photoInputRef = React.useRef<HTMLInputElement>(null)
   const today = new Date().toISOString().split('T')[0]
 
@@ -126,6 +139,36 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     setShowPhotoCapture(false)
     setPhotoResults(null)
     fetchDailyLogs()
+  }
+
+  async function clearMeal(mealType: string) {
+    const toDelete = dailyLogs.filter(l => l.meal_type === mealType)
+    for (const l of toDelete) await supabase.from('daily_food_logs').delete().eq('id', l.id)
+    setDailyLogs(prev => prev.filter(l => l.meal_type !== mealType))
+  }
+
+  async function applySavedMeal(meal: any, targetMealType: string) {
+    for (const food of (meal.foods || [])) {
+      await supabase.from('daily_food_logs').insert({
+        user_id: userId, date: today, meal_type: targetMealType,
+        custom_name: food.name, quantity_g: food.quantity || food.quantity_g || 100,
+        calories: food.calories || 0, protein: food.proteins || food.protein || 0,
+        carbs: food.carbs || 0, fat: food.fats || food.fat || 0,
+      })
+    }
+    await supabase.from('saved_meals').update({ use_count: (meal.use_count || 0) + 1 }).eq('id', meal.id).catch(() => {})
+    fetchDailyLogs()
+  }
+
+  async function copyMealToDate(foods: any[], targetDate: string, targetMealType: string) {
+    for (const food of foods) {
+      await supabase.from('daily_food_logs').insert({
+        user_id: userId, date: targetDate, meal_type: targetMealType,
+        custom_name: food.custom_name || food.name, quantity_g: food.quantity_g || 100,
+        calories: food.calories || 0, protein: food.protein || food.proteins || 0,
+        carbs: food.carbs || 0, fat: food.fat || food.fats || 0,
+      })
+    }
   }
 
   async function importMealFromPlan(mealType: string) {
@@ -653,6 +696,18 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       <span style={{ fontSize: 16 }}>{EMOJIS[mealType] || '🍽'}</span>
                       <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '1px', color: TEXT_PRIMARY }}>{MEAL_LABELS[mealType]}</span>
                       <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD, marginLeft: 'auto' }}>{con.kcal} kcal</span>
+                      {logs.length > 0 && (
+                        <div style={{ position: 'relative' }}>
+                          <button onClick={() => setMealMenuOpen(mealMenuOpen === mealType ? null : mealType)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>⋯</button>
+                          {mealMenuOpen === mealType && (
+                            <div style={{ position: 'absolute', top: 36, right: 0, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 6, zIndex: 50, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>💾</span><span style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY }}>Sauvegarder le repas</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>📋</span><span style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY }}>Copier vers un autre jour</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>🗑️</span><span style={{ fontFamily: FONT_BODY, fontSize: 13, color: '#EF4444' }}>Vider ce repas</span></button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {rec && (
                       <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, fontStyle: 'italic' }}>
@@ -711,9 +766,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${BORDER}`, background: 'transparent', cursor: 'pointer', fontFamily: FONT_BODY, color: TEXT_MUTED, fontSize: 11 }}>
                         <Plus size={12} strokeWidth={2.5} /> Ajouter
                       </button>
-                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 14px', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 10, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 11, color: GOLD }}>
-                        📸 Photo
-                      </button>
+                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 10, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 11, color: GOLD }}>📸</button>
+                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', border: `1px dashed ${GOLD_RULE}`, background: 'transparent', borderRadius: 10, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 11, color: GOLD }}>📂</button>
                     </div>
                   </div>
                 </div>
@@ -839,6 +893,85 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>AJOUTER TOUT</button>
               </div>
             )}
+          </div>
+        </>
+      )}
+
+      {/* ═══ SAVE MEAL POPUP ═══ */}
+      {showSaveMealPopup && saveMealData && (
+        <>
+          <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, zIndex: 1101 }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 16 }}>SAUVEGARDER LE REPAS</h3>
+            <input type="text" placeholder="Nom du repas..." value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 14, outline: 'none', marginBottom: 12 }} />
+            <div style={{ background: BG_BASE, borderRadius: 10, padding: 12, marginBottom: 16, border: `1px solid ${GOLD_DIM}` }}>
+              <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, marginBottom: 8 }}>{saveMealData.foods.length} ALIMENTS</div>
+              {saveMealData.foods.map((f: any, i: number) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontFamily: FONT_BODY, fontSize: 12 }}>
+                  <span style={{ color: TEXT_PRIMARY }}>{f.name}</span>
+                  <span style={{ color: GOLD }}>{f.calories} kcal</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setShowSaveMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>ANNULER</button>
+              <button disabled={!saveMealName.trim()} onClick={async () => {
+                await supabase.from('saved_meals').insert({ user_id: userId, name: saveMealName, meal_type: saveMealType, foods: saveMealData.foods, total_calories: saveMealData.foods.reduce((s: number, f: any) => s + (f.calories || 0), 0), total_proteins: saveMealData.foods.reduce((s: number, f: any) => s + (f.proteins || 0), 0), total_carbs: saveMealData.foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0), total_fats: saveMealData.foods.reduce((s: number, f: any) => s + (f.fats || 0), 0) })
+                setShowSaveMealPopup(false); setSaveMealName('')
+              }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)' : BG_CARD_2, border: 'none', borderRadius: 12, color: saveMealName.trim() ? '#0D0B08' : TEXT_DIM, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>SAUVEGARDER</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ═══ COPY MEAL POPUP ═══ */}
+      {showCopyMealPopup && copyMealData && (
+        <>
+          <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, zIndex: 1101 }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 16 }}>COPIER LE REPAS</h3>
+            <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, marginBottom: 6 }}>DATE</div>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+              {[{ l: 'Demain', d: 1 }, { l: '+2j', d: 2 }, { l: '+3j', d: 3 }, { l: '+1 sem', d: 7 }].map(s => {
+                const dt = new Date(Date.now() + s.d * 86400000).toISOString().split('T')[0]
+                return <button key={s.l} onClick={() => setCopyTargetDate(dt)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetDate === dt ? `1px solid ${GOLD}` : `1px solid ${GOLD_DIM}`, background: copyTargetDate === dt ? GOLD_DIM : 'transparent', color: copyTargetDate === dt ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{s.l}</button>
+              })}
+            </div>
+            <input type="date" value={copyTargetDate} onChange={e => setCopyTargetDate(e.target.value)} min={today} style={{ width: '100%', padding: '10px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 14, outline: 'none', marginBottom: 12, colorScheme: 'dark' }} />
+            <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, marginBottom: 6 }}>REPAS</div>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+              {MEAL_ORDER.map(t => <button key={t} onClick={() => setCopyTargetMealType(t)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetMealType === t ? `1px solid ${GOLD}` : `1px solid ${GOLD_DIM}`, background: copyTargetMealType === t ? GOLD_DIM : 'transparent', color: copyTargetMealType === t ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{MEAL_LABELS[t]}</button>)}
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setShowCopyMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>ANNULER</button>
+              <button disabled={!copyTargetDate || !copyTargetMealType} onClick={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} style={{ flex: 1, padding: 14, background: (copyTargetDate && copyTargetMealType) ? 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)' : BG_CARD_2, border: 'none', borderRadius: 12, color: (copyTargetDate && copyTargetMealType) ? '#0D0B08' : TEXT_DIM, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>COPIER</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ═══ SAVED MEALS POPUP ═══ */}
+      {showSavedMeals && (
+        <>
+          <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY }}>MES REPAS</span>
+              <button onClick={() => setShowSavedMeals(false)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 22, cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
+              {savedMeals.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14 }}>Aucun repas sauvegarde.</div>
+              ) : savedMeals.map((meal: any) => (
+                <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${GOLD_DIM}`, cursor: 'pointer', textAlign: 'left' }}>
+                  <div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 500 }}>{meal.name}</div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>{(meal.foods || []).length} aliments{meal.use_count > 0 && ` · ${meal.use_count}x utilise`}</div>
+                  </div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: GOLD }}>{Math.round(meal.total_calories || 0)}</div>
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}
