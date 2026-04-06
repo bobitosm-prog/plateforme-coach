@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
 
 export const runtime = 'edge'
 
@@ -53,11 +54,13 @@ export async function POST(req: NextRequest) {
     const days = Math.min(Math.max(trainingDays || 4, 3), 6)
     const splitGuide = SPLIT_GUIDE[days] || SPLIT_GUIDE[4]
 
-    const prompt = `Tu es un coach fitness expert en hypertrophie. Génère un programme d'entraînement en JSON UNIQUEMENT.
+    const prompt = `Tu es un coach fitness expert en hypertrophie. Genere un programme d'entrainement en JSON UNIQUEMENT.
 
-Client: objectif=${objective}, poids=${weight}kg, cible=${targetWeight}kg, niveau=${level}, équipement=${equipment.join(',')}, ${days} jours/semaine
+${getPrefatigueInstructions()}
 
-SPLIT RECOMMANDÉ :
+Client: objectif=${objective}, poids=${weight}kg, cible=${targetWeight}kg, niveau=${level}, equipement=${equipment.join(',')}, ${days} jours/semaine
+
+SPLIT RECOMMANDE :
 ${splitGuide}
 
 RÈGLES HYPERTROPHIE :

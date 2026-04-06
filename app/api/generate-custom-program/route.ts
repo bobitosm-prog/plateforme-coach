@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
 
 // ─── Program structures by days × gender ───
 
@@ -131,6 +132,8 @@ export async function POST(req: NextRequest) {
 ${genderRules}
 
 ${UNIVERSAL_RULES}
+
+${getPrefatigueInstructions()}
 
 ${programStructure}
 

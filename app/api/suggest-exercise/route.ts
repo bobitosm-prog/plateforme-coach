@@ -10,8 +10,12 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { exerciseName, reason, muscleGroup, availableEquipment } = await req.json()
+    const { exerciseName, reason, muscleGroup, availableEquipment, isIsolation } = await req.json()
     if (!exerciseName) return NextResponse.json({ error: 'exerciseName requis' }, { status: 400 })
+
+    const typeHint = isIsolation === true ? `IMPORTANT : "${exerciseName}" est un exercice d'ISOLATION. Propose UNIQUEMENT d'autres exercices d'isolation pour le meme groupe musculaire.`
+      : isIsolation === false ? `IMPORTANT : "${exerciseName}" est un exercice COMPOSE. Propose UNIQUEMENT d'autres exercices composes.`
+      : ''
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -21,17 +25,18 @@ export async function POST(req: NextRequest) {
         max_tokens: 500,
         messages: [{
           role: 'user',
-          content: `Tu es un coach fitness professionnel certifié. Ne mentionne jamais l'IA. L'utilisateur veut remplacer l'exercice "${exerciseName}" (muscle: ${muscleGroup || 'non spécifié'}).
-Raison : ${reason || 'non spécifiée'}
-${availableEquipment ? `Matériel disponible : ${availableEquipment}` : ''}
+          content: `Tu es un coach fitness professionnel certifie. Ne mentionne jamais l'IA. L'utilisateur veut remplacer l'exercice "${exerciseName}" (muscle: ${muscleGroup || 'non specifie'}).
+Raison : ${reason || 'non specifiee'}
+${availableEquipment ? `Materiel disponible : ${availableEquipment}` : ''}
+${typeHint}
 
-Propose exactement 3 alternatives en français. Pour chaque alternative, donne :
+Propose exactement 3 alternatives en francais. Pour chaque alternative, donne :
 - nom de l'exercice
-- muscles ciblés
+- muscles cibles
 - pourquoi c'est un bon remplacement
-- niveau de difficulté (débutant/intermédiaire/avancé)
+- niveau de difficulte (debutant/intermediaire/avance)
 
-Réponds UNIQUEMENT en JSON valide :
+Reponds UNIQUEMENT en JSON valide :
 [{"name": "...", "muscles": "...", "reason": "...", "difficulty": "..."}]`
         }]
       })
