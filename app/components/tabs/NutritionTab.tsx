@@ -52,6 +52,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [dailyLogs, setDailyLogs] = useState<any[]>([])
   const [importingMeal, setImportingMeal] = useState<string | null>(null)
+  const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
+  const [editQty, setEditQty] = useState('')
+  const [swappingFoodId, setSwappingFoodId] = useState<string | null>(null)
   const [showPhotoCapture, setShowPhotoCapture] = useState(false)
   const [photoMealTarget, setPhotoMealTarget] = useState('')
   const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
@@ -80,6 +83,18 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   async function deleteDailyLog(id: string) {
     await supabase.from('daily_food_logs').delete().eq('id', id)
     setDailyLogs(prev => prev.filter(l => l.id !== id))
+  }
+
+  async function updateFoodQuantity(id: string, newQty: number) {
+    if (!newQty || newQty <= 0) return
+    const log = dailyLogs.find(l => l.id === id)
+    if (!log) return
+    const oldQty = log.quantity_g || 100
+    const ratio = newQty / oldQty
+    const updated = { quantity_g: newQty, calories: Math.round((log.calories || 0) * ratio), protein: Math.round((log.protein || 0) * ratio * 10) / 10, carbs: Math.round((log.carbs || 0) * ratio * 10) / 10, fat: Math.round((log.fat || 0) * ratio * 10) / 10 }
+    await supabase.from('daily_food_logs').update(updated).eq('id', id)
+    setDailyLogs(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
+    setEditingFoodId(null)
   }
 
   async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
@@ -558,8 +573,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           supabase={supabase}
           userId={userId}
           defaultMealType={showFoodSearch}
-          onAdded={() => { setShowFoodSearch(null); fetchTodayMealLogs(); fetchDailyLogs() }}
-          onClose={() => setShowFoodSearch(null)}
+          onAdded={async () => { if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }; setShowFoodSearch(null); fetchTodayMealLogs(); fetchDailyLogs() }}
+          onClose={() => { setShowFoodSearch(null); setSwappingFoodId(null) }}
         />
       )}
 
@@ -654,15 +669,29 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   {/* Daily food logs for this meal */}
                   <div style={{ padding: '0 16px' }}>
                     {logs.map(log => (
-                      <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
+                      <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{log.custom_name || log.food_name || 'Aliment'}</div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{log.quantity_g}g · P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</div>
+                          {editingFoodId === log.id ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                              <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 6, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 16, textAlign: 'center', outline: 'none' }} />
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>g</span>
+                              <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: GOLD, border: 'none', borderRadius: 6, color: '#0D0B08', padding: '4px 10px', fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
+                              <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 14, cursor: 'pointer' }}>✕</button>
+                            </div>
+                          ) : (
+                            <div onClick={() => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <span>{log.quantity_g}g</span>
+                              <span style={{ fontSize: 10, color: TEXT_DIM }}>✏️</span>
+                              <span style={{ fontSize: 10, color: TEXT_DIM }}>· P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</span>
+                            </div>
+                          )}
                         </div>
-                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD, flexShrink: 0, marginRight: 8 }}>{Math.round(log.calories)} kcal</span>
-                        <button onClick={() => deleteDailyLog(log.id)} style={{ width: 28, height: 28, background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <Trash2 size={12} color="#EF4444" />
-                        </button>
+                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD, flexShrink: 0 }}>{Math.round(log.calories)}</span>
+                        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 14, cursor: 'pointer', padding: 4 }} title="Remplacer">🔄</button>
+                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 14, cursor: 'pointer', padding: 4 }} title="Supprimer">🗑️</button>
+                        </div>
                       </div>
                     ))}
 
