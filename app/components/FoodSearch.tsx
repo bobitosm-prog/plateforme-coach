@@ -120,8 +120,9 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
     const gluc = Math.round(((selected.glucides * quantity) / 100) * 10) / 10
     const lip = Math.round(((selected.lipides * quantity) / 100) * 10) / 10
     return (
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', alignItems: 'flex-end' }}>
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '2px 2px 0 0', padding: '24px 20px 40px', width: '100%' }}>
+      <>
+      <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: '24px 20px', zIndex: 1101, boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }} onClick={e => e.stopPropagation()}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3 style={{ fontFamily: FONT_ALT, fontSize: '1.2rem', fontWeight: 800, margin: 0, color: TEXT_PRIMARY, letterSpacing: '1px', textTransform: 'uppercase' }}>{selected.nom}</h3>
             <button onClick={() => setSelected(null)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -171,22 +172,29 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
             letterSpacing: '1px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1,
             
           }}>{saving ? 'Ajout...' : 'Ajouter au repas'}</button>
-        </div>
       </div>
+      </>
     )
   }
 
-  // Main view -- all foods by category
+  // Main view -- centered popup
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '16px', paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', display: 'flex', gap: 10, alignItems: 'center', borderBottom: `1px solid ${BORDER}`, background: BG_BASE }}>
-        <div style={{ flex: 1, position: 'relative' }}>
-          <Search size={16} color={GOLD} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-          <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder={`Filtrer ${allFoods.length} aliments fitness...`}
-            style={{ width: '100%', padding: '12px 12px 12px 38px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: '0.9rem', fontFamily: FONT_BODY, outline: 'none' }} />
+    <>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+      <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY }}>AJOUTER UN ALIMENT</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 22, cursor: 'pointer', padding: 4 }}><X size={18} /></button>
         </div>
-        <button onClick={() => setShowScanner(true)} style={{ width: 42, height: 42, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>📷</button>
-        <button onClick={onClose} style={{ padding: '8px 14px', background: 'none', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: TEXT_PRIMARY, cursor: 'pointer', fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.5px' }}>Fermer</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={16} color={GOLD} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+            <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher un aliment..." autoFocus
+              style={{ width: '100%', padding: '12px 12px 12px 38px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: 15, fontFamily: FONT_BODY, outline: 'none' }} />
+          </div>
+          <button onClick={() => setShowScanner(true)} style={{ width: 42, height: 42, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>📷</button>
+        </div>
       </div>
 
       {/* Barcode Scanner */}
@@ -202,7 +210,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
         {/* Favorites section */}
         {favorites.length > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'sticky', top: 0, background: 'rgba(5,5,5,0.9)', paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'sticky', top: 0, background: BG_CARD, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
               <Star size={14} color={GOLD} fill={GOLD} />
               <span style={{ fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, color: GOLD, letterSpacing: '2px', textTransform: 'uppercase' }}>Mes favoris</span>
               <span style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>({favorites.length})</span>
@@ -216,7 +224,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
         {/* Foods by category */}
         {grouped.map(cat => (
           <div key={cat.key} style={{ marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, position: 'sticky', top: 0, background: 'rgba(5,5,5,0.9)', paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, position: 'sticky', top: 0, background: BG_CARD, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
               <span style={{ fontSize: '0.85rem' }}>{cat.icon}</span>
               <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 800, color: TEXT_MUTED, letterSpacing: '2px', textTransform: 'uppercase' }}>{cat.label}</span>
               <span style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>({cat.foods.length})</span>
@@ -232,6 +240,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
         )}
       </div>
     </div>
+    </>
   )
 }
 
