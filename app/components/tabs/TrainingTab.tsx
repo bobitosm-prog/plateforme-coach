@@ -692,14 +692,6 @@ export default function TrainingTab({
         </div>
       ) : (
         <>
-          {/* ── WEEK DAY CHIPS ── */}
-          <TrainingDayChips
-            trainingDay={trainingDay}
-            todayKey={todayKey}
-            coachProgram={coachProgram}
-            onSelectDay={setTrainingDay}
-          />
-
           {/* ── REST DAY ── */}
           {trainingDayData?.repos ? (
             <TrainingRestDay />
