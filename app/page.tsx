@@ -277,25 +277,29 @@ export default function CoachApp() {
         </div>
       )}
 
-      {/* ── TOP HEADER BAR ── */}
-      <header style={{ flexShrink: 0, padding: '12px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Left: Logo + Swiss Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo-moovx.png" alt="MoovX" style={{ height: 32, width: 'auto', objectFit: 'contain' }} />
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: GOLD, color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 7, letterSpacing: 1.5, padding: '2px 6px', borderRadius: 3 }}>{'\uD83C\uDDE8\uD83C\uDDED'} SWISS MADE</span>
-        </div>
-        {/* Right: Progress + Messages + Avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button onClick={() => h.setActiveTab('progress')} style={{ width: 36, height: 36, borderRadius: 12, background: h.activeTab === 'progress' ? GOLD_DIM : 'transparent', border: h.activeTab === 'progress' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s ease' }}>
-            <TrendingUp size={18} color={h.activeTab === 'progress' ? GOLD : TEXT_MUTED} strokeWidth={h.activeTab === 'progress' ? 2.5 : 1.5} />
-          </button>
-          <button onClick={() => h.setActiveTab(h.hasRealCoach ? 'messages' : 'coachIA')} style={{ width: 36, height: 36, borderRadius: 12, background: (h.activeTab === 'messages' || h.activeTab === 'coachIA') ? GOLD_DIM : 'transparent', border: (h.activeTab === 'messages' || h.activeTab === 'coachIA') ? `1px solid ${GOLD_RULE}` : '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease' }}>
-            {h.hasRealCoach ? <MessageCircle size={18} color={(h.activeTab === 'messages') ? GOLD : TEXT_MUTED} strokeWidth={(h.activeTab === 'messages') ? 2.5 : 1.5} /> : <Bot size={18} color={h.activeTab === 'coachIA' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />}
-            {h.unreadCount > 0 && <div style={{ position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: '50%', background: RED, border: `2px solid ${BG_BASE}` }} />}
-          </button>
-          <button onClick={() => h.setActiveTab('profil')} style={{ width: 36, height: 36, borderRadius: '50%', border: h.activeTab === 'profil' ? `2px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: BG_CARD, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', transition: 'all 0.3s ease', padding: 0 }}>
-            {h.displayAvatar ? <img src={h.displayAvatar} alt="Profil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={16} color={h.activeTab === 'profil' ? GOLD : TEXT_MUTED} />}
-          </button>
+      {/* ── GLASS BAR HEADER ── */}
+      <header style={{ flexShrink: 0, padding: '8px 14px' }}>
+        <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18 }}>
+          {/* Left: Coach IA + Messages */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3 }}>
+            <button onClick={() => h.setActiveTab(h.hasRealCoach ? 'messages' : 'coachIA')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: (h.activeTab === 'messages' || h.activeTab === 'coachIA') ? GOLD_DIM : 'transparent', border: (h.activeTab === 'messages' || h.activeTab === 'coachIA') ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s', position: 'relative' }}>
+              {h.hasRealCoach ? <MessageCircle size={19} color={(h.activeTab === 'messages') ? GOLD : TEXT_MUTED} strokeWidth={1.5} /> : <Bot size={19} color={h.activeTab === 'coachIA' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />}
+              {h.unreadCount > 0 && <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: RED, border: '2px solid rgba(20,18,9,0.8)' }} />}
+            </button>
+          </div>
+          {/* Center: Logo Pill */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: '6px 14px', position: 'relative', zIndex: 3 }}>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 4, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>MOOVX</span>
+          </div>
+          {/* Right: Progress + Profil */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3 }}>
+            <button onClick={() => h.setActiveTab('progress')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'progress' ? GOLD_DIM : 'transparent', border: h.activeTab === 'progress' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
+              <TrendingUp size={19} color={h.activeTab === 'progress' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
+            </button>
+            <button onClick={() => h.setActiveTab('profil')} style={{ width: 34, height: 34, borderRadius: '50%', border: h.activeTab === 'profil' ? `1.5px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', transition: 'all 0.3s', padding: 0, marginLeft: 2 }}>
+              {h.displayAvatar ? <img src={h.displayAvatar} alt="Profil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={16} color={h.activeTab === 'profil' ? GOLD : TEXT_MUTED} />}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -337,7 +341,8 @@ export default function CoachApp() {
       />
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
-      {!h.workoutSession && <nav className="mobile-nav liquid-glass-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, paddingBottom: 'env(safe-area-inset-bottom, 20px)', paddingTop: 12, display: 'flex', justifyContent: 'center', gap: 48, zIndex: 999 }}>
+      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 14px', paddingBottom: 'calc(env(safe-area-inset-bottom, 20px) + 12px)', zIndex: 999 }}>
+        <div className="liquid-glass-nav" style={{ display: 'flex', justifyContent: 'center', gap: 40, padding: '10px 20px', borderRadius: 18 }}>
         {([
           { id: 'home' as Tab, Icon: Home, label: 'Home' },
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
@@ -352,6 +357,7 @@ export default function CoachApp() {
             </button>
           )
         })}
+        </div>
       </nav>}
     </div>
   )
