@@ -84,8 +84,10 @@ export default function TrainingTab({
   const [exerciseSearchResults, setExerciseSearchResults] = useState<any[]>([])
   // Feature: save choice popup
   const [showSaveChoice, setShowSaveChoice] = useState(false)
-  // Feature: swap exercise
   const [swapping, setSwapping] = useState<string | null>(null)
+  // Program edit mode
+  const [editMode, setEditMode] = useState(false)
+  const [editedDays, setEditedDays] = useState<any[] | null>(null)
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
@@ -340,6 +342,48 @@ export default function TrainingTab({
     return () => clearTimeout(t)
   }, [showAddExercise, exerciseSearchQ])
 
+  // ── Program edit functions ──
+  function startEditMode() {
+    if (!activeCustomProgram?.days) return
+    setEditedDays(JSON.parse(JSON.stringify(activeCustomProgram.days)))
+    setEditMode(true)
+  }
+  function editExField(dayIdx: number, exIdx: number, field: string, val: any) {
+    if (!editedDays) return
+    const d = [...editedDays]
+    d[dayIdx].exercises[exIdx][field] = val
+    setEditedDays(d)
+  }
+  function editRemoveEx(dayIdx: number, exIdx: number) {
+    if (!editedDays) return
+    const d = [...editedDays]
+    d[dayIdx].exercises.splice(exIdx, 1)
+    setEditedDays([...d])
+  }
+  function editMoveEx(dayIdx: number, exIdx: number, dir: -1 | 1) {
+    if (!editedDays) return
+    const d = [...editedDays]
+    const exs = d[dayIdx].exercises
+    const ni = exIdx + dir
+    if (ni < 0 || ni >= exs.length) return
+    ;[exs[exIdx], exs[ni]] = [exs[ni], exs[exIdx]]
+    setEditedDays([...d])
+  }
+  function editAddEx(dayIdx: number, ex: any) {
+    if (!editedDays) return
+    const d = [...editedDays]
+    d[dayIdx].exercises.push({ exercise_name: ex.name, custom_name: ex.name, name: ex.name, sets: 3, reps: 12, rest_seconds: 90, muscle_group: ex.muscle_group || '' })
+    setEditedDays([...d])
+  }
+  async function saveEditedProgram() {
+    if (!editedDays || !activeCustomProgram?.id) return
+    await supabase.from('custom_programs').update({ days: editedDays, updated_at: new Date().toISOString() }).eq('id', activeCustomProgram.id)
+    setActiveCustomProgram({ ...activeCustomProgram, days: editedDays })
+    setEditMode(false)
+    setEditedDays(null)
+    toast.success('Programme mis a jour')
+  }
+
   function addExerciseToSession(ex: any) {
     const newEx = { name: ex.name, sets: 3, reps: 12, rest_seconds: 90, muscle_group: ex.muscle_group || '', isAdded: true }
     setAddedExercises(prev => [...prev, newEx])
@@ -536,10 +580,20 @@ export default function TrainingTab({
       <div style={{ padding: '0 16px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: '1px' }}>MES PROGRAMMES</span>
-          <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-            style={{ fontFamily: FONT_BODY, fontSize: 11, color: GOLD, background: 'transparent', border: `1px solid ${GOLD}`, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            + CRÉER
-          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {activeCustomProgram && !editMode && (
+              <button onClick={startEditMode} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: GOLD, background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase' }}>MODIFIER</button>
+            )}
+            {editMode && (
+              <>
+                <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer' }}>ANNULER</button>
+                <button onClick={saveEditedProgram} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: '#0D0B08', background: GOLD, border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1 }}>SAUVEGARDER</button>
+              </>
+            )}
+            {!editMode && (
+              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }} style={{ fontFamily: FONT_BODY, fontSize: 11, color: GOLD, background: 'transparent', border: `1px solid ${GOLD}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>+ CREER</button>
+            )}
+          </div>
         </div>
         {customPrograms.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -722,6 +776,47 @@ export default function TrainingTab({
           ) : (
             /* ══════════════ EXERCISE CARDS ══════════════ */
             <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Edit mode: show editable exercise list */}
+              {editMode && editedDays && (() => {
+                const dayIdx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
+                const day = editedDays[dayIdx]
+                if (!day?.exercises) return null
+                return (
+                  <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 16, padding: 16, marginBottom: 8 }}>
+                    <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 12, textTransform: 'uppercase' }}>MODE EDITION</div>
+                    {day.exercises.map((ex: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${GOLD_DIM}` : 'none' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <button onClick={() => editMoveEx(dayIdx, i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: i === 0 ? TEXT_DIM : GOLD, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▲</button>
+                          <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? TEXT_DIM : GOLD, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▼</button>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 500 }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
+                          <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Sets</span>
+                              <input type="number" min={1} max={10} value={ex.sets || 3} onChange={e => editExField(dayIdx, i, 'sets', parseInt(e.target.value) || 3)} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
+                            </div>
+                            <span style={{ color: TEXT_DIM, alignSelf: 'center', fontSize: 10 }}>x</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Reps</span>
+                              <input type="number" min={1} max={50} value={ex.reps || 12} onChange={e => editExField(dayIdx, i, 'reps', parseInt(e.target.value) || 12)} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Repos</span>
+                              <input type="number" min={0} max={300} step={15} value={ex.rest_seconds || 90} onChange={e => editExField(dayIdx, i, 'rest_seconds', parseInt(e.target.value) || 90)} style={{ width: 42, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>s</span>
+                            </div>
+                          </div>
+                        </div>
+                        <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>✕</button>
+                      </div>
+                    ))}
+                    <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>+ AJOUTER UN EXERCICE</button>
+                  </div>
+                )
+              })()}
 
               {trainingExercises.map((ex: any, exIdx: number) => {
                 const storageKey = `moovx-sets-${todayStr}-${ex.name}`
@@ -911,7 +1006,15 @@ export default function TrainingTab({
       )}
 
       {showAddExercise && (
-        <AddExercisePopup searchQ={exerciseSearchQ} onSearchChange={setExerciseSearchQ} results={exerciseSearchResults} onSelect={(ex) => { addExerciseToSession(ex); setShowAddExercise(false) }} onClose={() => setShowAddExercise(false)} />
+        <AddExercisePopup searchQ={exerciseSearchQ} onSearchChange={setExerciseSearchQ} results={exerciseSearchResults} onSelect={(ex) => {
+          if (editMode && editedDays) {
+            const dayIdx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
+            editAddEx(dayIdx, ex)
+          } else {
+            addExerciseToSession(ex)
+          }
+          setShowAddExercise(false)
+        }} onClose={() => setShowAddExercise(false)} />
       )}
       {showSaveChoice && (
         <SaveChoicePopup onSaveModified={async () => { await saveWithModifications(); setShowSaveChoice(false) }} onSaveOriginal={async () => { await saveOriginal(); setShowSaveChoice(false) }} onClose={() => setShowSaveChoice(false)} />
