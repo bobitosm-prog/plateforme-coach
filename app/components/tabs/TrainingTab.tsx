@@ -22,6 +22,8 @@ import { ScheduledSession, SESSION_COLORS, SESSION_LABELS, getSessionsForDate, t
 
 import WorkoutCelebration from './training/WorkoutCelebration'
 import TrainingActiveBar from './training/TrainingActiveBar'
+import AddExercisePopup from './training/AddExercisePopup'
+import SaveChoicePopup from './training/SaveChoicePopup'
 import TrainingDayChips from './training/TrainingDayChips'
 import TrainingRestDay from './training/TrainingRestDay'
 import TrainingSessionDone from './training/TrainingSessionDone'
@@ -852,45 +854,11 @@ export default function TrainingTab({
         />
       )}
 
-      {/* ═══ ADD EXERCISE POPUP ═══ */}
       {showAddExercise && (
-        <>
-          <div onClick={() => setShowAddExercise(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 420, maxHeight: '70vh', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
-            <div style={{ padding: '20px 20px 12px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY }}>AJOUTER UN EXERCICE</span>
-                <button onClick={() => setShowAddExercise(false)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 22, cursor: 'pointer' }}>✕</button>
-              </div>
-              <input type="text" placeholder="Rechercher..." value={exerciseSearchQ} onChange={e => setExerciseSearchQ(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 14, outline: 'none' }} />
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 20px' }}>
-              {exerciseSearchResults.map((ex: any) => (
-                <button key={ex.id} onClick={() => { addExerciseToSession(ex); setShowAddExercise(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${GOLD_DIM}`, cursor: 'pointer', textAlign: 'left' }}>
-                  <div>
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{ex.name}</div>
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{ex.muscle_group || ''}</div>
-                  </div>
-                  <span style={{ color: GOLD, fontSize: 22 }}>+</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
+        <AddExercisePopup searchQ={exerciseSearchQ} onSearchChange={setExerciseSearchQ} results={exerciseSearchResults} onSelect={(ex) => { addExerciseToSession(ex); setShowAddExercise(false) }} onClose={() => setShowAddExercise(false)} />
       )}
-
-      {/* ═══ SAVE CHOICE POPUP ═══ */}
       {showSaveChoice && (
-        <>
-          <div onClick={() => setShowSaveChoice(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 40px)', maxWidth: 380, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, zIndex: 1101, textAlign: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: GOLD_DIM, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 16px' }}>💾</div>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>SEANCE MODIFIEE</h3>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 24 }}>Tu as ajoute des exercices. Veux-tu les garder pour les prochaines fois ?</p>
-            <button onClick={async () => { await saveWithModifications(); setShowSaveChoice(false) }} style={{ width: '100%', padding: 16, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, border: 'none', borderRadius: 12, cursor: 'pointer', marginBottom: 10, boxShadow: '0 4px 20px rgba(212,168,67,0.2)' }}>GARDER LES MODIFICATIONS</button>
-            <button onClick={async () => { await saveOriginal(); setShowSaveChoice(false) }} style={{ width: '100%', padding: 16, background: 'transparent', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, cursor: 'pointer' }}>GARDER LA SEANCE DE BASE</button>
-          </div>
-        </>
+        <SaveChoicePopup onSaveModified={async () => { await saveWithModifications(); setShowSaveChoice(false) }} onSaveOriginal={async () => { await saveOriginal(); setShowSaveChoice(false) }} onClose={() => setShowSaveChoice(false)} />
       )}
     </div>
   )
