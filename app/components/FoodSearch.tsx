@@ -46,7 +46,8 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
   const [likedIds, setLikedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<any>(null)
-  const [quantity, setQuantity] = useState(100)
+  const [quantityStr, setQuantityStr] = useState('100')
+  const quantity = parseFloat(quantityStr) || 0
   const [mealType, setMealType] = useState(defaultMealType || 'dejeuner')
   const [saving, setSaving] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
@@ -130,15 +131,15 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 20 }}>
-            <button onClick={() => setQuantity(q => Math.max(5, q - 25))} style={{ width: 44, height: 44, borderRadius: 12, background: BG_BASE, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setQuantityStr(String(Math.max(0, quantity - 25)))} style={{ width: 44, height: 44, borderRadius: 12, background: BG_BASE, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Minus size={18} color={TEXT_PRIMARY} />
             </button>
             <div style={{ textAlign: 'center' }}>
-              <input type="number" value={quantity} onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 0))} inputMode="numeric"
+              <input type="text" inputMode="numeric" pattern="[0-9]*" value={quantityStr} onChange={e => setQuantityStr(e.target.value.replace(/[^0-9]/g, ''))} onFocus={e => e.target.select()}
                 style={{ width: 80, background: 'transparent', border: 'none', color: GOLD, fontSize: '2.4rem', fontFamily: FONT_DISPLAY, fontWeight: 700, textAlign: 'center', outline: 'none' }} />
               <div style={{ fontSize: '0.72rem', fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_MUTED, marginTop: -4, letterSpacing: '1px', textTransform: 'uppercase' }}>grammes</div>
             </div>
-            <button onClick={() => setQuantity(q => q + 25)} style={{ width: 44, height: 44, borderRadius: 12, background: BG_BASE, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setQuantityStr(String(quantity + 25))} style={{ width: 44, height: 44, borderRadius: 12, background: BG_BASE, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Plus size={18} color={TEXT_PRIMARY} />
             </button>
           </div>
@@ -216,7 +217,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
               <span style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>({favorites.length})</span>
             </div>
             {favorites.map(food => (
-              <FoodRow key={food.id} food={food} isFav onSelect={() => { setSelected(food); setQuantity(100) }} />
+              <FoodRow key={food.id} food={food} isFav onSelect={() => { setSelected(food); setQuantityStr('100') }} />
             ))}
           </div>
         )}
@@ -230,7 +231,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
               <span style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>({cat.foods.length})</span>
             </div>
             {cat.foods.map((food: any) => (
-              <FoodRow key={food.id} food={food} onSelect={() => { setSelected(food); setQuantity(100) }} />
+              <FoodRow key={food.id} food={food} onSelect={() => { setSelected(food); setQuantityStr('100') }} />
             ))}
           </div>
         ))}
