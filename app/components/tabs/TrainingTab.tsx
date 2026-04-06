@@ -60,6 +60,8 @@ export default function TrainingTab({
   const [exercisesCache, setExercisesCache] = useState<any[]>([])
   const exercisesCacheLoaded = useRef(false)
   const [showMonthCalendar, setShowMonthCalendar] = useState(false)
+  const [workoutHistory, setWorkoutHistory] = useState<any[]>([])
+  const [historyFilter, setHistoryFilter] = useState('all')
   const [workoutFinished, setWorkoutFinished] = useState(false)
   const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
   const [videoExercise, setVideoExercise]     = useState<string | null>(null)
@@ -180,6 +182,14 @@ export default function TrainingTab({
         const active = (data || []).find((p: any) => p.is_active)
         if (active) setActiveCustomProgram(active)
       })
+  }, [session?.user?.id])
+
+  // ── Load workout history ──
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase.from('workout_sessions').select('id, name, completed, duration_minutes, notes, created_at')
+      .eq('user_id', session.user.id).eq('completed', true).order('created_at', { ascending: false }).limit(50)
+      .then(({ data }: any) => setWorkoutHistory(data || []))
   }, [session?.user?.id])
 
   // ── Load exercises_db cache ──
@@ -834,6 +844,56 @@ export default function TrainingTab({
           onClose={() => setVideoExercise(null)}
         />
       )}
+
+      {/* ═══ HISTORIQUE DES SÉANCES ═══ */}
+      <div style={{ padding: '0 16px', marginTop: 24, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 3, color: TEXT_PRIMARY }}>HISTORIQUE</span>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
+          <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>{workoutHistory.length} seances</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
+          {[
+            { key: 'all', label: 'Tout' },
+            { key: 'push', label: 'Push', kw: ['push','pec','chest','bench','developpe couche','developpe incline'] },
+            { key: 'pull', label: 'Pull', kw: ['pull','dos','back','row','tirage','tractions'] },
+            { key: 'legs', label: 'Legs', kw: ['leg','jambe','squat','quad','hamstring','fente','mollet'] },
+            { key: 'upper', label: 'Upper', kw: ['upper','epaule','shoulder','bras','arm'] },
+          ].map(f => (
+            <button key={f.key} onClick={() => setHistoryFilter(f.key)} style={{ padding: '7px 14px', borderRadius: 20, whiteSpace: 'nowrap', border: historyFilter === f.key ? `1px solid ${GOLD}` : `1px solid ${GOLD_DIM}`, background: historyFilter === f.key ? GOLD_DIM : 'transparent', color: historyFilter === f.key ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>{f.label}</button>
+          ))}
+        </div>
+        {(() => {
+          const filtered = workoutHistory.filter(s => {
+            if (historyFilter === 'all') return true
+            const kws = [{ key: 'push', kw: ['push','pec','chest','bench','developpe couche'] }, { key: 'pull', kw: ['pull','dos','back','row','tirage','tractions'] }, { key: 'legs', kw: ['leg','jambe','squat','quad','hamstring','fente'] }, { key: 'upper', kw: ['upper','epaule','shoulder','bras','arm'] }].find(f => f.key === historyFilter)?.kw || []
+            const txt = ((s.name || '') + ' ' + (s.notes || '')).toLowerCase()
+            return kws.some(k => txt.includes(k))
+          })
+          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: FONT_BODY, fontSize: 14, color: TEXT_DIM }}>Aucune seance</div>
+          return filtered.slice(0, 20).map((s: any) => {
+            const d = new Date(s.created_at)
+            const nameLC = (s.name || '').toLowerCase()
+            const icon = nameLC.includes('push') || nameLC.includes('pec') ? '\u{1F4AA}' : nameLC.includes('pull') || nameLC.includes('dos') ? '\u{1F9B5}' : nameLC.includes('leg') || nameLC.includes('jambe') ? '\u{1F9B5}' : '\u{1F3CB}\uFE0F'
+            return (
+              <div key={s.id} style={{ background: BG_CARD, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{icon}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || 'Seance'}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>
+                    {s.duration_minutes && <span>{s.duration_minutes}min</span>}
+                    {s.notes && <span> · {s.notes}</span>}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{d.getDate()}</div>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1, color: TEXT_MUTED, textTransform: 'uppercase' }}>{d.toLocaleDateString('fr-CH', { month: 'short' })}</div>
+                </div>
+              </div>
+            )
+          })
+        })()}
+      </div>
 
       {/* Video Feedback History */}
       {session?.user?.id && (
