@@ -53,7 +53,23 @@ export default function RootLayout({
         <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
         <link rel="icon" href="/favicon-16x16.png" sizes="16x16" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){for(var i=0;i<r.length;i++){r[i].unregister()}});if(window.caches){caches.keys().then(function(n){for(var i=0;i<n.length;i++){caches.delete(n[i])}})}}` }} />
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          if('serviceWorker' in navigator){
+            navigator.serviceWorker.register('/sw.js').then(function(reg){
+              reg.update();
+              reg.addEventListener('updatefound',function(){
+                var w=reg.installing;
+                if(w)w.addEventListener('statechange',function(){
+                  if(w.state==='activated')window.location.reload();
+                });
+              });
+            });
+            if(window.caches){caches.keys().then(function(n){for(var i=0;i<n.length;i++){caches.delete(n[i])}})}
+          }
+        ` }} />
       </head>
       <body className="antialiased" style={{ fontFamily: "var(--font-body), 'Outfit', sans-serif" }}>
         {children}
