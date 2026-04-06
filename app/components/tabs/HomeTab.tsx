@@ -458,17 +458,42 @@ export default function HomeTab({
           </div>
         </div>
 
-        {/* ═══ WATER QUICK ADD ═══ */}
-        <div style={{ display: 'flex', gap: 6 }}>
-          {[250, 500, 1000].map(ml => (
-            <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '12px 4px', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, background: 'transparent', cursor: 'pointer', color: TEXT_MUTED, fontSize: 12, fontWeight: 600, fontFamily: FONT_BODY, transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = GOLD_RULE; e.currentTarget.style.color = TEXT_MUTED }}
-            >
-              +{ml >= 1000 ? `${ml / 1000}L` : `${ml}ml`}
-            </button>
-          ))}
-        </div>
+        {/* ═══ HYDRATATION — Visual glasses ═══ */}
+        {(() => {
+          const waterGoal = (profile?.water_goal || 3000) / 1000
+          const glassSize = 0.25
+          const totalGlasses = Math.ceil(waterGoal / glassSize)
+          const waterL = waterToday / 1000
+          const filledGlasses = Math.floor(waterL / glassSize)
+          const partialFill = (waterL % glassSize) / glassSize
+          return (
+            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: '16px 18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                <div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 3, color: TEXT_PRIMARY }}>HYDRATATION</div>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 600, letterSpacing: 2, color: TEXT_MUTED }}>OBJECTIF : {waterGoal}L</div>
+                </div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: GOLD, lineHeight: 1 }}>{waterL.toFixed(1)}L</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
+                <div style={{ display: 'flex', gap: 5, flex: 1, flexWrap: 'wrap' }}>
+                  {Array.from({ length: totalGlasses }).map((_, i) => {
+                    const filled = i < filledGlasses
+                    const isPartial = i === filledGlasses && partialFill > 0
+                    return (
+                      <div key={i} style={{ width: 28, height: 28, borderRadius: 6, position: 'relative', overflow: 'hidden', background: filled ? 'linear-gradient(180deg, #E8C97A, #D4A843, #B8922F)' : BG_CARD_2, border: filled ? '1px solid rgba(232,201,122,0.4)' : `1px solid ${GOLD_DIM}`, transition: 'all 0.4s ease', boxShadow: filled ? '0 0 8px rgba(212,168,67,0.15)' : 'none' }}>
+                        {isPartial && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${partialFill * 100}%`, background: 'linear-gradient(180deg, #E8C97A, #D4A843)', transition: 'height 0.4s ease' }} />}
+                      </div>
+                    )
+                  })}
+                </div>
+                <button onClick={() => addWater(250)} style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 4px 16px rgba(212,168,67,0.25)' }}>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: '#0D0B08', lineHeight: 1 }}>+</span>
+                </button>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ═══ MUSCLE HEAT MAP ═══ */}
         <MuscleHeatMap muscleStatus={muscleStatus} />
