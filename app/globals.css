@@ -25,6 +25,11 @@
   100% { left: 200%; }
 }
 
+@keyframes skeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 @keyframes goldPulse {
   0%, 100% { box-shadow: 0 0 12px rgba(212,168,67,0.15); }
   50% { box-shadow: 0 0 28px rgba(212,168,67,0.4); }

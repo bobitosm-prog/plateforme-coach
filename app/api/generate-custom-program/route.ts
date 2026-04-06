@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit } from '../../../lib/rate-limit'
 
 // ─── Program structures by days × gender ───
 
@@ -106,6 +107,10 @@ REGLES SCIENTIFIQUES OBLIGATOIRES :
    - Isolation : 60s`
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  const rl = checkRateLimit(`custom-prog:${ip}`, 3, 60000)
+  if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
+
   try {
     const body = await req.json()
     const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender } = body

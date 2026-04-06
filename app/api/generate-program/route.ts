@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit } from '../../../lib/rate-limit'
 
 export const runtime = 'edge'
 
@@ -37,6 +38,10 @@ Chaque groupe musculaire 2x/semaine avec variations. 4-6 exercices, 3-4 sets, 8-
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  const rl = checkRateLimit(`program:${ip}`, 5, 60000)
+  if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
+
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
 

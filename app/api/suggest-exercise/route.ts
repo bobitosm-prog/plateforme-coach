@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit } from '../../../lib/rate-limit'
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  const rl = checkRateLimit(`suggest:${ip}`, 10, 60000)
+  if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
+
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })

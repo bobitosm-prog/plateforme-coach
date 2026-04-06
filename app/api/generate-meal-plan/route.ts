@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { checkRateLimit } from '../../../lib/rate-limit'
 
 export const maxDuration = 300
 
@@ -262,6 +263,9 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  const rl = checkRateLimit(`meal-plan:${ip}`, 3, 60000)
+  if (!rl.allowed) return new Response(JSON.stringify({ error: 'Trop de requetes. Reessayez dans ' + rl.retryAfter + 's.' }), { status: 429 })
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {
