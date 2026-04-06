@@ -328,7 +328,7 @@ export default function HomeTab({
 
         {/* ═══ COACH BANNER ═══ */}
         <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: `1px solid ${BORDER}`, cursor: 'pointer' }}>
-          <img src="/images/hero-coaching.png" alt="Coaching personnalise" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
+          <img src="/images/hero-coaching.webp" alt="Coaching personnalise" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.92) 0%, rgba(13,11,8,0.5) 50%, rgba(13,11,8,0.15) 100%)' }} />
           <div style={{ position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)' }}>
             <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 3, color: GOLD, textTransform: 'uppercase', marginBottom: 3 }}>Coaching personnel</div>

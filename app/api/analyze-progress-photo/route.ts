@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
       const contentType = res.headers.get('content-type') || 'image/jpeg'
       const mediaType = contentType.split(';')[0].trim()
 
-      console.log(`[analyze-progress-photo] Image fetched: ${(buffer.byteLength / 1024).toFixed(0)}KB, type: ${mediaType}`)
       return { base64, mediaType }
     }
 
@@ -294,7 +293,6 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
       ]
     }
 
-    console.log('[analyze-progress-photo] Calling Claude API...')
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -319,7 +317,6 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
     const data = await res.json()
     const analysis = data.content?.[0]?.text || 'Impossible de générer l\'analyse.'
 
-    console.log('[analyze-progress-photo] Analysis complete')
     return NextResponse.json({ analysis })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erreur inattendue'

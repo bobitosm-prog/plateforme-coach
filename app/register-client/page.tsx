@@ -169,7 +169,7 @@ function RegisterContent() {
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: FONT_BODY, position: 'relative' }}>
-      <img src="/images/hero-gym.png" alt="Gym luxe Geneve" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+      <img src="/images/hero-gym.webp" alt="Gym luxe Geneve" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}

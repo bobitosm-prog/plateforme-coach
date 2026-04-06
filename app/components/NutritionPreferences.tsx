@@ -256,11 +256,6 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   async function save() {
     setSaving(true)
     const objMap: Record<ObjectiveType, string> = { cut: 'weight_loss', maintain: 'maintenance', bulk: 'mass' }
-    console.log('=== SAVE START ===')
-    console.log('userId:', userId)
-    console.log('meal_preferences:', JSON.stringify(mealPrefs))
-    console.log('calorie_goal:', objectiveKcal, 'protein:', finalMacros.protein, 'carbs:', finalMacros.carbs, 'fat:', finalMacros.fat)
-    console.log('objective:', objMap[objective], 'activity:', activityLevel, 'diet:', dietaryType)
     const { data, error } = await supabase.from('profiles').update({
       calorie_goal: objectiveKcal,
       protein_goal: finalMacros.protein,
@@ -277,7 +272,6 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       height,
       gender,
     }).eq('id', userId).select()
-    console.log('=== SAVE RESULT ===', { data, error })
     setSaving(false)
     if (error) {
       console.error('Save error:', error)
@@ -298,7 +292,6 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     try {
       const objMap: Record<ObjectiveType, string> = { cut: 'seche', maintain: 'maintien', bulk: 'bulk' }
       const kcal = objectiveKcal || profile?.calorie_goal || 2200
-      console.log('=== REGEN START ===', { kcal, protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat })
       const res = await fetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -344,12 +337,10 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           try {
             const parsed = JSON.parse(line.slice(6))
             if (parsed.type === 'progress') setToastMsg(`Generation ${parsed.day}... (${parsed.index}/7)`)
-            if (parsed.type === 'done') { planData = parsed.plan; console.log('=== PLAN RECEIVED ===', Object.keys(planData || {})) }
             if (parsed.type === 'error') { console.error('SSE error:', parsed.error); throw new Error(parsed.error) }
           } catch (e) { if (e instanceof Error && e.message !== 'Unexpected end of JSON input') throw e }
         }
       }
-      console.log('=== STREAM DONE ===', { hasPlan: !!planData, days: planData ? Object.keys(planData).length : 0 })
       if (!planData) {
         setToastMsg('Generation echouee — aucun plan recu')
         setTimeout(() => setToastMsg(''), 3000)

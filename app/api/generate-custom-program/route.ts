@@ -207,7 +207,6 @@ IMPORTANT :
     cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1')
 
     const program = JSON.parse(cleaned)
-    console.log(`[generate-custom-program] OK: ${program.program_name}, ${program.days?.length} days, gender=${gender}`)
     return NextResponse.json({ program })
 
   } catch (e: any) {

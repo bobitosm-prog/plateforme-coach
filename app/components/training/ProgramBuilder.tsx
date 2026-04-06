@@ -115,7 +115,6 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
 
   /* ─── AI generate ─── */
   async function generateAI() {
-    console.log('[ProgramBuilder] Génération démarrée', { objective: aiObjective, level: aiLevel, daysPerWeek: aiDays, duration: aiDuration, equipment: aiEquipment, priorities: aiPriorities, exercises: dbExercises.length })
     setAiGenerating(true)
     try {
       const res = await fetch('/api/generate-custom-program', {
@@ -127,9 +126,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
           notes: aiNotes, gender: userGender,
         }),
       })
-      console.log('[ProgramBuilder] API response status:', res.status)
       const data = await res.json()
-      console.log('[ProgramBuilder] API response data:', JSON.stringify(data).substring(0, 500))
       if (data.program) {
         setAiResult(data.program)
         setProgramName(data.program.program_name || 'Programme IA')

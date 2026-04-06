@@ -64,12 +64,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   }, [userId])
 
   useEffect(() => {
-    console.log('=== NUTRITION TAB STATE ===')
-    console.log('activeMealPlan:', activeMealPlan ? { id: activeMealPlan.id, is_active: activeMealPlan.is_active, has_plan_data: !!activeMealPlan.plan_data, days: activeMealPlan.plan_data ? Object.keys(activeMealPlan.plan_data) : [] } : null)
-    console.log('coachMealPlan:', !!coachMealPlan)
-    console.log('nutritionDay:', nutritionDay, 'todayKey:', todayKey)
-    console.log('profile calorie_goal:', profile?.calorie_goal, 'tdee:', profile?.tdee)
-    console.log('subTab:', subTab, 'hasPlan:', hasPlan)
   }, [activeMealPlan, subTab])
 
   async function fetchDailyLogs() {
@@ -126,7 +120,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
-    console.log('=== FETCH MEAL PLAN ===', { found: !!data, id: data?.id, is_active: data?.is_active, days: data?.plan_data ? Object.keys(data.plan_data) : [] })
     setActiveMealPlan(data)
     if (data && !coachMealPlan) setSubTab('today')
     setLoadingPlan(false)
@@ -271,7 +264,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     if (!dayData) {
       // Show available days for debugging + prompt to pick one
       const availableDays = Object.keys(planData)
-      console.log('No data for', nutritionDay, '— available:', availableDays)
       return (
         <div style={{ padding: 20, textAlign: 'center' }}>
           <p style={{ fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_MUTED, marginBottom: 12 }}>Pas de plan pour {nutritionDay}.</p>
@@ -479,7 +471,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     <div style={{ minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       {/* HERO BANNER */}
       <div style={{ margin: '0 20px 0', height: 180, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
-        <img src="/images/hero-nutrition.png" alt="Plan nutritionnel MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+        <img src="/images/hero-nutrition.webp" alt="Plan nutritionnel MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 3, margin: 0, color: TEXT_PRIMARY, lineHeight: 1 }}>VOTRE PLAN NUTRITIONNEL</h1>

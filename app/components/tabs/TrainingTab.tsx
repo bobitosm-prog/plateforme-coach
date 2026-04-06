@@ -420,7 +420,7 @@ export default function TrainingTab({
 
       {/* ── HERO BANNER ── */}
       <div style={{ margin: '0 16px', height: 180, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
-        <img src="/images/hero-athlete.png" alt="Athlete MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+        <img src="/images/hero-athlete.webp" alt="Athlete MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 3, margin: 0, color: TEXT_PRIMARY, lineHeight: 1 }}>VOTRE PROGRAMME</h1>
