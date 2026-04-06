@@ -103,7 +103,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
     const gluc = Math.round(((selected.glucides * quantity) / 100) * 10) / 10
     const lip = Math.round(((selected.lipides * quantity) / 100) * 10) / 10
     return (
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'flex-end' }}>
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', alignItems: 'flex-end' }}>
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '2px 2px 0 0', padding: '24px 20px 40px', width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3 style={{ fontFamily: FONT_ALT, fontSize: '1.2rem', fontWeight: 800, margin: 0, color: TEXT_PRIMARY, letterSpacing: '1px', textTransform: 'uppercase' }}>{selected.nom}</h3>
@@ -161,8 +161,8 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
 
   // Main view -- all foods by category
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '16px', display: 'flex', gap: 10, alignItems: 'center', borderBottom: `1px solid ${BORDER}` }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '16px', paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', display: 'flex', gap: 10, alignItems: 'center', borderBottom: `1px solid ${BORDER}`, background: BG_BASE }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <Search size={16} color={GOLD} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
           <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder={`Filtrer ${allFoods.length} aliments fitness...`}
