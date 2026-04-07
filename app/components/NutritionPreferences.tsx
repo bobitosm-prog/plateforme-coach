@@ -220,19 +220,20 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     })
   }
 
-  // Debounced food search via authenticated supabase client
+  // Debounced food search — fitness first, then ANSES
   useEffect(() => {
     if (mealSearchQuery.length < 2) { setMealSearchResults([]); return }
     const timer = setTimeout(async () => {
       try {
-        const { data } = await supabase
-          .from('food_items')
-          .select('id, name, energy_kcal, proteins, carbohydrates, fat')
-          .ilike('name', `%${mealSearchQuery}%`)
-          .limit(8)
-        const results = (data || []).map((f: any) => ({
+        const [{ data: fitness }, { data: anses }] = await Promise.all([
+          supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').ilike('name', `%${mealSearchQuery}%`).limit(10),
+          supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', `%${mealSearchQuery}%`).limit(10),
+        ])
+        const data = [...(fitness || []), ...(anses || [])]
+        const results = data.map((f: any) => ({
           id: f.id,
           name: f.name,
+          source: f.source,
           calories_per_100g: Math.round(f.energy_kcal || 0),
           protein_per_100g: Math.round((f.proteins || 0) * 10) / 10,
         }))
@@ -725,6 +726,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
                 <button key={r.id} onClick={() => addSearchedFood(r.name)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${BORDER}`, cursor: 'pointer', textAlign: 'left' }}>
                   <Plus size={12} color={GOLD} />
                   <span style={{ fontSize: '0.78rem', fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{r.name}</span>
+                  {r.source === 'fitness' && <span style={{ fontFamily: FONT_ALT, fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(74,222,128,0.12)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.25)', flexShrink: 0 }}>FITNESS</span>}
                 </button>
               ))}
             </div>
