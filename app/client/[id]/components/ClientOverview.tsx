@@ -83,7 +83,8 @@ export default function ClientOverview({
             </div>
             {profile.objective && (() => {
               const labels: Record<string,string> = {perte_poids:'Perte de poids',prise_masse:'Prise de masse',maintien:'Maintien',performance:'Performance'}
-              return <span style={{fontSize:'0.75rem',color:'#6B7280'}}>{labels[profile.objective] ?? profile.objective}</span>
+              const label = labels[profile.objective]
+              return label ? <span style={{fontSize:'0.75rem',color:'#6B7280'}}>{label}</span> : null
             })()}
           </div>
         </div>

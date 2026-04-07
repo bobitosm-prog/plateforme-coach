@@ -111,7 +111,7 @@ export default function ClientProgram({
           ) : program[expandedDay].exercises.length === 0 ? (
             <div style={{textAlign:'center',padding:'28px 16px',color:TEXT_MUTED,fontFamily:FONT_BODY,fontSize:'0.85rem'}}>Aucun exercice — cliquez Ajouter</div>
           ) : (
-            <div style={{padding:'0 14px'}}>
+            <div style={{padding:'0 14px',overflowX:'auto'}}>
               {program[expandedDay].exercises.map((ex,idx)=>(
                 <div key={idx} className="ex-row-m">
                   {/* Name + delete */}
@@ -120,7 +120,7 @@ export default function ClientProgram({
                       placeholder="Nom de l'exercice"
                       value={ex.name}
                       onChange={e=>updateExercise(expandedDay,idx,'name',e.target.value)}
-                      style={{flex:1,background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'9px 11px',fontFamily:FONT_BODY,fontSize:'0.88rem',color:TEXT_PRIMARY,outline:'none',minHeight:40}}
+                      style={{flex:1,background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'9px 11px',fontFamily:FONT_BODY,fontSize:'0.88rem',color:TEXT_PRIMARY,outline:'none',minHeight:40,minWidth:0}}
                       onFocus={e=>{e.target.style.borderColor=GOLD}}
                       onBlur={e=>{e.target.style.borderColor=BORDER}}
                     />
@@ -129,7 +129,7 @@ export default function ClientProgram({
                     </button>
                   </div>
                   {/* Sets / Reps / Rest / Notes */}
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:6}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:6,minWidth:0}}>
                     {([
                       {label:'Séries',field:'sets' as const,type:'number',val:ex.sets},
                       {label:'Reps',field:'reps' as const,type:'number',val:ex.reps},

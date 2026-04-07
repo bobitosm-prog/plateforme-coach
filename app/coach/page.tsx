@@ -171,12 +171,9 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         .client-card-msg-btn { position: relative; background: transparent; border: none; cursor: pointer; padding: 8px; color: ${TEXT_MUTED}; display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 12px; transition: color 150ms; }
         .client-card-msg-btn:active { color: ${GOLD}; }
         .msg-badge { position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; background: ${RED}; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
-        .bottom-nav { display: none; }
-        @media (max-width: 767px) {
-          .bottom-nav { display: block; position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 100; }
-          .bottom-nav-inner { display: flex; background: rgba(13,11,8,0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(212,168,67,0.08); border-radius: 18px; box-shadow: 0 -2px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(232,201,122,0.04); }
-          .section-pad { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
-        }
+        .bottom-nav { display: block; position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 100; }
+        .bottom-nav-inner { display: flex; background: rgba(13,11,8,0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(212,168,67,0.08); border-radius: 18px; box-shadow: 0 -2px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(232,201,122,0.04); }
+        .section-pad { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
         .bottom-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: transparent; border: none; cursor: pointer; padding: 4px 8px; color: ${TEXT_MUTED}; transition: color 150ms; position: relative; min-height: 44px; justify-content: center; }
         .bottom-nav-btn.active { color: ${GOLD}; }
         .bottom-nav-label { font-family: ${FONT_ALT}; font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
@@ -406,13 +403,13 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           {/* Bloc 2 — Chiffre d'affaires */}
           <div className="sidebar-card">
             <h2 className="section-title">Chiffre d&apos;affaires</h2>
-            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <select value={revMonth} onChange={e => setRevMonth(Number(e.target.value))}
-                style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
+                style={{ width: '50%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
                 {WP_MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
               </select>
               <select value={revYear} onChange={e => setRevYear(Number(e.target.value))}
-                style={{ width: 90, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
+                style={{ width: 'auto', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
                 {WP_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>

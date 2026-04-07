@@ -147,8 +147,8 @@ export default function ClientNutrition({
               <div style={{padding:'8px 12px 12px'}}>
                 <div style={{display:'flex',gap:8,marginBottom:10}}>
                   {[
-                    {l:'Kcal',v:day.total_kcal,c:RED},{l:'P',v:`${day.total_protein}g`,c:'#3B82F6'},
-                    {l:'G',v:`${day.total_carbs}g`,c:GOLD},{l:'L',v:`${day.total_fat}g`,c:GREEN},
+                    {l:'Kcal',v:day.total_kcal,c:'#D4A843'},{l:'P',v:`${day.total_protein}g`,c:'#E8C97A'},
+                    {l:'G',v:`${day.total_carbs}g`,c:'#8A8070'},{l:'L',v:`${day.total_fat}g`,c:'#F5EDD8'},
                   ].map(m=>(
                     <div key={m.l} style={{flex:1,background:BG_BASE,borderRadius:RADIUS_CARD,padding:'6px 4px',textAlign:'center'}}>
                       <div style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,color:m.c}}>{m.v}</div>
@@ -218,8 +218,8 @@ export default function ClientNutrition({
               <div style={{padding:'8px 12px 12px'}}>
                 <div style={{display:'flex',gap:8,marginBottom:10}}>
                   {[
-                    {l:'Kcal',v:day.total_kcal,c:RED},{l:'P',v:`${day.total_protein}g`,c:'#3B82F6'},
-                    {l:'G',v:`${day.total_carbs}g`,c:GOLD},{l:'L',v:`${day.total_fat}g`,c:GREEN},
+                    {l:'Kcal',v:day.total_kcal,c:'#D4A843'},{l:'P',v:`${day.total_protein}g`,c:'#E8C97A'},
+                    {l:'G',v:`${day.total_carbs}g`,c:'#8A8070'},{l:'L',v:`${day.total_fat}g`,c:'#F5EDD8'},
                   ].map(m=>(
                     <div key={m.l} style={{flex:1,background:BG_BASE,borderRadius:RADIUS_CARD,padding:'6px 4px',textAlign:'center'}}>
                       <div style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,color:m.c}}>{m.v}</div>
