@@ -10,7 +10,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
 import {
-  Zap, Users, ChevronLeft, Dumbbell, Calendar,
+  Zap, Users, ChevronLeft, Dumbbell, Calendar, Home,
   LogOut, Check, X, Plus, MessageCircle, Clock, UtensilsCrossed, User,
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -94,6 +94,8 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
 export default function CoachPage({ initialSession }: { initialSession?: any } = {}) {
   const h = useCoachDashboard(initialSession)
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [revMonth, setRevMonth] = useState(new Date().getMonth())
+  const [revYear, setRevYear] = useState(new Date().getFullYear())
 
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
@@ -201,7 +203,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
       <div style={{ padding: '12px 14px 0', position: 'sticky', top: 0, zIndex: 50 }}>
         <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18 }}>
           {/* Left: Messages */}
-          <button onClick={() => h.setSection(s => s === 'messages' ? 'dashboard' : 'messages')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.section === 'messages' ? GOLD_DIM : 'transparent', border: h.section === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', position: 'relative', zIndex: 3 }}>
+          <button onClick={() => h.setSection(s => s === 'messages' ? 'accueil' : 'messages')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.section === 'messages' ? GOLD_DIM : 'transparent', border: h.section === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', position: 'relative', zIndex: 3 }}>
             <MessageCircle size={19} color={h.section === 'messages' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
             {h.totalUnread > 0 && <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: RED, border: '2px solid rgba(20,18,9,0.8)' }} />}
           </button>
@@ -366,19 +368,99 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         />
       )}
 
-      {/* ══ DASHBOARD SECTION ══ */}
+      {/* ══ ACCUEIL SECTION ══ */}
+      {h.section === 'accueil' && (
+        <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+          {/* Bloc 1 — Agenda du jour */}
+          <div className="sidebar-card">
+            <h2 className="section-title">Aujourd&apos;hui</h2>
+            {(() => {
+              const todayStr = new Date().toISOString().split('T')[0]
+              const todaySessions = h.scheduledSessions.filter(s => s.scheduled_at.startsWith(todayStr))
+              if (todaySessions.length === 0) {
+                return <p style={{ fontSize: '0.9rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>Aucune séance aujourd&apos;hui</p>
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {todaySessions.map(s => {
+                    const color = SESSION_COLORS[s.session_type] ?? GOLD
+                    const clientName = h.clients.find(c => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
+                    const dt = new Date(s.scheduled_at)
+                    return (
+                      <div key={s.id} onClick={() => h.setSelectedSession(s)}
+                        style={{ background: BG_CARD_2, borderLeft: `2px solid ${GOLD}`, borderRadius: RADIUS_CARD, padding: '10px 14px', cursor: 'pointer', border: `1px solid ${BORDER}`, borderLeftWidth: 2, borderLeftColor: GOLD }}>
+                        <div style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '1.5px' }}>{s.session_type}</div>
+                        <div style={{ fontSize: '0.88rem', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 500, marginTop: 2 }}>{clientName}</div>
+                        <div style={{ fontSize: '0.75rem', color: TEXT_MUTED, fontFamily: FONT_BODY, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Clock size={11} />{format(dt, 'HH:mm')} · {s.duration_minutes}min
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Bloc 2 — Chiffre d'affaires */}
+          <div className="sidebar-card">
+            <h2 className="section-title">Chiffre d&apos;affaires</h2>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+              <select value={revMonth} onChange={e => setRevMonth(Number(e.target.value))}
+                style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
+                {WP_MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+              </select>
+              <select value={revYear} onChange={e => setRevYear(Number(e.target.value))}
+                style={{ width: 90, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
+                {WP_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            {(() => {
+              const startDate = new Date(revYear, revMonth, 1)
+              const endDate = new Date(revYear, revMonth + 1, 0, 23, 59, 59)
+              const startIso = startDate.toISOString()
+              const endIso = endDate.toISOString()
+              let total = 0
+              let count = 0
+              for (const p of h.allPayments) {
+                if (p.paid_at && p.paid_at >= startIso && p.paid_at <= endIso) {
+                  total += p.amount || 0
+                  count++
+                }
+              }
+              const formatted = Math.round(total).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
+              return (
+                <div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
+                    CHF {formatted}
+                  </div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: '0.78rem', color: TEXT_MUTED, marginTop: 8 }}>
+                    {count} paiement{count !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Bloc 3 — Messages non lus (seulement si > 0) */}
+          {h.totalUnread > 0 && (
+            <div className="sidebar-card" style={{ cursor: 'pointer' }} onClick={() => h.setSection('messages')}>
+              <h2 className="section-title">Messages</h2>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: RED, lineHeight: 1 }}>
+                {h.totalUnread}
+              </div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: '0.78rem', color: TEXT_MUTED, marginTop: 8 }}>
+                message{h.totalUnread !== 1 ? 's' : ''} non lu{h.totalUnread !== 1 ? 's' : ''}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ DASHBOARD / CLIENTS SECTION ══ */}
       {h.section === 'dashboard' && (
         <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
-          <CoachRevenue
-            clients={h.clients} loading={h.loading} activeCount={h.activeCount}
-            totalUnread={h.totalUnread} scheduledSessions={h.scheduledSessions}
-            monthRevenue={h.monthRevenue} yearRevenue={h.yearRevenue} totalRevenue={h.totalRevenue}
-            monthPaymentsCount={h.monthPaymentsCount} activeSubscribers={h.activeSubscribers}
-            coachProfile={h.coachProfile} stripeConnecting={h.stripeConnecting}
-            handleStripeConnect={h.handleStripeConnect} setSection={h.setSection}
-            atRiskClients={h.atRiskClients}
-          />
-          <CoachVideoReviews session={h.session} supabase={h.supabase} />
           <ClientsList
             filtered={h.filtered} loading={h.loading}
             search={h.search} setSearch={h.setSearch}
@@ -425,8 +507,8 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
       <nav className="bottom-nav" aria-label="Navigation principale">
         <div className="bottom-nav-inner" style={{ justifyContent: 'center', gap: 48, padding: '10px 24px' }}>
         {([
+          { key: 'accueil', icon: <Home size={20} strokeWidth={1.5} />, label: 'Accueil' },
           { key: 'dashboard', icon: <Users size={20} strokeWidth={1.5} />, label: 'Clients' },
-          { key: 'messages', icon: <MessageCircle size={20} strokeWidth={1.5} />, label: 'Messages', badge: h.totalUnread },
           { key: 'calendar', icon: <Calendar size={20} strokeWidth={1.5} />, label: 'Calendrier' },
         ] as { key: string; icon: React.ReactNode; label: string; badge?: number }[]).map(tab => (
           <button key={tab.key} className={`bottom-nav-btn${h.section === tab.key ? ' active' : ''}`}

@@ -1,12 +1,10 @@
 'use client'
 
 import {
-  Search, ChevronRight, UserPlus, Dumbbell, Calendar,
-  Copy, Check, MessageCircle, Clock,
+  Search, ChevronRight, UserPlus,
+  Copy, Check, MessageCircle,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -27,7 +25,7 @@ interface ClientsListProps {
   copied: boolean
   copyInviteLink: () => void
   unreadCounts: Record<string, number>
-  setSection: (s: 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
+  setSection: (s: 'accueil' | 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
   openChat: (c: ClientRow) => void
   setShowNewSession: (v: boolean) => void
   coachInitials: string
@@ -46,7 +44,7 @@ export default function ClientsList({
   setSelectedSession,
 }: ClientsListProps) {
   return (
-    <div className="lg-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', alignItems: 'start' }}>
+    <div>
 
       {/* Client table */}
       <div className="sidebar-card">
@@ -193,83 +191,6 @@ export default function ClientsList({
         </div>
       </div>
 
-      {/* Sidebar */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-        {/* Quick actions */}
-        <div className="sidebar-card">
-          <h2 className="section-title">Actions rapides</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
-            <button className="btn-primary" onClick={() => setShowInvite((v: boolean) => !v)} aria-label="Inviter un nouveau client">
-              <UserPlus size={16} strokeWidth={2.5} />
-              Nouveau client
-            </button>
-
-            {showInvite && (
-              <div className="invite-panel">
-                <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, marginBottom: '10px', lineHeight: 1.5, fontFamily: FONT_BODY }}>
-                  Partage ce lien — le client sera lié à ton profil automatiquement.
-                </p>
-                <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 10px', fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: '10px' }}>
-                  {inviteLink || 'Chargement…'}
-                </div>
-                <button className="btn-primary btn-primary-orange" onClick={copyInviteLink} style={{ fontSize: '0.85rem', padding: '8px 16px' }}>
-                  {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier le lien</>}
-                </button>
-              </div>
-            )}
-
-            <button className="btn-primary btn-primary-orange" onClick={() => setShowNewSession(true)}>
-              <Dumbbell size={16} strokeWidth={2.5} />
-              Nouvelle séance
-            </button>
-
-            <hr className="divider" />
-
-            <button className="btn-secondary" onClick={() => setSection('calendar')}>
-              <Calendar size={16} strokeWidth={2} />
-              Voir le calendrier
-            </button>
-
-          </div>
-        </div>
-
-        {/* Today */}
-        <div className="sidebar-card">
-          <h2 className="section-title">Aujourd&apos;hui</h2>
-          {(() => {
-            const _todayStr = new Date().toISOString().split('T')[0]
-            const todaySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(_todayStr))
-            if (todaySessions.length === 0) {
-              return <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>Aucune séance planifiée.</p>
-            }
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {todaySessions.map(s => {
-                  const color = SESSION_COLORS[s.session_type] ?? GOLD
-                  const clientName = clients.find(c => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
-                  const dt = new Date(s.scheduled_at)
-                  return (
-                    <div
-                      key={s.id}
-                      onClick={() => setSelectedSession(s)}
-                      style={{ background: BG_CARD_2, borderLeft: `2px solid ${GOLD}`, borderRadius: RADIUS_CARD, padding: '8px 10px', cursor: 'pointer', border: `1px solid ${BORDER}`, borderLeftWidth: 2, borderLeftColor: GOLD }}
-                    >
-                      <div style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '1.5px' }}>{s.session_type}</div>
-                      <div style={{ fontSize: '0.82rem', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 500, marginTop: 2 }}>{clientName}</div>
-                      <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Clock size={10} />{format(dt, 'HH:mm')} · {s.duration_minutes}min
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )
-          })()}
-        </div>
-
-      </div>
     </div>
   )
 }

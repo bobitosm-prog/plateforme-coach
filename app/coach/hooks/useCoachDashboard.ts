@@ -101,7 +101,7 @@ export default function useCoachDashboard(initialSession?: any) {
   const [search, setSearch]     = useState('')
   const [copied, setCopied]     = useState(false)
   const [showInvite, setShowInvite] = useState(false)
-  const [section, setSection]   = useState<'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil' | 'programs'>('dashboard')
+  const [section, setSection]   = useState<'accueil' | 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil' | 'programs'>('accueil')
   const [coachProfile, setCoachProfile] = useState<any>(null)
   const [stripeConnecting, setStripeConnecting] = useState(false)
   const [monthRevenue, setMonthRevenue] = useState(0)
@@ -109,6 +109,7 @@ export default function useCoachDashboard(initialSession?: any) {
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [monthPaymentsCount, setMonthPaymentsCount] = useState(0)
   const [activeSubscribers, setActiveSubscribers] = useState(0)
+  const [allPayments, setAllPayments] = useState<{ amount: number; paid_at: string }[]>([])
   const [atRiskClients, setAtRiskClients] = useState<any[]>([])
   const [pendingVideoCount, setPendingVideoCount] = useState(0)
 
@@ -239,6 +240,7 @@ export default function useCoachDashboard(initialSession?: any) {
           const startOfYear = new Date(startOfMonth.getFullYear(), 0, 1, 0, 0, 0, 0)
           supabase.from('payments').select('amount,paid_at').eq('status', 'paid').limit(200).then(({ data: allPayments }) => {
             if (!allPayments) return
+            setAllPayments(allPayments as { amount: number; paid_at: string }[])
             const monthStart = startOfMonth.toISOString()
             const yearStart = startOfYear.toISOString()
             let mRev = 0, yRev = 0, tRev = 0, mCount = 0
@@ -606,6 +608,7 @@ export default function useCoachDashboard(initialSession?: any) {
     totalRevenue,
     monthPaymentsCount,
     activeSubscribers,
+    allPayments,
 
     // Invite
     showInvite, setShowInvite,

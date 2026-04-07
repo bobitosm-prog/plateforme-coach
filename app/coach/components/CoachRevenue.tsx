@@ -31,7 +31,7 @@ interface CoachRevenueProps {
   coachProfile: any
   stripeConnecting: boolean
   handleStripeConnect: () => void
-  setSection: (s: 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
+  setSection: (s: 'accueil' | 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
   atRiskClients: any[]
 }
 

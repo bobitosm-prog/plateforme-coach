@@ -18,7 +18,7 @@ interface CoachProfileProps {
   coachInitials: string
   session: any
   coachProfile: any
-  setSection: (s: 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
+  setSection: (s: 'accueil' | 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
   supabaseSignOut: () => void
 }
 

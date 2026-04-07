@@ -34,7 +34,7 @@ interface CoachCalendarProps {
   setSelectedSession: (s: ScheduledSession | null) => void
   setShowNewSession: (v: boolean) => void
   setNsDate: (v: string) => void
-  setSection: (s: 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
+  setSection: (s: 'accueil' | 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
 }
 
 export default function CoachCalendar({
