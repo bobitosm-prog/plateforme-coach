@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
+import { PROGRAM_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 
 export const runtime = 'edge'
 
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
     const days = Math.min(Math.max(trainingDays || 4, 3), 6)
     const splitGuide = SPLIT_GUIDE[days] || SPLIT_GUIDE[4]
 
-    const prompt = `Tu es un coach fitness expert en hypertrophie. Genere un programme d'entrainement en JSON UNIQUEMENT.
+    const prompt = `${PROGRAM_GENERATION_PROMPT}
 
 ${getPrefatigueInstructions()}
 

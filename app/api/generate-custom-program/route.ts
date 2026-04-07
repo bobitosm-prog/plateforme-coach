@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
+import { PROGRAM_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 
 // ─── Program structures by days × gender ───
 
@@ -127,7 +128,7 @@ export async function POST(req: NextRequest) {
     const programStructure = getProgramStructure(days, isFemale)
     const genderRules = isFemale ? FEMALE_RULES : MALE_RULES
 
-    const systemPrompt = `Tu es un coach fitness expert certifie. Tu generes des programmes d'entrainement scientifiquement structures en JSON.
+    const systemPrompt = `${PROGRAM_GENERATION_PROMPT}
 
 ${genderRules}
 

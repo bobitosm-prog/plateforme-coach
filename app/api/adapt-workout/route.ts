@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { PROGRAM_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
@@ -18,9 +19,10 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 800,
+        system: PROGRAM_GENERATION_PROMPT,
         messages: [{
           role: 'user',
-          content: `Tu es un coach fitness professionnel certifié. Ne mentionne jamais l'IA. Le client a seulement ${availableMinutes} minutes pour sa séance de ${sessionType || 'musculation'}.
+          content: `Le client a seulement ${availableMinutes} minutes pour sa seance de ${sessionType || 'musculation'}.
 Programme complet prévu : ${JSON.stringify(exercises.map((e: any) => ({ name: e.name || e.exercise_name, sets: e.sets, reps: e.reps })))}
 
 Adapte le programme pour ${availableMinutes} minutes :

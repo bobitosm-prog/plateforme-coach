@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 
 export const maxDuration = 300
 
@@ -84,7 +85,9 @@ VARIÉTÉ PROTÉINES SUR LA SEMAINE :
 - Ne JAMAIS répéter la même protéine principale 2 jours de suite au même repas
 - Sur 7 jours : minimum 3 repas poisson, 2 viande blanche, 2 viande rouge` : ''
 
-  return `Tu es un nutritionniste certifié expert en fitness. Tu génères UN jour de plan alimentaire en JSON. Ne mentionne jamais l'intelligence artificielle dans tes réponses.
+  return `${NUTRITION_GENERATION_PROMPT}
+
+Tu generes UN jour de plan alimentaire en JSON.
 
 ═══ OBJECTIF CALORIQUE DU CLIENT : ${kcal} KCAL/JOUR ═══
 Protéines : ${prot}g | Glucides : ${carbs}g | Lipides : ${fat}g

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { EXERCISE_SWAP_PROMPT } from '../../../lib/coach-knowledge'
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
@@ -23,9 +24,10 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
+        system: EXERCISE_SWAP_PROMPT,
         messages: [{
           role: 'user',
-          content: `Tu es un coach fitness professionnel certifie. Ne mentionne jamais l'IA. L'utilisateur veut remplacer l'exercice "${exerciseName}" (muscle: ${muscleGroup || 'non specifie'}).
+          content: `L'utilisateur veut remplacer l'exercice "${exerciseName}" (muscle: ${muscleGroup || 'non specifie'}).
 Raison : ${reason || 'non specifiee'}
 ${availableEquipment ? `Materiel disponible : ${availableEquipment}` : ''}
 ${typeHint}
