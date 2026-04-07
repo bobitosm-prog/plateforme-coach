@@ -100,9 +100,9 @@ export default function ClientOverview({
         {/* Nutrition preferences badges */}
         {(profile.dietary_type || profile.allergies?.length || profile.liked_foods?.length) && (
           <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid rgba(212,168,67,0.1)',display:'flex',flexWrap:'wrap',gap:6}}>
-            {profile.dietary_type && (
+            {profile.dietary_type && profile.dietary_type.length > 1 && (
               <span style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(212,168,67,0.12)',color:'#D4A843',border:'1px solid rgba(212,168,67,0.2)'}}>
-                {profile.dietary_type === 'omnivore' ? '🥩 Omnivore' : profile.dietary_type === 'vegetarian' ? '🥗 Végétarien' : '🌱 Vegan'}
+                {profile.dietary_type === 'omnivore' ? '🥩 Omnivore' : profile.dietary_type === 'vegetarian' ? '🥗 Végétarien' : profile.dietary_type === 'vegan' ? '🌱 Vegan' : profile.dietary_type}
               </span>
             )}
             {(profile.allergies || []).map((a: string) => (

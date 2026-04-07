@@ -129,7 +129,7 @@ export default function ClientProgram({
                     </button>
                   </div>
                   {/* Sets / Reps / Rest / Notes */}
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:6,minWidth:0}}>
+                  <div style={{display:'grid',gridTemplateColumns:'60px 60px 65px 1fr',gap:6,minWidth:0}}>
                     {([
                       {label:'Séries',field:'sets' as const,type:'number',val:ex.sets},
                       {label:'Reps',field:'reps' as const,type:'number',val:ex.reps},
