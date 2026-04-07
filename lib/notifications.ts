@@ -15,9 +15,9 @@ export async function showNotification(title: string, body: string) {
     const reg = await navigator.serviceWorker.ready
     await reg.showNotification(title, {
       body, icon: '/icon-192x192.png', badge: '/icon-192x192.png',
-      vibrate: [200, 100, 200], tag: 'moovx-reminder', renotify: true,
+      tag: 'moovx-reminder', renotify: true,
       data: { url: '/' },
-    })
+    } as any)
   } catch {
     try { new Notification(title, { body, icon: '/icon-192x192.png' }) } catch {}
   }
