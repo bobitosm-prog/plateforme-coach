@@ -376,7 +376,7 @@ export default function ClientProfilePage() {
               {h.editWeight && h.editHeight && (() => {
                 const bmi = (parseFloat(h.editWeight) / ((parseFloat(h.editHeight)/100)**2)).toFixed(1)
                 const bmiNum = parseFloat(bmi)
-                const cat = bmiNum < 18.5 ? {label:'Insuffisance pondérale',color:'#60A5FA'} : bmiNum < 25 ? {label:'Poids normal',color:GREEN} : bmiNum < 30 ? {label:'Surpoids',color:'#FBBF24'} : {label:'Obésité',color:RED}
+                const cat = bmiNum < 18.5 ? {label:'Insuffisance pondérale',color:'#60A5FA'} : bmiNum < 25 ? {label:'Poids normal',color:GOLD} : bmiNum < 30 ? {label:'Surpoids',color:'#E8C97A'} : {label:'Obésité',color:RED}
                 return (
                   <div style={{background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'10px 14px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                     <span style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:TEXT_MUTED,textTransform:'uppercase',letterSpacing:'2px'}}>IMC calculé</span>
@@ -388,7 +388,7 @@ export default function ClientProfilePage() {
             {h.editTab === 'status' && (<>
               <EditField label="Statut">
                 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-                  {[{val:'active',label:'Actif',color:GREEN},{val:'warning',label:'À relancer',color:GOLD},{val:'inactive',label:'Inactif',color:TEXT_MUTED}].map(({val,label,color})=>(
+                  {[{val:'active',label:'Actif',color:GOLD},{val:'warning',label:'À relancer',color:GOLD},{val:'inactive',label:'Inactif',color:TEXT_MUTED}].map(({val,label,color})=>(
                     <button key={val} onClick={()=>h.setEditStatus(val)} style={{padding:'10px 8px',borderRadius:0,border:`2px solid ${h.editStatus===val?color:BORDER}`,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.85rem',fontWeight:700,background:h.editStatus===val?`${color}20`:'transparent',color:h.editStatus===val?color:TEXT_MUTED,transition:'all 150ms ease'}}>{label}</button>
                   ))}
                 </div>
@@ -507,7 +507,7 @@ export default function ClientProfilePage() {
                 )}
                 {!h.aiGenerating && h.aiPreview && (
                   <div style={{ padding: '20px 24px' }}>
-                    <p style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, color: GREEN, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 12 }}>✓ Programme généré — aperçu</p>
+                    <p style={{ fontFamily: FONT_ALT, fontSize: '11px', fontWeight: 700, color: GOLD, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 12 }}>✓ Programme généré — aperçu</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
                       {DAYS.map(d => {
                         const day = h.aiPreview![d]

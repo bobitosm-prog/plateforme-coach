@@ -101,8 +101,8 @@ export default function CoachRevenue({
             {loading ? '—' : clients.length}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-            <TrendingUp size={12} color={GREEN} strokeWidth={2.5} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: GREEN, fontWeight: 500 }}>{activeCount} actifs</span>
+            <TrendingUp size={12} color={GOLD} strokeWidth={2.5} />
+            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: GOLD, fontWeight: 500 }}>{activeCount} actifs</span>
           </div>
         </div>
 
@@ -160,8 +160,8 @@ export default function CoachRevenue({
             CHF {fmtChf(totalRevenue)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-            <Check size={12} color={GREEN} strokeWidth={2.5} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: GREEN, fontWeight: 500 }}>{activeSubscribers} client{activeSubscribers !== 1 ? 's' : ''} actif{activeSubscribers !== 1 ? 's' : ''}</span>
+            <Check size={12} color={GOLD} strokeWidth={2.5} />
+            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: GOLD, fontWeight: 500 }}>{activeSubscribers} client{activeSubscribers !== 1 ? 's' : ''} actif{activeSubscribers !== 1 ? 's' : ''}</span>
           </div>
         </div>
 

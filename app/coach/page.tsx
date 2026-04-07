@@ -131,7 +131,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         .data-table tbody tr:hover { background: ${BG_CARD_2}; }
         .data-table tbody td { padding: 14px 16px; font-family: ${FONT_BODY}; font-size: 14px; font-weight: 400; color: ${TEXT_PRIMARY}; }
         .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 2px; font-family: ${FONT_ALT}; font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
-        .badge-active { background: rgba(74,222,128,0.12); color: ${GREEN}; }
+        .badge-active { background: rgba(212,168,67,0.12); color: ${GOLD}; }
         .badge-warning { background: ${GOLD_DIM}; color: ${GOLD}; }
         .badge-inactive { background: rgba(138,133,128,0.12); color: ${TEXT_MUTED}; }
         .avatar-circle { width: 34px; height: 34px; border-radius: 50%; background: ${GOLD}; display: flex; align-items: center; justify-content: center; font-family: ${FONT_DISPLAY}; font-weight: 700; font-size: 0.85rem; color: ${BG_BASE}; flex-shrink: 0; }
@@ -405,7 +405,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             <h2 className="section-title">Chiffre d&apos;affaires</h2>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <select value={revMonth} onChange={e => setRevMonth(Number(e.target.value))}
-                style={{ width: '50%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
+                style={{ flex: 1, maxWidth: 130, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
                 {WP_MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
               </select>
               <select value={revYear} onChange={e => setRevYear(Number(e.target.value))}

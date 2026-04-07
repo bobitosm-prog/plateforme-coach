@@ -61,7 +61,7 @@ export default function CoachProfile({
         <div style={{ fontSize: '0.82rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>{session.user.email}</div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
           <span className="badge badge-active">Coach</span>
-          {coachProfile?.stripe_account_id ? <span style={{ padding: '3px 9px', borderRadius: 12, fontSize: '0.65rem', fontWeight: 700, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const, background: `rgba(74,222,128,0.12)`, color: GREEN, border: `1px solid rgba(74,222,128,0.2)` }}>Stripe connecté</span> : <span style={{ padding: '3px 9px', borderRadius: 12, fontSize: '0.65rem', fontWeight: 700, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}` }}>Stripe manquant</span>}
+          {coachProfile?.stripe_account_id ? <span style={{ padding: '3px 9px', borderRadius: 12, fontSize: '0.65rem', fontWeight: 700, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}` }}>Stripe connecté</span> : <span style={{ padding: '3px 9px', borderRadius: 12, fontSize: '0.65rem', fontWeight: 700, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}` }}>Stripe manquant</span>}
         </div>
       </div>
 
@@ -92,7 +92,7 @@ export default function CoachProfile({
             <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, fontSize: '0.85rem', pointerEvents: 'none' }}>CHF</span>
           </div>
           <button onClick={saveRate} disabled={rateSaving}
-            style={{ padding: '10px 16px', background: rateSaved ? `rgba(74,222,128,0.15)` : GOLD, border: rateSaved ? `1px solid rgba(74,222,128,0.3)` : 'none', borderRadius: 12, color: rateSaved ? GREEN : BG_BASE, fontWeight: 700, fontSize: '0.82rem', cursor: rateSaving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT_ALT, whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const,  }}>
+            style={{ padding: '10px 16px', background: rateSaved ? GOLD_DIM : GOLD, border: rateSaved ? `1px solid ${GOLD_RULE}` : 'none', borderRadius: 12, color: rateSaved ? GOLD : BG_BASE, fontWeight: 700, fontSize: '0.82rem', cursor: rateSaving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT_ALT, whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const,  }}>
             {rateSaved ? '✓ Sauvé' : rateSaving ? '...' : <><Save size={14} /> Sauver</>}
           </button>
         </div>

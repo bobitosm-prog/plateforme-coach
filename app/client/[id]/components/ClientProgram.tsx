@@ -51,7 +51,7 @@ export default function ClientProgram({
         </button>
       </div>
       {programSaved && (
-        <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(74,222,128,.07)',border:`1px solid rgba(74,222,128,.18)`,borderRadius:RADIUS_CARD,color:GREEN,fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700}}>
+        <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:GOLD_DIM,border:`1px solid ${GOLD_RULE}`,borderRadius:RADIUS_CARD,color:GOLD,fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700}}>
           <Check size={12} strokeWidth={2.5}/>Programme sauvegardé
         </div>
       )}

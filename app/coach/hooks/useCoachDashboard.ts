@@ -42,8 +42,8 @@ export interface ScheduledSession {
 
 export const SESSION_TYPES = ['Force', 'Cardio', 'HIIT', 'Mobilité', 'Récupération']
 export const SESSION_COLORS: Record<string, string> = {
-  Force: '#F97316', Cardio: '#EF4444', HIIT: '#8B5CF6',
-  Mobilité: '#22C55E', Récupération: '#3B82F6',
+  Force: '#D4A843', Cardio: '#E8C97A', HIIT: '#D4A843',
+  Mobilité: '#8A8070', Récupération: '#F5EDD8',
 }
 
 export const STATUS_META = {

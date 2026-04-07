@@ -15,7 +15,7 @@ type WeekMealPlan = Record<string, DayMealData>
 
 const DAYS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
 const DAY_LABELS: Record<string,string> = { lundi:'Lun', mardi:'Mar', mercredi:'Mer', jeudi:'Jeu', vendredi:'Ven', samedi:'Sam', dimanche:'Dim' }
-const MACRO_COLORS = { kcal:GOLD, prot:'#818CF8', carb:GREEN, fat:'#FBBF24' }
+const MACRO_COLORS = { kcal:GOLD, prot:'#E8C97A', carb:TEXT_MUTED, fat:TEXT_PRIMARY }
 const AI_MEAL_ORDER = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
 const AI_MEAL_LABELS: Record<string, string> = { petit_dejeuner: 'Petit-déjeuner', dejeuner: 'Déjeuner', collation: 'Collation', diner: 'Dîner' }
 
@@ -106,7 +106,7 @@ export default function ClientNutrition({
           ) : (
             <span style={{fontSize:'0.72rem',fontFamily:FONT_BODY,color:TEXT_MUTED,fontStyle:'italic'}}>Le client n&apos;a pas encore calculé son TDEE</span>
           )}
-          {profile.dietary_type && <span style={{fontFamily:FONT_ALT,fontSize:'0.65rem',padding:'2px 8px',borderRadius:0,background:'rgba(74,222,128,.12)',color:GREEN,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px'}}>{profile.dietary_type}</span>}
+          {profile.dietary_type && <span style={{fontFamily:FONT_ALT,fontSize:'0.65rem',padding:'2px 8px',borderRadius:0,background:GOLD_DIM,color:GOLD,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px'}}>{profile.dietary_type}</span>}
           {(profile.allergies || []).map((a: string) => (
             <span key={a} style={{fontFamily:FONT_ALT,fontSize:'0.65rem',padding:'2px 8px',borderRadius:0,background:'rgba(239,68,68,.12)',color:RED,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px'}}>{a}</span>
           ))}
@@ -191,8 +191,8 @@ export default function ClientNutrition({
       {!aiMealPreview && clientActivePlan?.plan_data && (
         <div style={{background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:RADIUS_CARD,overflow:'hidden'}}>
           <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',gap:8}}>
-            <Utensils size={14} color={GREEN} strokeWidth={2.5}/>
-            <span style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GREEN,flex:1,letterSpacing:'2px',textTransform:'uppercase'}}>Plan actif</span>
+            <Utensils size={14} color={GOLD} strokeWidth={2.5}/>
+            <span style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,flex:1,letterSpacing:'2px',textTransform:'uppercase'}}>Plan actif</span>
             <span style={{fontSize:'0.65rem',fontFamily:FONT_BODY,color:TEXT_MUTED}}>{new Date(clientActivePlan.created_at).toLocaleDateString('fr-FR')}</span>
           </div>
           <div style={{display:'flex',gap:4,padding:'8px 12px',overflowX:'auto'}}>
@@ -202,7 +202,7 @@ export default function ClientNutrition({
                 <button key={d} onClick={()=>setClientActivePlanDay(d)} style={{
                   padding:'6px 10px',borderRadius:0,border:'none',cursor:'pointer',
                   fontFamily:FONT_ALT,fontSize:'0.72rem',fontWeight:700,
-                  background:clientActivePlanDay===d?GREEN:BG_CARD_2,
+                  background:clientActivePlanDay===d?GOLD:BG_CARD_2,
                   color:clientActivePlanDay===d?'#0D0B08':TEXT_MUTED,flexShrink:0,
                 }}>
                   {DAY_LABELS[d]}
@@ -232,7 +232,7 @@ export default function ClientNutrition({
                   if (foods.length === 0) return null
                   return (
                     <div key={mealType} style={{marginBottom:8}}>
-                      <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GREEN,textTransform:'uppercase',letterSpacing:'2px',marginBottom:4}}>
+                      <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:'2px',marginBottom:4}}>
                         {AI_MEAL_LABELS[mealType]}
                       </div>
                       {foods.map((f: any, i: number) => (
@@ -305,8 +305,8 @@ export default function ClientNutrition({
                     <div key={di} style={{
                       display:'flex',alignItems:'center',justifyContent:'center',
                       height:24,borderRadius:0,fontFamily:FONT_DISPLAY,fontSize:'0.65rem',fontWeight:400,
-                      background: isFuture ? BG_CARD_2 : isDone ? 'rgba(74,222,128,.15)' : 'rgba(156,163,175,.06)',
-                      color: isFuture ? TEXT_DIM : isDone ? GREEN : TEXT_DIM,
+                      background: isFuture ? BG_CARD_2 : isDone ? GOLD_DIM : 'rgba(138,133,128,.06)',
+                      color: isFuture ? TEXT_DIM : isDone ? GOLD : TEXT_DIM,
                     }}>
                       {isFuture ? '' : isDone ? '✓' : '○'}
                     </div>
@@ -340,7 +340,7 @@ export default function ClientNutrition({
             </button>
           </div>
           {mealPlanSaved && (
-            <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:'rgba(74,222,128,.07)',border:`1px solid rgba(74,222,128,.18)`,borderRadius:RADIUS_CARD,color:GREEN,fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:GOLD_DIM,border:`1px solid ${GOLD_RULE}`,borderRadius:RADIUS_CARD,color:GOLD,fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700}}>
               <Check size={12} strokeWidth={2.5}/>Plan alimentaire sauvegardé
             </div>
           )}
@@ -384,13 +384,13 @@ export default function ClientNutrition({
                   className="day-chip"
                   onClick={()=>setExpandedMealDay(isActive?null:day)}
                   style={{
-                    background: isActive?GREEN:hasFoods?'rgba(74,222,128,.12)':BG_CARD_2,
-                    color: isActive?'#0D0B08':hasFoods?GREEN:TEXT_MUTED,
-                    border: `1.5px solid ${isActive?GREEN:hasFoods?'rgba(74,222,128,.25)':BORDER}`,
+                    background: isActive?GOLD:hasFoods?GOLD_DIM:BG_CARD_2,
+                    color: isActive?'#0D0B08':hasFoods?GOLD:TEXT_MUTED,
+                    border: `1.5px solid ${isActive?GOLD:hasFoods?GOLD_RULE:BORDER}`,
                   }}
                 >
                   {DAY_LABELS[day]}
-                  {hasFoods && !isActive && <span style={{marginLeft:4,background:'rgba(74,222,128,.18)',borderRadius:0,padding:'0 4px',fontFamily:FONT_DISPLAY,fontSize:'0.6rem'}}>{kcal}</span>}
+                  {hasFoods && !isActive && <span style={{marginLeft:4,background:GOLD_DIM,borderRadius:0,padding:'0 4px',fontFamily:FONT_DISPLAY,fontSize:'0.6rem'}}>{kcal}</span>}
                 </button>
               )
             })}
@@ -438,7 +438,7 @@ export default function ClientNutrition({
                             <div style={{fontSize:'0.68rem',fontFamily:FONT_BODY,color:TEXT_MUTED,marginTop:1}}>{mealTotals.kcal} kcal · {mealTotals.prot}g prot</div>
                           )}
                         </div>
-                        <button onClick={()=>addFood(expandedMealDay,mealIdx)} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:0,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700,background:'rgba(74,222,128,.1)',color:GREEN,minHeight:36}}>
+                        <button onClick={()=>addFood(expandedMealDay,mealIdx)} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 11px',borderRadius:0,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700,background:GOLD_DIM,color:GOLD,minHeight:36}}>
                           <Plus size={11} strokeWidth={2.5}/>Ajouter
                         </button>
                       </div>
@@ -454,7 +454,7 @@ export default function ClientNutrition({
                                   value={food.name}
                                   onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'name',e.target.value)}
                                   style={{flex:1,background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'8px 10px',fontFamily:FONT_BODY,fontSize:'0.85rem',color:TEXT_PRIMARY,outline:'none',minHeight:36}}
-                                  onFocus={e=>{e.target.style.borderColor=GREEN}}
+                                  onFocus={e=>{e.target.style.borderColor=GOLD}}
                                   onBlur={e=>{e.target.style.borderColor=BORDER}}
                                 />
                                 <button onClick={()=>removeFood(expandedMealDay,mealIdx,foodIdx)} style={{background:'rgba(239,68,68,.08)',border:`1px solid rgba(239,68,68,.15)`,cursor:'pointer',color:RED,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,flexShrink:0}}>

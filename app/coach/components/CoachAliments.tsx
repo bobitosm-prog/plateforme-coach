@@ -77,10 +77,10 @@ export default function CoachAliments({
                 <div style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_PRIMARY, fontWeight: 500 }}>{f.name}</div>
                 {f.source === 'coach' && <span style={{ fontFamily: FONT_ALT, fontSize: '0.55rem', color: GOLD, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const }}>COACH</span>}
               </div>
-              <span style={{ fontSize: '0.78rem', color: RED, fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.energy_kcal || 0)}</span>
-              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: '#3B82F6', fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.proteins || 0)}</span>
-              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: GOLD, fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.carbohydrates || 0)}</span>
-              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: GREEN, fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.fat || 0)}</span>
+              <span style={{ fontSize: '0.78rem', color: GOLD, fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.energy_kcal || 0)}</span>
+              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: '#E8C97A', fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.proteins || 0)}</span>
+              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: TEXT_MUTED, fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.carbohydrates || 0)}</span>
+              <span className="food-col-hide" style={{ fontSize: '0.78rem', color: TEXT_PRIMARY, fontWeight: 700, fontFamily: FONT_DISPLAY }}>{Math.round(f.fat || 0)}</span>
               {f.source === 'coach' ? (
                 <button onClick={() => deleteFood(f.id)} style={{ width: 32, height: 32, borderRadius: 12, background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trash2 size={13} color={RED} />
@@ -106,10 +106,10 @@ export default function CoachAliments({
               <div style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '1.5px' }}>Valeurs pour 100g</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                 {([
-                  { k: 'energy_kcal', l: 'Calories (kcal)', c: RED },
-                  { k: 'proteins', l: 'Protéines (g)', c: '#3B82F6' },
-                  { k: 'carbohydrates', l: 'Glucides (g)', c: GOLD },
-                  { k: 'fat', l: 'Lipides (g)', c: GREEN },
+                  { k: 'energy_kcal', l: 'Calories (kcal)', c: GOLD },
+                  { k: 'proteins', l: 'Protéines (g)', c: '#E8C97A' },
+                  { k: 'carbohydrates', l: 'Glucides (g)', c: TEXT_MUTED },
+                  { k: 'fat', l: 'Lipides (g)', c: TEXT_PRIMARY },
                 ] as const).map(({ k, l, c }) => (
                   <div key={k}>
                     <label style={{ display: 'block', fontFamily: FONT_ALT, fontSize: '0.68rem', color: TEXT_MUTED, marginBottom: 4, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{l}</label>
