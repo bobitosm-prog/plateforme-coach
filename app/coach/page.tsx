@@ -423,21 +423,20 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
 
       {/* ── BOTTOM NAV ── */}
       <nav className="bottom-nav" aria-label="Navigation principale">
-        <div className="bottom-nav-inner">
+        <div className="bottom-nav-inner" style={{ justifyContent: 'center', gap: 48, padding: '10px 24px' }}>
         {([
           { key: 'dashboard', icon: <Users size={20} strokeWidth={1.5} />, label: 'Clients' },
           { key: 'messages', icon: <MessageCircle size={20} strokeWidth={1.5} />, label: 'Messages', badge: h.totalUnread },
-          { key: 'calendar', icon: <Calendar size={20} strokeWidth={1.5} />, label: 'Agenda' },
-          { key: 'programs', icon: <Dumbbell size={20} strokeWidth={1.5} />, label: 'Programmes' },
-          { key: 'profil', icon: <User size={20} strokeWidth={1.5} />, label: 'Profil' },
+          { key: 'calendar', icon: <Calendar size={20} strokeWidth={1.5} />, label: 'Calendrier' },
         ] as { key: string; icon: React.ReactNode; label: string; badge?: number }[]).map(tab => (
           <button key={tab.key} className={`bottom-nav-btn${h.section === tab.key ? ' active' : ''}`}
-            onClick={() => h.setSection(tab.key as any)} aria-label={tab.label}>
+            onClick={() => h.setSection(tab.key as any)} aria-label={tab.label} style={{ flex: 'none' }}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {tab.icon}
               {tab.badge && tab.badge > 0 ? <span className="nav-badge">{tab.badge > 9 ? '9+' : tab.badge}</span> : null}
             </div>
             <span className="bottom-nav-label">{tab.label}</span>
+            {h.section === tab.key && <div style={{ width: 3, height: 3, borderRadius: '50%', background: GOLD }} />}
           </button>
         ))}
         </div>
