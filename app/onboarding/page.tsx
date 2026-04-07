@@ -319,7 +319,7 @@ export default function OnboardingPage() {
           {/* Step 5: Mes repas — sequential sub-steps */}
           {step === 5 && (() => {
             const MEALS = [
-              { id: 'petit_dejeuner', label: 'PETIT-DÉJEUNER', emoji: '🌅' },
+              { id: 'petit_dejeuner', label: 'PETIT-DÉJEUNER', emoji: '🥐' },
               { id: 'dejeuner', label: 'DÉJEUNER', emoji: '☀️' },
               { id: 'collation', label: 'COLLATION', emoji: '🍎' },
               { id: 'diner', label: 'DÎNER', emoji: '🌙' },

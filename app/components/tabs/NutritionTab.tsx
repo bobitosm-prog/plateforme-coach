@@ -636,7 +636,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         const ringRadius = (ringSize - ringStroke) / 2
         const ringCircum = 2 * Math.PI * ringRadius
         const ringOffset = ringCircum - (pctKcal / 100) * ringCircum
-        const EMOJIS: Record<string, string> = { petit_dejeuner: '🌅', dejeuner: '☀️', collation: '🍎', diner: '🌙' }
+        const EMOJIS: Record<string, string> = { petit_dejeuner: '🥐', dejeuner: '☀️', collation: '🍎', diner: '🌙' }
 
         return (
           <div style={{ padding: '0 20px' }}>
