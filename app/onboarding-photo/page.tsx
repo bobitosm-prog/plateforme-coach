@@ -47,7 +47,7 @@ export default function OnboardingPhotoPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { window.location.href = '/landing'; return }
+      if (!session) { window.location.href = '/login'; return }
       setUserId(session.user.id)
       // Fetch profile data
       supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => {

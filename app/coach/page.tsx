@@ -257,7 +257,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
               )}
             </div>
             <div className="hide-sm" style={{ width: '1px', height: '24px', background: BORDER }} />
-            <button className="btn-ghost" onClick={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} aria-label="Se déconnecter">
+            <button className="btn-ghost" onClick={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} aria-label="Se déconnecter">
               <LogOut size={15} strokeWidth={2} /><span className="hide-sm">Déconnexion</span>
             </button>
           </div>
@@ -457,7 +457,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         <CoachProfile
           coachName={h.coachName} coachInitials={h.coachInitials}
           session={h.session} coachProfile={h.coachProfile}
-          setSection={h.setSection} supabaseSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }}
+          setSection={h.setSection} supabaseSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
         />
       )}
 

@@ -492,7 +492,7 @@ export default function ProfileTab({
       })()}
 
       {/* Sign out */}
-      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/landing' }) }} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
+      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
         <LogOut size={18} color={TEXT_MUTED} />
         <span style={{ fontSize: '1rem', fontFamily: FONT_DISPLAY, fontWeight: 700, letterSpacing: '1px', color: TEXT_MUTED }}>Déconnexion</span>
       </button>

@@ -87,7 +87,7 @@ export default function OnboardingFitnessPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { window.location.href = '/landing'; return }
+      if (!session) { window.location.href = '/login'; return }
       setUserId(session.user.id)
     })
   }, [supabase])

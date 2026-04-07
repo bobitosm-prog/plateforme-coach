@@ -16,7 +16,7 @@ export default function DeleteAccountSection({ session }: { session: any }) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: session.user.id }),
       })
-      if (res.ok) { window.location.href = '/landing' }
+      if (res.ok) { window.location.href = '/login' }
       else { const { error } = await res.json(); alert(`Erreur : ${error || 'Echec'}`); setDeleting(false) }
     } catch { alert('Erreur reseau'); setDeleting(false) }
   }

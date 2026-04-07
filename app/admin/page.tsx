@@ -245,7 +245,7 @@ export default function AdminPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '0.8rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{session?.user?.email}</span>
-            <button onClick={() => supabase.auth.signOut().then(() => window.location.href = '/landing')}
+            <button onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')}
               style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontWeight: 300, fontSize: '0.875rem', padding: '8px 12px', borderRadius: 12 }}>
               <LogOut size={15} strokeWidth={2} /> Deconnexion
             </button>
