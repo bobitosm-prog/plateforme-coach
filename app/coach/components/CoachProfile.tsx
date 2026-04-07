@@ -53,7 +53,7 @@ export default function CoachProfile({
   }
 
   return (
-    <div className="section-pad" style={{ maxWidth: '480px', margin: '0 auto', padding: '40px 16px' }}>
+    <div className="section-pad" style={{ padding: '16px 14px' }}>
       <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.2rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '3px', margin: '0 0 24px', textTransform: 'uppercase' }}>Mon profil</h1>
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '28px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
         <div className="avatar-circle" style={{ width: 72, height: 72, fontSize: '1.5rem', background: GOLD, color: BG_BASE }}>{coachInitials}</div>

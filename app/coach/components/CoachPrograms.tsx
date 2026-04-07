@@ -142,7 +142,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   // List view
   if (!creating) return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
+    <div style={{ padding: '16px 14px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '3px', textTransform: 'uppercase' }}>Programmes</h1>
         <button onClick={() => setCreating(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: GOLD, border: 'none', borderRadius: 12, padding: '8px 16px', color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const,  }}>
@@ -204,7 +204,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   // Create/Edit view
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
+    <div style={{ padding: '16px 14px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '3px', textTransform: 'uppercase' }}>
           {editing ? 'Modifier' : 'Créer'} un programme

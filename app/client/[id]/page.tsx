@@ -126,7 +126,7 @@ export default function ClientProfilePage() {
           .desktop-tabs{display:flex !important;gap:4px;padding:0 32px;border-bottom:1px solid ${BORDER};background:${BG_BASE};}
           .desktop-tabs button{padding:12px 16px;border:none;background:transparent;cursor:pointer;font-family:${FONT_ALT};font-size:.85rem;font-weight:700;letter-spacing:.04em;color:${TEXT_MUTED};border-bottom:2px solid transparent;transition:all 150ms;}
           .desktop-tabs button.dt-active{color:${GOLD};border-bottom-color:${GOLD};}
-          .main-client-content{max-width:100% !important;padding:24px 32px 32px !important;margin:0 !important;}
+          .main-client-content{max-width:100% !important;padding:16px 14px 80px !important;margin:0 !important;}
           .client-page-root{flex-direction:row !important;}
         }
         .food-row-m:last-child{border-bottom:none;}
@@ -200,7 +200,7 @@ export default function ClientProfilePage() {
       </header>
 
       {/* ── MAIN CONTENT ──────────────────────────────────────────── */}
-      <main className="main-client-content" data-scroll-container style={{flex:1,overflowY:'auto',overflowX:'hidden',padding:'14px 14px 80px',maxWidth:600,margin:'0 auto'}}>
+      <main className="main-client-content" data-scroll-container style={{flex:1,overflowY:'auto',overflowX:'hidden',padding:'14px 14px 80px'}}>
 
         {/* ══ TAB: APERÇU ══ */}
         {h.activeTab === 'apercu' && (

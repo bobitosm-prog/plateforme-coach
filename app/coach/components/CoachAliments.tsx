@@ -32,7 +32,7 @@ export default function CoachAliments({
   if (foodList.length === 0 && !foodLoading) loadFoods()
 
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 600, margin: '0 auto' }}>
+    <div style={{ padding: '16px 14px' }}>
       <style>{`
         @media(max-width:768px){.food-col-hide{display:none!important}.food-grid-row{grid-template-columns:1fr 50px 36px!important}}
       `}</style>

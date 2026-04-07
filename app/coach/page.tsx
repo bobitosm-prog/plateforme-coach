@@ -367,7 +367,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
 
       {/* ══ ACCUEIL SECTION ══ */}
       {h.section === 'accueil' && (
-        <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="section-pad" style={{ padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
           {/* Bloc 1 — Agenda du jour */}
           <div className="sidebar-card">
@@ -457,7 +457,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
 
       {/* ══ DASHBOARD / CLIENTS SECTION ══ */}
       {h.section === 'dashboard' && (
-        <div className="section-pad" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+        <div className="section-pad" style={{ padding: '16px 14px' }}>
           <ClientsList
             filtered={h.filtered} loading={h.loading}
             search={h.search} setSearch={h.setSearch}
