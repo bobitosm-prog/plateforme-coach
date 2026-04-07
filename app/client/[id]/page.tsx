@@ -109,8 +109,8 @@ export default function ClientProfilePage() {
         .toast-el{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${BG_CARD};border:1px solid ${BORDER};border-left:3px solid ${GREEN};color:${TEXT_PRIMARY};padding:11px 16px;border-radius:${RADIUS_CARD}px;font-family:${FONT_BODY};font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:8px;z-index:300;animation:slideUp 200ms ease;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;}
         .col-hdr{font-family:${FONT_ALT};font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${TEXT_MUTED};margin-bottom:3px;}
         .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:50;padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));}
-        .bottom-nav>div{background:rgba(13,11,8,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(212,168,67,0.08);border-radius:18px;box-shadow:0 -2px 16px rgba(0,0,0,0.2),inset 0 1px 0 rgba(232,201,122,0.04);padding:10px 16px;max-width:500px;margin:0 auto;}
-        .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;border:none;background:transparent;cursor:pointer;transition:color 150ms;min-height:52px;}
+        .bottom-nav>div{background:rgba(13,11,8,0.75);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(212,168,67,0.15);border-radius:18px;box-shadow:0 -2px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(232,201,122,0.08);padding:8px 12px;max-width:420px;margin:0 auto;}
+        .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;border:none;background:transparent;cursor:pointer;transition:color 150ms;min-height:44px;}
         .day-chip{flex-shrink:0;display:inline-flex;align-items:center;padding:8px 14px;border-radius:0;border:none;cursor:pointer;font-family:${FONT_ALT};font-size:.82rem;font-weight:700;letter-spacing:.05em;transition:all 150ms ease;min-height:44px;}
         .ex-row-m{display:flex;flex-direction:column;gap:7px;padding:12px 0;border-bottom:1px solid ${BORDER};}
         .ex-row-m:last-child{border-bottom:none;}
@@ -306,13 +306,13 @@ export default function ClientProfilePage() {
 
       {/* ── BOTTOM NAVIGATION ─────────────────────────────────────── */}
       <nav className="bottom-nav">
-        <div style={{display:'flex',alignItems:'stretch',height:52}}>
+        <div style={{display:'flex',alignItems:'stretch',height:44}}>
           {([
-            {id:'apercu',    label:'Aperçu',     icon:(a:boolean)=><LayoutDashboard size={20} strokeWidth={a?2.5:1.5}/>},
-            {id:'programme', label:'Programme',  icon:(a:boolean)=><Dumbbell        size={20} strokeWidth={a?2.5:1.5}/>},
-            {id:'nutrition', label:'Nutrition',  icon:(a:boolean)=><Utensils        size={20} strokeWidth={a?2.5:1.5}/>},
-            {id:'messages',  label:'Messages',   icon:(a:boolean)=><MessageCircle   size={20} strokeWidth={a?2.5:1.5}/>},
-            {id:'notes',     label:'Notes',      icon:(a:boolean)=><FileText        size={20} strokeWidth={a?2.5:1.5}/>},
+            {id:'apercu',    label:'Aperçu',  icon:(a:boolean)=><LayoutDashboard size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'programme', label:'Progr.',   icon:(a:boolean)=><Dumbbell        size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'nutrition', label:'Nutri.',   icon:(a:boolean)=><Utensils        size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'messages',  label:'Msgs',     icon:(a:boolean)=><MessageCircle   size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'notes',     label:'Notes',    icon:(a:boolean)=><FileText        size={18} strokeWidth={a?2.5:1.5}/>},
           ] as {id:'apercu'|'programme'|'nutrition'|'notes'|'messages', label:string, icon:(a:boolean)=>React.ReactNode}[]).map(tab => {
             const active = h.activeTab === tab.id
             return (
@@ -324,7 +324,7 @@ export default function ClientProfilePage() {
                 aria-label={tab.label}
               >
                 {tab.icon(active)}
-                <span style={{fontSize:'9px',fontFamily:FONT_ALT,fontWeight:700,letterSpacing:'2px',textTransform:'uppercase'}}>{tab.label}</span>
+                <span style={{fontSize:'8px',fontFamily:FONT_ALT,fontWeight:700,letterSpacing:'2px',textTransform:'uppercase'}}>{tab.label}</span>
                 {active && <div style={{position:'absolute',bottom:0,width:24,height:2,background:GOLD,borderRadius:0}}/>}
               </button>
             )
