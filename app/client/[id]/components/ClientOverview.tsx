@@ -175,8 +175,8 @@ export default function ClientOverview({
           </div>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'1.9rem',fontWeight:700,color:'#F8FAFC',lineHeight:1}}>{totalSessions}</div>
           <div style={{display:'flex',alignItems:'center',gap:3,marginTop:6}}>
-            <CheckCircle size={11} color="#22C55E" strokeWidth={2.5}/>
-            <span style={{fontSize:'0.68rem',color:'#22C55E',fontWeight:600}}>complétées</span>
+            <CheckCircle size={11} color="#D4A843" strokeWidth={2.5}/>
+            <span style={{fontSize:'0.68rem',color:'#D4A843',fontWeight:600}}>complétées</span>
           </div>
         </div>
         {/* Streak */}
@@ -208,7 +208,7 @@ export default function ClientOverview({
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                   {s.duration_minutes && <span style={{fontSize:'0.72rem',color:'#9CA3AF',background:'#1E1E1E',borderRadius:6,padding:'2px 7px'}}>{s.duration_minutes} min</span>}
-                  {s.completed && <CheckCircle size={14} color="#22C55E" strokeWidth={2}/>}
+                  {s.completed && <CheckCircle size={14} color="#D4A843" strokeWidth={2}/>}
                 </div>
               </div>
               {s.notes && <div style={{fontSize:'0.7rem',color:'#6B7280',marginTop:6,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.notes}</div>}
