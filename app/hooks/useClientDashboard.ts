@@ -191,7 +191,7 @@ export default function useClientDashboard() {
 
   async function resolveCoachLink(uid: string) {
     const defaultEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
-    const { data: defaultCoachProfile } = await supabase.from('profiles').select('id').eq('email', defaultEmail).single()
+    const { data: defaultCoachProfile } = await supabase.from('profiles').select('id').eq('email', defaultEmail).maybeSingle()
     const defaultCoachId = defaultCoachProfile?.id || null
 
     const { data: coachLink } = await supabase.from('coach_clients').select('coach_id').eq('client_id', uid).maybeSingle()

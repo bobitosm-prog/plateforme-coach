@@ -9,7 +9,23 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)))
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const clone = response.clone()
+          caches.open('moovx-v1').then((cache) => {
+            cache.put(event.request, clone)
+          })
+        }
+        return response
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cached) => {
+          return cached || new Response('Offline', { status: 503 })
+        })
+      })
+  )
 })
 
 // Handle push notifications

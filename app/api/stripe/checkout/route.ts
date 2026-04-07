@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       .from('profiles')
       .select('stripe_account_id, stripe_onboarding_complete')
       .eq('email', OWNER_EMAIL)
-      .single()
+      .maybeSingle()
     const ownerStripeAccountId = (ownerProfile?.stripe_account_id && ownerProfile?.stripe_onboarding_complete) ? ownerProfile.stripe_account_id : null
 
     // Determine redirect based on role
