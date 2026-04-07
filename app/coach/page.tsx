@@ -197,73 +197,30 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         @keyframes spin { to { transform: rotate(360deg) } }
       `}</style>
 
-      {/* ── NAVBAR ── */}
-      <nav style={{ background: BG_BASE, borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <img src="/logo-moovx.png" alt="MoovX" width={32} height={32} style={{ borderRadius: 2 }} />
-            <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.35rem', fontWeight: 700, color: GOLD, letterSpacing: '3px' }}>MOOVX</span>
-          </a>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button onClick={() => h.setSection(s => s === 'messages' ? 'dashboard' : 'messages')}
-              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, background: h.section === 'messages' ? GOLD_DIM : 'transparent', color: h.section === 'messages' ? GOLD : TEXT_MUTED, border: h.section === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', padding: '7px 14px', borderRadius: 12, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' as const, transition: 'all 200ms' }}>
-              <MessageCircle size={16} strokeWidth={2} /><span className="hide-sm">Messages</span>
-              {h.totalUnread > 0 && <span style={{ position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: '0.65rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{h.totalUnread > 9 ? '9+' : h.totalUnread}</span>}
+      {/* ── GLASS BAR HEADER ── */}
+      <div style={{ padding: '12px 14px 0', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18 }}>
+          {/* Left: Messages */}
+          <button onClick={() => h.setSection(s => s === 'messages' ? 'dashboard' : 'messages')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.section === 'messages' ? GOLD_DIM : 'transparent', border: h.section === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', position: 'relative', zIndex: 3 }}>
+            <MessageCircle size={19} color={h.section === 'messages' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
+            {h.totalUnread > 0 && <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: RED, border: '2px solid rgba(20,18,9,0.8)' }} />}
+          </button>
+          {/* Center: Logo pill PRO */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: '6px 14px', zIndex: 3 }}>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 4, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>MOOVX</span>
+            <span style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 2, color: '#0D0B08', padding: '2px 6px', background: GOLD, borderRadius: 4 }}>PRO</span>
+          </div>
+          {/* Right: Profil + Logout */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, zIndex: 3 }}>
+            <button onClick={() => h.setSection('profil')} style={{ width: 34, height: 34, borderRadius: '50%', border: h.section === 'profil' ? `1.5px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD }}>
+              {h.coachInitials}
             </button>
-            <div className="hide-sm" style={{ width: '1px', height: '24px', background: BORDER }} />
-            <div className="hide-sm" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div className="avatar-circle">{h.coachInitials}</div>
-              <span style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', fontWeight: 500, color: TEXT_MUTED }}>{h.coachName}</span>
-              <button
-                onClick={() => setShowExportMenu(v => !v)}
-                style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '6px 12px', color: GOLD, fontFamily: FONT_ALT, fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '1px', whiteSpace: 'nowrap', textTransform: 'uppercase' as const }}
-              >
-                Exporter CSV
-              </button>
-              {showExportMenu && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 6, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 6, minWidth: 220, zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
-                  <button
-                    onClick={() => {
-                      const data = h.clients.map(c => {
-                        const atRisk = h.atRiskClients.find((r: any) => r.id === c.client_id)
-                        return {
-                          nom: c.profiles?.full_name ?? '',
-                          email: '',
-                          derniere_seance: atRisk ? (atRisk.daysSince >= 999 ? 'aucune' : `il y a ${atRisk.daysSince} jours`) : 'recente',
-                          statut: atRisk && atRisk.daysSince >= 3 ? 'inactif' : 'actif',
-                        }
-                      })
-                      downloadCSV(data, 'clients')
-                      setShowExportMenu(false)
-                    }}
-                    style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '10px 14px', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderRadius: 12 }}
-                    onMouseEnter={e => (e.currentTarget.style.background = BG_CARD_2)}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    Exporter la liste clients
-                  </button>
-                  <button
-                    onClick={async () => {
-                      const { data } = await h.supabase.from('payments').select('*').eq('status', 'paid').limit(200)
-                      if (data?.length) downloadCSV(data, 'paiements')
-                      setShowExportMenu(false)
-                    }}
-                    style={{ display: 'block', width: '100%', background: 'transparent', border: 'none', padding: '10px 14px', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderRadius: 12 }}
-                    onMouseEnter={e => (e.currentTarget.style.background = BG_CARD_2)}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    Exporter les paiements
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="hide-sm" style={{ width: '1px', height: '24px', background: BORDER }} />
-            <button className="btn-ghost" onClick={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} aria-label="Se déconnecter">
-              <LogOut size={15} strokeWidth={2} /><span className="hide-sm">Déconnexion</span>
+            <button onClick={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} style={{ width: 34, height: 34, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid transparent', cursor: 'pointer' }}>
+              <LogOut size={16} color={TEXT_MUTED} strokeWidth={1.5} />
             </button>
           </div>
         </div>
-      </nav>
+      </div>
 
       {/* ── Stripe warning banner ── */}
       {h.coachProfile && !h.coachProfile.stripe_onboarding_complete && (
