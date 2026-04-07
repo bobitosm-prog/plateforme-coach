@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { addXP, updateStreak } from '../../../lib/gamification'
+import { useWakeLock } from '../../hooks/useWakeLock'
 import {
   Dumbbell, Search, Award,
 } from 'lucide-react'
@@ -94,6 +95,9 @@ export default function TrainingTab({
 
   const todayStr         = new Date().toISOString().split('T')[0]
   const trainingIsToday  = trainingDay === todayKey
+
+  // Keep screen awake during workout + rest timer
+  useWakeLock(!!workoutStarted || restRunning)
   // Priorité : programme custom actif > programme coach
   const customDayData = (() => {
     if (!activeCustomProgram?.days?.length) return null
