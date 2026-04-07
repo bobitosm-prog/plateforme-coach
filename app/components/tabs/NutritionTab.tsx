@@ -73,7 +73,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [savedMeals, setSavedMeals] = useState<any[]>([])
   const [useSavedMealTarget, setUseSavedMealTarget] = useState('')
   const photoInputRef = React.useRef<HTMLInputElement>(null)
+  const calScrollRef = React.useRef<HTMLDivElement>(null)
   const today = new Date().toISOString().split('T')[0]
+  const [selectedDate, setSelectedDate] = useState(today)
+  const [daysWithMeals, setDaysWithMeals] = useState<Set<string>>(new Set())
+  const calendarDays = React.useMemo(() => {
+    const d: string[] = []
+    for (let i = -30; i <= 7; i++) { const dt = new Date(); dt.setDate(dt.getDate() + i); d.push(dt.toISOString().split('T')[0]) }
+    return d
+  }, [])
 
   const hasPlan = !!coachMealPlan || !!activeMealPlan
   const [subTab, setSubTab] = useState<SubTab>('today')
@@ -83,13 +91,22 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     fetchTodayTracking()
     fetchTodayMealLogs()
     fetchDailyLogs()
+    // Load days with meals for calendar dots
+    const thirtyAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
+    supabase.from('daily_food_logs').select('date').eq('user_id', userId).gte('date', thirtyAgo)
+      .then(({ data }: any) => setDaysWithMeals(new Set((data || []).map((d: any) => d.date))))
+    // Auto-scroll calendar to today
+    setTimeout(() => { document.getElementById(`cal-${today}`)?.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' }) }, 100)
   }, [userId])
+
+  // Reload meals when date changes
+  useEffect(() => { fetchDailyLogs() }, [selectedDate])
 
   useEffect(() => {
   }, [activeMealPlan, subTab])
 
   async function fetchDailyLogs() {
-    const { data } = await supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', today).order('created_at', { ascending: true })
+    const { data } = await supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', selectedDate).order('created_at', { ascending: true })
     setDailyLogs(data || [])
   }
 
@@ -623,6 +640,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* MON PLAN TAB — daily logs as source of truth */}
       {subTab === 'today' && (() => {
+        const isViewingPast = selectedDate < today
         const consumed = getDailyLogsMacros()
         const targetKcal = profile?.calorie_goal || 2000
         const targetP = profile?.protein_goal || 140
@@ -640,6 +658,32 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
         return (
           <div style={{ padding: '0 20px' }}>
+            {/* ═══ CALENDAR STRIP ═══ */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, color: TEXT_PRIMARY }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { month: 'long', year: 'numeric' }).toUpperCase()}</span>
+                {selectedDate !== today && <button onClick={() => setSelectedDate(today)} style={{ padding: '4px 12px', borderRadius: 8, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>AUJOURD&apos;HUI</button>}
+              </div>
+              <div ref={calScrollRef} style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 8, scrollSnapType: 'x mandatory' }}>
+                {calendarDays.map(dt => {
+                  const d = new Date(dt + 'T12:00:00')
+                  const sel = dt === selectedDate, isTd = dt === today, hasMl = daysWithMeals.has(dt), fut = dt > today
+                  return (
+                    <button key={dt} id={`cal-${dt}`} onClick={() => setSelectedDate(dt)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 10px', minWidth: 44, borderRadius: 12, border: sel ? `1.5px solid ${GOLD}` : isTd ? `1px solid ${GOLD_RULE}` : '1px solid transparent', background: sel ? GOLD_DIM : 'transparent', cursor: 'pointer', transition: 'all 0.2s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
+                      <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1, color: sel ? GOLD : TEXT_MUTED }}>{d.toLocaleDateString('fr-CH', { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
+                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: sel ? GOLD : isTd ? TEXT_PRIMARY : TEXT_MUTED }}>{d.getDate()}</span>
+                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: hasMl ? GOLD : 'transparent' }} />
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            {isViewingPast && (
+              <div style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '10px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 16 }}>📅</span>
+                <span style={{ fontFamily: FONT_BODY, fontSize: 13, color: GOLD }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+              </div>
+            )}
             {/* Ring */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
               <div style={{ position: 'relative' }}>
