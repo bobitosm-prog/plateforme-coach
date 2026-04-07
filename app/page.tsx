@@ -33,8 +33,18 @@ import {
 
 const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
 
+import { checkAndShowReminder } from '../lib/notifications'
+
 export default function CoachApp() {
   const h = useClientDashboard()
+
+  // Check and schedule workout reminders
+  React.useEffect(() => {
+    if (h.session?.user?.id && h.profile) {
+      const cleanup = checkAndShowReminder(h.session.user.id, h.profile)
+      return cleanup
+    }
+  }, [h.session?.user?.id, h.profile?.reminder_enabled])
 
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
