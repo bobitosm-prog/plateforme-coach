@@ -11,7 +11,7 @@ import {
 } from '../../lib/design-tokens'
 import {
   Zap, Users, ChevronLeft, Dumbbell, Calendar,
-  LogOut, Check, X, Plus, MessageCircle, Clock, UtensilsCrossed,
+  LogOut, Check, X, Plus, MessageCircle, Clock, UtensilsCrossed, User,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -107,7 +107,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
   /* ── No session → landing ── */
   if (!h.session && !h.loading) {
     h.supabase.from('app_logs').insert({ level: 'warning', message: 'COACH_PAGE_REDIRECT_LANDING', details: { loading: h.loading, hasSession: !!h.session, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/coach' })
-    h.router.push('/landing')
+    h.router.push('/login')
     return null
   }
 
@@ -119,9 +119,9 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         ::-webkit-scrollbar-track { background: ${BG_BASE}; }
         ::-webkit-scrollbar-thumb { background: ${BORDER}; border-radius: 1px; }
         .wheel-col::-webkit-scrollbar { display: none; }
-        .stat-card { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; padding: 24px; transition: box-shadow 200ms ease; cursor: default; }
-        .stat-card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.15); }
-        .sidebar-card { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; padding: 24px; }
+        .stat-card { background: rgba(20,18,9,0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(212,168,67,0.15); border-radius: ${RADIUS_CARD}px; padding: 24px; transition: all 200ms ease; cursor: default; box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,201,122,0.06); position: relative; overflow: hidden; }
+        .stat-card:hover { border-color: rgba(212,168,67,0.3); box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(232,201,122,0.12); }
+        .sidebar-card { background: rgba(20,18,9,0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(212,168,67,0.15); border-radius: ${RADIUS_CARD}px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,201,122,0.06); }
         .section-title { font-family: ${FONT_ALT}; font-size: 1.15rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: ${TEXT_PRIMARY}; margin: 0 0 16px 0; }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table thead th { font-family: ${FONT_ALT}; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: ${GOLD}; padding: 10px 16px; text-align: left; background: ${GOLD_DIM}; border-bottom: 1px solid ${BORDER}; }
@@ -171,7 +171,8 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         .msg-badge { position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; background: ${RED}; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
         .bottom-nav { display: none; }
         @media (max-width: 767px) {
-          .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: ${BG_BASE}; border-top: 1px solid ${BORDER}; padding: 8px 0; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 100; }
+          .bottom-nav { display: block; position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 100; }
+          .bottom-nav-inner { display: flex; background: rgba(13,11,8,0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(212,168,67,0.08); border-radius: 18px; box-shadow: 0 -2px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(232,201,122,0.04); }
           .section-pad { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
         }
         .bottom-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: transparent; border: none; cursor: pointer; padding: 4px 8px; color: ${TEXT_MUTED}; transition: color 150ms; position: relative; min-height: 44px; justify-content: center; }
@@ -465,13 +466,13 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
 
       {/* ── BOTTOM NAV ── */}
       <nav className="bottom-nav" aria-label="Navigation principale">
+        <div className="bottom-nav-inner">
         {([
-          { key: 'dashboard', icon: <Users size={22} strokeWidth={2} />, label: 'Clients' },
-          { key: 'messages', icon: <MessageCircle size={22} strokeWidth={2} />, label: 'Messages', badge: h.totalUnread },
-          { key: 'calendar', icon: <Calendar size={22} strokeWidth={2} />, label: 'Calendrier' },
-          { key: 'programs', icon: <Dumbbell size={22} strokeWidth={2} />, label: 'Programmes' },
-          { key: 'aliments', icon: <UtensilsCrossed size={22} strokeWidth={2} />, label: 'Aliments' },
-          { key: 'profil', icon: <div className="avatar-circle" style={{ width: 26, height: 26, fontSize: '0.65rem', flexShrink: 0 }}>{h.coachInitials}</div>, label: 'Profil' },
+          { key: 'dashboard', icon: <Users size={20} strokeWidth={1.5} />, label: 'Clients' },
+          { key: 'messages', icon: <MessageCircle size={20} strokeWidth={1.5} />, label: 'Messages', badge: h.totalUnread },
+          { key: 'calendar', icon: <Calendar size={20} strokeWidth={1.5} />, label: 'Agenda' },
+          { key: 'programs', icon: <Dumbbell size={20} strokeWidth={1.5} />, label: 'Programmes' },
+          { key: 'profil', icon: <User size={20} strokeWidth={1.5} />, label: 'Profil' },
         ] as { key: string; icon: React.ReactNode; label: string; badge?: number }[]).map(tab => (
           <button key={tab.key} className={`bottom-nav-btn${h.section === tab.key ? ' active' : ''}`}
             onClick={() => h.setSection(tab.key as any)} aria-label={tab.label}>
@@ -482,6 +483,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             <span className="bottom-nav-label">{tab.label}</span>
           </button>
         ))}
+        </div>
       </nav>
     </div>
   )
