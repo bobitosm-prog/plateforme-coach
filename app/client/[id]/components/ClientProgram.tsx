@@ -56,8 +56,8 @@ export default function ClientProgram({
         </div>
       )}
 
-      {/* Day chips — horizontal scroll */}
-      <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:2}}>
+      {/* Calendrier semaine */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(7, 1fr)',gap:6,marginBottom:12}}>
         {DAYS.map(day => {
           const d = program[day]
           const isActive = expandedDay === day
@@ -65,17 +65,33 @@ export default function ClientProgram({
           return (
             <button
               key={day}
-              className="day-chip"
               onClick={()=>setExpandedDay(isActive?null:day)}
               style={{
-                background: d.repos?'rgba(138,133,128,.1)':isActive?GOLD:hasEx?GOLD_DIM:BG_CARD_2,
-                color: d.repos?TEXT_MUTED:isActive?'#0D0B08':hasEx?GOLD:TEXT_MUTED,
-                border: `1.5px solid ${isActive?GOLD:d.repos?BORDER:hasEx?GOLD_RULE:BORDER}`,
+                display:'flex',flexDirection:'column',alignItems:'center',gap:4,
+                padding:'10px 4px',
+                background:isActive?GOLD:d.repos?BG_CARD_2:hasEx?GOLD_DIM:BG_CARD,
+                border:`1.5px solid ${isActive?GOLD:hasEx?GOLD_RULE:BORDER}`,
+                borderRadius:14,
+                cursor:'pointer',
+                transition:'all 0.2s',
               }}
             >
-              {DAY_LABELS[day]}
-              {d.repos && <Moon size={9} style={{marginLeft:3}}/>}
-              {hasEx && <span style={{marginLeft:4,background:GOLD_DIM,borderRadius:0,padding:'0 4px',fontFamily:FONT_DISPLAY,fontSize:'0.62rem'}}>{d.exercises.length}</span>}
+              <span style={{
+                fontFamily:FONT_ALT,fontSize:11,fontWeight:700,
+                letterSpacing:1,textTransform:'uppercase',
+                color:isActive?'#0D0B08':d.repos?TEXT_DIM:hasEx?GOLD:TEXT_MUTED,
+              }}>{DAY_LABELS[day]}</span>
+              {d.repos ? (
+                <Moon size={14} color={TEXT_DIM}/>
+              ) : (
+                <span style={{
+                  fontFamily:FONT_DISPLAY,fontSize:18,
+                  color:isActive?'#0D0B08':hasEx?GOLD:TEXT_DIM,
+                }}>{d.exercises.length}</span>
+              )}
+              {hasEx && !isActive && (
+                <div style={{width:4,height:4,borderRadius:'50%',background:GOLD}}/>
+              )}
             </button>
           )
         })}
