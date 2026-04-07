@@ -340,7 +340,7 @@ export default function CoachApp() {
         profile={h.profile}
         externalOpen={h.activeTab === 'coachIA'}
         onExternalClose={() => h.setActiveTab('home')}
-        hideFloatingButton={!h.hasRealCoach}
+        hideFloatingButton={true}
       />
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
