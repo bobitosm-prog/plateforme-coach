@@ -99,7 +99,7 @@ export default function ClientProfilePage() {
         .btn-ghost{display:inline-flex;align-items:center;gap:6px;background:transparent;color:${TEXT_MUTED};border:1px solid ${GOLD_RULE};padding:10px 12px;border-radius:0;font-family:${FONT_BODY};font-size:.875rem;font-weight:500;cursor:pointer;transition:background 150ms,color 150ms;min-height:44px;}
         .btn-ghost:active{background:${BG_CARD_2};color:${TEXT_PRIMARY};}
         .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:0;font-family:${FONT_ALT};font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
-        .badge-active{background:rgba(74,222,128,.12);color:${GREEN};border:1px solid rgba(74,222,128,.2);}
+        .badge-active{background:rgba(212,168,67,.15);color:${GOLD};border:1px solid rgba(212,168,67,.3);}
         .badge-warning{background:${GOLD_DIM};color:${GOLD};border:1px solid ${GOLD_RULE};}
         .badge-inactive{background:rgba(138,133,128,.08);color:${TEXT_MUTED};border:1px solid rgba(138,133,128,.12);}
         .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 200ms ease;}
@@ -108,7 +108,8 @@ export default function ClientProfilePage() {
         .modal-overlay.open .modal{transform:translateY(0);}
         .toast-el{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${BG_CARD};border:1px solid ${BORDER};border-left:3px solid ${GREEN};color:${TEXT_PRIMARY};padding:11px 16px;border-radius:${RADIUS_CARD}px;font-family:${FONT_BODY};font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:8px;z-index:300;animation:slideUp 200ms ease;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;}
         .col-hdr{font-family:${FONT_ALT};font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${TEXT_MUTED};margin-bottom:3px;}
-        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:${BG_BASE};border-top:1px solid ${BORDER};z-index:50;padding-bottom:env(safe-area-inset-bottom,0px);}
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:50;padding:0 14px 30px;pointer-events:none;}
+        .bottom-nav>div{pointer-events:all;background:rgba(13,11,8,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(212,168,67,0.08);border-radius:18px;box-shadow:0 -2px 16px rgba(0,0,0,0.2),inset 0 1px 0 rgba(232,201,122,0.04);padding:10px 16px;}
         .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;border:none;background:transparent;cursor:pointer;transition:color 150ms;min-height:52px;}
         .day-chip{flex-shrink:0;display:inline-flex;align-items:center;padding:8px 14px;border-radius:0;border:none;cursor:pointer;font-family:${FONT_ALT};font-size:.82rem;font-weight:700;letter-spacing:.05em;transition:all 150ms ease;min-height:44px;}
         .ex-row-m{display:flex;flex-direction:column;gap:7px;padding:12px 0;border-bottom:1px solid ${BORDER};}
@@ -184,18 +185,17 @@ export default function ClientProfilePage() {
       </div>
 
       {/* ── MOBILE HEADER ── */}
-      <header className="mobile-header-client" style={{flexShrink:0,background:BG_BASE,borderBottom:`1px solid ${BORDER}`,zIndex:40,height:52,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 16px'}}>
-        <button onClick={()=>h.router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,borderRadius:0,background:BG_CARD,border:`1px solid ${BORDER}`,cursor:'pointer',color:TEXT_MUTED,flexShrink:0}} aria-label="Retour">
-          <ArrowLeft size={16} strokeWidth={2.5}/>
-        </button>
-        <div style={{display:'flex',alignItems:'center',gap:7}}>
-          <div style={{width:22,height:22,background:GOLD,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            <Zap size={12} color="#0D0B08" strokeWidth={2.5}/>
+      <header className="mobile-header-client" style={{flexShrink:0,zIndex:40,padding:'12px 14px 0'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 10px',borderRadius:18,background:'rgba(20,18,9,0.55)',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',border:'1px solid rgba(212,168,67,0.08)',boxShadow:'0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,201,122,0.04)'}}>
+          <button onClick={()=>h.router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,borderRadius:12,background:'transparent',border:'1px solid transparent',cursor:'pointer',color:TEXT_MUTED,flexShrink:0}} aria-label="Retour">
+            <ArrowLeft size={16} strokeWidth={2.5}/>
+          </button>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <span style={{fontFamily:FONT_DISPLAY,fontSize:18,letterSpacing:4,background:'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',lineHeight:1}}>MOOVX</span>
           </div>
-          <span style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,color:TEXT_PRIMARY,letterSpacing:'2px',textTransform:'uppercase'}}>MOOVX</span>
-        </div>
-        <div style={{width:36,height:36,borderRadius:0,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontWeight:400,fontSize:'0.8rem',color:'#0D0B08',flexShrink:0}}>
-          {initials(profile.full_name)}
+          <div style={{width:34,height:34,borderRadius:'50%',border:`1.5px solid ${GOLD_RULE}`,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontSize:14,color:GOLD,flexShrink:0}}>
+            {initials(profile.full_name)}
+          </div>
         </div>
       </header>
 
@@ -321,11 +321,11 @@ export default function ClientProfilePage() {
                 key={tab.id}
                 className="nav-tab"
                 onClick={()=>h.setActiveTab(tab.id)}
-                style={{color: active ? GOLD : TEXT_DIM}}
+                style={{color: active ? GOLD : '#3A3528'}}
                 aria-label={tab.label}
               >
                 {tab.icon(active)}
-                <span style={{fontSize:'0.55rem',fontFamily:FONT_ALT,fontWeight:700,letterSpacing:'2px',textTransform:'uppercase'}}>{tab.label}</span>
+                <span style={{fontSize:'9px',fontFamily:FONT_ALT,fontWeight:700,letterSpacing:'2px',textTransform:'uppercase'}}>{tab.label}</span>
                 {active && <div style={{position:'absolute',bottom:0,width:24,height:2,background:GOLD,borderRadius:0}}/>}
               </button>
             )
