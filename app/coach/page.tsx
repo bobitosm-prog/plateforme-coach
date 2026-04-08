@@ -96,6 +96,31 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [revMonth, setRevMonth] = useState(new Date().getMonth())
   const [revYear, setRevYear] = useState(new Date().getFullYear())
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteSending, setInviteSending] = useState(false)
+  const [inviteSent, setInviteSent] = useState(false)
+
+  async function sendInviteEmail() {
+    if (!inviteEmail.includes('@') || !h.session?.user?.id) return
+    setInviteSending(true)
+    try {
+      await fetch('/api/invite-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coachName: h.coachName,
+          clientEmail: inviteEmail,
+          inviteLink: h.inviteLink,
+        }),
+      })
+      setInviteSent(true)
+      setInviteEmail('')
+      setTimeout(() => setInviteSent(false), 3000)
+    } catch {
+      alert('Erreur lors de l\'envoi')
+    }
+    setInviteSending(false)
+  }
 
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
@@ -398,6 +423,62 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                 </div>
               )
             })()}
+          </div>
+
+          {/* ═══ INVITER UN CLIENT ═══ */}
+          <div className="sidebar-card">
+            <h2 className="section-title">Inviter un client</h2>
+
+            {/* Option 1 — Lien d'invitation */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <input
+                readOnly
+                value={h.inviteLink}
+                style={{
+                  flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`,
+                  borderRadius: 12, padding: '10px 14px',
+                  fontFamily: FONT_BODY, fontSize: '0.78rem', color: TEXT_MUTED,
+                  outline: 'none', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}
+                onClick={e => (e.target as HTMLInputElement).select()}
+              />
+              <button onClick={h.copyInviteLink} style={{
+                padding: '10px 16px', borderRadius: 12, border: 'none',
+                background: h.copied ? 'rgba(74,222,128,0.15)' : GOLD,
+                color: h.copied ? GREEN : BG_BASE,
+                fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
+                letterSpacing: 1, cursor: 'pointer', whiteSpace: 'nowrap',
+              }}>
+                {h.copied ? '✓ Copié' : 'Copier'}
+              </button>
+            </div>
+
+            {/* Option 2 — Invitation par email */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="email"
+                placeholder="email@client.com"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                style={{
+                  flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`,
+                  borderRadius: 12, padding: '10px 14px',
+                  fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY,
+                  outline: 'none',
+                }}
+                onKeyDown={e => { if (e.key === 'Enter') sendInviteEmail() }}
+              />
+              <button onClick={sendInviteEmail} disabled={!inviteEmail.includes('@') || inviteSending} style={{
+                padding: '10px 16px', borderRadius: 12, border: 'none',
+                background: inviteSent ? 'rgba(74,222,128,0.15)' : GOLD,
+                color: inviteSent ? GREEN : BG_BASE,
+                fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
+                letterSpacing: 1, cursor: 'pointer', whiteSpace: 'nowrap',
+                opacity: !inviteEmail.includes('@') ? 0.5 : 1,
+              }}>
+                {inviteSent ? '✓ Envoyé' : inviteSending ? '...' : 'Inviter'}
+              </button>
+            </div>
           </div>
 
           {/* Bloc 2 — Chiffre d'affaires */}
