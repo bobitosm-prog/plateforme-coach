@@ -57,7 +57,11 @@ export async function POST(req: NextRequest) {
     console.log('[invite-client] Email sent to', clientEmail)
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('[invite-client] SMTP error:', error.message)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('[invite-client] SMTP error:', error.message, error.code, error.response)
+    return NextResponse.json({
+      error: error.message,
+      code: error.code,
+      hint: 'Vérifie SMTP_USER et SMTP_PASS dans Vercel env vars',
+    }, { status: 500 })
   }
 }

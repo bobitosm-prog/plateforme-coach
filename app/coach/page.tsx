@@ -104,7 +104,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
     if (!inviteEmail.includes('@') || !h.session?.user?.id) return
     setInviteSending(true)
     try {
-      await fetch('/api/invite-client', {
+      const res = await fetch('/api/invite-client', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -113,11 +113,17 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           inviteLink: h.inviteLink,
         }),
       })
+      if (!res.ok) throw new Error('API error')
       setInviteSent(true)
       setInviteEmail('')
       setTimeout(() => setInviteSent(false), 3000)
     } catch {
-      alert('Erreur lors de l\'envoi')
+      const subject = encodeURIComponent(h.coachName + " t'invite sur MoovX")
+      const body = encodeURIComponent("Salut !\n\nRejoins-moi sur MoovX :\n" + h.inviteLink)
+      window.open('mailto:' + inviteEmail + '?subject=' + subject + '&body=' + body)
+      setInviteSent(true)
+      setInviteEmail('')
+      setTimeout(() => setInviteSent(false), 3000)
     }
     setInviteSending(false)
   }
