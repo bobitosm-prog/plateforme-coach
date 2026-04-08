@@ -9,13 +9,16 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
+  // Only cache GET requests
+  if (event.request.method !== 'GET') return
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (response && response.status === 200) {
+        if (response && response.status === 200 && response.type === 'basic') {
           const clone = response.clone()
           caches.open('moovx-v1').then((cache) => {
-            cache.put(event.request, clone)
+            cache.put(event.request, clone).catch(() => {})
           })
         }
         return response

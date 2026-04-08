@@ -404,7 +404,7 @@ export default function useCoachDashboard(initialSession?: any) {
     const { data } = await supabase
       .from('scheduled_sessions')
       .select('*')
-      .eq('user_id', coachId)
+      .eq('coach_id', coachId)
       .gte('scheduled_date', from.toISOString().split('T')[0])
       .lte('scheduled_date', to.toISOString().split('T')[0])
       .order('scheduled_date', { ascending: true })
@@ -422,6 +422,7 @@ export default function useCoachDashboard(initialSession?: any) {
     setNsSaving('saving')
     const { error } = await supabase.from('scheduled_sessions').insert({
       user_id: nsClientId,
+      coach_id: session.user.id,
       scheduled_date: nsDate,
       session_name: nsType,
       duration_minutes: duration,
