@@ -132,6 +132,12 @@ export default function useClientDashboard() {
     ])
 
     if (!profRes.data) { router.replace('/onboarding'); return }
+    // If role is missing but user_metadata has it (RLS blocked the UPDATE at signup), fix it now
+    const metaRole = session?.user?.user_metadata?.role
+    if (!profRes.data.role && metaRole) {
+      await supabase.from('profiles').update({ role: metaRole }).eq('id', uid)
+      profRes.data.role = metaRole
+    }
     if (profRes.data.role === 'coach') {
       if (!profRes.data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
       // Coach with completed onboarding → proceed to dashboard

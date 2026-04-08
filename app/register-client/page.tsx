@@ -97,7 +97,7 @@ function RegisterContent() {
     const err = validate()
     if (err) { setError(err); return }
     setError(''); setSubmitting(true)
-    const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl } })
+    const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl, data: { role: selectedRole } } })
     if (signUpError) {
       setSubmitting(false)
       setError(signUpError.message.includes('already registered') ? 'Cet email est déjà utilisé. Connecte-toi.' : signUpError.message)

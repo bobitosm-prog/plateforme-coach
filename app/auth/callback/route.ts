@@ -26,6 +26,14 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // If user_metadata contains a role but profile doesn't, fix it
+      const metaRole = data.session?.user?.user_metadata?.role
+      if (metaRole && data.session) {
+        const { data: prof } = await supabase.from('profiles').select('role').eq('id', data.session.user.id).maybeSingle()
+        if (prof && !prof.role) {
+          await supabase.from('profiles').update({ role: metaRole }).eq('id', data.session.user.id)
+        }
+      }
       // Handle coach invitation link (?coach=uuid) — use server API to bypass RLS
       const coachId = searchParams.get('coach')
       if (coachId && data.session) {
