@@ -89,6 +89,7 @@ export default function TrainingTab({
   // Program edit mode
   const [editMode, setEditMode] = useState(false)
   const [editedDays, setEditedDays] = useState<any[] | null>(null)
+  const [variantPopup, setVariantPopup] = useState<{dayIdx: number, exIdx: number, variants: any[]} | null>(null)
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
@@ -378,6 +379,34 @@ export default function TrainingTab({
     const d = [...editedDays]
     d[dayIdx].exercises.push({ exercise_name: ex.name, custom_name: ex.name, name: ex.name, sets: 3, reps: 12, rest_seconds: 90, muscle_group: ex.muscle_group || '' })
     setEditedDays([...d])
+  }
+  async function loadEditVariants(exerciseName: string, dayIdx: number, exIdx: number) {
+    const { data: current } = await supabase
+      .from('exercises_db').select('variant_group')
+      .ilike('name', exerciseName).limit(1).maybeSingle()
+    if (current?.variant_group) {
+      const { data } = await supabase
+        .from('exercises_db').select('name, equipment, muscle_group')
+        .eq('variant_group', current.variant_group)
+        .neq('name', exerciseName).order('equipment').limit(10)
+      setVariantPopup({ dayIdx, exIdx, variants: data || [] })
+    } else {
+      const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
+      const { data } = await supabase
+        .from('exercises_db').select('name, equipment, muscle_group')
+        .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
+      setVariantPopup({ dayIdx, exIdx, variants: data || [] })
+    }
+  }
+  function selectEditVariant(v: any) {
+    if (!variantPopup || !editedDays) return
+    const d = [...editedDays]
+    const ex = d[variantPopup.dayIdx].exercises[variantPopup.exIdx]
+    ex.exercise_name = v.name
+    ex.custom_name = v.name
+    ex.name = v.name
+    setEditedDays([...d])
+    setVariantPopup(null)
   }
   async function saveEditedProgram() {
     if (!editedDays || !activeCustomProgram?.id) return
@@ -814,6 +843,7 @@ export default function TrainingTab({
                             </div>
                           </div>
                         </div>
+                        <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>🔄</button>
                         <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>✕</button>
                       </div>
                     ))}
@@ -1022,6 +1052,33 @@ export default function TrainingTab({
       )}
       {showSaveChoice && (
         <SaveChoicePopup onSaveModified={async () => { await saveWithModifications(); setShowSaveChoice(false) }} onSaveOriginal={async () => { await saveOriginal(); setShowSaveChoice(false) }} onClose={() => setShowSaveChoice(false)} />
+      )}
+
+      {/* Variant popup */}
+      {variantPopup && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
+            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>VARIANTES</span>
+              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
+            </div>
+            <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px 30px'}}>
+              {variantPopup.variants.length===0?(
+                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14,fontFamily:FONT_BODY}}>Aucune variante trouvée</div>
+              ):variantPopup.variants.map((v: any,i: number)=>(
+                <button key={i} onClick={()=>selectEditVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:BG_BASE,border:`1px solid ${BORDER}`,cursor:'pointer',textAlign:'left'}}>
+                  <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                    {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
+                  </div>
+                  <div>
+                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{v.name}</div>
+                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
