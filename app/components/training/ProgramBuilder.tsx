@@ -60,6 +60,17 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 8,
 }
 
+const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+
+/** Ensure programDays always has exactly 7 entries, padding with rest days */
+function padTo7Days(days: any[]): any[] {
+  const result = [...days]
+  while (result.length < 7) {
+    result.push({ name: `Repos`, exercises: [], is_rest: true })
+  }
+  return result.slice(0, 7)
+}
+
 /* ─── Component ─── */
 export default function ProgramBuilder({ supabase, session, onClose, onSave, editProgram }: ProgramBuilderProps) {
   const [mode, setMode] = useState<'select' | 'ai' | 'manual' | 'custom-exercise'>('select')
@@ -109,7 +120,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
       .then(({ data }: any) => { if (data?.gender) setUserGender(data.gender) })
     if (editProgram) {
       setProgramName(editProgram.name)
-      setProgramDays(editProgram.days || [])
+      setProgramDays(padTo7Days(editProgram.days || []))
       setMode('manual')
       setManualStep(1)
     }
@@ -132,7 +143,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
       if (data.program) {
         setAiResult(data.program)
         setProgramName(data.program.program_name || 'Programme IA')
-        setProgramDays(data.program.days || [])
+        setProgramDays(padTo7Days(data.program.days || []))
         toast.success('Programme généré !')
       } else {
         toast.error(data.error || 'Erreur de génération')
@@ -516,7 +527,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                   onClick={() => {
                     if (!programName.trim()) { toast.error('Donne un nom au programme'); return }
                     if (!programDays.length) {
-                      setProgramDays(Array.from({ length: 3 }, (_, i) => ({ name: `Jour ${i + 1}`, exercises: [] })))
+                      setProgramDays(padTo7Days(Array.from({ length: 3 }, (_, i) => ({ name: `Jour ${i + 1}`, exercises: [] }))))
                     }
                     setManualStep(1)
                   }}
@@ -783,12 +794,13 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
     const DAY_LABELS = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM']
     return (
       <div>
-        {/* Day grid — weekday labels + exercise count */}
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(programDays.length, 7)}, 1fr)`, gap: 6, marginBottom: 12 }}>
-          {programDays.map((day, i) => {
+        {/* Day grid — always 7 columns */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 12 }}>
+          {programDays.slice(0, 7).map((day, i) => {
             const isActive = editingDayIndex === i
             const isSwap = swapFirst === i
-            const hasEx = (day.exercises?.length || 0) > 0
+            const isRest = day.is_rest || (!day.exercises?.length && day.name === 'Repos')
+            const hasEx = !isRest && (day.exercises?.length || 0) > 0
             return (
               <button
                 key={i}
@@ -796,19 +808,23 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                   padding: '8px 2px', cursor: 'pointer',
-                  background: isSwap ? 'rgba(232,201,122,0.2)' : isActive ? GOLD : hasEx ? GOLD_DIM : BG_CARD,
+                  background: isSwap ? 'rgba(232,201,122,0.2)' : isActive ? GOLD : isRest ? BG_BASE : hasEx ? GOLD_DIM : BG_CARD,
                   border: `1.5px solid ${isSwap ? '#E8C97A' : isActive ? GOLD : hasEx ? GOLD_RULE : BORDER}`,
                   borderRadius: 12, transition: 'all 0.2s',
                 }}
               >
                 <span style={{
                   fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
-                  letterSpacing: 1, color: isActive ? '#0D0B08' : TEXT_MUTED,
-                }}>{DAY_LABELS[i] || `J${i + 1}`}</span>
-                <span style={{
-                  fontFamily: FONT_DISPLAY, fontSize: 16,
-                  color: isActive ? '#0D0B08' : hasEx ? GOLD : TEXT_DIM,
-                }}>{day.exercises?.length || 0}</span>
+                  letterSpacing: 1, color: isActive ? '#0D0B08' : isRest ? TEXT_DIM : TEXT_MUTED,
+                }}>{DAY_LABELS[i]}</span>
+                {isRest ? (
+                  <span style={{ fontSize: 14, lineHeight: 1 }}>😴</span>
+                ) : (
+                  <span style={{
+                    fontFamily: FONT_DISPLAY, fontSize: 16,
+                    color: isActive ? '#0D0B08' : hasEx ? GOLD : TEXT_DIM,
+                  }}>{day.exercises?.length || 0}</span>
+                )}
               </button>
             )
           })}
