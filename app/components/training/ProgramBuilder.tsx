@@ -85,6 +85,8 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
   const [exerciseSearchFilter, setExerciseSearchFilter] = useState('')
   const [editingDayIndex, setEditingDayIndex] = useState(0)
+  const [swapMode, setSwapMode] = useState(false)
+  const [swapFirst, setSwapFirst] = useState<number | null>(null)
 
   // Custom exercise mode
   const [ceName, setCeName] = useState('')
@@ -755,27 +757,68 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
   )
 
   /* ──────── DAY EDITOR (shared between AI result and manual) ──────── */
+  function handleDayTabClick(i: number) {
+    if (!swapMode) {
+      setEditingDayIndex(i)
+      return
+    }
+    if (swapFirst === null) {
+      setSwapFirst(i)
+      return
+    }
+    // Swap the two days
+    setProgramDays(prev => {
+      const updated = [...prev]
+      const temp = { ...updated[swapFirst] }
+      updated[swapFirst] = { ...updated[i] }
+      updated[i] = temp
+      return updated
+    })
+    setSwapFirst(null)
+    setSwapMode(false)
+    setEditingDayIndex(i)
+  }
+
   function renderDayEditor() {
     return (
       <div>
         {/* Day tabs */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 12, paddingBottom: 4 }}>
           {programDays.map((day, i) => (
             <button
               key={i}
-              onClick={() => setEditingDayIndex(i)}
+              onClick={() => handleDayTabClick(i)}
               style={{
                 padding: '10px 16px', whiteSpace: 'nowrap', cursor: 'pointer',
                 fontFamily: FONT_DISPLAY, fontSize: 16,
-                background: editingDayIndex === i ? GOLD : BG_CARD,
-                color: editingDayIndex === i ? '#0D0B08' : TEXT_PRIMARY,
-                border: `1px solid ${editingDayIndex === i ? GOLD : BORDER}`,
+                background: swapFirst === i ? 'rgba(232,201,122,0.2)' : editingDayIndex === i ? GOLD : BG_CARD,
+                color: swapFirst === i ? GOLD : editingDayIndex === i ? '#0D0B08' : TEXT_PRIMARY,
+                border: `1px solid ${swapFirst === i ? '#E8C97A' : editingDayIndex === i ? GOLD : BORDER}`,
               }}
             >
               {day.name || `Jour ${i + 1}`}
             </button>
           ))}
         </div>
+
+        {/* Swap button */}
+        {programDays.length > 1 && (
+          <button
+            onClick={() => { setSwapMode(!swapMode); setSwapFirst(null) }}
+            style={{
+              width: '100%', padding: 10, borderRadius: 12, marginBottom: 16,
+              background: swapMode ? GOLD_DIM : 'transparent',
+              border: `1px solid ${swapMode ? GOLD : BORDER}`,
+              color: swapMode ? GOLD : TEXT_MUTED,
+              fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
+              letterSpacing: 1, cursor: 'pointer',
+            }}
+          >
+            {swapMode
+              ? (swapFirst !== null ? `Jour ${swapFirst + 1} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger')
+              : 'Réorganiser les jours'}
+          </button>
+        )}
 
         {/* Active day */}
         {programDays[editingDayIndex] && (
