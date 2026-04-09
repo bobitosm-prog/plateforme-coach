@@ -148,16 +148,21 @@ export default function useClientDashboard() {
       if (!profRes.data.onboarding_completed_at) {
         router.replace('/onboarding-fitness'); return
       }
-      // Étape 2 : onboarding repas pas encore fait ?
+      // Étape 2 : onboarding repas/profil pas encore fait ?
       const fn = profRes.data.full_name?.trim()
       if (!fn || fn === 'Athlete') {
         router.replace('/onboarding'); return
       }
-      // Étape 3 : onboarding photo pas encore fait ?
+      // Étape 3 : photo onboarding — only for NEW users (skip if profile was created before the feature)
+      // Users who completed steps 1+2 before onboarding-photo existed should not be blocked
       if (!profRes.data.onboarding_photo_completed_at) {
-        router.replace('/onboarding-photo'); return
+        const createdAt = profRes.data.created_at ? new Date(profRes.data.created_at) : null
+        const photoFeatureDate = new Date('2026-04-03')
+        if (createdAt && createdAt >= photoFeatureDate) {
+          router.replace('/onboarding-photo'); return
+        }
       }
-      // Les trois sont complétés → on laisse passer
+      // All onboarding steps completed (or grandfathered) → proceed
     }
 
     const profileData = profRes.data
