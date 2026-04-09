@@ -499,13 +499,14 @@ export default function useClientDetail() {
   }
 
   /* ── Save programme ─────────────────────────────────────────── */
-  const saveProgram = async () => {
+  const saveProgram = async (programOverride?: typeof program) => {
     if (!coachId) return
+    const toSave = programOverride || program
     setProgramSaving(true)
     if (programId) {
-      await supabase.from('client_programs').update({ program, updated_at: new Date().toISOString() }).eq('id', programId)
+      await supabase.from('client_programs').update({ program: toSave, updated_at: new Date().toISOString() }).eq('id', programId)
     } else {
-      const { data } = await supabase.from('client_programs').insert({ coach_id: coachId, client_id: id, week_start: currentMonday(), program }).select('id').single()
+      const { data } = await supabase.from('client_programs').insert({ coach_id: coachId, client_id: id, week_start: currentMonday(), program: toSave }).select('id').single()
       if (data?.id) setProgramId(data.id)
     }
     setProgramSaving(false); setProgramSaved(true); showToast('Programme sauvegardé'); setTimeout(() => setProgramSaved(false), 2000)
@@ -513,20 +514,20 @@ export default function useClientDetail() {
 
   /* ── Programme helpers ──────────────────────────────────────── */
   const toggleRepos = (day: string) => {
-    setProgram(p => {
-      const current = p[day]
-      if (!current.repos && current.exercises.length > 0) {
-        setSavedExercises(prev => ({ ...prev, [day]: current.exercises }))
-      }
-      return {
-        ...p,
-        [day]: {
-          ...current,
-          repos: !current.repos,
-          exercises: !current.repos ? [] : (savedExercises[day] || []),
-        },
-      }
-    })
+    const current = program[day]
+    if (!current.repos && current.exercises.length > 0) {
+      setSavedExercises(prev => ({ ...prev, [day]: current.exercises }))
+    }
+    const newProgram = {
+      ...program,
+      [day]: {
+        ...current,
+        repos: !current.repos,
+        exercises: !current.repos ? [] : (savedExercises[day] || []),
+      },
+    }
+    setProgram(newProgram)
+    saveProgram(newProgram)
   }
   const handleDayClick = (day: string) => {
     if (!swapMode) {
@@ -537,12 +538,19 @@ export default function useClientDetail() {
       setSwapFirst(day)
       return
     }
-    setProgram(p => {
-      const temp = { ...p[swapFirst!] }
-      return { ...p, [swapFirst!]: { ...p[day] }, [day]: temp }
-    })
+    if (swapFirst === day) {
+      setSwapFirst(null)
+      return
+    }
+    const newProgram = {
+      ...program,
+      [swapFirst!]: { ...program[day] },
+      [day]: { ...program[swapFirst!] },
+    }
+    setProgram(newProgram)
     setSwapFirst(null)
     setSwapMode(false)
+    saveProgram(newProgram)
   }
   const addExercise  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...p[day].exercises, { name:'', sets:3, reps:10, rest:'60s', notes:'' }] } }))
   const removeExercise = (day: string, i: number) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: p[day].exercises.filter((_,j) => j !== i) } }))
