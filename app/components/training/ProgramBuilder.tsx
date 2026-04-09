@@ -98,6 +98,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
   const [editingDayIndex, setEditingDayIndex] = useState(0)
   const [swapMode, setSwapMode] = useState(false)
   const [swapFirst, setSwapFirst] = useState<number | null>(null)
+  const [variantPopup, setVariantPopup] = useState<{dayIdx: number, exIdx: number, variants: any[]} | null>(null)
 
   // Custom exercise mode
   const [ceName, setCeName] = useState('')
@@ -240,6 +241,31 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
       updated[dayIdx] = day
       return updated
     })
+  }
+
+  async function loadVariants(exerciseName: string, dayIdx: number, exIdx: number) {
+    const { data: current } = await supabase
+      .from('exercises_db').select('variant_group')
+      .ilike('name', exerciseName).limit(1).maybeSingle()
+    if (!current?.variant_group) {
+      const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
+      const { data: similar } = await supabase
+        .from('exercises_db').select('name, equipment, muscle_group')
+        .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
+      setVariantPopup({ dayIdx, exIdx, variants: similar || [] })
+      return
+    }
+    const { data: variants } = await supabase
+      .from('exercises_db').select('name, equipment, muscle_group')
+      .eq('variant_group', current.variant_group)
+      .neq('name', exerciseName).order('equipment').limit(10)
+    setVariantPopup({ dayIdx, exIdx, variants: variants || [] })
+  }
+  function selectVariant(variant: any) {
+    if (!variantPopup) return
+    updateExerciseField(variantPopup.dayIdx, variantPopup.exIdx, 'name', variant.name)
+    updateExerciseField(variantPopup.dayIdx, variantPopup.exIdx, 'exercise_name', variant.name)
+    setVariantPopup(null)
   }
 
   function updateDayName(dayIdx: number, name: string) {
@@ -764,6 +790,33 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
           </div>
         </motion.div>
       )}
+
+      {/* ──────── VARIANT POPUP ──────── */}
+      {variantPopup && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
+            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>VARIANTES</span>
+              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
+            </div>
+            <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px'}}>
+              {variantPopup.variants.length === 0 ? (
+                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14,fontFamily:FONT_BODY}}>Aucune variante trouvée</div>
+              ) : variantPopup.variants.map((v: any,i: number)=>(
+                <button key={i} onClick={()=>selectVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:BG_BASE,border:`1px solid ${BORDER}`,cursor:'pointer',textAlign:'left',transition:'all 0.2s'}}>
+                  <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                    {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
+                  </div>
+                  <div>
+                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{v.name}</div>
+                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 
@@ -898,12 +951,19 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                         </span>
                       )}
                     </div>
-                    <button
-                      onClick={() => removeExerciseFromDay(editingDayIndex, exIdx)}
-                      style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button
+                        onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)}
+                        title="Variantes"
+                        style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}
+                      >🔄</button>
+                      <button
+                        onClick={() => removeExerciseFromDay(editingDayIndex, exIdx)}
+                        style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: 12 }}>

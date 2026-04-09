@@ -244,6 +244,10 @@ export default function ClientProfilePage() {
             setSwapMode={h.setSwapMode}
             swapFirst={h.swapFirst}
             handleDayClick={h.handleDayClick}
+            variantPopup={h.variantPopup}
+            setVariantPopup={h.setVariantPopup}
+            loadVariants={h.loadVariants}
+            selectVariant={h.selectVariant}
           />
         )}
 

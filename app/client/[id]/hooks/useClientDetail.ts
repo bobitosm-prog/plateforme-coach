@@ -107,6 +107,7 @@ export default function useClientDetail() {
   const [savedExercises, setSavedExercises] = useState<Record<string, Exercise[]>>({})
   const [swapMode, setSwapMode] = useState(false)
   const [swapFirst, setSwapFirst] = useState<string | null>(null)
+  const [variantPopup, setVariantPopup] = useState<{day: string, idx: number, variants: any[]} | null>(null)
 
   // Meal plan
   const [mealPlan,       setMealPlan]       = useState<WeekMealPlan>(defaultMealPlan())
@@ -552,6 +553,31 @@ export default function useClientDetail() {
     setSwapMode(false)
     saveProgram(newProgram)
   }
+  async function loadVariants(exerciseName: string, day: string, idx: number) {
+    const { data: current } = await supabase
+      .from('exercises_db').select('variant_group')
+      .ilike('name', exerciseName).limit(1).maybeSingle()
+    if (!current?.variant_group) {
+      const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
+      const { data: similar } = await supabase
+        .from('exercises_db').select('name, equipment, muscle_group')
+        .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
+      setVariantPopup({ day, idx, variants: similar || [] })
+      return
+    }
+    const { data: variants } = await supabase
+      .from('exercises_db').select('name, equipment, muscle_group')
+      .eq('variant_group', current.variant_group)
+      .neq('name', exerciseName).order('equipment').limit(10)
+    setVariantPopup({ day, idx, variants: variants || [] })
+  }
+  function selectVariant(variant: any) {
+    if (!variantPopup) return
+    const newProgram = { ...program, [variantPopup.day]: { ...program[variantPopup.day], exercises: program[variantPopup.day].exercises.map((ex, i) => i === variantPopup.idx ? { ...ex, name: variant.name } : ex) } }
+    setProgram(newProgram)
+    setVariantPopup(null)
+    saveProgram(newProgram)
+  }
   const addExercise  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...p[day].exercises, { name:'', sets:3, reps:10, rest:'60s', notes:'' }] } }))
   const removeExercise = (day: string, i: number) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: p[day].exercises.filter((_,j) => j !== i) } }))
 
@@ -665,6 +691,7 @@ export default function useClientDetail() {
     programSaving, programSaved, saveProgram,
     toggleRepos, addExercise, removeExercise, updateExercise, openExDbModal,
     swapMode, setSwapMode, swapFirst, handleDayClick,
+    variantPopup, setVariantPopup, loadVariants, selectVariant,
     // Exercise DB modal
     showExDbModal, setShowExDbModal, exDbTargetDay, exDbSearch, setExDbSearch,
     exDbResults, exDbAll, exDbFilter, setExDbFilter, selectExercise,

@@ -33,6 +33,10 @@ interface ClientProgramProps {
   setSwapMode: (val: boolean) => void
   swapFirst: string | null
   handleDayClick: (day: string) => void
+  variantPopup: {day: string, idx: number, variants: any[]} | null
+  setVariantPopup: (v: any) => void
+  loadVariants: (name: string, day: string, idx: number) => void
+  selectVariant: (v: any) => void
 }
 
 export default function ClientProgram({
@@ -40,6 +44,7 @@ export default function ClientProgram({
   saveProgram, toggleRepos, removeExercise, updateExercise,
   openExDbModal, setShowAiModal, setAiPreview,
   swapMode, setSwapMode, swapFirst, handleDayClick,
+  variantPopup, setVariantPopup, loadVariants, selectVariant,
 }: ClientProgramProps) {
   return (
     <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
@@ -150,7 +155,7 @@ export default function ClientProgram({
             <div style={{padding:'0 14px',overflowX:'auto'}}>
               {program[expandedDay].exercises.map((ex,idx)=>(
                 <div key={idx} className="ex-row-m">
-                  {/* Name + delete */}
+                  {/* Name + variants + delete */}
                   <div style={{display:'flex',gap:6,alignItems:'center'}}>
                     <input
                       placeholder="Nom de l'exercice"
@@ -160,6 +165,11 @@ export default function ClientProgram({
                       onFocus={e=>{e.target.style.borderColor=GOLD}}
                       onBlur={e=>{e.target.style.borderColor=BORDER}}
                     />
+                    {ex.name && (
+                      <button onClick={()=>loadVariants(ex.name,expandedDay,idx)} title="Variantes" style={{background:'rgba(212,168,67,0.08)',border:`1px solid rgba(212,168,67,0.2)`,cursor:'pointer',color:GOLD,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0,fontSize:16}}>
+                        🔄
+                      </button>
+                    )}
                     <button onClick={()=>removeExercise(expandedDay,idx)} style={{background:'rgba(239,68,68,.08)',border:`1px solid rgba(239,68,68,.15)`,cursor:'pointer',color:RED,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0}}>
                       <Minus size={14} strokeWidth={2.5}/>
                     </button>
@@ -202,6 +212,32 @@ export default function ClientProgram({
               </div>
             </div>
           )}
+        </div>
+      )}
+      {/* Variant popup */}
+      {variantPopup && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
+            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>VARIANTES</span>
+              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
+            </div>
+            <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px'}}>
+              {variantPopup.variants.length === 0 ? (
+                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14,fontFamily:FONT_BODY}}>Aucune variante trouvée</div>
+              ) : variantPopup.variants.map((v,i)=>(
+                <button key={i} onClick={()=>selectVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:BG_BASE,border:`1px solid ${BORDER}`,cursor:'pointer',textAlign:'left',transition:'all 0.2s'}}>
+                  <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                    {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
+                  </div>
+                  <div>
+                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{v.name}</div>
+                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
