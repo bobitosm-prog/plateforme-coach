@@ -104,6 +104,9 @@ export default function useClientDetail() {
   const [programSaving,setProgramSaving]= useState(false)
   const [programSaved, setProgramSaved] = useState(false)
   const [expandedDay,  setExpandedDay]  = useState<string | null>('lundi')
+  const [savedExercises, setSavedExercises] = useState<Record<string, Exercise[]>>({})
+  const [swapMode, setSwapMode] = useState(false)
+  const [swapFirst, setSwapFirst] = useState<string | null>(null)
 
   // Meal plan
   const [mealPlan,       setMealPlan]       = useState<WeekMealPlan>(defaultMealPlan())
@@ -509,7 +512,38 @@ export default function useClientDetail() {
   }
 
   /* ── Programme helpers ──────────────────────────────────────── */
-  const toggleRepos  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], repos: !p[day].repos, exercises: [] } }))
+  const toggleRepos = (day: string) => {
+    setProgram(p => {
+      const current = p[day]
+      if (!current.repos && current.exercises.length > 0) {
+        setSavedExercises(prev => ({ ...prev, [day]: current.exercises }))
+      }
+      return {
+        ...p,
+        [day]: {
+          ...current,
+          repos: !current.repos,
+          exercises: !current.repos ? [] : (savedExercises[day] || []),
+        },
+      }
+    })
+  }
+  const handleDayClick = (day: string) => {
+    if (!swapMode) {
+      setExpandedDay(expandedDay === day ? null : day)
+      return
+    }
+    if (!swapFirst) {
+      setSwapFirst(day)
+      return
+    }
+    setProgram(p => {
+      const temp = { ...p[swapFirst!] }
+      return { ...p, [swapFirst!]: { ...p[day] }, [day]: temp }
+    })
+    setSwapFirst(null)
+    setSwapMode(false)
+  }
   const addExercise  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...p[day].exercises, { name:'', sets:3, reps:10, rest:'60s', notes:'' }] } }))
   const removeExercise = (day: string, i: number) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: p[day].exercises.filter((_,j) => j !== i) } }))
 
@@ -622,6 +656,7 @@ export default function useClientDetail() {
     program, expandedDay, setExpandedDay,
     programSaving, programSaved, saveProgram,
     toggleRepos, addExercise, removeExercise, updateExercise, openExDbModal,
+    swapMode, setSwapMode, swapFirst, handleDayClick,
     // Exercise DB modal
     showExDbModal, setShowExDbModal, exDbTargetDay, exDbSearch, setExDbSearch,
     exDbResults, exDbAll, exDbFilter, setExDbFilter, selectExercise,

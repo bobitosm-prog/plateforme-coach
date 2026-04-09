@@ -138,7 +138,9 @@ export default function useClientDashboard() {
       await supabase.from('profiles').update({ role: metaRole }).eq('id', uid)
       profRes.data.role = metaRole
     }
-    if (profRes.data.role === 'coach') {
+    if (profRes.data.role === 'super_admin' || profRes.data.role === 'admin') {
+      // Admin users skip all onboarding → proceed to dashboard
+    } else if (profRes.data.role === 'coach') {
       if (!profRes.data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
       // Coach with completed onboarding → proceed to dashboard
     } else {

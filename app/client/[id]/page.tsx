@@ -240,6 +240,10 @@ export default function ClientProfilePage() {
             openExDbModal={h.openExDbModal}
             setShowAiModal={h.setShowAiModal}
             setAiPreview={h.setAiPreview}
+            swapMode={h.swapMode}
+            setSwapMode={h.setSwapMode}
+            swapFirst={h.swapFirst}
+            handleDayClick={h.handleDayClick}
           />
         )}
 

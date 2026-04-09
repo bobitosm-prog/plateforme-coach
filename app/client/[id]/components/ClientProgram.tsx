@@ -29,12 +29,17 @@ interface ClientProgramProps {
   openExDbModal: (day: string) => void
   setShowAiModal: (val: boolean) => void
   setAiPreview: (val: WeekProgram | null) => void
+  swapMode: boolean
+  setSwapMode: (val: boolean) => void
+  swapFirst: string | null
+  handleDayClick: (day: string) => void
 }
 
 export default function ClientProgram({
   program, expandedDay, setExpandedDay, programSaving, programSaved,
   saveProgram, toggleRepos, removeExercise, updateExercise,
   openExDbModal, setShowAiModal, setAiPreview,
+  swapMode, setSwapMode, swapFirst, handleDayClick,
 }: ClientProgramProps) {
   return (
     <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
@@ -65,12 +70,12 @@ export default function ClientProgram({
           return (
             <button
               key={day}
-              onClick={()=>setExpandedDay(isActive?null:day)}
+              onClick={()=>handleDayClick(day)}
               style={{
                 display:'flex',flexDirection:'column',alignItems:'center',gap:4,
                 padding:'10px 4px',
-                background:isActive?GOLD:d.repos?BG_CARD_2:hasEx?GOLD_DIM:BG_CARD,
-                border:`1.5px solid ${isActive?GOLD:hasEx?GOLD_RULE:BORDER}`,
+                background:swapFirst===day?'rgba(232,201,122,0.2)':isActive?GOLD:d.repos?BG_CARD_2:hasEx?GOLD_DIM:BG_CARD,
+                border:`1.5px solid ${swapFirst===day?'#E8C97A':isActive?GOLD:hasEx?GOLD_RULE:BORDER}`,
                 borderRadius:14,
                 cursor:'pointer',
                 transition:'all 0.2s',
@@ -96,6 +101,21 @@ export default function ClientProgram({
           )
         })}
       </div>
+
+      {/* Swap days */}
+      <button
+        onClick={() => { setSwapMode(!swapMode); if (swapMode) { /* cancel */ } }}
+        style={{
+          width:'100%', padding:'10px', borderRadius:12,
+          background: swapMode ? GOLD_DIM : 'transparent',
+          border: `1px solid ${swapMode ? GOLD : BORDER}`,
+          color: swapMode ? GOLD : TEXT_MUTED,
+          fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
+          letterSpacing: 1, cursor: 'pointer', marginBottom: 12,
+        }}
+      >
+        {swapMode ? (swapFirst ? `${DAY_LABELS[swapFirst]} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger') : 'Réorganiser les jours'}
+      </button>
 
       {/* Expanded day */}
       {expandedDay && (
