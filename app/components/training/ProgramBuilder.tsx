@@ -780,26 +780,50 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
   }
 
   function renderDayEditor() {
+    const DAY_LABELS = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM']
     return (
       <div>
-        {/* Day tabs */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 12, paddingBottom: 4 }}>
-          {programDays.map((day, i) => (
-            <button
-              key={i}
-              onClick={() => handleDayTabClick(i)}
-              style={{
-                padding: '10px 16px', whiteSpace: 'nowrap', cursor: 'pointer',
-                fontFamily: FONT_DISPLAY, fontSize: 16,
-                background: swapFirst === i ? 'rgba(232,201,122,0.2)' : editingDayIndex === i ? GOLD : BG_CARD,
-                color: swapFirst === i ? GOLD : editingDayIndex === i ? '#0D0B08' : TEXT_PRIMARY,
-                border: `1px solid ${swapFirst === i ? '#E8C97A' : editingDayIndex === i ? GOLD : BORDER}`,
-              }}
-            >
-              {day.name || `Jour ${i + 1}`}
-            </button>
-          ))}
+        {/* Day grid — weekday labels + exercise count */}
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(programDays.length, 7)}, 1fr)`, gap: 6, marginBottom: 12 }}>
+          {programDays.map((day, i) => {
+            const isActive = editingDayIndex === i
+            const isSwap = swapFirst === i
+            const hasEx = (day.exercises?.length || 0) > 0
+            return (
+              <button
+                key={i}
+                onClick={() => handleDayTabClick(i)}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                  padding: '8px 2px', cursor: 'pointer',
+                  background: isSwap ? 'rgba(232,201,122,0.2)' : isActive ? GOLD : hasEx ? GOLD_DIM : BG_CARD,
+                  border: `1.5px solid ${isSwap ? '#E8C97A' : isActive ? GOLD : hasEx ? GOLD_RULE : BORDER}`,
+                  borderRadius: 12, transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
+                  letterSpacing: 1, color: isActive ? '#0D0B08' : TEXT_MUTED,
+                }}>{DAY_LABELS[i] || `J${i + 1}`}</span>
+                <span style={{
+                  fontFamily: FONT_DISPLAY, fontSize: 16,
+                  color: isActive ? '#0D0B08' : hasEx ? GOLD : TEXT_DIM,
+                }}>{day.exercises?.length || 0}</span>
+              </button>
+            )
+          })}
         </div>
+
+        {/* Active day session name */}
+        {programDays[editingDayIndex]?.name && (
+          <div style={{
+            fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
+            letterSpacing: 2, color: GOLD, textTransform: 'uppercase',
+            marginBottom: 8, paddingLeft: 4,
+          }}>
+            {programDays[editingDayIndex].name}
+          </div>
+        )}
 
         {/* Swap button */}
         {programDays.length > 1 && (
