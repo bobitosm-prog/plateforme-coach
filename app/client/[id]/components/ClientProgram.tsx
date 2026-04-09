@@ -196,7 +196,11 @@ export default function ClientProgram({
                           inputMode={type==='number'?'numeric':undefined}
                           value={val}
                           placeholder={field==='rest'?'60s':field==='notes'?'…':''}
-                          onChange={e=>updateExercise(expandedDay,idx,field,type==='number'?parseInt(e.target.value)||1:e.target.value)}
+                          onChange={e=>{
+                            if (type!=='number') { updateExercise(expandedDay,idx,field,e.target.value); return }
+                            const raw=e.target.value; if(raw===''){updateExercise(expandedDay,idx,field,'');return}
+                            const num=parseInt(raw); if(!isNaN(num))updateExercise(expandedDay,idx,field,num)
+                          }}
                           style={{width:'100%',background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'7px 7px',fontFamily:FONT_BODY,fontSize:'0.8rem',color:TEXT_PRIMARY,outline:'none',textAlign:type==='number'?'center':'left',minHeight:36}}
                           onFocus={e=>{e.target.style.borderColor=GOLD}}
                           onBlur={e=>{e.target.style.borderColor=BORDER}}

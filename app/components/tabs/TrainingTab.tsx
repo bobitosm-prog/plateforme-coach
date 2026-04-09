@@ -831,16 +831,16 @@ export default function TrainingTab({
                           <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                               <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Sets</span>
-                              <input type="number" min={1} max={10} value={ex.sets || 3} onChange={e => editExField(dayIdx, i, 'sets', parseInt(e.target.value) || 3)} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
+                              <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
                             </div>
                             <span style={{ color: TEXT_DIM, alignSelf: 'center', fontSize: 10 }}>x</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                               <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Reps</span>
-                              <input type="number" min={1} max={50} value={ex.reps || 12} onChange={e => editExField(dayIdx, i, 'reps', parseInt(e.target.value) || 12)} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
+                              <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                               <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Repos</span>
-                              <input type="number" min={0} max={300} step={15} value={ex.rest_seconds || 90} onChange={e => editExField(dayIdx, i, 'rest_seconds', parseInt(e.target.value) || 90)} style={{ width: 42, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
+                              <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 42, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
                               <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>s</span>
                             </div>
                           </div>
