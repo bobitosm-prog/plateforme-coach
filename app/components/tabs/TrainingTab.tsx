@@ -33,6 +33,8 @@ import TrainingExerciseCard from './training/TrainingExerciseCard'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder from '../training/ProgramBuilder'
+import ExerciseInfoPopup from '../ExerciseInfoPopup'
+import { useExerciseInfo } from '../../hooks/useExerciseInfo'
 
 interface TrainingTabProps {
   supabase: any
@@ -53,6 +55,7 @@ export default function TrainingTab({
   supabase, session, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
 }: TrainingTabProps) {
+  const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
   const [setInputs, setSetInputs]       = useState<Record<string, { kg: string; reps: string }[]>>({})
@@ -535,8 +538,7 @@ export default function TrainingTab({
   }
 
   function handleExerciseInfo(ex: any) {
-    const found = findExercise(ex.name)
-    if (found) setExerciseDetail({ ...found, _sets: ex.sets, _reps: ex.reps, _rest: ex.rest })
+    loadExerciseInfo(ex.name)
   }
 
   // ══════════════════════════════════════════
@@ -843,6 +845,7 @@ export default function TrainingTab({
                             </div>
                           </div>
                         </div>
+                        <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(212,168,67,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>ℹ️</button>
                         <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>🔄</button>
                         <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>✕</button>
                       </div>
@@ -1053,6 +1056,9 @@ export default function TrainingTab({
       {showSaveChoice && (
         <SaveChoicePopup onSaveModified={async () => { await saveWithModifications(); setShowSaveChoice(false) }} onSaveOriginal={async () => { await saveOriginal(); setShowSaveChoice(false) }} onClose={() => setShowSaveChoice(false)} />
       )}
+
+      {/* Exercise info popup */}
+      {exerciseInfo && <ExerciseInfoPopup info={exerciseInfo} onClose={() => setExerciseInfo(null)} />}
 
       {/* Variant popup */}
       {variantPopup && (

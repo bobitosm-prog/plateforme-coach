@@ -2,6 +2,7 @@
 import {
   Check, Plus, Minus, Moon, Save, Sparkles, Loader2,
 } from 'lucide-react'
+import ExerciseInfoPopup from '../../../components/ExerciseInfoPopup'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -37,6 +38,9 @@ interface ClientProgramProps {
   setVariantPopup: (v: any) => void
   loadVariants: (name: string, day: string, idx: number) => void
   selectVariant: (v: any) => void
+  exerciseInfo: any
+  setExerciseInfo: (v: any) => void
+  loadExInfo: (name: string) => void
 }
 
 export default function ClientProgram({
@@ -45,6 +49,7 @@ export default function ClientProgram({
   openExDbModal, setShowAiModal, setAiPreview,
   swapMode, setSwapMode, swapFirst, handleDayClick,
   variantPopup, setVariantPopup, loadVariants, selectVariant,
+  exerciseInfo, setExerciseInfo, loadExInfo,
 }: ClientProgramProps) {
   return (
     <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
@@ -166,9 +171,10 @@ export default function ClientProgram({
                       onBlur={e=>{e.target.style.borderColor=BORDER}}
                     />
                     {ex.name && (
-                      <button onClick={()=>loadVariants(ex.name,expandedDay,idx)} title="Variantes" style={{background:'rgba(212,168,67,0.08)',border:`1px solid rgba(212,168,67,0.2)`,cursor:'pointer',color:GOLD,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0,fontSize:16}}>
-                        🔄
-                      </button>
+                      <>
+                        <button onClick={()=>loadExInfo(ex.name)} title="Instructions" style={{background:'rgba(212,168,67,0.06)',border:`1px solid ${BORDER}`,cursor:'pointer',padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0,fontSize:16}}>ℹ️</button>
+                        <button onClick={()=>loadVariants(ex.name,expandedDay,idx)} title="Variantes" style={{background:'rgba(212,168,67,0.08)',border:`1px solid rgba(212,168,67,0.2)`,cursor:'pointer',color:GOLD,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0,fontSize:16}}>🔄</button>
+                      </>
                     )}
                     <button onClick={()=>removeExercise(expandedDay,idx)} style={{background:'rgba(239,68,68,.08)',border:`1px solid rgba(239,68,68,.15)`,cursor:'pointer',color:RED,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0}}>
                       <Minus size={14} strokeWidth={2.5}/>
@@ -214,6 +220,9 @@ export default function ClientProgram({
           )}
         </div>
       )}
+      {/* Exercise info popup */}
+      {exerciseInfo && <ExerciseInfoPopup info={exerciseInfo} onClose={() => setExerciseInfo(null)} />}
+
       {/* Variant popup */}
       {variantPopup && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>

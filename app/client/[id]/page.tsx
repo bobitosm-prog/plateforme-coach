@@ -248,6 +248,9 @@ export default function ClientProfilePage() {
             setVariantPopup={h.setVariantPopup}
             loadVariants={h.loadVariants}
             selectVariant={h.selectVariant}
+            exerciseInfo={h.exerciseInfo}
+            setExerciseInfo={h.setExerciseInfo}
+            loadExInfo={h.loadExInfo}
           />
         )}
 

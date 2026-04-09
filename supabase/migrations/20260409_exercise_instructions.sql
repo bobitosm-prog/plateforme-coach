@@ -1,0 +1,2 @@
+ALTER TABLE exercises_db ADD COLUMN IF NOT EXISTS instructions TEXT;
+ALTER TABLE exercises_db ADD COLUMN IF NOT EXISTS tips TEXT;

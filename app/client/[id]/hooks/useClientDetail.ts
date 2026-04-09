@@ -2,6 +2,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useExerciseInfo } from '../../../hooks/useExerciseInfo'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,6 +69,7 @@ function currentMonday(): string {
 export default function useClientDetail() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { exerciseInfo, setExerciseInfo, loadExerciseInfo: loadExInfo } = useExerciseInfo(supabase)
 
   // Core
   const [profile,     setProfile]     = useState<Profile | null>(null)
@@ -692,6 +694,7 @@ export default function useClientDetail() {
     toggleRepos, addExercise, removeExercise, updateExercise, openExDbModal,
     swapMode, setSwapMode, swapFirst, handleDayClick,
     variantPopup, setVariantPopup, loadVariants, selectVariant,
+    exerciseInfo, setExerciseInfo, loadExInfo,
     // Exercise DB modal
     showExDbModal, setShowExDbModal, exDbTargetDay, exDbSearch, setExDbSearch,
     exDbResults, exDbAll, exDbFilter, setExDbFilter, selectExercise,
