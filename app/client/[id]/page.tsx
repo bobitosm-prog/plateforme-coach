@@ -426,8 +426,8 @@ export default function ClientProfilePage() {
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }}
             onClick={() => h.setShowExDbModal(false)}>
             <motion.div key="exdb-sheet" initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              onClick={e => e.stopPropagation()} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <div style={{ padding: '20px 20px 0', flexShrink: 0, position: 'sticky', top: 0, zIndex: 10, background: BG_CARD }}>
+              onClick={e => e.stopPropagation()} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, width: '100%', maxHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ padding: '20px 20px 0', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))', flexShrink: 0, position: 'sticky', top: 0, zIndex: 10, background: BG_CARD }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <div>
                     <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', textTransform: 'uppercase' }}>BASE D&apos;EXERCICES</h3>

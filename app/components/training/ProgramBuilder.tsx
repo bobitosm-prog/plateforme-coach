@@ -895,27 +895,67 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
         )}
 
         {/* Swap button */}
-        {programDays.length > 1 && (
+        {programDays.length > 1 && !swapMode && (
           <button
-            onClick={() => { setSwapMode(!swapMode); setSwapFirst(null) }}
+            onClick={() => { setSwapMode(true); setSwapFirst(null) }}
             style={{
               width: '100%', padding: 10, borderRadius: 12, marginBottom: 16,
-              background: swapMode ? GOLD_DIM : 'transparent',
-              border: `1px solid ${swapMode ? GOLD : BORDER}`,
-              color: swapMode ? GOLD : TEXT_MUTED,
+              background: 'transparent',
+              border: `1px solid ${BORDER}`,
+              color: TEXT_MUTED,
               fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
               letterSpacing: 1, cursor: 'pointer',
             }}
           >
-            {swapMode
-              ? (swapFirst !== null ? `Jour ${swapFirst + 1} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger')
-              : 'Réorganiser les jours'}
+            Réorganiser les jours
+          </button>
+        )}
+        {swapMode && (
+          <button
+            onClick={() => { setSwapMode(false); setSwapFirst(null) }}
+            style={{
+              width: '100%', padding: 10, borderRadius: 12, marginBottom: 16,
+              background: GOLD_DIM,
+              border: `1px solid ${GOLD}`,
+              color: GOLD,
+              fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
+              letterSpacing: 1, cursor: 'pointer',
+            }}
+          >
+            {swapFirst !== null ? `${DAY_LABELS[swapFirst]} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger'}
           </button>
         )}
 
         {/* Active day */}
         {programDays[editingDayIndex] && (
           <div>
+            {/* Rest toggle */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <button
+                onClick={() => {
+                  setProgramDays(prev => {
+                    const updated = [...prev]
+                    const day = { ...updated[editingDayIndex] }
+                    day.is_rest = !day.is_rest
+                    if (day.is_rest) { day.name = 'Repos'; day.exercises = [] }
+                    else if (day.name === 'Repos') { day.name = '' }
+                    updated[editingDayIndex] = day
+                    return updated
+                  })
+                }}
+                style={{
+                  padding: '8px 16px', borderRadius: 10, cursor: 'pointer',
+                  background: programDays[editingDayIndex]?.is_rest ? 'rgba(138,133,128,.18)' : GOLD_DIM,
+                  border: `1px solid ${programDays[editingDayIndex]?.is_rest ? BORDER : GOLD}`,
+                  color: programDays[editingDayIndex]?.is_rest ? TEXT_MUTED : GOLD,
+                  fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 1,
+                }}
+              >
+                {programDays[editingDayIndex]?.is_rest ? '😴 REPOS — Cliquer pour activer' : `${DAY_LABELS[editingDayIndex]} — ENTRAÎNEMENT`}
+              </button>
+            </div>
+
+            {!programDays[editingDayIndex]?.is_rest && (
             <div style={{ marginBottom: 16 }}>
               <div style={labelStyle}>Nom de la séance</div>
               <input
@@ -925,8 +965,10 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 placeholder="Ex: Push, Chest & Triceps..."
               />
             </div>
+            )}
 
-            {/* Exercise list */}
+            {/* Exercise list — hidden for rest days */}
+            {!programDays[editingDayIndex]?.is_rest && (<>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
               {(programDays[editingDayIndex]?.exercises || []).map((ex: any, exIdx: number) => {
                 const exerciseName = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || 'Exercice inconnu'
@@ -1014,6 +1056,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
             >
               <Plus size={18} /> AJOUTER UN EXERCICE
             </button>
+            </>)}
           </div>
         )}
       </div>

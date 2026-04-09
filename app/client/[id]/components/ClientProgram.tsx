@@ -113,19 +113,35 @@ export default function ClientProgram({
       </div>
 
       {/* Swap days */}
-      <button
-        onClick={() => { setSwapMode(!swapMode); if (swapMode) { /* cancel */ } }}
-        style={{
-          width:'100%', padding:'10px', borderRadius:12,
-          background: swapMode ? GOLD_DIM : 'transparent',
-          border: `1px solid ${swapMode ? GOLD : BORDER}`,
-          color: swapMode ? GOLD : TEXT_MUTED,
-          fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
-          letterSpacing: 1, cursor: 'pointer', marginBottom: 12,
-        }}
-      >
-        {swapMode ? (swapFirst ? `${DAY_LABELS[swapFirst]} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger') : 'Réorganiser les jours'}
-      </button>
+      {!swapMode ? (
+        <button
+          onClick={() => setSwapMode(true)}
+          style={{
+            width:'100%', padding:'10px', borderRadius:12,
+            background: 'transparent',
+            border: `1px solid ${BORDER}`,
+            color: TEXT_MUTED,
+            fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
+            letterSpacing: 1, cursor: 'pointer', marginBottom: 12,
+          }}
+        >
+          Réorganiser les jours
+        </button>
+      ) : (
+        <button
+          onClick={() => { setSwapMode(false); }}
+          style={{
+            width:'100%', padding:'10px', borderRadius:12,
+            background: GOLD_DIM,
+            border: `1px solid ${GOLD}`,
+            color: GOLD,
+            fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
+            letterSpacing: 1, cursor: 'pointer', marginBottom: 12,
+          }}
+        >
+          {swapFirst ? `${DAY_LABELS[swapFirst]} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger'}
+        </button>
+      )}
 
       {/* Expanded day */}
       {expandedDay && (
