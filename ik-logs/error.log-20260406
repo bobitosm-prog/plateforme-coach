@@ -1,2 +1,0 @@
-moovx.ch [Mon Apr 06 16:53:05.501152 2026] [authz_core:error] [pid 440977:tid 140267692734208] [client 5.30.203.252:0] AH01630: client denied by server configuration: /home/clients/a17974847b7abf8b0e572bd94dd92858/sites/moovx.ch/.env
-moovx.ch [Mon Apr 06 16:53:05.501241 2026] [authz_core:error] [pid 440977:tid 140267692734208] [client 5.30.203.252:0] AH01630: client denied by server configuration: /home/clients/a17974847b7abf8b0e572bd94dd92858/sites/moovx.ch/.env

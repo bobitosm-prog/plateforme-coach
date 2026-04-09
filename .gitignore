@@ -23,6 +23,12 @@
 # claude
 .claude/
 
+# local data
+ik-logs/
+sites/
+tmp/
+.vscode/
+
 # misc
 .DS_Store
 *.pem

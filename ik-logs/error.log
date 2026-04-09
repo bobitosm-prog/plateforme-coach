@@ -1,5 +1,0 @@
-moovx.ch [Tue Apr 07 12:25:12.101666 2026] [authz_core:error] [pid 1818429:tid 140275359930112] [client 104.131.183.1:0] AH01630: client denied by server configuration: /home/clients/a17974847b7abf8b0e572bd94dd92858/sites/moovx.ch/.git
-moovx.ch [Tue Apr 07 12:25:12.101755 2026] [authz_core:error] [pid 1818429:tid 140275359930112] [client 104.131.183.1:0] AH01630: client denied by server configuration: /home/clients/a17974847b7abf8b0e572bd94dd92858/sites/moovx.ch/.git
-moovx.ch [Tue Apr 07 12:25:17.323817 2026] [authz_core:error] [pid 1818429:tid 140275905193728] [client 104.131.183.1:0] AH01630: client denied by server configuration: /home/clients/a17974847b7abf8b0e572bd94dd92858/sites/moovx.ch/.git
-moovx.ch [Tue Apr 07 12:25:17.323955 2026] [authz_core:error] [pid 1818429:tid 140275905193728] [client 104.131.183.1:0] AH01630: client denied by server configuration: /home/clients/a17974847b7abf8b0e572bd94dd92858/sites/moovx.ch/.git
-moovx.ch [Tue Apr 07 15:05:18.857847 2026] [negotiation:error] [pid 2545515:tid 140270368696064] [client 157.66.56.90:0] AH00690: no acceptable variant: /usr/share/apache2/error/HTTP_NOT_FOUND.html.var
