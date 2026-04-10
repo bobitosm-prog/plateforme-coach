@@ -20,7 +20,7 @@ interface ProgramBuilderProps {
 }
 
 const MUSCLE_OPTIONS = ['Poitrine', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Fessiers', 'Abdos']
-const MUSCLE_FILTERS = ['Tous', 'Poitrine', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Fessiers', 'Abdos', 'Cardio']
+const MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos']
 const EQUIPMENT_OPTIONS = ['Haltères', 'Barre', 'Machine', 'Câble', 'Poids du corps', 'Autre']
 const REST_OPTIONS = [30, 60, 90, 120, 180]
 
@@ -284,7 +284,11 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
   const filteredExercises = [...dbExercises, ...customExercises.map(e => ({ ...e, _custom: true }))]
     .filter(e => {
       if (exerciseSearchQuery && !e.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())) return false
-      if (exerciseSearchFilter && exerciseSearchFilter !== 'Tous' && e.muscle_group !== exerciseSearchFilter) return false
+      if (exerciseSearchFilter && exerciseSearchFilter !== 'Tous') {
+        const mg = (e.muscle_group || '').toLowerCase()
+        const filter = exerciseSearchFilter.toLowerCase()
+        if (mg !== filter) return false
+      }
       return true
     })
 
