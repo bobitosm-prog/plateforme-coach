@@ -145,7 +145,8 @@ export default function useClientDashboard() {
       // Coach with completed onboarding → proceed to dashboard
     } else {
       // Étape 1 : onboarding fitness pas encore fait ?
-      if (!profRes.data.onboarding_completed_at) {
+      // Check both onboarding_completed_at AND objective (for users created before the column existed)
+      if (!profRes.data.onboarding_completed_at && !profRes.data.objective) {
         router.replace('/onboarding-fitness'); return
       }
       // Étape 2 : onboarding repas/profil pas encore fait ?

@@ -49,8 +49,7 @@ export default function CoachApp() {
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0D0B08', gap: 24 }}>
-      <img src="/logo-moovx.png" alt="MoovX Logo" width={80} height={80} style={{ borderRadius: 20 }} />
-      <img src="/logo-moovx.png" alt="MoovX" style={{ height: 120, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 0 30px rgba(212,168,67,0.3))' }} />
+      <img src="/logo-moovx.png" alt="MoovX" width={80} height={80} style={{ borderRadius: 20, filter: 'drop-shadow(0 0 30px rgba(212,168,67,0.3))' }} />
       <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#D4A843', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
   )
