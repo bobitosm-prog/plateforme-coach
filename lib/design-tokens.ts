@@ -37,7 +37,7 @@ export const MUSCLE_COLORS: Record<string, string> = {
   'Fessiers': '#EC4899',
   'Cardio': '#06B6D4',
 }
-export const MUSCLE_GROUPS_FILTER = ['Tous', 'Poitrine', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Abdos', 'Fessiers', 'Cardio']
+export const MUSCLE_GROUPS_FILTER = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos']
 
 export const MEAL_TYPES = [
   { id: 'breakfast', label: 'Petit-déj', icon: '🥣' },

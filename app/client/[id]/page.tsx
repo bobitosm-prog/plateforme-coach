@@ -433,7 +433,7 @@ export default function ClientProfilePage() {
                     <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 400, color: TEXT_PRIMARY, margin: 0, letterSpacing: '2px', textTransform: 'uppercase' }}>BASE D&apos;EXERCICES</h3>
                     {h.exDbTargetDay && <p style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: '2px 0 0', textTransform: 'capitalize' }}>Ajouter à · {h.exDbTargetDay}</p>}
                   </div>
-                  <button onClick={() => h.setShowExDbModal(false)} style={{ width: 32, height: 32, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
+                  <button onClick={() => { h.setShowExDbModal(false); h.setExDbSearch('') }} style={{ width: 44, height: 44, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, zIndex: 10 }}><X size={18} color={TEXT_MUTED} /></button>
                 </div>
                 <div style={{ position: 'relative', marginBottom: 10 }}>
                   <Search size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
@@ -446,10 +446,10 @@ export default function ClientProfilePage() {
                   })}
                 </div>
               </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 32px' }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 0' }}>
                 {(() => {
                   let list = h.exDbSearch.length >= 2 ? h.exDbResults : h.exDbAll
-                  if (h.exDbFilter !== 'Tous') list = list.filter(ex => ex.muscle_group === h.exDbFilter)
+                  if (h.exDbFilter !== 'Tous') list = list.filter(ex => (ex.muscle_group || '').toLowerCase() === h.exDbFilter.toLowerCase())
                   if (list.length === 0) return (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '48px 0', color: TEXT_MUTED }}>
                       <Dumbbell size={32} strokeWidth={1.5} />
@@ -480,6 +480,12 @@ export default function ClientProfilePage() {
                     </div>
                   )
                 })()}
+                <div style={{ height: 32 }} />
+              </div>
+              <div style={{ padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', borderTop: `1px solid ${BORDER}`, flexShrink: 0, background: BG_CARD }}>
+                <button onClick={() => { h.setShowExDbModal(false); h.setExDbSearch('') }} style={{ width: '100%', padding: 14, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, color: TEXT_MUTED, fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer', letterSpacing: 2 }}>
+                  FERMER
+                </button>
               </div>
             </motion.div>
           </motion.div>

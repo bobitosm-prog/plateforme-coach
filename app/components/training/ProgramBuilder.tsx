@@ -710,7 +710,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>AJOUTER UN EXERCICE</span>
-              <button onClick={() => { setShowExerciseSearch(false); setExerciseSearchQuery('') }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => { setShowExerciseSearch(false); setExerciseSearchQuery(''); setExerciseSearchFilter('') }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={22} />
               </button>
             </div>
