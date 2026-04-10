@@ -61,15 +61,20 @@ const labelStyle: React.CSSProperties = {
 }
 
 const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
-/** Ensure programDays always has exactly 7 entries, padding with rest days */
+/** Ensure programDays always has exactly 7 entries, each tagged with weekday */
 function padTo7Days(days: any[]): any[] {
   const result = [...days]
+  result.forEach((d, i) => { if (!d.weekday) d.weekday = DAY_NAMES[i] || `Jour ${i + 1}` })
   while (result.length < 7) {
-    result.push({ name: `Repos`, exercises: [], is_rest: true })
+    result.push({ name: '', weekday: DAY_NAMES[result.length], is_rest: true, exercises: [] })
   }
   return result.slice(0, 7)
 }
+
+/** Export for TrainingTab */
+export { padTo7Days }
 
 /* ─── Component ─── */
 export default function ProgramBuilder({ supabase, session, onClose, onSave, editProgram }: ProgramBuilderProps) {
@@ -687,8 +692,8 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
             display: 'flex', flexDirection: 'column',
           }}
         >
-          {/* Search header */}
-          <div style={{ padding: '16px', borderBottom: `1px solid ${BORDER}` }}>
+          {/* Search header — sticky + safe area */}
+          <div style={{ padding: '16px', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))', borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 10, background: BG_CARD }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>AJOUTER UN EXERCICE</span>
               <button onClick={() => setShowExerciseSearch(false)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer' }}>
@@ -844,15 +849,14 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
   }
 
   function renderDayEditor() {
-    const DAY_LABELS = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM']
     return (
       <div>
-        {/* Day grid — always 7 columns */}
+        {/* Day grid — always 7 columns with weekday labels */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 12 }}>
           {programDays.slice(0, 7).map((day, i) => {
             const isActive = editingDayIndex === i
             const isSwap = swapFirst === i
-            const isRest = day.is_rest || (!day.exercises?.length && day.name === 'Repos')
+            const isRest = day.is_rest
             const hasEx = !isRest && (day.exercises?.length || 0) > 0
             return (
               <button
@@ -860,21 +864,21 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 onClick={() => handleDayTabClick(i)}
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                  padding: '8px 2px', cursor: 'pointer',
+                  padding: '10px 2px', borderRadius: 14, cursor: 'pointer',
                   background: isSwap ? 'rgba(232,201,122,0.2)' : isActive ? GOLD : isRest ? BG_BASE : hasEx ? GOLD_DIM : BG_CARD,
                   border: `1.5px solid ${isSwap ? '#E8C97A' : isActive ? GOLD : hasEx ? GOLD_RULE : BORDER}`,
-                  borderRadius: 12, transition: 'all 0.2s',
+                  transition: 'all 0.2s',
                 }}
               >
                 <span style={{
                   fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
-                  letterSpacing: 1, color: isActive ? '#0D0B08' : isRest ? TEXT_DIM : TEXT_MUTED,
-                }}>{DAY_LABELS[i]}</span>
+                  letterSpacing: 1, color: isActive ? '#0D0B08' : isRest ? TEXT_DIM : hasEx ? GOLD : TEXT_MUTED,
+                }}>{DAY_SHORT[i]}</span>
                 {isRest ? (
                   <span style={{ fontSize: 14, lineHeight: 1 }}>😴</span>
                 ) : (
                   <span style={{
-                    fontFamily: FONT_DISPLAY, fontSize: 16,
+                    fontFamily: FONT_DISPLAY, fontSize: 18,
                     color: isActive ? '#0D0B08' : hasEx ? GOLD : TEXT_DIM,
                   }}>{day.exercises?.length || 0}</span>
                 )}
@@ -884,27 +888,25 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
         </div>
 
         {/* Active day session name */}
-        {programDays[editingDayIndex]?.name && (
+        {programDays[editingDayIndex]?.name && !programDays[editingDayIndex]?.is_rest && (
           <div style={{
             fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
             letterSpacing: 2, color: GOLD, textTransform: 'uppercase',
             marginBottom: 8, paddingLeft: 4,
           }}>
-            {programDays[editingDayIndex].name}
+            {DAY_NAMES[editingDayIndex]} — {programDays[editingDayIndex].name}
           </div>
         )}
 
-        {/* Swap button */}
-        {programDays.length > 1 && !swapMode && (
+        {/* Swap button — only show text when active */}
+        {!swapMode && (
           <button
             onClick={() => { setSwapMode(true); setSwapFirst(null) }}
             style={{
-              width: '100%', padding: 10, borderRadius: 12, marginBottom: 16,
-              background: 'transparent',
-              border: `1px solid ${BORDER}`,
-              color: TEXT_MUTED,
-              fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
-              letterSpacing: 1, cursor: 'pointer',
+              width: '100%', padding: 12, borderRadius: 14, marginBottom: 10,
+              background: BG_CARD, border: `1px dashed ${BORDER}`,
+              color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 12,
+              fontWeight: 700, letterSpacing: 2, cursor: 'pointer',
             }}
           >
             Réorganiser les jours
@@ -914,15 +916,13 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
           <button
             onClick={() => { setSwapMode(false); setSwapFirst(null) }}
             style={{
-              width: '100%', padding: 10, borderRadius: 12, marginBottom: 16,
-              background: GOLD_DIM,
-              border: `1px solid ${GOLD}`,
-              color: GOLD,
-              fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
-              letterSpacing: 1, cursor: 'pointer',
+              width: '100%', padding: 12, borderRadius: 14, marginBottom: 10,
+              background: GOLD_DIM, border: `1px solid ${GOLD}`,
+              color: GOLD, fontFamily: FONT_ALT, fontSize: 12,
+              fontWeight: 700, letterSpacing: 2, cursor: 'pointer',
             }}
           >
-            {swapFirst !== null ? `${DAY_LABELS[swapFirst]} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger'}
+            {swapFirst !== null ? `${DAY_SHORT[swapFirst]} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger'}
           </button>
         )}
 
@@ -930,28 +930,30 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
         {programDays[editingDayIndex] && (
           <div>
             {/* Rest toggle */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: 1 }}>
+                {DAY_NAMES[editingDayIndex]}
+              </span>
               <button
                 onClick={() => {
                   setProgramDays(prev => {
                     const updated = [...prev]
                     const day = { ...updated[editingDayIndex] }
                     day.is_rest = !day.is_rest
-                    if (day.is_rest) { day.name = 'Repos'; day.exercises = [] }
-                    else if (day.name === 'Repos') { day.name = '' }
+                    if (day.is_rest) { day.exercises = [] }
                     updated[editingDayIndex] = day
                     return updated
                   })
                 }}
                 style={{
-                  padding: '8px 16px', borderRadius: 10, cursor: 'pointer',
+                  padding: '6px 14px', borderRadius: 10, cursor: 'pointer',
                   background: programDays[editingDayIndex]?.is_rest ? 'rgba(138,133,128,.18)' : GOLD_DIM,
                   border: `1px solid ${programDays[editingDayIndex]?.is_rest ? BORDER : GOLD}`,
                   color: programDays[editingDayIndex]?.is_rest ? TEXT_MUTED : GOLD,
-                  fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 1,
+                  fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1,
                 }}
               >
-                {programDays[editingDayIndex]?.is_rest ? '😴 REPOS — Cliquer pour activer' : `${DAY_LABELS[editingDayIndex]} — ENTRAÎNEMENT`}
+                {programDays[editingDayIndex]?.is_rest ? '😴 Repos — Cliquer pour activer' : 'Entraînement ✓'}
               </button>
             </div>
 

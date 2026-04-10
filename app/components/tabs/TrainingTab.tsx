@@ -32,7 +32,7 @@ import TrainingSessionDone from './training/TrainingSessionDone'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
-import ProgramBuilder from '../training/ProgramBuilder'
+import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
 import ExerciseInfoPopup from '../ExerciseInfoPopup'
 import { useExerciseInfo } from '../../hooks/useExerciseInfo'
 
@@ -106,8 +106,10 @@ export default function TrainingTab({
   const customDayData = (() => {
     if (!activeCustomProgram?.days?.length) return null
     const dayIndex = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-    const customDay = activeCustomProgram.days[dayIndex] || activeCustomProgram.days.find((d: any) => d.day_number === dayIndex + 1)
+    const paddedDays = padTo7Days(activeCustomProgram.days)
+    const customDay = paddedDays[dayIndex]
     if (!customDay) return null
+    if (customDay.is_rest) return { repos: true, exercises: [] }
     return { repos: false, exercises: (customDay.exercises || []).map((ex: any) => ({ name: ex.exercise_name || ex.custom_name || ex.name || 'Exercice', sets: ex.sets || 3, reps: ex.reps || 10, rest_seconds: ex.rest_seconds || 90, muscle_group: ex.muscle_group || customDay.focus || '' })) }
   })()
   const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
