@@ -680,120 +680,131 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
 
       {/* ──────── EXERCISE SEARCH OVERLAY ──────── */}
       {showExerciseSearch && (
-        <motion.div
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 25 }}
-          style={{
-            position: 'fixed', bottom: 0, left: 0, right: 0,
-            maxHeight: '70vh', background: BG_CARD,
-            borderTop: `1px solid ${BORDER}`, zIndex: 70,
-            display: 'flex', flexDirection: 'column',
-          }}
-        >
-          {/* Search header — sticky + safe area */}
-          <div style={{ padding: '16px', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))', borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 10, background: BG_CARD }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>AJOUTER UN EXERCICE</span>
-              <button onClick={() => setShowExerciseSearch(false)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer' }}>
-                <X size={20} />
-              </button>
-            </div>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <style>{`input[inputmode="search"]::-webkit-search-decoration,input[inputmode="search"]::-webkit-search-cancel-button{display:none}`}</style>
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25 }}
+            style={{
+              flex: 1, marginTop: 40,
+              background: BG_CARD, borderRadius: '20px 20px 0 0',
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            }}
+          >
+            {/* Sticky header: title + search + filters */}
+            <div style={{
+              flexShrink: 0, background: BG_CARD, zIndex: 10,
+              padding: '16px 16px 10px',
+              borderBottom: `1px solid ${BORDER}`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>AJOUTER UN EXERCICE</span>
+                <button onClick={() => setShowExerciseSearch(false)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer' }}>
+                  <X size={20} />
+                </button>
+              </div>
 
-            <div style={{ position: 'relative', marginBottom: 12 }}>
-              <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED }} />
-              <input
-                value={exerciseSearchQuery}
-                onChange={e => setExerciseSearchQuery(e.target.value)}
-                placeholder="Rechercher..."
-                style={{ ...inputStyle, paddingLeft: 36 }}
-                autoFocus
-              />
-            </div>
-
-            {/* Muscle filter pills */}
-            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
-              {MUSCLE_FILTERS.map(f => (
-                <button
-                  key={f}
-                  onClick={() => setExerciseSearchFilter(f === 'Tous' ? '' : f)}
+              {/* Search input FIRST */}
+              <div style={{ position: 'relative', marginBottom: 10 }}>
+                <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
+                <input
+                  autoFocus
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  inputMode="search"
+                  enterKeyHint="search"
+                  value={exerciseSearchQuery}
+                  onChange={e => setExerciseSearchQuery(e.target.value)}
+                  placeholder="Rechercher un exercice..."
                   style={{
-                    ...selBtn((f === 'Tous' && !exerciseSearchFilter) || exerciseSearchFilter === f),
-                    padding: '6px 12px', fontSize: 11, whiteSpace: 'nowrap',
+                    width: '100%', padding: '12px 14px 12px 40px',
+                    background: BG_BASE, border: `1px solid ${BORDER}`,
+                    borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16,
+                    fontFamily: FONT_BODY, outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Muscle filter pills */}
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+                {MUSCLE_FILTERS.map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setExerciseSearchFilter(f === 'Tous' ? '' : f)}
+                    style={{
+                      ...selBtn((f === 'Tous' && !exerciseSearchFilter) || exerciseSearchFilter === f),
+                      padding: '6px 12px', fontSize: 11, whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Scrollable exercise list */}
+            <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, padding: '8px 16px 200px' }}>
+              {filteredExercises.map((ex, i) => (
+                <div
+                  key={ex.id || i}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '12px 0', borderBottom: `1px solid ${BORDER}`,
                   }}
                 >
-                  {f}
-                </button>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{ex.name}</div>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                      {ex.muscle_group && (
+                        <span style={{ fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase', padding: '2px 8px', background: GOLD_DIM, color: GOLD, letterSpacing: '0.05em' }}>
+                          {ex.muscle_group}
+                        </span>
+                      )}
+                      {ex._custom && (
+                        <span style={{ fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase', padding: '2px 8px', background: GOLD_DIM, color: GOLD, letterSpacing: '0.05em' }}>
+                          MON EXERCICE
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => addExerciseToDay(ex, !!ex._custom)}
+                    style={{ background: 'none', border: `1px solid ${BORDER}`, color: GREEN, cursor: 'pointer', padding: 8 }}
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
               ))}
+              {filteredExercises.length === 0 && (
+                <div style={{ textAlign: 'center', padding: 24, color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14 }}>
+                  Aucun exercice trouvé
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Exercise list */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
-            {filteredExercises.map((ex, i) => (
-              <div
-                key={ex.id || i}
+            {/* Create exercise button */}
+            <div style={{ padding: 16, borderTop: `1px solid ${BORDER}`, flexShrink: 0 }}>
+              <button
+                onClick={() => { previousMode.current = 'manual'; setShowExerciseSearch(false); setMode('custom-exercise') }}
                 style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 0', borderBottom: `1px solid ${BORDER}`,
+                  width: '100%', padding: '14px', background: BG_CARD_2,
+                  border: `1px solid ${BORDER}`, color: GOLD,
+                  fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer',
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>
-                    {ex.name}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                    {ex.muscle_group && (
-                      <span style={{
-                        fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase',
-                        padding: '2px 8px', background: GOLD_DIM, color: GOLD,
-                        letterSpacing: '0.05em',
-                      }}>
-                        {ex.muscle_group}
-                      </span>
-                    )}
-                    {ex._custom && (
-                      <span style={{
-                        fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase',
-                        padding: '2px 8px', background: GOLD_DIM, color: GOLD,
-                        letterSpacing: '0.05em',
-                      }}>
-                        MON EXERCICE
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => addExerciseToDay(ex, !!ex._custom)}
-                  style={{ background: 'none', border: `1px solid ${BORDER}`, color: GREEN, cursor: 'pointer', padding: 8 }}
-                >
-                  <Plus size={18} />
-                </button>
-              </div>
-            ))}
-
-            {filteredExercises.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 24, color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14 }}>
-                Aucun exercice trouvé
-              </div>
-            )}
-          </div>
-
-          {/* Create exercise button */}
-          <div style={{ padding: 16, borderTop: `1px solid ${BORDER}` }}>
-            <button
-              onClick={() => { previousMode.current = 'manual'; setShowExerciseSearch(false); setMode('custom-exercise') }}
-              style={{
-                width: '100%', padding: '14px', background: BG_CARD_2,
-                border: `1px solid ${BORDER}`, color: GOLD,
-                fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer',
-              }}
-            >
-              CRÉER UN EXERCICE
-            </button>
-          </div>
-        </motion.div>
+                CRÉER UN EXERCICE
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
 
       {/* ──────── VARIANT POPUP ──────── */}
