@@ -125,6 +125,7 @@ export default function HomeTab({
   const [todayHabit, setTodayHabit] = useState<any>(null)
   const [habitValues, setHabitValues] = useState<Record<string, number>>({})
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
+  const [customDayName, setCustomDayName] = useState<string | null>(null)
 
   // Fetch today's consumed calories
   useEffect(() => {
@@ -233,8 +234,11 @@ export default function HomeTab({
           const dayIdx = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(todayKey)
           const realIdx = dayIdx <= 0 ? 6 : dayIdx - 1 // Convert JS day to Mon=0 index
           const customDay = data.days[realIdx] || data.days.find((d: any) => d.day_number === dayIdx)
-          if (customDay?.exercises?.length) {
+          if (customDay?.is_rest) {
+            setCustomDayName('Repos')
+          } else if (customDay?.exercises?.length) {
             setCustomProgramExercises((customDay.exercises || []).map((ex: any) => ({ name: ex.exercise_name || ex.custom_name || ex.name || 'Exercice', sets: ex.sets || 3, reps: ex.reps || 10, rest_seconds: ex.rest_seconds || 90, muscle_group: ex.muscle_group || '' })))
+            setCustomDayName(customDay.name || customDay.weekday || null)
           }
         }
       })
@@ -259,7 +263,7 @@ export default function HomeTab({
 
   // Custom program exercises take priority over coach program
   const todayExercises = customProgramExercises || todayCoachDay?.exercises || []
-  const sessionTitle = todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
+  const sessionTitle = customDayName || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
 
   // Weekly bar chart data
   const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']

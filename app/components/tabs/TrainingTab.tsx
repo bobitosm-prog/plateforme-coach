@@ -667,7 +667,19 @@ export default function TrainingTab({
       {scheduledSessions.length > 0 && (
         <div style={{ padding: '0 16px' }}>
           <WeekCalendar
-            sessions={scheduledSessions}
+            sessions={(() => {
+              if (!activeCustomProgram?.days?.length) return scheduledSessions
+              const paddedCustomDays = padTo7Days(activeCustomProgram.days)
+              return scheduledSessions.map(s => {
+                const d = new Date(s.scheduled_date)
+                const jsDay = d.getDay() // 0=Sun
+                const idx = jsDay === 0 ? 6 : jsDay - 1 // Mon=0
+                const customDay = paddedCustomDays[idx]
+                if (!customDay || customDay.is_rest) return s
+                const customTitle = customDay.name || customDay.weekday || s.title
+                return customTitle !== s.title ? { ...s, title: customTitle } : s
+              })
+            })()}
             selectedDate={calendarSelectedDate}
             onSelectDate={(d) => {
               setCalendarSelectedDate(d)
