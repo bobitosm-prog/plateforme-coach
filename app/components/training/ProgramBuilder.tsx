@@ -197,6 +197,45 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
     } else {
       await supabase.from('custom_programs').insert(payload)
     }
+
+    // Regenerate scheduled_sessions for current week with correct day names
+    try {
+      const today = new Date()
+      const dow = today.getDay()
+      const monday = new Date(today)
+      monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
+      monday.setHours(0, 0, 0, 0)
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      const mondayStr = monday.toISOString().split('T')[0]
+      const sundayStr = sunday.toISOString().split('T')[0]
+
+      await supabase.from('scheduled_sessions').delete()
+        .eq('user_id', session.user.id)
+        .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
+        .eq('completed', false)
+
+      const newSessions: any[] = []
+      for (let i = 0; i < 7; i++) {
+        const day = programDays[i]
+        if (!day || day.is_rest) continue
+        const date = new Date(monday)
+        date.setDate(monday.getDate() + i)
+        newSessions.push({
+          user_id: session.user.id,
+          title: day.name || day.weekday || DAY_NAMES[i],
+          session_type: 'custom',
+          scheduled_date: date.toISOString().split('T')[0],
+          scheduled_time: '08:00',
+          duration_min: 60,
+          completed: false,
+        })
+      }
+      if (newSessions.length > 0) {
+        await supabase.from('scheduled_sessions').insert(newSessions)
+      }
+    } catch (e) { console.error('[saveProgram] scheduled_sessions sync error:', e) }
+
     toast.success('Programme sauvegardé !')
     setSaving(false)
     onSave()
@@ -860,12 +899,15 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
       setSwapFirst(i)
       return
     }
-    // Swap the two days
+    // Swap everything EXCEPT weekday (which stays fixed to the calendar position)
     setProgramDays(prev => {
       const updated = [...prev]
-      const temp = { ...updated[swapFirst] }
-      updated[swapFirst] = { ...updated[i] }
-      updated[i] = temp
+      const dayA = { ...updated[swapFirst!] }
+      const dayB = { ...updated[i] }
+      const weekdayA = dayA.weekday
+      const weekdayB = dayB.weekday
+      updated[swapFirst!] = { ...dayB, weekday: weekdayA }
+      updated[i] = { ...dayA, weekday: weekdayB }
       return updated
     })
     setSwapFirst(null)

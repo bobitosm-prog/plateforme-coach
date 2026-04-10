@@ -221,7 +221,51 @@ export default function TrainingTab({
     if (error) { toast.error('Erreur: ' + error.message); return }
     const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId }))
     setCustomPrograms(updated)
-    setActiveCustomProgram(updated.find(p => p.id === programId) || null)
+    const activeProg = updated.find(p => p.id === programId) || null
+    setActiveCustomProgram(activeProg)
+
+    // Regenerate scheduled_sessions with the activated program's day names
+    if (activeProg?.days) {
+      try {
+        const today = new Date()
+        const dow = today.getDay()
+        const monday = new Date(today)
+        monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
+        monday.setHours(0, 0, 0, 0)
+        const sunday = new Date(monday)
+        sunday.setDate(monday.getDate() + 6)
+        const mondayStr = monday.toISOString().split('T')[0]
+        const sundayStr = sunday.toISOString().split('T')[0]
+
+        await supabase.from('scheduled_sessions').delete()
+          .eq('user_id', session.user.id)
+          .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
+          .eq('completed', false)
+
+        const paddedDays = padTo7Days(activeProg.days)
+        const DAY_LABELS_FULL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+        const newSessions: any[] = []
+        for (let i = 0; i < 7; i++) {
+          const day = paddedDays[i]
+          if (!day || day.is_rest) continue
+          const date = new Date(monday)
+          date.setDate(monday.getDate() + i)
+          newSessions.push({
+            user_id: session.user.id,
+            title: day.name || day.weekday || DAY_LABELS_FULL[i],
+            session_type: 'custom',
+            scheduled_date: date.toISOString().split('T')[0],
+            scheduled_time: '08:00',
+            duration_min: 60,
+            completed: false,
+          })
+        }
+        if (newSessions.length > 0) {
+          await supabase.from('scheduled_sessions').insert(newSessions)
+        }
+      } catch (e) { console.error('[activateProgram] sync error:', e) }
+    }
+
     toast.success('Programme activé !')
   }
 
@@ -671,13 +715,13 @@ export default function TrainingTab({
               if (!activeCustomProgram?.days?.length) return scheduledSessions
               const paddedCustomDays = padTo7Days(activeCustomProgram.days)
               return scheduledSessions.map(s => {
-                const d = new Date(s.scheduled_date)
-                const jsDay = d.getDay() // 0=Sun
-                const idx = jsDay === 0 ? 6 : jsDay - 1 // Mon=0
+                const sessionDate = new Date(s.scheduled_date + 'T12:00:00')
+                const jsDay = sessionDate.getDay()
+                const idx = jsDay === 0 ? 6 : jsDay - 1
                 const customDay = paddedCustomDays[idx]
-                if (!customDay || customDay.is_rest) return s
+                if (!customDay || customDay.is_rest) return { ...s, session_type: 'rest', title: 'Repos' }
                 const customTitle = customDay.name || customDay.weekday || s.title
-                return customTitle !== s.title ? { ...s, title: customTitle } : s
+                return { ...s, title: customTitle }
               })
             })()}
             selectedDate={calendarSelectedDate}
