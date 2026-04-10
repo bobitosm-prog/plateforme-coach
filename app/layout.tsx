@@ -52,9 +52,10 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="MoovX" />
-        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
-        <link rel="icon" href="/favicon-16x16.png" sizes="16x16" />
+        <link rel="icon" href="/logo-moovx-32.png" sizes="32x32" />
+        <link rel="icon" href="/logo-moovx-16.png" sizes="16x16" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta property="og:image" content="https://app.moovx.ch/logo-moovx.png" />
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />

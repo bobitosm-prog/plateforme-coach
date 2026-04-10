@@ -17,7 +17,7 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const clone = response.clone()
-          caches.open('moovx-v1').then((cache) => {
+          caches.open('moovx-v2').then((cache) => {
             cache.put(event.request, clone).catch(() => {})
           })
         }
@@ -37,8 +37,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || 'MoovX', {
       body: data.body || '',
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
+      icon: '/logo-moovx-192.png',
+      badge: '/logo-moovx-192.png',
       vibrate: [200, 100, 200],
       tag: 'moovx',
       renotify: true,
