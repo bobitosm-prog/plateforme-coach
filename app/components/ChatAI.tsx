@@ -28,6 +28,15 @@ function getSuggestions(): string[] {
   ]
 }
 
+function renderMarkdown(text: string) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#D4A843">$1</strong>')
+    .replace(/^## (.*$)/gm, '<div style="font-family:\'Bebas Neue\';font-size:18px;color:#D4A843;letter-spacing:2px;margin:12px 0 6px">$1</div>')
+    .replace(/^### (.*$)/gm, '<div style="font-family:\'Barlow Condensed\';font-size:14px;font-weight:700;color:#D4A843;letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase">$1</div>')
+    .replace(/^- (.*$)/gm, '<div style="padding-left:12px;margin:2px 0">• $1</div>')
+    .replace(/\n/g, '<br/>')
+}
+
 const STORAGE_KEY = 'moovx_chat_history'
 const RATE_KEY = 'moovx_chat_rate'
 
@@ -84,7 +93,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
       const raw = sessionStorage.getItem(RATE_KEY)
       const data = raw ? JSON.parse(raw) : { count: 0, hour: 0 }
       const currentHour = Math.floor(Date.now() / 3600000)
-      if (data.hour !== currentHour) return true // new hour
+      if (data.hour !== currentHour) return true
       return data.count < 40
     } catch { return true }
   }
@@ -148,9 +157,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     }
   }
 
-  // Handle close — notify parent if externally opened
   function handleClose() {
-    handleClose()
+    setOpen(false)
     onExternalClose?.()
   }
 
@@ -159,7 +167,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     if (hideFloatingButton) return null
     return (
       <button onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 300) }}
-        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998,  }}>
+        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998 }}>
         <Bot size={24} color="#0D0B08" strokeWidth={2.5} />
       </button>
     )
@@ -174,10 +182,22 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         exit={{ opacity: 0, y: 40 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className="chat-ai-panel"
-        style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: 'calc(100dvh - 0px)', background: BG_BASE, zIndex: 1001, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${BORDER}` }}
+        style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: '#0D0B08', zIndex: 1001, display: 'flex', flexDirection: 'column' }}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+        {/* Header — glass */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 16px',
+          paddingTop: 'max(14px, env(safe-area-inset-top, 14px))',
+          background: 'rgba(20,18,9,0.55)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(212,168,67,0.1)',
+          borderRadius: 18,
+          margin: '12px 14px 0',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,201,122,0.06)',
+          flexShrink: 0,
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 12, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Bot size={20} color="#0D0B08" strokeWidth={2.5} />
@@ -189,8 +209,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               </div>
             </div>
           </div>
-          <button onClick={() => handleClose()} style={{ width: 32, height: 32, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color={TEXT_MUTED} />
+          <button onClick={handleClose} style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(138,133,128,0.1)', border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={18} color={TEXT_MUTED} />
           </button>
         </div>
 
@@ -206,22 +226,38 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
 
           {messages.map((msg, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-              <div style={{
-                maxWidth: '85%', padding: '10px 14px', fontSize: '0.85rem', lineHeight: 1.55, color: TEXT_PRIMARY,
-                fontFamily: FONT_BODY, fontWeight: 300,
-                borderRadius: 12,
-                background: msg.role === 'user' ? GOLD_DIM : BG_CARD_2,
-                border: msg.role === 'user' ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
-                whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-              }}>
-                {msg.content}
-              </div>
+              {msg.role === 'assistant' ? (
+                <div style={{
+                  maxWidth: '85%', padding: '14px 16px',
+                  background: 'rgba(20,18,9,0.6)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(212,168,67,0.15)',
+                  borderRadius: '16px 16px 16px 4px',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,201,122,0.06)',
+                }}>
+                  <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
+                    style={{ fontSize: 14, color: '#F5EDD8', lineHeight: 1.6, fontFamily: FONT_BODY, fontWeight: 300 }} />
+                </div>
+              ) : (
+                <div style={{
+                  maxWidth: '85%', padding: '14px 16px',
+                  background: 'rgba(212,168,67,0.1)',
+                  border: '1px solid rgba(212,168,67,0.25)',
+                  borderRadius: '16px 16px 4px 16px',
+                  fontSize: 14, color: TEXT_PRIMARY, lineHeight: 1.55,
+                  fontFamily: FONT_BODY, fontWeight: 300,
+                  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                }}>
+                  {msg.content}
+                </div>
+              )}
             </div>
           ))}
 
           {loading && (
             <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <div style={{ padding: '10px 14px', borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}` }}>
+              <div style={{ padding: '14px 16px', borderRadius: '16px 16px 16px 4px', background: 'rgba(20,18,9,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {[0, 1, 2].map(i => (
                     <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD, opacity: 0.5, animation: `dotPulse 1.2s ${i * 0.2}s ease-in-out infinite` }} />
@@ -244,16 +280,39 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           </div>
         )}
 
-        {/* Input */}
-        <div style={{ padding: '10px 16px calc(10px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
+        {/* Input — glass */}
+        <div style={{
+          display: 'flex', gap: 10, alignItems: 'center',
+          padding: '12px 14px',
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
+          background: 'rgba(20,18,9,0.7)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderTop: '1px solid rgba(212,168,67,0.1)',
+          flexShrink: 0,
+        }}>
           <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
             placeholder="Pose ta question..."
             rows={1}
-            style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, fontFamily: FONT_BODY }}
+            style={{
+              flex: 1, padding: '12px 16px',
+              background: '#141209',
+              border: '1px solid rgba(212,168,67,0.15)',
+              borderRadius: 14,
+              color: '#F5EDD8', fontSize: 15,
+              fontFamily: FONT_BODY, outline: 'none',
+              resize: 'none', maxHeight: 100,
+            }}
           />
           <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
-            style={{ width: 40, height: 40, borderRadius: 12, background: input.trim() ? GOLD : BG_CARD_2, border: input.trim() ? 'none' : `1px solid ${BORDER}`, cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms' }}>
+            style={{
+              width: 44, height: 44, borderRadius: 14,
+              background: input.trim() ? GOLD : 'rgba(212,168,67,0.1)',
+              border: 'none', cursor: input.trim() ? 'pointer' : 'default',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, transition: 'background 150ms',
+            }}>
             <Send size={18} color={input.trim() ? '#0D0B08' : TEXT_MUTED} strokeWidth={2.5} />
           </button>
         </div>
