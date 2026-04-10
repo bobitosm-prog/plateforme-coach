@@ -534,22 +534,27 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 </div>
 
                 <div style={{ marginBottom: 24 }}>
-                  <div style={labelStyle}>Nombre de jours</div>
+                  <div style={labelStyle}>Jours d&apos;entraînement / semaine</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <input
-                      type="range" min={1} max={7} value={programDays.length || 3}
+                      type="range" min={1} max={7}
+                      value={programDays.filter(d => !d.is_rest).length || 3}
                       onChange={e => {
-                        const n = Number(e.target.value)
-                        setProgramDays(prev => {
-                          const arr = [...prev]
-                          while (arr.length < n) arr.push({ name: `Jour ${arr.length + 1}`, exercises: [] })
-                          return arr.slice(0, n)
-                        })
+                        const n = parseInt(e.target.value)
+                        setProgramDays(DAY_NAMES.map((wd, i) => {
+                          const existing = programDays[i]
+                          if (i < n) {
+                            return existing && !existing.is_rest
+                              ? { ...existing, weekday: wd }
+                              : { name: existing?.name || '', weekday: wd, is_rest: false, exercises: existing?.exercises || [] }
+                          }
+                          return { name: '', weekday: wd, is_rest: true, exercises: [] }
+                        }))
                       }}
                       style={{ flex: 1, accentColor: GOLD }}
                     />
                     <span style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: GOLD, minWidth: 32, textAlign: 'center' }}>
-                      {programDays.length || 3}
+                      {programDays.filter(d => !d.is_rest).length || 3}
                     </span>
                   </div>
                 </div>
@@ -557,8 +562,14 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 <button
                   onClick={() => {
                     if (!programName.trim()) { toast.error('Donne un nom au programme'); return }
-                    if (!programDays.length) {
-                      setProgramDays(padTo7Days(Array.from({ length: 3 }, (_, i) => ({ name: `Jour ${i + 1}`, exercises: [] }))))
+                    if (!programDays.length || programDays.length < 7) {
+                      const trainingCount = programDays.filter(d => !d.is_rest).length || 4
+                      setProgramDays(DAY_NAMES.map((wd, i) => {
+                        const existing = programDays[i]
+                        if (i < trainingCount && existing && !existing.is_rest) return { ...existing, weekday: wd }
+                        if (i < trainingCount) return { name: '', weekday: wd, is_rest: false, exercises: [] }
+                        return { name: '', weekday: wd, is_rest: true, exercises: [] }
+                      }))
                     }
                     setManualStep(1)
                   }}
@@ -681,7 +692,8 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
       {/* ──────── EXERCISE SEARCH OVERLAY ──────── */}
       {showExerciseSearch && (
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 200,
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          height: '100dvh', zIndex: 200,
           background: 'rgba(0,0,0,0.8)',
           display: 'flex', flexDirection: 'column',
         }}>
@@ -751,7 +763,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
             </div>
 
             {/* Scrollable exercise list */}
-            <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, padding: '8px 16px 200px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, padding: '8px 16px 300px' }}>
               {filteredExercises.map((ex, i) => (
                 <div
                   key={ex.id || i}
