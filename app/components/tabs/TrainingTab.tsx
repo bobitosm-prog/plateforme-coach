@@ -89,6 +89,10 @@ export default function TrainingTab({
   // Feature: save choice popup
   const [showSaveChoice, setShowSaveChoice] = useState(false)
   const [swapping, setSwapping] = useState<string | null>(null)
+  // Workout detail
+  const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
+  const [workoutDetail, setWorkoutDetail] = useState<any[]>([])
+  const [loadingDetail, setLoadingDetail] = useState(false)
   // Program edit mode
   const [editMode, setEditMode] = useState(false)
   const [editedDays, setEditedDays] = useState<any[] | null>(null)
@@ -587,6 +591,24 @@ export default function TrainingTab({
     loadExerciseInfo(ex.name)
   }
 
+  async function openWorkoutDetail(workout: any) {
+    setSelectedWorkout(workout)
+    setLoadingDetail(true)
+    const { data } = await supabase
+      .from('workout_sets')
+      .select('exercise_name, set_number, weight, reps, completed')
+      .eq('session_id', workout.id)
+      .order('exercise_name').order('set_number', { ascending: true })
+    // Group by exercise
+    const grouped: Record<string, any[]> = {}
+    for (const row of (data || [])) {
+      if (!grouped[row.exercise_name]) grouped[row.exercise_name] = []
+      grouped[row.exercise_name].push(row)
+    }
+    setWorkoutDetail(Object.entries(grouped).map(([name, sets]) => ({ name, sets })))
+    setLoadingDetail(false)
+  }
+
   // ══════════════════════════════════════════
   return (
     <div style={{ minHeight: '100vh', background: BG_BASE, paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
@@ -1066,7 +1088,7 @@ export default function TrainingTab({
             const nameLC = (s.name || '').toLowerCase()
             const icon = nameLC.includes('push') || nameLC.includes('pec') ? '\u{1F4AA}' : nameLC.includes('pull') || nameLC.includes('dos') ? '\u{1F9B5}' : nameLC.includes('leg') || nameLC.includes('jambe') ? '\u{1F9B5}' : '\u{1F3CB}\uFE0F'
             return (
-              <div key={s.id} style={{ background: BG_CARD, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: BG_CARD, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{icon}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || 'Seance'}</div>
@@ -1140,6 +1162,51 @@ export default function TrainingTab({
                   </div>
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workout detail popup */}
+      {selectedWorkout && (
+        <div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setSelectedWorkout(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+              <div>
+                <div style={{fontFamily:FONT_DISPLAY,fontSize:22,letterSpacing:2,color:TEXT_PRIMARY}}>{selectedWorkout.name||'Séance'}</div>
+                <div style={{fontFamily:FONT_BODY,fontSize:12,color:TEXT_MUTED,marginTop:2}}>
+                  {new Date(selectedWorkout.created_at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}
+                  {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
+                </div>
+              </div>
+              <button onClick={()=>setSelectedWorkout(null)} style={{width:36,height:36,borderRadius:12,background:GOLD_DIM,border:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:TEXT_MUTED,fontSize:16}}>✕</button>
+            </div>
+            <div style={{flex:1,overflowY:'auto',padding:'12px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
+              {loadingDetail?(
+                <div style={{textAlign:'center',padding:40,color:TEXT_MUTED}}>Chargement...</div>
+              ):workoutDetail.length===0?(
+                <div style={{textAlign:'center',padding:40,color:TEXT_DIM,fontSize:14,fontFamily:FONT_BODY}}>Aucun détail enregistré</div>
+              ):(
+                workoutDetail.map((ex,i)=>(
+                  <div key={i} style={{marginBottom:16,paddingBottom:16,borderBottom:i<workoutDetail.length-1?`1px solid ${BORDER}`:'none'}}>
+                    <div style={{fontFamily:FONT_ALT,fontSize:16,fontWeight:700,color:TEXT_PRIMARY,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{ex.name}</div>
+                    <div style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'4px 0',marginBottom:4}}>
+                      <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>SET</span>
+                      <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>KG</span>
+                      <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>REPS</span>
+                      <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>VOLUME</span>
+                    </div>
+                    {ex.sets.map((set:any,si:number)=>(
+                      <div key={si} style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'6px 0',borderBottom:`1px solid ${BORDER}`}}>
+                        <span style={{fontFamily:FONT_DISPLAY,fontSize:16,color:GOLD,width:28,height:28,borderRadius:8,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center'}}>{si+1}</span>
+                        <span style={{fontFamily:FONT_DISPLAY,fontSize:18,color:TEXT_PRIMARY}}>{set.weight||0}</span>
+                        <span style={{fontFamily:FONT_DISPLAY,fontSize:18,color:TEXT_PRIMARY}}>{set.reps||0}</span>
+                        <span style={{fontFamily:FONT_BODY,fontSize:13,color:TEXT_MUTED}}>{((set.weight||0)*(set.reps||0))} kg</span>
+                      </div>
+                    ))}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
