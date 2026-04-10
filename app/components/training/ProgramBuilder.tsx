@@ -726,12 +726,23 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 onFocus={e => { setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300) }}
                 placeholder="Rechercher un exercice..."
                 style={{
-                  width: '100%', padding: '14px 14px 14px 40px',
+                  width: '100%', padding: '14px 44px 14px 40px',
                   background: BG_CARD, border: `1px solid ${BORDER}`,
                   borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16,
                   fontFamily: FONT_BODY, outline: 'none',
                 }}
               />
+              {exerciseSearchQuery && (
+                <button onClick={() => setExerciseSearchQuery('')} style={{
+                  position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: 'rgba(212,168,67,0.15)', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}>
+                  <X size={14} color={GOLD} />
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
