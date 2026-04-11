@@ -236,6 +236,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [showSavePopup, setShowSavePopup] = useState(false)
   const [exerciseMenu, setExerciseMenu] = useState<number | null>(null)
   const [variantPopup, setVariantPopup] = useState<{exIdx: number, variants: any[], originalName: string} | null>(null)
+  const [exerciseInfo, setExerciseInfo] = useState<any>(null)
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
@@ -363,6 +364,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       variants = data || []
     }
     setVariantPopup({ exIdx, variants, originalName: exo.name })
+  }
+  async function openExerciseInfo(exo: Exo) {
+    const { data } = await supabase.from('exercises_db')
+      .select('name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url')
+      .ilike('name', exo.name).limit(1).maybeSingle()
+    setExerciseInfo(data || { name: exo.name })
   }
   function selectSessionVariant(v: any) {
     if (!variantPopup) return
@@ -511,8 +518,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 </div>
               </button>
 
-              {/* ⋯ menu button */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+              {/* ℹ️ + ⋯ menu buttons */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4, gap: 4 }}>
+                <button onClick={() => openExerciseInfo(exo)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', padding: '4px 8px', minWidth: 36, minHeight: 32, fontSize: 16 }}>ℹ️</button>
                 <button onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 20, cursor: 'pointer', padding: '4px 8px', minWidth: 44, minHeight: 32 }}>⋯</button>
               </div>
               {exerciseMenu === idx && (
@@ -692,6 +700,57 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           <button onClick={() => sessionModified ? setShowSavePopup(true) : finish()} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
         </div>
       </div>
+
+      {/* Exercise info popup */}
+      {exerciseInfo && (
+        <div style={{position:'fixed',inset:0,zIndex:300,background:'rgba(0,0,0,0.85)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setExerciseInfo(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+              <div>
+                <div style={{fontFamily:FONT_DISPLAY,fontSize:22,letterSpacing:2,color:TEXT_PRIMARY}}>{exerciseInfo.name}</div>
+                <div style={{display:'flex',gap:6,marginTop:4,flexWrap:'wrap'}}>
+                  {exerciseInfo.muscle_group&&<span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:GOLD_DIM,color:GOLD,letterSpacing:1,textTransform:'uppercase' as const}}>{exerciseInfo.muscle_group}</span>}
+                  {exerciseInfo.equipment&&<span style={{fontFamily:FONT_BODY,fontSize:10,padding:'2px 8px',borderRadius:6,background:BG_CARD_2,color:TEXT_MUTED}}>{exerciseInfo.equipment}</span>}
+                  {exerciseInfo.difficulty&&<span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:exerciseInfo.difficulty==='avance'?'rgba(239,68,68,0.1)':exerciseInfo.difficulty==='intermediaire'?GOLD_DIM:'rgba(74,222,128,0.1)',color:exerciseInfo.difficulty==='avance'?'#EF4444':exerciseInfo.difficulty==='intermediaire'?GOLD:'#4ade80',letterSpacing:1,textTransform:'uppercase' as const}}>{exerciseInfo.difficulty==='debutant'?'Débutant':exerciseInfo.difficulty==='intermediaire'?'Intermédiaire':'Avancé'}</span>}
+                </div>
+              </div>
+              <button onClick={()=>setExerciseInfo(null)} style={{width:36,height:36,borderRadius:12,background:GOLD_DIM,border:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:TEXT_MUTED,fontSize:16}}>✕</button>
+            </div>
+            <div style={{flex:1,overflowY:'auto',padding:'16px 20px 32px',WebkitOverflowScrolling:'touch' as any}}>
+              {exerciseInfo.gif_url?(
+                <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
+                  <img src={exerciseInfo.gif_url} alt={exerciseInfo.name} style={{width:'100%',height:'auto',display:'block'}}/>
+                </div>
+              ):(
+                <div style={{marginBottom:20,borderRadius:14,border:`1px dashed ${BORDER}`,padding:'40px 20px',textAlign:'center',background:GOLD_DIM}}>
+                  <div style={{fontSize:32,marginBottom:8}}>🎬</div>
+                  <div style={{fontFamily:FONT_ALT,fontSize:12,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>ANIMATION À VENIR</div>
+                </div>
+              )}
+              {exerciseInfo.video_url&&(
+                <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
+                  <video src={exerciseInfo.video_url} controls playsInline style={{width:'100%',height:'auto',display:'block'}}/>
+                </div>
+              )}
+              {(exerciseInfo.description||exerciseInfo.instructions)&&(
+                <div style={{marginBottom:20}}>
+                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>EXÉCUTION</div>
+                  <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,lineHeight:1.6}}>{exerciseInfo.description||exerciseInfo.instructions}</div>
+                </div>
+              )}
+              {(exerciseInfo.execution_tips||exerciseInfo.tips)&&(
+                <div style={{marginBottom:20}}>
+                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>CONSEILS</div>
+                  <div style={{fontFamily:FONT_BODY,fontSize:13,color:TEXT_MUTED,lineHeight:1.6,padding:'12px 14px',background:GOLD_DIM,border:`1px solid ${GOLD_RULE}`,borderRadius:12}}>{exerciseInfo.execution_tips||exerciseInfo.tips}</div>
+                </div>
+              )}
+              {!exerciseInfo.description&&!exerciseInfo.instructions&&!exerciseInfo.execution_tips&&!exerciseInfo.tips&&!exerciseInfo.gif_url&&!exerciseInfo.video_url&&(
+                <div style={{textAlign:'center',padding:'20px 0',color:TEXT_DIM,fontFamily:FONT_BODY,fontSize:14}}>Aucune information disponible.<br/>Descriptions et animations à venir.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Variant popup */}
       {variantPopup && (

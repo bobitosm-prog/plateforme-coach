@@ -1,0 +1,4 @@
+ALTER TABLE exercises_db ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE exercises_db ADD COLUMN IF NOT EXISTS execution_tips TEXT;
+ALTER TABLE exercises_db ADD COLUMN IF NOT EXISTS gif_url TEXT;
+ALTER TABLE exercises_db ADD COLUMN IF NOT EXISTS video_url TEXT;
