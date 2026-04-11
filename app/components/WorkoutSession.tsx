@@ -505,7 +505,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
           return (
-          <SortableExercise key={exo.id} id={exo.id}>
+          <SortableExercise key={exo.id} id={exo.id} exerciseName={exo.name}>
+          {(dragHandleProps: any) => (
             <div className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
               {/* ── Accordion Header ── */}
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
@@ -513,7 +514,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   <ExercisePreview name={exo.name} size={80} animate={false} />
                   {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0" {...dragHandleProps}>
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -682,6 +683,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 </div>
               )}
             </div>
+          )}
           </SortableExercise>
           )
         })}

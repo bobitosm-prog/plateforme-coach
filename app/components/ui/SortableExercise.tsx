@@ -1,26 +1,41 @@
 'use client'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import React from 'react'
 
-export default function SortableExercise({ id, children }: { id: string; children: React.ReactNode }) {
+interface Props {
+  id: string
+  exerciseName: string
+  children: (dragHandleProps: any) => React.ReactNode
+}
+
+export default function SortableExercise({ id, exerciseName, children }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+
   return (
     <div ref={setNodeRef} style={{
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging ? 0.5 : 1,
       zIndex: isDragging ? 100 : 'auto',
       position: 'relative',
     }} {...attributes}>
-      <div {...listeners} style={{
-        position: 'absolute', left: 0, top: 0, bottom: 0, width: 40,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'grab', touchAction: 'none', zIndex: 10,
-        color: '#3A3528', fontSize: 18, userSelect: 'none',
-      }}>⠿</div>
-      <div style={{ paddingLeft: 36 }}>
-        {children}
-      </div>
+      {isDragging ? (
+        <div style={{
+          padding: '12px 16px',
+          background: 'rgba(212,168,67,0.15)',
+          border: '1.5px solid #D4A843',
+          borderRadius: 12,
+          fontFamily: "'Barlow Condensed'",
+          fontSize: 15,
+          fontWeight: 700,
+          color: '#D4A843',
+          letterSpacing: 1,
+          textTransform: 'uppercase',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        }}>{exerciseName}</div>
+      ) : (
+        <>{children({ ...listeners, style: { cursor: 'grab', touchAction: 'none' } })}</>
+      )}
     </div>
   )
 }

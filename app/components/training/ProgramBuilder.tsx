@@ -1065,14 +1065,15 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                 const exerciseName = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || 'Exercice inconnu'
                 const exerciseMuscle = ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group || ''
                 return (
-                <SortableExercise key={`pex-${exIdx}`} id={`pex-${exIdx}`}>
+                <SortableExercise key={`pex-${exIdx}`} id={`pex-${exIdx}`} exerciseName={exerciseName}>
+                {(dragHandleProps: any) => (
                 <div
                   style={{
                     background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16,
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
-                    <div>
+                    <div {...dragHandleProps}>
                       <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY }}>{exerciseName}</div>
                       {exerciseMuscle && (
                         <span style={{
@@ -1132,6 +1133,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                     </div>
                   </div>
                 </div>
+                )}
                 </SortableExercise>
               )})}
             </div>
