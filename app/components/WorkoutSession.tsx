@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, MoreHorizontal } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -542,9 +542,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                           <Play size={20} style={{ color: TEXT_MUTED }} />
                         </button>
                       )}
-                      <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
-                        <MoreHorizontal size={20} style={{ color: TEXT_MUTED }} />
-                      </button>
                     </div>
                   </div>
 
