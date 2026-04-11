@@ -204,6 +204,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [reorderMode, setReorderMode] = useState(false)
   const [sessionModified, setSessionModified] = useState(false)
   const [showSavePopup, setShowSavePopup] = useState(false)
+  const [exerciseMenu, setExerciseMenu] = useState<number | null>(null)
+  const [variantPopup, setVariantPopup] = useState<{exIdx: number, variants: any[], originalName: string} | null>(null)
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
@@ -288,6 +290,31 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     updated[newIndex] = temp
     setExos(updated)
     setSessionModified(true)
+  }
+  function removeExerciseDuringSession(exIdx: number) {
+    setExos(prev => prev.filter((_, i) => i !== exIdx))
+    setSessionModified(true)
+    setExerciseMenu(null)
+  }
+  async function loadVariantsForSession(exo: Exo, exIdx: number) {
+    setExerciseMenu(null)
+    const { data: current } = await supabase.from('exercises_db').select('variant_group').ilike('name', exo.name).limit(1).maybeSingle()
+    let variants: any[] = []
+    if (current?.variant_group) {
+      const { data } = await supabase.from('exercises_db').select('name, equipment, muscle_group').eq('variant_group', current.variant_group).neq('name', exo.name).order('equipment').limit(10)
+      variants = data || []
+    } else {
+      const baseName = exo.name.split(' ').slice(0, 2).join(' ')
+      const { data } = await supabase.from('exercises_db').select('name, equipment, muscle_group').ilike('name', `%${baseName}%`).neq('name', exo.name).limit(8)
+      variants = data || []
+    }
+    setVariantPopup({ exIdx, variants, originalName: exo.name })
+  }
+  function selectSessionVariant(v: any) {
+    if (!variantPopup) return
+    setExos(prev => prev.map((e, i) => i === variantPopup.exIdx ? { ...e, name: v.name, muscle: v.muscle_group || e.muscle } : e))
+    setSessionModified(true)
+    setVariantPopup(null)
   }
 
   if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || e.rest || 90, tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))); setMode('session') }} onCancel={() => setMode('session')} />
@@ -457,6 +484,17 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   {exo.open ? <ChevronUp size={14} style={{ color: TEXT_DIM }} /> : <ChevronDown size={14} style={{ color: TEXT_DIM }} />}
                 </div>
               </button>
+
+              {/* ⋯ menu button */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                <button onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 20, cursor: 'pointer', padding: '4px 8px', minWidth: 44, minHeight: 32 }}>⋯</button>
+              </div>
+              {exerciseMenu === idx && (
+                <div style={{ display: 'flex', gap: 8, padding: '0 0 12px', animation: 'fadeIn 150ms ease' }}>
+                  <button onClick={() => loadVariantsForSession(exo, idx)} style={{ flex: 1, padding: 10, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>🔄 REMPLACER</button>
+                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 10, borderRadius: 12, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>🗑 SUPPRIMER</button>
+                </div>
+              )}
 
               {/* ── Expanded Content ── */}
               {exo.open && (
@@ -630,6 +668,36 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           <button onClick={() => sessionModified ? setShowSavePopup(true) : finish()} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
         </div>
       </div>
+
+      {/* Variant popup */}
+      {variantPopup && (
+        <div style={{position:'fixed',inset:0,zIndex:300,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end'}} onClick={()=>setVariantPopup(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxHeight:'60vh',display:'flex',flexDirection:'column'}}>
+            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>REMPLACER</div>
+                <div style={{fontFamily:FONT_BODY,fontSize:12,color:TEXT_MUTED,marginTop:2}}>{variantPopup.originalName}</div>
+              </div>
+              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
+            </div>
+            <div style={{overflowY:'auto',padding:'8px 12px 32px'}}>
+              {variantPopup.variants.length===0?(
+                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14}}>Aucune variante trouvée</div>
+              ):variantPopup.variants.map((v: any,i: number)=>(
+                <button key={i} onClick={()=>selectSessionVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:BG_BASE,border:`1px solid ${BORDER}`,cursor:'pointer',textAlign:'left'}}>
+                  <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                    {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
+                  </div>
+                  <div>
+                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{v.name}</div>
+                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Save changes popup */}
       {showSavePopup && (
