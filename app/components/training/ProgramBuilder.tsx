@@ -9,6 +9,9 @@ import {
   GREEN, RED, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import SortableExercise from '../ui/SortableExercise'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -332,6 +335,23 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
     })
 
   const previousMode = useRef<'select' | 'manual'>('select')
+  const pbSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  )
+  function handleExerciseDragEnd(event: any) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = parseInt(active.id.replace('pex-', ''))
+    const newIndex = parseInt(over.id.replace('pex-', ''))
+    setProgramDays(prev => {
+      const updated = [...prev]
+      const day = { ...updated[editingDayIndex] }
+      day.exercises = arrayMove([...(day.exercises || [])], oldIndex, newIndex)
+      updated[editingDayIndex] = day
+      return updated
+    })
+  }
 
   /* ─── RENDER ─── */
   return (
@@ -1038,13 +1058,15 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
 
             {/* Exercise list — hidden for rest days */}
             {!programDays[editingDayIndex]?.is_rest && (<>
+            <DndContext sensors={pbSensors} collisionDetection={closestCenter} onDragEnd={handleExerciseDragEnd}>
+            <SortableContext items={(programDays[editingDayIndex]?.exercises || []).map((_: any, i: number) => `pex-${i}`)} strategy={verticalListSortingStrategy}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
               {(programDays[editingDayIndex]?.exercises || []).map((ex: any, exIdx: number) => {
                 const exerciseName = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || 'Exercice inconnu'
                 const exerciseMuscle = ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group || ''
                 return (
+                <SortableExercise key={`pex-${exIdx}`} id={`pex-${exIdx}`}>
                 <div
-                  key={exIdx}
                   style={{
                     background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16,
                   }}
@@ -1110,8 +1132,11 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                     </div>
                   </div>
                 </div>
+                </SortableExercise>
               )})}
             </div>
+            </SortableContext>
+            </DndContext>
 
             {/* Add exercise button */}
             <button

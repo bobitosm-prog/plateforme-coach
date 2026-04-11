@@ -9,6 +9,9 @@ import {
 } from '../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import SortableExercise from './ui/SortableExercise'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -232,7 +235,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const elT = useRef<NodeJS.Timeout | null>(null)
   const [done, setDone] = useState(false)
   const [showVideo, setShowVideo] = useState<string | null>(null)
-  const [reorderMode, setReorderMode] = useState(false)
   const [sessionModified, setSessionModified] = useState(false)
   const [showSavePopup, setShowSavePopup] = useState(false)
   const [exerciseMenu, setExerciseMenu] = useState<number | null>(null)
@@ -340,14 +342,17 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const finish = () => { if (elT.current) clearInterval(elT.current); setDone(true); onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) }) }
 
-  function moveExercise(index: number, direction: number) {
-    const newIndex = index + direction
-    if (newIndex < 0 || newIndex >= exos.length) return
-    const updated = [...exos]
-    const temp = updated[index]
-    updated[index] = updated[newIndex]
-    updated[newIndex] = temp
-    setExos(updated)
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  )
+  function handleDragEnd(event: any) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = exos.findIndex(e => e.id === active.id)
+    const newIndex = exos.findIndex(e => e.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    setExos(prev => arrayMove(prev, oldIndex, newIndex))
     setSessionModified(true)
   }
   function removeExerciseDuringSession(exIdx: number) {
@@ -482,51 +487,26 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
       {/* EXERCICES */}
       <div className="py-4" style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px 200px' }}>
-        {/* Reorder + Add buttons */}
-        <div style={{ display: 'flex', gap: 8, margin: '0 4px 16px', width: 'calc(100% - 8px)' }}>
-          <button onClick={() => setReorderMode(!reorderMode)} style={{
-            flex: 1, padding: 10, borderRadius: 12,
-            background: reorderMode ? 'rgba(212,168,67,0.12)' : BG_CARD,
-            border: `1px solid ${reorderMode ? GOLD : BORDER}`,
-            color: reorderMode ? GOLD : TEXT_MUTED,
-            fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
-            letterSpacing: 2, cursor: 'pointer',
-          }}>{reorderMode ? '✓ TERMINÉ' : '↕ RÉORGANISER'}</button>
+        {/* Add exercise button */}
+        <div style={{ margin: '0 4px 16px', width: 'calc(100% - 8px)' }}>
           <button onClick={() => setMode('custom')} style={{
-            flex: 1, padding: 10, borderRadius: 12,
+            width: '100%', padding: 10, borderRadius: 12,
             background: BG_CARD, border: `1px solid ${BORDER}`,
             color: GOLD,
             fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
             letterSpacing: 2, cursor: 'pointer',
-          }}>+ AJOUTER</button>
+          }}>+ AJOUTER UN EXERCICE</button>
         </div>
 
+        <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={exos.map(e => e.id)} strategy={verticalListSortingStrategy}>
         {exos.map((exo, idx) => {
           const cnt = exo.sets.filter(s => s.done).length
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
           return (
-            <div key={exo.id} className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12, display: 'flex', gap: 0 }}>
-              {/* Reorder arrows */}
-              {reorderMode && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginRight: 8, paddingTop: 16 }}>
-                  <button disabled={idx === 0} onClick={() => moveExercise(idx, -1)} style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: idx === 0 ? BG_BASE : GOLD_DIM,
-                    border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`,
-                    color: idx === 0 ? TEXT_DIM : GOLD, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
-                  }}>↑</button>
-                  <button disabled={idx === exos.length - 1} onClick={() => moveExercise(idx, 1)} style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM,
-                    border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`,
-                    color: idx === exos.length - 1 ? TEXT_DIM : GOLD, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
-                  }}>↓</button>
-                </div>
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
+          <SortableExercise key={exo.id} id={exo.id}>
+            <div className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
               {/* ── Accordion Header ── */}
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
                 <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
@@ -701,10 +681,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   </button>
                 </div>
               )}
-              </div>{/* end flex:1 wrapper for reorder */}
             </div>
+          </SortableExercise>
           )
         })}
+        </SortableContext>
+        </DndContext>
 
         {allDone && (
           <div className="p-6 text-center" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD }}>
