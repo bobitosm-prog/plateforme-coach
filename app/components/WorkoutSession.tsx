@@ -201,6 +201,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
   const elT = useRef<NodeJS.Timeout | null>(null)
   const [done, setDone] = useState(false)
   const [showVideo, setShowVideo] = useState<string | null>(null)
+  const [reorderMode, setReorderMode] = useState(false)
+  const [sessionModified, setSessionModified] = useState(false)
+  const [showSavePopup, setShowSavePopup] = useState(false)
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
@@ -275,6 +278,17 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
   const allDone = completed === total && total > 0
 
   const finish = () => { if (elT.current) clearInterval(elT.current); setDone(true); onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) }) }
+
+  function moveExercise(index: number, direction: number) {
+    const newIndex = index + direction
+    if (newIndex < 0 || newIndex >= exos.length) return
+    const updated = [...exos]
+    const temp = updated[index]
+    updated[index] = updated[newIndex]
+    updated[newIndex] = temp
+    setExos(updated)
+    setSessionModified(true)
+  }
 
   if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || e.rest || 90, tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))); setMode('session') }} onCancel={() => setMode('session')} />
 
@@ -382,21 +396,51 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
 
       {/* EXERCICES */}
       <div className="py-4" style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px 200px' }}>
-        <button onClick={() => setMode('custom')} className="flex items-center gap-3 p-4 active:scale-[0.98]"
-          style={{ background: GOLD_DIM, border: `1px dashed ${GOLD_RULE}`, borderRadius: RADIUS_CARD, marginBottom: 24, margin: '0 4px 24px', width: 'calc(100% - 8px)' }}>
-          <Plus size={18} style={{ color: GOLD }} />
-          <div className="text-left">
-            <div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>Séance personnalisée</div>
-            <div className="text-[10px]" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>Choisir dans la base d'exercices</div>
-          </div>
-        </button>
+        {/* Reorder + Add buttons */}
+        <div style={{ display: 'flex', gap: 8, margin: '0 4px 16px', width: 'calc(100% - 8px)' }}>
+          <button onClick={() => setReorderMode(!reorderMode)} style={{
+            flex: 1, padding: 10, borderRadius: 12,
+            background: reorderMode ? 'rgba(212,168,67,0.12)' : BG_CARD,
+            border: `1px solid ${reorderMode ? GOLD : BORDER}`,
+            color: reorderMode ? GOLD : TEXT_MUTED,
+            fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
+            letterSpacing: 2, cursor: 'pointer',
+          }}>{reorderMode ? '✓ TERMINÉ' : '↕ RÉORGANISER'}</button>
+          <button onClick={() => setMode('custom')} style={{
+            flex: 1, padding: 10, borderRadius: 12,
+            background: BG_CARD, border: `1px solid ${BORDER}`,
+            color: GOLD,
+            fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
+            letterSpacing: 2, cursor: 'pointer',
+          }}>+ AJOUTER</button>
+        </div>
 
         {exos.map((exo, idx) => {
           const cnt = exo.sets.filter(s => s.done).length
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
           return (
-            <div key={exo.id} className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
+            <div key={exo.id} className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12, display: 'flex', gap: 0 }}>
+              {/* Reorder arrows */}
+              {reorderMode && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginRight: 8, paddingTop: 16 }}>
+                  <button disabled={idx === 0} onClick={() => moveExercise(idx, -1)} style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: idx === 0 ? BG_BASE : GOLD_DIM,
+                    border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`,
+                    color: idx === 0 ? TEXT_DIM : GOLD, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                  }}>↑</button>
+                  <button disabled={idx === exos.length - 1} onClick={() => moveExercise(idx, 1)} style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM,
+                    border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`,
+                    color: idx === exos.length - 1 ? TEXT_DIM : GOLD, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                  }}>↓</button>
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
               {/* ── Accordion Header ── */}
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
                 <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
@@ -560,6 +604,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
                   </button>
                 </div>
               )}
+              </div>{/* end flex:1 wrapper for reorder */}
             </div>
           )
         })}
@@ -569,7 +614,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
             <Trophy size={32} className="mx-auto mb-2" style={{ color: GOLD }} />
             <p className="text-base mb-1" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px' }}>Séance complète ! 🔥</p>
             <p className="text-sm mb-4" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{dur(elapsed)} · {Math.round(volume)} kg</p>
-            <button onClick={finish} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>🏆 Terminer</button>
+            <button onClick={() => sessionModified ? setShowSavePopup(true) : finish()} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>🏆 Terminer</button>
           </div>
         )}
       </div>
@@ -582,9 +627,36 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>TEMPS</span>
             <span style={{ fontSize: 24, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={finish} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
+          <button onClick={() => sessionModified ? setShowSavePopup(true) : finish()} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
         </div>
       </div>
+
+      {/* Save changes popup */}
+      {showSavePopup && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>PROGRAMME MODIFIÉ</div>
+            <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 24 }}>
+              Tu as modifié les exercices. Sauvegarder dans ton programme ?
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button onClick={() => { setShowSavePopup(false); finish() }} style={{
+                width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08',
+                fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer',
+              }}>SAUVEGARDER LE PROGRAMME</button>
+              <button onClick={() => { setSessionModified(false); setShowSavePopup(false); finish() }} style={{
+                width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
+                border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
+                fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer',
+              }}>JUSTE CETTE SÉANCE</button>
+              <button onClick={() => setShowSavePopup(false)} style={{
+                width: '100%', padding: 12, background: 'transparent', border: 'none',
+                color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 13, cursor: 'pointer',
+              }}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
