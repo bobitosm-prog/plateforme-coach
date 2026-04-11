@@ -129,6 +129,39 @@ export default function TrainingTab({
     return s + (completedSets[key] || []).filter(Boolean).length
   }, 0)
 
+  // Build week sessions from custom program (single source of truth for calendar)
+  const weekSessions: any[] = (() => {
+    if (!activeCustomProgram?.days?.length) return scheduledSessions
+    const paddedDays = padTo7Days(activeCustomProgram.days)
+    const today = new Date()
+    const dow = today.getDay()
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
+    monday.setHours(0, 0, 0, 0)
+    return paddedDays.map((day: any, i: number) => {
+      const date = new Date(monday)
+      date.setDate(monday.getDate() + i)
+      const dateStr = date.toISOString().split('T')[0]
+      const existing = scheduledSessions.find((s: any) => s.scheduled_date === dateStr)
+      const isRest = day.is_rest
+      return {
+        id: existing?.id || `custom-${i}`,
+        user_id: session?.user?.id || '',
+        title: isRest ? 'Repos' : (day.name || day.weekday || `Jour ${i + 1}`),
+        session_type: isRest ? 'rest' as const : 'custom' as const,
+        scheduled_date: dateStr,
+        scheduled_time: existing?.scheduled_time || '08:00',
+        duration_min: existing?.duration_min || 60,
+        completed: existing?.completed || false,
+        completed_at: existing?.completed_at || null,
+        reminder_enabled: false,
+        reminder_minutes_before: 30,
+        notes: null,
+        created_at: existing?.created_at || new Date().toISOString(),
+      }
+    })
+  })()
+
   // ── Rest timer: pure decrement only (no side-effects inside updater) ──
   useEffect(() => {
     if (!restRunning || restTimer <= 0) return
@@ -730,22 +763,10 @@ export default function TrainingTab({
       </div>
 
       {/* ── WEEK CALENDAR ── */}
-      {scheduledSessions.length > 0 && (
+      {weekSessions.length > 0 && (
         <div style={{ padding: '0 16px' }}>
           <WeekCalendar
-            sessions={(() => {
-              if (!activeCustomProgram?.days?.length) return scheduledSessions
-              const paddedCustomDays = padTo7Days(activeCustomProgram.days)
-              return scheduledSessions.map(s => {
-                const sessionDate = new Date(s.scheduled_date + 'T12:00:00')
-                const jsDay = sessionDate.getDay()
-                const idx = jsDay === 0 ? 6 : jsDay - 1
-                const customDay = paddedCustomDays[idx]
-                if (!customDay || customDay.is_rest) return { ...s, session_type: 'rest', title: 'Repos' }
-                const customTitle = customDay.name || customDay.weekday || s.title
-                return { ...s, title: customTitle }
-              })
-            })()}
+            sessions={weekSessions}
             selectedDate={calendarSelectedDate}
             onSelectDate={(d) => {
               setCalendarSelectedDate(d)
@@ -757,7 +778,7 @@ export default function TrainingTab({
           <AnimatePresence>
             {showMonthCalendar && (
               <MonthCalendar
-                sessions={scheduledSessions}
+                sessions={weekSessions}
                 selectedDate={calendarSelectedDate}
                 onSelectDate={(d) => {
                   setCalendarSelectedDate(d)
@@ -771,7 +792,7 @@ export default function TrainingTab({
 
           {/* ── Selected Day Program Summary ── */}
           {(() => {
-            const daySessions = getSessionsForDate(scheduledSessions, calendarSelectedDate)
+            const daySessions = getSessionsForDate(weekSessions as any, calendarSelectedDate)
             if (daySessions.length === 0) return null
             const isRest = daySessions.every(s => s.session_type === 'rest')
             if (isRest) {

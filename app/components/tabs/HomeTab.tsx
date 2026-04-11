@@ -231,9 +231,12 @@ export default function HomeTab({
     supabase.from('custom_programs').select('days').eq('user_id', userId).eq('is_active', true).maybeSingle()
       .then(({ data }: any) => {
         if (data?.days) {
-          const dayIdx = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(todayKey)
-          const realIdx = dayIdx <= 0 ? 6 : dayIdx - 1 // Convert JS day to Mon=0 index
-          const customDay = data.days[realIdx] || data.days.find((d: any) => d.day_number === dayIdx)
+          const dow = new Date().getDay()
+          const realIdx = dow === 0 ? 6 : dow - 1 // Mon=0, Sun=6
+          // Pad to 7 days to handle short programs
+          const padded = [...data.days]
+          while (padded.length < 7) padded.push({ name: '', is_rest: true, exercises: [] })
+          const customDay = padded[realIdx]
           if (customDay?.is_rest) {
             setCustomDayName('Repos')
           } else if (customDay?.exercises?.length) {
