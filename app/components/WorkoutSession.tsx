@@ -253,11 +253,39 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   }, [restOn, restSecs])
   useEffect(() => {
     let wl: any = null
-    const tryWL = async () => { try { if ('wakeLock' in navigator) wl = await (navigator as any).wakeLock.request('screen') } catch {} }
-    tryWL()
+    let videoEl: HTMLVideoElement | null = null
+    const tryWL = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wl = await (navigator as any).wakeLock.request('screen')
+          console.log('[WakeLock] Screen lock acquired')
+        }
+      } catch (err) { console.warn('[WakeLock] Not supported:', err) }
+    }
+    tryWL().then(() => {
+      // Fallback iOS: invisible looping video prevents sleep
+      if (!wl) {
+        try {
+          videoEl = document.createElement('video')
+          videoEl.setAttribute('playsinline', '')
+          videoEl.setAttribute('muted', '')
+          videoEl.muted = true
+          videoEl.setAttribute('loop', '')
+          videoEl.style.cssText = 'position:fixed;top:-1px;left:-1px;width:1px;height:1px;opacity:0.01'
+          videoEl.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAAhmcmVlAAAAGm1kYXQAAABhBgX//13QRNi9VAV2iu1ciRckAAACMm1vb3YAAABsbXZoZAAAAADcFAAN3BQADQAAu4AAAEAAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAABWG10cmFrAAAAXHRraGQAAAAD3BQADdwUAA0AAAABAAAAAAAAu4AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAA'
+          document.body.appendChild(videoEl)
+          videoEl.play().catch(() => {})
+          console.log('[WakeLock] Fallback video activated')
+        } catch {}
+      }
+    })
     const onVis = () => { if (document.visibilityState === 'visible') tryWL() }
     document.addEventListener('visibilitychange', onVis)
-    return () => { document.removeEventListener('visibilitychange', onVis); if (wl) wl.release() }
+    return () => {
+      document.removeEventListener('visibilitychange', onVis)
+      if (wl) { wl.release().catch(() => {}); console.log('[WakeLock] Released') }
+      if (videoEl) { videoEl.pause(); videoEl.remove(); console.log('[WakeLock] Fallback video removed') }
+    }
   }, [])
 
   const startRest = (s: number) => { if (restT.current) clearTimeout(restT.current); setRestMax(s); setRestSecs(s); setRestOn(true) }
