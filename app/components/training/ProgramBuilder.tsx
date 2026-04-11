@@ -9,9 +9,6 @@ import {
   GREEN, RED, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
-import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
-import SortableExercise from '../ui/SortableExercise'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -335,19 +332,16 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
     })
 
   const previousMode = useRef<'select' | 'manual'>('select')
-  const pbSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
-  )
-  function handleExerciseDragEnd(event: any) {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = parseInt(active.id.replace('pex-', ''))
-    const newIndex = parseInt(over.id.replace('pex-', ''))
+  function moveExerciseInDay(exIdx: number, dir: number) {
+    const ni = exIdx + dir
+    const exs = programDays[editingDayIndex]?.exercises || []
+    if (ni < 0 || ni >= exs.length) return
     setProgramDays(prev => {
       const updated = [...prev]
       const day = { ...updated[editingDayIndex] }
-      day.exercises = arrayMove([...(day.exercises || [])], oldIndex, newIndex)
+      const arr = [...(day.exercises || [])]
+      const temp = arr[exIdx]; arr[exIdx] = arr[ni]; arr[ni] = temp
+      day.exercises = arr
       updated[editingDayIndex] = day
       return updated
     })
@@ -1058,22 +1052,15 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
 
             {/* Exercise list — hidden for rest days */}
             {!programDays[editingDayIndex]?.is_rest && (<>
-            <DndContext sensors={pbSensors} collisionDetection={closestCenter} onDragEnd={handleExerciseDragEnd}>
-            <SortableContext items={(programDays[editingDayIndex]?.exercises || []).map((_: any, i: number) => `pex-${i}`)} strategy={verticalListSortingStrategy}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
               {(programDays[editingDayIndex]?.exercises || []).map((ex: any, exIdx: number) => {
                 const exerciseName = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || 'Exercice inconnu'
                 const exerciseMuscle = ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group || ''
+                const exCount = programDays[editingDayIndex]?.exercises?.length || 0
                 return (
-                <SortableExercise key={`pex-${exIdx}`} id={`pex-${exIdx}`} exerciseName={exerciseName}>
-                {(dragHandleProps: any) => (
-                <div
-                  style={{
-                    background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16,
-                  }}
-                >
+                <div key={exIdx} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
-                    <div {...dragHandleProps}>
+                    <div>
                       <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY }}>{exerciseName}</div>
                       {exerciseMuscle && (
                         <span style={{
@@ -1086,17 +1073,10 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button
-                        onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)}
-                        title="Variantes"
-                        style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}
-                      >🔄</button>
-                      <button
-                        onClick={() => removeExerciseFromDay(editingDayIndex, exIdx)}
-                        style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <button disabled={exIdx === 0} onClick={() => moveExerciseInDay(exIdx, -1)} title="Monter" style={{ background: exIdx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === 0 ? BORDER : GOLD_RULE}`, color: exIdx === 0 ? TEXT_DIM : GOLD, cursor: exIdx === 0 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↑</button>
+                      <button disabled={exIdx === exCount - 1} onClick={() => moveExerciseInDay(exIdx, 1)} title="Descendre" style={{ background: exIdx === exCount - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === exCount - 1 ? BORDER : GOLD_RULE}`, color: exIdx === exCount - 1 ? TEXT_DIM : GOLD, cursor: exIdx === exCount - 1 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↓</button>
+                      <button onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)} title="Variantes" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}>🔄</button>
+                      <button onClick={() => removeExerciseFromDay(editingDayIndex, exIdx)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
                     </div>
                   </div>
 
@@ -1133,12 +1113,8 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                     </div>
                   </div>
                 </div>
-                )}
-                </SortableExercise>
               )})}
             </div>
-            </SortableContext>
-            </DndContext>
 
             {/* Add exercise button */}
             <button

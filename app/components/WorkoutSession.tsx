@@ -9,9 +9,6 @@ import {
 } from '../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
-import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
-import SortableExercise from './ui/SortableExercise'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -342,17 +339,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const finish = () => { if (elT.current) clearInterval(elT.current); setDone(true); onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) }) }
 
-  const dndSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
-  )
-  function handleDragEnd(event: any) {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = exos.findIndex(e => e.id === active.id)
-    const newIndex = exos.findIndex(e => e.id === over.id)
-    if (oldIndex === -1 || newIndex === -1) return
-    setExos(prev => arrayMove(prev, oldIndex, newIndex))
+  function moveExercise(index: number, dir: number) {
+    const ni = index + dir
+    if (ni < 0 || ni >= exos.length) return
+    setExos(prev => { const a = [...prev]; const t = a[index]; a[index] = a[ni]; a[ni] = t; return a })
     setSessionModified(true)
   }
   function removeExerciseDuringSession(exIdx: number) {
@@ -498,23 +488,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           }}>+ AJOUTER UN EXERCICE</button>
         </div>
 
-        <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={exos.map(e => e.id)} strategy={verticalListSortingStrategy}>
         {exos.map((exo, idx) => {
           const cnt = exo.sets.filter(s => s.done).length
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
           return (
-          <SortableExercise key={exo.id} id={exo.id} exerciseName={exo.name}>
-          {(dragHandleProps: any) => (
-            <div className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
+            <div key={exo.id} className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
               {/* ── Accordion Header ── */}
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
                 <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
                   <ExercisePreview name={exo.name} size={80} animate={false} />
                   {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
                 </div>
-                <div className="flex-1 min-w-0" {...dragHandleProps}>
+                <div className="flex-1 min-w-0">
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -530,9 +516,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 <button onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 20, cursor: 'pointer', padding: '4px 8px', minWidth: 44, minHeight: 32 }}>⋯</button>
               </div>
               {exerciseMenu === idx && (
-                <div style={{ display: 'flex', gap: 8, padding: '0 0 12px', animation: 'fadeIn 150ms ease' }}>
-                  <button onClick={() => loadVariantsForSession(exo, idx)} style={{ flex: 1, padding: 10, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>🔄 REMPLACER</button>
-                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 10, borderRadius: 12, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444', cursor: 'pointer', fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>🗑 SUPPRIMER</button>
+                <div style={{ display: 'flex', gap: 6, padding: '0 0 12px', flexWrap: 'wrap' }}>
+                  <button disabled={idx === 0} onClick={() => { moveExercise(idx, -1); setExerciseMenu(null) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: idx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`, color: idx === 0 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: idx === 0 ? 'default' : 'pointer' }}>↑ MONTER</button>
+                  <button disabled={idx === exos.length - 1} onClick={() => { moveExercise(idx, 1); setExerciseMenu(null) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`, color: idx === exos.length - 1 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: idx === exos.length - 1 ? 'default' : 'pointer' }}>↓ DESCENDRE</button>
+                  <button onClick={() => { setExerciseMenu(null); loadVariantsForSession(exo, idx) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer' }}>🔄 REMPLACER</button>
+                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444', fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer' }}>🗑 SUPPRIMER</button>
                 </div>
               )}
 
@@ -683,12 +671,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 </div>
               )}
             </div>
-          )}
-          </SortableExercise>
           )
         })}
-        </SortableContext>
-        </DndContext>
 
         {allDone && (
           <div className="p-6 text-center" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD }}>
