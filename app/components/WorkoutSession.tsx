@@ -51,6 +51,8 @@ function RestOverlay({ secs, max, onSkip }: { secs: number; max: number; onSkip:
   )
 }
 
+const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Cardio']
+
 function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: any[]) => void; onCancel: () => void }) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const [name, setName] = useState('Ma Séance')
@@ -61,129 +63,158 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   const [step, setStep] = useState<'build' | 'config'>('build')
   const [cfg, setCfg] = useState<any[]>([])
   const ref = useRef<any>(null)
-  const muscles = ['Poitrine', 'Dos Large', 'Dos Épais', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-Jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Cardio']
 
   useEffect(() => {
     clearTimeout(ref.current)
     ref.current = setTimeout(async () => {
-      let q = supabase.from('exercises_db').select('*')
+      let q = supabase.from('exercises_db').select('id, name, muscle_group, equipment, difficulty, description')
       if (search.length >= 2) q = q.ilike('name', `%${search}%`)
-      if (filter) q = q.eq('muscle_group', filter)
-      const { data } = await q.limit(40).order('name')
-      setDbExos(data || [])
+      if (filter && filter !== 'Tous') q = q.eq('muscle_group', filter)
+      const { data } = await q.limit(60).order('name')
+      // Deduplicate by name
+      const unique = (data || []).filter((ex: any, i: number, arr: any[]) => arr.findIndex((e: any) => e.name.toLowerCase() === ex.name.toLowerCase()) === i)
+      setDbExos(unique)
     }, 250)
   }, [search, filter])
 
-  useEffect(() => { supabase.from('exercises_db').select('*').order('name').limit(40).then(({ data }) => setDbExos(data || [])) }, [])
+  useEffect(() => {
+    supabase.from('exercises_db').select('id, name, muscle_group, equipment, difficulty, description').order('name').limit(60)
+      .then(({ data }: any) => {
+        const unique = (data || []).filter((ex: any, i: number, arr: any[]) => arr.findIndex((e: any) => e.name.toLowerCase() === ex.name.toLowerCase()) === i)
+        setDbExos(unique)
+      })
+  }, [])
 
   const toggle = (e: any) => setSelected(p => p.find(x => x.id === e.id) ? p.filter(x => x.id !== e.id) : [...p, e])
   const goConfig = () => { setCfg(selected.map(e => ({ ...e, targetSets: 3, targetReps: '10-12', rest: 90 }))); setStep('config') }
   const launch = () => onStart(name, cfg.map(e => ({ exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetReps, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
   const dc = (d: string) => d === 'debutant' ? GREEN : d === 'intermediaire' ? GOLD : RED
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
-      <div className="sticky top-0 z-10 px-4 pt-10 pb-4 border-b" style={{ background: 'rgba(5,5,5,0.97)', borderColor: BORDER, backdropFilter: 'blur(20px)' }}>
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={onCancel} className="flex items-center gap-1.5 text-xs" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700 }}><ArrowLeft size={14} /> Retour</button>
-          <h2 className="text-sm uppercase tracking-wider" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px' }}>{step === 'build' ? 'Choisir les exercices' : 'Configurer'}</h2>
-          {step === 'build'
-            ? <button onClick={goConfig} disabled={!selected.length} className="text-[11px] uppercase px-4 py-2 active:scale-95"
-                style={{ background: selected.length ? GOLD : BG_CARD, color: selected.length ? '#0D0B08' : TEXT_DIM, fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: selected.length ? 'none' : `1px solid ${BORDER}` }}>Suite ({selected.length})</button>
-            : <button onClick={launch} className="text-[11px] uppercase px-4 py-2 active:scale-95" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none' }}>Lancer !</button>}
-        </div>
-        {step === 'build' && <>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Nom de la séance..."
-            className="w-full px-4 py-3 text-sm font-bold mb-3 outline-none"
-            style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY }} />
-          <div className="relative mb-3">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: TEXT_DIM }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un exercice..."
-              className="w-full pl-9 pr-4 py-3 text-sm outline-none"
-              style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY }} />
+  if (step === 'config') return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: BG_BASE, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flexShrink: 0, padding: '16px', paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', borderBottom: `1px solid ${BORDER}`, background: BG_BASE, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button onClick={() => setStep('build')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <ArrowLeft size={14} /> Retour
+        </button>
+        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>CONFIGURER</span>
+        <button onClick={launch} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>LANCER</button>
+      </div>
+      <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {cfg.map((e, i) => (
+          <div key={e.id} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 14 }}>{i + 1}</span>
+              </div>
+              <div>
+                <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{e.name}</div>
+                {e.muscle_group && <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{e.muscle_group}</div>}
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              {[['SETS', 'targetSets', 'number'], ['REPS', 'targetReps', 'text'], ['REPOS s', 'rest', 'number']].map(([label, key, type]) => (
+                <div key={key} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12 }}>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' as const, marginBottom: 6 }}>{label}</div>
+                  <input type={type} value={(e as any)[key]}
+                    onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))}
+                    style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 18 }} />
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {['Tous', ...muscles].map(m => (
-              <button key={m} onClick={() => setFilter(m === 'Tous' ? '' : (filter === m ? '' : m))}
-                className="flex-shrink-0 px-3 py-1.5 text-[10px] uppercase"
-                style={{ background: (m === 'Tous' && !filter) || filter === m ? GOLD : BG_BASE, color: (m === 'Tous' && !filter) || filter === m ? '#0D0B08' : TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', borderRadius: 12 }}>
-                {m}
-              </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: BG_BASE, display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <div style={{ flexShrink: 0, background: BG_BASE, padding: '16px 16px 10px', paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <ArrowLeft size={14} /> Retour
+          </button>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>AJOUTER</span>
+          {selected.length > 0 ? (
+            <button onClick={goConfig} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>SUITE ({selected.length})</button>
+          ) : <div style={{ width: 60 }} />}
+        </div>
+
+        {/* Selected tags */}
+        {selected.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+            {selected.map(e => (
+              <span key={e.id} onClick={() => toggle(e)} style={{ padding: '4px 10px', borderRadius: 10, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                {e.name} <X size={9} />
+              </span>
             ))}
           </div>
-        </>}
-      </div>
+        )}
 
-      <div className="px-4 py-4 pb-20 space-y-2">
-        {step === 'build' && <>
-          {selected.length > 0 && (
-            <div className="p-3 mb-3" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD }}>
-              <p className="text-[10px] mb-2" style={{ color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>Sélectionnés ({selected.length})</p>
-              <div className="flex flex-wrap gap-1.5">
-                {selected.map(e => (
-                  <button key={e.id} onClick={() => toggle(e)} className="flex items-center gap-1 px-2.5 py-1 text-[10px]"
-                    style={{ background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, fontFamily: FONT_ALT, fontWeight: 700 }}>
-                    {e.name} <X size={9} />
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* Search */}
+        <div style={{ position: 'relative', marginBottom: 10 }}>
+          <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
+          <input autoFocus autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} inputMode="search" enterKeyHint="search"
+            value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un exercice..."
+            style={{ width: '100%', padding: '14px 44px 14px 36px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16, fontFamily: FONT_BODY, outline: 'none' }} />
+          {search && (
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: '50%', background: GOLD_DIM, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <X size={12} color={GOLD} />
+            </button>
           )}
-          {dbExos.map((e: any) => {
-            const sel = !!selected.find(x => x.id === e.id)
-            return (
-              <button key={e.id} onClick={() => toggle(e)} className="w-full text-left p-4 active:scale-[0.98] transition-all"
-                style={{ background: sel ? GOLD_DIM : BG_CARD, border: `1px solid ${sel ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD }}>
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style={{ background: sel ? GOLD : BG_BASE, border: `1px solid ${sel ? 'transparent' : BORDER}`, borderRadius: RADIUS_CARD }}>
-                    {sel ? <Check size={16} className="text-black" strokeWidth={3} /> : <Dumbbell size={15} style={{ color: TEXT_DIM }} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.name}</div>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="text-[10px] px-2 py-0.5" style={{ background: BG_BASE, color: TEXT_MUTED, border: `1px solid ${BORDER}`, borderRadius: 12, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.muscle_group}</span>
-                      <span className="text-[9px] px-1.5 py-0.5" style={{ color: dc(e.difficulty), background: `${dc(e.difficulty)}18`, borderRadius: 12, fontFamily: FONT_ALT, fontWeight: 700 }}>
-                        {e.difficulty === 'debutant' ? 'Débutant' : e.difficulty === 'intermediaire' ? 'Intermédiaire' : 'Avancé'}
-                      </span>
-                      {e.equipment && <span className="text-[9px]" style={{ color: TEXT_DIM, fontFamily: FONT_BODY }}>{e.equipment}</span>}
-                    </div>
-                    {e.description && <p className="text-[10px] mt-1.5 leading-relaxed" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{e.description}</p>}
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </>}
+        </div>
 
-        {step === 'config' && <>
-          <p className="text-[11px] uppercase tracking-widest mb-3" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px' }}>Configure chaque exercice</p>
-          {cfg.map((e, i) => (
-            <div key={e.id} className="p-4" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 flex items-center justify-center" style={{ background: GOLD, borderRadius: RADIUS_CARD }}>
-                  <span className="text-xs" style={{ color: '#0D0B08', fontFamily: FONT_DISPLAY, fontWeight: 700 }}>{i + 1}</span>
-                </div>
-                <div>
-                  <div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.name}</div>
-                  <div className="text-[10px]" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{e.muscle_group}</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[['SETS', 'targetSets', 'number'], ['REPS', 'targetReps', 'text'], ['REPOS s', 'rest', 'number']].map(([label, key, type]) => (
-                  <div key={key} className="p-3" style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12 }}>
-                    <div className="text-[9px] mb-1.5" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{label}</div>
-                    <input type={type} value={(e as any)[key]}
-                      onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))}
-                      className="w-full bg-transparent text-base outline-none"
-                      style={{ color: GOLD, fontFamily: FONT_DISPLAY, fontWeight: 700 }} />
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Muscle filters */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
+          {WORKOUT_MUSCLE_FILTERS.map(f => (
+            <button key={f} onClick={() => setFilter(f === 'Tous' ? '' : f)} style={{
+              flexShrink: 0, padding: '6px 14px', borderRadius: 10,
+              border: `1px solid ${(!filter && f === 'Tous') || filter === f ? GOLD : BORDER}`,
+              background: (!filter && f === 'Tous') || filter === f ? GOLD_DIM : BG_CARD,
+              color: (!filter && f === 'Tous') || filter === f ? GOLD : TEXT_MUTED,
+              fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: 'pointer',
+            }}>{f}</button>
           ))}
-        </>}
+        </div>
       </div>
+
+      {/* Exercise list */}
+      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, padding: '8px 16px 120px' }}>
+        {dbExos.map((e: any) => {
+          const sel = !!selected.find(x => x.id === e.id)
+          return (
+            <button key={e.id} onClick={() => toggle(e)} style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+              padding: '14px 0', borderBottom: `1px solid ${BORDER}`,
+              background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+              opacity: sel ? 0.5 : 1,
+            }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: sel ? GOLD : GOLD_DIM, border: `1px solid ${sel ? 'transparent' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {sel ? <Check size={16} color="#0D0B08" strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{e.name}</div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                  {e.muscle_group && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: GOLD_DIM, color: GOLD, letterSpacing: 1, textTransform: 'uppercase' as const }}>{e.muscle_group}</span>}
+                  {e.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${dc(e.difficulty)}18`, color: dc(e.difficulty), letterSpacing: 1 }}>{e.difficulty === 'debutant' ? 'Débutant' : e.difficulty === 'intermediaire' ? 'Intermédiaire' : 'Avancé'}</span>}
+                  {e.equipment && <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_DIM }}>{e.equipment}</span>}
+                </div>
+              </div>
+            </button>
+          )
+        })}
+        {dbExos.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontSize: 14 }}>Aucun exercice trouvé</div>}
+      </div>
+
+      {/* Bottom button */}
+      {selected.length > 0 && (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', background: 'rgba(13,11,8,0.9)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${BORDER}` }}>
+          <button onClick={goConfig} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
+            AJOUTER {selected.length} EXERCICE{selected.length > 1 ? 'S' : ''}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
