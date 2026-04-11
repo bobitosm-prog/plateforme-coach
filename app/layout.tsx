@@ -73,6 +73,7 @@ export default function RootLayout({
             });
             if(window.caches){caches.keys().then(function(n){for(var i=0;i<n.length;i++){caches.delete(n[i])}})}
           }
+          try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait').catch(function(){})}catch(e){}
         ` }} />
       </head>
       <body className="antialiased" style={{ fontFamily: "var(--font-body), 'Outfit', sans-serif", backgroundColor: '#0D0B08', margin: 0 }}>

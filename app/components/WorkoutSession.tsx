@@ -15,7 +15,7 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 interface ExSet { id: string; num: number; weight: number | ''; reps: number | ''; done: boolean }
 interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; sets: ExSet[]; open: boolean }
-interface WorkoutSessionProps { sessionName: string; exercises: any[]; onFinish: (data: any) => void; onClose: () => void }
+interface WorkoutSessionProps { sessionName: string; exercises: any[]; startedAt?: string; onFinish: (data: any) => void; onClose: () => void }
 
 const uid = () => Math.random().toString(36).slice(2)
 const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', reps: '', done: false }))
@@ -188,7 +188,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   )
 }
 
-export default function WorkoutSession({ sessionName, exercises: raw, onFinish, onClose }: WorkoutSessionProps) {
+export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
   const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || e.rest || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, sets: makeSets(e.sets || 3), open: true })))
@@ -196,8 +196,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, onFinish, 
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
   const restT = useRef<NodeJS.Timeout | null>(null)
-  const [t0] = useState(Date.now())
-  const [elapsed, setElapsed] = useState(0)
+  const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
+  const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
   const elT = useRef<NodeJS.Timeout | null>(null)
   const [done, setDone] = useState(false)
   const [showVideo, setShowVideo] = useState<string | null>(null)

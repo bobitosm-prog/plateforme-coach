@@ -139,7 +139,7 @@ export default function CoachApp() {
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
-        <WorkoutSession sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); h.fetchAll() }} />
+        <WorkoutSession sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} />
       )}
 
       {/* ── WEIGHT MODAL ── */}

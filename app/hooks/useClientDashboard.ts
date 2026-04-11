@@ -32,7 +32,10 @@ export default function useClientDashboard() {
   const [roleChecked, setRoleChecked] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
 
-  const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[] } | null>(null)
+  const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[]; startedAt?: string } | null>(() => {
+    if (typeof window === 'undefined') return null
+    try { const s = localStorage.getItem('moovx_active_workout'); return s ? JSON.parse(s) : null } catch { return null }
+  })
   const [modal, setModal] = useState<string | null>(null)
 
   // BMR form state
@@ -221,10 +224,13 @@ export default function useClientDashboard() {
 
   /* ── Handlers ── */
   async function startProgramWorkout(day: any, exercises: any[]) {
-    setWorkoutSession({ name: day.day_name, exercises })
+    const ws = { name: day.day_name || day.name || 'Séance', exercises, startedAt: new Date().toISOString() }
+    setWorkoutSession(ws)
+    try { localStorage.setItem('moovx_active_workout', JSON.stringify(ws)) } catch {}
   }
 
   async function onFinishWorkout(data: any) {
+    try { localStorage.removeItem('moovx_active_workout') } catch {}
     const { data: sess } = await supabase.from('workout_sessions').insert({
       user_id: session.user.id, name: workoutSession?.name, completed: true,
       duration_minutes: Math.round(data.duration / 60000),
