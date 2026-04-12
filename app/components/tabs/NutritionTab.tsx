@@ -320,8 +320,21 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     return result
   }
 
+  const isInvited = profile?.subscription_type === 'invited'
+
   // Waiting screen when no plan exists
   function renderWaitingScreen() {
+    if (isInvited) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🔒</div>
+          <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: '0 0 10px' }}>Nutrition gérée par ton coach</h2>
+          <p style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_MUTED, margin: 0, lineHeight: 1.6, maxWidth: 300 }}>
+            Ton coach prépare ton plan nutrition personnalisé. Contacte-le via la messagerie.
+          </p>
+        </div>
+      )
+    }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🍽️</div>
@@ -593,12 +606,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* PILLS NAVIGATION */}
       <div style={{ display: 'flex', gap: 6, padding: '12px 20px', marginBottom: 16 }}>
-        {[
+        {([
           { id: 'today' as SubTab, label: 'JOURNAL' },
           { id: 'plan' as SubTab, label: 'PLAN IA' },
-          { id: 'prefs' as SubTab, label: 'PREFS' },
-          { id: 'recipes' as SubTab, label: 'RECETTES' },
-        ].map(({ id, label }) => {
+          ...(!isInvited ? [{ id: 'prefs' as SubTab, label: 'PREFS' }] : []),
+          ...(!isInvited ? [{ id: 'recipes' as SubTab, label: 'RECETTES' }] : []),
+        ]).map(({ id, label }) => {
           const active = subTab === id
           return (
             <button key={id} onClick={() => setSubTab(id)} style={{

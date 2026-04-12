@@ -11,7 +11,15 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { exerciseName, reason, muscleGroup, availableEquipment, isIsolation } = await req.json()
+    const body = await req.json()
+    const { exerciseName, reason, muscleGroup, availableEquipment, isIsolation, userId } = body
+
+    // Guard: invited clients cannot use AI suggestions
+    if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { guardInvitedClient } = await import('../../../lib/api-guard')
+      const blocked = await guardInvitedClient(userId)
+      if (blocked) return blocked
+    }
     if (!exerciseName) return NextResponse.json({ error: 'exerciseName requis' }, { status: 400 })
 
     const typeHint = isIsolation === true ? `IMPORTANT : "${exerciseName}" est un exercice d'ISOLATION. Propose UNIQUEMENT d'autres exercices d'isolation pour le meme groupe musculaire.`

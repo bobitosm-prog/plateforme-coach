@@ -276,6 +276,13 @@ export async function POST(req: NextRequest) {
     }
 
     const params = await req.json()
+
+    // Guard: invited clients cannot generate AI meal plans
+    if (params.userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { guardInvitedClient } = await import('../../../lib/api-guard')
+      const blocked = await guardInvitedClient(params.userId)
+      if (blocked) return blocked
+    }
     const encoder = new TextEncoder()
     const startTime = Date.now()
     const stream = new ReadableStream({

@@ -115,7 +115,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender } = body
+    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender, userId } = body
+
+    // Guard: invited clients cannot generate AI programs
+    if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { guardInvitedClient } = await import('../../../lib/api-guard')
+      const blocked = await guardInvitedClient(userId)
+      if (blocked) return blocked
+    }
 
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {

@@ -13,8 +13,13 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { message, history, profile } = await req.json()
+    const { message, history, profile, userId } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: 'Message vide' }, { status: 400 })
+
+    // Guard: invited clients cannot use AI coach
+    if (profile?.subscription_type === 'invited') {
+      return NextResponse.json({ error: 'Cette fonctionnalité est gérée par ton coach. Contacte-le directement.' }, { status: 403 })
+    }
 
     const p = profile || {}
     const onboarding = p.onboarding_answers || {}

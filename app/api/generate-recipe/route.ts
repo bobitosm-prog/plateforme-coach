@@ -12,7 +12,12 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { category, profile, foodsList, includeIngredients, excludeIngredients } = await req.json()
+    const { category, profile, foodsList, includeIngredients, excludeIngredients, userId } = await req.json()
+
+    // Guard: invited clients cannot generate AI recipes
+    if (profile?.subscription_type === 'invited') {
+      return NextResponse.json({ error: 'Fonctionnalité gérée par ton coach.' }, { status: 403 })
+    }
 
     const targetCalPerMeal = Math.round((profile?.calorie_goal || 2000) / 4)
     const targetProtPerMeal = Math.round((profile?.protein_goal || 130) / 4)
