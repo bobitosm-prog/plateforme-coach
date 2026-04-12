@@ -578,9 +578,21 @@ export default function TrainingTab({
       const key = `moovx-sets-${todayStr}-${ex.name}`
       return s + (completedSets[key] || []).filter(Boolean).length
     }, 0)
+    // Get the session title from custom program or scheduled session
+    const sessionTitle = (() => {
+      if (activeCustomProgram?.days?.length) {
+        const idx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
+        const paddedDays = padTo7Days(activeCustomProgram.days)
+        const day = paddedDays[idx]
+        if (day?.name && day.name !== 'Repos') return day.name
+      }
+      const todaySession = weekSessions.find((s: any) => s.scheduled_date === todayStr && s.session_type !== 'rest')
+      if (todaySession?.title) return todaySession.title
+      return trainingDay
+    })()
     await supabase.from('workout_sessions').insert({
       user_id: session.user.id,
-      name: trainingDay,
+      name: sessionTitle,
       completed: true,
       duration_minutes: Math.max(duration, 1),
       notes: `${doneSetsCount}/${totalSetsCount} séries · ${exs.length} exercices`,
@@ -1105,15 +1117,12 @@ export default function TrainingTab({
               <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: BG_CARD, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{icon}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || 'Seance'}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || 'Séance'}</div>
                   <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>
-                    {s.duration_minutes && <span>{s.duration_minutes}min</span>}
-                    {s.notes && <span> · {s.notes}</span>}
+                    {d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    {s.duration_minutes ? ` · ${s.duration_minutes}min` : ''}
+                    {s.notes ? ` · ${s.notes}` : ''}
                   </div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{d.getDate()}</div>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1, color: TEXT_MUTED, textTransform: 'uppercase' }}>{d.toLocaleDateString('fr-CH', { month: 'short' })}</div>
                 </div>
               </div>
             )
