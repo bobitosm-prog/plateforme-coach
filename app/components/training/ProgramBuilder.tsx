@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../../lib/session-types'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { X, Plus, ChevronLeft, ChevronRight, Search, Trash2, Check } from 'lucide-react'
@@ -1040,13 +1041,24 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
 
             {!programDays[editingDayIndex]?.is_rest && (
             <div style={{ marginBottom: 16 }}>
-              <div style={labelStyle}>Nom de la séance</div>
-              <input
-                value={programDays[editingDayIndex]?.name || ''}
-                onChange={e => updateDayName(editingDayIndex, e.target.value)}
-                style={inputStyle}
-                placeholder="Ex: Push, Chest & Triceps..."
-              />
+              <div style={labelStyle}>Type de séance</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                {SESSION_TYPE_OPTIONS.map(t => {
+                  const isSelected = programDays[editingDayIndex]?.name === t.label
+                  return (
+                    <button key={t.key} onClick={() => updateDayName(editingDayIndex, t.label)} style={{
+                      padding: '10px 6px', borderRadius: 10, cursor: 'pointer',
+                      background: isSelected ? `${t.color}20` : BG_CARD,
+                      border: `1.5px solid ${isSelected ? t.color : BORDER}`,
+                      color: isSelected ? t.color : TEXT_MUTED,
+                      fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}>
+                      <span style={{ fontSize: 16 }}>{t.emoji}</span> {t.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
             )}
 

@@ -216,6 +216,26 @@ IMPORTANT :
     cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1')
 
     const program = JSON.parse(cleaned)
+
+    // Post-process: normalize day names to standard types
+    const TYPE_MAP: Record<string, string> = {
+      'push': 'Pectoraux', 'chest': 'Pectoraux', 'pec': 'Pectoraux', 'poitrine': 'Pectoraux',
+      'pull': 'Dos', 'back': 'Dos', 'dorsal': 'Dos',
+      'legs': 'Jambes', 'lower': 'Jambes', 'quads': 'Jambes', 'ischio': 'Jambes', 'glute': 'Jambes', 'fessier': 'Jambes',
+      'upper': 'Haut du Corps', 'epaule': 'Épaules', 'shoulder': 'Épaules',
+      'full body': 'Full Body', 'cardio': 'Cardio',
+    }
+    if (program.days) {
+      for (const day of program.days) {
+        if (day.name) {
+          const n = day.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          for (const [key, val] of Object.entries(TYPE_MAP)) {
+            if (n.includes(key)) { day.name = val; break }
+          }
+        }
+      }
+    }
+
     return NextResponse.json({ program })
 
   } catch (e: any) {

@@ -2,7 +2,8 @@
 // Schedule utilities — PPL mapping, week generation, badge colors
 // ═══════════════════════════════════════
 
-export type SessionType = 'push_a' | 'push_b' | 'pull_a' | 'pull_b' | 'legs_a' | 'legs_b' | 'hiit' | 'liss' | 'rest' | 'custom'
+export type SessionType = 'pectoraux' | 'dos' | 'epaules' | 'jambes' | 'full_body' | 'haut' | 'bas' | 'cardio' | 'repos' | 'custom' | 'libre' |
+  'push_a' | 'push_b' | 'pull_a' | 'pull_b' | 'legs_a' | 'legs_b' | 'hiit' | 'liss' | 'rest' // legacy compat
 
 export interface ScheduledSession {
   id: string
@@ -23,27 +24,24 @@ export interface ScheduledSession {
 // Fixed PPL mapping: Monday=1 ... Sunday=0
 // JS getDay(): 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 export const PPL_SCHEDULE: { jsDay: number; title: string; type: SessionType }[] = [
-  { jsDay: 1, title: 'Push A', type: 'push_a' },
-  { jsDay: 2, title: 'Pull A', type: 'pull_a' },
-  { jsDay: 3, title: 'Legs A', type: 'legs_a' },
-  { jsDay: 4, title: 'Push B', type: 'push_b' },
-  { jsDay: 5, title: 'Pull B', type: 'pull_b' },
-  { jsDay: 6, title: 'Legs B', type: 'legs_b' },
-  { jsDay: 0, title: 'Repos', type: 'rest' },
+  { jsDay: 1, title: 'Pectoraux', type: 'pectoraux' },
+  { jsDay: 2, title: 'Dos', type: 'dos' },
+  { jsDay: 3, title: 'Jambes', type: 'jambes' },
+  { jsDay: 4, title: 'Pectoraux', type: 'pectoraux' },
+  { jsDay: 5, title: 'Dos', type: 'dos' },
+  { jsDay: 6, title: 'Jambes', type: 'jambes' },
+  { jsDay: 0, title: 'Repos', type: 'repos' },
 ]
 
 // Badge colors by session type
 export const SESSION_COLORS: Record<string, string> = {
-  push_a: '#F97316',  // orange
-  push_b: '#F97316',
-  pull_a: '#3B82F6',  // blue
-  pull_b: '#3B82F6',
-  legs_a: '#22C55E',  // green
-  legs_b: '#22C55E',
-  hiit:   '#EF4444',  // red
-  liss:   '#7DD3FC',  // light blue
-  rest:   '#6B7280',  // gray
-  custom: '#8B5CF6',  // purple
+  // Standard types
+  pectoraux: '#F97316', dos: '#3B82F6', epaules: '#A855F7',
+  jambes: '#22C55E', full_body: '#FBBF24', haut: '#F97316', bas: '#22C55E',
+  cardio: '#EF4444', repos: '#6B7280', custom: '#D4A843', libre: '#D4A843',
+  // Legacy types (backward compat)
+  push_a: '#F97316', push_b: '#F97316', pull_a: '#3B82F6', pull_b: '#3B82F6',
+  legs_a: '#22C55E', legs_b: '#22C55E', hiit: '#EF4444', liss: '#7DD3FC', rest: '#6B7280',
 }
 
 // Short label for calendar badge

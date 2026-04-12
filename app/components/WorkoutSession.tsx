@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell } from 'lucide-react'
 import { toast } from 'sonner'
+import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -740,8 +741,20 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
               Réutilise cette séance plus tard sans la recréer.
             </div>
-            <input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Nom du modèle..."
-              style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 15, outline: 'none', marginBottom: 16 }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 16 }}>
+              {SESSION_TYPE_OPTIONS.filter(t => t.key !== 'repos').map(t => (
+                <button key={t.key} onClick={() => setTemplateName(t.label)} style={{
+                  padding: '10px 6px', borderRadius: 10, cursor: 'pointer',
+                  background: templateName === t.label ? `${t.color}20` : BG_BASE,
+                  border: `1.5px solid ${templateName === t.label ? t.color : BORDER}`,
+                  color: templateName === t.label ? t.color : TEXT_MUTED,
+                  fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                }}>
+                  <span style={{ fontSize: 14 }}>{t.emoji}</span> {t.shortLabel}
+                </button>
+              ))}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button onClick={saveAsTemplate} style={{ width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer' }}>
                 OUI — SAUVEGARDER
