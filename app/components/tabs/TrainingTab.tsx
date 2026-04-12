@@ -1087,9 +1087,14 @@ export default function TrainingTab({
         {(() => {
           const filtered = workoutHistory.filter(s => {
             if (historyFilter === 'all') return true
-            const kws = [{ key: 'push', kw: ['push','pec','chest','bench','developpe couche'] }, { key: 'pull', kw: ['pull','dos','back','row','tirage','tractions'] }, { key: 'legs', kw: ['leg','jambe','squat','quad','hamstring','fente'] }, { key: 'upper', kw: ['upper','epaule','shoulder','bras','arm'] }].find(f => f.key === historyFilter)?.kw || []
-            const txt = ((s.name || '') + ' ' + (s.notes || '')).toLowerCase()
-            return kws.some(k => txt.includes(k))
+            const kws = [
+              { key: 'push', kw: ['push','pec','pectoraux','poitrine','chest','bench','développé couché','developpe couche','développé incliné','developpe incline','triceps','épaule','epaule'] },
+              { key: 'pull', kw: ['pull','dos','back','row','tirage','traction','biceps','curl','rowing','dorsal'] },
+              { key: 'legs', kw: ['leg','jambe','squat','quad','quadriceps','hamstring','ischio','fente','mollet','fessier','hip thrust','presse','glute'] },
+              { key: 'upper', kw: ['upper','épaule','epaule','shoulder','bras','arm','deltoide','militaire','latéral','lateral','full body'] },
+            ].find(f => f.key === historyFilter)?.kw || []
+            const txt = ((s.name || '') + ' ' + (s.notes || '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            return kws.some(k => txt.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
           })
           if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: FONT_BODY, fontSize: 14, color: TEXT_DIM }}>Aucune seance</div>
           return filtered.slice(0, 20).map((s: any) => {
