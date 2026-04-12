@@ -421,9 +421,9 @@ export default function HomeTab({
             </div>
           </div>
           <div style={{ padding: '16px 20px 20px' }}>
-            {!coachProgram ? (
+            {!coachProgram && !customProgramExercises ? (
               <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
-            ) : todayCoachDay?.repos ? (
+            ) : customDayName === 'Repos' || (!customProgramExercises && todayCoachDay?.repos) ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Moon size={24} color={TEXT_MUTED} />
                 <div>
