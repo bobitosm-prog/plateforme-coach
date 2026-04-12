@@ -19,6 +19,17 @@ import GenevaSection from './components/GenevaSection';
 import CtaSection from './components/CtaSection';
 import FooterSection from './components/FooterSection';
 
+function GoldSeparator() {
+  return (
+    <div style={{
+      height: 1,
+      background: 'linear-gradient(90deg, transparent 5%, rgba(212,168,67,0.2) 30%, rgba(212,168,67,0.2) 70%, transparent 95%)',
+      maxWidth: 1280,
+      margin: '0 auto',
+    }} />
+  )
+}
+
 export default function LandingPage() {
   return (
     <>
@@ -36,19 +47,32 @@ export default function LandingPage() {
         <Navbar />
         <Hero />
         <MarqueeSection />
-        <Results />
-        <NutritionSection />
-        <TrainingSection />
-        <TrackingSection />
-        <CoachIaSection />
-        <CoachingPro />
-        <EconomicModel />
-        <Testimonials />
-        <Steps />
-        <PWASection />
-        <PricingSection />
-        <FaqSection />
-        <GenevaSection />
+        <div style={{ background: '#0a0a0a' }}><Results /></div>
+        <GoldSeparator />
+        <div style={{ background: '#111' }}><NutritionSection /></div>
+        <GoldSeparator />
+        <div style={{ background: '#0a0a0a' }}><TrainingSection /></div>
+        <GoldSeparator />
+        <div style={{ background: '#111' }}><TrackingSection /></div>
+        <GoldSeparator />
+        <div style={{ background: '#0a0a0a' }}><CoachIaSection /></div>
+        <GoldSeparator />
+        <div style={{ background: '#111' }}><CoachingPro /></div>
+        <GoldSeparator />
+        <div style={{ background: '#0a0a0a' }}><EconomicModel /></div>
+        <GoldSeparator />
+        <div style={{ background: '#111' }}><Testimonials /></div>
+        <GoldSeparator />
+        <div style={{ background: '#0a0a0a' }}><Steps /></div>
+        <GoldSeparator />
+        <div style={{ background: '#111' }}><PWASection /></div>
+        <GoldSeparator />
+        <div style={{ background: '#0a0a0a' }}><PricingSection /></div>
+        <GoldSeparator />
+        <div style={{ background: '#111' }}><FaqSection /></div>
+        <GoldSeparator />
+        <div style={{ background: '#0a0a0a' }}><GenevaSection /></div>
+        <GoldSeparator />
         <CtaSection />
         <FooterSection />
       </div>

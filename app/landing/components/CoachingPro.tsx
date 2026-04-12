@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useReveal } from './shared';
 
 const FEATURES = [
-  { num: '01', title: 'Messagerie temps réel', desc: 'Chat direct avec chaque client. Read receipts et notifications push intégrées.' },
-  { num: '02', title: 'Plans personnalisés pour tes clients', desc: 'Génère nutrition et programmes personnalisés pour chaque client en quelques secondes.' },
-  { num: '03', title: 'Alertes clients inactifs', desc: "Détection automatique des clients qui ne s'entraînent plus depuis 3 jours. Relance en un clic." },
-  { num: '04', title: 'Templates de programmes', desc: "Crée tes programmes modèles (PPL, Full Body, Perte de poids) et assigne-les en un clic." },
-  { num: '05', title: 'Feedback vidéo', desc: "Le client filme son exécution, tu commentes et corriges la forme directement dans l'app." },
-  { num: '06', title: 'Export CSV', desc: 'Clients, paiements, progressions — toutes tes données accessibles et exportables.' },
+  { num: '01', title: 'Messagerie temps réel', desc: 'Chat direct avec chaque client. Read receipts et notifications push intégrées.', emoji: '💬' },
+  { num: '02', title: 'Plans personnalisés', desc: 'Génère nutrition et programmes personnalisés pour chaque client en quelques secondes.', emoji: '📋' },
+  { num: '03', title: 'Alertes inactifs', desc: "Détection automatique des clients qui ne s'entraînent plus depuis 3 jours.", emoji: '🔔' },
+  { num: '04', title: 'Templates programmes', desc: "Crée tes programmes modèles et assigne-les en un clic.", emoji: '⚡' },
+  { num: '05', title: 'Feedback vidéo', desc: "Le client filme, tu corriges la forme directement dans l'app.", emoji: '🎥' },
+  { num: '06', title: 'Export CSV', desc: 'Clients, paiements, progressions — toutes tes données exportables.', emoji: '📊' },
 ];
 
 export default function CoachingPro() {
   const { ref, visible } = useReveal();
-  const [hovered, setHovered] = useState<number | null>(null);
 
   return (
     <section
@@ -26,130 +25,87 @@ export default function CoachingPro() {
         transition: 'opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1)',
       }}
     >
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '120px 64px' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 64px 80px' }}>
         {/* Section header */}
-        <div style={{ marginBottom: 72 }}>
+        <div style={{ marginBottom: 40 }}>
           <span style={{
-            display: 'inline-flex',
-            fontFamily: 'var(--font-alt)',
-            fontWeight: 700,
-            fontSize: 11,
-            letterSpacing: 2,
-            color: 'var(--gold)',
-            background: 'var(--gold-dim)',
-            border: '1px solid var(--gold-rule)',
-            padding: '5px 14px',
-            textTransform: 'uppercase',
+            display: 'inline-flex', fontFamily: 'var(--font-alt)', fontWeight: 700,
+            fontSize: 11, letterSpacing: 2, color: 'var(--gold)', background: 'var(--gold-dim)',
+            border: '1px solid var(--gold-rule)', padding: '5px 14px', textTransform: 'uppercase',
           }}>
             05 — Coaching Pro
           </span>
           <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(40px, 5vw, 64px)',
-            letterSpacing: 2,
-            lineHeight: 0.95,
-            color: 'var(--text)',
-            margin: '20px 0 0',
+            fontFamily: 'var(--font-display)', fontSize: 'clamp(40px, 5vw, 64px)',
+            letterSpacing: 2, lineHeight: 0.95, color: 'var(--text)', margin: '20px 0 0',
           }}>
             OUTILS POUR LES COACHES
           </h2>
-          <p style={{
-            fontSize: 16,
-            color: 'var(--text-muted)',
-            fontWeight: 300,
-            margin: '16px 0 0',
-          }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', fontWeight: 300, margin: '16px 0 0' }}>
             Dashboard complet, messagerie, plans personnalisés, feedback vidéo
           </p>
         </div>
-
-        {/* Editorial grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 1,
-          background: 'var(--text-dim)',
-          border: '1px solid var(--text-dim)',
-        }}>
-          {FEATURES.map((f, i) => {
-            const isHovered = hovered === i;
-            return (
-              <div
-                key={f.num}
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
-                style={{
-                  background: isHovered ? 'var(--surface-2)' : 'var(--surface)',
-                  padding: '40px 36px',
-                  display: 'flex',
-                  gap: 24,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'background 0.3s ease',
-                }}
-              >
-                {/* Gold gradient bottom line */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 2,
-                  background: 'linear-gradient(90deg, var(--gold), transparent)',
-                  transform: isHovered ? 'scaleX(1)' : 'scaleX(0)',
-                  transformOrigin: 'left',
-                  transition: 'transform 0.4s ease',
-                }} />
-
-                <span style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 48,
-                  color: isHovered ? 'var(--gold)' : 'var(--text-dim)',
-                  transition: 'color 0.3s ease',
-                  lineHeight: 1,
-                }}>
-                  {f.num}
-                </span>
-
-                <div>
-                  <h3 style={{
-                    fontFamily: 'var(--font-alt)',
-                    fontWeight: 800,
-                    fontSize: 20,
-                    letterSpacing: 1,
-                    textTransform: 'uppercase',
-                    color: 'var(--text)',
-                    margin: 0,
-                  }}>
-                    {f.title}
-                  </h3>
-                  <p style={{
-                    fontSize: 14,
-                    color: 'var(--text-muted)',
-                    lineHeight: 1.7,
-                    fontWeight: 300,
-                    margin: '8px 0 0',
-                  }}>
-                    {f.desc}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
-      {/* Responsive */}
+      {/* Horizontal scroll carousel — full width */}
+      <div style={{
+        overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+        paddingLeft: 'max(64px, calc((100vw - 1280px) / 2 + 64px))',
+        paddingRight: 32, paddingBottom: 8,
+        display: 'flex', gap: 16,
+        scrollSnapType: 'x mandatory',
+        msOverflowStyle: 'none', scrollbarWidth: 'none',
+      }}>
+        {FEATURES.map((f) => (
+          <div
+            key={f.num}
+            style={{
+              flex: '0 0 320px',
+              scrollSnapAlign: 'start',
+              background: 'var(--surface)',
+              border: '1px solid var(--text-dim)',
+              borderRadius: 16,
+              padding: '32px 28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: 220,
+              transition: 'border-color 0.3s, transform 0.3s',
+              cursor: 'default',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold-rule)'; e.currentTarget.style.transform = 'translateY(-4px)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--text-dim)'; e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            <div>
+              <div style={{ fontSize: 32, marginBottom: 16 }}>{f.emoji}</div>
+              <h3 style={{
+                fontFamily: 'var(--font-alt)', fontWeight: 800, fontSize: 18,
+                letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text)', margin: 0,
+              }}>{f.title}</h3>
+              <p style={{
+                fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6,
+                fontWeight: 300, margin: '10px 0 0',
+              }}>{f.desc}</p>
+            </div>
+            <span style={{
+              fontFamily: 'var(--font-display)', fontSize: 48,
+              color: 'rgba(212,168,67,0.06)', lineHeight: 1, marginTop: 16,
+              alignSelf: 'flex-end',
+            }}>{f.num}</span>
+          </div>
+        ))}
+        {/* Spacer for last card to not hug edge */}
+        <div style={{ flex: '0 0 32px' }} />
+      </div>
+
+      <div style={{ height: 80 }} />
+
       <style>{`
-        @media (max-width: 1024px) {
-          #coaching > div > div:last-child {
-            grid-template-columns: 1fr !important;
-          }
-        }
+        #coaching > div:nth-child(2)::-webkit-scrollbar { display: none; }
         @media (max-width: 768px) {
-          #coaching > div {
-            padding: 80px 24px !important;
-          }
+          #coaching > div:first-child { padding: 80px 24px 80px !important; }
+          #coaching > div:nth-child(2) { padding-left: 24px !important; }
+          #coaching > div:nth-child(2) > div { flex: 0 0 280px !important; }
         }
       `}</style>
     </section>

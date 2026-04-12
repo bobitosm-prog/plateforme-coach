@@ -82,7 +82,7 @@ export default function TrainingSection() {
           style={{
             maxWidth: 1280,
             margin: '0 auto',
-            padding: '120px 64px',
+            padding: '80px 64px',
           }}
         >
           {/* Section header */}
@@ -129,10 +129,18 @@ export default function TrainingSection() {
             </p>
           </div>
 
-          {/* PPL grid */}
-          <div className="training-ppl-grid">
+          {/* PPL grid — with watermark */}
+          <div className="training-ppl-grid" style={{ position: 'relative' }}>
+            {/* Oversized watermark */}
+            <div style={{
+              position: 'absolute', top: '-40px', left: '-20px',
+              fontFamily: 'var(--font-display)', fontSize: 'clamp(180px, 20vw, 280px)',
+              color: 'rgba(212,168,67,0.04)', lineHeight: 1, pointerEvents: 'none',
+              userSelect: 'none', letterSpacing: -4, zIndex: 0,
+            }}>163</div>
+
             {/* Left: PPL table */}
-            <div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
               <table className="training-ppl-table">
                 <thead>
                   <tr>

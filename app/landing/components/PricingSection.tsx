@@ -80,7 +80,7 @@ export default function PricingSection() {
       <div style={{
         maxWidth: 1280,
         margin: '0 auto',
-        padding: '120px 64px',
+        padding: '80px 64px',
       }}>
         {/* Section header centered */}
         <div style={{
@@ -137,13 +137,17 @@ export default function PricingSection() {
           {plans.map((p, i) => (
             <div key={p.name} style={{
               background: p.featured ? 'var(--surface-2, #141310)' : 'var(--surface, #0D0C0B)',
-              padding: '40px 28px',
+              padding: p.featured ? '48px 32px' : '40px 28px',
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
               opacity: visible ? 1 : 0,
-              transform: visible ? 'translateY(0)' : 'translateY(24px)',
+              transform: visible ? `translateY(0)${p.featured ? ' scale(1.04)' : ''}` : 'translateY(24px)',
               transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * 100}ms`,
+              zIndex: p.featured ? 2 : 1,
+              boxShadow: p.featured ? '0 0 40px rgba(212,168,67,0.12), 0 0 80px rgba(212,168,67,0.06)' : 'none',
+              borderLeft: p.featured ? '2px solid var(--gold)' : undefined,
+              borderRight: p.featured ? '2px solid var(--gold)' : undefined,
             }}>
               {p.badge && (
                 <span style={{

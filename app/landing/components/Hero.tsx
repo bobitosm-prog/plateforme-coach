@@ -64,6 +64,18 @@ export default function Hero() {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(8px); }
         }
+        @keyframes phoneFloat {
+          0%, 100% { transform: translateY(0) rotate(-2deg); }
+          50% { transform: translateY(-12px) rotate(-2deg); }
+        }
+        @keyframes phonePulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+        @keyframes notchGlow {
+          0%, 100% { box-shadow: 0 0 6px rgba(201,168,76,0.0); }
+          50% { box-shadow: 0 0 6px rgba(201,168,76,0.3); }
+        }
         .hero-section {
           min-height: 100vh;
           position: relative;
@@ -78,7 +90,7 @@ export default function Hero() {
           display: flex;
           flex-direction: column;
           justify-content: center;
-          padding: 120px 40px 80px 24px;
+          padding: 80px 40px 80px 24px;
           gap: 0;
         }
         .hero-diag-line {
@@ -90,6 +102,189 @@ export default function Hero() {
           background: linear-gradient(to bottom, transparent 0%, var(--gold) 30%, var(--gold) 70%, transparent 100%);
           opacity: 0.4;
         }
+        .hero-phone-mockup {
+          position: absolute;
+          right: 120px;
+          top: 50%;
+          transform: translateY(-50%) rotate(-2deg);
+          z-index: 5;
+          width: 220px;
+          height: 440px;
+          border-radius: 36px;
+          background: #0a0a0a;
+          border: 2px solid rgba(201,168,76,0.25);
+          box-shadow:
+            0 0 0 1px rgba(201,168,76,0.08),
+            0 30px 80px rgba(0,0,0,0.6),
+            0 10px 30px rgba(0,0,0,0.4),
+            inset 0 1px 0 rgba(255,255,255,0.04);
+          overflow: hidden;
+          animation: phoneFloat 4s ease-in-out infinite;
+          pointer-events: none;
+        }
+        .hero-phone-notch {
+          position: absolute;
+          top: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 80px;
+          height: 24px;
+          background: #000;
+          border-radius: 0 0 14px 14px;
+          z-index: 2;
+          animation: notchGlow 3s ease-in-out infinite;
+        }
+        .hero-phone-notch::after {
+          content: '';
+          position: absolute;
+          top: 8px;
+          right: 16px;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(201,168,76,0.4) 0%, rgba(201,168,76,0.1) 60%, transparent 100%);
+        }
+        .hero-phone-screen {
+          position: absolute;
+          inset: 8px;
+          border-radius: 28px;
+          overflow: hidden;
+          background: linear-gradient(160deg, #0c0b09 0%, #111010 40%, #0d0c0a 100%);
+        }
+        .hero-phone-screen-header {
+          padding: 40px 18px 14px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .hero-phone-screen-logo {
+          width: 28px;
+          height: 28px;
+          border-radius: 8px;
+          background: linear-gradient(135deg, var(--gold) 0%, #8b6914 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: var(--font-display);
+          font-size: 11px;
+          color: #0D0B08;
+          font-weight: 900;
+          letter-spacing: -0.5px;
+        }
+        .hero-phone-screen-title {
+          font-family: var(--font-alt);
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--text);
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+        .hero-phone-screen-bar {
+          margin: 0 18px 10px;
+          height: 4px;
+          border-radius: 2px;
+          background: rgba(201,168,76,0.12);
+          overflow: hidden;
+        }
+        .hero-phone-screen-bar-fill {
+          height: 100%;
+          width: 68%;
+          border-radius: 2px;
+          background: linear-gradient(90deg, var(--gold), #d4a843);
+          animation: phonePulse 2.5s ease-in-out infinite;
+        }
+        .hero-phone-screen-card {
+          margin: 0 14px 8px;
+          padding: 12px 14px;
+          border-radius: 12px;
+          background: rgba(201,168,76,0.05);
+          border: 1px solid rgba(201,168,76,0.1);
+        }
+        .hero-phone-screen-card-label {
+          font-family: var(--font-body);
+          font-size: 8px;
+          color: var(--text-dim);
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          margin-bottom: 4px;
+        }
+        .hero-phone-screen-card-value {
+          font-family: var(--font-display);
+          font-size: 22px;
+          color: var(--gold);
+          line-height: 1;
+        }
+        .hero-phone-screen-card-unit {
+          font-family: var(--font-body);
+          font-size: 9px;
+          color: var(--text-muted);
+          margin-left: 4px;
+        }
+        .hero-phone-screen-rows {
+          margin: 6px 14px 0;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .hero-phone-screen-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          background: rgba(255,255,255,0.02);
+        }
+        .hero-phone-screen-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--gold);
+          opacity: 0.6;
+        }
+        .hero-phone-screen-line {
+          flex: 1;
+          height: 3px;
+          border-radius: 2px;
+          background: rgba(255,255,255,0.06);
+        }
+        .hero-phone-screen-line-short {
+          width: 30%;
+          height: 3px;
+          border-radius: 2px;
+          background: rgba(201,168,76,0.15);
+        }
+        .hero-phone-home {
+          position: absolute;
+          bottom: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 80px;
+          height: 4px;
+          border-radius: 2px;
+          background: rgba(255,255,255,0.15);
+        }
+        .hero-bottom-divider {
+          position: absolute;
+          bottom: -1px;
+          left: 0;
+          right: 0;
+          height: 80px;
+          z-index: 4;
+          clip-path: polygon(0 40%, 100% 0%, 100% 100%, 0% 100%);
+          background: linear-gradient(90deg, rgba(201,168,76,0.06) 0%, rgba(201,168,76,0.02) 50%, transparent 100%);
+          pointer-events: none;
+        }
+        .hero-bottom-divider::after {
+          content: '';
+          position: absolute;
+          top: 40%;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, rgba(201,168,76,0.2) 0%, rgba(201,168,76,0.06) 60%, transparent 100%);
+          transform: rotate(-1.5deg);
+          transform-origin: top right;
+        }
         @media (max-width: 1024px) {
           .hero-section {
             grid-template-columns: 1fr !important;
@@ -98,6 +293,9 @@ export default function Hero() {
             display: none !important;
           }
           .hero-diag-line {
+            display: none !important;
+          }
+          .hero-phone-mockup {
             display: none !important;
           }
         }
@@ -153,6 +351,52 @@ export default function Hero() {
         {/* Diagonal gold line */}
         <div className="hero-diag-line" />
 
+        {/* Floating phone mockup */}
+        <div className="hero-phone-mockup">
+          <div className="hero-phone-notch" />
+          <div className="hero-phone-screen">
+            <div className="hero-phone-screen-header">
+              <div className="hero-phone-screen-logo">M</div>
+              <div className="hero-phone-screen-title">MoovX</div>
+            </div>
+            <div className="hero-phone-screen-bar">
+              <div className="hero-phone-screen-bar-fill" />
+            </div>
+            <div className="hero-phone-screen-card">
+              <div className="hero-phone-screen-card-label">Calories</div>
+              <div style={{ display: 'flex', alignItems: 'baseline' }}>
+                <span className="hero-phone-screen-card-value">1 847</span>
+                <span className="hero-phone-screen-card-unit">/ 2 400 kcal</span>
+              </div>
+            </div>
+            <div className="hero-phone-screen-card">
+              <div className="hero-phone-screen-card-label">Workout</div>
+              <div style={{ display: 'flex', alignItems: 'baseline' }}>
+                <span className="hero-phone-screen-card-value">Push</span>
+                <span className="hero-phone-screen-card-unit">Day A</span>
+              </div>
+            </div>
+            <div className="hero-phone-screen-rows">
+              <div className="hero-phone-screen-row">
+                <div className="hero-phone-screen-dot" />
+                <div className="hero-phone-screen-line" />
+                <div className="hero-phone-screen-line-short" />
+              </div>
+              <div className="hero-phone-screen-row">
+                <div className="hero-phone-screen-dot" />
+                <div className="hero-phone-screen-line" />
+                <div className="hero-phone-screen-line-short" />
+              </div>
+              <div className="hero-phone-screen-row">
+                <div className="hero-phone-screen-dot" />
+                <div className="hero-phone-screen-line" />
+                <div className="hero-phone-screen-line-short" />
+              </div>
+            </div>
+          </div>
+          <div className="hero-phone-home" />
+        </div>
+
         {/* Left: Content */}
         <div
           className="hero-content-col"
@@ -162,7 +406,7 @@ export default function Hero() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            padding: '120px 60px 80px 64px',
+            padding: '80px 60px 80px 64px',
           }}
         >
           {/* Eyebrow */}
@@ -270,7 +514,7 @@ export default function Hero() {
                 position: 'relative',
                 overflow: 'hidden',
                 transition: 'transform 0.2s, box-shadow 0.2s',
-                
+
                 textDecoration: 'none',
               }}
             >
@@ -292,7 +536,7 @@ export default function Hero() {
                 border: '1px solid var(--gold-rule)',
                 cursor: 'none',
                 transition: 'all 0.3s',
-                
+
                 textDecoration: 'none',
               }}
             >
@@ -356,6 +600,9 @@ export default function Hero() {
             </div>
           </div>
         </div>
+
+        {/* Angled section divider at bottom */}
+        <div className="hero-bottom-divider" />
 
         {/* Scroll indicator */}
         <div
