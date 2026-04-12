@@ -66,10 +66,14 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
           const typeInfo = resolveSessionType(mainSession?.title || mainSession?.session_type)
           const mainColor = isRest ? BORDER : typeInfo.color
 
-          // Session label
+          // Session label — resolved type as main, raw title as subtitle
           let sessionLabel = 'Repos'
+          let sessionSubtitle = ''
           if (mainSession && mainSession.session_type !== 'rest') {
-            sessionLabel = mainSession.title || typeInfo.label
+            sessionLabel = typeInfo.label
+            const rawTitle = mainSession.title || ''
+            // Show subtitle only if raw title has extra info (contains —)
+            if (rawTitle.includes('—')) sessionSubtitle = rawTitle.split('—').slice(1).join('—').trim()
           }
 
           // Badge
@@ -127,22 +131,33 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
                 {date.getDate()}
               </span>
 
-              {/* Color dot + session type */}
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Color dot + session type + subtitle */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                 {mainSession && (
                   <div style={{
                     width: 6, height: 6, borderRadius: '50%',
                     background: mainColor, flexShrink: 0,
                   }} />
                 )}
-                <span style={{
-                  fontSize: '0.78rem', fontWeight: 700,
-                  color: isSelected ? '#0D0B08' : (isRest ? TEXT_MUTED : (isToday ? TEXT_PRIMARY : `${TEXT_PRIMARY}CC`)),
-                  letterSpacing: '0.02em',
-                  fontFamily: FONT_ALT,
-                }}>
-                  {sessionLabel}
-                </span>
+                <div style={{ minWidth: 0 }}>
+                  <span style={{
+                    fontSize: '0.78rem', fontWeight: 700,
+                    color: isSelected ? '#0D0B08' : (isRest ? TEXT_MUTED : (isToday ? TEXT_PRIMARY : `${TEXT_PRIMARY}CC`)),
+                    letterSpacing: '0.02em',
+                    fontFamily: FONT_ALT,
+                    display: 'block',
+                  }}>
+                    {sessionLabel}
+                  </span>
+                  {sessionSubtitle && (
+                    <span style={{
+                      fontSize: '0.6rem', color: isSelected ? '#0D0B0899' : TEXT_MUTED,
+                      fontFamily: FONT_BODY, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {sessionSubtitle}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Badge */}

@@ -1105,7 +1105,12 @@ export default function TrainingTab({
               <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: BG_CARD, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{typeInfo.emoji}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || 'Séance'}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY }}>{typeInfo.label.toUpperCase()}</div>
+                  {s.name && s.name.toLowerCase() !== typeInfo.label.toLowerCase() && s.name.includes('—') && (
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: GOLD, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {s.name.split('—').slice(1).join('—').trim()}
+                    </div>
+                  )}
                   <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>
                     {d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     {s.duration_minutes ? ` · ${s.duration_minutes}min` : ''}
