@@ -1111,11 +1111,23 @@ export default function TrainingTab({
           if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: FONT_BODY, fontSize: 14, color: TEXT_DIM }}>Aucune seance</div>
           return filtered.slice(0, 20).map((s: any) => {
             const d = new Date(s.created_at)
-            const nameLC = (s.name || '').toLowerCase()
-            const icon = nameLC.includes('push') || nameLC.includes('pec') ? '\u{1F4AA}' : nameLC.includes('pull') || nameLC.includes('dos') ? '\u{1F9B5}' : nameLC.includes('leg') || nameLC.includes('jambe') ? '\u{1F9B5}' : '\u{1F3CB}\uFE0F'
+            const nameLC = (s.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            const sessionIcon = nameLC.includes('push') || nameLC.includes('pec') || nameLC.includes('poitrine')
+              ? { emoji: '🏋️', color: '#F97316' }
+              : nameLC.includes('pull') || nameLC.includes('dos') || nameLC.includes('tirage')
+              ? { emoji: '💪', color: '#3B82F6' }
+              : nameLC.includes('leg') || nameLC.includes('jambe') || nameLC.includes('quad') || nameLC.includes('ischio')
+              ? { emoji: '🦵', color: '#22C55E' }
+              : nameLC.includes('upper') || nameLC.includes('epaule')
+              ? { emoji: '🤸', color: '#A855F7' }
+              : nameLC.includes('cardio') || nameLC.includes('hiit') || nameLC.includes('liss')
+              ? { emoji: '🏃', color: '#EF4444' }
+              : nameLC.includes('libre') || nameLC.includes('custom') || nameLC.includes('full')
+              ? { emoji: '⚡', color: GOLD }
+              : { emoji: '🏋️', color: GOLD }
             return (
               <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: BG_CARD, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{icon}</div>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${sessionIcon.color}15`, border: `1px solid ${sessionIcon.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{sessionIcon.emoji}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || 'Séance'}</div>
                   <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>
