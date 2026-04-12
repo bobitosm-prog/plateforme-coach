@@ -853,6 +853,23 @@ export default function TrainingTab({
         fmtElapsed={fmtElapsed}
       />
 
+      {/* ── SÉANCE LIBRE ── */}
+      <div style={{ padding: '0 16px', marginBottom: 16 }}>
+        <button
+          onClick={() => startProgramWorkout({ day_name: 'Séance libre' }, [])}
+          style={{
+            width: '100%', padding: 14, borderRadius: 14,
+            background: 'transparent',
+            border: `1.5px solid ${GOLD_RULE}`,
+            color: GOLD, cursor: 'pointer',
+            fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          + SÉANCE LIBRE
+        </button>
+      </div>
+
       {/* ── NO COACH PROGRAM → show custom programs ── */}
       {!coachProgram ? (
         <div style={{ padding: '20px 16px' }}>

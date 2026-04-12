@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell } from 'lucide-react'
+import { toast } from 'sonner'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -235,6 +236,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [sessionModified, setSessionModified] = useState(false)
   const [showSavePopup, setShowSavePopup] = useState(false)
   const [exerciseMenu, setExerciseMenu] = useState<number | null>(null)
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false)
+  const [templateName, setTemplateName] = useState(sessionName || 'Séance libre')
   const [variantPopup, setVariantPopup] = useState<{exIdx: number, variants: any[], originalName: string} | null>(null)
   const [exerciseInfo, setExerciseInfo] = useState<any>(null)
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
@@ -338,7 +341,27 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const pct = total > 0 ? (completed / total) * 100 : 0
   const allDone = completed === total && total > 0
 
-  const finish = () => { if (elT.current) clearInterval(elT.current); setDone(true); onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) }) }
+  const finish = () => {
+    if (elT.current) clearInterval(elT.current)
+    onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) })
+    if (exos.length > 0) {
+      setShowSaveTemplate(true)
+    } else {
+      setDone(true)
+    }
+  }
+  async function saveAsTemplate() {
+    await supabase.from('custom_programs').insert({
+      user_id: (await supabase.auth.getUser()).data.user?.id,
+      name: templateName.trim() || 'Séance libre',
+      days: [{ name: templateName.trim() || 'Séance libre', exercises: exos.map(e => ({ exercise_name: e.name, muscle_group: e.muscle, sets: e.targetSets, reps: parseInt(String(e.targetReps)) || 10, rest_seconds: e.rest })), is_rest: false }],
+      source: 'free_session',
+      is_active: false,
+    })
+    toast.success('Modèle sauvegardé ✓')
+    setShowSaveTemplate(false)
+    setDone(true)
+  }
 
   function moveExercise(index: number, dir: number) {
     const ni = index + dir
@@ -494,6 +517,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             letterSpacing: 2, cursor: 'pointer',
           }}>+ AJOUTER UN EXERCICE</button>
         </div>
+
+        {exos.length === 0 && (
+          <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${BORDER}`, borderRadius: 14, background: BG_CARD }}>
+            <Dumbbell size={32} color={TEXT_DIM} style={{ marginBottom: 12 }} />
+            <p style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1, margin: '0 0 4px' }}>Ajoute ton premier exercice</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_DIM, margin: 0 }}>Tape &quot;+ AJOUTER&quot; ci-dessus</p>
+          </div>
+        )}
 
         {exos.map((exo, idx) => {
           const cnt = exo.sets.filter(s => s.done).length
@@ -700,6 +731,28 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           <button onClick={() => sessionModified ? setShowSavePopup(true) : finish()} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
         </div>
       </div>
+
+      {/* Save as template popup */}
+      {showSaveTemplate && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>SAUVEGARDER COMME MODÈLE ?</div>
+            <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
+              Réutilise cette séance plus tard sans la recréer.
+            </div>
+            <input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Nom du modèle..."
+              style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 15, outline: 'none', marginBottom: 16 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button onClick={saveAsTemplate} style={{ width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer' }}>
+                OUI — SAUVEGARDER
+              </button>
+              <button onClick={() => { setShowSaveTemplate(false); setDone(true) }} style={{ width: '100%', padding: 14, borderRadius: 14, background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>
+                NON — JUSTE CETTE FOIS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Exercise info popup */}
       {exerciseInfo && (
