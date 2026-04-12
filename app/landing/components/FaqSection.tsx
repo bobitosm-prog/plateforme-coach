@@ -6,7 +6,7 @@ import { useReveal } from './shared';
 const FAQ_DATA = [
   {
     q: "C'est quoi MoovX ?",
-    a: "MoovX est une plateforme de coaching fitness suisse propulsée par des experts certifiés. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté. Basée à Genève.",
+    a: "MoovX est une plateforme de coaching fitness Swiss Made propulsée par des experts certifiés. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté. Accessible partout dans le monde.",
   },
   {
     q: "Comment fonctionne la nutrition experte ?",

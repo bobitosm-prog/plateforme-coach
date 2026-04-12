@@ -197,7 +197,7 @@ function RegisterContent() {
 
       <LeftPanel />
 
-      <div className="auth-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', background: BG_BASE, overflowY: 'auto' }}>
+      <div className="auth-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', overflowY: 'auto', position: 'relative', zIndex: 1 }}>
 
         {/* Mobile logo */}
         <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
@@ -472,7 +472,7 @@ export default function RegisterClientPage() {
 /* ── Left decorative panel (shared) ── */
 function LeftPanel() {
   return (
-    <div className="auth-left" style={{ width: '50%', flexShrink: 0, background: BG_BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', animation: 'panelIn 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
+    <div className="auth-left" style={{ width: '50%', flexShrink: 0, background: BG_BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', animation: 'panelIn 0.6s cubic-bezier(0.16,1,0.3,1)', zIndex: 1 }}>
       {/* Grid lines */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(201,168,76,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.015) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
       {/* Gold orb */}

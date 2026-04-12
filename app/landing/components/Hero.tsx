@@ -425,7 +425,7 @@ export default function Hero() {
                 textTransform: 'uppercase',
               }}
             >
-              {'\ud83c\udde8\ud83c\udded'} Swiss Made · Genève
+              {'\ud83c\udde8\ud83c\udded'} Swiss Made
             </span>
             <div style={{ flex: 1, maxWidth: 60, height: 1, background: 'var(--gold-rule)' }} />
           </div>
@@ -490,7 +490,7 @@ export default function Hero() {
                 textTransform: 'uppercase',
               }}
             >
-              Rejoins +1 200 utilisateurs à Genève &mdash; Dès CHF 10/mois
+              Rejoins +1 200 utilisateurs &mdash; Dès CHF 10/mois
             </p>
           </div>
 

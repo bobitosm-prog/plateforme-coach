@@ -67,6 +67,7 @@ export default function Results() {
 
   return (
     <section
+      id="resultats"
       ref={ref}
       style={{
         maxWidth: 1280,
