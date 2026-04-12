@@ -40,6 +40,7 @@ import { resolveSessionType, HISTORY_FILTERS } from '../../../lib/session-types'
 interface TrainingTabProps {
   supabase: any
   session: any
+  profile?: any
   coachProgram: any
   todayKey: string
   todaySessionDone: boolean
@@ -53,9 +54,10 @@ interface TrainingTabProps {
 }
 
 export default function TrainingTab({
-  supabase, session, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
+  supabase, session, profile, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
 }: TrainingTabProps) {
+  const aiAllowed = profile?.subscription_type !== 'invited'
   const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [dayExpanded, setDayExpanded] = useState(false)
@@ -1132,6 +1134,7 @@ export default function TrainingTab({
         <ProgramBuilder
           supabase={supabase}
           session={session}
+          aiAllowed={aiAllowed}
           onClose={() => { setShowProgramBuilder(false); setEditingProgram(null) }}
           onSave={refreshPrograms}
           editProgram={editingProgram}

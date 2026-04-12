@@ -410,7 +410,7 @@ export default function useClientDashboard() {
     todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
     displayAvatar, fullName, firstName,
     // Subscription & trial
-    isSubActive, isInTrial, trialDaysLeft, trialExpired, handleSubscribe,
+    isSubActive, isInTrial, trialDaysLeft, trialExpired, handleSubscribe, aiAllowed: !isInvited,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
     // Calendar / scheduled sessions (from sub-hook)

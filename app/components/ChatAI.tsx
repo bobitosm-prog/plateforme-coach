@@ -55,11 +55,26 @@ interface ChatAIProps {
 }
 
 export default function ChatAI({ session, profile, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
+  const isInvited = profile?.subscription_type === 'invited'
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (externalOpen) setOpen(true)
   }, [externalOpen])
+
+  // Invited clients see a disabled state
+  if (isInvited && open) {
+    return (
+      <div style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: '#0D0B08', zIndex: 1001, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 12 }}>COACH IA</div>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 15, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 24 }}>
+          Ton coach gère ton programme et ta nutrition. Contacte-le directement via la messagerie.
+        </p>
+        <button onClick={() => { setOpen(false); onExternalClose?.() }} style={{ padding: '12px 28px', borderRadius: 12, background: 'transparent', border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>FERMER</button>
+      </div>
+    )
+  }
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)

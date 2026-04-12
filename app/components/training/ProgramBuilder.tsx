@@ -15,6 +15,7 @@ import {
 interface ProgramBuilderProps {
   supabase: any
   session: any
+  aiAllowed?: boolean
   onClose: () => void
   onSave: () => void
   editProgram?: any
@@ -78,7 +79,7 @@ function padTo7Days(days: any[]): any[] {
 export { padTo7Days }
 
 /* ─── Component ─── */
-export default function ProgramBuilder({ supabase, session, onClose, onSave, editProgram }: ProgramBuilderProps) {
+export default function ProgramBuilder({ supabase, session, aiAllowed = true, onClose, onSave, editProgram }: ProgramBuilderProps) {
   const [mode, setMode] = useState<'select' | 'ai' | 'manual' | 'custom-exercise'>('select')
   const [dbExercises, setDbExercises] = useState<any[]>([])
   const [customExercises, setCustomExercises] = useState<any[]>([])
@@ -371,6 +372,7 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Card 1 - AI */}
+              {aiAllowed ? (
               <motion.button
                 whileHover={{ borderColor: GOLD }}
                 onClick={() => setMode('ai')}
@@ -385,6 +387,15 @@ export default function ProgramBuilder({ supabase, session, onClose, onSave, edi
                   Décris ton objectif et l&apos;IA crée tout
                 </div>
               </motion.button>
+              ) : (
+              <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 24, opacity: 0.5, textAlign: 'left', width: '100%' }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_MUTED }}>GÉNÉRER AVEC L&apos;IA</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_DIM, marginTop: 4 }}>
+                  Ton coach gère ton programme. Contacte-le directement.
+                </div>
+              </div>
+              )}
 
               {/* Card 2 - Manual */}
               <motion.button
