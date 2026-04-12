@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
+import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, ORANGE, GOLD, GOLD_DIM, GOLD_RULE, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -281,24 +282,7 @@ export default function ProgressTab({
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>PALMARÈS & ANALYTICS</h1>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {subTab === 'mesures' && displayWeights.length > 0 && (
-            <button onClick={() => {
-              const rows = displayWeights.map((w, i) => [w.date, w.poids, i > 0 ? (w.poids - displayWeights[i-1].poids).toFixed(1) : ''])
-              downloadCsv('poids.csv', ['Date', 'Poids (kg)', 'Variation'], rows)
-            }} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '6px 10px', cursor: 'pointer', fontFamily: FONT_ALT, color: TEXT_MUTED, fontSize: '0.68rem', fontWeight: 600 }}>
-              <Download size={12} /> Poids
-            </button>
-          )}
-          {subTab === 'mesures' && measurements.length > 0 && (
-            <button onClick={() => {
-              const rows = measurements.map((m: any) => [m.date, m.waist ?? '', m.hips ?? '', m.chest ?? '', m.left_arm ?? '', m.left_thigh ?? '', m.body_fat ?? ''])
-              downloadCsv('mensurations.csv', ['Date', 'Taille (cm)', 'Hanches (cm)', 'Poitrine (cm)', 'Bras (cm)', 'Cuisses (cm)', '% MG'], rows)
-            }} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '6px 10px', cursor: 'pointer', fontFamily: FONT_ALT, color: TEXT_MUTED, fontSize: '0.68rem', fontWeight: 600 }}>
-              <Download size={12} /> Mensurations
-            </button>
-          )}
-        </div>
+        <div style={{ width: 1 }} /> {/* spacer */}
       </div>
 
       {/* Sub-tabs */}
@@ -396,6 +380,37 @@ export default function ProgressTab({
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Export all data as xlsx */}
+          {(displayWeights.length > 0 || measurements.length > 0) && (
+            <button onClick={() => {
+              const wb = XLSX.utils.book_new()
+              if (displayWeights.length > 0) {
+                const wsData = [['Date', 'Poids (kg)', 'Variation (kg)'], ...displayWeights.map((w, i) => [w.date, w.poids, i > 0 ? +(w.poids - displayWeights[i-1].poids).toFixed(1) : ''])]
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), 'Poids')
+              }
+              if (measurements.length > 0) {
+                const msData = [['Date', 'Taille (cm)', 'Hanches (cm)', 'Poitrine (cm)', 'Bras (cm)', 'Cuisses (cm)', '% Graisse', 'IMC'],
+                  ...measurements.map((m: any) => {
+                    const h = profile?.height ? profile.height / 100 : 0
+                    const imc = m.waist && h > 0 ? +(displayWeights.find(w => w.date === m.date)?.poids || currentWeight || 0) / (h * h) : ''
+                    return [m.date, m.waist ?? '', m.hips ?? '', m.chest ?? '', m.left_arm ?? '', m.left_thigh ?? '', m.body_fat ?? '', typeof imc === 'number' ? +imc.toFixed(1) : '']
+                  })
+                ]
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(msData), 'Mensurations')
+              }
+              XLSX.writeFile(wb, 'MoovX_Mes_Donnees.xlsx')
+              toast.success('Fichier exporté ✓')
+            }} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              width: '100%', padding: 14, borderRadius: 12,
+              background: 'transparent', border: `1px solid ${BORDER}`,
+              color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700,
+              letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase',
+            }}>
+              <Download size={14} /> Exporter mes données (.xlsx)
+            </button>
           )}
         </div>
       )}
