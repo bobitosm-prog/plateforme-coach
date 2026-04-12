@@ -1055,6 +1055,7 @@ export default function TrainingTab({
         <ExerciseSearchModal
           supabase={supabase}
           onClose={() => setShowExDbModal(false)}
+          onAdd={(ex) => addExerciseToSession(ex)}
         />
       )}
 

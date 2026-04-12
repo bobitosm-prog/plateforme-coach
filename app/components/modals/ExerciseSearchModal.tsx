@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { X, Search, Dumbbell, Play } from 'lucide-react'
+import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, ORANGE, GOLD,
@@ -12,9 +13,10 @@ import { getExerciseImage } from '../../../lib/exercise-media'
 interface ExerciseSearchModalProps {
   supabase: any
   onClose: () => void
+  onAdd?: (exercise: any) => void
 }
 
-export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearchModalProps) {
+export default function ExerciseSearchModal({ supabase, onClose, onAdd }: ExerciseSearchModalProps) {
   const [exSearch, setExSearch] = useState('')
   const [exResults, setExResults] = useState<any[]>([])
   const [exDbAllResults, setExDbAllResults] = useState<any[]>([])
@@ -233,19 +235,42 @@ export default function ExerciseSearchModal({ supabase, onClose }: ExerciseSearc
                 </a>
               )}
 
-              {/* Reference info: default sets/reps/rest */}
+              {/* Editable sets/reps/rest */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
                 {[
-                  { label: 'Series', value: exDbAddSets },
-                  { label: 'Reps', value: exDbAddReps },
-                  { label: 'Repos (s)', value: exDbAddRest },
-                ].map(({ label, value }) => (
+                  { label: 'Séries', value: exDbAddSets, set: setExDbAddSets },
+                  { label: 'Reps', value: exDbAddReps, set: setExDbAddReps },
+                  { label: 'Repos (s)', value: exDbAddRest, set: setExDbAddRest },
+                ].map(({ label, value, set }) => (
                   <div key={label} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '10px 12px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4, fontFamily: FONT_ALT, letterSpacing: '2px' }}>{label}</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, color: GOLD }}>{value}</div>
+                    <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, fontFamily: FONT_ALT, letterSpacing: '2px' }}>{label}</div>
+                    <input type="number" value={value} onChange={e => set(e.target.value)}
+                      style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, color: GOLD, textAlign: 'center' }} />
                   </div>
                 ))}
               </div>
+
+              {/* Add button */}
+              {onAdd && (
+                <button
+                  onClick={() => {
+                    onAdd({
+                      name: selectedExDb.name,
+                      exercise_name: selectedExDb.name,
+                      muscle_group: selectedExDb.muscle_group || '',
+                      sets: parseInt(exDbAddSets) || 3,
+                      reps: parseInt(exDbAddReps) || 10,
+                      rest_seconds: parseInt(exDbAddRest) || 60,
+                    })
+                    toast.success('Exercice ajouté ✓')
+                    setSelectedExDb(null)
+                    setExDbAddSets('3'); setExDbAddReps('10'); setExDbAddRest('60')
+                  }}
+                  style={{ width: '100%', background: GOLD, color: '#0D0B08', fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_DISPLAY, fontSize: '1rem', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8 }}
+                >
+                  AJOUTER À MA SÉANCE
+                </button>
+              )}
 
               {/* Close button */}
               <button
