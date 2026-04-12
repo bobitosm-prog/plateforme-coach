@@ -213,7 +213,7 @@ export default function TrainingSection() {
                   margin: '0 0 20px',
                 }}
               >
-                89 EXERCICES GUID&Eacute;S EN FRAN&Ccedil;AIS
+                163 EXERCICES GUID&Eacute;S EN FRAN&Ccedil;AIS
               </h3>
               <p
                 style={{
@@ -242,7 +242,7 @@ export default function TrainingSection() {
                       marginBottom: 8,
                     }}
                   >
-                    89
+                    163
                   </div>
                   <div
                     style={{

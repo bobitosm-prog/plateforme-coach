@@ -315,7 +315,7 @@ export default function Hero() {
           style={revealStyle(stats.visible, 0.16)}
         >
           <StatItem target={1200} label="Plans personnalisés<br/>générés" first />
-          <StatItem target={89} label="Exercices<br/>guidés" />
+          <StatItem target={163} label="Exercices<br/>guidés" />
           <StatItem target={170} label="Aliments<br/>fitness" />
           <StatItem target={22} label="Fonctionnal-<br/>ités" />
 

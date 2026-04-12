@@ -126,6 +126,7 @@ export default function HomeTab({
   const [habitValues, setHabitValues] = useState<Record<string, number>>({})
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
   const [customDayName, setCustomDayName] = useState<string | null>(null)
+  const [todayScheduledSession, setTodayScheduledSession] = useState<any>(null)
 
   // Fetch today's consumed calories
   useEffect(() => {
@@ -246,6 +247,13 @@ export default function HomeTab({
         }
       })
 
+    // Fetch today's scheduled session (same source as Training page calendar)
+    const todayDateStr = new Date().toISOString().split('T')[0]
+    supabase.from('scheduled_sessions').select('id, title, session_type, completed')
+      .eq('user_id', userId).eq('scheduled_date', todayDateStr)
+      .neq('session_type', 'rest').limit(1).maybeSingle()
+      .then(({ data }: any) => { if (data) setTodayScheduledSession(data) })
+
     // Fetch XP data
     supabase.from('user_xp').select('total_xp, current_streak').eq('user_id', userId).maybeSingle()
       .then(({ data }: any) => { if (data) setXpData(data) })
@@ -266,7 +274,10 @@ export default function HomeTab({
 
   // Custom program exercises take priority over coach program
   const todayExercises = customProgramExercises || todayCoachDay?.exercises || []
-  const sessionTitle = customDayName || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
+  // Session title: scheduled session > custom program > coach program
+  const sessionTitle = todayScheduledSession?.title || customDayName || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
+  // Has workout today: scheduled session exists (not rest) OR custom program has exercises
+  const hasWorkoutToday = !!todayScheduledSession || (customProgramExercises && customProgramExercises.length > 0)
 
   // Weekly bar chart data
   const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
@@ -421,9 +432,9 @@ export default function HomeTab({
             </div>
           </div>
           <div style={{ padding: '16px 20px 20px' }}>
-            {!coachProgram && !customProgramExercises ? (
+            {!coachProgram && !customProgramExercises && !todayScheduledSession ? (
               <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
-            ) : customDayName === 'Repos' || (!customProgramExercises && todayCoachDay?.repos) ? (
+            ) : !hasWorkoutToday && (customDayName === 'Repos' || todayCoachDay?.repos) ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Moon size={24} color={TEXT_MUTED} />
                 <div>
