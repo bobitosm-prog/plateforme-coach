@@ -288,9 +288,9 @@ export default function CoachApp() {
 
       {/* ── GLASS BAR HEADER ── */}
       <header style={{ flexShrink: 0, padding: '8px 14px' }}>
-        <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18 }}>
-          {/* Left: Coach IA + Messages */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3 }}>
+        <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18, position: 'relative' }}>
+          {/* Left: Coach IA + Messages — fixed width for centering */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3, minWidth: 80 }}>
             <button onClick={() => h.setActiveTab('coachIA')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'coachIA' ? GOLD_DIM : 'transparent', border: h.activeTab === 'coachIA' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
               <Bot size={19} color={h.activeTab === 'coachIA' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
             </button>
@@ -299,12 +299,12 @@ export default function CoachApp() {
               {h.unreadCount > 0 && <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: RED, border: '2px solid rgba(20,18,9,0.8)' }} />}
             </button>
           </div>
-          {/* Center: Logo Pill */}
-          <button onClick={() => h.setActiveTab('home')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: '4px 12px', position: 'relative', zIndex: 3, cursor: 'pointer' }}>
+          {/* Center: Logo Pill — absolutely centered */}
+          <button onClick={() => h.setActiveTab('home')} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 6, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: '4px 12px', zIndex: 4, cursor: 'pointer' }}>
             <img src="/logo-moovx.png" alt="MoovX" style={{ height: 32, width: 'auto', objectFit: 'contain', borderRadius: 6 }} />
           </button>
-          {/* Right: Profil */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3 }}>
+          {/* Right: Profil — fixed width matching left for balance */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, position: 'relative', zIndex: 3, minWidth: 80 }}>
             <button onClick={() => h.setActiveTab('profil')} style={{ width: 34, height: 34, borderRadius: '50%', border: h.activeTab === 'profil' ? `1.5px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: h.activeTab === 'profil' ? GOLD_DIM : 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s', padding: 0 }}>
               <User size={16} color={h.activeTab === 'profil' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
             </button>
@@ -350,8 +350,8 @@ export default function CoachApp() {
       />
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
-      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 14px', paddingBottom: 'calc(env(safe-area-inset-bottom, 20px) + 12px)', zIndex: 999 }}>
-        <div className="liquid-glass-nav" style={{ display: 'flex', justifyContent: 'center', gap: 24, padding: '10px 16px', borderRadius: 18 }}>
+      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '8px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 8px)', zIndex: 999, display: 'flex', justifyContent: 'center' }}>
+        <div className="liquid-glass-nav" style={{ display: 'flex', justifyContent: 'center', gap: 0, padding: '10px 8px', borderRadius: 18, maxWidth: 360, width: '100%' }}>
         {([
           { id: 'home' as Tab, Icon: Home, label: 'Home' },
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
@@ -360,9 +360,9 @@ export default function CoachApp() {
         ]).map(({ id, Icon, label }) => {
           const active = h.activeTab === id
           return (
-            <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: '0 16px' }}>
-              <Icon size={22} color={active ? GOLD : TEXT_DIM} strokeWidth={active ? 2.5 : 1.5} style={{ transition: 'all 0.3s ease' }} />
-              <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: active ? GOLD : TEXT_DIM, transition: 'color 0.3s ease' }}>{label}</span>
+            <button key={id} onClick={() => h.setActiveTab(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>
+              <Icon size={20} color={active ? GOLD : TEXT_DIM} strokeWidth={active ? 2.5 : 1.5} style={{ transition: 'all 0.3s ease' }} />
+              <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: active ? GOLD : TEXT_DIM, transition: 'color 0.3s ease' }}>{label}</span>
               {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: GOLD, boxShadow: '0 0 8px rgba(212,168,67,0.5)' }} />}
             </button>
           )
