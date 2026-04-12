@@ -1066,6 +1066,7 @@ export default function TrainingTab({
           reps={exerciseDetail._reps}
           rest={exerciseDetail._rest}
           onClose={() => setExerciseDetail(null)}
+          onAdd={(ex) => { addExerciseToSession(ex); setExerciseDetail(null) }}
         />
       )}
 
