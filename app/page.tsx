@@ -300,9 +300,9 @@ export default function CoachApp() {
             </button>
           </div>
           {/* Center: Logo Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: '6px 14px', position: 'relative', zIndex: 3 }}>
-            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 4, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>MOOVX</span>
-          </div>
+          <button onClick={() => h.setActiveTab('home')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: '4px 12px', position: 'relative', zIndex: 3, cursor: 'pointer' }}>
+            <img src="/logo-moovx.png" alt="MoovX" style={{ height: 32, width: 'auto', objectFit: 'contain', borderRadius: 6 }} />
+          </button>
           {/* Right: Progress + Profil */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3 }}>
             <button onClick={() => h.setActiveTab('progress')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'progress' ? GOLD_DIM : 'transparent', border: h.activeTab === 'progress' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
