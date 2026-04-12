@@ -798,48 +798,26 @@ export default function TrainingTab({
             )}
           </AnimatePresence>
 
-          {/* ── Selected Day Program Summary ── */}
-          {(() => {
-            const daySessions = getSessionsForDate(weekSessions as any, calendarSelectedDate)
-            if (daySessions.length === 0) return null
-            const isRest = daySessions.every(s => s.session_type === 'rest')
-            if (isRest) {
-              return (
-                <div style={{
-                  background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
-                  padding: '12px 16px', marginBottom: 12, textAlign: 'center',
-                }}>
-                  <span style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>Jour de repos 💤 Récupération active recommandée</span>
-                </div>
-              )
-            }
-            return (
-              <div style={{
-                background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
-                padding: '12px 16px', marginBottom: 12,
-              }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {daySessions.filter(s => s.session_type !== 'rest').map(s => (
-                    <div key={s.id} style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '2px 10px', borderRadius: 12,
-                      background: GOLD_DIM,
-                      border: `1px solid ${GOLD_RULE}`,
-                    }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD }} />
-                      <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 800, letterSpacing: '1px', color: GOLD }}>
-                        {s.title}
-                      </span>
-                      {s.completed && <span style={{ fontSize: '0.65rem', color: GREEN }}>✓</span>}
-                      {s.duration_min > 0 && (
-                        <span style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>{s.duration_min}min</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
+          {/* Hint or séance libre — compact */}
+          {!dayExpanded && (
+            <p style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 2, color: TEXT_DIM, textTransform: 'uppercase', margin: '8px 0 0', textAlign: 'center' }}>
+              Touche un jour pour voir les exercices
+            </p>
+          )}
+
+          <button
+            onClick={() => startProgramWorkout({ day_name: 'Séance libre' }, [])}
+            style={{
+              width: '100%', padding: 12, borderRadius: 12, marginTop: 10,
+              background: 'transparent',
+              border: `1px solid ${GOLD_RULE}`,
+              color: GOLD, cursor: 'pointer',
+              fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 2,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            }}
+          >
+            + SÉANCE LIBRE
+          </button>
         </div>
       )}
 
@@ -852,23 +830,6 @@ export default function TrainingTab({
         onFinish={handleFinishWithCheck}
         fmtElapsed={fmtElapsed}
       />
-
-      {/* ── SÉANCE LIBRE ── */}
-      <div style={{ padding: '0 16px', marginBottom: 16 }}>
-        <button
-          onClick={() => startProgramWorkout({ day_name: 'Séance libre' }, [])}
-          style={{
-            width: '100%', padding: 14, borderRadius: 14,
-            background: 'transparent',
-            border: `1.5px solid ${GOLD_RULE}`,
-            color: GOLD, cursor: 'pointer',
-            fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
-          + SÉANCE LIBRE
-        </button>
-      </div>
 
       {/* ── NO COACH PROGRAM → show custom programs ── */}
       {!coachProgram ? (
@@ -917,16 +878,6 @@ export default function TrainingTab({
         </div>
       ) : (
         <>
-          {/* ── Collapsed state: tap a day to see exercises ── */}
-          {!dayExpanded && (
-            <div style={{ padding: '0 16px', marginBottom: 16 }}>
-              <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '24px 20px', textAlign: 'center' }}>
-                <Dumbbell size={24} color={GOLD} style={{ marginBottom: 8, opacity: 0.5 }} />
-                <p style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: TEXT_MUTED, margin: 0, letterSpacing: 1 }}>Touche un jour pour voir les exercices</p>
-              </div>
-            </div>
-          )}
-
           {/* ── REST DAY ── */}
           {dayExpanded && trainingDayData?.repos ? (
             <TrainingRestDay />
