@@ -303,12 +303,9 @@ export default function CoachApp() {
           <button onClick={() => h.setActiveTab('home')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: '4px 12px', position: 'relative', zIndex: 3, cursor: 'pointer' }}>
             <img src="/logo-moovx.png" alt="MoovX" style={{ height: 32, width: 'auto', objectFit: 'contain', borderRadius: 6 }} />
           </button>
-          {/* Right: Progress + Profil */}
+          {/* Right: Profil */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3 }}>
-            <button onClick={() => h.setActiveTab('progress')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'progress' ? GOLD_DIM : 'transparent', border: h.activeTab === 'progress' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
-              <TrendingUp size={19} color={h.activeTab === 'progress' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
-            </button>
-            <button onClick={() => h.setActiveTab('profil')} style={{ width: 34, height: 34, borderRadius: '50%', border: h.activeTab === 'profil' ? `1.5px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: h.activeTab === 'profil' ? GOLD_DIM : 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s', padding: 0, marginLeft: 2 }}>
+            <button onClick={() => h.setActiveTab('profil')} style={{ width: 34, height: 34, borderRadius: '50%', border: h.activeTab === 'profil' ? `1.5px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: h.activeTab === 'profil' ? GOLD_DIM : 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s', padding: 0 }}>
               <User size={16} color={h.activeTab === 'profil' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
             </button>
           </div>
@@ -354,11 +351,12 @@ export default function CoachApp() {
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
       {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 14px', paddingBottom: 'calc(env(safe-area-inset-bottom, 20px) + 12px)', zIndex: 999 }}>
-        <div className="liquid-glass-nav" style={{ display: 'flex', justifyContent: 'center', gap: 40, padding: '10px 20px', borderRadius: 18 }}>
+        <div className="liquid-glass-nav" style={{ display: 'flex', justifyContent: 'center', gap: 24, padding: '10px 16px', borderRadius: 18 }}>
         {([
           { id: 'home' as Tab, Icon: Home, label: 'Home' },
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
           { id: 'nutrition' as Tab, Icon: UtensilsCrossed, label: 'Nutrition' },
+          { id: 'progress' as Tab, Icon: TrendingUp, label: 'Analytics' },
         ]).map(({ id, Icon, label }) => {
           const active = h.activeTab === id
           return (
