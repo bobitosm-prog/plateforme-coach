@@ -56,7 +56,8 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
           const daySessions = sessions.filter(s => s.scheduled_date === dateStr)
           const mainSession = daySessions.find(s => !['hiit', 'liss'].includes(s.session_type)) || daySessions[0]
           const allCompleted = daySessions.length > 0 && daySessions.every(s => s.completed)
-          const isPast = date < today && !isSameDay(date, today)
+          const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+          const isPast = date < startOfToday
           const isRest = !mainSession || mainSession.session_type === 'rest'
           const missed = isPast && daySessions.length > 0 && !allCompleted && !isRest
           const isFuture = date > today && !isToday

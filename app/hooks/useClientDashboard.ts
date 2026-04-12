@@ -251,6 +251,10 @@ export default function useClientDashboard() {
       })
       if (setsToInsert.length > 0) await supabase.from('workout_sets').insert(setsToInsert)
     }
+    // Mark today's scheduled session as completed
+    const todayStr = new Date().toISOString().split('T')[0]
+    await supabase.from('scheduled_sessions').update({ completed: true, completed_at: new Date().toISOString() })
+      .eq('user_id', session.user.id).eq('scheduled_date', todayStr).eq('completed', false)
     // Update last_workout_at
     await supabase.from('profiles').update({ last_workout_at: new Date().toISOString() }).eq('id', session.user.id)
     toast.success('Séance terminée ! Bien joué 💪')
