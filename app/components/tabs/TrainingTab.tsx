@@ -57,6 +57,7 @@ export default function TrainingTab({
 }: TrainingTabProps) {
   const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
+  const [dayExpanded, setDayExpanded] = useState(false)
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
   const [setInputs, setSetInputs]       = useState<Record<string, { kg: string; reps: string }[]>>({})
   const [showExDbModal, setShowExDbModal] = useState(false)
@@ -769,9 +770,15 @@ export default function TrainingTab({
             sessions={weekSessions}
             selectedDate={calendarSelectedDate}
             onSelectDate={(d) => {
-              setCalendarSelectedDate(d)
               const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
-              setTrainingDay(dayNames[d.getDay()])
+              const newDay = dayNames[d.getDay()]
+              if (trainingDay === newDay && dayExpanded) {
+                setDayExpanded(false)
+              } else {
+                setCalendarSelectedDate(d)
+                setTrainingDay(newDay)
+                setDayExpanded(true)
+              }
             }}
             onToggleMonth={() => setShowMonthCalendar(v => !v)}
           />
@@ -784,6 +791,7 @@ export default function TrainingTab({
                   setCalendarSelectedDate(d)
                   const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
                   setTrainingDay(dayNames[d.getDay()])
+                  setDayExpanded(true)
                 }}
                 onClose={() => setShowMonthCalendar(false)}
               />
@@ -892,11 +900,21 @@ export default function TrainingTab({
         </div>
       ) : (
         <>
+          {/* ── Collapsed state: tap a day to see exercises ── */}
+          {!dayExpanded && (
+            <div style={{ padding: '0 16px', marginBottom: 16 }}>
+              <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '24px 20px', textAlign: 'center' }}>
+                <Dumbbell size={24} color={GOLD} style={{ marginBottom: 8, opacity: 0.5 }} />
+                <p style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: TEXT_MUTED, margin: 0, letterSpacing: 1 }}>Touche un jour pour voir les exercices</p>
+              </div>
+            </div>
+          )}
+
           {/* ── REST DAY ── */}
-          {trainingDayData?.repos ? (
+          {dayExpanded && trainingDayData?.repos ? (
             <TrainingRestDay />
 
-          ) : trainingExercises.length === 0 ? (
+          ) : dayExpanded && trainingExercises.length === 0 ? (
             /* ── NO EXERCISES ── */
             <div style={{ padding: '0 16px' }}>
               <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 24px', textAlign: 'center' }}>
@@ -905,11 +923,11 @@ export default function TrainingTab({
               </div>
             </div>
 
-          ) : trainingIsToday && todaySessionDone ? (
+          ) : dayExpanded && trainingIsToday && todaySessionDone ? (
             /* ── SESSION ALREADY DONE TODAY ── */
             <TrainingSessionDone todayKey={todayKey} coachProgram={coachProgram} />
 
-          ) : (
+          ) : dayExpanded ? (
             /* ══════════════ EXERCISE CARDS ══════════════ */
             <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -1041,7 +1059,7 @@ export default function TrainingTab({
 
               <div style={{ height: 8 }} />
             </div>
-          )}
+          ) : null}
         </>
       )}
 
