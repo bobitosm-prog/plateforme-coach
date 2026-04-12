@@ -288,7 +288,7 @@ export default function CoachApp() {
 
       {/* ── GLASS BAR HEADER ── */}
       <header style={{ flexShrink: 0, padding: '8px 14px' }}>
-        <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18, position: 'relative' }}>
+        <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18, position: 'relative', overflow: 'visible' }}>
           {/* Left: Coach IA + Messages — fixed width for centering */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3, minWidth: 80 }}>
             <button onClick={() => h.setActiveTab('coachIA')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'coachIA' ? GOLD_DIM : 'transparent', border: h.activeTab === 'coachIA' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
@@ -299,9 +299,17 @@ export default function CoachApp() {
               {h.unreadCount > 0 && <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: RED, border: '2px solid rgba(20,18,9,0.8)' }} />}
             </button>
           </div>
-          {/* Center: Logo Pill — absolutely centered */}
-          <button onClick={() => h.setActiveTab('home')} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 6, background: GOLD_DIM, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: '4px 12px', zIndex: 4, cursor: 'pointer' }}>
-            <img src="/logo-moovx.png" alt="MoovX" style={{ height: 32, width: 'auto', objectFit: 'contain', borderRadius: 6 }} />
+          {/* Center: Floating logo medallion — overflows navbar */}
+          <button onClick={() => h.setActiveTab('home')} style={{
+            position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 56, height: 56, borderRadius: 16,
+            background: 'rgba(13,11,8,0.9)',
+            border: `1.5px solid ${GOLD_RULE}`,
+            boxShadow: `0 4px 20px rgba(0,0,0,0.4), 0 0 20px rgba(212,168,67,0.1)`,
+            zIndex: 10, cursor: 'pointer',
+          }}>
+            <img src="/logo-moovx.png" alt="MoovX" style={{ height: 40, width: 'auto', objectFit: 'contain', borderRadius: 8 }} />
           </button>
           {/* Right: Profil — fixed width matching left for balance */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, position: 'relative', zIndex: 3, minWidth: 80 }}>
