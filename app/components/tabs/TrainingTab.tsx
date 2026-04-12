@@ -35,6 +35,7 @@ import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
 import ExerciseInfoPopup from '../ExerciseInfoPopup'
 import { useExerciseInfo } from '../../hooks/useExerciseInfo'
+import { resolveSessionType, HISTORY_FILTERS } from '../../../lib/session-types'
 
 interface TrainingTabProps {
   supabase: any
@@ -1085,49 +1086,24 @@ export default function TrainingTab({
           <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
           <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>{workoutHistory.length} seances</span>
         </div>
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
-          {[
-            { key: 'all', label: 'Tout' },
-            { key: 'push', label: 'Push', kw: ['push','pec','chest','bench','developpe couche','developpe incline'] },
-            { key: 'pull', label: 'Pull', kw: ['pull','dos','back','row','tirage','tractions'] },
-            { key: 'legs', label: 'Legs', kw: ['leg','jambe','squat','quad','hamstring','fente','mollet'] },
-            { key: 'upper', label: 'Upper', kw: ['upper','epaule','shoulder','bras','arm'] },
-          ].map(f => (
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
+          {HISTORY_FILTERS.map(f => (
             <button key={f.key} onClick={() => setHistoryFilter(f.key)} style={{ padding: '7px 14px', borderRadius: 20, whiteSpace: 'nowrap', border: historyFilter === f.key ? `1px solid ${GOLD}` : `1px solid ${GOLD_DIM}`, background: historyFilter === f.key ? GOLD_DIM : 'transparent', color: historyFilter === f.key ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>{f.label}</button>
           ))}
         </div>
         {(() => {
           const filtered = workoutHistory.filter(s => {
             if (historyFilter === 'all') return true
-            const kws = [
-              { key: 'push', kw: ['push','pec','pectoraux','poitrine','chest','bench','développé couché','developpe couche','développé incliné','developpe incline','triceps','épaule','epaule'] },
-              { key: 'pull', kw: ['pull','dos','back','row','tirage','traction','biceps','curl','rowing','dorsal'] },
-              { key: 'legs', kw: ['leg','jambe','squat','quad','quadriceps','hamstring','ischio','fente','mollet','fessier','hip thrust','presse','glute'] },
-              { key: 'upper', kw: ['upper','épaule','epaule','shoulder','bras','arm','deltoide','militaire','latéral','lateral','full body'] },
-            ].find(f => f.key === historyFilter)?.kw || []
-            const txt = ((s.name || '') + ' ' + (s.notes || '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            return kws.some(k => txt.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+            const resolved = resolveSessionType(s.name)
+            return resolved.key === historyFilter
           })
-          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: FONT_BODY, fontSize: 14, color: TEXT_DIM }}>Aucune seance</div>
+          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: FONT_BODY, fontSize: 14, color: TEXT_DIM }}>Aucune séance</div>
           return filtered.slice(0, 20).map((s: any) => {
             const d = new Date(s.created_at)
-            const nameLC = (s.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            const sessionIcon = nameLC.includes('push') || nameLC.includes('pec') || nameLC.includes('poitrine')
-              ? { emoji: '🏋️', color: '#F97316' }
-              : nameLC.includes('pull') || nameLC.includes('dos') || nameLC.includes('tirage')
-              ? { emoji: '💪', color: '#3B82F6' }
-              : nameLC.includes('leg') || nameLC.includes('jambe') || nameLC.includes('quad') || nameLC.includes('ischio')
-              ? { emoji: '🦵', color: '#22C55E' }
-              : nameLC.includes('upper') || nameLC.includes('epaule')
-              ? { emoji: '🤸', color: '#A855F7' }
-              : nameLC.includes('cardio') || nameLC.includes('hiit') || nameLC.includes('liss')
-              ? { emoji: '🏃', color: '#EF4444' }
-              : nameLC.includes('libre') || nameLC.includes('custom') || nameLC.includes('full')
-              ? { emoji: '⚡', color: GOLD }
-              : { emoji: '🏋️', color: GOLD }
+            const typeInfo = resolveSessionType(s.name)
             return (
               <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: BG_CARD, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${sessionIcon.color}15`, border: `1px solid ${sessionIcon.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{sessionIcon.emoji}</div>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{typeInfo.emoji}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || 'Séance'}</div>
                   <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>

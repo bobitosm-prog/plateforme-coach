@@ -4,6 +4,7 @@ import {
   ScheduledSession, SESSION_COLORS, SESSION_CATEGORY,
   DAY_LABELS_SHORT, getWeekDates, toDateStr, isSameDay,
 } from '../../lib/schedule-utils'
+import { resolveSessionType } from '../../lib/session-types'
 import {
   BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GREEN, RED,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -62,12 +63,13 @@ export default function WeekCalendar({ sessions, selectedDate, onSelectDate, onT
           const missed = isPast && daySessions.length > 0 && !allCompleted && !isRest
           const isFuture = date > today && !isToday
 
-          const mainColor = mainSession ? SESSION_COLORS[mainSession.session_type] : BORDER
+          const typeInfo = resolveSessionType(mainSession?.title || mainSession?.session_type)
+          const mainColor = isRest ? BORDER : typeInfo.color
 
           // Session label
           let sessionLabel = 'Repos'
           if (mainSession && mainSession.session_type !== 'rest') {
-            sessionLabel = mainSession.title || SESSION_CATEGORY[mainSession.session_type] || mainSession.session_type
+            sessionLabel = mainSession.title || typeInfo.label
           }
 
           // Badge

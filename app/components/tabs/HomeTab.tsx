@@ -7,6 +7,7 @@ import {
   Ruler, Camera, Zap, Moon, CheckCircle, Flame, Dumbbell, TrendingUp, Droplets,
 } from 'lucide-react'
 import ExercisePreview from '../ExercisePreview'
+import { resolveSessionType } from '../../../lib/session-types'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
@@ -275,7 +276,9 @@ export default function HomeTab({
   // Custom program exercises take priority over coach program
   const todayExercises = customProgramExercises || todayCoachDay?.exercises || []
   // Session title: scheduled session > custom program > coach program
-  const sessionTitle = todayScheduledSession?.title || customDayName || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
+  const rawSessionTitle = todayScheduledSession?.title || customDayName || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
+  const sessionTypeInfo = resolveSessionType(rawSessionTitle)
+  const sessionTitle = rawSessionTitle
   // Has workout today: scheduled session exists (not rest) OR custom program has exercises
   const hasWorkoutToday = !!todayScheduledSession || (customProgramExercises && customProgramExercises.length > 0)
 
