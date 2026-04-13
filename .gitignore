@@ -45,6 +45,16 @@ yarn-error.log*
 # vercel
 .vercel
 
+# playwright MCP
+.playwright-mcp/
+
+# video generation assets (raw downloads, not served by app)
+/videos/
+/output/
+/skills/
+SESSION-RESUME.md
+higgsfield-*.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
