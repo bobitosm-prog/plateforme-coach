@@ -795,13 +795,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               ):(
                 <div style={{marginBottom:20,borderRadius:14,border:`1px dashed ${BORDER}`,padding:'40px 20px',textAlign:'center',background:GOLD_DIM}}>
                   <div style={{fontSize:32,marginBottom:8}}>🎬</div>
-                  <div style={{fontFamily:FONT_ALT,fontSize:12,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>ANIMATION À VENIR</div>
+                  <div style={{fontFamily:FONT_ALT,fontSize:12,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>VIDÉO À VENIR</div>
                 </div>
               )}
-              {(exerciseInfo.description||exerciseInfo.instructions)&&(
+              {exerciseInfo.description&&(
+                <div style={{marginBottom:20}}>
+                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>DESCRIPTION</div>
+                  <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_MUTED,lineHeight:1.6}}>{exerciseInfo.description}</div>
+                </div>
+              )}
+              {exerciseInfo.instructions&&(
                 <div style={{marginBottom:20}}>
                   <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>EXÉCUTION</div>
-                  <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,lineHeight:1.6}}>{exerciseInfo.description||exerciseInfo.instructions}</div>
+                  <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,lineHeight:1.6}}>{exerciseInfo.instructions}</div>
                 </div>
               )}
               {(exerciseInfo.execution_tips||exerciseInfo.tips)&&(
@@ -809,9 +815,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>CONSEILS</div>
                   <div style={{fontFamily:FONT_BODY,fontSize:13,color:TEXT_MUTED,lineHeight:1.6,padding:'12px 14px',background:GOLD_DIM,border:`1px solid ${GOLD_RULE}`,borderRadius:12}}>{exerciseInfo.execution_tips||exerciseInfo.tips}</div>
                 </div>
-              )}
-              {!exerciseInfo.description&&!exerciseInfo.instructions&&!exerciseInfo.execution_tips&&!exerciseInfo.tips&&!exerciseInfo.gif_url&&!exerciseInfo.video_url&&(
-                <div style={{textAlign:'center',padding:'20px 0',color:TEXT_DIM,fontFamily:FONT_BODY,fontSize:14}}>Aucune information disponible.<br/>Descriptions et animations à venir.</div>
               )}
             </div>
           </div>

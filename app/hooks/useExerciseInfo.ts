@@ -8,6 +8,7 @@ export interface ExerciseInfoData {
   tips: string
   description: string
   video_url: string
+  gif_url: string
 }
 
 export function useExerciseInfo(supabase: any) {
@@ -16,10 +17,12 @@ export function useExerciseInfo(supabase: any) {
   async function loadExerciseInfo(exerciseName: string) {
     const { data } = await supabase
       .from('exercises_db')
-      .select('name, muscle_group, equipment, instructions, tips, description, video_url')
+      .select('name, muscle_group, equipment, instructions, tips, description, video_url, gif_url')
       .ilike('name', exerciseName)
       .limit(1)
       .maybeSingle()
+
+    console.log('[ExerciseInfo]', exerciseName, '→ video_url:', data?.video_url, '| gif_url:', data?.gif_url)
 
     setExerciseInfo(data || {
       name: exerciseName,
@@ -29,6 +32,7 @@ export function useExerciseInfo(supabase: any) {
       tips: '',
       description: '',
       video_url: '',
+      gif_url: '',
     })
   }
 

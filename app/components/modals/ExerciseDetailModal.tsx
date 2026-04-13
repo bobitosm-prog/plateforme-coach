@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { X, Play } from 'lucide-react'
+import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
 import {
@@ -8,8 +8,6 @@ import {
   MUSCLE_COLORS,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
-import ExercisePreview from '../ExercisePreview'
-import { getExerciseImage } from '../../../lib/exercise-media'
 
 interface ExerciseDetailModalProps {
   exercise: any | null
@@ -81,24 +79,21 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
               </button>
             </div>
 
-            {/* Video or preview */}
+            {/* Media: video > gif > placeholder */}
             {exercise.video_url ? (
               <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE }}>
-                <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block' }} src={`${exercise.video_url}?v=2`} />
+                <video src={`${exercise.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: 'auto', display: 'block' }} />
               </div>
-            ) : (() => {
-              const imgUrl = getExerciseImage(exercise.name)
-              return imgUrl ? (
-                <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
-                  <ExercisePreview name={exercise.name} size={200} animate={true} />
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: BG_BASE, borderRadius: RADIUS_CARD, padding: '28px 16px', marginBottom: 18, border: `1px solid ${BORDER}` }}>
-                  <span style={{ fontSize: '1.8rem' }}>💪</span>
-                  <span style={{ fontSize: '0.82rem', color: TEXT_MUTED, fontWeight: 500, fontFamily: FONT_BODY }}>Vidéo bientôt disponible</span>
-                </div>
-              )
-            })()}
+            ) : exercise.gif_url ? (
+              <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}` }}>
+                <img src={exercise.gif_url} alt={exercise.name} style={{ width: '100%', height: 'auto', display: 'block' }} />
+              </div>
+            ) : (
+              <div style={{ borderRadius: RADIUS_CARD, border: `1px dashed ${BORDER}`, padding: '40px 20px', textAlign: 'center', background: GOLD_DIM, marginBottom: 18 }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🎬</div>
+                <div style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1 }}>VIDÉO À VENIR</div>
+              </div>
+            )}
 
             {/* Tags */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
@@ -118,6 +113,14 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
               <div style={{ marginBottom: 18 }}>
                 <div style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', color: GOLD, letterSpacing: '2px', marginBottom: 6, fontFamily: FONT_ALT }}>Description</div>
                 <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, lineHeight: 1.65, margin: 0, fontFamily: FONT_BODY }}>{exercise.description}</p>
+              </div>
+            )}
+
+            {/* Instructions */}
+            {exercise.instructions && (
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', color: GOLD, letterSpacing: '2px', marginBottom: 6, fontFamily: FONT_ALT }}>Exécution</div>
+                <p style={{ fontSize: '0.85rem', color: TEXT_PRIMARY, lineHeight: 1.65, margin: 0, fontFamily: FONT_BODY }}>{exercise.instructions}</p>
               </div>
             )}
 
@@ -156,15 +159,6 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
                 </div>
               ))}
             </div>
-
-            {/* Video link */}
-            {exercise.video_url && (
-              <a href={exercise.video_url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: GOLD, fontSize: '0.82rem', fontWeight: 700, marginBottom: 16, textDecoration: 'none', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                <Play size={15} fill={GOLD} color={GOLD} />
-                Ouvrir la video en plein ecran
-              </a>
-            )}
           </div>
 
           {/* Sticky bottom buttons */}
