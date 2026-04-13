@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { X, Search, Dumbbell, Play } from 'lucide-react'
+import { X, Search, Dumbbell } from 'lucide-react'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -123,8 +123,16 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                     <motion.button
                       key={ex.id}
                       whileTap={{ scale: 0.96 }}
-                      onClick={() => {
-                        setSelectedExDb(ex)
+                      onClick={async () => {
+                        let selected = { ...ex }
+                        // If no video_url but has variant_group, try siblings
+                        if (!selected.video_url && selected.variant_group) {
+                          const { data: sibling } = await supabase.from('exercises_db')
+                            .select('video_url').eq('variant_group', selected.variant_group)
+                            .not('video_url', 'is', null).limit(1).maybeSingle()
+                          if (sibling?.video_url) selected.video_url = sibling.video_url
+                        }
+                        setSelectedExDb(selected)
                         setExDbAddSets('3')
                         setExDbAddReps(ex.reps ? String(ex.reps) : '10')
                         setExDbAddRest(ex.rest ? String(ex.rest) : '60')
@@ -226,13 +234,16 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                 <p style={{ fontSize: '0.85rem', color: TEXT_MUTED, lineHeight: 1.65, marginBottom: 20, fontFamily: FONT_BODY }}>{selectedExDb.description}</p>
               )}
 
-              {/* Video link */}
-              {selectedExDb.video_url && (
-                <a href={selectedExDb.video_url} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: GOLD, fontSize: '0.82rem', fontWeight: 700, marginBottom: 22, textDecoration: 'none', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  <Play size={15} fill={GOLD} color={GOLD} />
-                  Voir la video demo
-                </a>
+              {/* Video or placeholder */}
+              {selectedExDb.video_url ? (
+                <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 20, background: '#0a0a0a' }}>
+                  <video src={`${selectedExDb.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: 'auto', display: 'block' }} />
+                </div>
+              ) : (
+                <div style={{ borderRadius: 12, border: `1px dashed ${BORDER}`, padding: '32px 20px', textAlign: 'center', background: '#0a0a0a', marginBottom: 20 }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>🎬</div>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1 }}>VIDÉO À VENIR</div>
+                </div>
               )}
 
               {/* Editable sets/reps/rest */}
