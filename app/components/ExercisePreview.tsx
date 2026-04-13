@@ -6,9 +6,10 @@ interface Props {
   name: string
   size?: number
   animate?: boolean
+  imageUrl?: string
 }
 
-export default function ExercisePreview({ name, size = 56, animate = true }: Props) {
+export default function ExercisePreview({ name, size = 56, animate = true, imageUrl }: Props) {
   const [showEnd, setShowEnd] = useState(false)
   const [error, setError] = useState(false)
   const images = getExerciseImages(name)
@@ -19,7 +20,10 @@ export default function ExercisePreview({ name, size = 56, animate = true }: Pro
     return () => clearInterval(id)
   }, [animate, images.start, images.end])
 
-  if (!images.start || error) {
+  // Priority: imageUrl prop > GitHub images > fallback icon
+  const src = imageUrl || (showEnd && images.end ? images.end : images.start)
+
+  if (!src || (error && !imageUrl)) {
     return (
       <div style={{
         width: size, height: size, background: '#141310', border: '1px solid #3D3B38',
@@ -34,7 +38,7 @@ export default function ExercisePreview({ name, size = 56, animate = true }: Pro
 
   return (
     <img
-      src={showEnd && images.end ? images.end : images.start}
+      src={src}
       alt={name}
       onError={() => setError(true)}
       loading="lazy"

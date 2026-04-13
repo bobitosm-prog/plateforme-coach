@@ -122,7 +122,10 @@ export default function TrainingTab({
   })()
   const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
   const baseExercises: any[] = trainingDayData?.exercises || []
-  const trainingExercises: any[] = [...baseExercises, ...addedExercises]
+  const trainingExercises: any[] = [...baseExercises, ...addedExercises].map((ex: any) => {
+    const dbMatch = exercisesCache.find((d: any) => d.name?.toLowerCase() === ex.name?.toLowerCase())
+    return dbMatch?.gif_url ? { ...ex, gif_url: dbMatch.gif_url } : ex
+  })
 
   const trainingTotalSets = trainingExercises.reduce((s: number, ex: any) => {
     const key = `moovx-sets-${todayStr}-${ex.name}`

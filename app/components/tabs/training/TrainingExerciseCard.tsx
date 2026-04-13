@@ -101,8 +101,8 @@ export default function TrainingExerciseCard({
       {/* ── Card Header ── */}
       <div style={{ padding: '14px 14px 10px', borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          {/* Exercise image */}
-          <ExercisePreview name={ex.name} size={48} animate={false} />
+          {/* Exercise image — gif_url takes priority over GitHub images */}
+          <ExercisePreview name={ex.name} size={48} animate={false} imageUrl={ex.gif_url} />
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Exercise name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
