@@ -390,10 +390,17 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     setVariantPopup({ exIdx, variants, originalName: exo.name })
   }
   async function openExerciseInfo(exo: Exo) {
-    const { data } = await supabase.from('exercises_db')
+    // Try exact match first, then fuzzy
+    let { data } = await supabase.from('exercises_db')
       .select('name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url')
       .ilike('name', exo.name).limit(1).maybeSingle()
-    console.log('[ExerciseInfo]', exo.name, '→ video_url:', data?.video_url, '| gif_url:', data?.gif_url)
+    if (!data) {
+      const fuzzy = await supabase.from('exercises_db')
+        .select('name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url')
+        .ilike('name', `%${exo.name}%`).limit(1).maybeSingle()
+      data = fuzzy.data
+    }
+    console.log('[ExerciseInfo]', exo.name, '→ video_url:', data?.video_url, '| gif_url:', data?.gif_url, '| matched:', data?.name)
     setExerciseInfo(data || { name: exo.name })
   }
   function selectSessionVariant(v: any) {
