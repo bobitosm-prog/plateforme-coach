@@ -1,9 +1,11 @@
 'use client'
 import {
-  BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
+import ExercisePreview from './ExercisePreview'
+import { getExerciseImage } from '../../lib/exercise-media'
 
 interface ExerciseInfo {
   name: string
@@ -11,6 +13,8 @@ interface ExerciseInfo {
   equipment: string
   instructions: string
   tips: string
+  description?: string
+  video_url?: string
 }
 
 interface ExerciseInfoPopupProps {
@@ -77,6 +81,32 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
 
         {/* Body */}
         <div style={{ padding: '20px 24px', overflowY: 'auto', maxHeight: 'calc(80vh - 140px)' }}>
+          {/* Video or animated preview */}
+          {info.video_url ? (
+            <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE }}>
+              <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block' }} src={info.video_url} />
+            </div>
+          ) : getExerciseImage(info.name) ? (
+            <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+              <ExercisePreview name={info.name} size={200} animate={true} />
+            </div>
+          ) : null}
+
+          {/* Description */}
+          {info.description && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{
+                fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
+                letterSpacing: 2, color: GOLD, marginBottom: 10,
+                textTransform: 'uppercase',
+              }}>DESCRIPTION</div>
+              <p style={{
+                fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED,
+                lineHeight: 1.7, margin: 0, fontWeight: 300,
+              }}>{info.description}</p>
+            </div>
+          )}
+
           {info.instructions && (
             <div style={{ marginBottom: 20 }}>
               <div style={{
@@ -109,7 +139,7 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
             </div>
           )}
 
-          {!info.instructions && !info.tips && (
+          {!info.instructions && !info.tips && !info.description && !info.video_url && (
             <div style={{ textAlign: 'center', padding: '20px 0', color: TEXT_DIM, fontFamily: FONT_BODY }}>
               Instructions non disponibles
             </div>
