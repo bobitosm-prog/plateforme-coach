@@ -783,7 +783,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               <button onClick={()=>setExerciseInfo(null)} style={{width:36,height:36,borderRadius:12,background:GOLD_DIM,border:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:TEXT_MUTED,fontSize:16}}>✕</button>
             </div>
             <div style={{flex:1,overflowY:'auto',padding:'16px 20px 32px',WebkitOverflowScrolling:'touch' as any}}>
-              {exerciseInfo.gif_url?(
+              {exerciseInfo.video_url?(
+                <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
+                  <video src={exerciseInfo.video_url} autoPlay loop muted playsInline style={{width:'100%',height:'auto',display:'block'}}/>
+                </div>
+              ):exerciseInfo.gif_url?(
                 <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
                   <img src={exerciseInfo.gif_url} alt={exerciseInfo.name} style={{width:'100%',height:'auto',display:'block'}}/>
                 </div>
@@ -791,11 +795,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 <div style={{marginBottom:20,borderRadius:14,border:`1px dashed ${BORDER}`,padding:'40px 20px',textAlign:'center',background:GOLD_DIM}}>
                   <div style={{fontSize:32,marginBottom:8}}>🎬</div>
                   <div style={{fontFamily:FONT_ALT,fontSize:12,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>ANIMATION À VENIR</div>
-                </div>
-              )}
-              {exerciseInfo.video_url&&(
-                <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
-                  <video src={exerciseInfo.video_url} controls playsInline style={{width:'100%',height:'auto',display:'block'}}/>
                 </div>
               )}
               {(exerciseInfo.description||exerciseInfo.instructions)&&(
