@@ -299,15 +299,16 @@ export default function HomeTab({
     <div style={{ background: BG_BASE, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
-      {/* ═══ GREETING ═══ */}
+      {/* ═══ GREETING — Stitch style ═══ */}
       <div style={{ padding: '8px 24px 0' }}>
-        <p style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 3, textTransform: 'uppercase', margin: '0 0 4px' }}>
-          {format(new Date(), 'EEEE d MMMM', { locale: fr })}
-        </p>
-        <h1 style={{ fontFamily: FONT_DISPLAY, margin: '0 0 8px', lineHeight: 1, letterSpacing: '2px' }}>
-          <span style={{ fontSize: 30, color: TEXT_PRIMARY }}>BONJOUR, </span>
-          <span style={{ fontSize: 30, color: GOLD }}>{firstName.toUpperCase()}</span>
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${GOLD}20`, flexShrink: 0 }}>
+            {displayAvatar ? <img src={displayAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: BG_CARD_2 }} />}
+          </div>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 15, color: TEXT_PRIMARY, letterSpacing: '-0.02em' }}>
+            Bonjour, {firstName}
+          </span>
+        </div>
         <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontStyle: 'italic', color: TEXT_MUTED, lineHeight: 1.5, paddingLeft: 12, borderLeft: `2px solid ${GOLD_RULE}` }}>
           &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
         </div>
@@ -315,42 +316,95 @@ export default function HomeTab({
 
       <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* ═══ HERO CARD — Ring + Stats side by side ═══ */}
-        <div className="liquid-glass-strong" style={{ borderRadius: 20, padding: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* Compact Ring 110px */}
-            <div style={{ position: 'relative', width: 110, height: 110, flexShrink: 0 }}>
-              <div style={{ position: 'absolute', top: '50%', left: '50%', width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,67,0.07) 0%, transparent 70%)', transform: 'translate(-50%, -50%)' }} />
-              <svg viewBox="0 0 140 140" width={110} height={110} style={{ filter: 'drop-shadow(0 0 10px rgba(212,168,67,0.12))', position: 'relative', zIndex: 1 }}>
+        {/* ═══ HERO DIORAMA — Stitch floating stats ═══ */}
+        <div style={{ position: 'relative', width: '100%', height: 280, background: '#0e0e0e', borderRadius: 24, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+          {/* Background bar chart faint */}
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.08, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '0 32px 16px' }}>
+            {[40, 60, 35, 80, 50].map((h, i) => <div key={i} style={{ width: 24, height: `${h}%`, background: GOLD, borderRadius: '8px 8px 0 0' }} />)}
+          </div>
+          {/* Calorie ring center */}
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ position: 'relative', width: 120, height: 120 }}>
+              <svg viewBox="0 0 140 140" width={120} height={120} style={{ filter: 'drop-shadow(0 0 10px rgba(212,168,67,0.12))', transform: 'rotate(-90deg)' }}>
                 <defs>
                   <linearGradient id="heroGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#E8C97A" /><stop offset="40%" stopColor="#D4A843" /><stop offset="70%" stopColor="#C9A84C" /><stop offset="100%" stopColor="#8B6914" />
+                    <stop offset="0%" stopColor="#e6c364" /><stop offset="100%" stopColor="#c9a84c" />
                   </linearGradient>
-                  <filter id="heroGlow"><feGaussianBlur stdDeviation="2" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
-                <circle cx="70" cy="70" r="56" fill="none" stroke="rgba(212,168,67,0.1)" strokeWidth="7" />
-                <circle cx="70" cy="70" r="56" fill="none" stroke="url(#heroGold)" strokeWidth="7" strokeLinecap="round" filter="url(#heroGlow)" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - calPct / 100)} transform="rotate(-90 70 70)" style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
-                <text x="70" y="64" textAnchor="middle" fill={GOLD} fontSize="30" fontFamily={FONT_DISPLAY} letterSpacing="1">{consumedKcal}</text>
-                <text x="70" y="80" textAnchor="middle" fill={TEXT_MUTED} fontSize="9" fontFamily={FONT_ALT} fontWeight="700" letterSpacing="2">KCAL</text>
+                <circle cx="70" cy="70" r="56" fill="none" stroke="#2a2a2a" strokeWidth="6" />
+                <circle cx="70" cy="70" r="56" fill="none" stroke="url(#heroGold)" strokeWidth="6" strokeLinecap="round" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - calPct / 100)} style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
               </svg>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY }}>{consumedKcal}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>kcal</span>
+              </div>
             </div>
-            {/* Stats grid 2x2 */}
-            <div style={{ flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {[
-                { icon: <Flame size={14} color={GOLD} />, value: consumedKcal, label: 'Kcal' },
-                { icon: <Dumbbell size={14} color={GOLD} />, value: weekSessions, label: 'Seances' },
-                { icon: <TrendingUp size={14} color={GOLD} />, value: `+${streak}`, label: 'Streak' },
-                { icon: <Droplets size={14} color={GOLD} />, value: `${(waterToday / 1000).toFixed(1)}L`, label: 'Eau' },
-              ].map((stat, i) => (
-                <div key={i} style={{ background: BG_CARD_2, border: `1px solid ${GOLD_DIM}`, borderRadius: 10, padding: '8px 8px', display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{stat.icon}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: GOLD, lineHeight: 1 }}>{stat.value}</div>
-                    <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 1, color: TEXT_MUTED, textTransform: 'uppercase' }}>{stat.label}</div>
-                  </div>
-                </div>
+          </div>
+          {/* Floating stat: Daily Burn — top left */}
+          <div style={{ position: 'absolute', top: 20, left: 20, padding: '12px 16px', background: 'rgba(32,31,31,0.6)', backdropFilter: 'blur(24px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 30px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Flame size={12} color={GOLD} />
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>Objectif</span>
+            </div>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>
+              {calorieGoal} <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED }}>kcal</span>
+            </div>
+          </div>
+          {/* Floating stat: Volume — bottom right */}
+          <div style={{ position: 'absolute', bottom: 36, right: 20, padding: '12px 16px', background: 'rgba(32,31,31,0.6)', backdropFilter: 'blur(24px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 30px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Dumbbell size={12} color={GOLD} />
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>Volume</span>
+            </div>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>
+              {weekSessions} <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED }}>séances</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ BENTO STATS — Active Energy + Hydration ═══ */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {/* Active Energy */}
+          <div style={{ background: '#201f1f', borderRadius: 20, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1' }}>
+            <div>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>Énergie</span>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>{calPct}%</div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Zap size={40} color={GOLD} fill={GOLD} opacity={0.6} />
+            </div>
+          </div>
+          {/* Hydration */}
+          <div style={{ background: '#201f1f', borderRadius: 20, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1' }}>
+            <div>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>Hydratation</span>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>
+                {(waterToday / 1000).toFixed(1)} <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_MUTED }}>L</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 48 }}>
+              {[60, 80, 40, 95, 20].map((h, i) => (
+                <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '4px 4px 0 0', background: i === 3 ? `linear-gradient(180deg, ${GOLD}, #c9a84c)` : '#2a2a2a', transition: 'height 0.5s ease' }} />
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* ═══ STREAK CARD — Stitch "ON FIRE" ═══ */}
+        <div style={{ background: '#2a2a2a', borderRadius: 20, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden', position: 'relative' }}>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: GOLD, textTransform: 'uppercase' }}>On Fire</span>
+            </div>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 30, fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '-0.02em' }}>
+              {streak} JOUR{streak > 1 ? 'S' : ''} STREAK
+            </div>
+            <p style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 6, maxWidth: 200, lineHeight: 1.4 }}>
+              Continue pour débloquer le badge &ldquo;Titan&rdquo;.
+            </p>
+          </div>
+          <div style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '33%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
+            <Flame size={100} color={GOLD} />
           </div>
         </div>
 
@@ -477,17 +531,26 @@ export default function HomeTab({
           </div>
         </div>
 
-        {/* ═══ PERFORMANCE HEBDO ═══ */}
-        <div className="liquid-glass" style={{ borderRadius: 16, padding: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, color: TEXT_PRIMARY }}>PERFORMANCE HEBDO</span>
-            <button onClick={() => setActiveTab('progress')} style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: GOLD, textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}>Voir tout</button>
+        {/* ═══ PERFORMANCE HEBDO — Stitch bar chart ═══ */}
+        <div style={{ background: '#1c1b1b', borderRadius: 20, padding: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 15, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>Performance</span>
+            <button onClick={() => setActiveTab('progress')} style={{ fontSize: 11, fontWeight: 700, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Semaine</button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 60 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 8 }}>
             {barData.map((b, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: '100%', height: Math.max(4, (b.value / barMax) * 55), borderRadius: '4px 4px 0 0', background: b.isToday ? TEXT_DIM : b.value > 40 ? 'linear-gradient(180deg, #E8C97A, #D4A843)' : GOLD, opacity: b.value < 10 && b.value > 0 ? 0.5 : b.value === 0 ? 0.15 : 1, transition: 'height 0.5s ease' }} />
-                <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 600, letterSpacing: 1, color: b.isToday ? GOLD : TEXT_DIM }}>{b.label}</span>
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  width: '100%',
+                  height: Math.max(8, (b.value / barMax) * 90),
+                  borderRadius: 999,
+                  background: b.isToday
+                    ? `linear-gradient(180deg, ${GOLD}, #c9a84c)`
+                    : '#353534',
+                  boxShadow: b.isToday ? '0 0 20px rgba(230,195,100,0.2)' : 'none',
+                  transition: 'height 0.5s ease',
+                }} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: b.isToday ? GOLD : TEXT_MUTED }}>{b.label}</span>
               </div>
             ))}
           </div>
