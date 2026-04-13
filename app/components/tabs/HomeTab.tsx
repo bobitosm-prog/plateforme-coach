@@ -9,8 +9,7 @@ import {
 import ExercisePreview from '../ExercisePreview'
 import { resolveSessionType } from '../../../lib/session-types'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  GOLD, TEXT_PRIMARY, TEXT_MUTED,
   todayNutritionKey,
 } from '../../../lib/design-tokens'
 import SwissBadge from '../ui/SwissBadge'
@@ -296,20 +295,20 @@ export default function HomeTab({
     : profile?.objective === 'mass' || profile?.objective === 'bulk' ? 'bulk' : 'maintain'
 
   return (
-    <div style={{ background: BG_BASE, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
+    <div style={{ background: '#131313', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
       {/* ═══ GREETING — Stitch style ═══ */}
       <div style={{ padding: '8px 24px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${GOLD}20`, flexShrink: 0 }}>
-            {displayAvatar ? <img src={displayAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: BG_CARD_2 }} />}
+          <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: `2px solid #e6c36420`, flexShrink: 0 }}>
+            {displayAvatar ? <img src={displayAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: '#1c1b1b' }} />}
           </div>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 15, color: TEXT_PRIMARY, letterSpacing: '-0.02em' }}>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 15, color: '#e5e2e1', letterSpacing: '-0.02em' }}>
             Bonjour, {firstName}
           </span>
         </div>
-        <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontStyle: 'italic', color: TEXT_MUTED, lineHeight: 1.5, paddingLeft: 12, borderLeft: `2px solid ${GOLD_RULE}` }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontStyle: 'italic', color: '#d0c5b2', lineHeight: 1.5, paddingLeft: 12, borderLeft: '2px solid rgba(201,168,76,0.25)' }}>
           &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
         </div>
       </div>
@@ -410,26 +409,26 @@ export default function HomeTab({
 
         {/* ═══ WEIGHT + OBJECTIVE CARD ═══ */}
         {currentWeight && (
-          <div className="liquid-glass" style={{ borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 3, color: GOLD, textTransform: 'uppercase', marginBottom: 4 }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: 3, color: '#e6c364', textTransform: 'uppercase', marginBottom: 4 }}>
                 {objLabel === 'bulk' && '\u{1F4AA} PRISE DE MASSE'}
                 {objLabel === 'cut' && '\u{1F525} SECHE'}
                 {objLabel === 'maintain' && '\u2696\uFE0F MAINTIEN'}
               </div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, lineHeight: 1 }}>
-                {currentWeight} <span style={{ fontSize: 16, color: TEXT_MUTED }}>KG</span>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: '#e5e2e1', lineHeight: 1 }}>
+                {currentWeight} <span style={{ fontSize: 16, color: '#d0c5b2' }}>KG</span>
               </div>
             </div>
             {goalWeight && (
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase', marginBottom: 4 }}>OBJECTIF</div>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: GOLD, lineHeight: 1 }}>
-                  {goalWeight} <span style={{ fontSize: 14, color: TEXT_MUTED }}>KG</span>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: 2, color: '#d0c5b2', textTransform: 'uppercase', marginBottom: 4 }}>OBJECTIF</div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, color: '#e6c364', lineHeight: 1 }}>
+                  {goalWeight} <span style={{ fontSize: 14, color: '#d0c5b2' }}>KG</span>
                 </div>
               </div>
             )}
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: objLabel === 'bulk' ? GOLD : objLabel === 'cut' ? GOLD : GREEN }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, color: objLabel === 'bulk' ? '#e6c364' : objLabel === 'cut' ? '#e6c364' : '#4ade80' }}>
               {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}
             </div>
           </div>
@@ -441,15 +440,15 @@ export default function HomeTab({
           const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
           const title = getLevelTitle(level)
           return (
-            <div className="liquid-glass" style={{ borderRadius: 14, padding: '14px 16px' }}>
+            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '14px 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GOLD }}>LV.{level}</span>
-                  <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>{title}</span>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, color: '#e6c364' }}>LV.{level}</span>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#d0c5b2', textTransform: 'uppercase' }}>{title}</span>
                 </div>
-                <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{xpInLevel} / {xpForNext} XP</span>
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2' }}>{xpInLevel} / {xpForNext} XP</span>
               </div>
-              <div style={{ width: '100%', height: 6, borderRadius: 3, background: BG_CARD_2, overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: 6, borderRadius: 3, background: '#1c1b1b', overflow: 'hidden' }}>
                 <div style={{ width: `${progress * 100}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #D4A843, #E8C97A)', transition: 'width 1s ease' }} />
               </div>
             </div>
@@ -457,73 +456,73 @@ export default function HomeTab({
         })()}
 
         {/* ═══ COACH BANNER ═══ */}
-        <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: `1px solid ${BORDER}`, cursor: 'pointer' }}>
+        <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(201,168,76,0.15)', cursor: 'pointer' }}>
           <img src="/images/hero-coaching.webp" alt="Coaching personnalise" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.92) 0%, rgba(13,11,8,0.5) 50%, rgba(13,11,8,0.15) 100%)' }} />
           <div style={{ position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)' }}>
-            <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 3, color: GOLD, textTransform: 'uppercase', marginBottom: 3 }}>Coaching personnel</div>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY, lineHeight: 1.15 }}>VOTRE COACH<br />VOUS ACCOMPAGNE</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: 3, color: '#e6c364', textTransform: 'uppercase', marginBottom: 3 }}>Coaching personnel</div>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, letterSpacing: 2, color: '#e5e2e1', lineHeight: 1.15 }}>VOTRE COACH<br />VOUS ACCOMPAGNE</div>
           </div>
         </div>
 
         {/* ═══ PROGRAMME — Title with line ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: -4 }}>
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 3, color: TEXT_PRIMARY }}>PROGRAMME</span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, letterSpacing: 3, color: '#e5e2e1' }}>PROGRAMME</span>
           <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
-          <button onClick={() => setActiveTab('training')} style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: GOLD, textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}>Voir tout</button>
+          <button onClick={() => setActiveTab('training')} style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#e6c364', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}>Voir tout</button>
         </div>
 
         {/* ═══ SÉANCE DU JOUR ═══ */}
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, position: 'relative', overflow: 'hidden' }}>
           {/* Background image overlay */}
           <div style={{ height: todayExercises.length > 0 && !todaySession ? 160 : 0, position: 'relative', overflow: 'hidden' }}>
             {todayExercises.length > 0 && !todaySession && (
               <>
-                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 0%, ${BG_CARD} 100%)`, zIndex: 1 }} />
-                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%)` }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, #0e0e0e 100%)', zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%)' }} />
                 <img src="/images/stitch-gym.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'grayscale(100%)' }} />
               </>
             )}
-            <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, background: GOLD, padding: '4px 12px' }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700, color: '#0D0B08', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Séance du jour</span>
+            <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, background: '#e6c364', padding: '4px 12px' }}>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, color: '#0D0B08', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Séance du jour</span>
             </div>
           </div>
           <div style={{ padding: '16px 20px 20px' }}>
             {!coachProgram && !customProgramExercises && !todayScheduledSession ? (
-              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#d0c5b2', margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
             ) : !hasWorkoutToday && (customDayName === 'Repos' || todayCoachDay?.repos) ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Moon size={24} color={TEXT_MUTED} />
+                <Moon size={24} color={'#d0c5b2'} />
                 <div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: '1px' }}>JOUR DE REPOS</div>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>Récupère bien, étirements bienvenus</div>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 24, color: '#e5e2e1', letterSpacing: '1px' }}>JOUR DE REPOS</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#d0c5b2' }}>Récupère bien, étirements bienvenus</div>
                 </div>
               </div>
             ) : !todayExercises.length ? (
-              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0 }}>Aucun exercice prévu.</p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#d0c5b2', margin: 0 }}>Aucun exercice prévu.</p>
             ) : todaySession ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <CheckCircle size={32} color={GREEN} style={{ flexShrink: 0 }} />
+                <CheckCircle size={32} color={'#4ade80'} style={{ flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GREEN, letterSpacing: '1px' }}>SÉANCE TERMINÉE</div>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginTop: 2 }}>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, color: '#4ade80', letterSpacing: '1px' }}>SÉANCE TERMINÉE</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#d0c5b2', marginTop: 2 }}>
                     {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
                   </div>
                 </div>
               </div>
             ) : (
               <>
-                <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 28, color: TEXT_PRIMARY, letterSpacing: '1px', lineHeight: 1, margin: '0 0 8px' }}>
+                <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, color: '#e5e2e1', letterSpacing: '1px', lineHeight: 1, margin: '0 0 8px' }}>
                   {sessionTitle.toUpperCase()}
                 </h3>
-                <div style={{ display: 'flex', gap: 16, fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
+                <div style={{ display: 'flex', gap: 16, fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
                   <span>{todayExercises.length} exercices</span>
                   <span>·</span>
                   <span>~45 min</span>
                 </div>
                 <button
                   onClick={() => startProgramWorkout({ day_name: sessionTitle || todayKey, name: sessionTitle || todayKey }, todayExercises)}
-                  style={{ width: '100%', background: GOLD, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
+                  style={{ width: '100%', background: '#e6c364', color: '#0D0B08', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
                   COMMENCER
                 </button>
               </>
@@ -565,13 +564,13 @@ export default function HomeTab({
           const filledGlasses = Math.floor(waterL / glassSize)
           const partialFill = (waterL % glassSize) / glassSize
           return (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: '16px 18px' }}>
+            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '16px 18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                 <div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 3, color: TEXT_PRIMARY }}>HYDRATATION</div>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 600, letterSpacing: 2, color: TEXT_MUTED }}>OBJECTIF : {waterGoal}L</div>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, letterSpacing: 3, color: '#e5e2e1' }}>HYDRATATION</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: 2, color: '#d0c5b2' }}>OBJECTIF : {waterGoal}L</div>
                 </div>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: GOLD, lineHeight: 1 }}>{waterL.toFixed(1)}L</div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: '#e6c364', lineHeight: 1 }}>{waterL.toFixed(1)}L</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
                 <div style={{ display: 'flex', gap: 5, flex: 1, flexWrap: 'wrap' }}>
@@ -579,14 +578,14 @@ export default function HomeTab({
                     const filled = i < filledGlasses
                     const isPartial = i === filledGlasses && partialFill > 0
                     return (
-                      <div key={i} style={{ width: 28, height: 28, borderRadius: 6, position: 'relative', overflow: 'hidden', background: filled ? 'linear-gradient(180deg, #E8C97A, #D4A843, #B8922F)' : BG_CARD_2, border: filled ? '1px solid rgba(232,201,122,0.4)' : `1px solid ${GOLD_DIM}`, transition: 'all 0.4s ease', boxShadow: filled ? '0 0 8px rgba(212,168,67,0.15)' : 'none' }}>
+                      <div key={i} style={{ width: 28, height: 28, borderRadius: 6, position: 'relative', overflow: 'hidden', background: filled ? 'linear-gradient(180deg, #E8C97A, #D4A843, #B8922F)' : '#1c1b1b', border: filled ? '1px solid rgba(232,201,122,0.4)' : '1px solid rgba(230,195,100,0.08)', transition: 'all 0.4s ease', boxShadow: filled ? '0 0 8px rgba(212,168,67,0.15)' : 'none' }}>
                         {isPartial && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${partialFill * 100}%`, background: 'linear-gradient(180deg, #E8C97A, #D4A843)', transition: 'height 0.4s ease' }} />}
                       </div>
                     )
                   })}
                 </div>
                 <button onClick={() => addWater(250)} style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 4px 16px rgba(212,168,67,0.25)' }}>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: '#0D0B08', lineHeight: 1 }}>+</span>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 24, color: '#0D0B08', lineHeight: 1 }}>+</span>
                 </button>
               </div>
             </div>
@@ -598,34 +597,34 @@ export default function HomeTab({
 
         {/* ═══ DAILY HABIT CHECK-IN ═══ */}
         {!todayHabit ? (
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
-            <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 3, color: GOLD, marginBottom: 10 }}>CHECK-IN DU JOUR</div>
+          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '14px 16px', marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#e6c364', marginBottom: 10 }}>CHECK-IN DU JOUR</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[
                 { key: 'mood', label: 'Humeur', emojis: ['\u{1F62B}','\u{1F615}','\u{1F610}','\u{1F60A}','\u{1F525}'] },
                 { key: 'energy', label: 'Energie', emojis: ['\u{1FAB4}','\u{1F634}','\u26A1','\u{1F4AA}','\u{1F680}'] },
               ].map(({ key, label, emojis }) => (
                 <div key={key} style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 8, color: TEXT_MUTED, letterSpacing: 1, marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: '#d0c5b2', letterSpacing: 1, marginBottom: 6 }}>{label}</div>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
                     {emojis.map((e, i) => (
-                      <button key={i} onClick={() => setHabitValues(prev => ({ ...prev, [key]: i + 1 }))} style={{ background: habitValues[key] === i + 1 ? GOLD_DIM : 'transparent', border: habitValues[key] === i + 1 ? `1px solid ${GOLD_RULE}` : '1px solid transparent', borderRadius: 6, width: 28, height: 28, fontSize: 14, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{e}</button>
+                      <button key={i} onClick={() => setHabitValues(prev => ({ ...prev, [key]: i + 1 }))} style={{ background: habitValues[key] === i + 1 ? 'rgba(230,195,100,0.08)' : 'transparent', border: habitValues[key] === i + 1 ? '1px solid rgba(201,168,76,0.25)' : '1px solid transparent', borderRadius: 6, width: 28, height: 28, fontSize: 14, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{e}</button>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
-              <span style={{ fontFamily: FONT_ALT, fontSize: 9, color: TEXT_MUTED, letterSpacing: 1 }}>SOMMEIL</span>
-              <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={habitValues.sleep_hours || ''} onChange={e => setHabitValues(prev => ({ ...prev, sleep_hours: parseFloat(e.target.value) }))} style={{ width: 60, padding: '6px 8px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 18, textAlign: 'center', outline: 'none' }} />
-              <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>heures</span>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: '#d0c5b2', letterSpacing: 1 }}>SOMMEIL</span>
+              <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={habitValues.sleep_hours || ''} onChange={e => setHabitValues(prev => ({ ...prev, sleep_hours: parseFloat(e.target.value) }))} style={{ width: 60, padding: '6px 8px', background: '#131313', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 8, color: '#e5e2e1', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, textAlign: 'center', outline: 'none' }} />
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#d0c5b2' }}>heures</span>
             </div>
             <button onClick={async () => {
               const todayDate = new Date().toISOString().split('T')[0]
               await supabase.from('daily_habits').upsert({ user_id: session.user.id, date: todayDate, ...habitValues })
               try { await addXP(session.user.id, 10, supabase) } catch {}
               setTodayHabit({ ...habitValues })
-            }} style={{ width: '100%', padding: 12, marginTop: 12, background: Object.keys(habitValues).length >= 2 ? 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)' : BG_CARD_2, color: Object.keys(habitValues).length >= 2 ? '#0D0B08' : TEXT_DIM, fontFamily: FONT_DISPLAY, fontSize: 14, letterSpacing: 2, border: 'none', borderRadius: 10, cursor: 'pointer' }}>ENREGISTRER</button>
+            }} style={{ width: '100%', padding: 12, marginTop: 12, background: Object.keys(habitValues).length >= 2 ? 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)' : '#1c1b1b', color: Object.keys(habitValues).length >= 2 ? '#0D0B08' : '#99907e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, letterSpacing: 2, border: 'none', borderRadius: 16, cursor: 'pointer' }}>ENREGISTRER</button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
@@ -634,30 +633,30 @@ export default function HomeTab({
               { emoji: ['\u{1FAB4}','\u{1F634}','\u26A1','\u{1F4AA}','\u{1F680}'][((todayHabit.energy || 3) - 1)], label: 'ENERGIE' },
               { emoji: `${todayHabit.sleep_hours || '?'}h`, label: 'SOMMEIL', isText: true },
             ].map(i => (
-              <div key={i.label} style={{ flex: 1, background: BG_CARD, borderRadius: 10, padding: '8px 10px', textAlign: 'center', border: `1px solid ${GOLD_DIM}` }}>
-                <div style={i.isText ? { fontFamily: FONT_DISPLAY, fontSize: 18, color: GOLD } : { fontSize: 18 }}>{i.emoji}</div>
-                <div style={{ fontFamily: FONT_ALT, fontSize: 8, color: TEXT_MUTED, letterSpacing: 1 }}>{i.label}</div>
+              <div key={i.label} style={{ flex: 1, background: '#0e0e0e', borderRadius: 16, padding: '8px 10px', textAlign: 'center', border: '1px solid rgba(230,195,100,0.08)' }}>
+                <div style={i.isText ? { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, color: '#e6c364' } : { fontSize: 18 }}>{i.emoji}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: '#d0c5b2', letterSpacing: 1 }}>{i.label}</div>
               </div>
             ))}
           </div>
         )}
 
         {/* ═══ NUTRITION MACROS ═══ */}
-        <div className="liquid-glass" style={{ borderRadius: 16, padding: 18 }}>
+        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: TEXT_PRIMARY, letterSpacing: '1px' }}>NUTRITION</span>
-            <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: FONT_BODY, fontSize: 10, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir plan</button>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, color: '#e5e2e1', letterSpacing: '1px' }}>NUTRITION</span>
+            <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#e6c364', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir plan</button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: BORDER }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: 'rgba(201,168,76,0.15)' }}>
             {[
               { label: 'Cible', value: calorieGoal },
               { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '—' },
               { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—' },
               { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—' },
             ].map(({ label, value }) => (
-              <div key={label} style={{ background: BG_CARD, padding: '10px 4px', textAlign: 'center' }}>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: GOLD }}>{value}</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
+              <div key={label} style={{ background: '#0e0e0e', padding: '10px 4px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, color: '#e6c364' }}>{value}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: '#d0c5b2', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
               </div>
             ))}
           </div>
