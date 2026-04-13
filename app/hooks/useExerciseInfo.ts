@@ -11,7 +11,7 @@ export interface ExerciseInfoData {
   gif_url: string
 }
 
-const FIELDS = 'name, muscle_group, equipment, instructions, tips, description, video_url, gif_url'
+const FIELDS = 'name, muscle_group, equipment, instructions, tips, description, video_url, gif_url, variant_group'
 
 export function useExerciseInfo(supabase: any) {
   const [exerciseInfo, setExerciseInfo] = useState<ExerciseInfoData | null>(null)
@@ -35,7 +35,19 @@ export function useExerciseInfo(supabase: any) {
       data = fuzzy.data
     }
 
-    console.log('[ExerciseInfo]', exerciseName, '→ video_url:', data?.video_url, '| gif_url:', data?.gif_url, '| matched:', data?.name)
+    // If no video_url but has variant_group, try siblings
+    if (data && !data.video_url && data.variant_group) {
+      const { data: sibling } = await supabase
+        .from('exercises_db')
+        .select('video_url')
+        .eq('variant_group', data.variant_group)
+        .not('video_url', 'is', null)
+        .limit(1)
+        .maybeSingle()
+      if (sibling?.video_url) data.video_url = sibling.video_url
+    }
+
+    console.log('[ExerciseInfo]', exerciseName, '→ video_url:', data?.video_url, '| matched:', data?.name)
 
     setExerciseInfo(data || {
       name: exerciseName,

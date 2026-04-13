@@ -390,17 +390,23 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     setVariantPopup({ exIdx, variants, originalName: exo.name })
   }
   async function openExerciseInfo(exo: Exo) {
+    const fields = 'name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url, variant_group'
     // Try exact match first, then fuzzy
     let { data } = await supabase.from('exercises_db')
-      .select('name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url')
-      .ilike('name', exo.name).limit(1).maybeSingle()
+      .select(fields).ilike('name', exo.name).limit(1).maybeSingle()
     if (!data) {
       const fuzzy = await supabase.from('exercises_db')
-        .select('name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url')
-        .ilike('name', `%${exo.name}%`).limit(1).maybeSingle()
+        .select(fields).ilike('name', `%${exo.name}%`).limit(1).maybeSingle()
       data = fuzzy.data
     }
-    console.log('[ExerciseInfo]', exo.name, '→ video_url:', data?.video_url, '| gif_url:', data?.gif_url, '| matched:', data?.name)
+    // If no video_url but has variant_group, try siblings
+    if (data && !data.video_url && data.variant_group) {
+      const { data: sibling } = await supabase.from('exercises_db')
+        .select('video_url').eq('variant_group', data.variant_group)
+        .not('video_url', 'is', null).limit(1).maybeSingle()
+      if (sibling?.video_url) data.video_url = sibling.video_url
+    }
+    console.log('[ExerciseInfo]', exo.name, '→ video_url:', data?.video_url, '| matched:', data?.name)
     setExerciseInfo(data || { name: exo.name })
   }
   function selectSessionVariant(v: any) {
