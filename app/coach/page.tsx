@@ -229,7 +229,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
 
       {/* ── GLASS BAR HEADER ── */}
       <div style={{ padding: '12px 14px 0', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18 }}>
+        <div className="stitch-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18 }}>
           {/* Left: Messages */}
           <button onClick={() => h.setSection(s => s === 'messages' ? 'accueil' : 'messages')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.section === 'messages' ? GOLD_DIM : 'transparent', border: h.section === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', position: 'relative', zIndex: 3 }}>
             <MessageCircle size={19} color={h.section === 'messages' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />

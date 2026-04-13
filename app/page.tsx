@@ -288,7 +288,7 @@ export default function CoachApp() {
 
       {/* ── GLASS BAR HEADER ── */}
       <header style={{ flexShrink: 0, padding: '8px 14px' }}>
-        <div className="liquid-glass-strong" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18, position: 'relative', overflow: 'visible' }}>
+        <div className="stitch-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18, position: 'relative', overflow: 'visible' }}>
           {/* Left: Coach IA + Messages — fixed width for centering */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3, minWidth: 80 }}>
             <button onClick={() => h.setActiveTab('coachIA')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'coachIA' ? GOLD_DIM : 'transparent', border: h.activeTab === 'coachIA' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
@@ -359,7 +359,7 @@ export default function CoachApp() {
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
       {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '8px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 8px)', zIndex: 999, display: 'flex', justifyContent: 'center' }}>
-        <div className="liquid-glass-nav" style={{ display: 'flex', justifyContent: 'center', gap: 0, padding: '10px 8px', borderRadius: 18, maxWidth: 360, width: '100%' }}>
+        <div className="stitch-card-nav" style={{ display: 'flex', justifyContent: 'center', gap: 0, padding: '10px 8px', borderRadius: 18, maxWidth: 360, width: '100%' }}>
         {([
           { id: 'home' as Tab, Icon: Home, label: 'Home' },
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
