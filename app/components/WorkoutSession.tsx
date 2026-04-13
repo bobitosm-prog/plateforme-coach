@@ -393,6 +393,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     const { data } = await supabase.from('exercises_db')
       .select('name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url')
       .ilike('name', exo.name).limit(1).maybeSingle()
+    console.log('[ExerciseInfo]', exo.name, '→ video_url:', data?.video_url, '| gif_url:', data?.gif_url)
     setExerciseInfo(data || { name: exo.name })
   }
   function selectSessionVariant(v: any) {
@@ -785,7 +786,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             <div style={{flex:1,overflowY:'auto',padding:'16px 20px 32px',WebkitOverflowScrolling:'touch' as any}}>
               {exerciseInfo.video_url?(
                 <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
-                  <video src={exerciseInfo.video_url} autoPlay loop muted playsInline style={{width:'100%',height:'auto',display:'block'}}/>
+                  <video src={`${exerciseInfo.video_url}?v=2`} autoPlay loop muted playsInline style={{width:'100%',height:'auto',display:'block'}}/>
                 </div>
               ):exerciseInfo.gif_url?(
                 <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>

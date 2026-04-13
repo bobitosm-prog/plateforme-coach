@@ -84,7 +84,7 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
           {/* Video or animated preview */}
           {info.video_url ? (
             <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE }}>
-              <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block' }} src={info.video_url} />
+              <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block' }} src={`${info.video_url}?v=2`} />
             </div>
           ) : getExerciseImage(info.name) ? (
             <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'center', padding: '12px 0' }}>

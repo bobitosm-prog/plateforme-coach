@@ -84,7 +84,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
             {/* Video or preview */}
             {exercise.video_url ? (
               <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE }}>
-                <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block' }} src={exercise.video_url} />
+                <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block' }} src={`${exercise.video_url}?v=2`} />
               </div>
             ) : (() => {
               const imgUrl = getExerciseImage(exercise.name)
