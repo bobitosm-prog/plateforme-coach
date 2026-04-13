@@ -2,50 +2,43 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { GOLD, FONT_DISPLAY, TEXT_PRIMARY, TEXT_MUTED, BORDER } from '../../lib/design-tokens'
+import Image from 'next/image'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
-
-const BG = '#0D0B08'
-const GOLD_C = '#D4A843'
-const GOLD_BG = 'rgba(201,168,76,0.10)'
-const GOLD_BORDER = 'rgba(201,168,76,0.5)'
-const FONT_DM = "'DM Sans', var(--font-dm-sans), sans-serif"
-const FONT_BEBAS = FONT_DISPLAY
 
 const TOTAL_STEPS = 5
 
 // ─── Step data ───
 
-type Option = { label: string; pts: number }
+type Option = { label: string; pts: number; icon: string }
 
 const GOALS: Option[] = [
-  { label: 'Perdre du poids', pts: 3 },
-  { label: 'Prendre du muscle', pts: 4 },
-  { label: 'Améliorer ma condition', pts: 2 },
-  { label: 'Me remettre en forme', pts: 3 },
+  { label: 'Perdre du poids', pts: 3, icon: 'local_fire_department' },
+  { label: 'Prendre du muscle', pts: 4, icon: 'fitness_center' },
+  { label: 'Améliorer ma condition', pts: 2, icon: 'directions_run' },
+  { label: 'Me remettre en forme', pts: 3, icon: 'refresh' },
 ]
 
 const ACTIVITY: Option[] = [
-  { label: 'Sédentaire <1x/sem', pts: 1 },
-  { label: 'Actif 1-2x/sem', pts: 3 },
-  { label: 'Régulier 3-4x/sem', pts: 5 },
-  { label: 'Avancé 5x+/sem', pts: 7 },
+  { label: 'Sédentaire <1x/sem', pts: 1, icon: 'weekend' },
+  { label: 'Actif 1-2x/sem', pts: 3, icon: 'directions_walk' },
+  { label: 'Régulier 3-4x/sem', pts: 5, icon: 'directions_run' },
+  { label: 'Avancé 5x+/sem', pts: 7, icon: 'bolt' },
 ]
 
 const NUTRITION: Option[] = [
-  { label: 'Sans faire attention', pts: 1 },
-  { label: "J'essaie de bien manger", pts: 3 },
-  { label: 'Je suis mes macros', pts: 5 },
-  { label: 'Régime spécifique', pts: 4 },
+  { label: 'Sans faire attention', pts: 1, icon: 'fastfood' },
+  { label: "J'essaie de bien manger", pts: 3, icon: 'restaurant' },
+  { label: 'Je suis mes macros', pts: 5, icon: 'analytics' },
+  { label: 'Régime spécifique', pts: 4, icon: 'eco' },
 ]
 
 const EXPERIENCE: Option[] = [
-  { label: 'Débutant <6 mois', pts: 1 },
-  { label: 'Intermédiaire 6m-2ans', pts: 3 },
-  { label: 'Expérimenté 2-5ans', pts: 6 },
-  { label: 'Vétéran 5ans+', pts: 8 },
+  { label: 'Débutant <6 mois', pts: 1, icon: 'school' },
+  { label: 'Intermédiaire 6m-2ans', pts: 3, icon: 'trending_up' },
+  { label: 'Expérimenté 2-5ans', pts: 6, icon: 'military_tech' },
+  { label: 'Vétéran 5ans+', pts: 8, icon: 'emoji_events' },
 ]
 
 const SLIDER_LABELS: Record<number, string> = {
@@ -56,6 +49,22 @@ const SLIDER_LABELS: Record<number, string> = {
   5: 'Programme intensif',
   6: 'Niveau athlète',
 }
+
+const STEP_TITLES = [
+  'Quel est votre objectif principal ?',
+  "Votre niveau d'activité actuel ?",
+  'Séances par semaine souhaitées',
+  'Votre alimentation actuelle ?',
+  'Votre expérience en musculation ?',
+]
+
+const STEP_SUBTITLES = [
+  'Sélectionnez l\'objectif qui correspond à votre vision.',
+  'Décrivez votre routine actuelle.',
+  'Définissez votre fréquence idéale.',
+  'Évaluez vos habitudes alimentaires.',
+  'Indiquez votre parcours fitness.',
+]
 
 // ─── Animations ───
 
@@ -181,7 +190,7 @@ export default function OnboardingFitnessPage() {
   const canContinue =
     (step === 1 && goal !== null) ||
     (step === 2 && activity !== null) ||
-    (step === 3) || // slider always has a value
+    (step === 3) ||
     (step === 4 && nutrition !== null) ||
     (step === 5 && experience !== null)
 
@@ -192,135 +201,88 @@ export default function OnboardingFitnessPage() {
 
   // ─── Ring SVG ───
 
-  const ringSize = 180
+  const ringSize = 200
   const strokeWidth = 10
   const radius = (ringSize - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference
 
-  // ─── Shared styles ───
+  const progressPct = (step / TOTAL_STEPS) * 100
 
-  const optionStyle = (selected: boolean): React.CSSProperties => ({
-    padding: '16px 20px',
-    background: selected ? GOLD_BG : 'rgba(255,255,255,0.03)',
-    border: `1.5px solid ${selected ? GOLD_BORDER : 'rgba(255,255,255,0.08)'}`,
-    borderRadius: 12,
-    cursor: 'pointer',
-    fontFamily: FONT_DM,
-    fontSize: 15,
-    fontWeight: selected ? 600 : 400,
-    color: selected ? GOLD_C : TEXT_PRIMARY,
-    transition: 'all 0.2s ease',
-    textAlign: 'left' as const,
-  })
-
-  const btnStyle = (disabled: boolean): React.CSSProperties => ({
-    width: '100%',
-    padding: '16px',
-    background: disabled ? 'rgba(255,255,255,0.05)' : GOLD_C,
-    color: disabled ? TEXT_MUTED : '#0D0B08',
-    border: 'none',
-    borderRadius: 12,
-    fontFamily: FONT_BEBAS,
-    fontSize: 20,
-    letterSpacing: '0.08em',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'all 0.2s ease',
-    opacity: disabled ? 0.5 : 1,
-  })
-
-  // ─── Result screen ───
+  // ─── Result screen (Stitch: Fitness Score Reveal) ───
 
   if (showResult) {
     const objectives = generateObjectives()
     const metricCards = [
-      { label: 'Objectif', value: goal !== null ? GOALS[goal].label : '-' },
-      { label: 'Niveau', value: levelLabel },
-      { label: 'Séances/sem', value: `${sessions}x` },
-      { label: 'Nutrition', value: nutrition !== null ? NUTRITION[nutrition].label : '-' },
+      { label: 'Flamme', value: goal !== null ? GOALS[goal].label : '-', icon: 'local_fire_department' },
+      { label: 'Niveau', value: levelLabel, icon: 'military_tech' },
+      { label: 'Séances', value: `${sessions}x/sem`, icon: 'fitness_center' },
+      { label: 'Énergie', value: nutrition !== null ? NUTRITION[nutrition].label : '-', icon: 'bolt' },
     ]
 
     return (
-      <div style={{ minHeight: '100dvh', background: BG, fontFamily: FONT_DM, color: TEXT_PRIMARY }}>
+      <div className="min-h-dvh bg-[#131313] text-[#e5e2e1] font-['Inter',sans-serif]">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          style={{ maxWidth: 480, margin: '0 auto', padding: '40px 20px 60px' }}
+          className="max-w-md mx-auto px-6 pt-8 pb-32"
         >
-          {/* Score ring */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-            <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)' }}>
-              <circle
-                cx={ringSize / 2} cy={ringSize / 2} r={radius}
-                fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth}
-              />
-              <circle
-                cx={ringSize / 2} cy={ringSize / 2} r={radius}
-                fill="none" stroke={GOLD_C} strokeWidth={strokeWidth}
-                strokeLinecap="butt"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                style={{ transition: 'stroke-dashoffset 0.05s linear' }}
-              />
-            </svg>
-            <div style={{
-              position: 'relative', marginTop: -ringSize + 10,
-              height: ringSize - 20,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <span style={{ fontFamily: FONT_BEBAS, fontSize: 56, color: GOLD_C, lineHeight: 1 }}>
+          {/* 3D Hero */}
+          <div className="relative w-full flex items-center justify-center mb-4">
+            <div className="absolute inset-0 bg-[#e6c364]/5 rounded-full blur-[80px]" />
+            <Image
+              src="/images/onboarding/fitness-score-3d.png"
+              alt="Fitness Score"
+              width={280}
+              height={280}
+              className="relative z-10 object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+              priority
+            />
+            {/* Score overlay */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+              <span className="font-['Plus_Jakarta_Sans'] text-6xl font-extrabold tracking-tighter text-[#e6c364]" style={{ textShadow: '0 0 20px rgba(230,195,100,0.3)' }}>
                 {animatedScore}
               </span>
-              <span style={{ fontFamily: FONT_DM, fontSize: 13, color: TEXT_MUTED, marginTop: 2 }}>/100</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[#d0c5b2] font-bold">/100</span>
             </div>
           </div>
 
           {/* Level title */}
-          <h1 style={{
-            fontFamily: FONT_BEBAS, fontSize: 32, color: TEXT_PRIMARY,
-            textAlign: 'center', letterSpacing: '0.06em', marginBottom: 28, marginTop: 8,
-          }}>
-            {levelLabel.toUpperCase()}
-          </h1>
+          <div className="text-center mb-8">
+            <h2 className="font-['Plus_Jakarta_Sans'] text-3xl font-extrabold tracking-tight mb-2">{levelLabel}</h2>
+            <p className="text-[#d0c5b2] text-sm font-medium">
+              {finalScore >= 70
+                ? 'Vous êtes dans le top 5% des membres MoovX.'
+                : finalScore >= 40
+                ? 'Votre potentiel est excellent. Construisons dessus.'
+                : 'Un super point de départ. On va progresser ensemble.'}
+            </p>
+          </div>
 
-          {/* Metric cards */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28,
-          }}>
+          {/* Metric cards — Bento grid */}
+          <div className="grid grid-cols-2 gap-4 mb-10">
             {metricCards.map(c => (
-              <div key={c.label} style={{
-                padding: '14px 16px',
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 12,
-              }}>
-                <div style={{ fontFamily: FONT_DM, fontSize: 11, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
-                  {c.label}
+              <div key={c.label} className="bg-[#201f1f] rounded-xl p-5 flex flex-col gap-4 group hover:bg-[#2a2a2a] transition-colors">
+                <div className="flex justify-between items-start">
+                  <div className="p-2 bg-[#e6c364]/10 rounded-lg text-[#e6c364]">
+                    <span className="material-symbols-outlined">{c.icon}</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#d0c5b2] tracking-widest uppercase">{c.label}</span>
                 </div>
-                <div style={{ fontFamily: FONT_DM, fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY }}>
-                  {c.value}
-                </div>
+                <div className="font-['Plus_Jakarta_Sans'] text-lg font-bold">{c.value}</div>
               </div>
             ))}
           </div>
 
           {/* Objectives */}
-          <div style={{ marginBottom: 36 }}>
-            <h2 style={{ fontFamily: FONT_BEBAS, fontSize: 22, color: TEXT_PRIMARY, letterSpacing: '0.06em', marginBottom: 14 }}>
-              VOS OBJECTIFS
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="mb-10">
+            <h3 className="font-['Plus_Jakarta_Sans'] text-xl font-bold uppercase tracking-tighter mb-4">Vos objectifs</h3>
+            <div className="flex flex-col gap-3">
               {objectives.map((obj, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '12px 16px',
-                  background: 'rgba(201,168,76,0.06)',
-                  border: '1px solid rgba(201,168,76,0.15)',
-                  borderRadius: 12,
-                }}>
-                  <span style={{ color: GOLD_C, fontSize: 16, flexShrink: 0 }}>&#9654;</span>
-                  <span style={{ fontFamily: FONT_DM, fontSize: 14, color: TEXT_PRIMARY }}>{obj}</span>
+                <div key={i} className="flex items-center gap-3 p-4 bg-[#e6c364]/5 border border-[#e6c364]/15 rounded-xl">
+                  <span className="material-symbols-outlined text-[#e6c364] text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  <span className="text-sm font-medium">{obj}</span>
                 </div>
               ))}
             </div>
@@ -330,125 +292,71 @@ export default function OnboardingFitnessPage() {
           <button
             onClick={handleFinish}
             disabled={saving}
-            style={{
-              ...btnStyle(false),
-              opacity: saving ? 0.6 : 1,
-              cursor: saving ? 'wait' : 'pointer',
-            }}
+            className="w-full py-4 bg-gradient-to-br from-[#e6c364] to-[#c9a84c] text-[#3d2e00] font-['Plus_Jakarta_Sans'] font-bold rounded-full shadow-lg shadow-[#e6c364]/20 active:scale-[0.98] transition-all uppercase tracking-widest text-sm disabled:opacity-60"
           >
-            {saving ? 'SAUVEGARDE...' : 'COMMENCER MON PROGRAMME'}
+            {saving ? 'Sauvegarde...' : 'Commencer mon programme'}
           </button>
         </motion.div>
+
+        {/* Material Symbols font */}
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
       </div>
     )
   }
 
-  // ─── Step content ───
-
-  function renderStep() {
-    switch (step) {
-      case 1:
-        return (
-          <StepChoices
-            title="Quel est votre objectif principal ?"
-            options={GOALS}
-            selected={goal}
-            onSelect={setGoal}
-          />
-        )
-      case 2:
-        return (
-          <StepChoices
-            title="Votre niveau d'activité actuel ?"
-            options={ACTIVITY}
-            selected={activity}
-            onSelect={setActivity}
-          />
-        )
-      case 3:
-        return (
-          <div>
-            <h2 style={{ fontFamily: FONT_BEBAS, fontSize: 28, color: TEXT_PRIMARY, letterSpacing: '0.06em', marginBottom: 24 }}>
-              SÉANCES PAR SEMAINE SOUHAITÉES
-            </h2>
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <span style={{ fontFamily: FONT_BEBAS, fontSize: 64, color: GOLD_C, lineHeight: 1 }}>
-                {sessions}
-              </span>
-              <span style={{ fontFamily: FONT_DM, fontSize: 15, color: TEXT_MUTED, display: 'block', marginTop: 8 }}>
-                {SLIDER_LABELS[sessions]}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={1}
-              max={6}
-              value={sessions}
-              onChange={e => setSessions(Number(e.target.value))}
-              style={{
-                width: '100%',
-                accentColor: GOLD_C,
-                height: 6,
-                cursor: 'pointer',
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FONT_DM, fontSize: 12, color: TEXT_MUTED, marginTop: 8 }}>
-              <span>1</span><span>6</span>
-            </div>
-          </div>
-        )
-      case 4:
-        return (
-          <StepChoices
-            title="Votre alimentation actuelle ?"
-            options={NUTRITION}
-            selected={nutrition}
-            onSelect={setNutrition}
-          />
-        )
-      case 5:
-        return (
-          <StepChoices
-            title="Votre expérience en musculation ?"
-            options={EXPERIENCE}
-            selected={experience}
-            onSelect={setExperience}
-          />
-        )
-      default:
-        return null
-    }
-  }
-
-  // ─── Main layout ───
-
-  const progressPct = (step / TOTAL_STEPS) * 100
+  // ─── Quiz layout (Stitch: Fitness Goals Quiz) ───
 
   return (
-    <div style={{ minHeight: '100dvh', background: BG, fontFamily: FONT_DM, color: TEXT_PRIMARY }}>
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: '0 20px' }}>
-
-        {/* Progress bar */}
-        <div style={{ paddingTop: 20, marginBottom: 8 }}>
-          <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden' }}>
+    <div className="min-h-dvh bg-[#131313] text-[#e5e2e1] font-['Inter',sans-serif] flex flex-col">
+      {/* Header + Progress */}
+      <header className="fixed top-0 left-0 w-full z-50 px-6 pt-8 pb-4 bg-[#131313]/80 backdrop-blur-md">
+        <div className="max-w-md mx-auto flex flex-col gap-4">
+          <div className="flex justify-between items-end">
+            <div>
+              <span className="font-['Plus_Jakarta_Sans'] text-[#e6c364] text-[10px] uppercase tracking-[0.3em] font-bold">
+                Question {String(step).padStart(2, '0')} / {String(TOTAL_STEPS).padStart(2, '0')}
+              </span>
+              <h1 className="font-['Plus_Jakarta_Sans'] text-xl font-black tracking-tighter uppercase mt-1">
+                Définissez votre parcours
+              </h1>
+            </div>
+            <span className="material-symbols-outlined text-[#c9a84c] text-2xl">bolt</span>
+          </div>
+          {/* Gold progress bar */}
+          <div className="relative w-full h-[6px] bg-[#353534] rounded-full overflow-hidden">
             <motion.div
               animate={{ width: `${progressPct}%` }}
               transition={{ duration: 0.3 }}
-              style={{ height: '100%', background: GOLD_C }}
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#e6c364] to-[#c9a84c] rounded-full shadow-[0_0_15px_rgba(230,195,100,0.4)]"
             />
           </div>
         </div>
+      </header>
 
-        {/* Step label */}
-        <div style={{
-          fontFamily: FONT_DM, fontSize: 12, color: TEXT_MUTED,
-          textTransform: 'uppercase', letterSpacing: '0.1em',
-          marginBottom: 32, paddingTop: 8,
-        }}>
-          Étape {step} / {TOTAL_STEPS}
+      <main className="flex-grow pt-32 pb-24 px-6 max-w-md mx-auto w-full">
+        {/* 3D Illustration */}
+        <div className="relative mb-8 flex justify-center items-center">
+          <div className="absolute w-[300px] h-[300px] bg-[#e6c364]/5 rounded-full blur-[80px] -z-10" />
+          <Image
+            src="/images/onboarding/fitness-goals-3d.png"
+            alt="Fitness Goals"
+            width={220}
+            height={220}
+            className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+            priority
+          />
         </div>
 
-        {/* Step content with animation */}
+        {/* Step title */}
+        <div className="text-center mb-8">
+          <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-extrabold tracking-tight mb-2">
+            {STEP_TITLES[step - 1]}
+          </h2>
+          <p className="text-[#d0c5b2] text-sm font-medium">{STEP_SUBTITLES[step - 1]}</p>
+        </div>
+
+        {/* Step content */}
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -458,92 +366,90 @@ export default function OnboardingFitnessPage() {
             exit="exit"
             transition={stepTransition}
           >
-            {renderStep()}
+            {step === 3 ? (
+              /* Slider step */
+              <div className="flex flex-col items-center">
+                <span className="font-['Plus_Jakarta_Sans'] text-6xl font-extrabold text-[#e6c364] mb-2" style={{ textShadow: '0 0 20px rgba(230,195,100,0.3)' }}>
+                  {sessions}
+                </span>
+                <span className="text-sm text-[#d0c5b2] font-medium mb-8">{SLIDER_LABELS[sessions]}</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={6}
+                  value={sessions}
+                  onChange={e => setSessions(Number(e.target.value))}
+                  className="w-full h-[6px] rounded-full appearance-none cursor-pointer"
+                  style={{ accentColor: '#e6c364', background: '#353534' }}
+                />
+                <div className="flex justify-between w-full text-xs text-[#d0c5b2] mt-2 font-medium">
+                  <span>1x</span><span>6x</span>
+                </div>
+              </div>
+            ) : (
+              /* Choice cards */
+              <div className="flex flex-col gap-3">
+                {(step === 1 ? GOALS : step === 2 ? ACTIVITY : step === 4 ? NUTRITION : EXPERIENCE).map((opt, i) => {
+                  const sel = step === 1 ? goal : step === 2 ? activity : step === 4 ? nutrition : experience
+                  const setSel = step === 1 ? setGoal : step === 2 ? setActivity : step === 4 ? setNutrition : setExperience
+                  const isSelected = sel === i
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setSel(i)}
+                      className={`group relative flex items-center p-4 rounded-xl transition-all duration-300 text-left ${
+                        isSelected
+                          ? 'bg-[#1c1b1b] border-2 border-[#e6c364]/60 shadow-[0_0_20px_rgba(230,195,100,0.1)]'
+                          : 'bg-[#201f1f] border border-[#4d4637]/20 hover:bg-[#2a2a2a] hover:border-[#e6c364]/40'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center mr-4 transition-transform group-hover:scale-110 ${
+                        isSelected ? 'bg-[#e6c364]/20' : 'bg-[#353534]'
+                      }`}>
+                        <span className={`material-symbols-outlined text-2xl ${isSelected ? 'text-[#e6c364]' : 'text-[#d0c5b2]'}`}>
+                          {opt.icon}
+                        </span>
+                      </div>
+                      <span className={`font-semibold text-[15px] flex-grow ${isSelected ? 'text-[#e6c364]' : ''}`}>
+                        {opt.label}
+                      </span>
+                      {isSelected && (
+                        <span className="material-symbols-outlined text-[#e6c364]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
+      </main>
 
-        {/* Navigation */}
-        <div style={{ display: 'flex', gap: 12, marginTop: 36, paddingBottom: 40 }}>
+      {/* Footer CTA */}
+      <footer className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#131313] via-[#131313] to-transparent">
+        <div className="max-w-md mx-auto flex gap-3">
           {step > 1 && (
             <button
               onClick={() => setStep(s => s - 1)}
-              style={{
-                flex: '0 0 auto',
-                padding: '16px 24px',
-                background: 'transparent',
-                border: `1.5px solid rgba(255,255,255,0.1)`,
-                borderRadius: 12,
-                color: TEXT_MUTED,
-                fontFamily: FONT_BEBAS,
-                fontSize: 18,
-                letterSpacing: '0.06em',
-                cursor: 'pointer',
-              }}
+              className="px-6 py-4 rounded-full border border-[#4d4637]/30 text-[#d0c5b2] font-bold text-sm uppercase tracking-widest hover:bg-[#201f1f] transition-colors"
             >
-              RETOUR
+              Retour
             </button>
           )}
           <button
             onClick={handleNext}
             disabled={!canContinue}
-            style={{ ...btnStyle(!canContinue), flex: 1 }}
+            className="flex-1 py-4 rounded-full font-['Plus_Jakarta_Sans'] font-bold bg-gradient-to-br from-[#e6c364] to-[#c9a84c] text-[#3d2e00] shadow-lg shadow-[#e6c364]/10 active:scale-[0.98] transition-all uppercase tracking-widest text-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {step === TOTAL_STEPS ? 'VOIR MON RÉSULTAT' : 'CONTINUER'}
+            {step === TOTAL_STEPS ? 'Voir mon résultat' : 'Continuer'}
           </button>
         </div>
-      </div>
-    </div>
-  )
-}
+      </footer>
 
-// ─── Reusable choice step ───
-
-function StepChoices({
-  title,
-  options,
-  selected,
-  onSelect,
-}: {
-  title: string
-  options: Option[]
-  selected: number | null
-  onSelect: (i: number) => void
-}) {
-  return (
-    <div>
-      <h2 style={{
-        fontFamily: FONT_DISPLAY,
-        fontSize: 28,
-        color: TEXT_PRIMARY,
-        letterSpacing: '0.06em',
-        marginBottom: 24,
-        lineHeight: 1.1,
-      }}>
-        {title.toUpperCase()}
-      </h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {options.map((opt, i) => (
-          <button
-            key={i}
-            onClick={() => onSelect(i)}
-            style={{
-              padding: '16px 20px',
-              background: selected === i ? 'rgba(201,168,76,0.10)' : 'rgba(255,255,255,0.03)',
-              border: `1.5px solid ${selected === i ? 'rgba(201,168,76,0.5)' : 'rgba(255,255,255,0.08)'}`,
-              borderRadius: 12,
-              cursor: 'pointer',
-              fontFamily: "'DM Sans', var(--font-dm-sans), sans-serif",
-              fontSize: 15,
-              fontWeight: selected === i ? 600 : 400,
-              color: selected === i ? '#D4A843' : TEXT_PRIMARY,
-              transition: 'all 0.2s ease',
-              textAlign: 'left' as const,
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+      {/* Material Symbols font */}
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
     </div>
   )
 }
