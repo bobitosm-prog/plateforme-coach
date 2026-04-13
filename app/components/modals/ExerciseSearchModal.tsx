@@ -139,9 +139,9 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                       }}
                       style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '0', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
                     >
-                      {/* Exercise image or muscle color bar */}
+                      {/* Exercise image: gif_url > GitHub > color bar */}
                       {(() => {
-                        const imgUrl = getExerciseImage(ex.name)
+                        const imgUrl = ex.gif_url || getExerciseImage(ex.name)
                         return imgUrl ? (
                           <div style={{ height: 80, overflow: 'hidden', flexShrink: 0 }}>
                             <img src={imgUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { const p = (e.target as HTMLImageElement).parentElement!; p.style.height = '4px'; p.style.background = mgColor; (e.target as HTMLImageElement).style.display = 'none' }} />

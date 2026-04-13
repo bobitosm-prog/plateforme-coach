@@ -550,7 +550,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               {/* ── Accordion Header ── */}
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
                 <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
-                  <ExercisePreview name={exo.name} size={80} animate={false} />
+                  <ExercisePreview name={exo.name} size={80} animate={false} imageUrl={exo.imageUrl} />
                   {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
                 </div>
                 <div className="flex-1 min-w-0">
