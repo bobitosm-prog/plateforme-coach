@@ -316,7 +316,7 @@ export default function HomeTab({
       <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* ═══ HERO DIORAMA — Stitch floating stats ═══ */}
-        <div style={{ position: 'relative', width: '100%', height: 280, background: '#0e0e0e', borderRadius: 24, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+        <div style={{ position: 'relative', width: '100%', height: 280, background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
           {/* Background bar chart faint */}
           <div style={{ position: 'absolute', inset: 0, opacity: 0.08, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '0 32px 16px' }}>
             {[40, 60, 35, 80, 50].map((h, i) => <div key={i} style={{ width: 24, height: `${h}%`, background: GOLD, borderRadius: '8px 8px 0 0' }} />)}
@@ -364,7 +364,7 @@ export default function HomeTab({
         {/* ═══ BENTO STATS — Active Energy + Hydration ═══ */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {/* Active Energy */}
-          <div style={{ background: '#201f1f', borderRadius: 20, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1' }}>
+          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1' }}>
             <div>
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>Énergie</span>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>{calPct}%</div>
@@ -374,7 +374,7 @@ export default function HomeTab({
             </div>
           </div>
           {/* Hydration */}
-          <div style={{ background: '#201f1f', borderRadius: 20, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1' }}>
+          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1' }}>
             <div>
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>Hydratation</span>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>
@@ -390,7 +390,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ STREAK CARD — Stitch "ON FIRE" ═══ */}
-        <div style={{ background: '#2a2a2a', borderRadius: 20, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden', position: 'relative' }}>
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: GOLD, textTransform: 'uppercase' }}>On Fire</span>
@@ -531,7 +531,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ PERFORMANCE HEBDO — Stitch bar chart ═══ */}
-        <div style={{ background: '#1c1b1b', borderRadius: 20, padding: 20 }}>
+        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 15, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>Performance</span>
             <button onClick={() => setActiveTab('progress')} style={{ fontSize: 11, fontWeight: 700, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Semaine</button>
