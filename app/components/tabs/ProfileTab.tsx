@@ -4,7 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Download, X, Clock, Calendar, Volume2 } from 'lucide-react'
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
-import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
+import { colors, fonts, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
 import SwissBadge from '../ui/SwissBadge'
 import CoachSection from './profile/CoachSection'
@@ -57,6 +57,7 @@ export default function ProfileTab({
   updateReminderSettings,
   regenerateWeekSchedule,
 }: ProfileTabProps) {
+  const T = titleStyle
   const [phoneForm, setPhoneForm] = useState<string>(profile?.phone || '')
   const [phoneEditing, setPhoneEditing] = useState(false)
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle')
@@ -113,7 +114,7 @@ export default function ProfileTab({
 
   return (
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
-      <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.6rem', fontWeight: 800, letterSpacing: '2px', margin: '0 0 24px', textTransform: 'uppercase', color: TEXT_PRIMARY }}>PROFIL</h1>
+      <h1 style={{ ...pageTitleStyle, margin: '0 0 24px' }}>PROFIL</h1>
 
       {/* Avatar + name */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24, gap: 12 }}>
@@ -125,8 +126,8 @@ export default function ProfileTab({
         </button>
         <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.5rem', fontWeight: 800, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '2px', lineHeight: 1.1 }}>{fullName}</div>
-          <div style={{ fontSize: '0.8rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300, marginBottom: 6 }}>{session.user.email}</div>
+          <div style={{ ...statStyle, fontSize: '2.5rem', textTransform: 'uppercase', letterSpacing: '2px', lineHeight: 1.1 }}>{fullName}</div>
+          <div style={{ ...mutedStyle, marginBottom: 6 }}>{session.user.email}</div>
           <SwissBadge variant="solid" />
           {profile?.fitness_level && (
             <div style={{ display: 'inline-block', marginTop: 8, background: GOLD_DIM, border: `1px solid ${GOLD}`, borderRadius: 20, padding: '4px 14px' }}>
@@ -134,7 +135,7 @@ export default function ProfileTab({
             </div>
           )}
           {profile?.created_at && (
-            <div style={{ fontSize: '10px', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 6 }}>
+            <div style={{ ...subtitleStyle, fontSize: '10px', marginTop: 6 }}>
               MEMBRE DEPUIS {new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
             </div>
           )}
@@ -149,15 +150,15 @@ export default function ProfileTab({
           { label: 'Kcal/j', value: calorieGoal ? `${calorieGoal}` : '—', color: TEXT_MUTED },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 8px', textAlign: 'center' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 800, color }}>{value}</div>
-            <div style={{ fontSize: 9, fontFamily: FONT_BODY, fontWeight: 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: TEXT_MUTED, marginTop: 4 }}>{label}</div>
+            <div style={{ ...statSmallStyle, fontSize: '1.6rem', color }}>{value}</div>
+            <div style={{ ...mutedStyle, fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase', marginTop: 4 }}>{label}</div>
           </div>
         ))}
       </div>
 
       {/* Phone field */}
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px', marginBottom: 8 }}>
-        <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 8 }}>Téléphone</div>
+        <div style={{ ...T, fontSize: 11, color: TEXT_MUTED, marginBottom: 8 }}>Téléphone</div>
         {phoneEditing ? (
           <div style={{ display: 'flex', gap: 8 }}>
             <input
@@ -172,7 +173,7 @@ export default function ProfileTab({
           </div>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: profile?.phone ? TEXT_PRIMARY : TEXT_MUTED }}>{profile?.phone || 'Ajouter un numéro'}</span>
+            <span style={{ ...bodyStyle, fontSize: 15, color: profile?.phone ? TEXT_PRIMARY : TEXT_MUTED }}>{profile?.phone || 'Ajouter un numéro'}</span>
             <button onClick={() => setPhoneEditing(true)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '4px 10px', color: TEXT_MUTED, fontSize: '0.72rem', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>Modifier</button>
           </div>
         )}
@@ -183,7 +184,7 @@ export default function ProfileTab({
         <button onMouseEnter={e => (e.currentTarget.style.background = colors.surfaceHigh)} onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)} onClick={() => setModal('bmr')} style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 12, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 150ms', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Zap size={18} color={TEXT_MUTED} />
-            <span style={{ fontSize: 14, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Calculateur BMR</span>
+            <span style={{ ...bodyStyle, color: TEXT_PRIMARY }}>Calculateur BMR</span>
           </div>
           <ChevronRight size={16} color={TEXT_DIM} />
         </button>
@@ -195,8 +196,8 @@ export default function ProfileTab({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Crown size={18} color={GOLD} />
             <div>
-              <div style={{ fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, color: TEXT_PRIMARY }}>Mon coach</div>
-              <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>Programme actif</div>
+              <div style={{ ...bodyStyle, fontWeight: 700, color: TEXT_PRIMARY }}>Mon coach</div>
+              <div style={{ ...mutedStyle }}>Programme actif</div>
             </div>
             <span style={{ marginLeft: 'auto', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GREEN, background: `${GREEN}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>Actif</span>
           </div>
@@ -214,7 +215,7 @@ export default function ProfileTab({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {notifStatus === 'denied' ? <BellOff size={18} color={RED} /> : <Bell size={18} color={notifStatus === 'done' ? GREEN : TEXT_MUTED} />}
-            <span style={{ fontSize: 14, fontFamily: FONT_BODY, fontWeight: 400, color: notifStatus === 'denied' ? RED : TEXT_PRIMARY }}>
+            <span style={{ ...bodyStyle, color: notifStatus === 'denied' ? RED : TEXT_PRIMARY }}>
               {notifStatus === 'done' ? 'Notifications activées' : notifStatus === 'denied' ? 'Notifications refusées' : 'Activer les notifications'}
             </span>
           </div>
@@ -225,7 +226,7 @@ export default function ProfileTab({
 
       {/* Reminder settings */}
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
-        <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>
+        <div style={{ ...T, fontSize: 11, marginBottom: 12 }}>
           Rappels d&apos;entraînement
         </div>
 
@@ -233,7 +234,7 @@ export default function ProfileTab({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Bell size={16} color={profile?.reminder_enabled ? GREEN : TEXT_MUTED} />
-            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Activer les rappels</span>
+            <span style={{ ...bodyStyle, fontSize: 15, color: TEXT_PRIMARY }}>Activer les rappels</span>
           </div>
           <button
             onClick={async () => {
@@ -263,7 +264,7 @@ export default function ProfileTab({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Volume2 size={16} color={timerSound ? GREEN : TEXT_MUTED} />
-            <span style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Son du timer</span>
+            <span style={{ ...bodyStyle, fontSize: 15, color: TEXT_PRIMARY }}>Son du timer</span>
           </div>
           <button
             onClick={() => { const next = !timerSound; setTimerSound(next); setTimerSoundEnabled(next) }}
@@ -286,7 +287,7 @@ export default function ProfileTab({
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <Clock size={16} color={TEXT_MUTED} />
-            <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED }}>Heure d&apos;entraînement</span>
+            <span style={{ ...subtitleStyle, fontSize: 11 }}>Heure d&apos;entraînement</span>
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {['06:00', '08:00', '12:00', '17:00', '19:00'].map(time => {
@@ -314,7 +315,7 @@ export default function ProfileTab({
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <Calendar size={16} color={TEXT_MUTED} />
-            <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED }}>Rappel avant la séance</span>
+            <span style={{ ...subtitleStyle, fontSize: 11 }}>Rappel avant la séance</span>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {[{ label: '15 min', value: 15 }, { label: '30 min', value: 30 }, { label: '1h', value: 60 }].map(opt => {
@@ -344,7 +345,7 @@ export default function ProfileTab({
             background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
             padding: '10px 14px', marginBottom: 12,
           }}>
-            <span style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>
+            <span style={{ ...mutedStyle }}>
               Tu recevras un rappel à{' '}
               <strong style={{ color: TEXT_PRIMARY }}>
                 {(() => {
@@ -381,7 +382,7 @@ export default function ProfileTab({
 
       {/* Subscription */}
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
-        <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Mon abonnement</div>
+        <div style={{ ...T, fontSize: 11, marginBottom: 12 }}>Mon abonnement</div>
         {(() => {
           const st = profile?.subscription_status
           const subType = profile?.subscription_type
@@ -392,7 +393,7 @@ export default function ProfileTab({
           if (st === 'lifetime') return (
             <div>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: RADIUS_CARD, background: colors.goldBorder, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 700, marginBottom: 12 }}>Accès à vie</span>
-              <p style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Tu bénéficies d&apos;un accès permanent à toutes les fonctionnalités MoovX.</p>
+              <p style={{ ...bodyStyle, fontSize: 15, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Tu bénéficies d&apos;un accès permanent à toutes les fonctionnalités MoovX.</p>
             </div>
           )
 
@@ -400,7 +401,7 @@ export default function ProfileTab({
           if (st === 'invited' || subType === 'invited') return (
             <div>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: RADIUS_CARD, background: `${GREEN}15`, border: `1px solid ${GREEN}30`, color: GREEN, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 700, marginBottom: 12 }}>Accès Coach</span>
-              <p style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Ton accès est inclus via ton coach.</p>
+              <p style={{ ...bodyStyle, fontSize: 15, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Ton accès est inclus via ton coach.</p>
             </div>
           )
 
@@ -413,11 +414,11 @@ export default function ProfileTab({
               <div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: RADIUS_CARD, background: `${GREEN}15`, border: `1px solid ${GREEN}30`, color: GREEN, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 700, marginBottom: 12 }}>{planLabel}</span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 800, color: GOLD }}>{days}</span>
-                  <span style={{ fontSize: '0.82rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>jours restants</span>
+                  <span style={{ ...statSmallStyle, fontSize: '1.4rem' }}>{days}</span>
+                  <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>jours restants</span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300, marginBottom: days <= 5 ? 4 : 0 }}>Renouvellement le {endDate}</div>
-                {days <= 5 && <div style={{ fontSize: '0.78rem', color: GOLD, marginTop: 6, fontFamily: FONT_ALT, fontWeight: 600 }}>Ton abonnement expire bientôt</div>}
+                <div style={{ ...mutedStyle, marginBottom: days <= 5 ? 4 : 0 }}>Renouvellement le {endDate}</div>
+                {days <= 5 && <div style={{ ...labelStyle, fontSize: '0.78rem', marginTop: 6, cursor: 'default' }}>Ton abonnement expire bientôt</div>}
               </div>
             )
           }
@@ -425,7 +426,7 @@ export default function ProfileTab({
           // No subscription
           return (
             <div>
-              <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 14px', lineHeight: 1.5, fontFamily: FONT_BODY, fontWeight: 300 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
+              <p style={{ ...mutedStyle, fontSize: '0.82rem', margin: '0 0 14px', lineHeight: 1.5 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
               <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer',  }}>
                 S&apos;abonner — Dès CHF 10/mois
               </button>
@@ -463,7 +464,7 @@ export default function ProfileTab({
         ]
         return (
           <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
-            <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>Mes badges</div>
+            <div style={{ ...T, fontSize: 11, marginBottom: 12 }}>Mes badges</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {ALL_BADGES.map(b => {
                 const earned = badges.includes(b.type)
@@ -478,8 +479,8 @@ export default function ProfileTab({
                     transition: 'opacity 0.3s ease',
                   }}>
                     <div style={{ fontSize: '1.4rem', marginBottom: 4 }}>{b.icon}</div>
-                    <div style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: earned ? GOLD : TEXT_MUTED, marginBottom: 2 }}>{b.label}</div>
-                    <div style={{ fontSize: '0.55rem', color: TEXT_MUTED, lineHeight: 1.3, fontFamily: FONT_BODY, fontWeight: 300 }}>{b.desc}</div>
+                    <div style={{ ...labelStyle, fontSize: '0.72rem', color: earned ? GOLD : TEXT_MUTED, marginBottom: 2, cursor: 'default' }}>{b.label}</div>
+                    <div style={{ ...mutedStyle, fontSize: '0.55rem', lineHeight: 1.3 }}>{b.desc}</div>
                   </div>
                 )
               })}
@@ -491,7 +492,7 @@ export default function ProfileTab({
       {/* Sign out */}
       <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 200ms', marginTop: 8 }}>
         <LogOut size={18} color={TEXT_MUTED} />
-        <span style={{ fontSize: '1rem', fontFamily: FONT_DISPLAY, fontWeight: 700, letterSpacing: '1px', color: TEXT_MUTED }}>Déconnexion</span>
+        <span style={{ ...labelStyle, fontSize: '1rem', color: TEXT_MUTED, cursor: 'inherit' }}>Déconnexion</span>
       </button>
 
       {/* Delete account */}
