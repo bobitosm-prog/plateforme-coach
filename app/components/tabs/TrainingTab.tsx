@@ -70,6 +70,8 @@ export default function TrainingTab({
   const [showProgramManager, setShowProgramManager] = useState(false)
   const [weekOffset, setWeekOffset] = useState(0)
   const calTouchStart = useRef<number | null>(null)
+  const [expandedProgram, setExpandedProgram] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [showFullHistory, setShowFullHistory] = useState(false)
   const [workoutHistory, setWorkoutHistory] = useState<any[]>([])
   const [historyFilter, setHistoryFilter] = useState('all')
@@ -1146,62 +1148,119 @@ export default function TrainingTab({
         <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={80} />
       </div>
 
-      {/* ═══ SECTION 7 — PROGRAM MANAGER MODAL ═══ */}
+      {/* ═══ SECTION 7 — PROGRAM MANAGER MODAL (fullscreen) ═══ */}
       {showProgramManager && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowProgramManager(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ ...cardStyle, borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 500, maxHeight: '85vh', overflow: 'auto', padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <span style={pageTitleStyle}>MES PROGRAMMES</span>
-              <button onClick={() => setShowProgramManager(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: colors.textMuted }}>✕</button>
-            </div>
+        <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* Header */}
+          <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0 }}>
+            <span style={pageTitleStyle}>MES PROGRAMMES</span>
+            <button onClick={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} style={{ width: 36, height: 36, borderRadius: 12, background: colors.surface, border: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.textMuted, fontSize: 16 }}>✕</button>
+          </div>
 
-            {/* Program management buttons */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {activeCustomProgram && !editMode && (
-                  <button onClick={startEditMode} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: colors.gold, background: 'transparent', border: `1px solid ${colors.goldRule}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase' }}>MODIFIER</button>
-                )}
-                {editMode && (
-                  <>
-                    <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: colors.textMuted, background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer' }}>ANNULER</button>
-                    <button onClick={saveEditedProgram} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: '#0D0B08', background: colors.gold, border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1 }}>SAUVEGARDER</button>
-                  </>
-                )}
-                {!editMode && (
-                  <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }} style={{ fontFamily: fonts.body, fontSize: 11, color: colors.gold, background: 'transparent', border: `1px solid ${colors.gold}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>+ CREER</button>
-                )}
-              </div>
-            </div>
+          {/* Scrollable content */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 100px' }}>
+            {/* Create button */}
+            <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }} style={{ ...btnPrimary, width: '100%', padding: 16, marginBottom: 20 }}>
+              + CRÉER UN PROGRAMME
+            </button>
 
             {/* Program list */}
-            {customPrograms.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {customPrograms.map((prog: any) => (
-                  <div key={prog.id} style={{ background: colors.surface, border: `1px solid ${prog.is_active ? colors.gold : colors.goldBorder}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ ...statSmallStyle, fontSize: 16, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '1px' }}>{prog.name}</div>
-                      <div style={{ ...mutedStyle, fontSize: 11 }}>
-                        {(prog.days || []).length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
-                        {prog.is_active && <span style={{ color: colors.success, marginLeft: 8 }}>● Actif</span>}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {prog.is_active ? (
-                        <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: colors.success, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>DÉSACTIVER</button>
-                      ) : (
-                        <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: colors.goldDim, border: `1px solid ${colors.gold}`, color: colors.gold, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>ACTIVER</button>
-                      )}
-                      <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>ÉDITER</button>
-                      <button onClick={() => deleteProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, color: colors.error, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>×</button>
-                    </div>
-                  </div>
-                ))}
+            {customPrograms.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <Dumbbell size={48} color={colors.textDim} strokeWidth={1.5} />
+                <p style={{ ...bodyStyle, marginTop: 12 }}>Aucun programme créé</p>
               </div>
             ) : (
-              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-                style={{ width: '100%', padding: 16, background: colors.goldDim, border: `1px dashed ${colors.goldRule}`, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                CRÉER UN PROGRAMME +
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {customPrograms.map((prog: any) => {
+                  const isExpanded = expandedProgram === prog.id
+                  const days = prog.days || []
+
+                  return (
+                    <div key={prog.id} style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
+                      {/* Program header — always visible */}
+                      <button
+                        onClick={() => setExpandedProgram(isExpanded ? null : prog.id)}
+                        style={{ width: '100%', padding: 20, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+                      >
+                        <div>
+                          <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '0.05em' }}>{prog.name}</div>
+                          <div style={{ ...mutedStyle, marginTop: 4 }}>
+                            {days.length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {prog.is_active && (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.success, background: 'rgba(74,222,128,0.1)', padding: '3px 10px', borderRadius: 999 }}>● Actif</span>
+                          )}
+                          <span style={{ color: colors.textMuted, fontSize: 14, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
+                        </div>
+                      </button>
+
+                      {/* Expanded content — accordion */}
+                      {isExpanded && (
+                        <div style={{ padding: '0 20px 20px', borderTop: `1px solid ${colors.goldBorder}` }}>
+                          {/* Action buttons */}
+                          <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 16 }}>
+                            {prog.is_active ? (
+                              <button onClick={() => deactivateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: 'rgba(74,222,128,0.08)', border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 12, color: colors.success, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>DÉSACTIVER</button>
+                            ) : (
+                              <button onClick={() => activateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: colors.goldDim, border: `1px solid ${colors.gold}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ACTIVER</button>
+                            )}
+                            <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ flex: 1, padding: '10px 0', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>✏️ ÉDITER</button>
+                          </div>
+
+                          {/* Days accordion */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {padTo7Days(days).map((day: any, di: number) => {
+                              if (day.is_rest) return (
+                                <div key={di} style={{ background: colors.surfaceHigh, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <Moon size={14} color={colors.textDim} />
+                                  <span style={{ ...mutedStyle, fontSize: 12 }}>Jour {di + 1} — Repos</span>
+                                </div>
+                              )
+                              const exList = day.exercises || []
+                              return (
+                                <div key={di} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 16 }}>
+                                  <div style={{ ...titleStyle, fontSize: 12, marginBottom: 8 }}>
+                                    Jour {di + 1} : {day.name || day.weekday || `Séance ${di + 1}`}
+                                    {day.focus && <span style={{ color: colors.textMuted, fontWeight: 400, marginLeft: 6 }}>({day.focus})</span>}
+                                  </div>
+                                  {exList.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                      {exList.map((ex: any, ei: number) => (
+                                        <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                          <span style={{ color: colors.gold, fontSize: 10 }}>•</span>
+                                          <span style={{ ...bodyStyle, fontSize: 13 }}>{ex.exercise_name || ex.name}</span>
+                                          <span style={{ ...mutedStyle, fontSize: 11, marginLeft: 'auto' }}>{ex.sets || 3}×{ex.reps || 10}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span style={{ ...mutedStyle, fontSize: 12 }}>Aucun exercice</span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          {/* Delete button with confirmation */}
+                          <div style={{ marginTop: 16, borderTop: `1px solid ${colors.goldBorder}`, paddingTop: 16 }}>
+                            {confirmDelete === prog.id ? (
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button onClick={() => { deleteProgram(prog.id); setConfirmDelete(null); setExpandedProgram(null) }} style={{ flex: 1, padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>CONFIRMER SUPPRESSION</button>
+                                <button onClick={() => setConfirmDelete(null)} style={{ padding: '12px 20px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>ANNULER</button>
+                              </div>
+                            ) : (
+                              <button onClick={() => setConfirmDelete(prog.id)} style={{ width: '100%', padding: 12, background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>SUPPRIMER CE PROGRAMME</button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             )}
           </div>
         </div>
