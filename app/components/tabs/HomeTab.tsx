@@ -348,7 +348,7 @@ export default function HomeTab({
           <div style={{ position: 'absolute', top: 20, left: 20, padding: '12px 16px', background: 'rgba(32,31,31,0.6)', backdropFilter: 'blur(24px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 30px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Flame size={12} color={GOLD} />
-              <span style={{ ...T, fontSize: 12 }}>Objectif</span>
+              <span style={T}>Objectif</span>
             </div>
             <div style={{ ...statStyle, fontSize: 22, marginTop: 4 }}>
               {calorieGoal} <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED }}>kcal</span>
@@ -358,7 +358,7 @@ export default function HomeTab({
           <div style={{ position: 'absolute', bottom: 36, right: 20, padding: '12px 16px', background: 'rgba(32,31,31,0.6)', backdropFilter: 'blur(24px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 30px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Dumbbell size={12} color={GOLD} />
-              <span style={{ ...T, fontSize: 12 }}>Volume</span>
+              <span style={T}>Volume</span>
             </div>
             <div style={{ ...statStyle, fontSize: 22, marginTop: 4 }}>
               {weekSessions} <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED }}>séances</span>
@@ -371,7 +371,7 @@ export default function HomeTab({
           {/* Active Energy */}
           <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
-              <span style={{ ...T, fontSize: 12 }}>Énergie</span>
+              <span style={T}>Énergie</span>
               <div style={{ ...statStyle, marginTop: 4 }}>{calPct}%</div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -381,7 +381,7 @@ export default function HomeTab({
           {/* Hydration */}
           <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
-              <span style={{ ...T, fontSize: 12 }}>Hydratation</span>
+              <span style={T}>Hydratation</span>
               <div style={{ ...statStyle, marginTop: 4 }}>
                 {(waterToday / 1000).toFixed(1)} <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_MUTED }}>L</span>
               </div>
@@ -414,7 +414,7 @@ export default function HomeTab({
 
         {/* ═══ WEIGHT + OBJECTIVE CARD ═══ */}
         {currentWeight && (
-          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
               <div style={{ ...T, marginBottom: 4 }}>
                 {objLabel === 'bulk' && 'PRISE DE MASSE'}
@@ -445,7 +445,7 @@ export default function HomeTab({
           const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
           const title = getLevelTitle(level)
           return (
-            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '14px 16px', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={T}>LV.{level} — {title}</span>
@@ -491,7 +491,7 @@ export default function HomeTab({
               <span style={{ fontFamily: fonts.body, fontSize: 10, fontWeight: 700, color: '#0D0B08', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Séance du jour</span>
             </div>
           </div>
-          <div style={{ padding: '16px 20px 20px' }}>
+          <div style={{ padding: 20 }}>
             {!coachProgram && !customProgramExercises && !todayScheduledSession ? (
               <p style={{ ...bodyStyle, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
             ) : !hasWorkoutToday && (customDayName === 'Repos' || todayCoachDay?.repos) ? (
@@ -568,7 +568,7 @@ export default function HomeTab({
           const filledGlasses = Math.floor(waterL / glassSize)
           const partialFill = (waterL % glassSize) / glassSize
           return (
-            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '16px 18px', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                 <div>
                   <div style={T}>HYDRATATION</div>
@@ -601,7 +601,7 @@ export default function HomeTab({
 
         {/* ═══ DAILY HABIT CHECK-IN ═══ */}
         {!todayHabit ? (
-          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '14px 16px', marginBottom: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div style={{ ...T, marginBottom: 10 }}>CHECK-IN DU JOUR</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[
@@ -646,7 +646,7 @@ export default function HomeTab({
         )}
 
         {/* ═══ NUTRITION MACROS ═══ */}
-        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={T}>NUTRITION</span>
             <button onClick={() => setActiveTab('nutrition')} style={{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em' }}>Voir plan</button>
