@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useReveal, useCounter } from './shared'
+import { colors } from '../../../lib/design-tokens'
 
 function StatItem({ target, label, first }: { target: number; label: string; first?: boolean }) {
   const { ref, value } = useCounter(target)
@@ -73,8 +74,8 @@ export default function Hero() {
           50% { opacity: 1; }
         }
         @keyframes notchGlow {
-          0%, 100% { box-shadow: 0 0 6px rgba(201,168,76,0.0); }
-          50% { box-shadow: 0 0 6px rgba(201,168,76,0.3); }
+          0%, 100% { box-shadow: 0 0 6px ${colors.goldDim}; }
+          50% { box-shadow: 0 0 6px ${colors.goldRule}; }
         }
         .hero-section {
           min-height: 100vh;
@@ -112,9 +113,9 @@ export default function Hero() {
           height: 440px;
           border-radius: 36px;
           background: #0a0a0a;
-          border: 2px solid rgba(201,168,76,0.25);
+          border: 2px solid ${colors.goldRule};
           box-shadow:
-            0 0 0 1px rgba(201,168,76,0.08),
+            0 0 0 1px ${colors.goldDim},
             0 30px 80px rgba(0,0,0,0.6),
             0 10px 30px rgba(0,0,0,0.4),
             inset 0 1px 0 rgba(255,255,255,0.04);
@@ -142,7 +143,7 @@ export default function Hero() {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(201,168,76,0.4) 0%, rgba(201,168,76,0.1) 60%, transparent 100%);
+          background: radial-gradient(circle, ${colors.goldRule} 0%, ${colors.goldDim} 60%, transparent 100%);
         }
         .hero-phone-screen {
           position: absolute;
@@ -183,7 +184,7 @@ export default function Hero() {
           margin: 0 18px 10px;
           height: 4px;
           border-radius: 2px;
-          background: rgba(201,168,76,0.12);
+          background: ${colors.goldBorder};
           overflow: hidden;
         }
         .hero-phone-screen-bar-fill {
@@ -197,8 +198,8 @@ export default function Hero() {
           margin: 0 14px 8px;
           padding: 12px 14px;
           border-radius: 12px;
-          background: rgba(201,168,76,0.05);
-          border: 1px solid rgba(201,168,76,0.1);
+          background: ${colors.goldDim};
+          border: 1px solid ${colors.goldDim};
         }
         .hero-phone-screen-card-label {
           font-family: var(--font-body);
@@ -251,7 +252,7 @@ export default function Hero() {
           width: 30%;
           height: 3px;
           border-radius: 2px;
-          background: rgba(201,168,76,0.15);
+          background: ${colors.goldBorder};
         }
         .hero-phone-home {
           position: absolute;
@@ -271,7 +272,7 @@ export default function Hero() {
           height: 80px;
           z-index: 4;
           clip-path: polygon(0 40%, 100% 0%, 100% 100%, 0% 100%);
-          background: linear-gradient(90deg, rgba(201,168,76,0.06) 0%, rgba(201,168,76,0.02) 50%, transparent 100%);
+          background: linear-gradient(90deg, ${colors.goldDim} 0%, ${colors.goldDim} 50%, transparent 100%);
           pointer-events: none;
         }
         .hero-bottom-divider::after {
@@ -281,7 +282,7 @@ export default function Hero() {
           left: 0;
           right: 0;
           height: 1px;
-          background: linear-gradient(90deg, rgba(201,168,76,0.2) 0%, rgba(201,168,76,0.06) 60%, transparent 100%);
+          background: linear-gradient(90deg, ${colors.goldRule} 0%, ${colors.goldDim} 60%, transparent 100%);
           transform: rotate(-1.5deg);
           transform-origin: top right;
         }
@@ -337,7 +338,7 @@ export default function Hero() {
             left: '-0.02em',
             fontFamily: 'var(--font-display)',
             fontSize: 'clamp(160px, 22vw, 320px)',
-            color: 'rgba(201,168,76,0.04)',
+            color: colors.goldDim,
             letterSpacing: -2,
             lineHeight: 1,
             pointerEvents: 'none',

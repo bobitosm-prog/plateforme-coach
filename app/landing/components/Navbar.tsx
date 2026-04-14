@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { colors } from '../../../lib/design-tokens'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
@@ -15,8 +16,8 @@ export default function Navbar() {
     <>
       <style>{`
         @keyframes pulse-gold {
-          0%, 100% { box-shadow: 0 0 12px rgba(201,168,76,0.2); }
-          50% { box-shadow: 0 0 32px rgba(201,168,76,0.5); }
+          0%, 100% { box-shadow: 0 0 12px ${colors.goldRule}; }
+          50% { box-shadow: 0 0 32px ${colors.goldRule}; }
         }
         @media (max-width: 640px) {
           .landing-nav { padding: 0 20px !important; }

@@ -3,6 +3,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import { colors, fonts } from '../../lib/design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -221,7 +222,7 @@ export default function OnboardingFitnessPage() {
     ]
 
     return (
-      <div className="min-h-dvh bg-[#131313] text-[#e5e2e1] font-['Inter',sans-serif]">
+      <div className="min-h-dvh bg-[var(--background)] text-[var(--text)] font-['Inter',sans-serif]">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -230,7 +231,7 @@ export default function OnboardingFitnessPage() {
         >
           {/* 3D Hero */}
           <div className="relative w-full flex items-center justify-center mb-4">
-            <div className="absolute inset-0 bg-[#e6c364]/5 rounded-full blur-[80px]" />
+            <div className="absolute inset-0 bg-[var(--gold)]/5 rounded-full blur-[80px]" />
             <Image
               src="/images/onboarding/fitness-score-3d.png"
               alt="Fitness Score"
@@ -241,17 +242,17 @@ export default function OnboardingFitnessPage() {
             />
             {/* Score overlay */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
-              <span className="font-['Plus_Jakarta_Sans'] text-6xl font-extrabold tracking-tighter text-[#e6c364]" style={{ textShadow: '0 0 20px rgba(230,195,100,0.3)' }}>
+              <span className="font-['Plus_Jakarta_Sans'] text-6xl font-extrabold tracking-tighter text-[var(--gold)]" style={{ textShadow: `0 0 20px ${colors.goldDim}` }}>
                 {animatedScore}
               </span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-[#d0c5b2] font-bold">/100</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-bold">/100</span>
             </div>
           </div>
 
           {/* Level title */}
           <div className="text-center mb-8">
             <h2 className="font-['Plus_Jakarta_Sans'] text-3xl font-extrabold tracking-tight mb-2">{levelLabel}</h2>
-            <p className="text-[#d0c5b2] text-sm font-medium">
+            <p className="text-[var(--text-muted)] text-sm font-medium">
               {finalScore >= 70
                 ? 'Vous êtes dans le top 5% des membres MoovX.'
                 : finalScore >= 40
@@ -265,10 +266,10 @@ export default function OnboardingFitnessPage() {
             {metricCards.map(c => (
               <div key={c.label} className="bg-[#201f1f] rounded-xl p-5 flex flex-col gap-4 group hover:bg-[#2a2a2a] transition-colors">
                 <div className="flex justify-between items-start">
-                  <div className="p-2 bg-[#e6c364]/10 rounded-lg text-[#e6c364]">
+                  <div className="p-2 bg-[var(--gold)]/10 rounded-lg text-[var(--gold)]">
                     <span className="material-symbols-outlined">{c.icon}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-[#d0c5b2] tracking-widest uppercase">{c.label}</span>
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-widest uppercase">{c.label}</span>
                 </div>
                 <div className="font-['Plus_Jakarta_Sans'] text-lg font-bold">{c.value}</div>
               </div>
@@ -280,8 +281,8 @@ export default function OnboardingFitnessPage() {
             <h3 className="font-['Plus_Jakarta_Sans'] text-xl font-bold uppercase tracking-tighter mb-4">Vos objectifs</h3>
             <div className="flex flex-col gap-3">
               {objectives.map((obj, i) => (
-                <div key={i} className="flex items-center gap-3 p-4 bg-[#e6c364]/5 border border-[#e6c364]/15 rounded-xl">
-                  <span className="material-symbols-outlined text-[#e6c364] text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                <div key={i} className="flex items-center gap-3 p-4 bg-[var(--gold)]/5 border border-[var(--gold)]/15 rounded-xl">
+                  <span className="material-symbols-outlined text-[var(--gold)] text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   <span className="text-sm font-medium">{obj}</span>
                 </div>
               ))}
@@ -292,7 +293,7 @@ export default function OnboardingFitnessPage() {
           <button
             onClick={handleFinish}
             disabled={saving}
-            className="w-full py-4 bg-gradient-to-br from-[#e6c364] to-[#c9a84c] text-[#3d2e00] font-['Plus_Jakarta_Sans'] font-bold rounded-full shadow-lg shadow-[#e6c364]/20 active:scale-[0.98] transition-all uppercase tracking-widest text-sm disabled:opacity-60"
+            className="w-full py-4 bg-gradient-to-br from-[var(--gold)] to-[var(--gold-container)] text-[#3d2e00] font-['Plus_Jakarta_Sans'] font-bold rounded-full shadow-lg shadow-[var(--gold)]/20 active:scale-[0.98] transition-all uppercase tracking-widest text-sm disabled:opacity-60"
           >
             {saving ? 'Sauvegarde...' : 'Commencer mon programme'}
           </button>
@@ -308,27 +309,27 @@ export default function OnboardingFitnessPage() {
   // ─── Quiz layout (Stitch: Fitness Goals Quiz) ───
 
   return (
-    <div className="min-h-dvh bg-[#131313] text-[#e5e2e1] font-['Inter',sans-serif] flex flex-col">
+    <div className="min-h-dvh bg-[var(--background)] text-[var(--text)] font-['Inter',sans-serif] flex flex-col">
       {/* Header + Progress */}
-      <header className="fixed top-0 left-0 w-full z-50 px-6 pt-8 pb-4 bg-[#131313]/80 backdrop-blur-md">
+      <header className="fixed top-0 left-0 w-full z-50 px-6 pt-8 pb-4 bg-[var(--background)]/80 backdrop-blur-md">
         <div className="max-w-md mx-auto flex flex-col gap-4">
           <div className="flex justify-between items-end">
             <div>
-              <span className="font-['Plus_Jakarta_Sans'] text-[#e6c364] text-[10px] uppercase tracking-[0.3em] font-bold">
+              <span className="font-['Plus_Jakarta_Sans'] text-[var(--gold)] text-[10px] uppercase tracking-[0.3em] font-bold">
                 Question {String(step).padStart(2, '0')} / {String(TOTAL_STEPS).padStart(2, '0')}
               </span>
               <h1 className="font-['Plus_Jakarta_Sans'] text-xl font-black tracking-tighter uppercase mt-1">
                 Définissez votre parcours
               </h1>
             </div>
-            <span className="material-symbols-outlined text-[#c9a84c] text-2xl">bolt</span>
+            <span className="material-symbols-outlined text-[var(--gold-container)] text-2xl">bolt</span>
           </div>
           {/* Gold progress bar */}
           <div className="relative w-full h-[6px] bg-[#353534] rounded-full overflow-hidden">
             <motion.div
               animate={{ width: `${progressPct}%` }}
               transition={{ duration: 0.3 }}
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#e6c364] to-[#c9a84c] rounded-full shadow-[0_0_15px_rgba(230,195,100,0.4)]"
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[var(--gold)] to-[var(--gold-container)] rounded-full shadow-[0_0_15px_var(--gold-dim)]"
             />
           </div>
         </div>
@@ -337,7 +338,7 @@ export default function OnboardingFitnessPage() {
       <main className="flex-grow pt-32 pb-24 px-6 max-w-md mx-auto w-full">
         {/* 3D Illustration */}
         <div className="relative mb-8 flex justify-center items-center">
-          <div className="absolute w-[300px] h-[300px] bg-[#e6c364]/5 rounded-full blur-[80px] -z-10" />
+          <div className="absolute w-[300px] h-[300px] bg-[var(--gold)]/5 rounded-full blur-[80px] -z-10" />
           <Image
             src="/images/onboarding/fitness-goals-3d.png"
             alt="Fitness Goals"
@@ -353,7 +354,7 @@ export default function OnboardingFitnessPage() {
           <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-extrabold tracking-tight mb-2">
             {STEP_TITLES[step - 1]}
           </h2>
-          <p className="text-[#d0c5b2] text-sm font-medium">{STEP_SUBTITLES[step - 1]}</p>
+          <p className="text-[var(--text-muted)] text-sm font-medium">{STEP_SUBTITLES[step - 1]}</p>
         </div>
 
         {/* Step content */}
@@ -369,10 +370,10 @@ export default function OnboardingFitnessPage() {
             {step === 3 ? (
               /* Slider step */
               <div className="flex flex-col items-center">
-                <span className="font-['Plus_Jakarta_Sans'] text-6xl font-extrabold text-[#e6c364] mb-2" style={{ textShadow: '0 0 20px rgba(230,195,100,0.3)' }}>
+                <span className="font-['Plus_Jakarta_Sans'] text-6xl font-extrabold text-[var(--gold)] mb-2" style={{ textShadow: `0 0 20px ${colors.goldDim}` }}>
                   {sessions}
                 </span>
-                <span className="text-sm text-[#d0c5b2] font-medium mb-8">{SLIDER_LABELS[sessions]}</span>
+                <span className="text-sm text-[var(--text-muted)] font-medium mb-8">{SLIDER_LABELS[sessions]}</span>
                 <input
                   type="range"
                   min={1}
@@ -380,9 +381,9 @@ export default function OnboardingFitnessPage() {
                   value={sessions}
                   onChange={e => setSessions(Number(e.target.value))}
                   className="w-full h-[6px] rounded-full appearance-none cursor-pointer"
-                  style={{ accentColor: '#e6c364', background: '#353534' }}
+                  style={{ accentColor: colors.gold, background: '#353534' }}
                 />
-                <div className="flex justify-between w-full text-xs text-[#d0c5b2] mt-2 font-medium">
+                <div className="flex justify-between w-full text-xs text-[var(--text-muted)] mt-2 font-medium">
                   <span>1x</span><span>6x</span>
                 </div>
               </div>
@@ -400,22 +401,22 @@ export default function OnboardingFitnessPage() {
                       onClick={() => setSel(i)}
                       className={`group relative flex items-center p-4 rounded-xl transition-all duration-300 text-left ${
                         isSelected
-                          ? 'bg-[#1c1b1b] border-2 border-[#e6c364]/60 shadow-[0_0_20px_rgba(230,195,100,0.1)]'
-                          : 'bg-[#201f1f] border border-[#4d4637]/20 hover:bg-[#2a2a2a] hover:border-[#e6c364]/40'
+                          ? 'bg-[var(--surface-high)] border-2 border-[var(--gold)]/60 shadow-[0_0_20px_var(--gold-dim)]'
+                          : 'bg-[#201f1f] border border-[#4d4637]/20 hover:bg-[#2a2a2a] hover:border-[var(--gold)]/40'
                       }`}
                     >
                       <div className={`w-12 h-12 rounded-lg flex items-center justify-center mr-4 transition-transform group-hover:scale-110 ${
-                        isSelected ? 'bg-[#e6c364]/20' : 'bg-[#353534]'
+                        isSelected ? 'bg-[var(--gold)]/20' : 'bg-[#353534]'
                       }`}>
-                        <span className={`material-symbols-outlined text-2xl ${isSelected ? 'text-[#e6c364]' : 'text-[#d0c5b2]'}`}>
+                        <span className={`material-symbols-outlined text-2xl ${isSelected ? 'text-[var(--gold)]' : 'text-[${colors.textMuted}]'}`}>
                           {opt.icon}
                         </span>
                       </div>
-                      <span className={`font-semibold text-[15px] flex-grow ${isSelected ? 'text-[#e6c364]' : ''}`}>
+                      <span className={`font-semibold text-[15px] flex-grow ${isSelected ? 'text-[${colors.gold}]' : ''}`}>
                         {opt.label}
                       </span>
                       {isSelected && (
-                        <span className="material-symbols-outlined text-[#e6c364]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                        <span className="material-symbols-outlined text-[var(--gold)]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                       )}
                     </button>
                   )
@@ -427,12 +428,12 @@ export default function OnboardingFitnessPage() {
       </main>
 
       {/* Footer CTA */}
-      <footer className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#131313] via-[#131313] to-transparent">
+      <footer className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent">
         <div className="max-w-md mx-auto flex gap-3">
           {step > 1 && (
             <button
               onClick={() => setStep(s => s - 1)}
-              className="px-6 py-4 rounded-full border border-[#4d4637]/30 text-[#d0c5b2] font-bold text-sm uppercase tracking-widest hover:bg-[#201f1f] transition-colors"
+              className="px-6 py-4 rounded-full border border-[#4d4637]/30 text-[var(--text-muted)] font-bold text-sm uppercase tracking-widest hover:bg-[#201f1f] transition-colors"
             >
               Retour
             </button>
@@ -440,7 +441,7 @@ export default function OnboardingFitnessPage() {
           <button
             onClick={handleNext}
             disabled={!canContinue}
-            className="flex-1 py-4 rounded-full font-['Plus_Jakarta_Sans'] font-bold bg-gradient-to-br from-[#e6c364] to-[#c9a84c] text-[#3d2e00] shadow-lg shadow-[#e6c364]/10 active:scale-[0.98] transition-all uppercase tracking-widest text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-4 rounded-full font-['Plus_Jakarta_Sans'] font-bold bg-gradient-to-br from-[var(--gold)] to-[var(--gold-container)] text-[#3d2e00] shadow-lg shadow-[var(--gold)]/10 active:scale-[0.98] transition-all uppercase tracking-widest text-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {step === TOTAL_STEPS ? 'Voir mon résultat' : 'Continuer'}
           </button>

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useReveal } from './shared';
+import { colors } from '../../../lib/design-tokens'
 
 const plans = [
   {
@@ -96,9 +97,9 @@ export default function PricingSection() {
             fontWeight: 700,
             fontSize: 11,
             letterSpacing: 2,
-            color: 'var(--gold, #C9A84C)',
-            background: 'var(--gold-dim, rgba(201,168,76,0.15))',
-            border: '1px solid var(--gold-rule, rgba(201,168,76,0.25))',
+            color: colors.goldContainer,
+            background: colors.goldBorder,
+            border: `1px solid ${colors.goldRule}`,
             padding: '5px 14px',
             textTransform: 'uppercase',
             marginBottom: 20,
@@ -159,7 +160,7 @@ export default function PricingSection() {
                   fontWeight: 800,
                   fontSize: 10,
                   letterSpacing: 2,
-                  background: 'var(--gold, #C9A84C)',
+                  background: colors.goldContainer,
                   color: '#0D0B08',
                   padding: '4px 16px',
                   textTransform: 'uppercase',
@@ -174,7 +175,7 @@ export default function PricingSection() {
                 fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
                 fontWeight: 700,
                 fontSize: 16,
-                color: 'var(--gold, #C9A84C)',
+                color: colors.goldContainer,
                 letterSpacing: 1,
                 marginTop: p.badge ? 16 : 0,
               }}>
@@ -238,7 +239,7 @@ export default function PricingSection() {
                     fontWeight: 300,
                     alignItems: 'flex-start',
                   }}>
-                    <span style={{ color: 'var(--gold, #C9A84C)', flexShrink: 0 }}>&mdash;</span>
+                    <span style={{ color: colors.goldContainer, flexShrink: 0 }}>&mdash;</span>
                     <span>{f}</span>
                   </div>
                 ))}
@@ -259,9 +260,9 @@ export default function PricingSection() {
                 transition: 'all 0.3s ease',
                 ...(p.featured
                   ? {
-                      background: 'var(--gold, #C9A84C)',
+                      background: colors.goldContainer,
                       color: '#0D0B08',
-                      border: '1px solid var(--gold, #C9A84C)',
+                      border: '1px solid var(--gold, ${colors.goldContainer})',
                     }
                   : {
                       background: 'transparent',

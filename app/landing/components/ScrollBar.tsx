@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { colors } from '../../../lib/design-tokens'
 
 export default function ScrollBar() {
   const [pct, setPct] = useState(0)
@@ -24,7 +25,7 @@ export default function ScrollBar() {
         background: 'var(--gold)',
         width: `${pct}%`,
         transition: 'width 0.08s linear',
-        boxShadow: '0 0 12px rgba(201,168,76,0.6)',
+        boxShadow: `0 0 12px ${colors.goldRule}`,
       }}
     />
   )

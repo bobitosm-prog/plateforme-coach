@@ -1,4 +1,5 @@
 'use client'
+import { colors } from '../../../../lib/design-tokens'
 
 export default function AnalysisDisplay({ text }: { text: string }) {
   const sections = [
@@ -6,7 +7,7 @@ export default function AnalysisDisplay({ text }: { text: string }) {
     { title: 'COHERENCE PROGRAMME', color: '#A78BFA', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
     { title: 'POINTS POSITIFS', color: '#34D399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
     { title: 'AXES DE PROGRESSION', color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.2)' },
-    { title: 'RECOMMANDATION PRIORITAIRE', color: '#D4A843', bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)' },
+    { title: 'RECOMMANDATION PRIORITAIRE', color: '#D4A843', bg: colors.goldDim, border: colors.goldRule },
   ]
 
   const parts: { title: string; content: string; color: string; bg: string; border: string }[] = []

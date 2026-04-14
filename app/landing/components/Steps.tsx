@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useReveal } from './shared';
+import { colors } from '../../../lib/design-tokens'
 
 const steps = [
   { num: '01', title: 'Crée ton profil', desc: '2 minutes. Objectifs, mensurations, préférences alimentaires et niveau fitness.' },
@@ -34,9 +35,9 @@ export default function Steps() {
             fontWeight: 700,
             fontSize: 11,
             letterSpacing: 2,
-            color: 'var(--gold, #C9A84C)',
-            background: 'var(--gold-dim, rgba(201,168,76,0.15))',
-            border: '1px solid var(--gold-rule, rgba(201,168,76,0.25))',
+            color: colors.goldContainer,
+            background: colors.goldBorder,
+            border: `1px solid ${colors.goldRule}`,
             padding: '5px 14px',
             textTransform: 'uppercase',
             marginBottom: 20,
@@ -77,7 +78,7 @@ export default function Steps() {
             left: 'calc(12.5% + 32px)',
             right: 'calc(12.5% + 32px)',
             height: 1,
-            background: 'linear-gradient(90deg, var(--gold-rule, rgba(201,168,76,0.25)), var(--gold, #C9A84C), var(--gold-rule, rgba(201,168,76,0.25)))',
+            background: `linear-gradient(90deg, ${colors.goldRule}, ${colors.goldContainer}, ${colors.goldRule})`,
             zIndex: 0,
           }} />
 
@@ -94,11 +95,11 @@ export default function Steps() {
                 width: 64,
                 height: 64,
                 margin: '0 auto 24px',
-                border: '1px solid var(--gold-rule, rgba(201,168,76,0.25))',
+                border: `1px solid ${colors.goldRule}`,
                 background: 'var(--surface, #0D0C0B)',
                 fontFamily: "var(--font-display, 'Bebas Neue'), sans-serif",
                 fontSize: 24,
-                color: 'var(--gold, #C9A84C)',
+                color: colors.goldContainer,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -134,7 +135,7 @@ export default function Steps() {
 
       <style>{`
         .step-num:hover {
-          background: var(--gold, #C9A84C) !important;
+          background: ${colors.goldContainer} !important;
           color: #050505 !important;
         }
         @media (max-width: 1024px) {

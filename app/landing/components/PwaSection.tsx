@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useReveal } from './shared';
+import { colors } from '../../../lib/design-tokens'
 
 const badges = [
   {
@@ -68,9 +69,9 @@ export default function PWASection() {
             fontWeight: 700,
             fontSize: 11,
             letterSpacing: 2,
-            color: 'var(--gold, #C9A84C)',
-            background: 'var(--gold-dim, rgba(201,168,76,0.15))',
-            border: '1px solid var(--gold-rule, rgba(201,168,76,0.25))',
+            color: colors.goldContainer,
+            background: colors.goldBorder,
+            border: `1px solid ${colors.goldRule}`,
             padding: '5px 14px',
             textTransform: 'uppercase',
             marginBottom: 20,
@@ -130,7 +131,7 @@ export default function PWASection() {
               fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
               fontWeight: 700,
               fontSize: 13,
-              color: 'var(--gold, #C9A84C)',
+              color: colors.goldContainer,
               letterSpacing: 1,
               textTransform: 'uppercase',
               margin: '0 0 32px',
@@ -147,14 +148,14 @@ export default function PWASection() {
                   <div style={{
                     minWidth: 36,
                     height: 36,
-                    background: 'var(--gold-dim, rgba(201,168,76,0.15))',
-                    border: '1px solid var(--gold-rule, rgba(201,168,76,0.25))',
+                    background: colors.goldBorder,
+                    border: `1px solid ${colors.goldRule}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontFamily: "var(--font-display, 'Bebas Neue'), sans-serif",
                     fontSize: 18,
-                    color: 'var(--gold, #C9A84C)',
+                    color: colors.goldContainer,
                   }}>
                     {s.n}
                   </div>
@@ -211,7 +212,7 @@ export default function PWASection() {
               fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
               fontWeight: 700,
               fontSize: 13,
-              color: 'var(--gold, #C9A84C)',
+              color: colors.goldContainer,
               letterSpacing: 1,
               textTransform: 'uppercase',
               margin: '0 0 32px',
@@ -228,14 +229,14 @@ export default function PWASection() {
                   <div style={{
                     minWidth: 36,
                     height: 36,
-                    background: 'var(--gold-dim, rgba(201,168,76,0.15))',
-                    border: '1px solid var(--gold-rule, rgba(201,168,76,0.25))',
+                    background: colors.goldBorder,
+                    border: `1px solid ${colors.goldRule}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontFamily: "var(--font-display, 'Bebas Neue'), sans-serif",
                     fontSize: 18,
-                    color: 'var(--gold, #C9A84C)',
+                    color: colors.goldContainer,
                   }}>
                     {s.n}
                   </div>
@@ -299,7 +300,7 @@ export default function PWASection() {
                 fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
                 fontWeight: 700,
                 fontSize: 14,
-                color: 'var(--gold, #C9A84C)',
+                color: colors.goldContainer,
                 letterSpacing: 1,
                 textTransform: 'uppercase',
                 margin: '0 0 4px',

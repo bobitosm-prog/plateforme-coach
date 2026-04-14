@@ -13,12 +13,7 @@ import ClientProgram from './components/ClientProgram'
 import ClientNutrition from './components/ClientNutrition'
 import ClientMessages from './components/ClientMessages'
 import ClientNotes from './components/ClientNotes'
-import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
-  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
-  MUSCLE_COLORS as MC, MUSCLE_GROUPS_FILTER as MUSCLE_FILTERS,
-} from '@/lib/design-tokens'
+import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS as MC, MUSCLE_GROUPS_FILTER as MUSCLE_FILTERS } from '@/lib/design-tokens'
 
 /* ══════════════════════════════════════════════════════════════
    CONSTANTS (render-only)
@@ -131,7 +126,7 @@ export default function ClientProfilePage() {
         .food-row-m:last-child{border-bottom:none;}
         input[type=number]::-webkit-inner-spin-button{opacity:.4;}
         input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:0;background:${BORDER};outline:none;}
-        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:0;background:${GOLD};cursor:pointer;border:2px solid ${BG_BASE};box-shadow:0 2px 8px rgba(201,168,76,.4);}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:0;background:${GOLD};cursor:pointer;border:2px solid ${BG_BASE};box-shadow:0 2px 8px ${colors.goldRule};}
         ::-webkit-scrollbar{display:none;}
       `}</style>
 

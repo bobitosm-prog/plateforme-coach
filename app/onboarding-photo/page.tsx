@@ -2,7 +2,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { GOLD, GOLD_DIM, GOLD_RULE, BG_BASE, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
+import { colors, GOLD, GOLD_DIM, GOLD_RULE, BG_BASE, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -24,7 +24,7 @@ const ANALYSIS_SECTIONS = [
   { title: 'COHÉRENCE PROGRAMME', color: '#A78BFA', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
   { title: 'POINTS POSITIFS', color: '#34D399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
   { title: 'AXES DE PROGRESSION', color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.2)' },
-  { title: 'RECOMMANDATION PRIORITAIRE', color: GOLD_C, bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)' },
+  { title: 'RECOMMANDATION PRIORITAIRE', color: GOLD_C, bg: colors.goldDim, border: colors.goldRule },
 ]
 
 type Phase = 'upload' | 'analyzing' | 'results'
@@ -239,7 +239,7 @@ export default function OnboardingPhotoPage() {
               onClick={() => fileRef.current?.click()}
               style={{
                 border: `2px dashed ${dragOver ? GOLD_C : 'rgba(255,255,255,0.1)'}`,
-                background: dragOver ? 'rgba(201,168,76,0.06)' : 'rgba(255,255,255,0.02)',
+                background: dragOver ? colors.goldDim : 'rgba(255,255,255,0.02)',
                 padding: '60px 24px', textAlign: 'center', cursor: 'pointer',
                 transition: 'all 0.2s',
               }}

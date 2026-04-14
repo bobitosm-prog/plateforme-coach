@@ -1,10 +1,11 @@
 'use client'
 import type { ToastItem } from '../../lib/hooks/useToast'
+import { colors } from '../../lib/design-tokens'
 
 const COLORS: Record<string, { bg: string; border: string; text: string }> = {
   success: { bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.3)', text: '#22C55E' },
-  error:   { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', text: '#EF4444' },
-  info:    { bg: 'rgba(201,168,76,0.12)', border: 'rgba(201,168,76,0.3)', text: '#D4A843' },
+  error:   { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', text: colors.error },
+  info:    { bg: colors.goldBorder, border: colors.goldRule, text: '#D4A843' },
 }
 
 export default function ToastContainer({ toasts }: { toasts: ToastItem[] }) {

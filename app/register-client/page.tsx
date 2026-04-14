@@ -3,7 +3,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, User, ChevronDown } from 'lucide-react'
-import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
+import { colors, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
 
 /*
   APPLE SIGN-IN SETUP:
@@ -183,13 +183,13 @@ function RegisterContent() {
         .auth-select option{background:${BG_BASE};color:${TEXT_PRIMARY}}
         .oauth-btn{width:100%;padding:14px 20px;border-radius:12px;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s}
         .oauth-btn:hover{transform:translateY(-1px)}
-        .gold-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, #C9A84C 70%, #8B6914 100%);border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 24px rgba(212,168,67,0.25)}
+        .gold-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, ${colors.goldContainer} 70%, #8B6914 100%);border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 24px rgba(212,168,67,0.25)}
         .gold-btn:hover{transform:translateY(-2px)}
         .gold-btn:disabled{opacity:0.6;cursor:wait;transform:none;box-shadow:none}
         .ghost-btn{width:100%;padding:15px 20px;background:transparent;border:1px solid ${GOLD_RULE};border-radius:12px;color:${GOLD};font-size:0.95rem;font-weight:700;cursor:pointer;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s,background 0.2s}
-        .ghost-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(201,168,76,0.15);background:rgba(201,168,76,0.05)}
+        .ghost-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px ${colors.goldBorder};background:${colors.goldDim}}
         .role-card{background:${BG_CARD};border:1px solid ${BORDER};border-radius:${RADIUS_CARD}px;padding:40px 32px;cursor:pointer;transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
-        .role-card:hover{border-color:${GOLD_RULE};transform:translateY(-4px);box-shadow:0 16px 48px rgba(201,168,76,0.1)}
+        .role-card:hover{border-color:${GOLD_RULE};transform:translateY(-4px);box-shadow:0 16px 48px ${colors.goldDim}}
         .back-btn{background:none;border:none;color:${TEXT_MUTED};font-size:0.85rem;cursor:pointer;font-family:${FONT_ALT};padding:0;margin-bottom:20px;transition:color 0.2s;display:flex;align-items:center;gap:6px}
         .back-btn:hover{color:${GOLD}}
         @media(max-width:768px){.auth-left{display:none!important}.auth-right{min-height:100dvh!important}.role-grid{grid-template-columns:1fr!important}}
@@ -474,15 +474,15 @@ function LeftPanel() {
   return (
     <div className="auth-left" style={{ width: '50%', flexShrink: 0, background: BG_BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', animation: 'panelIn 0.6s cubic-bezier(0.16,1,0.3,1)', zIndex: 1 }}>
       {/* Grid lines */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(201,168,76,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.015) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(${colors.goldDim} 1px,transparent 1px),linear-gradient(90deg,${colors.goldDim} 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
       {/* Gold orb */}
-      <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: 500, height: 500, background: 'radial-gradient(circle,rgba(201,168,76,0.06),transparent 60%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: 500, height: 500, background: 'radial-gradient(circle,${colors.goldDim},transparent 60%)', pointerEvents: 'none' }} />
       {/* Grain */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
 
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 40px' }}>
-        <img src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px rgba(201,168,76,0.2)' }} />
+        <img src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px ${colors.goldRule}' }} />
         <div style={{ fontFamily: FONT_DISPLAY, fontSize: 32, letterSpacing: 3, color: GOLD, marginBottom: 8 }}>MOOVX</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
           <span style={{ fontSize: 14 }}>🇨🇭</span>

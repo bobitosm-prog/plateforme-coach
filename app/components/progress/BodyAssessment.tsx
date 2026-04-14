@@ -1,11 +1,7 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import {
-  BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
-  FONT_DISPLAY, FONT_BODY,
-} from '../../../lib/design-tokens'
-
+import { colors, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_BODY } from '../../../lib/design-tokens'
 interface BodyAssessmentProps {
   supabase: any
   session: any
@@ -26,9 +22,9 @@ const SECTIONS = [
   { title: 'VUE D\'ENSEMBLE', color: '#60A5FA', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)' },
   { title: 'GROUPES MUSCULAIRES DÉVELOPPÉS', color: '#34D399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
   { title: 'ZONES EN RETARD', color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.2)' },
-  { title: 'DÉSÉQUILIBRES DÉTECTÉS', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' },
+  { title: 'DÉSÉQUILIBRES DÉTECTÉS', color: colors.error, bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' },
   { title: 'PROGRAMME CORRECTIF', color: '#A78BFA', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
-  { title: 'OBJECTIF 12 SEMAINES', color: '#D4A843', bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)' },
+  { title: 'OBJECTIF 12 SEMAINES', color: '#D4A843', bg: colors.goldDim, border: colors.goldRule },
 ]
 
 const ANALYSIS_MESSAGES = [
@@ -160,7 +156,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
 
     // If parsing failed, show raw text
     if (results.length === 0) {
-      results.push({ title: 'ANALYSE', color: GOLD, bg: 'rgba(201,168,76,0.08)', border: 'rgba(201,168,76,0.2)', content: text })
+      results.push({ title: 'ANALYSE', color: GOLD, bg: colors.goldDim, border: colors.goldRule, content: text })
     }
 
     return results
@@ -222,7 +218,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
                 <div
                   onClick={() => !uploading[key] && fileRefs[key].current?.click()}
                   style={{
-                    border: photos[key] ? `2px solid ${GOLD}` : '2px dashed rgba(201,168,76,0.4)',
+                    border: photos[key] ? `2px solid ${GOLD}` : `2px dashed ${colors.goldRule}`,
                     borderRadius: 20,
                     aspectRatio: '3/4',
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

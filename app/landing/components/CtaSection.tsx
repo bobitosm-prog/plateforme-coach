@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useReveal } from './shared';
+import { colors } from '../../../lib/design-tokens'
 
 export default function CtaSection() {
   const { ref, visible } = useReveal();
@@ -28,7 +29,7 @@ export default function CtaSection() {
           transform: 'translate(-50%, -50%)',
           fontFamily: 'var(--font-display)',
           fontSize: 'clamp(120px, 18vw, 240px)',
-          color: 'rgba(201,168,76,0.03)',
+          color: colors.goldDim,
           pointerEvents: 'none' as const,
           letterSpacing: 4,
           whiteSpace: 'nowrap' as const,

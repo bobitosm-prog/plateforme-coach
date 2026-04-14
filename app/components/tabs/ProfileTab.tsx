@@ -4,10 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Download, X, Clock, Calendar, Volume2 } from 'lucide-react'
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
-import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
-} from '../../../lib/design-tokens'
+import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
 import SwissBadge from '../ui/SwissBadge'
 import CoachSection from './profile/CoachSection'
@@ -183,7 +180,7 @@ export default function ProfileTab({
 
       {/* BMR calculator */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-        <button onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')} onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)} onClick={() => setModal('bmr')} style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 12, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 150ms', width: '100%' }}>
+        <button onMouseEnter={e => (e.currentTarget.style.background = colors.surfaceHigh)} onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)} onClick={() => setModal('bmr')} style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 12, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 150ms', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Zap size={18} color={TEXT_MUTED} />
             <span style={{ fontSize: 14, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY }}>Calculateur BMR</span>
@@ -211,7 +208,7 @@ export default function ProfileTab({
         <button
           onClick={enableNotifications}
           disabled={notifStatus === 'loading' || notifStatus === 'done'}
-          onMouseEnter={e => (e.currentTarget.style.background = '#1c1b1b')}
+          onMouseEnter={e => (e.currentTarget.style.background = colors.surfaceHigh)}
           onMouseLeave={e => (e.currentTarget.style.background = BG_CARD)}
           style={{ background: BG_CARD, borderBottom: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderRadius: 12, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: notifStatus === 'done' ? 'default' : 'pointer', opacity: notifStatus === 'loading' ? 0.6 : 1, transition: 'background 150ms', width: '100%' }}
         >
@@ -394,7 +391,7 @@ export default function ProfileTab({
           // Lifetime
           if (st === 'lifetime') return (
             <div>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: RADIUS_CARD, background: 'rgba(201,168,76,0.12)', border: `1px solid ${GOLD_RULE}`, color: GOLD, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 700, marginBottom: 12 }}>Accès à vie</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: RADIUS_CARD, background: colors.goldBorder, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontSize: '0.78rem', fontFamily: FONT_ALT, fontWeight: 700, marginBottom: 12 }}>Accès à vie</span>
               <p style={{ fontSize: 15, fontFamily: FONT_BODY, fontWeight: 400, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.6 }}>Tu bénéficies d&apos;un accès permanent à toutes les fonctionnalités MoovX.</p>
             </div>
           )

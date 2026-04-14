@@ -4,12 +4,7 @@ import {
   Flame, TrendingDown, CheckCircle, Pencil,
   Check, X,
 } from 'lucide-react'
-import {
-  BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED,
-  TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY,
-} from '@/lib/design-tokens'
-
+import { colors, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '@/lib/design-tokens'
 type Profile = {
   id: string; full_name: string | null; email: string | null
   current_weight: number | null
@@ -106,7 +101,7 @@ export default function ClientOverview({
               </span>
             )}
             {(profile.allergies || []).map((a: string) => (
-              <span key={a} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(239,68,68,0.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,0.2)'}}>
+              <span key={a} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(239,68,68,0.12)',color:colors.error,border:'1px solid rgba(239,68,68,0.2)'}}>
                 {a}
               </span>
             ))}
@@ -116,7 +111,7 @@ export default function ClientOverview({
               </span>
             ))}
             {resolvedFoods.length > 10 && !showAllFoods && (
-              <button onClick={()=>setShowAllFoods(true)} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",background:'rgba(201,168,76,0.1)',color:'#D4A843',border:'1px solid rgba(201,168,76,0.2)',cursor:'pointer'}}>
+              <button onClick={()=>setShowAllFoods(true)} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:999,fontSize:'0.68rem',fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",background:colors.goldDim,color:'#D4A843',border:`1px solid ${colors.goldRule}`,cursor:'pointer'}}>
                 +{resolvedFoods.length - 10} autres
               </button>
             )}
@@ -140,8 +135,8 @@ export default function ClientOverview({
           </div>
           {weightDelta !== null && (
             <div style={{display:'flex',alignItems:'center',gap:3,marginTop:6}}>
-              <TrendingDown size={11} color={weightDelta<=0?'#D4A843':'#EF4444'} strokeWidth={2.5}/>
-              <span style={{fontSize:'0.68rem',color:weightDelta<=0?'#D4A843':'#EF4444',fontWeight:600}}>{weightDelta>0?'+':''}{weightDelta.toFixed(1)} kg</span>
+              <TrendingDown size={11} color={weightDelta<=0?'#D4A843':colors.error} strokeWidth={2.5}/>
+              <span style={{fontSize:'0.68rem',color:weightDelta<=0?'#D4A843':colors.error,fontWeight:600}}>{weightDelta>0?'+':''}{weightDelta.toFixed(1)} kg</span>
             </div>
           )}
         </div>

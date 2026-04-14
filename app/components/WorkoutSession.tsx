@@ -4,11 +4,7 @@ import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Sear
 import { toast } from 'sonner'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
-import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
-  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY
-} from '../../lib/design-tokens'
+import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
 
@@ -31,7 +27,7 @@ function RestOverlay({ secs, max, onSkip }: { secs: number; max: number; onSkip:
       <div className="flex flex-col items-center gap-5 p-8 w-full max-w-xs relative overflow-hidden"
         style={{ background: BG_CARD, borderRadius: RADIUS_CARD, border: `1px solid ${GOLD_RULE}` }}>
         <div className="absolute inset-0 pointer-events-none"
-          style={{ background: hot ? `radial-gradient(circle at 50% 0%, rgba(201,168,76,0.25) 0%, transparent 60%)` : `radial-gradient(circle at 50% 0%, rgba(201,168,76,0.12) 0%, transparent 60%)` }} />
+          style={{ background: hot ? `radial-gradient(circle at 50% 0%, ${colors.goldRule} 0%, transparent 60%)` : `radial-gradient(circle at 50% 0%, ${colors.goldBorder} 0%, transparent 60%)` }} />
         <p className="text-[11px] relative z-10" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>REPOS</p>
         <div className="relative z-10">
           <svg width="136" height="136" viewBox="0 0 136 136" style={{ transform: 'rotate(-90deg)' }}>
@@ -551,7 +547,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
                 <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
                   <ExercisePreview name={exo.name} size={80} animate={false} imageUrl={exo.imageUrl} />
-                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(201,168,76,0.4)', borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
+                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.goldRule, borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
@@ -574,7 +570,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   <button disabled={idx === 0} onClick={() => { moveExercise(idx, -1); setExerciseMenu(null) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: idx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`, color: idx === 0 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: idx === 0 ? 'default' : 'pointer' }}>↑ MONTER</button>
                   <button disabled={idx === exos.length - 1} onClick={() => { moveExercise(idx, 1); setExerciseMenu(null) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`, color: idx === exos.length - 1 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: idx === exos.length - 1 ? 'default' : 'pointer' }}>↓ DESCENDRE</button>
                   <button onClick={() => { setExerciseMenu(null); loadVariantsForSession(exo, idx) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer' }}>🔄 REMPLACER</button>
-                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444', fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer' }}>🗑 SUPPRIMER</button>
+                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: colors.error, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer' }}>🗑 SUPPRIMER</button>
                 </div>
               )}
 
@@ -738,7 +734,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       {/* BARRE BAS */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, minHeight: 70, padding: '12px 16px', paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center' }}>
-          <button onClick={onClose} className="active:scale-95" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '10px 16px', color: '#EF4444', fontSize: 13, fontWeight: 500, fontFamily: FONT_BODY, cursor: 'pointer' }}>Abandonner</button>
+          <button onClick={onClose} className="active:scale-95" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '10px 16px', color: colors.error, fontSize: 13, fontWeight: 500, fontFamily: FONT_BODY, cursor: 'pointer' }}>Abandonner</button>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>TEMPS</span>
             <span style={{ fontSize: 24, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
@@ -791,7 +787,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 <div style={{display:'flex',gap:6,marginTop:4,flexWrap:'wrap'}}>
                   {exerciseInfo.muscle_group&&<span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:GOLD_DIM,color:GOLD,letterSpacing:1,textTransform:'uppercase' as const}}>{exerciseInfo.muscle_group}</span>}
                   {exerciseInfo.equipment&&<span style={{fontFamily:FONT_BODY,fontSize:10,padding:'2px 8px',borderRadius:6,background:BG_CARD_2,color:TEXT_MUTED}}>{exerciseInfo.equipment}</span>}
-                  {exerciseInfo.difficulty&&<span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:exerciseInfo.difficulty==='avance'?'rgba(239,68,68,0.1)':exerciseInfo.difficulty==='intermediaire'?GOLD_DIM:'rgba(74,222,128,0.1)',color:exerciseInfo.difficulty==='avance'?'#EF4444':exerciseInfo.difficulty==='intermediaire'?GOLD:'#4ade80',letterSpacing:1,textTransform:'uppercase' as const}}>{exerciseInfo.difficulty==='debutant'?'Débutant':exerciseInfo.difficulty==='intermediaire'?'Intermédiaire':'Avancé'}</span>}
+                  {exerciseInfo.difficulty&&<span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:exerciseInfo.difficulty==='avance'?'rgba(239,68,68,0.1)':exerciseInfo.difficulty==='intermediaire'?GOLD_DIM:'rgba(74,222,128,0.1)',color:exerciseInfo.difficulty==='avance'?colors.error:exerciseInfo.difficulty==='intermediaire'?GOLD:colors.success,letterSpacing:1,textTransform:'uppercase' as const}}>{exerciseInfo.difficulty==='debutant'?'Débutant':exerciseInfo.difficulty==='intermediaire'?'Intermédiaire':'Avancé'}</span>}
                 </div>
               </div>
               <button onClick={()=>setExerciseInfo(null)} style={{width:36,height:36,borderRadius:12,background:GOLD_DIM,border:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:TEXT_MUTED,fontSize:16}}>✕</button>

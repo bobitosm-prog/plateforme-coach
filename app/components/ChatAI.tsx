@@ -2,8 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Send, Bot, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
-
+import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
 function getSuggestions(): string[] {
   const h = new Date().getHours()
   if (h >= 6 && h < 12) return [
@@ -182,7 +181,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     if (hideFloatingButton) return null
     return (
       <button onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 300) }}
-        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(201,168,76,0.3)', zIndex: 998 }}>
+        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px ${colors.goldRule}`, zIndex: 998 }}>
         <Bot size={24} color="#0D0B08" strokeWidth={2.5} />
       </button>
     )
@@ -282,7 +281,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             </div>
           )}
 
-          {error && <p style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, color: '#ef4444', textAlign: 'center' }}>{error}</p>}
+          {error && <p style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, color: colors.error, textAlign: 'center' }}>{error}</p>}
           <div ref={endRef} />
         </div>
 
