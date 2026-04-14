@@ -2,15 +2,15 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { colors, GOLD, GOLD_DIM, GOLD_RULE, BG_BASE, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
+import { colors, fonts, titleStyle, bodyStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM } from '../../lib/design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 const BG = '#0D0B08'
 const GOLD_C = '#D4A843'
-const FONT_DM = "'DM Sans', var(--font-dm-sans), sans-serif"
-const FONT_BEBAS = FONT_DISPLAY
+const FONT_DM = fonts.body
+const FONT_BEBAS = fonts.headline
 
 const ANALYSIS_MESSAGES = [
   'Analyse de ta composition corporelle...',
@@ -202,15 +202,15 @@ export default function OnboardingPhotoPage() {
     if (current && buf.length) blocks.push({ section: current, content: buf.join('\n') })
 
     if (!blocks.length) {
-      return <p style={{ fontFamily: FONT_DM, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{text}</p>
+      return <p style={{ ...bodyStyle, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{text}</p>
     }
 
     return blocks.map((b, i) => (
       <div key={i} style={{ padding: 16, background: b.section.bg, border: `1px solid ${b.section.border}`, marginBottom: 12 }}>
-        <h3 style={{ fontFamily: FONT_BEBAS, fontSize: 16, color: b.section.color, letterSpacing: '0.08em', marginBottom: 8 }}>
+        <h3 style={{ ...titleStyle, fontSize: 16, color: b.section.color, letterSpacing: '0.08em', marginBottom: 8 }}>
           {b.section.title}
         </h3>
-        <p style={{ fontFamily: FONT_DM, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: 0 }}>
+        <p style={{ ...bodyStyle, fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: 0 }}>
           {b.content.trim()}
         </p>
       </div>
@@ -220,13 +220,13 @@ export default function OnboardingPhotoPage() {
   // ─── PHASE 1: Upload ───
   if (phase === 'upload') {
     return (
-      <div style={{ minHeight: '100dvh', background: BG, fontFamily: FONT_DM, color: TEXT_PRIMARY }}>
+      <div style={{ minHeight: '100dvh', background: BG, fontFamily: fonts.body, color: TEXT_PRIMARY }}>
         <div style={{ maxWidth: 480, margin: '0 auto', padding: '60px 20px 40px' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <h1 style={{ fontFamily: FONT_BEBAS, fontSize: 40, color: TEXT_PRIMARY, letterSpacing: '0.04em', marginBottom: 12, lineHeight: 1 }}>
+            <h1 style={{ ...pageTitleStyle, fontSize: 40, letterSpacing: '0.04em', marginBottom: 12, lineHeight: 1 }}>
               TON POINT DE DÉPART
             </h1>
-            <p style={{ fontFamily: FONT_DM, fontSize: 15, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 36 }}>
+            <p style={{ ...bodyStyle, fontSize: 15, lineHeight: 1.6, marginBottom: 36 }}>
               Une photo nous aide à personnaliser ton plan avec précision
             </p>
 
@@ -247,15 +247,15 @@ export default function OnboardingPhotoPage() {
               {uploading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 32, height: 32, border: `3px solid ${BORDER}`, borderTopColor: GOLD_C, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                  <span style={{ fontFamily: FONT_DM, fontSize: 14, color: TEXT_MUTED }}>Upload en cours...</span>
+                  <span style={{ ...bodyStyle }}>Upload en cours...</span>
                 </div>
               ) : (
                 <>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>📸</div>
-                  <p style={{ fontFamily: FONT_BEBAS, fontSize: 22, color: TEXT_PRIMARY, letterSpacing: '0.06em', marginBottom: 8 }}>
+                  <p style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '0.06em', marginBottom: 8 }}>
                     PRENDRE UNE PHOTO
                   </p>
-                  <p style={{ fontFamily: FONT_DM, fontSize: 13, color: TEXT_MUTED }}>
+                  <p style={{ ...bodyStyle, fontSize: 13 }}>
                     Glisse une photo ici ou touche pour ouvrir la caméra
                   </p>
                 </>
@@ -271,7 +271,7 @@ export default function OnboardingPhotoPage() {
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
             />
 
-            <p style={{ fontFamily: FONT_DM, fontSize: 11, color: TEXT_DIM, marginTop: 16, textAlign: 'center' }}>
+            <p style={{ ...mutedStyle, fontSize: 11, marginTop: 16, textAlign: 'center' }}>
               Photo de face, buste visible · Éclairage neutre · Stockée en privé
             </p>
 
@@ -282,7 +282,7 @@ export default function OnboardingPhotoPage() {
               style={{
                 display: 'block', width: '100%', marginTop: 48,
                 background: 'transparent', border: 'none', cursor: 'pointer',
-                fontFamily: FONT_DM, fontSize: 13, color: TEXT_MUTED,
+                fontFamily: fonts.body, fontSize: 13, color: TEXT_MUTED,
                 textDecoration: 'underline', padding: 12,
               }}
             >
@@ -298,7 +298,7 @@ export default function OnboardingPhotoPage() {
                     style={{ height: '100%', background: GOLD_C }}
                   />
                 </div>
-                <p style={{ fontFamily: FONT_DM, fontSize: 12, color: TEXT_MUTED, textAlign: 'center', marginTop: 8 }}>
+                <p style={{ ...mutedStyle, textAlign: 'center', marginTop: 8 }}>
                   Génération de ton plan nutritionnel... {genProgress}%
                 </p>
               </div>
@@ -313,7 +313,7 @@ export default function OnboardingPhotoPage() {
   // ─── PHASE 2: Analyzing ───
   if (phase === 'analyzing') {
     return (
-      <div style={{ minHeight: '100dvh', background: BG, fontFamily: FONT_DM, color: TEXT_PRIMARY, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ minHeight: '100dvh', background: BG, fontFamily: fonts.body, color: TEXT_PRIMARY, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ maxWidth: 400, textAlign: 'center' }}>
           {photoUrl && (
             <img src={photoUrl} alt="Ta photo" style={{ width: 200, height: 200, objectFit: 'cover', margin: '0 auto 32px', border: `1px solid rgba(255,255,255,0.08)` }} />
@@ -326,7 +326,7 @@ export default function OnboardingPhotoPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              style={{ fontFamily: FONT_DM, fontSize: 15, color: TEXT_MUTED }}
+              style={{ ...bodyStyle, fontSize: 15 }}
             >
               {ANALYSIS_MESSAGES[analysisMsg]}
             </motion.p>
@@ -339,13 +339,13 @@ export default function OnboardingPhotoPage() {
 
   // ─── PHASE 3: Results ───
   return (
-    <div style={{ minHeight: '100dvh', background: BG, fontFamily: FONT_DM, color: TEXT_PRIMARY }}>
+    <div style={{ minHeight: '100dvh', background: BG, fontFamily: fonts.body, color: TEXT_PRIMARY }}>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: '40px 20px 60px' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <h1 style={{ fontFamily: FONT_BEBAS, fontSize: 36, color: TEXT_PRIMARY, letterSpacing: '0.04em', marginBottom: 8 }}>
+          <h1 style={{ ...pageTitleStyle, fontSize: 36, letterSpacing: '0.04em', marginBottom: 8 }}>
             TON ANALYSE
           </h1>
-          <p style={{ fontFamily: FONT_DM, fontSize: 14, color: TEXT_MUTED, marginBottom: 24 }}>
+          <p style={{ ...bodyStyle, marginBottom: 24 }}>
             Basée sur ta photo et tes données de profil
           </p>
 
@@ -370,7 +370,7 @@ export default function OnboardingPhotoPage() {
               background: generating ? 'rgba(255,255,255,0.05)' : GOLD_C,
               color: generating ? TEXT_MUTED : '#0D0B08',
               border: 'none', borderRadius: 12,
-              fontFamily: FONT_BEBAS, fontSize: 22, letterSpacing: '0.08em',
+              fontFamily: fonts.headline, fontSize: 22, letterSpacing: '0.08em',
               cursor: generating ? 'wait' : 'pointer',
               opacity: generating ? 0.6 : 1,
               transition: 'all 0.2s',
@@ -388,7 +388,7 @@ export default function OnboardingPhotoPage() {
                   style={{ height: '100%', background: GOLD_C }}
                 />
               </div>
-              <p style={{ fontFamily: FONT_DM, fontSize: 12, color: TEXT_MUTED, textAlign: 'center', marginTop: 8 }}>
+              <p style={{ ...mutedStyle, textAlign: 'center', marginTop: 8 }}>
                 Plan nutritionnel sur 7 jours... {genProgress}%
               </p>
             </div>
@@ -401,7 +401,7 @@ export default function OnboardingPhotoPage() {
               style={{
                 display: 'block', width: '100%', marginTop: 24,
                 background: 'transparent', border: 'none', cursor: 'pointer',
-                fontFamily: FONT_DM, fontSize: 13, color: TEXT_MUTED,
+                fontFamily: fonts.body, fontSize: 13, color: TEXT_MUTED,
                 textDecoration: 'underline', padding: 12,
               }}
             >

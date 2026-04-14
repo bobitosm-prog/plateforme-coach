@@ -3,7 +3,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, User, ChevronDown } from 'lucide-react'
-import { colors, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
+import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../lib/design-tokens'
 
 /*
   APPLE SIGN-IN SETUP:
@@ -40,6 +40,7 @@ const SPECIALITIES = ['Musculation', 'Nutrition', 'Fitness général', 'CrossFit
 const EXPERIENCE_OPTIONS = ['1-3 ans', '3-5 ans', '5-10 ans', '10+ ans']
 
 function RegisterContent() {
+  const T = titleStyle
   const router = useRouter()
   const searchParams = useSearchParams()
   const [checking, setChecking] = useState(true)
@@ -154,43 +155,43 @@ function RegisterContent() {
           <div style={{ width: 72, height: 72, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: RADIUS_CARD, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <CheckCircle size={36} color={GREEN} strokeWidth={1.5} />
           </div>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.2rem', letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 12px' }}>VERIFIE TA BOITE MAIL</h1>
-          <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', lineHeight: 1.7, margin: '0 0 8px', fontFamily: FONT_BODY }}>
+          <h1 style={{ ...pageTitleStyle, fontSize: '2.2rem', letterSpacing: '2px', margin: '0 0 12px' }}>VERIFIE TA BOITE MAIL</h1>
+          <p style={{ ...bodyStyle, fontSize: '0.9rem', lineHeight: 1.7, margin: '0 0 8px' }}>
             Un email de confirmation a été envoyé à <strong style={{ color: GOLD }}>{email}</strong>.
           </p>
-          <p style={{ color: TEXT_MUTED, fontSize: '0.78rem', margin: '0 0 32px', lineHeight: 1.5, fontFamily: FONT_BODY }}>
+          <p style={{ ...mutedStyle, fontSize: '0.78rem', margin: '0 0 32px', lineHeight: 1.5, color: TEXT_MUTED }}>
             Clique sur le lien pour activer ton compte et commencer.
           </p>
-          <button onClick={() => { setEmailSent(false); setPassword(''); setConfirmPassword('') }} style={{ background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '12px 32px', color: TEXT_MUTED, fontSize: '0.85rem', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700, transition: 'border-color 0.3s' }}>Retour</button>
+          <button onClick={() => { setEmailSent(false); setPassword(''); setConfirmPassword('') }} style={{ background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '12px 32px', color: TEXT_MUTED, fontSize: '0.85rem', cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700, transition: 'border-color 0.3s' }}>Retour</button>
         </div>
       </div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: FONT_BODY, position: 'relative' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: fonts.body, position: 'relative' }}>
       <img src="/images/hero-gym.webp" alt="Gym luxe Geneve" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
         @keyframes panelIn{from{opacity:0}to{opacity:1}}
-        .auth-input{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${FONT_BODY};box-sizing:border-box}
+        .auth-input{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${fonts.body};box-sizing:border-box}
         .auth-input:focus{border-color:${GOLD};box-shadow:none}
         .auth-input::placeholder{color:${TEXT_DIM}}
-        .auth-select{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${FONT_BODY};appearance:none;cursor:pointer;box-sizing:border-box}
+        .auth-select{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${fonts.body};appearance:none;cursor:pointer;box-sizing:border-box}
         .auth-select:focus{border-color:${GOLD};box-shadow:none}
         .auth-select option{background:${BG_BASE};color:${TEXT_PRIMARY}}
-        .oauth-btn{width:100%;padding:14px 20px;border-radius:12px;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s}
+        .oauth-btn{width:100%;padding:14px 20px;border-radius:12px;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s}
         .oauth-btn:hover{transform:translateY(-1px)}
-        .gold-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, ${colors.goldContainer} 70%, #8B6914 100%);border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 24px rgba(212,168,67,0.25)}
+        .gold-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, ${colors.goldContainer} 70%, #8B6914 100%);border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 24px rgba(212,168,67,0.25)}
         .gold-btn:hover{transform:translateY(-2px)}
         .gold-btn:disabled{opacity:0.6;cursor:wait;transform:none;box-shadow:none}
-        .ghost-btn{width:100%;padding:15px 20px;background:transparent;border:1px solid ${GOLD_RULE};border-radius:12px;color:${GOLD};font-size:0.95rem;font-weight:700;cursor:pointer;font-family:${FONT_ALT};transition:transform 0.2s,box-shadow 0.2s,background 0.2s}
+        .ghost-btn{width:100%;padding:15px 20px;background:transparent;border:1px solid ${GOLD_RULE};border-radius:12px;color:${GOLD};font-size:0.95rem;font-weight:700;cursor:pointer;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s,background 0.2s}
         .ghost-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px ${colors.goldBorder};background:${colors.goldDim}}
         .role-card{background:${BG_CARD};border:1px solid ${BORDER};border-radius:${RADIUS_CARD}px;padding:40px 32px;cursor:pointer;transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
         .role-card:hover{border-color:${GOLD_RULE};transform:translateY(-4px);box-shadow:0 16px 48px ${colors.goldDim}}
-        .back-btn{background:none;border:none;color:${TEXT_MUTED};font-size:0.85rem;cursor:pointer;font-family:${FONT_ALT};padding:0;margin-bottom:20px;transition:color 0.2s;display:flex;align-items:center;gap:6px}
+        .back-btn{background:none;border:none;color:${TEXT_MUTED};font-size:0.85rem;cursor:pointer;font-family:${fonts.body};padding:0;margin-bottom:20px;transition:color 0.2s;display:flex;align-items:center;gap:6px}
         .back-btn:hover{color:${GOLD}}
         @media(max-width:768px){.auth-left{display:none!important}.auth-right{min-height:100dvh!important}.role-grid{grid-template-columns:1fr!important}}
       `}</style>
@@ -202,7 +203,7 @@ function RegisterContent() {
         {/* Mobile logo */}
         <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
           <img src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 3, color: GOLD }}>MOOVX</span>
+          <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
         </div>
         <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
 
@@ -210,21 +211,21 @@ function RegisterContent() {
         {step === 'choose' && (
           <div style={{ maxWidth: 800, width: '100%', animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 6px', lineHeight: 1 }}>REJOINS MOOVX</h1>
-              <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 300, margin: 0, fontFamily: FONT_BODY }}>Choisis ton profil</p>
+              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>REJOINS MOOVX</h1>
+              <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: 0 }}>Choisis ton profil</p>
             </div>
 
             <div className="role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
               {/* Card CLIENT */}
               <div className="role-card" onClick={() => { setSelectedRole('client'); setStep('client') }}>
                 <ClientIcon />
-                <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: '2px', color: TEXT_PRIMARY, margin: 0 }}>JE SUIS CLIENT</h2>
-                <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, lineHeight: 1.6 }}>
+                <h2 style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '2px', margin: 0 }}>JE SUIS CLIENT</h2>
+                <p style={{ ...bodyStyle, margin: 0, lineHeight: 1.6 }}>
                   Je veux transformer mon corps avec un programme personnalisé
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: '100%' }}>
                   {['Plans nutrition personnalises', 'Programme PPL', 'Suivi progression', 'Coach personnel 24/7'].map(f => (
-                    <span key={f} style={{ fontSize: 13, color: TEXT_MUTED, fontFamily: FONT_BODY }}>
+                    <span key={f} style={{ ...bodyStyle, fontSize: 13 }}>
                       <span style={{ color: GOLD, marginRight: 6 }}>&#10003;</span>{f}
                     </span>
                   ))}
@@ -237,18 +238,18 @@ function RegisterContent() {
               {/* Card COACH */}
               <div className="role-card" onClick={() => { setSelectedRole('coach'); setStep('coach') }}>
                 <CoachIcon />
-                <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: '2px', color: TEXT_PRIMARY, margin: 0 }}>JE SUIS COACH</h2>
-                <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: 0, lineHeight: 1.6 }}>
+                <h2 style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '2px', margin: 0 }}>JE SUIS COACH</h2>
+                <p style={{ ...bodyStyle, margin: 0, lineHeight: 1.6 }}>
                   Je veux gérer mes clients avec les outils pro de MoovX
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: '100%' }}>
                   {['Dashboard coach', 'Plans personnalises pour tes clients', 'Messagerie', 'Analytics'].map(f => (
-                    <span key={f} style={{ fontSize: 13, color: TEXT_MUTED, fontFamily: FONT_BODY }}>
+                    <span key={f} style={{ ...bodyStyle, fontSize: 13 }}>
                       <span style={{ color: GOLD, marginRight: 6 }}>&#10003;</span>{f}
                     </span>
                   ))}
                 </div>
-                <span style={{ fontSize: 12, color: GOLD, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '4px 12px', fontWeight: 600, fontFamily: FONT_ALT }}>CHF 50/mois</span>
+                <span style={{ ...labelStyle, fontSize: 12, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '4px 12px', fontWeight: 600 }}>CHF 50/mois</span>
                 <button className="ghost-btn" style={{ marginTop: 4 }} onClick={e => { e.stopPropagation(); setSelectedRole('coach'); setStep('coach') }}>
                   Devenir Coach Pro
                 </button>
@@ -257,8 +258,8 @@ function RegisterContent() {
 
             {/* Link to login */}
             <div style={{ textAlign: 'center', marginTop: 32 }}>
-              <span style={{ color: TEXT_DIM, fontSize: '0.82rem', fontFamily: FONT_BODY }}>Déjà un compte ?{' '}</span>
-              <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: FONT_BODY, transition: 'color 0.2s' }}
+              <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>Déjà un compte ?{' '}</span>
+              <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                 Se connecter
               </button>
@@ -274,8 +275,8 @@ function RegisterContent() {
             </button>
 
             <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
-              <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 6px', lineHeight: 1 }}>CREER TON COMPTE</h1>
-              <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px', fontFamily: FONT_BODY }}>Commence ta transformation</p>
+              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>CREER TON COMPTE</h1>
+              <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px' }}>Commence ta transformation</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -294,7 +295,7 @@ function RegisterContent() {
               {/* Separator */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '8px 0', animation: 'fadeUp 0.7s 0.2s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <div style={{ flex: 1, height: 1, background: BORDER }} />
-                <span style={{ color: TEXT_DIM, fontSize: '0.72rem', fontWeight: 500, letterSpacing: 1, fontFamily: FONT_ALT }}>OU</span>
+                <span style={{ ...subtitleStyle, fontSize: '0.72rem', fontWeight: 500, letterSpacing: 1, color: TEXT_DIM }}>OU</span>
                 <div style={{ flex: 1, height: 1, background: BORDER }} />
               </div>
 
@@ -336,8 +337,8 @@ function RegisterContent() {
 
               {/* Link to login */}
               <div style={{ textAlign: 'center', marginTop: 12, animation: 'fadeUp 0.7s 0.45s cubic-bezier(0.16,1,0.3,1) both' }}>
-                <span style={{ color: TEXT_DIM, fontSize: '0.82rem', fontFamily: FONT_BODY }}>Déjà un compte ?{' '}</span>
-                <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: FONT_BODY, transition: 'color 0.2s' }}
+                <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>Déjà un compte ?{' '}</span>
+                <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                   Se connecter
                 </button>
@@ -354,8 +355,8 @@ function RegisterContent() {
             </button>
 
             <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
-              <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 6px', lineHeight: 1 }}>DEVENIR COACH PRO</h1>
-              <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px', fontFamily: FONT_BODY }}>Gère tes clients avec nos outils pro</p>
+              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>DEVENIR COACH PRO</h1>
+              <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px' }}>Gère tes clients avec nos outils pro</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -374,7 +375,7 @@ function RegisterContent() {
               {/* Separator */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '8px 0', animation: 'fadeUp 0.7s 0.2s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <div style={{ flex: 1, height: 1, background: BORDER }} />
-                <span style={{ color: TEXT_DIM, fontSize: '0.72rem', fontWeight: 500, letterSpacing: 1, fontFamily: FONT_ALT }}>OU</span>
+                <span style={{ ...subtitleStyle, fontSize: '0.72rem', fontWeight: 500, letterSpacing: 1, color: TEXT_DIM }}>OU</span>
                 <div style={{ flex: 1, height: 1, background: BORDER }} />
               </div>
 
@@ -442,8 +443,8 @@ function RegisterContent() {
 
               {/* Link to login */}
               <div style={{ textAlign: 'center', marginTop: 12, animation: 'fadeUp 0.7s 0.6s cubic-bezier(0.16,1,0.3,1) both' }}>
-                <span style={{ color: TEXT_DIM, fontSize: '0.82rem', fontFamily: FONT_BODY }}>Déjà un compte ?{' '}</span>
-                <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: FONT_BODY, transition: 'color 0.2s' }}
+                <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>Déjà un compte ?{' '}</span>
+                <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                   Se connecter
                 </button>
@@ -483,19 +484,19 @@ function LeftPanel() {
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 40px' }}>
         <img src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px ${colors.goldRule}' }} />
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 32, letterSpacing: 3, color: GOLD, marginBottom: 8 }}>MOOVX</div>
+        <div style={{ fontFamily: fonts.headline, fontSize: 32, letterSpacing: 3, color: GOLD, marginBottom: 8 }}>MOOVX</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
           <span style={{ fontSize: 14 }}>🇨🇭</span>
-          <span style={{ fontSize: '0.7rem', letterSpacing: 4, color: GOLD, textTransform: 'uppercase', fontWeight: 400, fontFamily: FONT_BODY }}>Swiss Made · Swiss Quality</span>
+          <span style={{ ...labelStyle, fontSize: '0.7rem', letterSpacing: 4, fontWeight: 400 }}>Swiss Made · Swiss Quality</span>
         </div>
-        <p style={{ color: TEXT_MUTED, fontSize: '0.88rem', fontWeight: 300, lineHeight: 1.8, maxWidth: 300, margin: '0 auto', fontFamily: FONT_BODY }}>
+        <p style={{ ...bodyStyle, fontSize: '0.88rem', fontWeight: 300, lineHeight: 1.8, maxWidth: 300, margin: '0 auto' }}>
           La plateforme de coaching fitness d&apos;élite
         </p>
       </div>
 
       {/* Bottom copyright */}
       <div style={{ position: 'absolute', bottom: 32, left: 0, right: 0, textAlign: 'center' }}>
-        <span style={{ color: TEXT_DIM, fontSize: '0.68rem', fontWeight: 300, letterSpacing: 1, fontFamily: FONT_BODY }}>© 2026 MoovX · Genève, Suisse</span>
+        <span style={{ ...mutedStyle, fontSize: '0.68rem', fontWeight: 300, letterSpacing: 1 }}>© 2026 MoovX · Genève, Suisse</span>
       </div>
     </div>
   )
