@@ -9,7 +9,7 @@ import {
   Dumbbell, Search, Award,
 } from 'lucide-react'
 import {
-  fonts, colors, JS_DAYS_FR,
+  fonts, colors, JS_DAYS_FR, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle,
 } from '../../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
 import { toast } from 'sonner'
@@ -55,6 +55,7 @@ export default function TrainingTab({
   supabase, session, profile, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
 }: TrainingTabProps) {
+  const T = titleStyle
   const aiAllowed = profile?.subscription_type !== 'invited'
   const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
@@ -698,10 +699,10 @@ export default function TrainingTab({
                 <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
               </svg>
             </div>
-            <h2 style={{ fontFamily: fonts.headline, fontSize: 36, color: colors.gold, letterSpacing: 3, margin: '0 0 8px' }}>
+            <h2 style={{ ...statStyle, fontSize: 36, color: colors.gold, letterSpacing: 3, margin: '0 0 8px' }}>
               REPOS TERMINÉ
             </h2>
-            <p style={{ fontFamily: fonts.body, fontWeight: 800, fontSize: 20, color: colors.text, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 24px' }}>
+            <p style={{ ...subtitleStyle, fontWeight: 800, fontSize: 20, color: colors.text, letterSpacing: 2, margin: '0 0 24px' }}>
               {motivationalMsg}
             </p>
             <button onClick={() => setShowTimerAlert(false)} style={{
@@ -724,15 +725,15 @@ export default function TrainingTab({
         <img src="/images/hero-athlete.webp" alt="Athlete MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
-          <h1 style={{ fontFamily: fonts.headline, fontSize: 24, letterSpacing: 3, margin: 0, color: colors.text, lineHeight: 1 }}>VOTRE PROGRAMME</h1>
-          <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.gold, fontWeight: 700, letterSpacing: 2 }}>{format(new Date(), 'EEE d MMM', { locale: fr }).toUpperCase()} — Semaine en cours</span>
+          <h1 style={{ ...pageTitleStyle, letterSpacing: 3, margin: 0, lineHeight: 1 }}>VOTRE PROGRAMME</h1>
+          <span style={{ ...labelStyle, letterSpacing: 2 }}>{format(new Date(), 'EEE d MMM', { locale: fr }).toUpperCase()} — Semaine en cours</span>
         </div>
       </div>
 
       {/* ── MES PROGRAMMES ── */}
       <div style={{ padding: '0 16px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <span style={{ fontFamily: fonts.headline, fontSize: 18, color: colors.text, letterSpacing: '1px' }}>MES PROGRAMMES</span>
+          <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: '1px' }}>MES PROGRAMMES</span>
           <div style={{ display: 'flex', gap: 6 }}>
             {activeCustomProgram && !editMode && (
               <button onClick={startEditMode} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: colors.gold, background: 'transparent', border: `1px solid ${colors.goldRule}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase' }}>MODIFIER</button>
@@ -753,8 +754,8 @@ export default function TrainingTab({
             {customPrograms.map((prog: any) => (
               <div key={prog.id} style={{ background: colors.surface, border: `1px solid ${prog.is_active ? colors.gold : colors.goldBorder}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: fonts.headline, fontSize: 16, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '1px' }}>{prog.name}</div>
-                  <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>
+                  <div style={{ ...statSmallStyle, fontSize: 16, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '1px' }}>{prog.name}</div>
+                  <div style={{ ...mutedStyle, fontSize: 11 }}>
                     {(prog.days || []).length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
                     {prog.is_active && <span style={{ color: colors.success, marginLeft: 8 }}>● Actif</span>}
                   </div>
@@ -816,7 +817,7 @@ export default function TrainingTab({
 
           {/* Hint or séance libre — compact */}
           {!dayExpanded && (
-            <p style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, color: colors.textDim, textTransform: 'uppercase', margin: '8px 0 0', textAlign: 'center' }}>
+            <p style={{ ...mutedStyle, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', margin: '8px 0 0', textAlign: 'center' }}>
               Touche un jour pour voir les exercices
             </p>
           )}
@@ -853,7 +854,7 @@ export default function TrainingTab({
           {customPrograms.length > 0 ? (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontFamily: fonts.headline, fontSize: 18, color: colors.text, letterSpacing: '1px' }}>MES PROGRAMMES</span>
+                <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: '1px' }}>MES PROGRAMMES</span>
                 <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
                   style={{ fontFamily: fonts.body, fontSize: 11, color: colors.gold, background: 'transparent', border: `1px solid ${colors.gold}`, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   + CREER
@@ -863,8 +864,8 @@ export default function TrainingTab({
                 {customPrograms.map((prog: any) => (
                   <div key={prog.id} style={{ background: colors.surface, border: `1px solid ${prog.is_active ? colors.gold : colors.goldBorder}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: fonts.headline, fontSize: 16, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '1px' }}>{prog.name}</div>
-                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>
+                      <div style={{ ...statSmallStyle, fontSize: 16, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '1px' }}>{prog.name}</div>
+                      <div style={{ ...mutedStyle, fontSize: 11 }}>
                         {(prog.days || []).length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
                         {prog.is_active && <span style={{ color: colors.success, marginLeft: 8 }}>● Actif</span>}
                       </div>
@@ -883,8 +884,8 @@ export default function TrainingTab({
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '60px 20px', textAlign: 'center' }}>
               <Dumbbell size={56} color={colors.textMuted} strokeWidth={1.5} />
-              <p style={{ fontFamily: fonts.body, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.text, margin: 0 }}>Aucun programme</p>
-              <p style={{ fontSize: '0.85rem', fontFamily: fonts.body, color: colors.textMuted, margin: 0, maxWidth: 280 }}>Cree ton premier programme avec l&apos;IA en 2 minutes.</p>
+              <p style={{ ...subtitleStyle, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: 0 }}>Aucun programme</p>
+              <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0, maxWidth: 280 }}>Cree ton premier programme avec l&apos;IA en 2 minutes.</p>
               <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
                 style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
                 Creer mon programme
@@ -903,7 +904,7 @@ export default function TrainingTab({
             <div style={{ padding: '0 16px' }}>
               <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '40px 24px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <Dumbbell size={32} color={colors.textMuted} style={{ marginBottom: 12 }} />
-                <p style={{ fontSize: '0.85rem', fontFamily: fonts.body, color: colors.textMuted, margin: 0 }}>Aucun exercice pour ce jour.</p>
+                <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>Aucun exercice pour ce jour.</p>
               </div>
             </div>
 
@@ -922,7 +923,7 @@ export default function TrainingTab({
                 if (!day?.exercises) return null
                 return (
                   <div style={{ background: colors.surface, border: `1px solid ${colors.goldRule}`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                    <div style={{ fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: colors.gold, marginBottom: 12, textTransform: 'uppercase' }}>MODE EDITION</div>
+                    <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>MODE EDITION</div>
                     {day.exercises.map((ex: any, i: number) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -930,7 +931,7 @@ export default function TrainingTab({
                           <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? colors.textDim : colors.gold, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▼</button>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text, fontWeight: 500 }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
+                          <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
                           <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                               <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Sets</span>
@@ -1003,7 +1004,7 @@ export default function TrainingTab({
                 style={{ width: '100%', background: colors.surface, border: `2px dashed ${colors.goldBorder}`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}
               >
                 <Search size={16} color={colors.gold} />
-                <span style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 800, color: colors.gold, letterSpacing: '2px', textTransform: 'uppercase' }}>Découvrir les exercices</span>
+                <span style={{ ...labelStyle, fontSize: 13, fontWeight: 800, letterSpacing: '2px' }}>Découvrir les exercices</span>
               </motion.button>
 
               {/* ── Start Workout Button ── */}
@@ -1085,9 +1086,9 @@ export default function TrainingTab({
       {/* ═══ HISTORIQUE DES SÉANCES ═══ */}
       <div style={{ padding: '0 16px', marginTop: 24, marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <span style={{ fontFamily: fonts.headline, fontSize: 18, letterSpacing: 3, color: colors.text }}>HISTORIQUE</span>
+          <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: 3 }}>HISTORIQUE</span>
           <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
-          <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted }}>{workoutHistory.length} seances</span>
+          <span style={mutedStyle}>{workoutHistory.length} seances</span>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
           {HISTORY_FILTERS.map(f => (
@@ -1100,7 +1101,7 @@ export default function TrainingTab({
             const resolved = resolveSessionType(s.name)
             return resolved.key === historyFilter
           })
-          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>Aucune séance</div>
+          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', ...bodyStyle, color: colors.textDim }}>Aucune séance</div>
           return filtered.slice(0, 20).map((s: any) => {
             const d = new Date(s.created_at)
             const typeInfo = resolveSessionType(s.name)
@@ -1108,13 +1109,13 @@ export default function TrainingTab({
               <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: colors.surface, border: `1px solid ${colors.goldDim}`, borderRadius: 16, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{typeInfo.emoji}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: fonts.headline, fontSize: 17, letterSpacing: 1, color: colors.text }}>{typeInfo.label.toUpperCase()}</div>
+                  <div style={{ ...statSmallStyle, fontSize: 17, color: colors.text, letterSpacing: 1 }}>{typeInfo.label.toUpperCase()}</div>
                   {s.name && s.name.toLowerCase() !== typeInfo.label.toLowerCase() && s.name.includes('—') && (
-                    <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.gold, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ ...mutedStyle, fontSize: 11, color: colors.gold, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {s.name.split('—').slice(1).join('—').trim()}
                     </div>
                   )}
-                  <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
+                  <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>
                     {d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     {s.duration_minutes ? ` · ${s.duration_minutes}min` : ''}
                     {s.notes ? ` · ${s.notes}` : ''}

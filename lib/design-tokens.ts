@@ -58,7 +58,19 @@ export const cardStyle: React.CSSProperties = {
   boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
 }
 
-/** Card section title — gold, uppercase, small */
+// ─── Typography inline presets ───
+
+/** Page title (ex: "ENTRAÎNEMENT", "NUTRITION") */
+export const pageTitleStyle: React.CSSProperties = {
+  fontFamily: fonts.headline,
+  fontSize: 24,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.15em',
+  color: colors.text,
+}
+
+/** Card section title — gold, uppercase, small (ex: "HYDRATATION", "ON FIRE") */
 export const titleStyle: React.CSSProperties = {
   fontFamily: fonts.headline,
   fontSize: 14,
@@ -68,18 +80,57 @@ export const titleStyle: React.CSSProperties = {
   color: colors.gold,
 }
 
-/** Big stat number */
+/** Subtitle (ex: "Objectif : 3L", "80/100 XP") */
+export const subtitleStyle: React.CSSProperties = {
+  fontFamily: fonts.body,
+  fontSize: 12,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: colors.textMuted,
+}
+
+/** Big stat number (ex: "66.2 KG", "2575") */
 export const statStyle: React.CSSProperties = {
   fontFamily: fonts.headline,
+  fontSize: 28,
   fontWeight: 800,
   color: colors.text,
 }
 
-/** Body text */
+/** Small stat (ex: "145G", "PROT") */
+export const statSmallStyle: React.CSSProperties = {
+  fontFamily: fonts.headline,
+  fontSize: 18,
+  fontWeight: 700,
+  color: colors.gold,
+}
+
+/** Body text (descriptions, paragraphs) */
 export const bodyStyle: React.CSSProperties = {
   fontFamily: fonts.body,
   fontSize: 14,
   color: colors.textMuted,
+}
+
+/** Label (ex: "VOIR TOUT", "SEMAINE") */
+export const labelStyle: React.CSSProperties = {
+  fontFamily: fonts.body,
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: colors.gold,
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+}
+
+/** Muted text (ex: timestamps, dates) */
+export const mutedStyle: React.CSSProperties = {
+  fontFamily: fonts.body,
+  fontSize: 12,
+  color: colors.textDim,
 }
 
 /** Primary CTA button */
@@ -144,19 +195,26 @@ export const modalContainer: React.CSSProperties = {
 // ══════════════════════════════════════════
 
 export const tw = {
+  // Layout
   card: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.6)]",
-  cardTitle: "font-['Plus_Jakarta_Sans'] text-sm font-bold uppercase tracking-[0.15em] text-[#e6c364]",
-  sectionTitle: "font-['Plus_Jakarta_Sans'] text-xl font-bold uppercase tracking-[0.15em] text-white",
-  body: "font-['Inter'] text-sm text-white/70",
-  stat: "font-['Plus_Jakarta_Sans'] text-3xl font-bold text-white",
-  btnPrimary: "bg-gradient-to-r from-[#e6c364] to-[#c9a84c] text-black font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
-  btnSecondary: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] text-[#e6c364] font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
-  input: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-xl px-4 py-3 text-white font-['Inter'] text-sm focus:border-[#e6c364] outline-none",
   modalOverlay: "fixed inset-0 bg-black/75 backdrop-blur-sm z-50",
   modalContainer: "bg-[#131313] border border-[rgba(201,168,76,0.15)] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6",
+  input: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-xl px-4 py-3 text-white font-['Inter'] text-sm focus:border-[#e6c364] outline-none",
+  btnPrimary: "bg-gradient-to-r from-[#e6c364] to-[#c9a84c] text-black font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
+  btnSecondary: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] text-[#e6c364] font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
   navBar: "bg-[#0e0e0e] border-t border-[rgba(201,168,76,0.15)]",
   navActive: "text-[#e6c364]",
   navInactive: "text-white/30",
+
+  // Typography
+  pageTitle: "font-['Plus_Jakarta_Sans'] text-2xl font-bold uppercase tracking-[0.15em] text-white",
+  cardTitle: "font-['Plus_Jakarta_Sans'] text-sm font-bold uppercase tracking-[0.15em] text-[#e6c364]",
+  subtitle: "font-['Inter'] text-xs font-semibold uppercase tracking-wider text-white/50",
+  stat: "font-['Plus_Jakarta_Sans'] text-3xl font-bold text-white",
+  statSmall: "font-['Plus_Jakarta_Sans'] text-lg font-bold text-[#e6c364]",
+  body: "font-['Inter'] text-sm text-white/70",
+  label: "font-['Inter'] text-xs font-bold uppercase tracking-wider text-[#e6c364]",
+  muted: "font-['Inter'] text-xs text-white/30",
 } as const
 
 // ══════════════════════════════════════════

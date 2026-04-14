@@ -9,7 +9,7 @@ import {
 import ExercisePreview from '../ExercisePreview'
 import { resolveSessionType } from '../../../lib/session-types'
 import {
-  colors, fonts, cardStyle, titleStyle, statStyle, btnPrimary, todayNutritionKey,
+  colors, fonts, cardStyle, titleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
 } from '../../../lib/design-tokens'
 const GOLD = colors.gold
 const TEXT_PRIMARY = colors.text
@@ -313,7 +313,7 @@ export default function HomeTab({
             Bonjour, {firstName}
           </span>
         </div>
-        <div style={{ fontFamily: fonts.body, fontSize: 13, fontStyle: 'italic', color: colors.textMuted, lineHeight: 1.5, paddingLeft: 12, borderLeft: `2px solid ${colors.goldRule}` }}>
+        <div style={{ ...bodyStyle, fontSize: 13, fontStyle: 'italic', lineHeight: 1.5, paddingLeft: 12, borderLeft: `2px solid ${colors.goldRule}` }}>
           &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
         </div>
       </div>
@@ -339,8 +339,8 @@ export default function HomeTab({
                 <circle cx="70" cy="70" r="56" fill="none" stroke="url(#heroGold)" strokeWidth="6" strokeLinecap="round" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - calPct / 100)} style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
               </svg>
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontFamily: fonts.headline, fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY }}>{consumedKcal}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' }}>kcal</span>
+                <span style={statStyle}>{consumedKcal}</span>
+                <span style={{ ...subtitleStyle, fontSize: 9, letterSpacing: 2 }}>kcal</span>
               </div>
             </div>
           </div>
@@ -350,7 +350,7 @@ export default function HomeTab({
               <Flame size={12} color={GOLD} />
               <span style={{ ...T, fontSize: 12 }}>Objectif</span>
             </div>
-            <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>
+            <div style={{ ...statStyle, fontSize: 22, marginTop: 4 }}>
               {calorieGoal} <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED }}>kcal</span>
             </div>
           </div>
@@ -360,7 +360,7 @@ export default function HomeTab({
               <Dumbbell size={12} color={GOLD} />
               <span style={{ ...T, fontSize: 12 }}>Volume</span>
             </div>
-            <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>
+            <div style={{ ...statStyle, fontSize: 22, marginTop: 4 }}>
               {weekSessions} <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED }}>séances</span>
             </div>
           </div>
@@ -372,7 +372,7 @@ export default function HomeTab({
           <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
               <span style={{ ...T, fontSize: 12 }}>Énergie</span>
-              <div style={{ fontFamily: fonts.headline, fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>{calPct}%</div>
+              <div style={{ ...statStyle, marginTop: 4 }}>{calPct}%</div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <Zap size={40} color={GOLD} fill={GOLD} opacity={0.6} />
@@ -382,7 +382,7 @@ export default function HomeTab({
           <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
               <span style={{ ...T, fontSize: 12 }}>Hydratation</span>
-              <div style={{ fontFamily: fonts.headline, fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>
+              <div style={{ ...statStyle, marginTop: 4 }}>
                 {(waterToday / 1000).toFixed(1)} <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_MUTED }}>L</span>
               </div>
             </div>
@@ -400,10 +400,10 @@ export default function HomeTab({
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <span style={T}>On Fire</span>
             </div>
-            <div style={{ fontFamily: fonts.headline, fontSize: 30, fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '-0.02em' }}>
+            <div style={{ ...statStyle, fontSize: 30, letterSpacing: '-0.02em' }}>
               {streak} JOUR{streak > 1 ? 'S' : ''} STREAK
             </div>
-            <p style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 6, maxWidth: 200, lineHeight: 1.4 }}>
+            <p style={{ ...bodyStyle, fontSize: 13, marginTop: 6, maxWidth: 200, lineHeight: 1.4 }}>
               Continue pour débloquer le badge &ldquo;Titan&rdquo;.
             </p>
           </div>
@@ -421,19 +421,19 @@ export default function HomeTab({
                 {objLabel === 'cut' && 'SÈCHE'}
                 {objLabel === 'maintain' && 'MAINTIEN'}
               </div>
-              <div style={{ fontFamily: fonts.headline, fontSize: 32, color: colors.text, lineHeight: 1 }}>
+              <div style={{ ...statStyle, fontSize: 32, lineHeight: 1 }}>
                 {currentWeight} <span style={{ fontSize: 16, color: colors.textMuted }}>KG</span>
               </div>
             </div>
             {goalWeight && (
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 4 }}>OBJECTIF</div>
-                <div style={{ fontFamily: fonts.headline, fontSize: 28, color: colors.gold, lineHeight: 1 }}>
+                <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: 2, marginBottom: 4 }}>OBJECTIF</div>
+                <div style={{ ...statStyle, fontSize: 28, color: colors.gold, lineHeight: 1 }}>
                   {goalWeight} <span style={{ fontSize: 14, color: colors.textMuted }}>KG</span>
                 </div>
               </div>
             )}
-            <div style={{ fontFamily: fonts.headline, fontSize: 18, color: objLabel === 'bulk' ? colors.gold : objLabel === 'cut' ? colors.gold : colors.success }}>
+            <div style={{ ...statSmallStyle, color: objLabel === 'bulk' ? colors.gold : objLabel === 'cut' ? colors.gold : colors.success }}>
               {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}
             </div>
           </div>
@@ -450,7 +450,7 @@ export default function HomeTab({
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={T}>LV.{level} — {title}</span>
                 </div>
-                <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{xpInLevel} / {xpForNext} XP</span>
+                <span style={{ ...mutedStyle, fontSize: 11 }}>{xpInLevel} / {xpForNext} XP</span>
               </div>
               <div style={{ width: '100%', height: 6, borderRadius: 3, background: colors.surfaceHigh, overflow: 'hidden' }}>
                 <div style={{ width: `${progress * 100}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #D4A843, #E8C97A)', transition: 'width 1s ease' }} />
@@ -465,7 +465,7 @@ export default function HomeTab({
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.92) 0%, rgba(13,11,8,0.5) 50%, rgba(13,11,8,0.15) 100%)' }} />
           <div style={{ position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)' }}>
             <div style={{ ...T, marginBottom: 3 }}>Coaching personnel</div>
-            <div style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 800, letterSpacing: '0.05em', color: colors.text, lineHeight: 1.15 }}>VOTRE COACH<br />VOUS ACCOMPAGNE</div>
+            <div style={{ ...statSmallStyle, fontWeight: 800, color: colors.text, letterSpacing: '0.05em', lineHeight: 1.15 }}>VOTRE COACH<br />VOUS ACCOMPAGNE</div>
           </div>
         </div>
 
@@ -473,7 +473,7 @@ export default function HomeTab({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: -4 }}>
           <span style={T}>PROGRAMME</span>
           <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
-          <button onClick={() => setActiveTab('training')} style={{ fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: colors.gold, textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}>Voir tout</button>
+          <button onClick={() => setActiveTab('training')} style={{ ...labelStyle, fontSize: 10, letterSpacing: 1 }}>Voir tout</button>
         </div>
 
         {/* ═══ SÉANCE DU JOUR ═══ */}
@@ -493,33 +493,33 @@ export default function HomeTab({
           </div>
           <div style={{ padding: '16px 20px 20px' }}>
             {!coachProgram && !customProgramExercises && !todayScheduledSession ? (
-              <p style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textMuted, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
+              <p style={{ ...bodyStyle, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
             ) : !hasWorkoutToday && (customDayName === 'Repos' || todayCoachDay?.repos) ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Moon size={24} color={colors.textMuted} />
                 <div>
                   <div style={T}>JOUR DE REPOS</div>
-                  <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted }}>Récupère bien, étirements bienvenus</div>
+                  <div style={mutedStyle}>Récupère bien, étirements bienvenus</div>
                 </div>
               </div>
             ) : !todayExercises.length ? (
-              <p style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textMuted, margin: 0 }}>Aucun exercice prévu.</p>
+              <p style={{ ...bodyStyle, margin: 0 }}>Aucun exercice prévu.</p>
             ) : todaySession ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <CheckCircle size={32} color={colors.success} style={{ flexShrink: 0 }} />
                 <div>
                   <div style={{ ...T, color: colors.success }}>SÉANCE TERMINÉE</div>
-                  <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+                  <div style={{ ...mutedStyle, marginTop: 2 }}>
                     {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
                   </div>
                 </div>
               </div>
             ) : (
               <>
-                <h3 style={{ fontFamily: fonts.headline, fontSize: 28, color: colors.text, letterSpacing: '1px', lineHeight: 1, margin: '0 0 8px' }}>
+                <h3 style={{ ...statStyle, letterSpacing: '1px', lineHeight: 1, margin: '0 0 8px' }}>
                   {sessionTitle.toUpperCase()}
                 </h3>
-                <div style={{ display: 'flex', gap: 16, fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
+                <div style={{ display: 'flex', gap: 16, ...subtitleStyle, fontSize: 11, letterSpacing: '0.12em', marginBottom: 20 }}>
                   <span>{todayExercises.length} exercices</span>
                   <span>·</span>
                   <span>~45 min</span>
@@ -538,7 +538,7 @@ export default function HomeTab({
         <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <span style={T}>Performance</span>
-            <button onClick={() => setActiveTab('progress')} style={{ fontSize: 11, fontWeight: 700, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Semaine</button>
+            <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 11 }}>Semaine</button>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 8 }}>
             {barData.map((b, i) => (
@@ -572,9 +572,9 @@ export default function HomeTab({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                 <div>
                   <div style={T}>HYDRATATION</div>
-                  <div style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 600, letterSpacing: 2, color: colors.textMuted }}>OBJECTIF : {waterGoal}L</div>
+                  <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: 2 }}>OBJECTIF : {waterGoal}L</div>
                 </div>
-                <div style={{ fontFamily: fonts.headline, fontSize: 32, color: colors.gold, lineHeight: 1 }}>{waterL.toFixed(1)}L</div>
+                <div style={{ ...statStyle, fontSize: 32, color: colors.gold, lineHeight: 1 }}>{waterL.toFixed(1)}L</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
                 <div style={{ display: 'flex', gap: 5, flex: 1, flexWrap: 'wrap' }}>
@@ -621,7 +621,7 @@ export default function HomeTab({
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
               <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, letterSpacing: 1 }}>SOMMEIL</span>
               <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={habitValues.sleep_hours || ''} onChange={e => setHabitValues(prev => ({ ...prev, sleep_hours: parseFloat(e.target.value) }))} style={{ width: 60, padding: '6px 8px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.headline, fontSize: 18, textAlign: 'center', outline: 'none' }} />
-              <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted }}>heures</span>
+              <span style={mutedStyle}>heures</span>
             </div>
             <button onClick={async () => {
               const todayDate = new Date().toISOString().split('T')[0]
@@ -638,8 +638,8 @@ export default function HomeTab({
               { emoji: `${todayHabit.sleep_hours || '?'}h`, label: 'SOMMEIL', isText: true },
             ].map(i => (
               <div key={i.label} style={{ flex: 1, background: colors.surface, borderRadius: 16, padding: '8px 10px', textAlign: 'center', border: `1px solid ${colors.goldDim}` }}>
-                <div style={i.isText ? { fontFamily: fonts.headline, fontSize: 18, color: colors.gold } : { fontSize: 18 }}>{i.emoji}</div>
-                <div style={{ fontFamily: fonts.body, fontSize: 8, color: colors.textMuted, letterSpacing: 1 }}>{i.label}</div>
+                <div style={i.isText ? statSmallStyle : { fontSize: 18 }}>{i.emoji}</div>
+                <div style={{ ...mutedStyle, fontSize: 8, letterSpacing: 1 }}>{i.label}</div>
               </div>
             ))}
           </div>
@@ -649,7 +649,7 @@ export default function HomeTab({
         <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={T}>NUTRITION</span>
-            <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.gold, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir plan</button>
+            <button onClick={() => setActiveTab('nutrition')} style={{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em' }}>Voir plan</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: colors.goldBorder }}>
             {[
@@ -659,8 +659,8 @@ export default function HomeTab({
               { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—' },
             ].map(({ label, value }) => (
               <div key={label} style={{ background: colors.surface, borderRadius: 16, padding: '10px 4px', textAlign: 'center' }}>
-                <div style={{ fontFamily: fonts.headline, fontSize: 22, color: colors.gold }}>{value}</div>
-                <div style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
+                <div style={{ ...statSmallStyle, fontSize: 22 }}>{value}</div>
+                <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: '0.1em' }}>{label}</div>
               </div>
             ))}
           </div>
