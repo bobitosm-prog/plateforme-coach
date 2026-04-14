@@ -736,7 +736,7 @@ export default function TrainingTab({
       </div>
 
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
-      <div style={{ margin: '8px 24px 0', ...cardStyle, padding: 16 }}>
+      <div style={{ margin: '8px 24px 0', ...cardStyle, padding: '20px 16px 16px' }}>
         {/* Month label + week nav arrows */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <span style={mutedStyle}>
@@ -860,20 +860,39 @@ export default function TrainingTab({
                 return trainingDay.toUpperCase()
               })()}</div>
 
-              {/* Badge pills */}
-              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 16 }}>
-                <span style={{ fontSize: 10, color: colors.gold, background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.2)', borderRadius: 999, padding: '3px 10px' }}>
-                  {trainingExercises.length} exercices
-                </span>
-                <span style={{ fontSize: 10, color: colors.gold, background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.2)', borderRadius: 999, padding: '3px 10px' }}>
-                  ~{Math.round(trainingExercises.length * 10)}min
-                </span>
-                {trainingDayData?.focus && (
-                  <span style={{ fontSize: 10, color: colors.gold, background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.2)', borderRadius: 999, padding: '3px 10px' }}>
-                    {trainingDayData.focus}
-                  </span>
-                )}
+              {/* Badge pills — exercises + duration + muscle groups */}
+              {(() => {
+                const pillStyle: React.CSSProperties = { fontSize: 10, color: colors.gold, background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.2)', borderRadius: 999, padding: '3px 10px' }
+                const muscles = [...new Set(trainingExercises.map((e: any) => e.muscle_group).filter(Boolean))]
+                return (
+                  <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 12 }}>
+                    <span style={pillStyle}>{trainingExercises.length} exercices</span>
+                    <span style={pillStyle}>~{Math.round(trainingExercises.length * 10)}min</span>
+                    {muscles.map((m: string) => <span key={m} style={pillStyle}>{m}</span>)}
+                  </div>
+                )
+              })()}
+
+              {/* Mini-stats row: SETS · VOLUME · REPOS */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+                {[
+                  { label: 'SETS', value: trainingExercises.reduce((s: number, e: any) => s + (Number(e.sets) || 3), 0) },
+                  { label: 'EXERCICES', value: trainingExercises.length },
+                  { label: 'REPOS', value: `${Math.round(trainingExercises.reduce((s: number, e: any) => s + (Number(e.rest_seconds) || 90), 0) / 60)}min` },
+                ].map(s => (
+                  <div key={s.label} style={{ background: 'rgba(201,168,76,0.06)', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+                    <div style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 700, color: colors.text }}>{s.value}</div>
+                    <div style={{ fontFamily: fonts.body, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', color: colors.textMuted, textTransform: 'uppercase' }}>{s.label}</div>
+                  </div>
+                ))}
               </div>
+
+              {/* DÉMARRER button — BEFORE exercise list */}
+              {trainingIsToday && !todaySessionDone && !workoutStarted && (
+                <button onClick={() => startProgramWorkout(trainingDayData, trainingExercises)} style={{ ...btnPrimary, width: '100%', padding: 16, borderRadius: 14, marginBottom: 16 }}>
+                  DÉMARRER LA SÉANCE
+                </button>
+              )}
 
               {/* Exercise cards — edit mode */}
               {editMode && editedDays && (() => {
