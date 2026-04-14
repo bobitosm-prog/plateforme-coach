@@ -133,6 +133,20 @@ export const mutedStyle: React.CSSProperties = {
   color: colors.textDim,
 }
 
+/** Badge (ex: "AVANCÉ", "POITRINE") */
+export const badgeStyle: React.CSSProperties = {
+  fontFamily: fonts.body,
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: colors.gold,
+  background: colors.goldDim,
+  padding: '4px 12px',
+  borderRadius: radii.pill,
+  display: 'inline-block',
+}
+
 /** Primary CTA button */
 export const btnPrimary: React.CSSProperties = {
   background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`,
@@ -199,12 +213,24 @@ export const tw = {
   card: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.6)]",
   modalOverlay: "fixed inset-0 bg-black/75 backdrop-blur-sm z-50",
   modalContainer: "bg-[#131313] border border-[rgba(201,168,76,0.15)] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6",
-  input: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-xl px-4 py-3 text-white font-['Inter'] text-sm focus:border-[#e6c364] outline-none",
-  btnPrimary: "bg-gradient-to-r from-[#e6c364] to-[#c9a84c] text-black font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
-  btnSecondary: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] text-[#e6c364] font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
   navBar: "bg-[#0e0e0e] border-t border-[rgba(201,168,76,0.15)]",
   navActive: "text-[#e6c364]",
   navInactive: "text-white/30",
+
+  // Buttons
+  btnPrimary: "bg-gradient-to-r from-[#e6c364] to-[#c9a84c] text-black font-['Plus_Jakarta_Sans'] font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
+  btnSecondary: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] text-[#e6c364] font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
+  btnGhost: "bg-transparent border border-[rgba(201,168,76,0.25)] text-[#e6c364] font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
+
+  // Inputs
+  input: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-xl px-4 py-3 text-white font-['Inter'] text-sm focus:border-[#e6c364] outline-none",
+  select: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-xl px-4 py-3 text-white font-['Inter'] text-sm focus:border-[#e6c364] outline-none appearance-none",
+  textarea: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-xl px-4 py-3 text-white font-['Inter'] text-sm focus:border-[#e6c364] outline-none resize-none",
+
+  // Badges
+  badge: "bg-[#e6c364]/10 text-[#e6c364] font-['Inter'] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider",
+  badgeSuccess: "bg-[#4ade80]/10 text-[#4ade80] font-['Inter'] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider",
+  badgeError: "bg-[#ef4444]/10 text-[#ef4444] font-['Inter'] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider",
 
   // Typography
   pageTitle: "font-['Plus_Jakarta_Sans'] text-2xl font-bold uppercase tracking-[0.15em] text-white",
