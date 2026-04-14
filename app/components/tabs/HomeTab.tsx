@@ -160,7 +160,7 @@ export default function HomeTab({
   useEffect(() => {
     if (!session?.user?.id) return
     const today = new Date().toISOString().split('T')[0]
-    supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', today).limit(10)
+    supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', today).limit(50)
       .then(({ data }: any) => {
         setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0))
       })
@@ -651,14 +651,14 @@ export default function HomeTab({
             <span style={T}>NUTRITION</span>
             <button onClick={() => setActiveTab('nutrition')} style={{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em' }}>Voir plan</button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: colors.goldBorder }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
               { label: 'Cible', value: calorieGoal },
               { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '—' },
               { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—' },
               { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—' },
             ].map(({ label, value }) => (
-              <div key={label} style={{ background: colors.surface, borderRadius: 16, padding: '10px 4px', textAlign: 'center' }}>
+              <div key={label} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 4px', textAlign: 'center' }}>
                 <div style={{ ...statSmallStyle, fontSize: 22 }}>{value}</div>
                 <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: '0.1em' }}>{label}</div>
               </div>

@@ -41,9 +41,9 @@ export default function MuscleHeatMap({ muscleStatus }: { muscleStatus: Record<s
   const g = (m: string) => SC[(muscleStatus[m] ?? 0) as keyof typeof SC]
 
   return (
-    <div style={{ background: '#141209', border: '1px solid rgba(212,168,67,0.25)', borderRadius: 16, padding: 18, marginBottom: 16 }}>
+    <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontFamily: "'Bebas Neue'", fontSize: 18, letterSpacing: 3, color: '#F5EDD8' }}>RECUPERATION MUSCULAIRE</span>
+        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#e6c364' }}>RÉCUPÉRATION MUSCULAIRE</span>
         <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
@@ -75,7 +75,7 @@ export default function MuscleHeatMap({ muscleStatus }: { muscleStatus: Record<s
             <text x="80" y="234" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">QUAD</text>
             <text x="120" y="234" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">QUAD</text>
           </svg>
-          <div style={{ fontFamily: "'Barlow Condensed'", fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#8A8070', marginTop: 4 }}>FACE</div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#d0c5b2', marginTop: 4 }}>FACE</div>
         </div>
         {/* BACK */}
         <div style={{ textAlign: 'center' }}>
@@ -111,14 +111,14 @@ export default function MuscleHeatMap({ muscleStatus }: { muscleStatus: Record<s
             <text x="80" y="244" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">ISCH</text>
             <text x="120" y="244" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">ISCH</text>
           </svg>
-          <div style={{ fontFamily: "'Barlow Condensed'", fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#8A8070', marginTop: 4 }}>DOS</div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#d0c5b2', marginTop: 4 }}>DOS</div>
         </div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 14 }}>
         {Object.values(SC).map(v => (
           <div key={v.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: v.fill, opacity: v.opacity }} />
-            <span style={{ fontFamily: "'DM Sans'", fontSize: 11, color: '#8A8070' }}>{v.label}</span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2' }}>{v.label}</span>
           </div>
         ))}
       </div>
