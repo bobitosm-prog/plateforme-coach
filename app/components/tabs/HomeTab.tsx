@@ -9,9 +9,13 @@ import {
 import ExercisePreview from '../ExercisePreview'
 import { resolveSessionType } from '../../../lib/session-types'
 import {
-  GOLD, TEXT_PRIMARY, TEXT_MUTED,
+  colors, fonts, cardStyle, titleStyle, statStyle, btnPrimary,
   todayNutritionKey,
 } from '../../../lib/design-tokens'
+
+const GOLD = colors.gold
+const TEXT_PRIMARY = colors.text
+const TEXT_MUTED = colors.textMuted
 import SwissBadge from '../ui/SwissBadge'
 import MuscleHeatMap, { calculateMuscleStatus } from '../ui/MuscleHeatMap'
 import { getLevelFromXP, getLevelTitle, addXP } from '../../../lib/gamification'
@@ -294,8 +298,8 @@ export default function HomeTab({
   const objLabel = profile?.objective === 'weight_loss' || profile?.objective === 'seche' ? 'cut'
     : profile?.objective === 'mass' || profile?.objective === 'bulk' ? 'bulk' : 'maintain'
 
-  // Unified card title style — Stitch design system
-  const T: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#e6c364' }
+  // Card title style from centralized design system
+  const T = titleStyle
 
   return (
     <div style={{ background: '#131313', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>

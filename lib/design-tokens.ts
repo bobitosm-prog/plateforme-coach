@@ -1,31 +1,197 @@
-// ─── Swiss Luxury Dark Gold Design System ───
-export const BG_BASE = '#0D0B08'
-export const BG_CARD = '#141209'
-export const BG_CARD_2 = '#1A1712'
-export const SURFACE_HIGH = '#2a2a2a'
-export const BORDER = 'rgba(212,168,67,0.25)'
-export const GOLD = '#D4A843'
-export const GOLD_BRIGHT = '#E8C97A'
-export const GOLD_DIM = 'rgba(212,168,67,0.12)'
-export const GOLD_RULE = 'rgba(212,168,67,0.25)'
-export const GOLD_GLOW = '0 0 20px rgba(212,168,67,0.15)'
-export const GOLD_BORDER_STRONG = 'rgba(212,168,67,0.5)'
-export const GREEN = '#4ade80'
-export const RED = '#ef4444'
-export const BLUE = '#60A5FA'
-export const TEXT_PRIMARY = '#F5EDD8'
-export const TEXT_MUTED = '#8A8070'
-export const TEXT_DIM = '#3A3528'
-export const RADIUS_CARD = 16
-export const RADIUS_BTN = 12
-export const RADIUS_INPUT = 10
-export const RADIUS_PILL = 8
-export const FONT_DISPLAY = "'Bebas Neue', sans-serif"
-export const FONT_ALT = "'Barlow Condensed', sans-serif"
-export const FONT_BODY = "'DM Sans', var(--font-dm-sans), sans-serif"
+// ─── MOOVX Stitch Design System ───
+// Single source of truth. Change ONE value → applies EVERYWHERE.
 
-// Legacy aliases (to avoid breaking imports)
-export const ORANGE = GOLD
+import type React from 'react'
+
+// ══════════════════════════════════════════
+// COLORS
+// ══════════════════════════════════════════
+
+export const colors = {
+  background: '#131313',
+  surface: '#0e0e0e',
+  surfaceHigh: '#1c1b1b',
+  gold: '#e6c364',
+  goldContainer: '#c9a84c',
+  goldBorder: 'rgba(201,168,76,0.15)',
+  goldDim: 'rgba(230,195,100,0.08)',
+  goldRule: 'rgba(201,168,76,0.25)',
+  text: '#e5e2e1',
+  textMuted: '#d0c5b2',
+  textDim: '#99907e',
+  success: '#4ade80',
+  error: '#ef4444',
+  blue: '#60a5fa',
+  orange: '#fb923c',
+} as const
+
+// ══════════════════════════════════════════
+// TYPOGRAPHY
+// ══════════════════════════════════════════
+
+export const fonts = {
+  headline: "'Plus Jakarta Sans', sans-serif",
+  body: "'Inter', sans-serif",
+} as const
+
+// ══════════════════════════════════════════
+// RADII
+// ══════════════════════════════════════════
+
+export const radii = {
+  card: 16,
+  button: 12,
+  input: 12,
+  pill: 8,
+  full: 999,
+} as const
+
+// ══════════════════════════════════════════
+// INLINE STYLE PRESETS (for style={{...}})
+// ══════════════════════════════════════════
+
+/** Standard card container */
+export const cardStyle: React.CSSProperties = {
+  background: colors.surface,
+  border: `1px solid ${colors.goldBorder}`,
+  borderRadius: radii.card,
+  boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
+}
+
+/** Card section title — gold, uppercase, small */
+export const titleStyle: React.CSSProperties = {
+  fontFamily: fonts.headline,
+  fontSize: 14,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.15em',
+  color: colors.gold,
+}
+
+/** Big stat number */
+export const statStyle: React.CSSProperties = {
+  fontFamily: fonts.headline,
+  fontWeight: 800,
+  color: colors.text,
+}
+
+/** Body text */
+export const bodyStyle: React.CSSProperties = {
+  fontFamily: fonts.body,
+  fontSize: 14,
+  color: colors.textMuted,
+}
+
+/** Primary CTA button */
+export const btnPrimary: React.CSSProperties = {
+  background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`,
+  color: '#0D0B08',
+  fontFamily: fonts.headline,
+  fontWeight: 700,
+  borderRadius: radii.button,
+  border: 'none',
+  cursor: 'pointer',
+  textTransform: 'uppercase',
+  letterSpacing: '0.12em',
+  fontSize: 14,
+}
+
+/** Secondary button */
+export const btnSecondary: React.CSSProperties = {
+  background: colors.surface,
+  border: `1px solid ${colors.goldBorder}`,
+  color: colors.gold,
+  fontFamily: fonts.headline,
+  fontWeight: 700,
+  borderRadius: radii.button,
+  cursor: 'pointer',
+  textTransform: 'uppercase',
+  letterSpacing: '0.12em',
+  fontSize: 14,
+}
+
+/** Input field */
+export const inputStyle: React.CSSProperties = {
+  background: colors.surface,
+  border: `1px solid ${colors.goldBorder}`,
+  borderRadius: radii.input,
+  color: colors.text,
+  fontFamily: fonts.body,
+  fontSize: 14,
+  padding: '12px 16px',
+  outline: 'none',
+}
+
+/** Modal overlay */
+export const modalOverlay: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0,0,0,0.75)',
+  backdropFilter: 'blur(8px)',
+  zIndex: 50,
+}
+
+/** Modal container */
+export const modalContainer: React.CSSProperties = {
+  background: colors.background,
+  border: `1px solid ${colors.goldBorder}`,
+  borderRadius: radii.card,
+  boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+}
+
+// ══════════════════════════════════════════
+// TAILWIND CLASS PRESETS (for className="")
+// ══════════════════════════════════════════
+
+export const tw = {
+  card: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.6)]",
+  cardTitle: "font-['Plus_Jakarta_Sans'] text-sm font-bold uppercase tracking-[0.15em] text-[#e6c364]",
+  sectionTitle: "font-['Plus_Jakarta_Sans'] text-xl font-bold uppercase tracking-[0.15em] text-white",
+  body: "font-['Inter'] text-sm text-white/70",
+  stat: "font-['Plus_Jakarta_Sans'] text-3xl font-bold text-white",
+  btnPrimary: "bg-gradient-to-r from-[#e6c364] to-[#c9a84c] text-black font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
+  btnSecondary: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] text-[#e6c364] font-bold rounded-xl px-6 py-3 uppercase tracking-wider text-sm",
+  input: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-xl px-4 py-3 text-white font-['Inter'] text-sm focus:border-[#e6c364] outline-none",
+  modalOverlay: "fixed inset-0 bg-black/75 backdrop-blur-sm z-50",
+  modalContainer: "bg-[#131313] border border-[rgba(201,168,76,0.15)] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6",
+  navBar: "bg-[#0e0e0e] border-t border-[rgba(201,168,76,0.15)]",
+  navActive: "text-[#e6c364]",
+  navInactive: "text-white/30",
+} as const
+
+// ══════════════════════════════════════════
+// LEGACY ALIASES (backward compat — DO NOT USE in new code)
+// ══════════════════════════════════════════
+
+export const BG_BASE = colors.background
+export const BG_CARD = colors.surface
+export const BG_CARD_2 = colors.surfaceHigh
+export const SURFACE_HIGH = colors.surfaceHigh
+export const BORDER = colors.goldBorder
+export const GOLD = colors.gold
+export const GOLD_BRIGHT = colors.gold
+export const GOLD_DIM = colors.goldDim
+export const GOLD_RULE = colors.goldRule
+export const GOLD_GLOW = '0 0 20px rgba(230,195,100,0.15)'
+export const GOLD_BORDER_STRONG = colors.goldRule
+export const GREEN = colors.success
+export const RED = colors.error
+export const BLUE = colors.blue
+export const ORANGE = colors.gold
+export const TEXT_PRIMARY = colors.text
+export const TEXT_MUTED = colors.textMuted
+export const TEXT_DIM = colors.textDim
+export const RADIUS_CARD = radii.card
+export const RADIUS_BTN = radii.button
+export const RADIUS_INPUT = radii.input
+export const RADIUS_PILL = radii.pill
+export const FONT_DISPLAY = fonts.headline
+export const FONT_ALT = fonts.body
+export const FONT_BODY = fonts.body
+
+// ══════════════════════════════════════════
+// DATA CONSTANTS (not design — keep as-is)
+// ══════════════════════════════════════════
 
 export const MUSCLE_COLORS: Record<string, string> = {
   'Poitrine': '#EF4444',
@@ -36,6 +202,12 @@ export const MUSCLE_COLORS: Record<string, string> = {
   'Abdos': '#EAB308',
   'Fessiers': '#EC4899',
   'Cardio': '#06B6D4',
+  'Pectoraux': '#EF4444',
+  'Biceps': '#F97316',
+  'Triceps': '#F97316',
+  'Quadriceps': '#22C55E',
+  'Ischio-jambiers': '#22C55E',
+  'Mollets': '#22C55E',
 }
 export const MUSCLE_GROUPS_FILTER = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos']
 
