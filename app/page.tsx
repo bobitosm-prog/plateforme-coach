@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 
 import useClientDashboard, { type Tab } from './hooks/useClientDashboard'
+import Header from './components/Header'
 import Paywall from './components/Paywall'
 import BugReport from './components/BugReport'
 import ChatAI from './components/ChatAI'
@@ -286,39 +287,17 @@ export default function CoachApp() {
         </div>
       )}
 
-      {/* ── GLASS BAR HEADER ── */}
-      <header style={{ flexShrink: 0, padding: '8px 14px' }}>
-        <div className="stitch-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 18, position: 'relative', overflow: 'visible' }}>
-          {/* Left: Coach IA + Messages — fixed width for centering */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 3, minWidth: 80 }}>
-            <button onClick={() => h.setActiveTab('coachIA')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'coachIA' ? GOLD_DIM : 'transparent', border: h.activeTab === 'coachIA' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
-              <Bot size={19} color={h.activeTab === 'coachIA' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
-            </button>
-            <button onClick={() => h.setActiveTab('messages')} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: h.activeTab === 'messages' ? GOLD_DIM : 'transparent', border: h.activeTab === 'messages' ? `1px solid ${GOLD_RULE}` : '1px solid transparent', cursor: 'pointer', transition: 'all 0.3s', position: 'relative' }}>
-              <MessageCircle size={19} color={h.activeTab === 'messages' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
-              {h.unreadCount > 0 && <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: RED, border: '2px solid rgba(20,18,9,0.8)' }} />}
-            </button>
-          </div>
-          {/* Center: Floating logo medallion — overflows navbar */}
-          <button onClick={() => h.setActiveTab('home')} style={{
-            position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 56, height: 56, borderRadius: 16,
-            background: 'rgba(13,11,8,0.9)',
-            border: `1.5px solid ${GOLD_RULE}`,
-            boxShadow: `0 4px 20px rgba(0,0,0,0.4), 0 0 20px rgba(212,168,67,0.1)`,
-            zIndex: 10, cursor: 'pointer',
-          }}>
-            <img src="/logo-moovx.png" alt="MoovX" style={{ height: 40, width: 'auto', objectFit: 'contain', borderRadius: 8 }} />
-          </button>
-          {/* Right: Profil — fixed width matching left for balance */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, position: 'relative', zIndex: 3, minWidth: 80 }}>
-            <button onClick={() => h.setActiveTab('profil')} style={{ width: 34, height: 34, borderRadius: '50%', border: h.activeTab === 'profil' ? `1.5px solid ${GOLD}` : `1.5px solid ${GOLD_RULE}`, background: h.activeTab === 'profil' ? GOLD_DIM : 'rgba(212,168,67,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s', padding: 0 }}>
-              <User size={16} color={h.activeTab === 'profil' ? GOLD : TEXT_MUTED} strokeWidth={1.5} />
-            </button>
-          </div>
-        </div>
-      </header>
+      {/* ── HEADER ── */}
+      <Header
+        firstName={h.firstName}
+        displayAvatar={h.displayAvatar}
+        objective={h.profile?.objective}
+        unreadCount={h.unreadCount}
+        onAvatar={() => h.setActiveTab('profil')}
+        onLogo={() => h.setActiveTab('home')}
+        onCalendar={() => h.setActiveTab('training')}
+        onMessages={() => h.setActiveTab('messages')}
+      />
 
       {/* ── TRIAL BANNER ── */}
       {h.isInTrial && (
