@@ -9,8 +9,6 @@ import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, ORANGE, GOLD, GOLD_DIM, GOLD_RULE, GOLD_BORDER_STRONG, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY,
   NUTRITION_DAYS, todayNutritionKey,
 } from '../../../lib/design-tokens'
 const MEAL_LABELS: Record<string, string> = {
@@ -328,8 +326,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🔒</div>
-          <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: '0 0 10px' }}>Nutrition gérée par ton coach</h2>
-          <p style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_MUTED, margin: 0, lineHeight: 1.6, maxWidth: 300 }}>
+          <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: '#e5e2e1', margin: '0 0 10px' }}>Nutrition gérée par ton coach</h2>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.82rem', color: '#d0c5b2', margin: 0, lineHeight: 1.6, maxWidth: 300 }}>
             Ton coach prépare ton plan nutrition personnalisé. Contacte-le via la messagerie.
           </p>
         </div>
@@ -338,11 +336,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🍽️</div>
-        <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: '0 0 10px' }}>Aucun plan alimentaire</h2>
-        <p style={{ fontFamily: FONT_BODY, fontSize: '0.82rem', color: TEXT_MUTED, margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
+        <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: '#e5e2e1', margin: '0 0 10px' }}>Aucun plan alimentaire</h2>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.82rem', color: '#d0c5b2', margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
           Configure tes preferences puis genere ton plan IA personnalise.
         </p>
-        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
+        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: '#e6c364', fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
           Configurer mes preferences
         </button>
       </div>
@@ -391,8 +389,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       const availableDays = Object.keys(planData)
       return (
         <div style={{ padding: 20, textAlign: 'center' }}>
-          <p style={{ fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_MUTED, marginBottom: 12 }}>Pas de plan pour {nutritionDay}.</p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: '0.75rem', color: TEXT_DIM }}>Jours disponibles : {availableDays.join(', ')}</p>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.85rem', color: '#d0c5b2', marginBottom: 12 }}>Pas de plan pour {nutritionDay}.</p>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.75rem', color: '#99907e' }}>Jours disponibles : {availableDays.join(', ')}</p>
         </div>
       )
     }
@@ -400,16 +398,16 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     return (
       <>
         {/* Macro targets */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: BORDER, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
           {[
             { label: 'Kcal', value: String(dayData.total_kcal || plan.total_calories || '—') },
             { label: 'Prot', value: `${dayData.total_protein || plan.protein_g || '—'}g` },
             { label: 'Gluc', value: `${dayData.total_carbs || plan.carbs_g || '—'}g` },
             { label: 'Lip', value: `${dayData.total_fat || plan.fat_g || '—'}g` },
           ].map(({ label, value }) => (
-            <div key={label} style={{ background: BG_CARD, padding: 20, textAlign: 'center' }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 400, color: GOLD }}>{value}</div>
-              <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginTop: 4 }}>{label}</div>
+            <div key={label} style={{ background: '#0e0e0e', padding: 20, textAlign: 'center' }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 400, color: '#e6c364' }}>{value}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: '#d0c5b2', marginTop: 4 }}>{label}</div>
             </div>
           ))}
         </div>
@@ -423,10 +421,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             return (
               <button key={key} onClick={() => setNutritionDay(key)} style={{
                 flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
-                background: isActive ? GOLD : BG_CARD,
-                color: isActive ? '#0D0B08' : isToday ? GOLD : TEXT_MUTED,
-                outline: isToday && !isActive ? `2px solid ${GOLD}` : 'none',
+                fontFamily: "'Inter', sans-serif", fontSize: '0.82rem', fontWeight: 700,
+                background: isActive ? '#e6c364' : '#0e0e0e',
+                color: isActive ? '#0D0B08' : isToday ? '#e6c364' : '#d0c5b2',
+                outline: isToday && !isActive ? '2px solid #e6c364' : 'none',
               }}>
                 {label}
                 {dayKcal > 0 && <span style={{ display: 'block', fontSize: '0.55rem', fontWeight: 700, opacity: 0.8 }}>{dayKcal}</span>}
@@ -438,10 +436,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         {/* Shopping list button */}
         <button onClick={() => setShowShoppingModal(true)} style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
-          padding: '12px 16px', borderRadius: RADIUS_CARD, border: `1.5px solid ${GOLD_RULE}`, cursor: 'pointer',
-          background: GOLD_DIM,
-          fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
-          color: GOLD, marginBottom: 12, transition: 'all 150ms',
+          padding: '12px 16px', borderRadius: 16, border: '1.5px solid rgba(201,168,76,0.25)', cursor: 'pointer',
+          background: 'rgba(230,195,100,0.08)',
+          fontFamily: "'Inter', sans-serif", fontSize: '0.82rem', fontWeight: 700,
+          color: '#e6c364', marginBottom: 12, transition: 'all 150ms',
         }}>
           <ShoppingCart size={15} strokeWidth={2.5} />
           Liste de courses
@@ -454,34 +452,34 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             if (foodList.length === 0) return null
             const mealKcal = foodList.reduce((s: number, f: any) => s + (f.kcal || 0), 0)
             return (
-              <div key={mealType} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY }}>
+              <div key={mealType} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(201,168,76,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: '#e5e2e1' }}>
                     {MEAL_LABELS[mealType]}
                   </span>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: '0.85rem', color: GOLD }}>{mealKcal} kcal</span>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.85rem', color: '#e6c364' }}>{mealKcal} kcal</span>
                 </div>
-                <div style={{ padding: '8px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', gap: 12 }}>
+                <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(201,168,76,0.15)', display: 'flex', gap: 12 }}>
                   {[
-                    { l: 'P', v: foodList.reduce((s: number, f: any) => s + (f.proteines || 0), 0), color: GOLD },
+                    { l: 'P', v: foodList.reduce((s: number, f: any) => s + (f.proteines || 0), 0), color: '#e6c364' },
                     { l: 'G', v: foodList.reduce((s: number, f: any) => s + (f.glucides || 0), 0), color: '#60A5FA' },
                     { l: 'L', v: foodList.reduce((s: number, f: any) => s + (f.lipides || 0), 0), color: '#F97316' },
                   ].map(({ l, v, color }) => (
-                    <span key={l} style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', fontWeight: 700, color: TEXT_MUTED }}>
+                    <span key={l} style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#d0c5b2' }}>
                       <span style={{ color }}>{l}</span> {Math.round(v)}g
                     </span>
                   ))}
                 </div>
                 <div>
                   {foodList.map((food: any, fi: number) => (
-                    <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? `1px solid ${BORDER}` : 'none' }}>
+                    <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? '1px solid rgba(201,168,76,0.15)' : 'none' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 400, color: TEXT_PRIMARY }}>{food.aliment}</div>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2 }}>{food.quantite_g}g</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 400, color: '#e5e2e1' }}>{food.aliment}</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.65rem', color: '#d0c5b2', marginTop: 2 }}>{food.quantite_g}g</div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: '0.85rem', color: GOLD }}>{food.kcal || 0} kcal</div>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: '0.6rem', color: TEXT_MUTED }}>P{food.proteines || 0} G{food.glucides || 0} L{food.lipides || 0}</div>
+                        <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.85rem', color: '#e6c364' }}>{food.kcal || 0} kcal</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.6rem', color: '#d0c5b2' }}>P{food.proteines || 0} G{food.glucides || 0} L{food.lipides || 0}</div>
                       </div>
                     </div>
                   ))}
@@ -498,16 +496,16 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   function renderCoachPlan() {
     return (
       <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: BORDER, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
           {[
             { label: 'Kcal', value: String(coachMealPlan.calorie_target || '—') },
             { label: 'Prot', value: coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—' },
             { label: 'Gluc', value: coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—' },
             { label: 'Lip', value: coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—' },
           ].map(({ label, value }) => (
-            <div key={label} style={{ background: BG_CARD, padding: 20, textAlign: 'center' }}>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 400, color: GOLD }}>{value}</div>
-              <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginTop: 4 }}>{label}</div>
+            <div key={label} style={{ background: '#0e0e0e', padding: 20, textAlign: 'center' }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 400, color: '#e6c364' }}>{value}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: '#d0c5b2', marginTop: 4 }}>{label}</div>
             </div>
           ))}
         </div>
@@ -521,10 +519,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             return (
               <button key={key} onClick={() => setNutritionDay(key)} style={{
                 flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 700,
-                background: isActive ? GOLD : BG_CARD,
-                color: isActive ? '#0D0B08' : isToday ? GOLD : TEXT_MUTED,
-                outline: isToday && !isActive ? `2px solid ${GOLD}` : 'none',
+                fontFamily: "'Inter', sans-serif", fontSize: '0.82rem', fontWeight: 700,
+                background: isActive ? '#e6c364' : '#0e0e0e',
+                color: isActive ? '#0D0B08' : isToday ? '#e6c364' : '#d0c5b2',
+                outline: isToday && !isActive ? '2px solid #e6c364' : 'none',
               }}>
                 {label}
                 {dayKcal > 0 && <span style={{ display: 'block', fontSize: '0.55rem', fontWeight: 700, opacity: 0.8 }}>{dayKcal}</span>}
@@ -537,9 +535,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           const dayPlan = coachMealPlan[nutritionDay]
           const meals: any[] = dayPlan?.meals ?? []
           if (!meals.length) return (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 20px', textAlign: 'center' }}>
-              <UtensilsCrossed size={28} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
-              <p style={{ fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_MUTED, margin: 0 }}>Aucun repas pour ce jour.</p>
+            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '40px 20px', textAlign: 'center' }}>
+              <UtensilsCrossed size={28} color={'#d0c5b2'} style={{ marginBottom: 8 }} />
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.85rem', color: '#d0c5b2', margin: 0 }}>Aucun repas pour ce jour.</p>
             </div>
           )
           return (
@@ -550,33 +548,33 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 const mealCarb = (meal.foods || []).reduce((s: number, f: any) => s + (f.carb || 0), 0)
                 const mealFat = (meal.foods || []).reduce((s: number, f: any) => s + (f.fat || 0), 0)
                 return (
-                  <div key={mi} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
-                    <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY }}>{meal.name}</span>
-                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: '0.85rem', color: GOLD }}>{mealKcal} kcal</span>
+                  <div key={mi} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden' }}>
+                    <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(201,168,76,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: '#e5e2e1' }}>{meal.name}</span>
+                      <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.85rem', color: '#e6c364' }}>{mealKcal} kcal</span>
                     </div>
-                    <div style={{ padding: '8px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', gap: 12 }}>
+                    <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(201,168,76,0.15)', display: 'flex', gap: 12 }}>
                       {[
-                        { label: 'P', value: `${Math.round(mealProt)}g`, color: GOLD },
+                        { label: 'P', value: `${Math.round(mealProt)}g`, color: '#e6c364' },
                         { label: 'G', value: `${Math.round(mealCarb)}g`, color: '#60A5FA' },
                         { label: 'L', value: `${Math.round(mealFat)}g`, color: '#F97316' },
                       ].map(({ label, value, color }) => (
-                        <span key={label} style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', fontWeight: 700, color: TEXT_MUTED }}>
+                        <span key={label} style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.72rem', fontWeight: 700, color: '#d0c5b2' }}>
                           <span style={{ color }}>{label}</span> {value}
                         </span>
                       ))}
                     </div>
                     <div>
                       {(meal.foods || []).map((food: any, fi: number) => (
-                        <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? `1px solid ${BORDER}` : 'none' }}>
+                        <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? '1px solid rgba(201,168,76,0.15)' : 'none' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 400, color: TEXT_PRIMARY }}>{food.name}</div>
-                            {food.qty && <div style={{ fontFamily: FONT_BODY, fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2 }}>{food.qty}</div>}
+                            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 400, color: '#e5e2e1' }}>{food.name}</div>
+                            {food.qty && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.65rem', color: '#d0c5b2', marginTop: 2 }}>{food.qty}</div>}
                           </div>
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '0.85rem', color: GOLD }}>{food.kcal || 0} kcal</div>
+                            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.85rem', color: '#e6c364' }}>{food.kcal || 0} kcal</div>
                             {(food.prot || food.carb || food.fat) ? (
-                              <div style={{ fontFamily: FONT_BODY, fontSize: '0.6rem', color: TEXT_MUTED }}>P{food.prot || 0} G{food.carb || 0} L{food.fat || 0}</div>
+                              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.6rem', color: '#d0c5b2' }}>P{food.prot || 0} G{food.carb || 0} L{food.fat || 0}</div>
                             ) : null}
                           </div>
                         </div>
@@ -599,8 +597,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <img src="/images/hero-nutrition.webp" alt="Plan nutritionnel MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 3, margin: 0, color: TEXT_PRIMARY, lineHeight: 1 }}>VOTRE PLAN NUTRITIONNEL</h1>
-          <span style={{ fontFamily: FONT_ALT, fontSize: 12, color: GOLD, fontWeight: 700, letterSpacing: 2 }}>Personnalise par IA</span>
+          <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 24, letterSpacing: 3, margin: 0, color: '#e5e2e1', lineHeight: 1 }}>VOTRE PLAN NUTRITIONNEL</h1>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#e6c364', fontWeight: 700, letterSpacing: 2 }}>Personnalise par IA</span>
         </div>
       </div>
 
@@ -616,9 +614,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           return (
             <button key={id} onClick={() => setSubTab(id)} style={{
               flex: 1, padding: '10px 8px', border: 'none', cursor: 'pointer',
-              fontFamily: FONT_DISPLAY, fontSize: 14, letterSpacing: '1px',
-              background: active ? GOLD : BG_CARD,
-              color: active ? '#0D0B08' : TEXT_MUTED,
+              fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, letterSpacing: '1px',
+              background: active ? '#e6c364' : '#0e0e0e',
+              color: active ? '#0D0B08' : '#d0c5b2',
             }}>
               {label}
             </button>
@@ -674,27 +672,27 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {/* ═══ CALENDAR STRIP ═══ */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, color: TEXT_PRIMARY }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { month: 'long', year: 'numeric' }).toUpperCase()}</span>
-                {selectedDate !== today && <button onClick={() => setSelectedDate(today)} style={{ padding: '4px 12px', borderRadius: 8, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>AUJOURD&apos;HUI</button>}
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: 2, color: '#e5e2e1' }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { month: 'long', year: 'numeric' }).toUpperCase()}</span>
+                {selectedDate !== today && <button onClick={() => setSelectedDate(today)} style={{ padding: '4px 12px', borderRadius: 8, background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(201,168,76,0.25)', color: '#e6c364', fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>AUJOURD&apos;HUI</button>}
               </div>
               <div ref={calScrollRef} style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 8, scrollSnapType: 'x mandatory' }}>
                 {calendarDays.map(dt => {
                   const d = new Date(dt + 'T12:00:00')
                   const sel = dt === selectedDate, isTd = dt === today, hasMl = daysWithMeals.has(dt), fut = dt > today
                   return (
-                    <button key={dt} id={`cal-${dt}`} onClick={() => setSelectedDate(dt)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 10px', minWidth: 44, borderRadius: 12, border: sel ? `1.5px solid ${GOLD}` : isTd ? `1px solid ${GOLD_RULE}` : '1px solid transparent', background: sel ? GOLD_DIM : 'transparent', cursor: 'pointer', transition: 'all 0.2s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
-                      <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1, color: sel ? GOLD : TEXT_MUTED }}>{d.toLocaleDateString('fr-CH', { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
-                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: sel ? GOLD : isTd ? TEXT_PRIMARY : TEXT_MUTED }}>{d.getDate()}</span>
-                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: hasMl ? GOLD : 'transparent' }} />
+                    <button key={dt} id={`cal-${dt}`} onClick={() => setSelectedDate(dt)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 10px', minWidth: 44, borderRadius: 12, border: sel ? '1.5px solid #e6c364' : isTd ? '1px solid rgba(201,168,76,0.25)' : '1px solid transparent', background: sel ? 'rgba(230,195,100,0.08)' : 'transparent', cursor: 'pointer', transition: 'all 0.2s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: 1, color: sel ? '#e6c364' : '#d0c5b2' }}>{d.toLocaleDateString('fr-CH', { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
+                      <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, color: sel ? '#e6c364' : isTd ? '#e5e2e1' : '#d0c5b2' }}>{d.getDate()}</span>
+                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: hasMl ? '#e6c364' : 'transparent' }} />
                     </button>
                   )
                 })}
               </div>
             </div>
             {isViewingPast && (
-              <div style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '10px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 12, padding: '10px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 16 }}>📅</span>
-                <span style={{ fontFamily: FONT_BODY, fontSize: 13, color: GOLD }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#e6c364' }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               </div>
             )}
             {/* Ring */}
@@ -711,9 +709,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke="url(#nutRingGrad)" strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))' }} />
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 40, color: GOLD, lineHeight: 1 }}>{consumed.kcal}</span>
-                  <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>/ {targetKcal} kcal</span>
-                  <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_DIM, marginTop: 2 }}>restantes : {remaining}</span>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 40, color: '#e6c364', lineHeight: 1 }}>{consumed.kcal}</span>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2' }}>/ {targetKcal} kcal</span>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#99907e', marginTop: 2 }}>restantes : {remaining}</span>
                 </div>
               </div>
             </div>
@@ -721,15 +719,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {/* Macros bar */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'PROT.', current: consumed.protein, target: targetP, color: GOLD },
+                { label: 'PROT.', current: consumed.protein, target: targetP, color: '#e6c364' },
                 { label: 'GLUC.', current: consumed.carbs, target: targetG, color: '#60A5FA' },
                 { label: 'LIP.', current: consumed.fat, target: targetL, color: '#F87171' },
               ].map(({ label, current, target, color }) => {
                 const pct = Math.min(100, Math.round((current / target) * 100))
                 return (
                   <div key={label} style={{ textAlign: 'center' }}>
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED, letterSpacing: '0.1em', marginBottom: 4 }}>{label}</div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: TEXT_MUTED }}>/{target}g</span></div>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#d0c5b2', letterSpacing: '0.1em', marginBottom: 4 }}>{label}</div>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: '#d0c5b2' }}>/{target}g</span></div>
                     <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, overflow: 'hidden', marginTop: 4 }}>
                       <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 12, transition: 'width 300ms' }} />
                     </div>
@@ -746,33 +744,33 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               const hasPlanFoods = !!rec
 
               return (
-                <div key={mealType} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, marginBottom: 12, overflow: 'hidden' }}>
+                <div key={mealType} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', marginBottom: 12, overflow: 'hidden' }}>
                   {/* Meal header */}
-                  <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER}` }}>
+                  <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       <span style={{ fontSize: 16 }}>{EMOJIS[mealType] || '🍽'}</span>
-                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: '1px', color: TEXT_PRIMARY }}>{MEAL_LABELS[mealType]}</span>
-                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD, marginLeft: 'auto' }}>{con.kcal} kcal</span>
+                      <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, letterSpacing: '1px', color: '#e5e2e1' }}>{MEAL_LABELS[mealType]}</span>
+                      <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: '#e6c364', marginLeft: 'auto' }}>{con.kcal} kcal</span>
                       {logs.length > 0 && (
                         <div style={{ position: 'relative' }}>
-                          <button onClick={() => setMealMenuOpen(mealMenuOpen === mealType ? null : mealType)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>⋯</button>
+                          <button onClick={() => setMealMenuOpen(mealMenuOpen === mealType ? null : mealType)} style={{ background: 'none', border: 'none', color: '#d0c5b2', fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>⋯</button>
                           {mealMenuOpen === mealType && (
-                            <div style={{ position: 'absolute', top: 36, right: 0, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 6, zIndex: 50, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>💾</span><span style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY }}>Sauvegarder le repas</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>📋</span><span style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY }}>Copier vers un autre jour</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>🗑️</span><span style={{ fontFamily: FONT_BODY, fontSize: 13, color: '#EF4444' }}>Vider ce repas</span></button>
+                            <div style={{ position: 'absolute', top: 36, right: 0, background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 12, padding: 6, zIndex: 50, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>💾</span><span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#e5e2e1' }}>Sauvegarder le repas</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>📋</span><span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#e5e2e1' }}>Copier vers un autre jour</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>🗑️</span><span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#EF4444' }}>Vider ce repas</span></button>
                             </div>
                           )}
                         </div>
                       )}
                     </div>
                     {rec && (
-                      <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, fontStyle: 'italic' }}>
+                      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2', fontStyle: 'italic' }}>
                         Recommandé : {rec.kcal} kcal · P:{Math.round(rec.protein)}g · G:{Math.round(rec.carbs)}g · L:{Math.round(rec.fat)}g
                       </div>
                     )}
                     {logs.length > 0 && (
-                      <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: con.kcal > (rec?.kcal || 9999) ? '#EF4444' : GOLD, marginTop: 2 }}>
+                      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: con.kcal > (rec?.kcal || 9999) ? '#EF4444' : '#e6c364', marginTop: 2 }}>
                         Consommé : {con.kcal} kcal · P:{Math.round(con.protein)}g · G:{Math.round(con.carbs)}g · L:{Math.round(con.fat)}g
                       </div>
                     )}
@@ -781,50 +779,50 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   {/* Daily food logs for this meal */}
                   <div style={{ padding: '0 16px' }}>
                     {logs.map(log => (
-                      <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
+                      <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{log.custom_name || log.food_name || 'Aliment'}</div>
+                          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#e5e2e1' }}>{log.custom_name || log.food_name || 'Aliment'}</div>
                           {editingFoodId === log.id ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                              <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 6, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 16, textAlign: 'center', outline: 'none' }} />
-                              <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>g</span>
-                              <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: GOLD, border: 'none', borderRadius: 6, color: '#0D0B08', padding: '4px 10px', fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
-                              <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 14, cursor: 'pointer' }}>✕</button>
+                              <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: '#131313', border: '1px solid #e6c364', borderRadius: 6, color: '#e5e2e1', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, textAlign: 'center', outline: 'none' }} />
+                              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#d0c5b2' }}>g</span>
+                              <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: '#e6c364', border: 'none', borderRadius: 6, color: '#0D0B08', padding: '4px 10px', fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
+                              <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', color: '#d0c5b2', fontSize: 14, cursor: 'pointer' }}>✕</button>
                             </div>
                           ) : (
-                            <div onClick={() => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <div onClick={() => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2', marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                               <span>{log.quantity_g}g</span>
-                              <span style={{ fontSize: 10, color: TEXT_DIM }}>✏️</span>
-                              <span style={{ fontSize: 10, color: TEXT_DIM }}>· P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</span>
+                              <span style={{ fontSize: 10, color: '#99907e' }}>✏️</span>
+                              <span style={{ fontSize: 10, color: '#99907e' }}>· P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</span>
                             </div>
                           )}
                         </div>
-                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: GOLD, flexShrink: 0 }}>{Math.round(log.calories)}</span>
+                        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: '#e6c364', flexShrink: 0 }}>{Math.round(log.calories)}</span>
                         <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 14, cursor: 'pointer', padding: 4 }} title="Remplacer">🔄</button>
-                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 14, cursor: 'pointer', padding: 4 }} title="Supprimer">🗑️</button>
+                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', color: '#d0c5b2', fontSize: 14, cursor: 'pointer', padding: 4 }} title="Remplacer">🔄</button>
+                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', color: '#d0c5b2', fontSize: 14, cursor: 'pointer', padding: 4 }} title="Supprimer">🗑️</button>
                         </div>
                       </div>
                     ))}
 
                     {logs.length === 0 && (
                       <div style={{ padding: '16px 0', textAlign: 'center' }}>
-                        <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_DIM }}>Aucun aliment ajouté</span>
+                        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#99907e' }}>Aucun aliment ajouté</span>
                       </div>
                     )}
 
                     {/* Action buttons */}
                     <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px' }}>
                       {hasPlanFoods && logs.length === 0 && (
-                        <button onClick={() => setImportingMeal(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px solid ${GOLD_RULE}`, background: GOLD_DIM, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 11, color: GOLD }}>
+                        <button onClick={() => setImportingMeal(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: '1px solid rgba(201,168,76,0.25)', background: 'rgba(230,195,100,0.08)', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#e6c364' }}>
                           🤖 Importer le plan IA
                         </button>
                       )}
-                      <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${BORDER}`, background: 'transparent', cursor: 'pointer', fontFamily: FONT_BODY, color: TEXT_MUTED, fontSize: 11 }}>
+                      <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: '1px dashed rgba(201,168,76,0.15)', background: 'transparent', cursor: 'pointer', fontFamily: "'Inter', sans-serif", color: '#d0c5b2', fontSize: 11 }}>
                         <Plus size={12} strokeWidth={2.5} /> Ajouter
                       </button>
-                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 10, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 11, color: GOLD }}>📸</button>
-                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', border: `1px dashed ${GOLD_RULE}`, background: 'transparent', borderRadius: 10, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 11, color: GOLD }}>📂</button>
+                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 10, cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#e6c364' }}>📸</button>
+                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', border: '1px dashed rgba(201,168,76,0.25)', background: 'transparent', borderRadius: 10, cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#e6c364' }}>📂</button>
                     </div>
                   </div>
                 </div>
@@ -844,8 +842,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {(activeMealPlan?.plan_data || coachMealPlan) && (
               <button onClick={() => setShowShoppingModal(true)} style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                padding: '12px', border: `1px solid ${GOLD_RULE}`, background: GOLD_DIM, cursor: 'pointer',
-                fontFamily: FONT_BODY, fontSize: 12, color: GOLD, marginBottom: 20,
+                padding: '12px', border: '1px solid rgba(201,168,76,0.25)', background: 'rgba(230,195,100,0.08)', cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#e6c364', marginBottom: 20,
               }}>
                 <ShoppingCart size={14} /> Liste de courses
               </button>
@@ -858,9 +856,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {subTab === 'plan' && loadingPlan && !coachMealPlan && (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
-            {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: RADIUS_CARD }} />)}
+            {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: 16 }} />)}
           </div>
-          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 100, borderRadius: RADIUS_CARD }} />)}
+          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 100, borderRadius: 16 }} />)}
         </div>
       )}
 
@@ -880,8 +878,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {subTab === 'prefs' && (
         <div style={{ padding: '0 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <SlidersHorizontal size={18} color={GOLD} />
-            <h2 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Preferences nutrition</h2>
+            <SlidersHorizontal size={18} color={'#e6c364'} />
+            <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: '#e5e2e1', margin: 0 }}>Preferences nutrition</h2>
           </div>
           <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
         </div>
@@ -906,48 +904,48 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {showPhotoCapture && (
         <>
           <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
-            <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY }}>SCANNER UN REPAS</span>
-              <button onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 22, cursor: 'pointer' }}>✕</button>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+            <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(201,168,76,0.15)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, letterSpacing: 2, color: '#e5e2e1' }}>SCANNER UN REPAS</span>
+              <button onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ background: 'none', border: 'none', color: '#d0c5b2', fontSize: 22, cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
               <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
               {!photoResults && !analyzingPhoto && (
-                <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: GOLD_DIM, border: `2px dashed ${GOLD_RULE}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: 'rgba(230,195,100,0.08)', border: '2px dashed rgba(201,168,76,0.25)', borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                   <span style={{ fontSize: 48 }}>📷</span>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: GOLD }}>PRENDRE UNE PHOTO</span>
-                  <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>ou choisir depuis la galerie</span>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, letterSpacing: 2, color: '#e6c364' }}>PRENDRE UNE PHOTO</span>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#d0c5b2' }}>ou choisir depuis la galerie</span>
                 </button>
               )}
               {analyzingPhoto && (
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', border: `3px solid ${GOLD_DIM}`, borderTopColor: GOLD, animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: GOLD, letterSpacing: 2 }}>ANALYSE EN COURS...</div>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid rgba(230,195,100,0.08)', borderTopColor: '#e6c364', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, color: '#e6c364', letterSpacing: 2 }}>ANALYSE EN COURS...</div>
                 </div>
               )}
               {photoResults?.foods && (
                 <>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 3, color: GOLD, textTransform: 'uppercase', marginBottom: 12 }}>{photoResults.foods.length} aliments detectes</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#e6c364', textTransform: 'uppercase', marginBottom: 12 }}>{photoResults.foods.length} aliments detectes</div>
                   {photoResults.foods.map((f: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < photoResults.foods.length - 1 ? `1px solid ${GOLD_DIM}` : 'none' }}>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < photoResults.foods.length - 1 ? '1px solid rgba(230,195,100,0.08)' : 'none' }}>
                       <div>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{f.name}</div>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{f.quantity_g}g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#e5e2e1' }}>{f.name}</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2' }}>{f.quantity_g}g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</div>
                       </div>
-                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}>{f.calories}</span>
+                      <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, color: '#e6c364' }}>{f.calories}</span>
                     </div>
                   ))}
-                  <div style={{ background: GOLD_DIM, borderRadius: 12, padding: '12px 16px', marginTop: 16, textAlign: 'center' }}>
-                    <span style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: GOLD }}>{photoResults.total_calories} KCAL</span>
+                  <div style={{ background: 'rgba(230,195,100,0.08)', borderRadius: 12, padding: '12px 16px', marginTop: 16, textAlign: 'center' }}>
+                    <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 24, color: '#e6c364' }}>{photoResults.total_calories} KCAL</span>
                   </div>
                 </>
               )}
             </div>
             {photoResults?.foods && (
-              <div style={{ padding: '16px 20px', borderTop: `1px solid ${GOLD_DIM}`, display: 'flex', gap: 12, flexShrink: 0 }}>
-                <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>REPRENDRE</button>
-                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>AJOUTER TOUT</button>
+              <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(230,195,100,0.08)', display: 'flex', gap: 12, flexShrink: 0 }}>
+                <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: '#e6c364', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>REPRENDRE</button>
+                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', borderRadius: 12, color: '#0D0B08', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>AJOUTER TOUT</button>
               </div>
             )}
           </div>
@@ -958,24 +956,24 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {showSaveMealPopup && saveMealData && (
         <>
           <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, zIndex: 1101 }}>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 16 }}>SAUVEGARDER LE REPAS</h3>
-            <input type="text" placeholder="Nom du repas..." value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 14, outline: 'none', marginBottom: 12 }} />
-            <div style={{ background: BG_BASE, borderRadius: 10, padding: 12, marginBottom: 16, border: `1px solid ${GOLD_DIM}` }}>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, marginBottom: 8 }}>{saveMealData.foods.length} ALIMENTS</div>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 24, zIndex: 1101 }}>
+            <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, letterSpacing: 2, color: '#e5e2e1', marginBottom: 16 }}>SAUVEGARDER LE REPAS</h3>
+            <input type="text" placeholder="Nom du repas..." value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: '#131313', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 10, color: '#e5e2e1', fontFamily: "'Inter', sans-serif", fontSize: 14, outline: 'none', marginBottom: 12 }} />
+            <div style={{ background: '#131313', borderRadius: 10, padding: 12, marginBottom: 16, border: '1px solid rgba(230,195,100,0.08)' }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: 2, color: '#d0c5b2', marginBottom: 8 }}>{saveMealData.foods.length} ALIMENTS</div>
               {saveMealData.foods.map((f: any, i: number) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontFamily: FONT_BODY, fontSize: 12 }}>
-                  <span style={{ color: TEXT_PRIMARY }}>{f.name}</span>
-                  <span style={{ color: GOLD }}>{f.calories} kcal</span>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontFamily: "'Inter', sans-serif", fontSize: 12 }}>
+                  <span style={{ color: '#e5e2e1' }}>{f.name}</span>
+                  <span style={{ color: '#e6c364' }}>{f.calories} kcal</span>
                 </div>
               ))}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowSaveMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>ANNULER</button>
+              <button onClick={() => setShowSaveMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: '#e6c364', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>ANNULER</button>
               <button disabled={!saveMealName.trim()} onClick={async () => {
                 await supabase.from('saved_meals').insert({ user_id: userId, name: saveMealName, meal_type: saveMealType, foods: saveMealData.foods, total_calories: saveMealData.foods.reduce((s: number, f: any) => s + (f.calories || 0), 0), total_proteins: saveMealData.foods.reduce((s: number, f: any) => s + (f.proteins || 0), 0), total_carbs: saveMealData.foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0), total_fats: saveMealData.foods.reduce((s: number, f: any) => s + (f.fats || 0), 0) })
                 setShowSaveMealPopup(false); setSaveMealName('')
-              }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)' : BG_CARD_2, border: 'none', borderRadius: 12, color: saveMealName.trim() ? '#0D0B08' : TEXT_DIM, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>SAUVEGARDER</button>
+              }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)' : '#1c1b1b', border: 'none', borderRadius: 12, color: saveMealName.trim() ? '#0D0B08' : '#99907e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>SAUVEGARDER</button>
             </div>
           </div>
         </>
@@ -985,23 +983,23 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {showCopyMealPopup && copyMealData && (
         <>
           <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, zIndex: 1101 }}>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 16 }}>COPIER LE REPAS</h3>
-            <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, marginBottom: 6 }}>DATE</div>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 24, zIndex: 1101 }}>
+            <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, letterSpacing: 2, color: '#e5e2e1', marginBottom: 16 }}>COPIER LE REPAS</h3>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#d0c5b2', marginBottom: 6 }}>DATE</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
               {[{ l: 'Demain', d: 1 }, { l: '+2j', d: 2 }, { l: '+3j', d: 3 }, { l: '+1 sem', d: 7 }].map(s => {
                 const dt = new Date(Date.now() + s.d * 86400000).toISOString().split('T')[0]
-                return <button key={s.l} onClick={() => setCopyTargetDate(dt)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetDate === dt ? `1px solid ${GOLD}` : `1px solid ${GOLD_DIM}`, background: copyTargetDate === dt ? GOLD_DIM : 'transparent', color: copyTargetDate === dt ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{s.l}</button>
+                return <button key={s.l} onClick={() => setCopyTargetDate(dt)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetDate === dt ? '1px solid #e6c364' : '1px solid rgba(230,195,100,0.08)', background: copyTargetDate === dt ? 'rgba(230,195,100,0.08)' : 'transparent', color: copyTargetDate === dt ? '#e6c364' : '#d0c5b2', fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{s.l}</button>
               })}
             </div>
-            <input type="date" value={copyTargetDate} onChange={e => setCopyTargetDate(e.target.value)} min={today} style={{ width: '100%', padding: '10px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 14, outline: 'none', marginBottom: 12, colorScheme: 'dark' }} />
-            <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, marginBottom: 6 }}>REPAS</div>
+            <input type="date" value={copyTargetDate} onChange={e => setCopyTargetDate(e.target.value)} min={today} style={{ width: '100%', padding: '10px 14px', background: '#131313', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 10, color: '#e5e2e1', fontFamily: "'Inter', sans-serif", fontSize: 14, outline: 'none', marginBottom: 12, colorScheme: 'dark' }} />
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#d0c5b2', marginBottom: 6 }}>REPAS</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-              {MEAL_ORDER.map(t => <button key={t} onClick={() => setCopyTargetMealType(t)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetMealType === t ? `1px solid ${GOLD}` : `1px solid ${GOLD_DIM}`, background: copyTargetMealType === t ? GOLD_DIM : 'transparent', color: copyTargetMealType === t ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{MEAL_LABELS[t]}</button>)}
+              {MEAL_ORDER.map(t => <button key={t} onClick={() => setCopyTargetMealType(t)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetMealType === t ? '1px solid #e6c364' : '1px solid rgba(230,195,100,0.08)', background: copyTargetMealType === t ? 'rgba(230,195,100,0.08)' : 'transparent', color: copyTargetMealType === t ? '#e6c364' : '#d0c5b2', fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{MEAL_LABELS[t]}</button>)}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowCopyMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>ANNULER</button>
-              <button disabled={!copyTargetDate || !copyTargetMealType} onClick={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} style={{ flex: 1, padding: 14, background: (copyTargetDate && copyTargetMealType) ? 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)' : BG_CARD_2, border: 'none', borderRadius: 12, color: (copyTargetDate && copyTargetMealType) ? '#0D0B08' : TEXT_DIM, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>COPIER</button>
+              <button onClick={() => setShowCopyMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: '#e6c364', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>ANNULER</button>
+              <button disabled={!copyTargetDate || !copyTargetMealType} onClick={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} style={{ flex: 1, padding: 14, background: (copyTargetDate && copyTargetMealType) ? 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)' : '#1c1b1b', border: 'none', borderRadius: 12, color: (copyTargetDate && copyTargetMealType) ? '#0D0B08' : '#99907e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>COPIER</button>
             </div>
           </div>
         </>
@@ -1011,21 +1009,21 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {showSavedMeals && (
         <>
           <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY }}>MES REPAS</span>
-              <button onClick={() => setShowSavedMeals(false)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 22, cursor: 'pointer' }}>✕</button>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(201,168,76,0.15)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, letterSpacing: 2, color: '#e5e2e1' }}>MES REPAS</span>
+              <button onClick={() => setShowSavedMeals(false)} style={{ background: 'none', border: 'none', color: '#d0c5b2', fontSize: 22, cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
               {savedMeals.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14 }}>Aucun repas sauvegarde.</div>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#d0c5b2', fontFamily: "'Inter', sans-serif", fontSize: 14 }}>Aucun repas sauvegarde.</div>
               ) : savedMeals.map((meal: any) => (
-                <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${GOLD_DIM}`, cursor: 'pointer', textAlign: 'left' }}>
+                <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: '1px solid rgba(230,195,100,0.08)', cursor: 'pointer', textAlign: 'left' }}>
                   <div>
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 500 }}>{meal.name}</div>
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>{(meal.foods || []).length} aliments{meal.use_count > 0 && ` · ${meal.use_count}x utilise`}</div>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#e5e2e1', fontWeight: 500 }}>{meal.name}</div>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2', marginTop: 2 }}>{(meal.foods || []).length} aliments{meal.use_count > 0 && ` · ${meal.use_count}x utilise`}</div>
                   </div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: GOLD }}>{Math.round(meal.total_calories || 0)}</div>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, color: '#e6c364' }}>{Math.round(meal.total_calories || 0)}</div>
                 </button>
               ))}
             </div>
