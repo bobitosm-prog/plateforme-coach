@@ -1165,7 +1165,7 @@ export default function TrainingTab({
           {/* Scrollable content */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 100px' }}>
             {/* Create button */}
-            <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }} style={{ ...btnPrimary, width: '100%', padding: 16, marginBottom: 20 }}>
+            <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ ...btnPrimary, width: '100%', padding: 16, marginBottom: 20 }}>
               + CRÉER UN PROGRAMME
             </button>
 
@@ -1212,36 +1212,44 @@ export default function TrainingTab({
                             ) : (
                               <button onClick={() => activateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: colors.goldDim, border: `1px solid ${colors.gold}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ACTIVER</button>
                             )}
-                            <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ flex: 1, padding: '10px 0', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>✏️ ÉDITER</button>
+                            <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ flex: 1, padding: '10px 0', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>✏️ ÉDITER</button>
                           </div>
 
-                          {/* Days accordion */}
+                          {/* Days list */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {padTo7Days(days).map((day: any, di: number) => {
-                              if (day.is_rest) return (
-                                <div key={di} style={{ background: colors.surfaceHigh, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <Moon size={14} color={colors.textDim} />
-                                  <span style={{ ...mutedStyle, fontSize: 12 }}>Jour {di + 1} — Repos</span>
-                                </div>
-                              )
                               const exList = day.exercises || []
                               return (
                                 <div key={di} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 16 }}>
-                                  <div style={{ ...titleStyle, fontSize: 12, marginBottom: 8 }}>
-                                    Jour {di + 1} : {day.name || day.weekday || `Séance ${di + 1}`}
-                                    {day.focus && <span style={{ color: colors.textMuted, fontWeight: 400, marginLeft: 6 }}>({day.focus})</span>}
-                                  </div>
-                                  {exList.length > 0 ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                      {exList.map((ex: any, ei: number) => (
-                                        <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                          <span style={{ color: colors.gold, fontSize: 10 }}>•</span>
-                                          <span style={{ ...bodyStyle, fontSize: 13 }}>{ex.exercise_name || ex.name}</span>
-                                          <span style={{ ...mutedStyle, fontSize: 11, marginLeft: 'auto' }}>{ex.sets || 3}×{ex.reps || 10}</span>
-                                        </div>
-                                      ))}
+                                  {/* Day header */}
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: day.is_rest ? 0 : 8 }}>
+                                    <div style={{ ...titleStyle, fontSize: 12 }}>
+                                      Jour {di + 1} : {day.is_rest ? 'Repos' : (day.name || day.weekday || `Séance ${di + 1}`)}
+                                      {!day.is_rest && day.focus && <span style={{ color: colors.textMuted, fontWeight: 400, marginLeft: 6 }}>({day.focus})</span>}
                                     </div>
-                                  ) : (
+                                    {day.is_rest ? (
+                                      <Moon size={14} color={colors.textDim} />
+                                    ) : (
+                                      <span style={{ ...mutedStyle, fontSize: 10 }}>{exList.length} ex.</span>
+                                    )}
+                                  </div>
+
+                                  {/* Exercise list (if not rest) */}
+                                  {!day.is_rest && exList.length > 0 && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                      {exList.map((ex: any, ei: number) => {
+                                        const exName = ex.exercise_name || ex.custom_name || ex.name || ex.exerciseName || `Exercice ${ei + 1}`
+                                        return (
+                                          <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <span style={{ color: colors.gold, fontSize: 10 }}>•</span>
+                                            <span style={{ ...bodyStyle, fontSize: 13, flex: 1, minWidth: 0 }}>{exName}</span>
+                                            <span style={{ ...mutedStyle, fontSize: 11, flexShrink: 0 }}>{ex.sets || 3}×{ex.reps || 10}</span>
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
+                                  )}
+                                  {!day.is_rest && exList.length === 0 && (
                                     <span style={{ ...mutedStyle, fontSize: 12 }}>Aucun exercice</span>
                                   )}
                                 </div>
