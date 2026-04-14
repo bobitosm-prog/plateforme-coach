@@ -67,6 +67,8 @@ export default function TrainingTab({
   const [exercisesCache, setExercisesCache] = useState<any[]>([])
   const exercisesCacheLoaded = useRef(false)
   const [showMonthCalendar, setShowMonthCalendar] = useState(false)
+  const [showProgramManager, setShowProgramManager] = useState(false)
+  const [showFullHistory, setShowFullHistory] = useState(false)
   const [workoutHistory, setWorkoutHistory] = useState<any[]>([])
   const [historyFilter, setHistoryFilter] = useState('all')
   const [workoutFinished, setWorkoutFinished] = useState(false)
@@ -709,7 +711,7 @@ export default function TrainingTab({
               background: colors.gold, color: '#0D0B08', border: 'none',
               fontFamily: fonts.body, fontWeight: 800, fontSize: 16, letterSpacing: 2,
               padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
-              
+
             }}>
               C&apos;EST PARTI !
             </button>
@@ -720,125 +722,238 @@ export default function TrainingTab({
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
       <WorkoutCelebration visible={workoutFinished} />
 
-      {/* ── HERO BANNER ── */}
-      <div style={{ margin: '0 16px', height: 180, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
-        <img src="/images/hero-athlete.webp" alt="Athlete MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
-        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
-          <h1 style={{ ...pageTitleStyle, letterSpacing: 3, margin: 0, lineHeight: 1 }}>VOTRE PROGRAMME</h1>
-          <span style={{ ...labelStyle, letterSpacing: 2 }}>{format(new Date(), 'EEE d MMM', { locale: fr }).toUpperCase()} — Semaine en cours</span>
+      {/* ═══ SECTION 1 — COMPACT HEADER ═══ */}
+      <div style={{ padding: '8px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={pageTitleStyle}>TRAINING</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {activeCustomProgram && (
+            <span style={mutedStyle}>{activeCustomProgram.name} · Actif</span>
+          )}
+          <button onClick={() => setShowProgramManager(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <span style={{ fontSize: 18, color: colors.gold }}>✏️</span>
+          </button>
         </div>
       </div>
 
-      {/* ── MES PROGRAMMES ── */}
-      <div style={{ padding: '0 16px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: '1px' }}>MES PROGRAMMES</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {activeCustomProgram && !editMode && (
-              <button onClick={startEditMode} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: colors.gold, background: 'transparent', border: `1px solid ${colors.goldRule}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase' }}>MODIFIER</button>
-            )}
-            {editMode && (
-              <>
-                <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: colors.textMuted, background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer' }}>ANNULER</button>
-                <button onClick={saveEditedProgram} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: '#0D0B08', background: colors.gold, border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1 }}>SAUVEGARDER</button>
-              </>
-            )}
-            {!editMode && (
-              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }} style={{ fontFamily: fonts.body, fontSize: 11, color: colors.gold, background: 'transparent', border: `1px solid ${colors.gold}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>+ CREER</button>
-            )}
+      {/* ═══ SECTION 2 — SÉANCE DU JOUR ═══ */}
+      <div style={{ margin: '0 24px', ...cardStyle, padding: 24 }}>
+        <div style={{ ...titleStyle, marginBottom: 12 }}>SÉANCE DU JOUR</div>
+        {!coachProgram && !activeCustomProgram ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '40px 20px', textAlign: 'center' }}>
+            <Dumbbell size={56} color={colors.textMuted} strokeWidth={1.5} />
+            <p style={{ ...subtitleStyle, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: 0 }}>Aucun programme</p>
+            <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0, maxWidth: 280 }}>Cree ton premier programme avec l&apos;IA en 2 minutes.</p>
+            <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
+              style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
+              Creer mon programme
+            </button>
           </div>
-        </div>
-        {customPrograms.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {customPrograms.map((prog: any) => (
-              <div key={prog.id} style={{ background: colors.surface, border: `1px solid ${prog.is_active ? colors.gold : colors.goldBorder}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ ...statSmallStyle, fontSize: 16, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '1px' }}>{prog.name}</div>
-                  <div style={{ ...mutedStyle, fontSize: 11 }}>
-                    {(prog.days || []).length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
-                    {prog.is_active && <span style={{ color: colors.success, marginLeft: 8 }}>● Actif</span>}
-                  </div>
+        ) : dayExpanded && trainingDayData?.repos ? (
+          <TrainingRestDay />
+        ) : dayExpanded && trainingExercises.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <Dumbbell size={32} color={colors.textMuted} style={{ marginBottom: 12 }} />
+            <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>Aucun exercice pour ce jour.</p>
+          </div>
+        ) : dayExpanded && trainingIsToday && todaySessionDone ? (
+          <TrainingSessionDone todayKey={todayKey} coachProgram={coachProgram} />
+        ) : dayExpanded ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Edit mode: show editable exercise list */}
+            {editMode && editedDays && (() => {
+              const dayIdx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
+              const day = editedDays[dayIdx]
+              if (!day?.exercises) return null
+              return (
+                <div style={{ background: colors.surface, border: `1px solid ${colors.goldRule}`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+                  <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>MODE EDITION</div>
+                  {day.exercises.map((ex: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <button onClick={() => editMoveEx(dayIdx, i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: i === 0 ? colors.textDim : colors.gold, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▲</button>
+                        <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? colors.textDim : colors.gold, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▼</button>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
+                        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Sets</span>
+                            <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
+                          </div>
+                          <span style={{ color: colors.textDim, alignSelf: 'center', fontSize: 10 }}>x</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Reps</span>
+                            <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Repos</span>
+                            <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 42, padding: '3px 4px', textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
+                            <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>s</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(212,168,67,0.06)', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>ℹ️</button>
+                      <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>🔄</button>
+                      <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.error, fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>✕</button>
+                    </div>
+                  ))}
+                  <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${colors.goldRule}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>+ AJOUTER UN EXERCICE</button>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {prog.is_active ? (
-                    <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: colors.success, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>DÉSACTIVER</button>
-                  ) : (
-                    <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: colors.goldDim, border: `1px solid ${colors.gold}`, color: colors.gold, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>ACTIVER</button>
-                  )}
-                  <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>ÉDITER</button>
-                  <button onClick={() => deleteProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, color: colors.error, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>×</button>
-                </div>
-              </div>
-            ))}
+              )
+            })()}
+
+            {trainingExercises.map((ex: any, exIdx: number) => {
+              const storageKey = `moovx-sets-${todayStr}-${ex.name}`
+              const n = Number(ex.sets) || 3
+              const setsArr: boolean[] = completedSets[storageKey] || Array.from({ length: n }, () => false)
+              const numSets = setsArr.length
+              const inputs = setInputs[ex.name] || Array.from({ length: numSets }, () => ({ kg: '', reps: String(ex.reps || '') }))
+
+              return (
+                <TrainingExerciseCard
+                  key={ex.name}
+                  ex={ex}
+                  exIdx={exIdx}
+                  setsArr={setsArr}
+                  inputs={inputs}
+                  trainingIsToday={trainingIsToday}
+                  restRunning={restRunning}
+                  restingSet={restingSet}
+                  restTimer={restTimer}
+                  onToggleSet={toggleSet}
+                  onAddSet={addSet}
+                  onUpdateInput={updateInput}
+                  onExerciseInfo={handleExerciseInfo}
+                  fmtRest={fmtRest}
+                  onCancelRest={cancelRest}
+                  onVideoFeedback={(name: string) => setVideoExercise(name)}
+                  supabase={supabase}
+                  userId={session?.user?.id}
+                />
+              )
+            })}
+
+            {/* ── Add Exercise to Session ── */}
+            {trainingIsToday && (workoutStarted || trainingDoneSets > 0) && (
+              <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 14, background: 'transparent', border: `1.5px dashed rgba(212,168,67,0.4)`, borderRadius: 16, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                + AJOUTER UN EXERCICE
+              </button>
+            )}
+
+            {/* ── Browse Exercise DB ── */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowExDbModal(true)}
+              style={{ width: '100%', background: colors.surface, border: `2px dashed ${colors.goldBorder}`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}
+            >
+              <Search size={16} color={colors.gold} />
+              <span style={{ ...labelStyle, fontSize: 13, fontWeight: 800, letterSpacing: '2px' }}>Découvrir les exercices</span>
+            </motion.button>
+
+            {/* ── Start Workout Button ── */}
+            {trainingIsToday && !todaySessionDone && (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => startProgramWorkout(trainingDayData, trainingExercises)}
+                style={{
+                  width: '100%', background: colors.gold, color: '#0D0B08',
+                  fontWeight: 400, padding: '18px', borderRadius: 16, border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: fonts.headline, fontSize: 20, letterSpacing: '0.15em',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                }}
+              >
+                DÉMARRER LA SÉANCE
+              </motion.button>
+            )}
+
+            {/* ── Bottom Finish Button (when session not yet started but sets done) ── */}
+            {trainingIsToday && !workoutStarted && trainingDoneSets > 0 && (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleFinishWithCheck}
+                style={{
+                  width: '100%', background: colors.success, color: '#0D0B08',
+                  fontWeight: 700, padding: '16px', borderRadius: 16, border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: fonts.body, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                }}
+              >
+                <Award size={18} color="#0D0B08" />
+                Terminer la séance
+              </motion.button>
+            )}
           </div>
         ) : (
-          <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-            style={{ width: '100%', padding: 16, background: colors.goldDim, border: `1px dashed ${colors.goldRule}`, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            CRÉER UN PROGRAMME +
-          </button>
+          <p style={{ ...mutedStyle, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', margin: 0, textAlign: 'center' }}>
+            Touche un jour pour voir les exercices
+          </p>
         )}
       </div>
 
-      {/* ── WEEK CALENDAR ── */}
-      {weekSessions.length > 0 && (
-        <div style={{ padding: '0 16px' }}>
-          <WeekCalendar
-            sessions={weekSessions}
-            selectedDate={calendarSelectedDate}
-            onSelectDate={(d) => {
-              const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
-              const newDay = dayNames[d.getDay()]
-              if (trainingDay === newDay && dayExpanded) {
-                setDayExpanded(false)
-              } else {
-                setCalendarSelectedDate(d)
-                setTrainingDay(newDay)
-                setDayExpanded(true)
-              }
-            }}
-            onToggleMonth={() => setShowMonthCalendar(v => !v)}
-          />
-          <AnimatePresence>
-            {showMonthCalendar && (
-              <MonthCalendar
-                sessions={weekSessions}
-                selectedDate={calendarSelectedDate}
-                onSelectDate={(d) => {
-                  setCalendarSelectedDate(d)
-                  const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
-                  setTrainingDay(dayNames[d.getDay()])
-                  setDayExpanded(true)
-                }}
-                onClose={() => setShowMonthCalendar(false)}
-              />
-            )}
-          </AnimatePresence>
+      {/* ── Séance libre button ── */}
+      <div style={{ padding: '0 24px', marginTop: 16 }}>
+        <button
+          onClick={() => startProgramWorkout({ day_name: 'Séance libre' }, [])}
+          style={{
+            width: '100%', padding: 12, borderRadius: 16,
+            background: 'transparent',
+            border: `1px solid ${colors.goldRule}`,
+            color: colors.gold, cursor: 'pointer',
+            fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          }}
+        >
+          + SÉANCE LIBRE
+        </button>
+      </div>
 
-          {/* Hint or séance libre — compact */}
-          {!dayExpanded && (
-            <p style={{ ...mutedStyle, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', margin: '8px 0 0', textAlign: 'center' }}>
-              Touche un jour pour voir les exercices
-            </p>
-          )}
-
-          <button
-            onClick={() => startProgramWorkout({ day_name: 'Séance libre' }, [])}
-            style={{
-              width: '100%', padding: 12, borderRadius: 16, marginTop: 10,
-              background: 'transparent',
-              border: `1px solid ${colors.goldRule}`,
-              color: colors.gold, cursor: 'pointer',
-              fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            }}
-          >
-            + SÉANCE LIBRE
-          </button>
+      {/* ═══ SECTION 3 — CETTE SEMAINE ═══ */}
+      <div style={{ marginTop: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px', marginBottom: 8 }}>
+          <span style={titleStyle}>CETTE SEMAINE</span>
+          <button onClick={() => setShowMonthCalendar(v => !v)} style={{ ...labelStyle, background: 'none', border: 'none', cursor: 'pointer' }}>Voir le mois</button>
         </div>
-      )}
+        {weekSessions.length > 0 && (
+          <div style={{ padding: '0 24px' }}>
+            <WeekCalendar
+              sessions={weekSessions}
+              selectedDate={calendarSelectedDate}
+              onSelectDate={(d) => {
+                const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+                const newDay = dayNames[d.getDay()]
+                if (trainingDay === newDay && dayExpanded) {
+                  setDayExpanded(false)
+                } else {
+                  setCalendarSelectedDate(d)
+                  setTrainingDay(newDay)
+                  setDayExpanded(true)
+                }
+              }}
+              onToggleMonth={() => setShowMonthCalendar(v => !v)}
+            />
+            <AnimatePresence>
+              {showMonthCalendar && (
+                <MonthCalendar
+                  sessions={weekSessions}
+                  selectedDate={calendarSelectedDate}
+                  onSelectDate={(d) => {
+                    setCalendarSelectedDate(d)
+                    const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+                    setTrainingDay(dayNames[d.getDay()])
+                    setDayExpanded(true)
+                  }}
+                  onClose={() => setShowMonthCalendar(false)}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
 
-      {/* ── ACTIVE SESSION TOP BAR ── */}
+      {/* ═══ SECTION 4 — ACTIVE SESSION BAR ═══ */}
       <TrainingActiveBar
         workoutStarted={workoutStarted}
         elapsedSecs={elapsedSecs}
@@ -848,18 +963,99 @@ export default function TrainingTab({
         fmtElapsed={fmtElapsed}
       />
 
-      {/* ── NO COACH PROGRAM → show custom programs ── */}
-      {!coachProgram ? (
-        <div style={{ padding: '20px 16px' }}>
-          {customPrograms.length > 0 ? (
+      {/* ═══ SECTION 5 — DERNIÈRES SÉANCES ═══ */}
+      <div style={{ padding: '0 24px', marginTop: 24, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: 3 }}>DERNIÈRES SÉANCES</span>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
+          <span style={mutedStyle}>{workoutHistory.length} seances</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
+          {HISTORY_FILTERS.map(f => (
+            <button key={f.key} onClick={() => setHistoryFilter(f.key)} style={{ padding: '7px 14px', borderRadius: 16, whiteSpace: 'nowrap', border: historyFilter === f.key ? `1px solid ${colors.gold}` : `1px solid ${colors.goldDim}`, background: historyFilter === f.key ? colors.goldDim : 'transparent', color: historyFilter === f.key ? colors.gold : colors.textMuted, fontFamily: fonts.body, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>{f.label}</button>
+          ))}
+        </div>
+        {(() => {
+          const filtered = workoutHistory.filter(s => {
+            if (historyFilter === 'all') return true
+            const resolved = resolveSessionType(s.name)
+            return resolved.key === historyFilter
+          })
+          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', ...bodyStyle, color: colors.textDim }}>Aucune séance</div>
+          const limit = showFullHistory ? 20 : 3
+          return (
             <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: '1px' }}>MES PROGRAMMES</span>
-                <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-                  style={{ fontFamily: fonts.body, fontSize: 11, color: colors.gold, background: 'transparent', border: `1px solid ${colors.gold}`, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  + CREER
+              {filtered.slice(0, limit).map((s: any) => {
+                const d = new Date(s.created_at)
+                const typeInfo = resolveSessionType(s.name)
+                return (
+                  <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: colors.surface, border: `1px solid ${colors.goldDim}`, borderRadius: 16, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{typeInfo.emoji}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ ...statSmallStyle, fontSize: 17, color: colors.text, letterSpacing: 1 }}>{typeInfo.label.toUpperCase()}</div>
+                      {s.name && s.name.toLowerCase() !== typeInfo.label.toLowerCase() && s.name.includes('—') && (
+                        <div style={{ ...mutedStyle, fontSize: 11, color: colors.gold, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {s.name.split('—').slice(1).join('—').trim()}
+                        </div>
+                      )}
+                      <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>
+                        {d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        {s.duration_minutes ? ` · ${s.duration_minutes}min` : ''}
+                        {s.notes ? ` · ${s.notes}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+              {filtered.length > 3 && !showFullHistory && (
+                <button onClick={() => setShowFullHistory(true)} style={{ width: '100%', padding: 12, background: 'transparent', border: `1px solid ${colors.goldDim}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer', textAlign: 'center', marginTop: 4 }}>
+                  Voir tout →
                 </button>
+              )}
+              {showFullHistory && filtered.length > 3 && (
+                <button onClick={() => setShowFullHistory(false)} style={{ width: '100%', padding: 12, background: 'transparent', border: `1px solid ${colors.goldDim}`, borderRadius: 16, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer', textAlign: 'center', marginTop: 4 }}>
+                  Réduire
+                </button>
+              )}
+            </>
+          )
+        })()}
+      </div>
+
+      {/* ═══ SECTION 6 — CARDIO ═══ */}
+      <div style={{ padding: '0 24px 16px' }}>
+        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={80} />
+      </div>
+
+      {/* ═══ SECTION 7 — PROGRAM MANAGER MODAL ═══ */}
+      {showProgramManager && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowProgramManager(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ ...cardStyle, borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 500, maxHeight: '85vh', overflow: 'auto', padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={pageTitleStyle}>MES PROGRAMMES</span>
+              <button onClick={() => setShowProgramManager(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: colors.textMuted }}>✕</button>
+            </div>
+
+            {/* Program management buttons */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {activeCustomProgram && !editMode && (
+                  <button onClick={startEditMode} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: colors.gold, background: 'transparent', border: `1px solid ${colors.goldRule}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase' }}>MODIFIER</button>
+                )}
+                {editMode && (
+                  <>
+                    <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: colors.textMuted, background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer' }}>ANNULER</button>
+                    <button onClick={saveEditedProgram} style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: '#0D0B08', background: colors.gold, border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1 }}>SAUVEGARDER</button>
+                  </>
+                )}
+                {!editMode && (
+                  <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }} style={{ fontFamily: fonts.body, fontSize: 11, color: colors.gold, background: 'transparent', border: `1px solid ${colors.gold}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>+ CREER</button>
+                )}
               </div>
+            </div>
+
+            {/* Program list */}
+            {customPrograms.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {customPrograms.map((prog: any) => (
                   <div key={prog.id} style={{ background: colors.surface, border: `1px solid ${prog.is_active ? colors.gold : colors.goldBorder}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
@@ -872,186 +1068,27 @@ export default function TrainingTab({
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {prog.is_active ? (
-                        <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: colors.success, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>DESACTIVER</button>
+                        <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: colors.success, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>DÉSACTIVER</button>
                       ) : (
                         <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: colors.goldDim, border: `1px solid ${colors.gold}`, color: colors.gold, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>ACTIVER</button>
                       )}
+                      <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>ÉDITER</button>
+                      <button onClick={() => deleteProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, color: colors.error, cursor: 'pointer', fontFamily: fonts.body, fontWeight: 700 }}>×</button>
                     </div>
                   </div>
                 ))}
               </div>
-            </>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '60px 20px', textAlign: 'center' }}>
-              <Dumbbell size={56} color={colors.textMuted} strokeWidth={1.5} />
-              <p style={{ ...subtitleStyle, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: 0 }}>Aucun programme</p>
-              <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0, maxWidth: 280 }}>Cree ton premier programme avec l&apos;IA en 2 minutes.</p>
+            ) : (
               <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-                style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
-                Creer mon programme
+                style={{ width: '100%', padding: 16, background: colors.goldDim, border: `1px dashed ${colors.goldRule}`, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                CRÉER UN PROGRAMME +
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      ) : (
-        <>
-          {/* ── REST DAY ── */}
-          {dayExpanded && trainingDayData?.repos ? (
-            <TrainingRestDay />
-
-          ) : dayExpanded && trainingExercises.length === 0 ? (
-            /* ── NO EXERCISES ── */
-            <div style={{ padding: '0 16px' }}>
-              <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '40px 24px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                <Dumbbell size={32} color={colors.textMuted} style={{ marginBottom: 12 }} />
-                <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>Aucun exercice pour ce jour.</p>
-              </div>
-            </div>
-
-          ) : dayExpanded && trainingIsToday && todaySessionDone ? (
-            /* ── SESSION ALREADY DONE TODAY ── */
-            <TrainingSessionDone todayKey={todayKey} coachProgram={coachProgram} />
-
-          ) : dayExpanded ? (
-            /* ══════════════ EXERCISE CARDS ══════════════ */
-            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-              {/* Edit mode: show editable exercise list */}
-              {editMode && editedDays && (() => {
-                const dayIdx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-                const day = editedDays[dayIdx]
-                if (!day?.exercises) return null
-                return (
-                  <div style={{ background: colors.surface, border: `1px solid ${colors.goldRule}`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                    <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>MODE EDITION</div>
-                    {day.exercises.map((ex: any, i: number) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          <button onClick={() => editMoveEx(dayIdx, i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: i === 0 ? colors.textDim : colors.gold, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▲</button>
-                          <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? colors.textDim : colors.gold, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▼</button>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
-                          <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Sets</span>
-                              <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                            </div>
-                            <span style={{ color: colors.textDim, alignSelf: 'center', fontSize: 10 }}>x</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Reps</span>
-                              <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Repos</span>
-                              <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 42, padding: '3px 4px', textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>s</span>
-                            </div>
-                          </div>
-                        </div>
-                        <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(212,168,67,0.06)', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>ℹ️</button>
-                        <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>🔄</button>
-                        <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.error, fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>✕</button>
-                      </div>
-                    ))}
-                    <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${colors.goldRule}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>+ AJOUTER UN EXERCICE</button>
-                  </div>
-                )
-              })()}
-
-              {trainingExercises.map((ex: any, exIdx: number) => {
-                const storageKey = `moovx-sets-${todayStr}-${ex.name}`
-                const n = Number(ex.sets) || 3
-                const setsArr: boolean[] = completedSets[storageKey] || Array.from({ length: n }, () => false)
-                const numSets = setsArr.length
-                const inputs = setInputs[ex.name] || Array.from({ length: numSets }, () => ({ kg: '', reps: String(ex.reps || '') }))
-
-                return (
-                  <TrainingExerciseCard
-                    key={ex.name}
-                    ex={ex}
-                    exIdx={exIdx}
-                    setsArr={setsArr}
-                    inputs={inputs}
-                    trainingIsToday={trainingIsToday}
-                    restRunning={restRunning}
-                    restingSet={restingSet}
-                    restTimer={restTimer}
-                    onToggleSet={toggleSet}
-                    onAddSet={addSet}
-                    onUpdateInput={updateInput}
-                    onExerciseInfo={handleExerciseInfo}
-                    fmtRest={fmtRest}
-                    onCancelRest={cancelRest}
-                    onVideoFeedback={(name: string) => setVideoExercise(name)}
-                    supabase={supabase}
-                    userId={session?.user?.id}
-                  />
-                )
-              })}
-
-              {/* ── Add Exercise to Session ── */}
-              {trainingIsToday && (workoutStarted || trainingDoneSets > 0) && (
-                <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 14, background: 'transparent', border: `1.5px dashed rgba(212,168,67,0.4)`, borderRadius: 16, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  + AJOUTER UN EXERCICE
-                </button>
-              )}
-
-              {/* ── Browse Exercise DB ── */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setShowExDbModal(true)}
-                style={{ width: '100%', background: colors.surface, border: `2px dashed ${colors.goldBorder}`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}
-              >
-                <Search size={16} color={colors.gold} />
-                <span style={{ ...labelStyle, fontSize: 13, fontWeight: 800, letterSpacing: '2px' }}>Découvrir les exercices</span>
-              </motion.button>
-
-              {/* ── Start Workout Button ── */}
-              {trainingIsToday && !todaySessionDone && (
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => startProgramWorkout(trainingDayData, trainingExercises)}
-                  style={{
-                    width: '100%', background: colors.gold, color: '#0D0B08',
-                    fontWeight: 400, padding: '18px', borderRadius: 16, border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: fonts.headline, fontSize: 20, letterSpacing: '0.15em',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  }}
-                >
-                  DÉMARRER LA SÉANCE
-                </motion.button>
-              )}
-
-              {/* ── Bottom Finish Button (when session not yet started but sets done) ── */}
-              {trainingIsToday && !workoutStarted && trainingDoneSets > 0 && (
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleFinishWithCheck}
-                  style={{
-                    width: '100%', background: colors.success, color: '#0D0B08',
-                    fontWeight: 700, padding: '16px', borderRadius: 16, border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: fonts.body, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  }}
-                >
-                  <Award size={18} color="#0D0B08" />
-                  Terminer la séance
-                </motion.button>
-              )}
-
-              <div style={{ height: 8 }} />
-            </div>
-          ) : null}
-        </>
       )}
 
-      {/* Cardio Section */}
-      <div style={{ padding: '0 16px 16px' }}>
-        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={80} />
-      </div>
+      {/* ═══ ALL EXISTING MODALS (unchanged) ═══ */}
 
       {/* Exercise DB Modal */}
       {showExDbModal && (
@@ -1082,50 +1119,6 @@ export default function TrainingTab({
           onClose={() => setVideoExercise(null)}
         />
       )}
-
-      {/* ═══ HISTORIQUE DES SÉANCES ═══ */}
-      <div style={{ padding: '0 16px', marginTop: 24, marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: 3 }}>HISTORIQUE</span>
-          <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
-          <span style={mutedStyle}>{workoutHistory.length} seances</span>
-        </div>
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
-          {HISTORY_FILTERS.map(f => (
-            <button key={f.key} onClick={() => setHistoryFilter(f.key)} style={{ padding: '7px 14px', borderRadius: 16, whiteSpace: 'nowrap', border: historyFilter === f.key ? `1px solid ${colors.gold}` : `1px solid ${colors.goldDim}`, background: historyFilter === f.key ? colors.goldDim : 'transparent', color: historyFilter === f.key ? colors.gold : colors.textMuted, fontFamily: fonts.body, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>{f.label}</button>
-          ))}
-        </div>
-        {(() => {
-          const filtered = workoutHistory.filter(s => {
-            if (historyFilter === 'all') return true
-            const resolved = resolveSessionType(s.name)
-            return resolved.key === historyFilter
-          })
-          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', ...bodyStyle, color: colors.textDim }}>Aucune séance</div>
-          return filtered.slice(0, 20).map((s: any) => {
-            const d = new Date(s.created_at)
-            const typeInfo = resolveSessionType(s.name)
-            return (
-              <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: colors.surface, border: `1px solid ${colors.goldDim}`, borderRadius: 16, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{typeInfo.emoji}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ ...statSmallStyle, fontSize: 17, color: colors.text, letterSpacing: 1 }}>{typeInfo.label.toUpperCase()}</div>
-                  {s.name && s.name.toLowerCase() !== typeInfo.label.toLowerCase() && s.name.includes('—') && (
-                    <div style={{ ...mutedStyle, fontSize: 11, color: colors.gold, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {s.name.split('—').slice(1).join('—').trim()}
-                    </div>
-                  )}
-                  <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>
-                    {d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    {s.duration_minutes ? ` · ${s.duration_minutes}min` : ''}
-                    {s.notes ? ` · ${s.notes}` : ''}
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        })()}
-      </div>
 
       {/* Video Feedback History */}
       {session?.user?.id && (
