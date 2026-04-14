@@ -8,11 +8,7 @@ import { useWakeLock } from '../../hooks/useWakeLock'
 import {
   Dumbbell, Search, Award,
 } from 'lucide-react'
-import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
-  GREEN, RADIUS_CARD, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY, JS_DAYS_FR,
-} from '../../../lib/design-tokens'
+import { JS_DAYS_FR } from '../../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
 import { toast } from 'sonner'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
@@ -663,12 +659,12 @@ export default function TrainingTab({
 
   // ══════════════════════════════════════════
   return (
-    <div style={{ minHeight: '100vh', background: BG_BASE, paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
+    <div style={{ minHeight: '100vh', background: '#131313', paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
       <style>{`
         .set-input { -webkit-appearance: none; appearance: none; }
         .set-input::-webkit-inner-spin-button,
         .set-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .set-input:focus { border-color: ${GOLD} !important; }
+        .set-input:focus { border-color: #e6c364 !important; }
         @keyframes ttPopIn {
           0% { opacity: 0; transform: scale(0.8); }
           100% { opacity: 1; transform: scale(1); }
@@ -687,28 +683,28 @@ export default function TrainingTab({
           zIndex: 9999, padding: 24,
         }}>
           <div style={{
-            background: BG_CARD, border: `2px solid ${GOLD}`,
+            background: '#0e0e0e', border: `2px solid #e6c364`,
             padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
             animation: 'ttPopIn 0.3s ease-out',
           }}>
             <div style={{
-              width: 64, height: 64, border: `2px solid ${GOLD}`,
+              width: 64, height: 64, border: `2px solid #e6c364`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 20px',
             }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill={GOLD}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill={'#e6c364'}>
                 <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
               </svg>
             </div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 36, color: GOLD, letterSpacing: 3, margin: '0 0 8px' }}>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 36, color: '#e6c364', letterSpacing: 3, margin: '0 0 8px' }}>
               REPOS TERMINÉ
             </h2>
-            <p style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 20, color: TEXT_PRIMARY, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 24px' }}>
+            <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: 20, color: '#e5e2e1', letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 24px' }}>
               {motivationalMsg}
             </p>
             <button onClick={() => setShowTimerAlert(false)} style={{
-              background: GOLD, color: '#0D0B08', border: 'none',
-              fontFamily: FONT_ALT, fontWeight: 800, fontSize: 16, letterSpacing: 2,
+              background: '#e6c364', color: '#0D0B08', border: 'none',
+              fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: 16, letterSpacing: 2,
               padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
               
             }}>
@@ -726,56 +722,56 @@ export default function TrainingTab({
         <img src="/images/hero-athlete.webp" alt="Athlete MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 3, margin: 0, color: TEXT_PRIMARY, lineHeight: 1 }}>VOTRE PROGRAMME</h1>
-          <span style={{ fontFamily: FONT_ALT, fontSize: 12, color: GOLD, fontWeight: 700, letterSpacing: 2 }}>{format(new Date(), 'EEE d MMM', { locale: fr }).toUpperCase()} — Semaine en cours</span>
+          <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 24, letterSpacing: 3, margin: 0, color: '#e5e2e1', lineHeight: 1 }}>VOTRE PROGRAMME</h1>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#e6c364', fontWeight: 700, letterSpacing: 2 }}>{format(new Date(), 'EEE d MMM', { locale: fr }).toUpperCase()} — Semaine en cours</span>
         </div>
       </div>
 
       {/* ── MES PROGRAMMES ── */}
       <div style={{ padding: '0 16px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: '1px' }}>MES PROGRAMMES</span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, color: '#e5e2e1', letterSpacing: '1px' }}>MES PROGRAMMES</span>
           <div style={{ display: 'flex', gap: 6 }}>
             {activeCustomProgram && !editMode && (
-              <button onClick={startEditMode} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: GOLD, background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase' }}>MODIFIER</button>
+              <button onClick={startEditMode} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, color: '#e6c364', background: 'transparent', border: `1px solid rgba(201,168,76,0.25)`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase' }}>MODIFIER</button>
             )}
             {editMode && (
               <>
-                <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer' }}>ANNULER</button>
-                <button onClick={saveEditedProgram} style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: '#0D0B08', background: GOLD, border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1 }}>SAUVEGARDER</button>
+                <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, color: '#d0c5b2', background: 'transparent', border: `1px solid rgba(201,168,76,0.15)`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer' }}>ANNULER</button>
+                <button onClick={saveEditedProgram} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, color: '#0D0B08', background: '#e6c364', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', letterSpacing: 1 }}>SAUVEGARDER</button>
               </>
             )}
             {!editMode && (
-              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }} style={{ fontFamily: FONT_BODY, fontSize: 11, color: GOLD, background: 'transparent', border: `1px solid ${GOLD}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>+ CREER</button>
+              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#e6c364', background: 'transparent', border: `1px solid #e6c364`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>+ CREER</button>
             )}
           </div>
         </div>
         {customPrograms.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {customPrograms.map((prog: any) => (
-              <div key={prog.id} style={{ background: BG_CARD, border: `1px solid ${prog.is_active ? GOLD : BORDER}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div key={prog.id} style={{ background: '#0e0e0e', border: `1px solid ${prog.is_active ? '#e6c364' : 'rgba(201,168,76,0.15)'}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: prog.is_active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{prog.name}</div>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, color: prog.is_active ? '#e6c364' : '#e5e2e1', letterSpacing: '1px' }}>{prog.name}</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2' }}>
                     {(prog.days || []).length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
-                    {prog.is_active && <span style={{ color: GREEN, marginLeft: 8 }}>● Actif</span>}
+                    {prog.is_active && <span style={{ color: '#4ade80', marginLeft: 8 }}>● Actif</span>}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {prog.is_active ? (
-                    <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: GREEN, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>DÉSACTIVER</button>
+                    <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: '#4ade80', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontWeight: 700 }}>DÉSACTIVER</button>
                   ) : (
-                    <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: GOLD_DIM, border: `1px solid ${GOLD}`, color: GOLD, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>ACTIVER</button>
+                    <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(230,195,100,0.08)', border: `1px solid #e6c364`, color: '#e6c364', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontWeight: 700 }}>ACTIVER</button>
                   )}
-                  <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>ÉDITER</button>
-                  <button onClick={() => deleteProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, color: '#EF4444', cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>×</button>
+                  <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true) }} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid rgba(201,168,76,0.15)`, color: '#d0c5b2', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontWeight: 700 }}>ÉDITER</button>
+                  <button onClick={() => deleteProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, color: '#EF4444', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontWeight: 700 }}>×</button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
           <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-            style={{ width: '100%', padding: 16, background: GOLD_DIM, border: `1px dashed ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            style={{ width: '100%', padding: 16, background: 'rgba(230,195,100,0.08)', border: `1px dashed rgba(201,168,76,0.25)`, color: '#e6c364', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             CRÉER UN PROGRAMME +
           </button>
         )}
@@ -818,7 +814,7 @@ export default function TrainingTab({
 
           {/* Hint or séance libre — compact */}
           {!dayExpanded && (
-            <p style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 2, color: TEXT_DIM, textTransform: 'uppercase', margin: '8px 0 0', textAlign: 'center' }}>
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: 2, color: '#99907e', textTransform: 'uppercase', margin: '8px 0 0', textAlign: 'center' }}>
               Touche un jour pour voir les exercices
             </p>
           )}
@@ -826,11 +822,11 @@ export default function TrainingTab({
           <button
             onClick={() => startProgramWorkout({ day_name: 'Séance libre' }, [])}
             style={{
-              width: '100%', padding: 12, borderRadius: 12, marginTop: 10,
+              width: '100%', padding: 12, borderRadius: 16, marginTop: 10,
               background: 'transparent',
-              border: `1px solid ${GOLD_RULE}`,
-              color: GOLD, cursor: 'pointer',
-              fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 2,
+              border: `1px solid rgba(201,168,76,0.25)`,
+              color: '#e6c364', cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: 2,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}
           >
@@ -855,27 +851,27 @@ export default function TrainingTab({
           {customPrograms.length > 0 ? (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: '1px' }}>MES PROGRAMMES</span>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, color: '#e5e2e1', letterSpacing: '1px' }}>MES PROGRAMMES</span>
                 <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-                  style={{ fontFamily: FONT_BODY, fontSize: 11, color: GOLD, background: 'transparent', border: `1px solid ${GOLD}`, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#e6c364', background: 'transparent', border: `1px solid #e6c364`, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   + CREER
                 </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {customPrograms.map((prog: any) => (
-                  <div key={prog.id} style={{ background: BG_CARD, border: `1px solid ${prog.is_active ? GOLD : BORDER}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={prog.id} style={{ background: '#0e0e0e', border: `1px solid ${prog.is_active ? '#e6c364' : 'rgba(201,168,76,0.15)'}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: prog.is_active ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{prog.name}</div>
-                      <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, color: prog.is_active ? '#e6c364' : '#e5e2e1', letterSpacing: '1px' }}>{prog.name}</div>
+                      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2' }}>
                         {(prog.days || []).length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
-                        {prog.is_active && <span style={{ color: GREEN, marginLeft: 8 }}>● Actif</span>}
+                        {prog.is_active && <span style={{ color: '#4ade80', marginLeft: 8 }}>● Actif</span>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {prog.is_active ? (
-                        <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: GREEN, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>DESACTIVER</button>
+                        <button onClick={() => deactivateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.4)', color: '#4ade80', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontWeight: 700 }}>DESACTIVER</button>
                       ) : (
-                        <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: GOLD_DIM, border: `1px solid ${GOLD}`, color: GOLD, cursor: 'pointer', fontFamily: FONT_ALT, fontWeight: 700 }}>ACTIVER</button>
+                        <button onClick={() => activateProgram(prog.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'rgba(230,195,100,0.08)', border: `1px solid #e6c364`, color: '#e6c364', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontWeight: 700 }}>ACTIVER</button>
                       )}
                     </div>
                   </div>
@@ -884,11 +880,11 @@ export default function TrainingTab({
             </>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '60px 20px', textAlign: 'center' }}>
-              <Dumbbell size={56} color={TEXT_MUTED} strokeWidth={1.5} />
-              <p style={{ fontFamily: FONT_ALT, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Aucun programme</p>
-              <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0, maxWidth: 280 }}>Cree ton premier programme avec l&apos;IA en 2 minutes.</p>
+              <Dumbbell size={56} color={'#d0c5b2'} strokeWidth={1.5} />
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.2rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: '#e5e2e1', margin: 0 }}>Aucun programme</p>
+              <p style={{ fontSize: '0.85rem', fontFamily: "'Inter', sans-serif", color: '#d0c5b2', margin: 0, maxWidth: 280 }}>Cree ton premier programme avec l&apos;IA en 2 minutes.</p>
               <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true) }}
-                style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: GOLD, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
+                style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: '#e6c364', fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
                 Creer mon programme
               </button>
             </div>
@@ -903,9 +899,9 @@ export default function TrainingTab({
           ) : dayExpanded && trainingExercises.length === 0 ? (
             /* ── NO EXERCISES ── */
             <div style={{ padding: '0 16px' }}>
-              <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 24px', textAlign: 'center' }}>
-                <Dumbbell size={32} color={TEXT_MUTED} style={{ marginBottom: 12 }} />
-                <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, color: TEXT_MUTED, margin: 0 }}>Aucun exercice pour ce jour.</p>
+              <div style={{ background: '#0e0e0e', border: `1px solid rgba(201,168,76,0.15)`, borderRadius: 16, padding: '40px 24px', textAlign: 'center' }}>
+                <Dumbbell size={32} color={'#d0c5b2'} style={{ marginBottom: 12 }} />
+                <p style={{ fontSize: '0.85rem', fontFamily: "'Inter', sans-serif", color: '#d0c5b2', margin: 0 }}>Aucun exercice pour ce jour.</p>
               </div>
             </div>
 
@@ -923,39 +919,39 @@ export default function TrainingTab({
                 const day = editedDays[dayIdx]
                 if (!day?.exercises) return null
                 return (
-                  <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 16, padding: 16, marginBottom: 8 }}>
-                    <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 12, textTransform: 'uppercase' }}>MODE EDITION</div>
+                  <div style={{ background: '#0e0e0e', border: `1px solid rgba(201,168,76,0.25)`, borderRadius: 16, padding: 16, marginBottom: 8 }}>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#e6c364', marginBottom: 12, textTransform: 'uppercase' }}>MODE EDITION</div>
                     {day.exercises.map((ex: any, i: number) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${GOLD_DIM}` : 'none' }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid rgba(230,195,100,0.08)` : 'none' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          <button onClick={() => editMoveEx(dayIdx, i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: i === 0 ? TEXT_DIM : GOLD, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▲</button>
-                          <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? TEXT_DIM : GOLD, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▼</button>
+                          <button onClick={() => editMoveEx(dayIdx, i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: i === 0 ? '#99907e' : '#e6c364', fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▲</button>
+                          <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? '#99907e' : '#e6c364', fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▼</button>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 500 }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
+                          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#e5e2e1', fontWeight: 500 }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
                           <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Sets</span>
-                              <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
+                              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#d0c5b2' }}>Sets</span>
+                              <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: '#131313', border: `1px solid rgba(201,168,76,0.15)`, borderRadius: 6, color: '#e6c364', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: 'none' }} />
                             </div>
-                            <span style={{ color: TEXT_DIM, alignSelf: 'center', fontSize: 10 }}>x</span>
+                            <span style={{ color: '#99907e', alignSelf: 'center', fontSize: 10 }}>x</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Reps</span>
-                              <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
+                              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#d0c5b2' }}>Reps</span>
+                              <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center', background: '#131313', border: `1px solid rgba(201,168,76,0.15)`, borderRadius: 6, color: '#e6c364', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: 'none' }} />
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Repos</span>
-                              <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 42, padding: '3px 4px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 14, outline: 'none' }} />
-                              <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>s</span>
+                              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#d0c5b2' }}>Repos</span>
+                              <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 42, padding: '3px 4px', textAlign: 'center', background: '#131313', border: `1px solid rgba(201,168,76,0.15)`, borderRadius: 6, color: '#e6c364', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: 'none' }} />
+                              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#d0c5b2' }}>s</span>
                             </div>
                           </div>
                         </div>
-                        <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(212,168,67,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>ℹ️</button>
+                        <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(212,168,67,0.06)', border: `1px solid rgba(201,168,76,0.15)`, borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>ℹ️</button>
                         <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>🔄</button>
                         <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>✕</button>
                       </div>
                     ))}
-                    <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>+ AJOUTER UN EXERCICE</button>
+                    <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed rgba(201,168,76,0.25)`, borderRadius: 16, color: '#e6c364', fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>+ AJOUTER UN EXERCICE</button>
                   </div>
                 )
               })()}
@@ -993,7 +989,7 @@ export default function TrainingTab({
 
               {/* ── Add Exercise to Session ── */}
               {trainingIsToday && (workoutStarted || trainingDoneSets > 0) && (
-                <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 14, background: 'transparent', border: `1.5px dashed rgba(212,168,67,0.4)`, borderRadius: 12, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 14, background: 'transparent', border: `1.5px dashed rgba(212,168,67,0.4)`, borderRadius: 16, color: '#e6c364', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   + AJOUTER UN EXERCICE
                 </button>
               )}
@@ -1002,10 +998,10 @@ export default function TrainingTab({
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setShowExDbModal(true)}
-                style={{ width: '100%', background: BG_CARD, border: `2px dashed ${BORDER}`, borderRadius: RADIUS_CARD, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                style={{ width: '100%', background: '#0e0e0e', border: `2px dashed rgba(201,168,76,0.15)`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
               >
-                <Search size={16} color={GOLD} />
-                <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 800, color: GOLD, letterSpacing: '2px', textTransform: 'uppercase' }}>Découvrir les exercices</span>
+                <Search size={16} color={'#e6c364'} />
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 800, color: '#e6c364', letterSpacing: '2px', textTransform: 'uppercase' }}>Découvrir les exercices</span>
               </motion.button>
 
               {/* ── Start Workout Button ── */}
@@ -1014,10 +1010,10 @@ export default function TrainingTab({
                   whileTap={{ scale: 0.97 }}
                   onClick={() => startProgramWorkout(trainingDayData, trainingExercises)}
                   style={{
-                    width: '100%', background: GOLD, color: '#0D0B08',
-                    fontWeight: 400, padding: '18px', borderRadius: 12, border: 'none',
+                    width: '100%', background: '#e6c364', color: '#0D0B08',
+                    fontWeight: 400, padding: '18px', borderRadius: 16, border: 'none',
                     cursor: 'pointer',
-                    fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: '0.15em',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, letterSpacing: '0.15em',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   }}
                 >
@@ -1031,10 +1027,10 @@ export default function TrainingTab({
                   whileTap={{ scale: 0.97 }}
                   onClick={handleFinishWithCheck}
                   style={{
-                    width: '100%', background: GREEN, color: '#0D0B08',
-                    fontWeight: 700, padding: '16px', borderRadius: RADIUS_CARD, border: 'none',
+                    width: '100%', background: '#4ade80', color: '#0D0B08',
+                    fontWeight: 700, padding: '16px', borderRadius: 16, border: 'none',
                     cursor: 'pointer',
-                    fontFamily: FONT_ALT, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase',
+                    fontFamily: "'Inter', sans-serif", fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   }}
                 >
@@ -1087,13 +1083,13 @@ export default function TrainingTab({
       {/* ═══ HISTORIQUE DES SÉANCES ═══ */}
       <div style={{ padding: '0 16px', marginTop: 24, marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 3, color: TEXT_PRIMARY }}>HISTORIQUE</span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, letterSpacing: 3, color: '#e5e2e1' }}>HISTORIQUE</span>
           <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,168,67,0.25), transparent)' }} />
-          <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>{workoutHistory.length} seances</span>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#d0c5b2' }}>{workoutHistory.length} seances</span>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
           {HISTORY_FILTERS.map(f => (
-            <button key={f.key} onClick={() => setHistoryFilter(f.key)} style={{ padding: '7px 14px', borderRadius: 20, whiteSpace: 'nowrap', border: historyFilter === f.key ? `1px solid ${GOLD}` : `1px solid ${GOLD_DIM}`, background: historyFilter === f.key ? GOLD_DIM : 'transparent', color: historyFilter === f.key ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>{f.label}</button>
+            <button key={f.key} onClick={() => setHistoryFilter(f.key)} style={{ padding: '7px 14px', borderRadius: 16, whiteSpace: 'nowrap', border: historyFilter === f.key ? `1px solid #e6c364` : `1px solid rgba(230,195,100,0.08)`, background: historyFilter === f.key ? 'rgba(230,195,100,0.08)' : 'transparent', color: historyFilter === f.key ? '#e6c364' : '#d0c5b2', fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>{f.label}</button>
           ))}
         </div>
         {(() => {
@@ -1102,21 +1098,21 @@ export default function TrainingTab({
             const resolved = resolveSessionType(s.name)
             return resolved.key === historyFilter
           })
-          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: FONT_BODY, fontSize: 14, color: TEXT_DIM }}>Aucune séance</div>
+          if (filtered.length === 0) return <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#99907e' }}>Aucune séance</div>
           return filtered.slice(0, 20).map((s: any) => {
             const d = new Date(s.created_at)
             const typeInfo = resolveSessionType(s.name)
             return (
-              <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: BG_CARD, border: `1px solid ${GOLD_DIM}`, borderRadius: 14, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
+              <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: '#0e0e0e', border: `1px solid rgba(230,195,100,0.08)`, borderRadius: 16, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{typeInfo.emoji}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 1, color: TEXT_PRIMARY }}>{typeInfo.label.toUpperCase()}</div>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 17, letterSpacing: 1, color: '#e5e2e1' }}>{typeInfo.label.toUpperCase()}</div>
                   {s.name && s.name.toLowerCase() !== typeInfo.label.toLowerCase() && s.name.includes('—') && (
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: GOLD, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#e6c364', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {s.name.split('—').slice(1).join('—').trim()}
                     </div>
                   )}
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2', marginTop: 2 }}>
                     {d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     {s.duration_minutes ? ` · ${s.duration_minutes}min` : ''}
                     {s.notes ? ` · ${s.notes}` : ''}
@@ -1165,22 +1161,22 @@ export default function TrainingTab({
       {/* Variant popup */}
       {variantPopup && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>VARIANTES</span>
-              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
+          <div onClick={e=>e.stopPropagation()} style={{background:'#0e0e0e',border:`1px solid rgba(201,168,76,0.25)`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
+            <div style={{padding:'16px 20px',borderBottom:`1px solid rgba(201,168,76,0.15)`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:20,letterSpacing:2,color:'#e5e2e1'}}>VARIANTES</span>
+              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:'#d0c5b2',fontSize:20,cursor:'pointer'}}>✕</button>
             </div>
             <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px 30px'}}>
               {variantPopup.variants.length===0?(
-                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14,fontFamily:FONT_BODY}}>Aucune variante trouvée</div>
+                <div style={{textAlign:'center',padding:32,color:'#d0c5b2',fontSize:14,fontFamily:"'Inter', sans-serif"}}>Aucune variante trouvée</div>
               ):variantPopup.variants.map((v: any,i: number)=>(
-                <button key={i} onClick={()=>selectEditVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:BG_BASE,border:`1px solid ${BORDER}`,cursor:'pointer',textAlign:'left'}}>
-                  <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                <button key={i} onClick={()=>selectEditVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius: 16,background:'#131313',border:`1px solid rgba(201,168,76,0.15)`,cursor:'pointer',textAlign:'left'}}>
+                  <div style={{width:40,height:40,borderRadius:10,background:'rgba(230,195,100,0.08)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
                     {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
                   </div>
                   <div>
-                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{v.name}</div>
-                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
+                    <div style={{fontFamily:"'Inter', sans-serif",fontSize:14,color:'#e5e2e1',fontWeight:500}}>{v.name}</div>
+                    <div style={{fontFamily:"'Inter', sans-serif",fontSize:10,color:'#e6c364',fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
                   </div>
                 </button>
               ))}
@@ -1192,38 +1188,38 @@ export default function TrainingTab({
       {/* Workout detail popup */}
       {selectedWorkout && (
         <div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setSelectedWorkout(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:'#0e0e0e',border:`1px solid rgba(201,168,76,0.25)`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+            <div style={{padding:'16px 20px',borderBottom:`1px solid rgba(201,168,76,0.15)`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
               <div>
-                <div style={{fontFamily:FONT_DISPLAY,fontSize:22,letterSpacing:2,color:TEXT_PRIMARY}}>{selectedWorkout.name||'Séance'}</div>
-                <div style={{fontFamily:FONT_BODY,fontSize:12,color:TEXT_MUTED,marginTop:2}}>
+                <div style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:22,letterSpacing:2,color:'#e5e2e1'}}>{selectedWorkout.name||'Séance'}</div>
+                <div style={{fontFamily:"'Inter', sans-serif",fontSize:12,color:'#d0c5b2',marginTop:2}}>
                   {new Date(selectedWorkout.created_at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}
                   {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
                 </div>
               </div>
-              <button onClick={()=>setSelectedWorkout(null)} style={{width:36,height:36,borderRadius:12,background:GOLD_DIM,border:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:TEXT_MUTED,fontSize:16}}>✕</button>
+              <button onClick={()=>setSelectedWorkout(null)} style={{width:36,height:36,borderRadius:12,background:'rgba(230,195,100,0.08)',border:`1px solid rgba(201,168,76,0.15)`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#d0c5b2',fontSize:16}}>✕</button>
             </div>
             <div style={{flex:1,overflowY:'auto',padding:'12px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
               {loadingDetail?(
-                <div style={{textAlign:'center',padding:40,color:TEXT_MUTED}}>Chargement...</div>
+                <div style={{textAlign:'center',padding:40,color:'#d0c5b2'}}>Chargement...</div>
               ):workoutDetail.length===0?(
-                <div style={{textAlign:'center',padding:40,color:TEXT_DIM,fontSize:14,fontFamily:FONT_BODY}}>Aucun détail enregistré</div>
+                <div style={{textAlign:'center',padding:40,color:'#99907e',fontSize:14,fontFamily:"'Inter', sans-serif"}}>Aucun détail enregistré</div>
               ):(
                 workoutDetail.map((ex,i)=>(
-                  <div key={i} style={{marginBottom:16,paddingBottom:16,borderBottom:i<workoutDetail.length-1?`1px solid ${BORDER}`:'none'}}>
-                    <div style={{fontFamily:FONT_ALT,fontSize:16,fontWeight:700,color:TEXT_PRIMARY,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{ex.name}</div>
+                  <div key={i} style={{marginBottom:16,paddingBottom:16,borderBottom:i<workoutDetail.length-1?`1px solid rgba(201,168,76,0.15)`:'none'}}>
+                    <div style={{fontFamily:"'Inter', sans-serif",fontSize:16,fontWeight:700,color:'#e5e2e1',letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{ex.name}</div>
                     <div style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'4px 0',marginBottom:4}}>
-                      <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>SET</span>
-                      <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>KG</span>
-                      <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>REPS</span>
-                      <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>VOLUME</span>
+                      <span style={{fontFamily:"'Inter', sans-serif",fontSize:9,fontWeight:700,color:'#99907e',letterSpacing:1}}>SET</span>
+                      <span style={{fontFamily:"'Inter', sans-serif",fontSize:9,fontWeight:700,color:'#99907e',letterSpacing:1}}>KG</span>
+                      <span style={{fontFamily:"'Inter', sans-serif",fontSize:9,fontWeight:700,color:'#99907e',letterSpacing:1}}>REPS</span>
+                      <span style={{fontFamily:"'Inter', sans-serif",fontSize:9,fontWeight:700,color:'#99907e',letterSpacing:1}}>VOLUME</span>
                     </div>
                     {ex.sets.map((set:any,si:number)=>(
-                      <div key={si} style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'6px 0',borderBottom:`1px solid ${BORDER}`}}>
-                        <span style={{fontFamily:FONT_DISPLAY,fontSize:16,color:GOLD,width:28,height:28,borderRadius:8,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center'}}>{si+1}</span>
-                        <span style={{fontFamily:FONT_DISPLAY,fontSize:18,color:TEXT_PRIMARY}}>{set.weight||0}</span>
-                        <span style={{fontFamily:FONT_DISPLAY,fontSize:18,color:TEXT_PRIMARY}}>{set.reps||0}</span>
-                        <span style={{fontFamily:FONT_BODY,fontSize:13,color:TEXT_MUTED}}>{((set.weight||0)*(set.reps||0))} kg</span>
+                      <div key={si} style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'6px 0',borderBottom:`1px solid rgba(201,168,76,0.15)`}}>
+                        <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:16,color:'#e6c364',width:28,height:28,borderRadius:8,background:'rgba(230,195,100,0.08)',display:'flex',alignItems:'center',justifyContent:'center'}}>{si+1}</span>
+                        <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:18,color:'#e5e2e1'}}>{set.weight||0}</span>
+                        <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:18,color:'#e5e2e1'}}>{set.reps||0}</span>
+                        <span style={{fontFamily:"'Inter', sans-serif",fontSize:13,color:'#d0c5b2'}}>{((set.weight||0)*(set.reps||0))} kg</span>
                       </div>
                     ))}
                   </div>
