@@ -297,6 +297,7 @@ export default function CoachApp() {
         onLogo={() => h.setActiveTab('home')}
         onCalendar={() => h.setActiveTab('training')}
         onMessages={() => h.setActiveTab('messages')}
+        scrollContainerRef={h.mainRef}
       />
 
       {/* ── TRIAL BANNER ── */}

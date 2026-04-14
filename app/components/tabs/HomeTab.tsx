@@ -303,17 +303,10 @@ export default function HomeTab({
     <div style={{ background: colors.background, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
-      {/* ═══ GREETING — Stitch style ═══ */}
-      <div style={{ padding: '8px 24px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${colors.gold}20`, flexShrink: 0 }}>
-            {displayAvatar ? <img src={displayAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: colors.surfaceHigh }} />}
-          </div>
-          <span style={{ fontFamily: fonts.headline, fontWeight: 700, fontSize: 15, color: colors.text, letterSpacing: '-0.02em' }}>
-            Bonjour, {firstName}
-          </span>
-        </div>
-        <div style={{ ...bodyStyle, fontSize: 13, fontStyle: 'italic', lineHeight: 1.5, paddingLeft: 12, borderLeft: `2px solid ${colors.goldRule}` }}>
+      {/* ═══ LOGO + CITATION ═══ */}
+      <div style={{ padding: '12px 24px 0', textAlign: 'center' }}>
+        <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, letterSpacing: '0.2em', color: colors.gold, marginBottom: 8 }}>MOOVX</div>
+        <div style={{ fontFamily: fonts.body, fontSize: 13, fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, maxWidth: 300, margin: '0 auto' }}>
           &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
         </div>
       </div>

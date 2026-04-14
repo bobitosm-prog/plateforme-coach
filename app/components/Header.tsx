@@ -12,28 +12,31 @@ interface HeaderProps {
   onMessages?: () => void
   onAvatar?: () => void
   onLogo?: () => void
+  scrollContainerRef?: React.RefObject<HTMLElement | null>
 }
 
-export default function Header({ firstName, displayAvatar, objective, unreadCount, onCalendar, onMessages, onAvatar, onLogo }: HeaderProps) {
+export default function Header({ firstName, displayAvatar, objective, unreadCount, onCalendar, onMessages, onAvatar, onLogo, scrollContainerRef }: HeaderProps) {
   const [visible, setVisible] = useState(true)
   const lastScrollY = useRef(0)
   const ticking = useRef(false)
 
   useEffect(() => {
+    // Attach to scroll container div (not window) since the app uses overflow-y: auto
+    const el = scrollContainerRef?.current || document.querySelector('.client-main-scroll') || window
     function onScroll() {
       if (ticking.current) return
       ticking.current = true
       requestAnimationFrame(() => {
-        const y = window.scrollY
+        const y = el === window ? window.scrollY : (el as HTMLElement).scrollTop
         if (y > lastScrollY.current + 10) setVisible(false)
         else if (y < lastScrollY.current - 10) setVisible(true)
         lastScrollY.current = y
         ticking.current = false
       })
     }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [scrollContainerRef])
 
   const objLabel = objective === 'weight_loss' || objective === 'seche' ? 'SÈCHE'
     : objective === 'mass' || objective === 'bulk' ? 'PRISE DE MASSE' : 'MAINTIEN'
@@ -62,7 +65,7 @@ export default function Header({ firstName, displayAvatar, objective, unreadCoun
         backdropFilter: 'blur(16px)',
       }}>
         {/* Avatar */}
-        <button onClick={onAvatar} style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', background: 'rgba(201,168,76,0.1)', border: 'none', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
+        <button onClick={onAvatar} style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', background: 'rgba(201,168,76,0.1)', border: 'none', cursor: 'pointer', flexShrink: 0, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {displayAvatar ? (
             <img src={displayAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
