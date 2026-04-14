@@ -68,6 +68,8 @@ export default function TrainingTab({
   const exercisesCacheLoaded = useRef(false)
   const [showMonthCalendar, setShowMonthCalendar] = useState(false)
   const [showProgramManager, setShowProgramManager] = useState(false)
+  const [weekOffset, setWeekOffset] = useState(0)
+  const calTouchStart = useRef<number | null>(null)
   const [showFullHistory, setShowFullHistory] = useState(false)
   const [workoutHistory, setWorkoutHistory] = useState<any[]>([])
   const [historyFilter, setHistoryFilter] = useState('all')
@@ -736,81 +738,115 @@ export default function TrainingTab({
       </div>
 
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
-      <div style={{ margin: '8px 24px 0', ...cardStyle, padding: '20px 16px 16px' }}>
-        {/* Month label + week nav arrows */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <span style={mutedStyle}>
-            {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
-          </span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 16 }}>◀</button>
-            <button style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 16 }}>▶</button>
-          </div>
-        </div>
+      {(() => {
+        // Compute the displayed week based on weekOffset
+        const today = new Date()
+        const dow = today.getDay()
+        const baseMonday = new Date(today)
+        baseMonday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + weekOffset * 7)
+        baseMonday.setHours(0, 0, 0, 0)
 
-        {/* 7-day grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-          {weekSessions.map((ws: any, i: number) => {
-            const date = new Date(ws.scheduled_date)
-            const dayNum = date.getDate()
-            const dayName = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'][i]
-            const isToday = ws.scheduled_date === todayStr
-            const isRest = ws.session_type === 'rest' || ws.title === 'Repos'
-            const isDone = ws.completed
-            const isMissed = !isDone && !isToday && !isRest && date < new Date(todayStr)
+        const displayDays = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(baseMonday)
+          d.setDate(baseMonday.getDate() + i)
+          const dateStr = d.toISOString().split('T')[0]
+          const ws = weekSessions.find((s: any) => s.scheduled_date === dateStr)
+          return { date: d, dateStr, ws }
+        })
 
-            // Determine dot color
-            const dotColor = isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : 'rgba(255,255,255,0.1)'
+        const monthLabel = displayDays[3].date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()
 
-            return (
-              <button
-                key={i}
-                onClick={() => {
-                  const dayKey = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'][i]
-                  setTrainingDay(dayKey)
-                  setDayExpanded(true)
-                  setCalendarSelectedDate(date)
-                }}
-                style={{
-                  background: isToday ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.05)',
-                  border: isToday ? '1.5px solid rgba(230,195,100,0.5)' : '0.5px solid rgba(201,168,76,0.08)',
-                  borderRadius: 10,
-                  padding: '8px 2px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column' as const,
-                  alignItems: 'center',
-                  gap: 4,
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{ fontSize: 9, fontWeight: 700, color: isToday ? colors.gold : colors.textDim, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{dayName}</span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
-                <div style={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: dotColor,
-                  boxShadow: isToday ? '0 0 8px rgba(230,195,100,0.5)' : 'none',
-                }} />
-              </button>
-            )
-          })}
-        </div>
+        const arrowBtn: React.CSSProperties = {
+          width: 32, height: 32, borderRadius: 10,
+          background: 'rgba(201,168,76,0.08)',
+          border: '0.5px solid rgba(201,168,76,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', transition: 'background 0.2s',
+        }
 
-        {/* Legend */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 10 }}>
-          {[
-            { color: colors.success, label: 'Fait' },
-            { color: colors.error, label: 'Manqué' },
-            { color: colors.gold, label: "Aujourd'hui" },
-            { color: 'rgba(255,255,255,0.1)', label: 'Repos' },
-          ].map(l => (
-            <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: l.color }} />
-              <span style={{ fontSize: 9, color: colors.textDim }}>{l.label}</span>
+        return (
+          <div
+            style={{ margin: '8px 24px 0', ...cardStyle, padding: '20px 16px 16px' }}
+            onTouchStart={e => { calTouchStart.current = e.touches[0].clientX }}
+            onTouchEnd={e => {
+              if (calTouchStart.current === null) return
+              const diff = e.changedTouches[0].clientX - calTouchStart.current
+              if (diff > 60) setWeekOffset(o => o - 1)
+              else if (diff < -60) setWeekOffset(o => o + 1)
+              calTouchStart.current = null
+            }}
+          >
+            {/* Month label + styled nav arrows */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={mutedStyle}>{monthLabel}</span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setWeekOffset(o => o - 1)} style={arrowBtn}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <button onClick={() => setWeekOffset(o => o + 1)} style={arrowBtn}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+                {weekOffset !== 0 && (
+                  <button onClick={() => setWeekOffset(0)} style={{ ...arrowBtn, fontSize: 10, color: colors.gold, fontWeight: 700 }}>
+                    ●
+                  </button>
+                )}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
+
+            {/* 7-day grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, transition: 'opacity 0.2s' }}>
+              {displayDays.map(({ date, dateStr, ws }, i) => {
+                const dayNum = date.getDate()
+                const dayName = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'][i]
+                const isToday = dateStr === todayStr
+                const isRest = ws?.session_type === 'rest' || ws?.title === 'Repos'
+                const isDone = ws?.completed
+                const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
+                const dotColor = isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : 'rgba(255,255,255,0.1)'
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      const dayKey = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'][i]
+                      setTrainingDay(dayKey)
+                      setDayExpanded(true)
+                      setCalendarSelectedDate(date)
+                    }}
+                    style={{
+                      background: isToday ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.05)',
+                      border: isToday ? '1.5px solid rgba(230,195,100,0.5)' : '0.5px solid rgba(201,168,76,0.08)',
+                      borderRadius: 10, padding: '8px 2px', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isToday ? colors.gold : colors.textDim, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{dayName}</span>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, boxShadow: isToday ? '0 0 8px rgba(230,195,100,0.5)' : 'none' }} />
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Legend */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 10 }}>
+              {[
+                { color: colors.success, label: 'Fait' },
+                { color: colors.error, label: 'Manqué' },
+                { color: colors.gold, label: "Aujourd'hui" },
+                { color: 'rgba(255,255,255,0.1)', label: 'Repos' },
+              ].map(l => (
+                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: l.color }} />
+                  <span style={{ fontSize: 9, color: colors.textDim }}>{l.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ═══ SECTION 3 — SÉANCE DU JOUR ═══ */}
       <div style={{ margin: '16px 24px 0' }}>
