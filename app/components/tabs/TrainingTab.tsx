@@ -110,7 +110,9 @@ export default function TrainingTab({
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
 
-  const todayStr         = new Date().toISOString().split('T')[0]
+  // Use local date (not UTC) to avoid timezone issues
+  const _now = new Date()
+  const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`
   const trainingIsToday  = trainingDay === todayKey
 
   // Keep screen awake during workout + rest timer
@@ -751,9 +753,12 @@ export default function TrainingTab({
         const displayDays = Array.from({ length: 7 }, (_, i) => {
           const d = new Date(baseMonday)
           d.setDate(baseMonday.getDate() + i)
-          const dateStr = d.toISOString().split('T')[0]
+          const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
           const ws = weekSessions.find((s: any) => s.scheduled_date === dateStr)
-          return { date: d, dateStr, ws }
+          // Also check if this day is rest in the active program
+          const programDay = activeCustomProgram?.days?.length ? padTo7Days(activeCustomProgram.days)[i] : null
+          const isProgRest = programDay?.is_rest === true
+          return { date: d, dateStr, ws, isProgRest }
         })
 
         const monthLabel = displayDays[3].date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()
@@ -798,14 +803,14 @@ export default function TrainingTab({
 
             {/* 7-day grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, transition: 'opacity 0.2s' }}>
-              {displayDays.map(({ date, dateStr, ws }, i) => {
+              {displayDays.map(({ date, dateStr, ws, isProgRest }, i) => {
                 const dayNum = date.getDate()
                 const dayName = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'][i]
                 const isToday = dateStr === todayStr
-                const isRest = ws?.session_type === 'rest' || ws?.title === 'Repos'
-                const isDone = ws?.completed
+                const isRest = isProgRest || ws?.session_type === 'rest' || ws?.title === 'Repos'
+                const isDone = ws?.completed && !isRest
                 const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
-                const dotColor = isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : 'rgba(255,255,255,0.1)'
+                const dotColor = isRest ? 'rgba(255,255,255,0.1)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : 'rgba(201,168,76,0.3)'
 
                 return (
                   <button
@@ -868,13 +873,13 @@ export default function TrainingTab({
               <button onClick={() => setShowProgramManager(true)} style={{ ...btnPrimary, width: '100%', padding: 14, marginTop: 16 }}>CRÉER UN PROGRAMME</button>
             </div>
           ) : trainingDayData?.repos ? (
-            /* Rest day */
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0' }}>
-              <Moon size={24} color={colors.textMuted} />
-              <div>
-                <div style={{ ...statSmallStyle, color: colors.text }}>JOUR DE REPOS</div>
-                <div style={bodyStyle}>Récupère bien, étirements bienvenus</div>
+            /* Rest day — enhanced */
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <Moon size={28} color={colors.gold} />
               </div>
+              <div style={{ ...statStyle, fontSize: 22, marginBottom: 6 }}>JOUR DE REPOS</div>
+              <div style={{ ...bodyStyle, maxWidth: 260, margin: '0 auto' }}>Récupération — ton corps construit du muscle au repos 💪</div>
             </div>
           ) : trainingExercises.length === 0 ? (
             /* No exercises for this day */
