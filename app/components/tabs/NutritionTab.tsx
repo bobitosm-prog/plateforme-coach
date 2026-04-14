@@ -405,7 +405,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             { label: 'Gluc', value: `${dayData.total_carbs || plan.carbs_g || '—'}g` },
             { label: 'Lip', value: `${dayData.total_fat || plan.fat_g || '—'}g` },
           ].map(({ label, value }) => (
-            <div key={label} style={{ background: '#0e0e0e', padding: 20, textAlign: 'center' }}>
+            <div key={label} style={{ background: '#0e0e0e', borderRadius: 16, padding: 20, textAlign: 'center' }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 400, color: '#e6c364' }}>{value}</div>
               <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: '#d0c5b2', marginTop: 4 }}>{label}</div>
             </div>
@@ -452,7 +452,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             if (foodList.length === 0) return null
             const mealKcal = foodList.reduce((s: number, f: any) => s + (f.kcal || 0), 0)
             return (
-              <div key={mealType} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden' }}>
+              <div key={mealType} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(201,168,76,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: '#e5e2e1' }}>
                     {MEAL_LABELS[mealType]}
@@ -503,7 +503,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             { label: 'Gluc', value: coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—' },
             { label: 'Lip', value: coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—' },
           ].map(({ label, value }) => (
-            <div key={label} style={{ background: '#0e0e0e', padding: 20, textAlign: 'center' }}>
+            <div key={label} style={{ background: '#0e0e0e', borderRadius: 16, padding: 20, textAlign: 'center' }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 400, color: '#e6c364' }}>{value}</div>
               <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: '#d0c5b2', marginTop: 4 }}>{label}</div>
             </div>
@@ -535,7 +535,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           const dayPlan = coachMealPlan[nutritionDay]
           const meals: any[] = dayPlan?.meals ?? []
           if (!meals.length) return (
-            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '40px 20px', textAlign: 'center' }}>
+            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '40px 20px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
               <UtensilsCrossed size={28} color={'#d0c5b2'} style={{ marginBottom: 8 }} />
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.85rem', color: '#d0c5b2', margin: 0 }}>Aucun repas pour ce jour.</p>
             </div>
@@ -548,7 +548,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 const mealCarb = (meal.foods || []).reduce((s: number, f: any) => s + (f.carb || 0), 0)
                 const mealFat = (meal.foods || []).reduce((s: number, f: any) => s + (f.fat || 0), 0)
                 return (
-                  <div key={mi} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden' }}>
+                  <div key={mi} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                     <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(201,168,76,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 400, fontSize: 18, letterSpacing: '2px', textTransform: 'uppercase', color: '#e5e2e1' }}>{meal.name}</span>
                       <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.85rem', color: '#e6c364' }}>{mealKcal} kcal</span>
@@ -744,7 +744,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               const hasPlanFoods = !!rec
 
               return (
-                <div key={mealType} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', marginBottom: 12, overflow: 'hidden' }}>
+                <div key={mealType} style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, marginBottom: 12, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                   {/* Meal header */}
                   <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -956,7 +956,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {showSaveMealPopup && saveMealData && (
         <>
           <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 24, zIndex: 1101 }}>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, letterSpacing: 2, color: '#e5e2e1', marginBottom: 16 }}>SAUVEGARDER LE REPAS</h3>
             <input type="text" placeholder="Nom du repas..." value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: '#131313', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 10, color: '#e5e2e1', fontFamily: "'Inter', sans-serif", fontSize: 14, outline: 'none', marginBottom: 12 }} />
             <div style={{ background: '#131313', borderRadius: 10, padding: 12, marginBottom: 16, border: '1px solid rgba(230,195,100,0.08)' }}>
@@ -983,7 +983,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {showCopyMealPopup && copyMealData && (
         <>
           <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 24, zIndex: 1101 }}>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, letterSpacing: 2, color: '#e5e2e1', marginBottom: 16 }}>COPIER LE REPAS</h3>
             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#d0c5b2', marginBottom: 6 }}>DATE</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
@@ -1009,7 +1009,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {showSavedMeals && (
         <>
           <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(201,168,76,0.15)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, letterSpacing: 2, color: '#e5e2e1' }}>MES REPAS</span>
               <button onClick={() => setShowSavedMeals(false)} style={{ background: 'none', border: 'none', color: '#d0c5b2', fontSize: 22, cursor: 'pointer' }}>✕</button>

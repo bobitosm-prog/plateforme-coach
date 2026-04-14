@@ -684,8 +684,8 @@ export default function TrainingTab({
         }}>
           <div style={{
             background: '#0e0e0e', border: `2px solid #e6c364`,
-            padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
-            animation: 'ttPopIn 0.3s ease-out',
+            borderRadius: 16, padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
+            animation: 'ttPopIn 0.3s ease-out', boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
           }}>
             <div style={{
               width: 64, height: 64, border: `2px solid #e6c364`,
@@ -749,7 +749,7 @@ export default function TrainingTab({
         {customPrograms.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {customPrograms.map((prog: any) => (
-              <div key={prog.id} style={{ background: '#0e0e0e', border: `1px solid ${prog.is_active ? '#e6c364' : 'rgba(201,168,76,0.15)'}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div key={prog.id} style={{ background: '#0e0e0e', border: `1px solid ${prog.is_active ? '#e6c364' : 'rgba(201,168,76,0.15)'}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, color: prog.is_active ? '#e6c364' : '#e5e2e1', letterSpacing: '1px' }}>{prog.name}</div>
                   <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2' }}>
@@ -859,7 +859,7 @@ export default function TrainingTab({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {customPrograms.map((prog: any) => (
-                  <div key={prog.id} style={{ background: '#0e0e0e', border: `1px solid ${prog.is_active ? '#e6c364' : 'rgba(201,168,76,0.15)'}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={prog.id} style={{ background: '#0e0e0e', border: `1px solid ${prog.is_active ? '#e6c364' : 'rgba(201,168,76,0.15)'}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, color: prog.is_active ? '#e6c364' : '#e5e2e1', letterSpacing: '1px' }}>{prog.name}</div>
                       <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#d0c5b2' }}>
@@ -899,7 +899,7 @@ export default function TrainingTab({
           ) : dayExpanded && trainingExercises.length === 0 ? (
             /* ── NO EXERCISES ── */
             <div style={{ padding: '0 16px' }}>
-              <div style={{ background: '#0e0e0e', border: `1px solid rgba(201,168,76,0.15)`, borderRadius: 16, padding: '40px 24px', textAlign: 'center' }}>
+              <div style={{ background: '#0e0e0e', border: `1px solid rgba(201,168,76,0.15)`, borderRadius: 16, padding: '40px 24px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <Dumbbell size={32} color={'#d0c5b2'} style={{ marginBottom: 12 }} />
                 <p style={{ fontSize: '0.85rem', fontFamily: "'Inter', sans-serif", color: '#d0c5b2', margin: 0 }}>Aucun exercice pour ce jour.</p>
               </div>
@@ -919,7 +919,7 @@ export default function TrainingTab({
                 const day = editedDays[dayIdx]
                 if (!day?.exercises) return null
                 return (
-                  <div style={{ background: '#0e0e0e', border: `1px solid rgba(201,168,76,0.25)`, borderRadius: 16, padding: 16, marginBottom: 8 }}>
+                  <div style={{ background: '#0e0e0e', border: `1px solid rgba(201,168,76,0.25)`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                     <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#e6c364', marginBottom: 12, textTransform: 'uppercase' }}>MODE EDITION</div>
                     {day.exercises.map((ex: any, i: number) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid rgba(230,195,100,0.08)` : 'none' }}>
@@ -998,7 +998,7 @@ export default function TrainingTab({
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setShowExDbModal(true)}
-                style={{ width: '100%', background: '#0e0e0e', border: `2px dashed rgba(201,168,76,0.15)`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                style={{ width: '100%', background: '#0e0e0e', border: `2px dashed rgba(201,168,76,0.15)`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}
               >
                 <Search size={16} color={'#e6c364'} />
                 <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 800, color: '#e6c364', letterSpacing: '2px', textTransform: 'uppercase' }}>Découvrir les exercices</span>
@@ -1103,7 +1103,7 @@ export default function TrainingTab({
             const d = new Date(s.created_at)
             const typeInfo = resolveSessionType(s.name)
             return (
-              <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: '#0e0e0e', border: `1px solid rgba(230,195,100,0.08)`, borderRadius: 16, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
+              <div key={s.id} onClick={() => openWorkoutDetail(s)} style={{ background: '#0e0e0e', border: `1px solid rgba(230,195,100,0.08)`, borderRadius: 16, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{typeInfo.emoji}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 17, letterSpacing: 1, color: '#e5e2e1' }}>{typeInfo.label.toUpperCase()}</div>

@@ -367,7 +367,7 @@ export default function HomeTab({
         {/* ═══ BENTO STATS — Active Energy + Hydration ═══ */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {/* Active Energy */}
-          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1' }}>
+          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
               <span style={{ ...T, fontSize: 12 }}>Énergie</span>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>{calPct}%</div>
@@ -377,7 +377,7 @@ export default function HomeTab({
             </div>
           </div>
           {/* Hydration */}
-          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1' }}>
+          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
               <span style={{ ...T, fontSize: 12 }}>Hydratation</span>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, fontWeight: 800, color: TEXT_PRIMARY, marginTop: 4 }}>
@@ -393,7 +393,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ STREAK CARD — Stitch "ON FIRE" ═══ */}
-        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <span style={T}>On Fire</span>
@@ -412,7 +412,7 @@ export default function HomeTab({
 
         {/* ═══ WEIGHT + OBJECTIVE CARD ═══ */}
         {currentWeight && (
-          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
               <div style={{ ...T, marginBottom: 4 }}>
                 {objLabel === 'bulk' && 'PRISE DE MASSE'}
@@ -443,7 +443,7 @@ export default function HomeTab({
           const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
           const title = getLevelTitle(level)
           return (
-            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '14px 16px' }}>
+            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '14px 16px', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={T}>LV.{level} — {title}</span>
@@ -475,7 +475,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ SÉANCE DU JOUR ═══ */}
-        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           {/* Background image overlay */}
           <div style={{ height: todayExercises.length > 0 && !todaySession ? 160 : 0, position: 'relative', overflow: 'hidden' }}>
             {todayExercises.length > 0 && !todaySession && (
@@ -533,7 +533,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ PERFORMANCE HEBDO — Stitch bar chart ═══ */}
-        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20 }}>
+        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <span style={T}>Performance</span>
             <button onClick={() => setActiveTab('progress')} style={{ fontSize: 11, fontWeight: 700, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Semaine</button>
@@ -566,7 +566,7 @@ export default function HomeTab({
           const filledGlasses = Math.floor(waterL / glassSize)
           const partialFill = (waterL % glassSize) / glassSize
           return (
-            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '16px 18px' }}>
+            <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '16px 18px', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                 <div>
                   <div style={T}>HYDRATATION</div>
@@ -599,7 +599,7 @@ export default function HomeTab({
 
         {/* ═══ DAILY HABIT CHECK-IN ═══ */}
         {!todayHabit ? (
-          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '14px 16px', marginBottom: 16 }}>
+          <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: '14px 16px', marginBottom: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div style={{ ...T, marginBottom: 10 }}>CHECK-IN DU JOUR</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[
@@ -644,7 +644,7 @@ export default function HomeTab({
         )}
 
         {/* ═══ NUTRITION MACROS ═══ */}
-        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 18 }}>
+        <div style={{ background: '#0e0e0e', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 16, padding: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={T}>NUTRITION</span>
             <button onClick={() => setActiveTab('nutrition')} style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#e6c364', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Voir plan</button>
@@ -656,7 +656,7 @@ export default function HomeTab({
               { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—' },
               { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—' },
             ].map(({ label, value }) => (
-              <div key={label} style={{ background: '#0e0e0e', padding: '10px 4px', textAlign: 'center' }}>
+              <div key={label} style={{ background: '#0e0e0e', borderRadius: 16, padding: '10px 4px', textAlign: 'center' }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, color: '#e6c364' }}>{value}</div>
                 <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: '#d0c5b2', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
               </div>
