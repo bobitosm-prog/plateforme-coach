@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Send, Bot, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
+import { colors, fonts, titleStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
 function getSuggestions(): string[] {
   const h = new Date().getHours()
   if (h >= 6 && h < 12) return [
@@ -30,8 +30,8 @@ function getSuggestions(): string[] {
 function renderMarkdown(text: string) {
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#D4A843">$1</strong>')
-    .replace(/^## (.*$)/gm, '<div style="font-family:\'Bebas Neue\';font-size:18px;color:#D4A843;letter-spacing:2px;margin:12px 0 6px">$1</div>')
-    .replace(/^### (.*$)/gm, '<div style="font-family:\'Barlow Condensed\';font-size:14px;font-weight:700;color:#D4A843;letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase">$1</div>')
+    .replace(/^## (.*$)/gm, `<div style="font-family:${fonts.headline};font-size:18px;color:${colors.gold};letter-spacing:2px;margin:12px 0 6px">$1</div>`)
+    .replace(/^### (.*$)/gm, `<div style="font-family:${fonts.body};font-size:14px;font-weight:700;color:${colors.gold};letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase">$1</div>`)
     .replace(/^- (.*$)/gm, '<div style="padding-left:12px;margin:2px 0">• $1</div>')
     .replace(/\n/g, '<br/>')
 }
@@ -54,6 +54,7 @@ interface ChatAIProps {
 }
 
 export default function ChatAI({ session, profile, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
+  const T = titleStyle
   const isInvited = profile?.subscription_type === 'invited'
   const [open, setOpen] = useState(false)
 
@@ -66,8 +67,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     return (
       <div style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: '#0D0B08', zIndex: 1001, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 12 }}>COACH IA</div>
-        <p style={{ fontFamily: FONT_BODY, fontSize: 15, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 24 }}>
+        <div style={{ ...T, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 12 }}>COACH IA</div>
+        <p style={{ ...bodyStyle, fontSize: 15, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 24 }}>
           Ton coach gère ton programme et ta nutrition. Contacte-le directement via la messagerie.
         </p>
         <button onClick={() => { setOpen(false); onExternalClose?.() }} style={{ padding: '12px 28px', borderRadius: 12, background: 'transparent', border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>FERMER</button>
@@ -217,8 +218,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               <Bot size={20} color="#0D0B08" strokeWidth={2.5} />
             </div>
             <div>
-              <div style={{ fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>COACH PERSONNEL</div>
-              <div style={{ fontSize: '0.6rem', fontFamily: FONT_BODY, color: TEXT_MUTED, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ ...T, fontSize: '1rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '2px' }}>COACH PERSONNEL</div>
+              <div style={{ ...mutedStyle, fontSize: '0.6rem', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <Sparkles size={9} color={GOLD} /> Ton coach MoovX
               </div>
             </div>
@@ -233,8 +234,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           {messages.length === 0 && (
             <div style={{ textAlign: 'center', padding: '40px 0' }}>
               <Bot size={40} color={GOLD} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-              <p style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, color: TEXT_PRIMARY, margin: '0 0 6px', letterSpacing: '1px', textTransform: 'uppercase' }}>Salut {profile?.full_name?.split(' ')[0] || ''} !</p>
-              <p style={{ fontSize: '0.82rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED, margin: 0, lineHeight: 1.5 }}>Pose-moi une question sur ta nutrition, ton entrainement ou tes objectifs.</p>
+              <p style={{ ...subtitleStyle, fontSize: '1.1rem', fontWeight: 800, color: TEXT_PRIMARY, margin: '0 0 6px', letterSpacing: '1px' }}>Salut {profile?.full_name?.split(' ')[0] || ''} !</p>
+              <p style={{ ...bodyStyle, fontSize: '0.82rem', fontWeight: 300, color: TEXT_MUTED, margin: 0, lineHeight: 1.5 }}>Pose-moi une question sur ta nutrition, ton entrainement ou tes objectifs.</p>
             </div>
           )}
 
@@ -251,7 +252,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
                   boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,201,122,0.06)',
                 }}>
                   <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
-                    style={{ fontSize: 14, color: '#F5EDD8', lineHeight: 1.6, fontFamily: FONT_BODY, fontWeight: 300 }} />
+                    style={{ ...bodyStyle, color: '#F5EDD8', lineHeight: 1.6, fontWeight: 300 }} />
                 </div>
               ) : (
                 <div style={{
@@ -259,8 +260,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
                   background: 'rgba(212,168,67,0.1)',
                   border: '1px solid rgba(212,168,67,0.25)',
                   borderRadius: '16px 16px 4px 16px',
-                  fontSize: 14, color: TEXT_PRIMARY, lineHeight: 1.55,
-                  fontFamily: FONT_BODY, fontWeight: 300,
+                  ...bodyStyle, color: TEXT_PRIMARY, lineHeight: 1.55,
+                  fontWeight: 300,
                   whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                 }}>
                   {msg.content}
@@ -281,7 +282,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             </div>
           )}
 
-          {error && <p style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, color: colors.error, textAlign: 'center' }}>{error}</p>}
+          {error && <p style={{ ...mutedStyle, fontSize: '0.75rem', color: colors.error, textAlign: 'center' }}>{error}</p>}
           <div ref={endRef} />
         </div>
 
