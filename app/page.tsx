@@ -19,6 +19,7 @@ import WorkoutSession from './components/WorkoutSession'
 import WeightModal from './components/modals/WeightModal'
 import MeasureModal from './components/modals/MeasureModal'
 import BmrModal from './components/modals/BmrModal'
+import ObjectiveModal from './components/modals/ObjectiveModal'
 import HomeTab from './components/tabs/HomeTab'
 import TrainingTab from './components/tabs/TrainingTab'
 import NutritionTab from './components/tabs/NutritionTab'
@@ -151,6 +152,9 @@ export default function CoachApp() {
 
       {/* ── BMR MODAL ── */}
       {h.modal === 'bmr' && <BmrModal supabase={h.supabase} session={h.session} initialValues={h.bmrForm} onClose={() => h.setModal(null)} />}
+
+      {/* ── OBJECTIVE MODAL ── */}
+      {h.modal === 'objective' && <ObjectiveModal profile={h.profile} currentWeight={h.currentWeight} goalWeight={h.goalWeight} supabase={h.supabase} session={h.session} onClose={() => h.setModal(null)} onSaved={() => h.fetchAll(true)} />}
 
       {/* ── BARCODE SCANNER ── */}
       {h.modal === 'scan' && (
@@ -294,6 +298,7 @@ export default function CoachApp() {
         objective={h.profile?.objective}
         unreadCount={h.unreadCount}
         onAvatar={() => h.setActiveTab('profil')}
+        onObjectiveChange={() => h.setModal('objective')}
         onCoachIA={() => h.setActiveTab('coachIA')}
         onCalendar={() => h.setActiveTab('training')}
         onMessages={() => h.setActiveTab('messages')}

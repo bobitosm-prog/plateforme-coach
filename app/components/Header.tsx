@@ -12,10 +12,11 @@ interface HeaderProps {
   onCalendar?: () => void
   onMessages?: () => void
   onAvatar?: () => void
+  onObjectiveChange?: () => void
   scrollContainerRef?: React.RefObject<HTMLElement | null>
 }
 
-export default function Header({ firstName, displayAvatar, objective, unreadCount, onCoachIA, onCalendar, onMessages, onAvatar, scrollContainerRef }: HeaderProps) {
+export default function Header({ firstName, displayAvatar, objective, unreadCount, onCoachIA, onCalendar, onMessages, onAvatar, onObjectiveChange, scrollContainerRef }: HeaderProps) {
   const [visible, setVisible] = useState(true)
   const lastScrollY = useRef(0)
   const ticking = useRef(false)
@@ -76,7 +77,10 @@ export default function Header({ firstName, displayAvatar, objective, unreadCoun
         {/* Name + objective */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: colors.text, lineHeight: 1.2 }}>{firstName}</div>
-          <div style={{ fontFamily: fonts.body, fontSize: 8, fontWeight: 600, color: colors.textDim, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{objLabel}</div>
+          <button onClick={onObjectiveChange} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+            <span style={{ fontFamily: fonts.body, fontSize: 8, fontWeight: 600, color: colors.textDim, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{objLabel}</span>
+            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', lineHeight: 1 }}>▼</span>
+          </button>
         </div>
 
         {/* Icons: Coach IA, Calendar, Messages */}

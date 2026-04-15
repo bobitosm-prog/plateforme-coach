@@ -193,11 +193,11 @@ export default function ProfileTab({
           { icon: User, label: 'Genre', value: profile?.gender === 'male' ? 'Homme' : profile?.gender === 'female' ? 'Femme' : '—' },
           { icon: Ruler, label: 'Taille', value: profile?.height ? `${profile.height} cm` : '—' },
           { icon: Target, label: 'Poids cible', value: goalWeight ? `${goalWeight} kg` : '—' },
-          { icon: Target, label: 'Objectif', value: ({ mass: 'Prise de masse', cut: 'Sèche', maintain: 'Maintien' } as Record<string, string>)[profile?.objective] || profile?.objective || '—' },
-          { icon: Activity, label: 'Niveau d\'activité', value: ({ sedentary: 'Sédentaire', light: 'Léger', moderate: 'Modéré', active: 'Actif', extreme: 'Intense' } as Record<string, string>)[profile?.activity_level] || profile?.activity_level || '—' },
+          { icon: Target, label: 'Objectif', value: ({ mass: 'Prise de masse', cut: 'Sèche', maintain: 'Maintien' } as Record<string, string>)[profile?.objective] || profile?.objective || '—', action: 'objective' },
+          { icon: Activity, label: 'Niveau d\'activité', value: ({ sedentary: 'Sédentaire', light: 'Léger', moderate: 'Modéré', active: 'Actif', extreme: 'Intense' } as Record<string, string>)[profile?.activity_level] || profile?.activity_level || '—', action: 'objective' },
         ].map((row, i, arr) => (
           <React.Fragment key={row.label}>
-            <div style={rowStyle}>
+            <div style={rowStyle} onClick={'action' in row ? () => setModal(row.action as string) : undefined}>
               <div style={iconBoxStyle}><row.icon size={14} color={colors.gold} /></div>
               <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{row.label}</span>
               <span style={{ fontSize: 12, color: colors.textMuted }}>{row.value}</span>
