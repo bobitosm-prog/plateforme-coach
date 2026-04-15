@@ -25,7 +25,7 @@ const MEAL_TIMES: Record<string, string> = {
 }
 const MEAL_ORDER = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
 
-type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes'
+type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes' | 'meals'
 
 interface NutritionTabProps {
   coachMealPlan: any
@@ -71,6 +71,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [showSavedMeals, setShowSavedMeals] = useState(false)
   const [savedMeals, setSavedMeals] = useState<any[]>([])
   const [useSavedMealTarget, setUseSavedMealTarget] = useState('')
+  // Mes repas tab state
+  const [myMeals, setMyMeals] = useState<any[]>([])
+  const [myMealsSearch, setMyMealsSearch] = useState('')
+  const [myMealsFilter, setMyMealsFilter] = useState('all')
+  const [editingMeal, setEditingMeal] = useState<any>(null)
+  const [confirmDeleteMeal, setConfirmDeleteMeal] = useState<string | null>(null)
   const photoInputRef = React.useRef<HTMLInputElement>(null)
   const calScrollRef = React.useRef<HTMLDivElement>(null)
   const today = new Date().toISOString().split('T')[0]
@@ -100,6 +106,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
   // Reload meals when date changes
   useEffect(() => { fetchDailyLogs() }, [selectedDate])
+
+  // Fetch saved meals for "Mes Repas" tab
+  useEffect(() => {
+    if (subTab === 'meals' && userId) {
+      supabase.from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+        .then(({ data }: any) => setMyMeals(data || []))
+    }
+  }, [subTab, userId])
 
   useEffect(() => {
   }, [activeMealPlan, subTab])
@@ -593,31 +607,29 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
   return (
     <div style={{ minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
-      {/* HERO BANNER */}
-      <div style={{ margin: '0 20px 0', height: 180, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
-        <img src="/images/hero-nutrition.webp" alt="Plan nutritionnel MoovX" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 20%, rgba(13,11,8,0.85) 100%)' }} />
-        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
-          <h1 style={{ ...pageTitleStyle, letterSpacing: 3, margin: 0, lineHeight: 1 }}>VOTRE PLAN NUTRITIONNEL</h1>
-          <span style={{ ...labelStyle, letterSpacing: 2 }}>Personnalise par IA</span>
-        </div>
+      {/* PAGE TITLE */}
+      <div style={{ padding: '16px 24px 0' }}>
+        <h1 style={{ ...pageTitleStyle, margin: 0 }}>NUTRITION</h1>
       </div>
 
       {/* PILLS NAVIGATION */}
-      <div style={{ display: 'flex', gap: 6, padding: '12px 20px', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 6, padding: '12px 20px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {([
           { id: 'today' as SubTab, label: 'JOURNAL' },
           { id: 'plan' as SubTab, label: 'PLAN IA' },
           ...(!isInvited ? [{ id: 'prefs' as SubTab, label: 'PREFS' }] : []),
           ...(!isInvited ? [{ id: 'recipes' as SubTab, label: 'RECETTES' }] : []),
+          { id: 'meals' as SubTab, label: 'MES REPAS' },
         ]).map(({ id, label }) => {
           const active = subTab === id
           return (
             <button key={id} onClick={() => setSubTab(id)} style={{
-              flex: 1, padding: '10px 8px', border: 'none', cursor: 'pointer',
-              fontFamily: fonts.headline, fontSize: 14, letterSpacing: '1px',
-              background: active ? colors.gold : colors.surface,
-              color: active ? '#0D0B08' : colors.textMuted,
+              padding: '8px 16px', cursor: 'pointer', whiteSpace: 'nowrap',
+              fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+              borderRadius: 12,
+              background: active ? 'rgba(201,168,76,0.15)' : 'transparent',
+              border: active ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(201,168,76,0.15)',
+              color: active ? colors.gold : 'rgba(255,255,255,0.4)',
             }}>
               {label}
             </button>
@@ -890,6 +902,128 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {subTab === 'recipes' && (
         <div style={{ padding: '0 20px' }}>
           <RecipesSection supabase={supabase} userId={userId} profile={profile} />
+        </div>
+      )}
+
+      {/* Mes Repas sub-tab */}
+      {subTab === 'meals' && (
+        <div style={{ padding: '0 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <span style={T}>MES REPAS</span>
+            <div style={titleLineStyle} />
+          </div>
+          <div style={{ ...cardStyle, padding: 16 }}>
+            {/* Search */}
+            <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder="Rechercher un repas..." style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
+            {/* Filter pills */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
+              {[{ k: 'all', l: 'TOUT' }, { k: 'petit_dejeuner', l: 'PETIT-DÉJ' }, { k: 'dejeuner', l: 'DÉJEUNER' }, { k: 'diner', l: 'DÎNER' }, { k: 'collation', l: 'COLLATION' }].map(({ k, l }) => (
+                <button key={k} onClick={() => setMyMealsFilter(k)} style={{
+                  fontSize: 9, fontFamily: fonts.body, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+                  padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', cursor: 'pointer', border: 'none',
+                  background: myMealsFilter === k ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.08)',
+                  color: myMealsFilter === k ? colors.gold : colors.textMuted,
+                  boxShadow: myMealsFilter === k ? 'inset 0 0 0 1px rgba(201,168,76,0.4)' : 'inset 0 0 0 1px rgba(201,168,76,0.15)',
+                }}>{l}</button>
+              ))}
+            </div>
+            {/* Meals list */}
+            {(() => {
+              const filtered = myMeals.filter(m => {
+                if (myMealsFilter !== 'all' && m.meal_type !== myMealsFilter) return false
+                if (myMealsSearch && !m.name?.toLowerCase().includes(myMealsSearch.toLowerCase())) return false
+                return true
+              })
+              return filtered.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {filtered.map((meal: any) => {
+                    const foods = meal.foods || []
+                    const kcal = foods.reduce((s: number, f: any) => s + (f.calories || 0), 0)
+                    const prot = foods.reduce((s: number, f: any) => s + (f.protein || 0), 0)
+                    const carbs = foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0)
+                    const fat = foods.reduce((s: number, f: any) => s + (f.fat || 0), 0)
+                    return (
+                      <div key={meal.id} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body }}>{meal.name || 'Repas sans nom'}</div>
+                            <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                              {meal.meal_type && <span style={{ fontSize: 9, fontFamily: fonts.body, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase' }}>{MEAL_LABELS[meal.meal_type] || meal.meal_type}</span>}
+                            </div>
+                            <div style={{ ...bodyStyle, marginTop: 4, fontSize: 11 }}>{Math.round(kcal)} kcal · {Math.round(prot)}g P · {Math.round(carbs)}g G · {Math.round(fat)}g L</div>
+                            <div style={{ ...mutedStyle, marginTop: 2 }}>{meal.created_at ? new Date(meal.created_at).toLocaleDateString('fr-FR') : ''}</div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                            <button onClick={() => setEditingMeal(meal)} style={{ background: colors.goldDim, border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>✏️</button>
+                            {confirmDeleteMeal === meal.id ? (
+                              <button onClick={async () => { await supabase.from('saved_meals').delete().eq('id', meal.id); setMyMeals(prev => prev.filter(m => m.id !== meal.id)); setConfirmDeleteMeal(null) }} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: colors.error, fontFamily: fonts.body, fontWeight: 700 }}>CONFIRMER</button>
+                            ) : (
+                              <button onClick={() => setConfirmDeleteMeal(meal.id)} style={{ background: 'rgba(239,68,68,0.08)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🗑️</button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div style={{ ...bodyStyle, textAlign: 'center', padding: '24px 16px', fontStyle: 'italic', lineHeight: 1.6 }}>
+                  Aucun repas sauvegardé. Ajoute un repas depuis l&apos;onglet Journal pour le retrouver ici.
+                </div>
+              )
+            })()}
+            {/* Create meal button */}
+            <button onClick={() => setShowFoodSearch('dejeuner')} style={{ width: '100%', marginTop: 16, padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, textAlign: 'center' }}>
+              + CRÉER UN REPAS
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Meal edit modal */}
+      {editingMeal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflow: 'auto', padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ ...T, fontSize: 16 }}>{editingMeal.name || 'Modifier le repas'}</span>
+              <button onClick={() => setEditingMeal(null)} style={{ background: colors.surfaceHigh, border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 16, color: colors.text }}>✕</button>
+            </div>
+            {/* Food items list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+              {(editingMeal.foods || []).map((food: any, idx: number) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, background: colors.surfaceHigh, borderRadius: 10, padding: '8px 10px', border: `1px solid ${colors.goldDim}` }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{food.name}</div>
+                    <div style={{ fontSize: 10, color: colors.textDim, fontFamily: fonts.body }}>{food.calories || 0} kcal · {food.protein || 0}g P</div>
+                  </div>
+                  <input type="number" value={food.quantity || 100} onChange={e => {
+                    const newFoods = [...editingMeal.foods]
+                    const ratio = (parseFloat(e.target.value) || 100) / (food.quantity || 100)
+                    newFoods[idx] = { ...food, quantity: parseFloat(e.target.value) || 0, calories: Math.round((food.calories || 0) * ratio), protein: Math.round((food.protein || 0) * ratio), carbs: Math.round((food.carbs || 0) * ratio), fat: Math.round((food.fat || 0) * ratio) }
+                    setEditingMeal({ ...editingMeal, foods: newFoods })
+                  }} style={{ width: 50, textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '4px', color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none' }} />
+                  <span style={{ fontSize: 10, color: colors.textDim }}>g</span>
+                  <button onClick={() => {
+                    const newFoods = editingMeal.foods.filter((_: any, i: number) => i !== idx)
+                    setEditingMeal({ ...editingMeal, foods: newFoods })
+                  }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: 2 }}>🗑️</button>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => { setShowFoodSearch('dejeuner'); setEditingMeal(null) }} style={{ width: '100%', padding: 10, background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: 'pointer', marginBottom: 12 }}>+ AJOUTER UN ALIMENT</button>
+            <button onClick={async () => {
+              await supabase.from('saved_meals').update({ foods: editingMeal.foods }).eq('id', editingMeal.id)
+              setMyMeals(prev => prev.map(m => m.id === editingMeal.id ? { ...m, foods: editingMeal.foods } : m))
+              setEditingMeal(null)
+            }} style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, marginBottom: 8 }}>SAUVEGARDER</button>
+            <button onClick={async () => {
+              if (confirm('Supprimer ce repas définitivement ?')) {
+                await supabase.from('saved_meals').delete().eq('id', editingMeal.id)
+                setMyMeals(prev => prev.filter(m => m.id !== editingMeal.id))
+                setEditingMeal(null)
+              }
+            }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>SUPPRIMER LE REPAS</button>
+          </div>
         </div>
       )}
 
