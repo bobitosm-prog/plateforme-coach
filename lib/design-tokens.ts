@@ -86,6 +86,13 @@ export const cardTitleAbove: React.CSSProperties = {
   marginBottom: 8,
 }
 
+/** Decorative line next to card titles */
+export const titleLineStyle: React.CSSProperties = {
+  flexGrow: 1,
+  height: 1,
+  background: colors.goldRule,
+}
+
 /** Subtitle (ex: "Objectif : 3L", "80/100 XP") */
 export const subtitleStyle: React.CSSProperties = {
   fontFamily: fonts.body,

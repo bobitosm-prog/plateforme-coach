@@ -4,7 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Download, X, Clock, Calendar, Volume2 } from 'lucide-react'
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
-import { colors, fonts, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
+import { colors, fonts, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
 import SwissBadge from '../ui/SwissBadge'
 import CoachSection from './profile/CoachSection'
@@ -157,7 +157,10 @@ export default function ProfileTab({
       </div>
 
       {/* Phone field */}
-      <div style={cardTitleAbove}>Téléphone</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        <span style={T}>Téléphone</span>
+        <div style={titleLineStyle} />
+      </div>
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px', marginBottom: 8 }}>
         {phoneEditing ? (
           <div style={{ display: 'flex', gap: 8 }}>
@@ -225,7 +228,10 @@ export default function ProfileTab({
       </div>
 
       {/* Reminder settings */}
-      <div style={cardTitleAbove}>Rappels d&apos;entraînement</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        <span style={T}>Rappels d&apos;entraînement</span>
+        <div style={titleLineStyle} />
+      </div>
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
 
         {/* Toggle reminders */}
@@ -379,7 +385,10 @@ export default function ProfileTab({
       </div>
 
       {/* Subscription */}
-      <div style={cardTitleAbove}>Mon abonnement</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        <span style={T}>Mon abonnement</span>
+        <div style={titleLineStyle} />
+      </div>
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
         {(() => {
           const st = profile?.subscription_status
@@ -462,7 +471,10 @@ export default function ProfileTab({
         ]
         return (
           <>
-          <div style={cardTitleAbove}>Mes badges</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <span style={T}>Mes badges</span>
+            <div style={titleLineStyle} />
+          </div>
           <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {ALL_BADGES.map(b => {
