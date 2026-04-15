@@ -9,7 +9,7 @@ import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
 import {
-  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle,
+  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
 } from '../../../lib/design-tokens'
 const MEAL_LABELS: Record<string, string> = {
   petit_dejeuner: 'Petit-déjeuner',

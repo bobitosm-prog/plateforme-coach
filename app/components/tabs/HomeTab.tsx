@@ -11,7 +11,7 @@ import ExercisePreview from '../ExercisePreview'
 import { getTodaySession } from '../../../lib/get-today-session'
 import { resolveSessionType } from '../../../lib/session-types'
 import {
-  colors, fonts, cardStyle, titleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
+  colors, fonts, cardStyle, cardTitleAbove, titleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
 } from '../../../lib/design-tokens'
 const GOLD = colors.gold
 const TEXT_PRIMARY = colors.text
@@ -387,11 +387,9 @@ export default function HomeTab({
         </div>
 
         {/* ═══ STREAK CARD — Stitch "ON FIRE" ═══ */}
+        <div style={cardTitleAbove}>On Fire</div>
         <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span style={T}>On Fire</span>
-            </div>
             <div style={{ ...statStyle, fontSize: 30, letterSpacing: '-0.02em' }}>
               {streak} JOUR{streak > 1 ? 'S' : ''} STREAK
             </div>
@@ -406,13 +404,14 @@ export default function HomeTab({
 
         {/* ═══ WEIGHT + OBJECTIVE CARD ═══ */}
         {currentWeight && (
+          <>
+          <div style={cardTitleAbove}>
+            {objLabel === 'bulk' && 'PRISE DE MASSE'}
+            {objLabel === 'cut' && 'SÈCHE'}
+            {objLabel === 'maintain' && 'MAINTIEN'}
+          </div>
           <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div>
-              <div style={{ ...T, marginBottom: 4 }}>
-                {objLabel === 'bulk' && 'PRISE DE MASSE'}
-                {objLabel === 'cut' && 'SÈCHE'}
-                {objLabel === 'maintain' && 'MAINTIEN'}
-              </div>
               <div style={{ ...statStyle, fontSize: 32, lineHeight: 1 }}>
                 {currentWeight} <span style={{ fontSize: 16, color: colors.textMuted }}>KG</span>
               </div>
@@ -429,6 +428,7 @@ export default function HomeTab({
               {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}
             </div>
           </div>
+          </>
         )}
 
         {/* ═══ XP BAR ═══ */}
@@ -437,17 +437,17 @@ export default function HomeTab({
           const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
           const title = getLevelTitle(level)
           return (
+            <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={T}>LV.{level} — {title}</span>
+              <span style={{ ...mutedStyle, fontSize: 11 }}>{xpInLevel} / {xpForNext} XP</span>
+            </div>
             <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={T}>LV.{level} — {title}</span>
-                </div>
-                <span style={{ ...mutedStyle, fontSize: 11 }}>{xpInLevel} / {xpForNext} XP</span>
-              </div>
               <div style={{ width: '100%', height: 6, borderRadius: 3, background: colors.surfaceHigh, overflow: 'hidden' }}>
                 <div style={{ width: `${progress * 100}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #D4A843, #E8C97A)', transition: 'width 1s ease' }} />
               </div>
             </div>
+            </>
           )
         })()}
 
@@ -527,11 +527,11 @@ export default function HomeTab({
         </div>
 
         {/* ═══ PERFORMANCE HEBDO — Stitch bar chart ═══ */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={T}>Performance</span>
+          <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 11 }}>Semaine</button>
+        </div>
         <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <span style={T}>Performance</span>
-            <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 11 }}>Semaine</button>
-          </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 8 }}>
             {barData.map((b, i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
@@ -560,14 +560,15 @@ export default function HomeTab({
           const filledGlasses = Math.floor(waterL / glassSize)
           const partialFill = (waterL % glassSize) / glassSize
           return (
-            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                <div>
-                  <div style={T}>HYDRATATION</div>
-                  <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: 2 }}>OBJECTIF : {waterGoal}L</div>
-                </div>
-                <div style={{ ...statStyle, fontSize: 32, color: colors.gold, lineHeight: 1 }}>{waterL.toFixed(1)}L</div>
+            <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div>
+                <div style={T}>HYDRATATION</div>
+                <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: 2 }}>OBJECTIF : {waterGoal}L</div>
               </div>
+              <div style={{ ...statStyle, fontSize: 32, color: colors.gold, lineHeight: 1 }}>{waterL.toFixed(1)}L</div>
+            </div>
+            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
                 <div style={{ display: 'flex', gap: 5, flex: 1, flexWrap: 'wrap' }}>
                   {Array.from({ length: totalGlasses }).map((_, i) => {
@@ -585,6 +586,7 @@ export default function HomeTab({
                 </button>
               </div>
             </div>
+            </>
           )
         })()}
 
@@ -593,8 +595,9 @@ export default function HomeTab({
 
         {/* ═══ DAILY HABIT CHECK-IN ═══ */}
         {!todayHabit ? (
+          <>
+          <div style={cardTitleAbove}>CHECK-IN DU JOUR</div>
           <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <div style={{ ...T, marginBottom: 10 }}>CHECK-IN DU JOUR</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[
                 { key: 'mood', label: 'Humeur', emojis: ['\u{1F62B}','\u{1F615}','\u{1F610}','\u{1F60A}','\u{1F525}'] },
@@ -622,6 +625,7 @@ export default function HomeTab({
               setTodayHabit({ ...habitValues })
             }} style={{ width: '100%', padding: 12, marginTop: 12, background: Object.keys(habitValues).length >= 2 ? 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)' : colors.surfaceHigh, color: Object.keys(habitValues).length >= 2 ? '#0D0B08' : colors.textDim, fontFamily: fonts.headline, fontSize: 14, letterSpacing: 2, border: 'none', borderRadius: 16, cursor: 'pointer' }}>ENREGISTRER</button>
           </div>
+          </>
         ) : (
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
             {[
@@ -638,11 +642,11 @@ export default function HomeTab({
         )}
 
         {/* ═══ NUTRITION MACROS ═══ */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={T}>NUTRITION</span>
+          <button onClick={() => setActiveTab('nutrition')} style={{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em' }}>Voir plan</button>
+        </div>
         <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={T}>NUTRITION</span>
-            <button onClick={() => setActiveTab('nutrition')} style={{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em' }}>Voir plan</button>
-          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
               { label: 'Cible', value: calorieGoal },

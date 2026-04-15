@@ -80,6 +80,12 @@ export const titleStyle: React.CSSProperties = {
   color: colors.gold,
 }
 
+/** Card with external title pattern — title sits ABOVE the card */
+export const cardTitleAbove: React.CSSProperties = {
+  ...titleStyle,
+  marginBottom: 8,
+}
+
 /** Subtitle (ex: "Objectif : 3L", "80/100 XP") */
 export const subtitleStyle: React.CSSProperties = {
   fontFamily: fonts.body,

@@ -4,7 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, Download, X, Clock, Calendar, Volume2 } from 'lucide-react'
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
-import { colors, fonts, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
+import { colors, fonts, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
 import SwissBadge from '../ui/SwissBadge'
 import CoachSection from './profile/CoachSection'
@@ -157,8 +157,8 @@ export default function ProfileTab({
       </div>
 
       {/* Phone field */}
+      <div style={cardTitleAbove}>Téléphone</div>
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px', marginBottom: 8 }}>
-        <div style={{ ...T, fontSize: 11, color: TEXT_MUTED, marginBottom: 8 }}>Téléphone</div>
         {phoneEditing ? (
           <div style={{ display: 'flex', gap: 8 }}>
             <input
@@ -225,10 +225,8 @@ export default function ProfileTab({
       </div>
 
       {/* Reminder settings */}
+      <div style={cardTitleAbove}>Rappels d&apos;entraînement</div>
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
-        <div style={{ ...T, fontSize: 11, marginBottom: 12 }}>
-          Rappels d&apos;entraînement
-        </div>
 
         {/* Toggle reminders */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -381,8 +379,8 @@ export default function ProfileTab({
       </div>
 
       {/* Subscription */}
+      <div style={cardTitleAbove}>Mon abonnement</div>
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18 }}>
-        <div style={{ ...T, fontSize: 11, marginBottom: 12 }}>Mon abonnement</div>
         {(() => {
           const st = profile?.subscription_status
           const subType = profile?.subscription_type
@@ -463,8 +461,9 @@ export default function ProfileTab({
           { type: 'lifetime', icon: '⭐', label: 'À vie', desc: 'Abonnement lifetime' },
         ]
         return (
+          <>
+          <div style={cardTitleAbove}>Mes badges</div>
           <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
-            <div style={{ ...T, fontSize: 11, marginBottom: 12 }}>Mes badges</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {ALL_BADGES.map(b => {
                 const earned = badges.includes(b.type)
@@ -486,6 +485,7 @@ export default function ProfileTab({
               })}
             </div>
           </div>
+          </>
         )
       })()}
 

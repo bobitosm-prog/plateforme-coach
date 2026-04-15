@@ -10,7 +10,7 @@ import {
   Dumbbell, Search, Award, Moon,
 } from 'lucide-react'
 import {
-  fonts, colors, JS_DAYS_FR, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, btnPrimary, btnSecondary,
+  fonts, colors, JS_DAYS_FR, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, btnPrimary, btnSecondary,
 } from '../../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
 import { toast } from 'sonner'
@@ -860,12 +860,11 @@ export default function TrainingTab({
 
       {/* ═══ SECTION 3 — SÉANCE DU JOUR ═══ */}
       <div style={{ margin: '16px 24px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={T}>SÉANCE DU JOUR</span>
+          <span style={mutedStyle}>{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+        </div>
         <div style={{ ...cardStyle, padding: 20 }}>
-          {/* Header row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={titleStyle}>SÉANCE DU JOUR</span>
-            <span style={mutedStyle}>{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-          </div>
 
           {/* Session content */}
           {!coachProgram && !activeCustomProgram ? (
