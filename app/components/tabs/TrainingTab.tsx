@@ -36,6 +36,7 @@ import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
 import ExerciseInfoPopup from '../ExerciseInfoPopup'
 import { useExerciseInfo } from '../../hooks/useExerciseInfo'
 import { resolveSessionType, HISTORY_FILTERS } from '../../../lib/session-types'
+import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
 
 interface TrainingTabProps {
   supabase: any
@@ -118,6 +119,9 @@ export default function TrainingTab({
   const [altSelected, setAltSelected] = useState<any>(null)
   const [altResults, setAltResults] = useState<any[]>([])
   const [techniqueTooltip, setTechniqueTooltip] = useState<string | null>(null)
+  const [importPreview, setImportPreview] = useState<ImportResult['program'] | null>(null)
+  const [importName, setImportName] = useState('')
+  const importFileRef = useRef<HTMLInputElement>(null)
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
@@ -1496,12 +1500,27 @@ export default function TrainingTab({
             <button onClick={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} style={{ width: 36, height: 36, borderRadius: 12, background: colors.surface, border: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.textMuted, fontSize: 16 }}>✕</button>
           </div>
 
+          {/* Hidden file input for import */}
+          <input ref={importFileRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={async (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+            const result = await parseProgramFromXlsx(file)
+            if (!result.success) { toast.error(result.error || 'Erreur'); return }
+            if (result.program) { setImportPreview(result.program); setImportName(result.program.name) }
+            e.target.value = ''
+          }} />
+
           {/* Scrollable content */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 100px' }}>
-            {/* Create button */}
-            <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ ...btnPrimary, width: '100%', padding: 16, marginBottom: 20 }}>
-              + CRÉER UN PROGRAMME
-            </button>
+            {/* Create + Import buttons */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ ...btnPrimary, flex: 1, padding: 16 }}>
+                + CRÉER
+              </button>
+              <button onClick={() => importFileRef.current?.click()} style={{ ...btnSecondary, flex: 1, padding: 16 }}>
+                IMPORTER (.XLSX)
+              </button>
+            </div>
 
             {/* Program list */}
             {customPrograms.length === 0 ? (
@@ -1549,6 +1568,7 @@ export default function TrainingTab({
                               <button onClick={() => activateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: colors.goldDim, border: `1px solid ${colors.gold}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ACTIVER</button>
                             )}
                             <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ flex: 1, padding: '10px 0', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>✏️ ÉDITER</button>
+                            <button onClick={() => exportProgramToXlsx(prog)} style={{ padding: '10px 14px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>⬇️</button>
                           </div>
 
                           {/* Days list */}
@@ -1611,6 +1631,58 @@ export default function TrainingTab({
                 })}
               </div>
             )}
+
+            {/* Blank template link */}
+            <div style={{ textAlign: 'center', marginTop: 24 }}>
+              <button onClick={downloadBlankTemplate} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textDecoration: 'underline', padding: 8 }}>
+                Télécharger le modèle vierge (.xlsx)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ IMPORT PREVIEW MODAL ═══ */}
+      {importPreview && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setImportPreview(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, padding: 24 }}>
+            <div style={pageTitleStyle}>APERÇU IMPORT</div>
+
+            <div style={{ marginTop: 16 }}>
+              <div style={{ ...labelStyle, marginBottom: 4 }}>Nom du programme</div>
+              <input value={importName} onChange={e => setImportName(e.target.value)} style={{ width: '100%', padding: 12, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none' }} />
+            </div>
+
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {importPreview.days.map((day, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid ${colors.goldBorder}` }}>
+                  <span style={{ ...bodyStyle, fontSize: 13 }}>
+                    {day.is_rest ? `Jour ${i + 1} — Repos` : `Jour ${i + 1} — ${day.name}`}
+                  </span>
+                  <span style={{ ...mutedStyle, fontSize: 12 }}>
+                    {day.is_rest ? '🌙' : `${(day.exercises || []).length} ex.`}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+              <button onClick={async () => {
+                const { error } = await supabase.from('custom_programs').insert({
+                  user_id: session.user.id,
+                  name: importName.trim() || 'Programme importé',
+                  description: importPreview.description || '',
+                  days: importPreview.days,
+                  source: 'import',
+                  is_active: false,
+                })
+                if (error) { toast.error('Erreur: ' + error.message); return }
+                toast.success('Programme importé avec succès ✓')
+                setImportPreview(null)
+                refreshPrograms()
+              }} style={{ ...btnPrimary, flex: 1, padding: 14 }}>IMPORTER</button>
+              <button onClick={() => setImportPreview(null)} style={{ ...btnSecondary, flex: 1, padding: 14 }}>ANNULER</button>
+            </div>
           </div>
         </div>
       )}
