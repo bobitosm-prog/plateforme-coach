@@ -10,6 +10,9 @@ import SwissBadge from '../ui/SwissBadge'
 import CoachSection from './profile/CoachSection'
 import PaymentHistory from './profile/PaymentHistory'
 import DeleteAccountSection from './profile/DeleteAccountSection'
+import BadgesModal from '../BadgesModal'
+import BadgeCelebration from '../BadgeCelebration'
+import { checkAndUnlockBadges, getLevelInfo, type Badge } from '../../../lib/check-badges'
 
 const supabasePush = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,12 +49,35 @@ export default function ProfileTab({
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle')
   const [showPaywall, setShowPaywall] = useState(false)
   const [timerSound, setTimerSound] = useState(() => isTimerSoundEnabled())
-  const [badges, setBadges] = useState<string[]>([])
+  const [unlockedBadgeIds, setUnlockedBadgeIds] = useState<Set<string>>(new Set())
+  const [allBadges, setAllBadges] = useState<Badge[]>([])
+  const [totalXp, setTotalXp] = useState(0)
+  const [currentValues, setCurrentValues] = useState<Record<string, number>>({})
+  const [showBadgesModal, setShowBadgesModal] = useState(false)
+  const [celebrateBadge, setCelebrateBadge] = useState<Badge | null>(null)
 
   useEffect(() => {
     if (!session?.user?.id) return
-    supabase.from('user_badges').select('badge_type').eq('user_id', session.user.id).limit(100)
-      .then(({ data }: any) => setBadges((data || []).map((b: any) => b.badge_type)))
+    // Load badges + user progress
+    Promise.all([
+      supabase.from('badges').select('*').order('sort_order'),
+      supabase.from('user_badges').select('badge_id, badge_type').eq('user_id', session.user.id).limit(100),
+      supabase.from('user_xp').select('total_xp').eq('user_id', session.user.id).single(),
+    ]).then(([badgesRes, unlockedRes, xpRes]: any[]) => {
+      setAllBadges(badgesRes.data || [])
+      const ids = new Set<string>((unlockedRes.data || []).map((u: any) => u.badge_id || u.badge_type))
+      setUnlockedBadgeIds(ids)
+      setTotalXp(xpRes.data?.total_xp || 0)
+    })
+    // Check for new badges
+    checkAndUnlockBadges(session.user.id, supabase).then(({ newBadges, currentValues: cv }) => {
+      setCurrentValues(cv)
+      if (newBadges.length > 0) {
+        setCelebrateBadge(newBadges[0])
+        setUnlockedBadgeIds(prev => { const next = new Set<string>(prev); newBadges.forEach(b => next.add(b.id)); return next })
+        setTotalXp(prev => prev + newBadges.reduce((s, b) => s + b.xp_reward, 0))
+      }
+    })
   }, [session?.user?.id])
 
   function urlBase64ToUint8Array(base64String: string) {
@@ -368,45 +394,56 @@ export default function ProfileTab({
 
       {/* ═══ SECTION 10 — MES BADGES ═══ */}
       {(() => {
-        const ALL_BADGES = [
-          { type: 'first_workout', icon: '🔥', label: 'Premier pas', desc: '1ère séance complétée' },
-          { type: 'week_streak', icon: '💪', label: 'Semaine complète', desc: '7 jours de streak' },
-          { type: 'month_streak', icon: '🏆', label: "Mois d'acier", desc: '30 jours de streak' },
-          { type: 'first_weight', icon: '📊', label: 'Première pesée', desc: '1er poids enregistré' },
-          { type: 'plan_respected', icon: '🥗', label: 'Plan respecté', desc: '7 jours repas cochés' },
-          { type: 'first_photo', icon: '📸', label: 'Avant/Après', desc: '1ère photo uploadée' },
-          { type: 'lifetime', icon: '⭐', label: 'À vie', desc: 'Abonnement lifetime' },
-        ]
-        const earned = ALL_BADGES.filter(b => badges.includes(b.type)).length
+        const earnedBadges = allBadges.filter(b => unlockedBadgeIds.has(b.id))
+        const lastThree = earnedBadges.slice(-3)
+        const EMOJIS: Record<string, string> = { star: '⭐', grid: '📊', home: '🏠', clock: '⏱️', 'star-big': '🌟', chart: '📈', doc: '📝', list: '📋', scan: '📷', target: '🎯', flame: '🔥', 'flame-plus': '💪', 'flame-star': '🏆', 'flame-crown': '👑', 'flame-legend': '🏅', camera: '📸', share: '🔗', users: '👥', crown: '👑' }
+        const level = getLevelInfo(totalXp)
         return (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <span style={cardTitleAbove}>MES BADGES</span>
               <div style={titleLineStyle} />
-              <span style={{ ...labelStyle, fontSize: 10 }}>{earned}/{ALL_BADGES.length}</span>
+              <span style={{ ...labelStyle, fontSize: 10 }}>{earnedBadges.length}/{allBadges.length}</span>
+              <button onClick={() => setShowBadgesModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.08em' }}>VOIR TOUT →</button>
             </div>
-            <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                {ALL_BADGES.map(b => {
-                  const isEarned = badges.includes(b.type)
-                  return (
-                    <div key={b.type} style={{
-                      background: isEarned ? 'rgba(230,195,100,0.08)' : 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${isEarned ? 'rgba(230,195,100,0.3)' : 'rgba(255,255,255,0.05)'}`,
-                      borderRadius: 12, padding: 12, textAlign: 'center', opacity: isEarned ? 1 : 0.35, position: 'relative',
-                    }}>
-                      {!isEarned && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 10 }}>🔒</span>}
-                      <div style={{ fontSize: 20, marginBottom: 4 }}>{b.icon}</div>
-                      <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: isEarned ? colors.text : 'rgba(255,255,255,0.4)', letterSpacing: '0.05em', marginBottom: 2 }}>{b.label}</div>
-                      <div style={{ fontSize: 7, color: isEarned ? colors.textMuted : 'rgba(255,255,255,0.15)', lineHeight: 1.3 }}>{b.desc}</div>
-                    </div>
-                  )
-                })}
+            <div style={{ ...cardStyle, padding: 16, marginBottom: 8 }}>
+              {/* Level bar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 800, color: colors.gold }}>LV.{level.level}</span>
+                <div style={{ flex: 1, height: 4, background: 'rgba(230,195,100,0.1)', borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.min(100, Math.round(((totalXp - level.minXp) / (level.maxXp - level.minXp)) * 100))}%`, height: '100%', background: colors.gold, borderRadius: 999 }} />
+                </div>
+                <span style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.gold }}>{totalXp} XP</span>
               </div>
+              {/* Last 3 earned */}
+              {lastThree.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {lastThree.map(b => (
+                    <div key={b.id} style={{ background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(230,195,100,0.3)', borderRadius: 12, padding: 10, textAlign: 'center' }}>
+                      <div style={{ fontSize: 18, marginBottom: 3 }}>{EMOJIS[b.icon] || '🏆'}</div>
+                      <div style={{ fontFamily: fonts.headline, fontSize: 7, fontWeight: 700, color: colors.text, letterSpacing: '0.05em' }}>{b.name}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                  <span style={{ fontSize: 10, color: colors.textMuted }}>Complète des actions pour débloquer des badges !</span>
+                </div>
+              )}
             </div>
           </>
         )
       })()}
+
+      {/* Badges fullscreen modal */}
+      {showBadgesModal && (
+        <BadgesModal allBadges={allBadges} unlockedIds={unlockedBadgeIds} totalXp={totalXp} currentValues={currentValues} onClose={() => setShowBadgesModal(false)} />
+      )}
+
+      {/* Badge celebration */}
+      {celebrateBadge && (
+        <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={() => setCelebrateBadge(null)} />
+      )}
 
       {/* ═══ SECTION 11 — ZONE DANGER ═══ */}
       <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
