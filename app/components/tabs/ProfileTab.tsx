@@ -185,7 +185,6 @@ export default function ProfileTab({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <span style={cardTitleAbove}>MON PROFIL</span>
         <div style={titleLineStyle} />
-        <span style={{ ...labelStyle, fontSize: 10, cursor: 'pointer' }}>MODIFIER</span>
       </div>
       <div style={{ ...cardStyle, padding: '4px 16px', marginBottom: 24 }}>
         {[
@@ -194,8 +193,8 @@ export default function ProfileTab({
           { icon: User, label: 'Genre', value: profile?.gender === 'male' ? 'Homme' : profile?.gender === 'female' ? 'Femme' : '—' },
           { icon: Ruler, label: 'Taille', value: profile?.height ? `${profile.height} cm` : '—' },
           { icon: Target, label: 'Poids cible', value: goalWeight ? `${goalWeight} kg` : '—' },
-          { icon: Target, label: 'Objectif', value: profile?.objective || '—' },
-          { icon: Activity, label: 'Niveau d\'activité', value: profile?.activity_level || '—' },
+          { icon: Target, label: 'Objectif', value: ({ mass: 'Prise de masse', cut: 'Sèche', maintain: 'Maintien' } as Record<string, string>)[profile?.objective] || profile?.objective || '—' },
+          { icon: Activity, label: 'Niveau d\'activité', value: ({ sedentary: 'Sédentaire', light: 'Léger', moderate: 'Modéré', active: 'Actif', extreme: 'Intense' } as Record<string, string>)[profile?.activity_level] || profile?.activity_level || '—' },
         ].map((row, i, arr) => (
           <React.Fragment key={row.label}>
             <div style={rowStyle}>
