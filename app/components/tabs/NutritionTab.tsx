@@ -663,7 +663,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           userId={userId}
           defaultMealType={showFoodSearch}
           dateOverride={selectedDate}
-          onAdded={async () => { if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }; await fetchDailyLogs(); await fetchTodayMealLogs(); setDaysWithMeals(prev => new Set([...prev, selectedDate])); setShowFoodSearch(null) }}
+          onAdded={async (insertedLog?: any) => {
+            if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }
+            // Optimistic update — inject into state immediately
+            if (insertedLog) { setDailyLogs(prev => [...prev, insertedLog]) }
+            setDaysWithMeals(prev => new Set([...prev, selectedDate]))
+            setShowFoodSearch(null)
+            // Background refetch for consistency (real IDs, order)
+            fetchDailyLogs()
+          }}
           onClose={() => { setShowFoodSearch(null); setSwappingFoodId(null) }}
         />
       )}
