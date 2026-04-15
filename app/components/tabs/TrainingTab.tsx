@@ -882,7 +882,9 @@ export default function TrainingTab({
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
               <Dumbbell size={40} color={colors.textDim} strokeWidth={1.5} />
               <p style={{ ...bodyStyle, marginTop: 12 }}>Aucun programme actif</p>
-              <button onClick={() => setShowProgramManager(true)} style={{ ...btnPrimary, width: '100%', padding: 14, marginTop: 16 }}>CRÉER UN PROGRAMME</button>
+              <button onClick={() => setShowProgramManager(true)} style={{ ...btnPrimary, width: '100%', padding: 14, marginTop: 16 }}>
+                {customPrograms.length > 0 ? 'MES PROGRAMMES' : 'CRÉER UN PROGRAMME'}
+              </button>
             </div>
           ) : trainingDayData?.repos ? (
             /* Rest day — enhanced */
@@ -942,12 +944,19 @@ export default function TrainingTab({
                 ))}
               </div>
 
-              {/* DÉMARRER button — BEFORE exercise list */}
-              {trainingIsToday && !todaySessionDone && !workoutStarted && (
-                <button onClick={() => startProgramWorkout(trainingDayData, trainingExercises)} style={{ ...btnPrimary, width: '100%', padding: 16, borderRadius: 14, marginBottom: 16 }}>
-                  DÉMARRER LA SÉANCE
-                </button>
-              )}
+              {/* Action buttons — DÉMARRER + MODIFIER */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                {trainingIsToday && !todaySessionDone && !workoutStarted && (
+                  <button onClick={() => startProgramWorkout(trainingDayData, trainingExercises)} style={{ ...btnPrimary, flex: 1, padding: 16, borderRadius: 14 }}>
+                    DÉMARRER LA SÉANCE
+                  </button>
+                )}
+                {activeCustomProgram && !editMode && !workoutStarted && (
+                  <button onClick={startEditMode} style={{ ...btnSecondary, padding: '16px 20px', borderRadius: 14, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em' }}>
+                    MODIFIER
+                  </button>
+                )}
+              </div>
 
               {/* Exercise cards — edit mode */}
               {editMode && editedDays && (() => {
@@ -988,6 +997,11 @@ export default function TrainingTab({
                       </div>
                     ))}
                     <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${colors.goldRule}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>+ AJOUTER UN EXERCICE</button>
+                    {/* Save / Cancel edit buttons */}
+                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                      <button onClick={saveEditedProgram} style={{ ...btnPrimary, flex: 1, padding: 12, borderRadius: 12 }}>SAUVEGARDER</button>
+                      <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ ...btnSecondary, flex: 1, padding: 12, borderRadius: 12 }}>ANNULER</button>
+                    </div>
                   </div>
                 )
               })()}
