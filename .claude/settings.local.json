@@ -76,7 +76,10 @@
       "Bash(magick -size 200x40 xc:transparent -font /System/Library/Fonts/Helvetica.ttc -pointsize 24 -fill 'rgba\\(255,255,255,0.5\\)' -gravity center -annotate 0 'moovx.ch' /tmp/watermark.png)",
       "Read(//private/tmp/**)",
       "mcp__playwright__browser_file_upload",
-      "mcp__playwright__browser_run_code"
+      "mcp__playwright__browser_run_code",
+      "Bash(SUPABASE_URL=\"https://njlzossopgknanhkzcbk.supabase.co\"\nSUPABASE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qbHpvc3NvcGdrbmFuaGt6Y2JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDczMDMsImV4cCI6MjA4ODEyMzMwM30.22cQCoBdbIek3IU0GPkRUKlPYj19jiYwac0K8sRJM1w\"\n\ncurl -s \"${SUPABASE_URL}/rest/v1/exercises_db?name=ilike.*curl*barre*&select=id,name,video_url,gif_url\" \\\\\n  -H \"Authorization: Bearer ${SUPABASE_KEY}\" \\\\\n  -H \"apikey: ${SUPABASE_KEY}\" | python3 -m json.tool)",
+      "Read(//mnt/user-data/**)",
+      "Read(//Users/marcoferreira/Downloads/**)"
     ]
   }
 }
