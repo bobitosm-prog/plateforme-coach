@@ -69,14 +69,21 @@ export default function ProfileTab({
       setUnlockedBadgeIds(ids)
       setTotalXp(xpRes.data?.total_xp || 0)
     })
-    // Check for new badges
-    checkAndUnlockBadges(session.user.id, supabase).then(({ newBadges, currentValues: cv }) => {
+    // Check for new badges then refetch everything
+    checkAndUnlockBadges(session.user.id, supabase).then(async ({ newBadges, currentValues: cv }) => {
       setCurrentValues(cv)
       if (newBadges.length > 0) {
         setCelebrateBadge(newBadges[0])
-        setUnlockedBadgeIds(prev => { const next = new Set<string>(prev); newBadges.forEach(b => next.add(b.id)); return next })
-        setTotalXp(prev => prev + newBadges.reduce((s, b) => s + b.xp_reward, 0))
       }
+      // Refetch to get accurate state after unlock
+      const [bRes, uRes, xRes] = await Promise.all([
+        supabase.from('badges').select('*').order('sort_order'),
+        supabase.from('user_badges').select('badge_id, badge_type').eq('user_id', session.user.id).limit(100),
+        supabase.from('user_xp').select('total_xp').eq('user_id', session.user.id).maybeSingle(),
+      ])
+      setAllBadges(bRes.data || [])
+      setUnlockedBadgeIds(new Set<string>((uRes.data || []).map((u: any) => u.badge_id || u.badge_type)))
+      setTotalXp(xRes.data?.total_xp || 0)
     })
   }, [session?.user?.id])
 

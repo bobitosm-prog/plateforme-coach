@@ -144,14 +144,15 @@ export async function checkAndUnlockBadges(userId: string, supabase: any): Promi
     }
   }
 
-  // 4. Update XP
-  if (newBadges.length > 0) {
-    const xpGained = newBadges.reduce((s, b) => s + b.xp_reward, 0)
-    const { data: xpRow } = await supabase.from('user_xp').select('*').eq('user_id', userId).single()
-    const newTotal = (xpRow?.total_xp || 0) + xpGained
-    const levelInfo = getLevelInfo(newTotal)
-    await supabase.from('user_xp').upsert({ user_id: userId, total_xp: newTotal, level: levelInfo.level, level_name: levelInfo.name }, { onConflict: 'user_id' })
-  }
+  // 4. Ensure user_xp row exists + update XP
+  const { data: xpRow } = await supabase.from('user_xp').select('*').eq('user_id', userId).maybeSingle()
+  const xpGained = newBadges.reduce((s, b) => s + b.xp_reward, 0)
+  const newTotal = (xpRow?.total_xp || 0) + xpGained
+  const levelInfo = getLevelInfo(newTotal)
+  await supabase.from('user_xp').upsert(
+    { user_id: userId, total_xp: newTotal, level: levelInfo.level, level_name: levelInfo.name },
+    { onConflict: 'user_id' }
+  )
 
   return { newBadges, currentValues }
 }
