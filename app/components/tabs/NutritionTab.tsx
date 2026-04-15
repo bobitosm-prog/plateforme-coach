@@ -663,7 +663,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           userId={userId}
           defaultMealType={showFoodSearch}
           dateOverride={selectedDate}
-          onAdded={async () => { if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }; setShowFoodSearch(null); await fetchDailyLogs(); await fetchTodayMealLogs(); setDaysWithMeals(prev => new Set([...prev, selectedDate])) }}
+          onAdded={async () => { if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }; await fetchDailyLogs(); await fetchTodayMealLogs(); setDaysWithMeals(prev => new Set([...prev, selectedDate])); setShowFoodSearch(null) }}
           onClose={() => { setShowFoodSearch(null); setSwappingFoodId(null) }}
         />
       )}
@@ -1024,8 +1024,16 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               <input value={editAddFoodQuery} onChange={async (e) => {
                 setEditAddFoodQuery(e.target.value)
                 if (e.target.value.length >= 2) {
-                  const { data } = await supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').ilike('name', `%${e.target.value}%`).limit(12)
-                  setEditAddFoodResults((data || []).map((f: any) => normalizeFoodItem(f)))
+                  const q = `%${e.target.value}%`
+                  const [fitRes, ansesRes] = await Promise.all([
+                    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').ilike('name', q).limit(8),
+                    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', q).limit(6),
+                  ])
+                  const results = [
+                    ...(fitRes.data || []).map((f: any) => normalizeFoodItem(f)),
+                    ...(ansesRes.data || []).map((f: any) => normalizeFoodItem(f)),
+                  ]
+                  setEditAddFoodResults(results)
                 } else { setEditAddFoodResults([]) }
               }} placeholder="+ Ajouter un aliment..." style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none' }} />
               {editAddFoodResults.length > 0 && (
@@ -1037,7 +1045,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       setEditAddFoodQuery('')
                       setEditAddFoodResults([])
                     }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{f.nom}{f.source === 'ANSES' ? ' 📊' : ''}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body, display: 'flex', alignItems: 'center', gap: 6 }}>{f.nom}{f.source === 'fitness' ? <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldBorder}` }}>FITNESS</span> : <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(96,165,250,0.1)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.2)' }}>CIQUAL</span>}</div>
                       <div style={{ fontSize: 9, color: colors.textDim }}>{f.calories} kcal · {f.proteines}g P · {f.glucides}g G · {f.lipides}g L</div>
                     </button>
                   ))}

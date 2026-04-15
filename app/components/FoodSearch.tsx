@@ -105,13 +105,15 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
     const prot = Math.round(((selected.proteines * quantity) / 100) * 10) / 10
     const gluc = Math.round(((selected.glucides * quantity) / 100) * 10) / 10
     const lip = Math.round(((selected.lipides * quantity) / 100) * 10) / 10
-    await supabase.from('daily_food_logs').insert({
+    const { error } = await supabase.from('daily_food_logs').insert({
       user_id: userId, date: today, meal_type: mealType,
       custom_name: selected.nom,
       quantity_g: quantity, calories: cal, protein: prot, carbs: gluc, fat: lip,
     })
+    if (!error) {
+      await onAdded()
+    }
     setSaving(false)
-    onAdded()
   }
 
   // Quantity modal for selected food
