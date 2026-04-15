@@ -191,13 +191,14 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       description: aiResult?.description || '',
       days: programDays,
       source: aiResult ? 'ai' : 'manual',
-      is_active: false,
       updated_at: new Date().toISOString(),
     }
     if (editProgram?.id) {
+      // Editing: keep current is_active status (don't deactivate on save)
       await supabase.from('custom_programs').update(payload).eq('id', editProgram.id)
     } else {
-      await supabase.from('custom_programs').insert(payload)
+      // New program: start inactive, user activates explicitly
+      await supabase.from('custom_programs').insert({ ...payload, is_active: false })
     }
 
     // Regenerate scheduled_sessions for current week with correct day names
