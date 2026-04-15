@@ -77,6 +77,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [myMealsFilter, setMyMealsFilter] = useState('all')
   const [editingMeal, setEditingMeal] = useState<any>(null)
   const [confirmDeleteMeal, setConfirmDeleteMeal] = useState<string | null>(null)
+  const [editMealSaving, setEditMealSaving] = useState(false)
+  const [editMealSaved, setEditMealSaved] = useState(false)
+  const [editAddFoodQuery, setEditAddFoodQuery] = useState('')
+  const [editAddFoodResults, setEditAddFoodResults] = useState<any[]>([])
   const photoInputRef = React.useRef<HTMLInputElement>(null)
   const calScrollRef = React.useRef<HTMLDivElement>(null)
   const today = new Date().toISOString().split('T')[0]
@@ -616,16 +620,16 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       <div style={{ display: 'flex', gap: 6, padding: '12px 20px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {([
           { id: 'today' as SubTab, label: 'JOURNAL' },
-          { id: 'plan' as SubTab, label: 'PLAN IA' },
+          { id: 'plan' as SubTab, label: 'PLAN' },
           ...(!isInvited ? [{ id: 'prefs' as SubTab, label: 'PREFS' }] : []),
           ...(!isInvited ? [{ id: 'recipes' as SubTab, label: 'RECETTES' }] : []),
-          { id: 'meals' as SubTab, label: 'MES REPAS' },
+          { id: 'meals' as SubTab, label: 'REPAS' },
         ]).map(({ id, label }) => {
           const active = subTab === id
           return (
             <button key={id} onClick={() => setSubTab(id)} style={{
-              padding: '8px 16px', cursor: 'pointer', whiteSpace: 'nowrap',
-              fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+              padding: '6px 12px', cursor: 'pointer', whiteSpace: 'nowrap',
+              fontFamily: fonts.body, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
               borderRadius: 12,
               background: active ? 'rgba(201,168,76,0.15)' : 'transparent',
               border: active ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(201,168,76,0.15)',
@@ -973,7 +977,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               )
             })()}
             {/* Create meal button */}
-            <button onClick={() => setShowFoodSearch('dejeuner')} style={{ width: '100%', marginTop: 16, padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, textAlign: 'center' }}>
+            <button onClick={async () => {
+              const { data } = await supabase.from('saved_meals').insert({ user_id: userId, name: 'Nouveau repas', meal_type: 'dejeuner', foods: [] }).select().single()
+              if (data) { setMyMeals(prev => [data, ...prev]); setEditingMeal(data) }
+            }} style={{ width: '100%', marginTop: 16, padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, textAlign: 'center' }}>
               + CRÉER UN REPAS
             </button>
           </div>
@@ -1010,12 +1017,41 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 </div>
               ))}
             </div>
-            <button onClick={() => { setShowFoodSearch('dejeuner'); setEditingMeal(null) }} style={{ width: '100%', padding: 10, background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: 'pointer', marginBottom: 12 }}>+ AJOUTER UN ALIMENT</button>
+            {/* Inline food search — adds directly to editingMeal.foods */}
+            <div style={{ marginBottom: 12 }}>
+              <input value={editAddFoodQuery} onChange={async (e) => {
+                setEditAddFoodQuery(e.target.value)
+                if (e.target.value.length >= 2) {
+                  const { data } = await supabase.from('food_items').select('id, nom, calories, proteines, glucides, lipides').ilike('nom', `%${e.target.value}%`).limit(6)
+                  setEditAddFoodResults(data || [])
+                } else { setEditAddFoodResults([]) }
+              }} placeholder="+ Ajouter un aliment..." style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none' }} />
+              {editAddFoodResults.length > 0 && (
+                <div style={{ maxHeight: 150, overflowY: 'auto', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, background: colors.surface, marginTop: 4 }}>
+                  {editAddFoodResults.map((f: any) => (
+                    <button key={f.id} onClick={() => {
+                      const newFood = { name: f.nom, calories: Math.round(f.calories || 0), protein: Math.round(f.proteines || 0), carbs: Math.round(f.glucides || 0), fat: Math.round(f.lipides || 0), quantity: 100 }
+                      setEditingMeal({ ...editingMeal, foods: [...(editingMeal.foods || []), newFood] })
+                      setEditAddFoodQuery('')
+                      setEditAddFoodResults([])
+                    }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{f.nom}</div>
+                      <div style={{ fontSize: 9, color: colors.textDim }}>{Math.round(f.calories || 0)} kcal · {Math.round(f.proteines || 0)}g P</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button onClick={async () => {
+              setEditMealSaving(true)
               await supabase.from('saved_meals').update({ foods: editingMeal.foods }).eq('id', editingMeal.id)
               setMyMeals(prev => prev.map(m => m.id === editingMeal.id ? { ...m, foods: editingMeal.foods } : m))
-              setEditingMeal(null)
-            }} style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, marginBottom: 8 }}>SAUVEGARDER</button>
+              setEditMealSaving(false)
+              setEditMealSaved(true)
+              setTimeout(() => setEditMealSaved(false), 2000)
+            }} disabled={editMealSaving} style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, marginBottom: 8, opacity: editMealSaving ? 0.6 : 1 }}>
+              {editMealSaving ? 'SAUVEGARDE...' : editMealSaved ? 'SAUVEGARDÉ ✓' : 'SAUVEGARDER'}
+            </button>
             <button onClick={async () => {
               if (confirm('Supprimer ce repas définitivement ?')) {
                 await supabase.from('saved_meals').delete().eq('id', editingMeal.id)
