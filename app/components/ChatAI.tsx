@@ -197,7 +197,10 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
 
           {/* ═══ SECTION 1 — HEADER COACH ═══ */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'max(24px, env(safe-area-inset-top, 24px))', marginBottom: 20 }}>
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'max(24px, env(safe-area-inset-top, 24px))', marginBottom: 20 }}>
+            <button onClick={handleClose} style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 0, width: 36, height: 36, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 16, color: colors.textMuted, lineHeight: 1 }}>&times;</span>
+            </button>
             <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(230,195,100,0.1)', border: '1px solid rgba(230,195,100,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
               <Bot size={28} color={colors.gold} strokeWidth={2} />
             </div>
