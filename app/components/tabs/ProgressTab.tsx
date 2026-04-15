@@ -153,17 +153,37 @@ export default function ProgressTab({
   async function runBodyAnalysis() {
     const { front, back, side } = bodyUploadPhotos
     if (!front || !back || !side || !session?.user?.id) return
+
+    // 1h cooldown check
+    if (bodyAnalysis?.created_at) {
+      const lastTime = new Date(bodyAnalysis.created_at).getTime()
+      const diff = Date.now() - lastTime
+      if (diff < 3600000) {
+        const mins = Math.ceil((3600000 - diff) / 60000)
+        toast.error(`Tu pourras relancer une analyse dans ${mins} minute${mins > 1 ? 's' : ''}`)
+        return
+      }
+    }
+
     setBodyAnalysisLoading(true)
     setBodyAnalysisStep(0)
     try {
-      const res = await fetch('/api/analyze-body', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photoFrontUrl: front, photoBackUrl: back, photoSideUrl: side, weight: currentWeight || profile?.current_weight, height: profile?.height }),
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      // Save to DB
+      // Retry with exponential backoff
+      let data: any = null
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const res = await fetch('/api/analyze-body', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photoFrontUrl: front, photoBackUrl: back, photoSideUrl: side, weight: currentWeight || profile?.current_weight, height: profile?.height }),
+        })
+        data = await res.json()
+        if (res.status === 429 && attempt < 2) {
+          await new Promise(r => setTimeout(r, 2000 * Math.pow(2, attempt)))
+          continue
+        }
+        break
+      }
+      if (data?.error) throw new Error(data.error)
       const row = { user_id: session.user.id, body_fat_estimate: data.body_fat_estimate, lean_mass_estimate: data.lean_mass_estimate, strengths: data.strengths, improvements: data.improvements, symmetry_score: data.symmetry_score, summary: data.summary, photos_used: 3 }
       await supabase.from('body_analyses').insert(row)
       setBodyAnalysis({ ...row, created_at: new Date().toISOString() })
@@ -171,7 +191,10 @@ export default function ProgressTab({
       setBodyUploadPhotos({})
       toast.success('Analyse terminée !')
     } catch (e: any) {
-      toast.error(e.message || 'Erreur lors de l\'analyse')
+      const msg = e.message?.includes('requêtes') || e.message?.includes('429')
+        ? 'L\'analyse est temporairement indisponible. Réessaye dans quelques minutes.'
+        : (e.message || 'Erreur lors de l\'analyse')
+      toast.error(msg)
     } finally {
       setBodyAnalysisLoading(false)
     }
@@ -675,21 +698,21 @@ export default function ProgressTab({
         {/* Upload modal */}
         {showBodyUpload && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
-            <div style={{ background: colors.surface, borderTop: `1px solid ${colors.goldBorder}`, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '24px 20px 40px', width: '100%' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h3 style={{ ...titleStyle, fontSize: 16, margin: 0 }}>PHOTOS POUR ANALYSE</h3>
+            <div style={{ background: colors.surface, borderTop: `1px solid ${colors.goldBorder}`, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '20px 20px 32px', width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <h3 style={{ ...titleStyle, fontSize: 14, margin: 0 }}>PHOTOS POUR ANALYSE</h3>
                 <button onClick={() => { setShowBodyUpload(false); setBodyUploadPhotos({}) }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
                 {(['front', 'back', 'side'] as const).map(angle => {
                   const url = bodyUploadPhotos[angle]
                   const labels = { front: 'FACE', back: 'DOS', side: 'PROFIL' }
                   return (
                     <div key={angle} onClick={() => { setBodyUploadTarget(angle); bodyUploadRef.current?.click() }}
-                      style={{ aspectRatio: '3/4', borderRadius: radii.card, overflow: 'hidden', border: url ? `2px solid ${colors.gold}` : `2px dashed ${colors.goldBorder}`, background: url ? colors.background : colors.goldDim, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', position: 'relative' }}>
+                      style={{ height: 120, borderRadius: radii.button, overflow: 'hidden', border: url ? `2px solid ${colors.gold}` : `2px dashed ${colors.goldBorder}`, background: url ? colors.background : colors.goldDim, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', position: 'relative' }}>
                       {url ? <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} alt={labels[angle]} /> : (
                         <>
-                          <Camera size={18} color={colors.textDim} />
+                          <Camera size={16} color={colors.textDim} />
                           <span style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em' }}>{labels[angle]}</span>
                         </>
                       )}

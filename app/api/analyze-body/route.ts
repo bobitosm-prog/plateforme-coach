@@ -3,7 +3,7 @@ import { checkRateLimit } from '../../../lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const rl = checkRateLimit(`body:${ip}`, 2, 60000)
+  const rl = checkRateLimit(`body:${ip}`, 5, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
 
   try {
