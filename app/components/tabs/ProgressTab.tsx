@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight, Star } from 'lucide-react'
+import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight, Star, Info, Clock, User } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
@@ -110,6 +110,72 @@ export default function ProgressTab({
   const [expandedAnalysis, setExpandedAnalysis] = useState<string | null>(null)
   const [analyses, setAnalyses] = useState<Record<string, string>>({})
   const [sharingId, setSharingId] = useState<string | null>(null)
+
+  // Body AI analysis
+  const [bodyAnalysis, setBodyAnalysis] = useState<any>(null)
+  const [bodyAnalysisLoading, setBodyAnalysisLoading] = useState(false)
+  const [bodyAnalysisStep, setBodyAnalysisStep] = useState(0)
+  const [bodyUploadPhotos, setBodyUploadPhotos] = useState<{ front?: string; back?: string; side?: string }>({})
+  const [showBodyUpload, setShowBodyUpload] = useState(false)
+  const bodyUploadRef = React.useRef<HTMLInputElement>(null)
+  const [bodyUploadTarget, setBodyUploadTarget] = useState<'front' | 'back' | 'side'>('front')
+
+  // Fetch latest body analysis
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase.from('body_analyses').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(1)
+      .then(({ data }: any) => { if (data?.[0]) setBodyAnalysis(data[0]) })
+  }, [session?.user?.id])
+
+  const ANALYSIS_STEPS = ['Analyse en cours...', 'Détection des groupes musculaires...', 'Calcul des proportions...', 'Génération du rapport...']
+  useEffect(() => {
+    if (!bodyAnalysisLoading) return
+    const interval = setInterval(() => setBodyAnalysisStep(s => (s + 1) % ANALYSIS_STEPS.length), 2500)
+    return () => clearInterval(interval)
+  }, [bodyAnalysisLoading])
+
+  async function handleBodyUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !session?.user?.id) return
+    const path = `${session.user.id}/body-${bodyUploadTarget}-${Date.now()}.jpg`
+    const { error } = await supabase.storage.from('progress-photos').upload(path, file)
+    if (error) { toast.error('Erreur upload'); return }
+    const { data: urlData } = await supabase.storage.from('progress-photos').createSignedUrl(path, 3600)
+    if (urlData?.signedUrl) {
+      setBodyUploadPhotos(prev => ({ ...prev, [bodyUploadTarget]: urlData.signedUrl }))
+      // Auto-advance to next missing photo
+      if (bodyUploadTarget === 'front') setBodyUploadTarget('back')
+      else if (bodyUploadTarget === 'back') setBodyUploadTarget('side')
+    }
+    e.target.value = ''
+  }
+
+  async function runBodyAnalysis() {
+    const { front, back, side } = bodyUploadPhotos
+    if (!front || !back || !side || !session?.user?.id) return
+    setBodyAnalysisLoading(true)
+    setBodyAnalysisStep(0)
+    try {
+      const res = await fetch('/api/analyze-body', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoFrontUrl: front, photoBackUrl: back, photoSideUrl: side, weight: currentWeight || profile?.current_weight, height: profile?.height }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      // Save to DB
+      const row = { user_id: session.user.id, body_fat_estimate: data.body_fat_estimate, lean_mass_estimate: data.lean_mass_estimate, strengths: data.strengths, improvements: data.improvements, symmetry_score: data.symmetry_score, summary: data.summary, photos_used: 3 }
+      await supabase.from('body_analyses').insert(row)
+      setBodyAnalysis({ ...row, created_at: new Date().toISOString() })
+      setShowBodyUpload(false)
+      setBodyUploadPhotos({})
+      toast.success('Analyse terminée !')
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur lors de l\'analyse')
+    } finally {
+      setBodyAnalysisLoading(false)
+    }
+  }
 
   // Signed URLs for private bucket
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
@@ -490,6 +556,173 @@ export default function ProgressTab({
           </div>
           <ChevronRight size={16} color={colors.textDim} />
         </button>
+      </div>
+
+      {/* ═══ SECTION 6.5 — ANALYSE IA ═══ */}
+      <div style={{ scrollMarginTop: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <span style={cardTitleAbove}>ANALYSE IA</span>
+          <div style={titleLineStyle} />
+          <span style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 999, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Sparkles size={8} /> BETA
+          </span>
+        </div>
+        <div style={{ ...cardStyle, padding: 16, marginBottom: 12 }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <User size={18} color={colors.gold} />
+            </div>
+            <div>
+              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>Analyse corporelle par IA</div>
+              <div style={{ ...mutedStyle, fontSize: 10 }}>Basée sur tes photos de progression</div>
+            </div>
+          </div>
+
+          {/* Disclaimer */}
+          <div style={{ background: 'rgba(201,168,76,0.04)', border: '0.5px solid rgba(201,168,76,0.1)', borderRadius: 12, padding: 12, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <Info size={14} color={colors.gold} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
+              Cette analyse est une estimation par intelligence artificielle. Elle peut contenir des erreurs. Rien ne remplace l&apos;avis d&apos;un professionnel qualifié.
+            </span>
+          </div>
+
+          {/* Loading state */}
+          {bodyAnalysisLoading && (
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
+              <div style={{ width: 24, height: 24, border: `2px solid ${colors.gold}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 12px' }} />
+              <div style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 600, color: colors.gold }}>{ANALYSIS_STEPS[bodyAnalysisStep]}</div>
+            </div>
+          )}
+
+          {/* Results */}
+          {!bodyAnalysisLoading && bodyAnalysis && (
+            <>
+              {/* Estimated values */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                <div style={{ background: 'rgba(230,195,100,0.06)', borderRadius: 12, padding: 14 }}>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>MASSE GRASSE</div>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>~{bodyAnalysis.body_fat_estimate}%</div>
+                  <div style={{ ...mutedStyle, fontSize: 9 }}>Estimation IA</div>
+                </div>
+                <div style={{ background: 'rgba(230,195,100,0.06)', borderRadius: 12, padding: 14 }}>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>MASSE MAIGRE</div>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>~{Math.round(bodyAnalysis.lean_mass_estimate)} KG</div>
+                  <div style={{ ...mutedStyle, fontSize: 9 }}>Estimation IA</div>
+                </div>
+              </div>
+
+              {/* Strengths */}
+              {bodyAnalysis.strengths?.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 8 }}>POINTS FORTS</div>
+                  {bodyAnalysis.strengths.map((s: string, i: number) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Improvements */}
+              {bodyAnalysis.improvements?.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 8 }}>AXES D&apos;AMÉLIORATION</div>
+                  {bodyAnalysis.improvements.map((s: string, i: number) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: colors.gold, flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Symmetry */}
+              {bodyAnalysis.symmetry_score != null && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 8 }}>SYMÉTRIE CORPORELLE</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, height: 6, background: 'rgba(230,195,100,0.1)', borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{ width: `${bodyAnalysis.symmetry_score}%`, height: '100%', background: colors.gold, borderRadius: 999 }} />
+                    </div>
+                    <span style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.gold }}>{bodyAnalysis.symmetry_score}%</span>
+                  </div>
+                  <div style={{ ...mutedStyle, fontSize: 9, marginTop: 4 }}>Score de symétrie gauche/droite</div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div style={{ background: 'rgba(230,195,100,0.04)', border: '1px solid rgba(230,195,100,0.1)', borderRadius: 10, padding: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Clock size={12} color='rgba(255,255,255,0.25)' />
+                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)' }}>
+                  Dernière analyse : {bodyAnalysis.created_at ? format(new Date(bodyAnalysis.created_at), 'd MMM yyyy', { locale: fr }) : '—'} — Basée sur {bodyAnalysis.photos_used || 3} photos
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Empty state */}
+          {!bodyAnalysisLoading && !bodyAnalysis && (
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <User size={28} color={colors.textDim} style={{ marginBottom: 6 }} />
+              <p style={{ ...mutedStyle, fontSize: 12, margin: '0 0 4px' }}>Aucune analyse encore</p>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: 0 }}>Upload 3 photos pour lancer ta première analyse</p>
+            </div>
+          )}
+        </div>
+
+        {/* Upload modal */}
+        {showBodyUpload && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
+            <div style={{ background: colors.surface, borderTop: `1px solid ${colors.goldBorder}`, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '24px 20px 40px', width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ ...titleStyle, fontSize: 16, margin: 0 }}>PHOTOS POUR ANALYSE</h3>
+                <button onClick={() => { setShowBodyUpload(false); setBodyUploadPhotos({}) }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
+                {(['front', 'back', 'side'] as const).map(angle => {
+                  const url = bodyUploadPhotos[angle]
+                  const labels = { front: 'FACE', back: 'DOS', side: 'PROFIL' }
+                  return (
+                    <div key={angle} onClick={() => { setBodyUploadTarget(angle); bodyUploadRef.current?.click() }}
+                      style={{ aspectRatio: '3/4', borderRadius: radii.card, overflow: 'hidden', border: url ? `2px solid ${colors.gold}` : `2px dashed ${colors.goldBorder}`, background: url ? colors.background : colors.goldDim, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', position: 'relative' }}>
+                      {url ? <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} alt={labels[angle]} /> : (
+                        <>
+                          <Camera size={18} color={colors.textDim} />
+                          <span style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em' }}>{labels[angle]}</span>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+              <input ref={bodyUploadRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBodyUpload} />
+              <button onClick={runBodyAnalysis} disabled={!bodyUploadPhotos.front || !bodyUploadPhotos.back || !bodyUploadPhotos.side || bodyAnalysisLoading}
+                style={{ width: '100%', padding: 16, borderRadius: radii.button, border: 'none', cursor: bodyUploadPhotos.front && bodyUploadPhotos.back && bodyUploadPhotos.side ? 'pointer' : 'default', background: bodyUploadPhotos.front && bodyUploadPhotos.back && bodyUploadPhotos.side ? colors.gold : colors.surfaceHigh, color: bodyUploadPhotos.front && bodyUploadPhotos.back && bodyUploadPhotos.side ? '#000' : colors.textMuted, fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
+                {bodyAnalysisLoading ? 'Analyse en cours...' : 'LANCER L\'ANALYSE'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+          <button onClick={() => setShowBodyUpload(true)} style={{ flex: 1, background: 'linear-gradient(135deg, rgba(230,195,100,0.15), rgba(230,195,100,0.08))', border: '1px solid rgba(230,195,100,0.25)', borderRadius: 14, padding: 14, cursor: 'pointer', textAlign: 'left' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Camera size={14} color={colors.gold} />
+              <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.08em' }}>NOUVELLE ANALYSE</span>
+            </div>
+            <div style={{ ...mutedStyle, fontSize: 8 }}>Upload 3 photos</div>
+          </button>
+          <button onClick={() => setModal('messages')} style={{ ...cardStyle, flex: 1, borderRadius: 14, padding: 14, cursor: 'pointer', textAlign: 'left', border: `1px solid ${colors.goldBorder}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Send size={14} color='rgba(255,255,255,0.4)' />
+              <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em' }}>VOIR UN PRO</span>
+            </div>
+            <div style={{ ...mutedStyle, fontSize: 8 }}>Contacte ton coach</div>
+          </button>
+        </div>
       </div>
 
       {/* ═══ SECTION 7 — MENSURATIONS ═══ */}
