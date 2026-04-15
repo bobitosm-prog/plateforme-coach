@@ -695,21 +695,23 @@ export default function ProgressTab({
           )}
         </div>
 
-        {/* Upload modal */}
+        {/* Upload modal — centered */}
         {showBodyUpload && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
-            <div style={{ background: colors.surface, borderTop: `1px solid ${colors.goldBorder}`, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '20px 20px 32px', width: '100%' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <h3 style={{ ...titleStyle, fontSize: 14, margin: 0 }}>PHOTOS POUR ANALYSE</h3>
-                <button onClick={() => { setShowBodyUpload(false); setBodyUploadPhotos({}) }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
+          <div onClick={() => { if (!bodyAnalysisLoading) { setShowBodyUpload(false); setBodyUploadPhotos({}) } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 20, padding: 24, width: '100%', maxWidth: 360 }}>
+              {/* a) Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <span style={titleStyle}>PHOTOS POUR ANALYSE</span>
+                <button onClick={() => { setShowBodyUpload(false); setBodyUploadPhotos({}) }} style={{ width: 32, height: 32, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={colors.textMuted} /></button>
               </div>
+              {/* b) 3 photo zones */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
                 {(['front', 'back', 'side'] as const).map(angle => {
                   const url = bodyUploadPhotos[angle]
                   const labels = { front: 'FACE', back: 'DOS', side: 'PROFIL' }
                   return (
                     <div key={angle} onClick={() => { setBodyUploadTarget(angle); bodyUploadRef.current?.click() }}
-                      style={{ height: 120, borderRadius: radii.button, overflow: 'hidden', border: url ? `2px solid ${colors.gold}` : `2px dashed ${colors.goldBorder}`, background: url ? colors.background : colors.goldDim, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', position: 'relative' }}>
+                      style={{ aspectRatio: '3/4', maxHeight: 140, borderRadius: radii.button, overflow: 'hidden', border: url ? `2px solid rgba(201,168,76,0.25)` : `2px dashed ${colors.goldBorder}`, background: url ? colors.surface : colors.goldDim, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', position: 'relative' }}>
                       {url ? <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} alt={labels[angle]} /> : (
                         <>
                           <Camera size={16} color={colors.textDim} />
@@ -721,10 +723,18 @@ export default function ProgressTab({
                 })}
               </div>
               <input ref={bodyUploadRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBodyUpload} />
-              <button onClick={runBodyAnalysis} disabled={!bodyUploadPhotos.front || !bodyUploadPhotos.back || !bodyUploadPhotos.side || bodyAnalysisLoading}
-                style={{ width: '100%', padding: 16, borderRadius: radii.button, border: 'none', cursor: bodyUploadPhotos.front && bodyUploadPhotos.back && bodyUploadPhotos.side ? 'pointer' : 'default', background: bodyUploadPhotos.front && bodyUploadPhotos.back && bodyUploadPhotos.side ? colors.gold : colors.surfaceHigh, color: bodyUploadPhotos.front && bodyUploadPhotos.back && bodyUploadPhotos.side ? '#000' : colors.textMuted, fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
-                {bodyAnalysisLoading ? 'Analyse en cours...' : 'LANCER L\'ANALYSE'}
-              </button>
+              {/* c) Analyze button */}
+              {(() => {
+                const ready = !!(bodyUploadPhotos.front && bodyUploadPhotos.back && bodyUploadPhotos.side)
+                return (
+                  <button onClick={runBodyAnalysis} disabled={!ready || bodyAnalysisLoading}
+                    style={{ width: '100%', padding: 14, borderRadius: radii.button, border: 'none', cursor: ready && !bodyAnalysisLoading ? 'pointer' : 'default', background: ready ? colors.gold : colors.surfaceHigh, color: ready ? '#000' : colors.textMuted, fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, opacity: ready && !bodyAnalysisLoading ? 1 : 0.5 }}>
+                    {bodyAnalysisLoading ? 'Analyse en cours...' : 'LANCER L\'ANALYSE IA'}
+                  </button>
+                )
+              })()}
+              {/* d) Disclaimer */}
+              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', textAlign: 'center', margin: '12px 0 0' }}>Estimation IA — peut contenir des erreurs</p>
             </div>
           </div>
         )}
