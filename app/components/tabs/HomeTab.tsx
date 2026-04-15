@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -305,7 +306,9 @@ export default function HomeTab({
 
       {/* ═══ LOGO + CITATION ═══ */}
       <div style={{ padding: '12px 24px 0', textAlign: 'center' }}>
-        <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, letterSpacing: '0.2em', color: colors.gold, marginBottom: 8 }}>MOOVX</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+          <Image src="/logo-moovx.png" alt="MoovX" width={120} height={40} style={{ objectFit: 'contain' }} priority />
+        </div>
         <div style={{ fontFamily: fonts.body, fontSize: 13, fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, maxWidth: 300, margin: '0 auto' }}>
           &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
         </div>

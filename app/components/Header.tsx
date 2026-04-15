@@ -51,7 +51,7 @@ export default function Header({ firstName, displayAvatar, objective, unreadCoun
 
   return (
     <div style={{
-      position: 'sticky', top: 0, zIndex: 50,
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
       padding: '8px 20px',
       transform: visible ? 'translateY(0)' : 'translateY(-100%)',
       transition: 'transform 0.3s ease',
