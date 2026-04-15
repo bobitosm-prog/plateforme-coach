@@ -450,8 +450,8 @@ export default function ProfileTab({
       {/* Badge celebration */}
       {celebrateBadge && (
         <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={async () => {
-          // Mark as celebrated in DB so it never shows again
-          await supabase.from('user_badges').update({ celebrated: true }).eq('user_id', session.user.id).eq('badge_id', celebrateBadge.id)
+          // Mark as celebrated in DB so it never shows again (match both badge_id and legacy badge_type)
+          await supabase.from('user_badges').update({ celebrated: true, badge_id: celebrateBadge.id }).eq('user_id', session.user.id).or(`badge_id.eq.${celebrateBadge.id},badge_type.eq.${celebrateBadge.id}`)
           setCelebrateBadge(null)
         }} />
       )}
