@@ -120,9 +120,10 @@ export async function checkAndUnlockBadges(userId: string, supabase: any): Promi
   const { data: allBadges } = await supabase.from('badges').select('*').order('sort_order')
   if (!allBadges?.length) return { newBadges: [], currentValues: {} }
 
-  // 2. Get already unlocked
-  const { data: unlocked } = await supabase.from('user_badges').select('badge_id').eq('user_id', userId)
+  // 2. Get already unlocked (include celebrated flag)
+  const { data: unlocked } = await supabase.from('user_badges').select('badge_id, badge_type, celebrated').eq('user_id', userId)
   const unlockedIds = new Set((unlocked || []).map((u: any) => u.badge_id || u.badge_type))
+  const uncelebratedIds = new Set((unlocked || []).filter((u: any) => u.celebrated === false).map((u: any) => u.badge_id || u.badge_type))
 
   // 3. Check each badge condition
   const newBadges: Badge[] = []
@@ -138,15 +139,25 @@ export async function checkAndUnlockBadges(userId: string, supabase: any): Promi
     if (unlockedIds.has(badge.id)) continue
     const current = currentValues[badge.condition_type] || 0
     if (current >= badge.condition_value) {
-      // Unlock!
-      await supabase.from('user_badges').insert({ user_id: userId, badge_id: badge.id })
+      // Unlock! celebrated defaults to false
+      await supabase.from('user_badges').insert({ user_id: userId, badge_id: badge.id, celebrated: false })
       newBadges.push(badge)
     }
   }
 
-  // 4. Ensure user_xp row exists + update XP
+  // 3b. XP only for truly new unlocks (not uncelebrated old ones)
+  const trulyNewCount = newBadges.length
+
+  // 3c. Also include previously unlocked but uncelebrated badges (for celebration display only)
+  for (const badge of allBadges as Badge[]) {
+    if (uncelebratedIds.has(badge.id) && !newBadges.find(b => b.id === badge.id)) {
+      newBadges.push(badge)
+    }
+  }
+
+  // 4. Ensure user_xp row exists + update XP (only for truly new unlocks)
   const { data: xpRow } = await supabase.from('user_xp').select('*').eq('user_id', userId).maybeSingle()
-  const xpGained = newBadges.reduce((s, b) => s + b.xp_reward, 0)
+  const xpGained = newBadges.slice(0, trulyNewCount).reduce((s, b) => s + b.xp_reward, 0)
   const newTotal = (xpRow?.total_xp || 0) + xpGained
   const levelInfo = getLevelInfo(newTotal)
   await supabase.from('user_xp').upsert(

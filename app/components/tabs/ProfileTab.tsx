@@ -449,7 +449,11 @@ export default function ProfileTab({
 
       {/* Badge celebration */}
       {celebrateBadge && (
-        <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={() => setCelebrateBadge(null)} />
+        <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={async () => {
+          // Mark as celebrated in DB so it never shows again
+          await supabase.from('user_badges').update({ celebrated: true }).eq('user_id', session.user.id).eq('badge_id', celebrateBadge.id)
+          setCelebrateBadge(null)
+        }} />
       )}
 
       {/* ═══ SECTION 11 — ZONE DANGER ═══ */}
