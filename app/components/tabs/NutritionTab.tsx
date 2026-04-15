@@ -45,7 +45,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [loadingPlan, setLoadingPlan] = useState(true)
   const [showShoppingList, setShowShoppingList] = useState(false)
   const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set())
-  const [mealLogs, setMealLogs] = useState<any[]>([])
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const [showScanner, setShowScanner] = useState(false)
   const [showFridgeScanner, setShowFridgeScanner] = useState(false)
@@ -99,7 +98,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   useEffect(() => {
     fetchActiveMealPlan()
     fetchTodayTracking()
-    fetchTodayMealLogs()
     fetchDailyLogs()
     // Load days with meals for calendar dots
     const thirtyAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
@@ -268,33 +266,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     }
   }
 
-  async function fetchTodayMealLogs() {
-    const { data } = await supabase
-      .from('daily_food_logs')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .order('created_at', { ascending: true })
-      .limit(100)
-    setMealLogs(data || [])
-  }
 
-  async function deleteMealLog(id: string) {
-    await supabase.from('daily_food_logs').delete().eq('id', id)
-    setMealLogs(prev => prev.filter(l => l.id !== id))
-  }
-
-  // Get daily_food_logs macros for today
-  function getMealLogsMacros(): { kcal: number; protein: number; carbs: number; fat: number } {
-    const result = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    for (const log of mealLogs) {
-      result.kcal += log.calories || 0
-      result.protein += log.protein || 0
-      result.carbs += log.carbs || 0
-      result.fat += log.fat || 0
-    }
-    return result
-  }
 
   async function toggleMeal(mealType: string, planId: string | null) {
     const isCompleted = !completedMeals.has(mealType)
@@ -645,7 +617,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* Barcode scanner modal (single scan) */}
       {showScanner && (
         <BarcodeScanner supabase={supabase} userId={userId} defaultMealType="dejeuner"
-          onProductAdded={() => { setShowScanner(false); fetchTodayMealLogs() }}
+          onProductAdded={() => { setShowScanner(false); fetchDailyLogs() }}
           onClose={() => setShowScanner(false)} />
       )}
 
@@ -665,12 +637,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           dateOverride={selectedDate}
           onAdded={async (insertedLog?: any) => {
             if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }
-            // Optimistic update — inject into state immediately
+            // Optimistic update — inject into state immediately (never null thanks to fallback)
             if (insertedLog) { setDailyLogs(prev => [...prev, insertedLog]) }
             setDaysWithMeals(prev => new Set([...prev, selectedDate]))
             setShowFoodSearch(null)
-            // Background refetch for consistency (real IDs, order)
-            fetchDailyLogs()
+            // Delayed refetch — wait for read replica sync before overwriting optimistic state
+            setTimeout(() => { fetchDailyLogs() }, 2000)
           }}
           onClose={() => { setShowFoodSearch(null); setSwappingFoodId(null) }}
         />
