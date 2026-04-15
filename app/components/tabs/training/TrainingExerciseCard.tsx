@@ -13,6 +13,13 @@ interface PreviousSet {
   reps: number
 }
 
+const TECHNIQUE_LABELS: Record<string, { emoji: string; label: string }> = {
+  dropset: { emoji: '🔻', label: 'DROP SET' },
+  restpause: { emoji: '⏸️', label: 'REST PAUSE' },
+  superset: { emoji: '🔗', label: 'SUPERSET' },
+  mechanical: { emoji: '🔄', label: 'MECHANICAL' },
+}
+
 interface TrainingExerciseCardProps {
   ex: any
   exIdx: number
@@ -29,6 +36,7 @@ interface TrainingExerciseCardProps {
   fmtRest: (s: number) => string
   onCancelRest: () => void
   onVideoFeedback?: (exerciseName: string) => void
+  onTechniqueInfo?: (technique: string) => void
   supabase?: any
   userId?: string
 }
@@ -36,7 +44,7 @@ interface TrainingExerciseCardProps {
 export default function TrainingExerciseCard({
   ex, exIdx, setsArr, inputs, trainingIsToday,
   restRunning, restingSet, restTimer,
-  onToggleSet, onAddSet, onUpdateInput, onExerciseInfo, fmtRest, onCancelRest, onVideoFeedback,
+  onToggleSet, onAddSet, onUpdateInput, onExerciseInfo, fmtRest, onCancelRest, onVideoFeedback, onTechniqueInfo,
   supabase, userId,
 }: TrainingExerciseCardProps) {
   const restSecs   = Number(ex.rest) || 90
@@ -149,6 +157,27 @@ export default function TrainingExerciseCard({
                     {fmtRest(restSecs)} repos
                   </span>
                 </>
+              )}
+            </div>
+
+            {/* Tempo + Technique badges */}
+            <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+              {ex.tempo && ex.tempo !== '2-0-2' && (
+                <span style={{
+                  fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
+                  color: GOLD, background: `${GOLD}08`, border: `0.5px solid ${GOLD}12`,
+                  borderRadius: 999, padding: '2px 8px', letterSpacing: '0.05em',
+                }}>TEMPO {ex.tempo}</span>
+              )}
+              {ex.technique && TECHNIQUE_LABELS[ex.technique] && (
+                <span
+                  onClick={() => onTechniqueInfo?.(ex.technique)}
+                  style={{
+                    fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
+                    color: GOLD, background: `${GOLD}15`, border: `0.5px solid ${GOLD}25`,
+                    borderRadius: 999, padding: '2px 8px', letterSpacing: '0.05em', cursor: 'pointer',
+                  }}
+                >{TECHNIQUE_LABELS[ex.technique].emoji} {TECHNIQUE_LABELS[ex.technique].label}{ex.technique_details ? ` ×${ex.technique_details.split(',')[0]}` : ''}</span>
               )}
             </div>
           </div>

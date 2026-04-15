@@ -106,7 +106,23 @@ REGLES SCIENTIFIQUES OBLIGATOIRES :
 8. Chaque exercice doit avoir un temps de repos :
    - Compound lourd : 120s
    - Compound moyen : 90s
-   - Isolation : 60s`
+   - Isolation : 60s
+9. TEMPO (format excentrique-pause-concentrique) :
+   - Hypertrophie : tempo lent (3-1-2, 4-1-1) pour les exercices d'isolation
+   - Force/Puissance : tempo rapide (1-0-1, 2-0-1) pour les exercices composés lourds
+   - Standard : tempo moyen (2-0-2) par défaut
+   - Toujours au format "X-X-X" (3 chiffres séparés par des tirets)
+10. TECHNIQUES AVANCEES (optionnel, selon le niveau) :
+   - Debutant : AUCUNE technique avancee, tempo 2-0-2 partout
+   - Intermediaire : 1 technique par seance maximum
+   - Avance : 2 techniques par seance maximum
+   - Types : "dropset" (drops: 1-3), "restpause" (mini-sets: 2-3, repos: 10-15s), "superset" (avec un autre exercice), "mechanical" (changement prise/angle)
+   - technique = null si pas de technique
+   - technique_details = "" si pas de technique
+   - Pour dropset : technique_details = "2" (nombre de drops)
+   - Pour restpause : technique_details = "2,15" (mini-sets,repos en secondes)
+   - Pour superset : technique_details = "nom de l'exercice partenaire"
+   - Pour mechanical : technique_details = "description de la variation"`
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
@@ -173,7 +189,10 @@ JSON obligatoire :
           "sets": 4,
           "reps": 8,
           "rest_seconds": 120,
-          "order": 1
+          "order": 1,
+          "tempo": "2-0-2",
+          "technique": null,
+          "technique_details": ""
         }
       ]
     }
@@ -185,7 +204,11 @@ IMPORTANT :
 - 5-7 exercices par jour
 - Suis la structure indiquee dans le system prompt
 - Chaque exercice a un order (1, 2, 3...), sets, reps, rest_seconds
-- muscle_groups utilise des IDs anglais : chest, back, shoulders, biceps, triceps, quads, hamstrings, glutes, calves, core, abs`
+- muscle_groups utilise des IDs anglais : chest, back, shoulders, biceps, triceps, quads, hamstrings, glutes, calves, core, abs
+- Chaque exercice a un tempo (format "X-X-X"), technique (null ou "dropset"/"restpause"/"superset"/"mechanical"), et technique_details
+- Pour les debutants : pas de techniques avancees, tempo "2-0-2" partout
+- Pour les intermediaires : max 1 technique par jour
+- Pour les avances : max 2 techniques par jour`
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

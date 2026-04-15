@@ -10,6 +10,7 @@ import {
   GREEN, RED, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
+import { TechniqueExplanationCards } from '../tabs/training/TechniquePopup'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -562,6 +563,12 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             {renderDayEditor()}
 
+            {/* Technique explanations (if AI used techniques) */}
+            {(() => {
+              const usedTechniques = [...new Set(programDays.flatMap((d: any) => (d.exercises || []).map((e: any) => e.technique).filter(Boolean)))]
+              return usedTechniques.length > 0 ? <TechniqueExplanationCards techniques={usedTechniques} /> : null
+            })()}
+
             <button
               onClick={saveProgram}
               disabled={saving}
@@ -1104,7 +1111,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <div>
                       <div style={{ ...labelStyle, marginBottom: 4 }}>Séries</div>
                       <input
@@ -1135,6 +1142,118 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                         ))}
                       </select>
                     </div>
+                  </div>
+
+                  {/* Tempo input */}
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ ...labelStyle, marginBottom: 4 }}>Tempo (excentrique - pause - concentrique)</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {(() => {
+                        const parts = (ex.tempo || '2-0-2').split('-')
+                        return [0, 1, 2].map(i => (
+                          <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <input
+                              type="number" min={0} max={9}
+                              value={parts[i] || (i === 1 ? '0' : '2')}
+                              onChange={e => {
+                                const p = [...parts]; p[i] = e.target.value
+                                updateExerciseField(editingDayIndex, exIdx, 'tempo', p.join('-'))
+                              }}
+                              style={{ ...inputStyle, width: 36, padding: '8px 4px', textAlign: 'center', fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}
+                            />
+                            {i < 2 && <span style={{ color: TEXT_DIM, fontSize: 16, fontWeight: 700 }}>-</span>}
+                          </span>
+                        ))
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Technique avancée */}
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ ...labelStyle, marginBottom: 4 }}>Technique avancée (optionnel)</div>
+                    <select
+                      value={ex.technique || ''}
+                      onChange={e => {
+                        const val = e.target.value || null
+                        updateExerciseField(editingDayIndex, exIdx, 'technique', val)
+                        if (!val) updateExerciseField(editingDayIndex, exIdx, 'technique_details', '')
+                      }}
+                      style={{ ...inputStyle, width: '100%', padding: '8px', appearance: 'auto' as any }}
+                    >
+                      <option value="">Aucune</option>
+                      <option value="dropset">Drop Set</option>
+                      <option value="restpause">Rest Pause</option>
+                      <option value="superset">Superset</option>
+                      <option value="mechanical">Mechanical Drop Set</option>
+                    </select>
+
+                    {/* Technique details */}
+                    {ex.technique === 'dropset' && (
+                      <div style={{ marginTop: 8 }}>
+                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Nombre de drops</div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          {[1, 2, 3].map(n => (
+                            <button key={n} onClick={() => updateExerciseField(editingDayIndex, exIdx, 'technique_details', String(n))}
+                              style={{ padding: '6px 14px', border: `1px solid ${(ex.technique_details || '2') === String(n) ? GOLD : BORDER}`, background: (ex.technique_details || '2') === String(n) ? GOLD_DIM : BG_BASE, color: (ex.technique_details || '2') === String(n) ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                            >{n}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {ex.technique === 'restpause' && (
+                      <div style={{ marginTop: 8, display: 'flex', gap: 12 }}>
+                        <div>
+                          <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Mini-sets</div>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            {[2, 3].map(n => (
+                              <button key={n} onClick={() => {
+                                const rest = (ex.technique_details || '2,15').split(',')[1] || '15'
+                                updateExerciseField(editingDayIndex, exIdx, 'technique_details', `${n},${rest}`)
+                              }}
+                                style={{ padding: '6px 12px', border: `1px solid ${(ex.technique_details || '2,15').split(',')[0] === String(n) ? GOLD : BORDER}`, background: (ex.technique_details || '2,15').split(',')[0] === String(n) ? GOLD_DIM : BG_BASE, color: (ex.technique_details || '2,15').split(',')[0] === String(n) ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                              >{n}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Repos (s)</div>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            {[10, 15, 20].map(n => (
+                              <button key={n} onClick={() => {
+                                const sets = (ex.technique_details || '2,15').split(',')[0] || '2'
+                                updateExerciseField(editingDayIndex, exIdx, 'technique_details', `${sets},${n}`)
+                              }}
+                                style={{ padding: '6px 10px', border: `1px solid ${(ex.technique_details || '2,15').split(',')[1] === String(n) ? GOLD : BORDER}`, background: (ex.technique_details || '2,15').split(',')[1] === String(n) ? GOLD_DIM : BG_BASE, color: (ex.technique_details || '2,15').split(',')[1] === String(n) ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                              >{n}s</button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {ex.technique === 'superset' && (
+                      <div style={{ marginTop: 8 }}>
+                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Exercice partenaire</div>
+                        <input
+                          type="text"
+                          value={ex.technique_details || ''}
+                          onChange={e => updateExerciseField(editingDayIndex, exIdx, 'technique_details', e.target.value)}
+                          placeholder="Nom de l'exercice"
+                          style={{ ...inputStyle, width: '100%', padding: '8px' }}
+                        />
+                      </div>
+                    )}
+                    {ex.technique === 'mechanical' && (
+                      <div style={{ marginTop: 8 }}>
+                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Variation (ex: prise large → serrée → marteau)</div>
+                        <input
+                          type="text"
+                          value={ex.technique_details || ''}
+                          onChange={e => updateExerciseField(editingDayIndex, exIdx, 'technique_details', e.target.value)}
+                          placeholder="Description de la variation"
+                          style={{ ...inputStyle, width: '100%', padding: '8px' }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )})}

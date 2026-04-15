@@ -29,6 +29,7 @@ import TrainingDayChips from './training/TrainingDayChips'
 import TrainingRestDay from './training/TrainingRestDay'
 import TrainingSessionDone from './training/TrainingSessionDone'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
+import { TechniqueTooltip } from './training/TechniquePopup'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
@@ -116,6 +117,7 @@ export default function TrainingTab({
   const [altSearch, setAltSearch] = useState('')
   const [altSelected, setAltSelected] = useState<any>(null)
   const [altResults, setAltResults] = useState<any[]>([])
+  const [techniqueTooltip, setTechniqueTooltip] = useState<string | null>(null)
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
@@ -992,6 +994,19 @@ export default function TrainingTab({
                               <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>s</span>
                             </div>
                           </div>
+                          {/* Tempo */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 6 }}>
+                            <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Tempo</span>
+                            {[0, 1, 2].map(idx => {
+                              const parts = (ex.tempo || '2-0-2').split('-')
+                              return (
+                                <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                  <input type="number" min={0} max={9} value={parts[idx] || (idx === 1 ? '0' : '2')} onChange={e => { const p = [...parts]; p[idx] = e.target.value; editExField(dayIdx, i, 'tempo', p.join('-')) }} style={{ width: 28, padding: '3px 2px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 12, outline: 'none' }} />
+                                  {idx < 2 && <span style={{ color: colors.textDim, fontSize: 10 }}>-</span>}
+                                </span>
+                              )
+                            })}
+                          </div>
                         </div>
                         <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(212,168,67,0.06)', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>ℹ️</button>
                         <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>🔄</button>
@@ -1008,35 +1023,58 @@ export default function TrainingTab({
                 )
               })()}
 
-              {/* Normal exercise cards */}
+              {/* Normal exercise cards (with superset grouping) */}
               {trainingExercises.map((ex: any, exIdx: number) => {
                 const storageKey = `moovx-sets-${todayStr}-${ex.name}`
                 const n = Number(ex.sets) || 3
                 const setsArr: boolean[] = completedSets[storageKey] || Array.from({ length: n }, () => false)
                 const numSets = setsArr.length
                 const inputs = setInputs[ex.name] || Array.from({ length: numSets }, () => ({ kg: '', reps: String(ex.reps || '') }))
+                // Check if this exercise is part of a superset pair
+                const nextEx = trainingExercises[exIdx + 1]
+                const isSupersetStart = ex.technique === 'superset' && ex.technique_details && nextEx
+                const prevEx = exIdx > 0 ? trainingExercises[exIdx - 1] : null
+                const isSupersetEnd = prevEx?.technique === 'superset' && prevEx?.technique_details?.toLowerCase() === ex.name?.toLowerCase()
 
                 return (
-                  <TrainingExerciseCard
-                    key={ex.name}
-                    ex={ex}
-                    exIdx={exIdx}
-                    setsArr={setsArr}
-                    inputs={inputs}
-                    trainingIsToday={trainingIsToday}
-                    restRunning={restRunning}
-                    restingSet={restingSet}
-                    restTimer={restTimer}
-                    onToggleSet={toggleSet}
-                    onAddSet={addSet}
-                    onUpdateInput={updateInput}
-                    onExerciseInfo={handleExerciseInfo}
-                    fmtRest={fmtRest}
-                    onCancelRest={cancelRest}
-                    onVideoFeedback={(name: string) => setVideoExercise(name)}
-                    supabase={supabase}
-                    userId={session?.user?.id}
-                  />
+                  <div key={ex.name}>
+                    {/* Superset grouping bar */}
+                    {isSupersetStart && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+                        <div style={{ width: 3, height: 20, background: colors.gold, borderRadius: 2 }} />
+                        <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: colors.gold }}>SUPERSET</span>
+                        <div style={{ flex: 1, height: 1, background: `${colors.gold}30` }} />
+                      </div>
+                    )}
+                    <div style={isSupersetStart || isSupersetEnd ? { borderLeft: `3px solid ${colors.gold}`, paddingLeft: 8 } : {}}>
+                      <TrainingExerciseCard
+                        ex={ex}
+                        exIdx={exIdx}
+                        setsArr={setsArr}
+                        inputs={inputs}
+                        trainingIsToday={trainingIsToday}
+                        restRunning={restRunning}
+                        restingSet={restingSet}
+                        restTimer={restTimer}
+                        onToggleSet={toggleSet}
+                        onAddSet={addSet}
+                        onUpdateInput={updateInput}
+                        onExerciseInfo={handleExerciseInfo}
+                        fmtRest={fmtRest}
+                        onCancelRest={cancelRest}
+                        onVideoFeedback={(name: string) => setVideoExercise(name)}
+                        onTechniqueInfo={(t: string) => setTechniqueTooltip(t)}
+                        supabase={supabase}
+                        userId={session?.user?.id}
+                      />
+                    </div>
+                    {isSupersetEnd && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+                        <div style={{ width: 3, height: 10, background: colors.gold, borderRadius: 2 }} />
+                        <div style={{ flex: 1, height: 1, background: `${colors.gold}30` }} />
+                      </div>
+                    )}
+                  </div>
                 )
               })}
 
@@ -1642,6 +1680,9 @@ export default function TrainingTab({
 
       {/* Exercise info popup */}
       {exerciseInfo && <ExerciseInfoPopup info={exerciseInfo} onClose={() => setExerciseInfo(null)} />}
+
+      {/* Technique tooltip */}
+      {techniqueTooltip && <TechniqueTooltip technique={techniqueTooltip} onClose={() => setTechniqueTooltip(null)} />}
 
       {/* Variant popup */}
       {variantPopup && (
