@@ -74,17 +74,17 @@ export default function Header({ firstName, displayAvatar, objective, unreadCoun
           )}
         </button>
 
-        {/* Name + objective */}
+        {/* Name */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: colors.text, lineHeight: 1.2 }}>{firstName}</div>
-          <button onClick={onObjectiveChange} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-            <span style={{ fontFamily: fonts.body, fontSize: 8, fontWeight: 600, color: colors.textDim, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{objLabel}</span>
-            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', lineHeight: 1 }}>▼</span>
-          </button>
+          <div style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: colors.text, lineHeight: 1 }}>{firstName}</div>
         </div>
 
-        {/* Icons: Coach IA, Calendar, Messages */}
-        <div style={{ display: 'flex', gap: 12 }}>
+        {/* Objective pill + Icons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={onObjectiveChange} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.2)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', flexShrink: 0 }}>
+            <span style={{ fontFamily: fonts.headline, fontSize: 7, fontWeight: 700, color: colors.gold, textTransform: 'uppercase', letterSpacing: '0.08em', lineHeight: 1 }}>{objLabel}</span>
+            <span style={{ fontSize: 6, color: 'rgba(255,255,255,0.3)', lineHeight: 1 }}>▼</span>
+          </button>
           <button onClick={onCoachIA} style={iconBtn}>
             <Sparkles size={16} color={colors.gold} strokeWidth={1.5} />
           </button>
