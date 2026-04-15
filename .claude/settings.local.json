@@ -52,7 +52,31 @@
       "Bash(sudo chown:*)",
       "Bash(npm cache:*)",
       "Bash(npx vitest:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(echo:*)",
+      "Bash(npm ls:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_close",
+      "Bash(pkill:*)",
+      "mcp__playwright__browser_fill_form",
+      "Bash(cp /Users/marcoferreira/plateforme-coach/public/videos/exercises/developpe-incline-halteres.mp4 /Users/marcoferreira/Desktop/developpe-incline-halteres.mp4)",
+      "Read(//Users/marcoferreira/Desktop/**)",
+      "Bash(for i:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(convert -size 200x40 xc:transparent -font Helvetica -pointsize 24 -fill 'rgba\\(255,255,255,0.5\\)' -gravity center -annotate 0 'moovx.ch' /tmp/watermark.png)",
+      "Read(//tmp/**)",
+      "Bash(magick:*)",
+      "Bash(magick -size 200x40 xc:transparent -font /System/Library/Fonts/Helvetica.ttc -pointsize 24 -fill 'rgba\\(255,255,255,0.5\\)' -gravity center -annotate 0 'moovx.ch' /tmp/watermark.png)",
+      "Read(//private/tmp/**)",
+      "mcp__playwright__browser_file_upload",
+      "mcp__playwright__browser_run_code"
     ]
   }
 }
