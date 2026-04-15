@@ -30,17 +30,17 @@ export async function POST(req: NextRequest) {
       fetchImage(photoSideUrl),
     ])
 
-    const systemPrompt = `Tu es un expert en analyse corporelle fitness. Analyse ces 3 photos (face, dos, profil) et retourne UNIQUEMENT un JSON valide (sans markdown, sans backticks) avec cette structure exacte :
+    const systemPrompt = `Tu es un expert en analyse corporelle fitness. Analyse les 3 photos (face, dos, profil) et retourne UNIQUEMENT un JSON valide (sans markdown, sans backticks) avec cette structure exacte :
 {
-  "body_fat_estimate": <number, pourcentage estimé de masse grasse>,
-  "lean_mass_estimate": <number, kg de masse maigre estimée>,
-  "strengths": [<2-3 strings, points forts physiques observés en français>],
-  "improvements": [<2-3 strings, axes d'amélioration en français>],
-  "symmetry_score": <number 0-100, score de symétrie gauche/droite>,
-  "summary": "<résumé court en français, 2-3 phrases>"
+  "body_fat_estimate": <number>,
+  "lean_mass_estimate": <number>,
+  "strengths": ["string", "string"],
+  "improvements": ["string", "string"],
+  "symmetry_score": <number 0-100>,
+  "summary": "string"
 }
-Poids de l'utilisateur : ${weight || '?'} kg. Taille : ${height || '?'} cm.
-IMPORTANT : Ce sont des ESTIMATIONS visuelles, pas des mesures exactes. Précise-le dans le summary.`
+Poids : ${weight || '?'} kg. Taille : ${height || '?'} cm.
+IMPORTANT : estimations visuelles, pas des mesures exactes.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -50,8 +50,9 @@ IMPORTANT : Ce sont des ESTIMATIONS visuelles, pas des mesures exactes. Précise
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
+        system: 'Tu es un expert fitness. Réponds uniquement en JSON valide, sans backticks ni markdown.',
         messages: [{
           role: 'user',
           content: [
@@ -66,8 +67,8 @@ IMPORTANT : Ce sont des ESTIMATIONS visuelles, pas des mesures exactes. Précise
 
     if (!response.ok) {
       const err = await response.text()
-      console.error('[analyze-body] Claude error:', err)
-      return NextResponse.json({ error: 'Erreur lors de l\'analyse' }, { status: 500 })
+      console.error('[analyze-body] Claude API error:', response.status, err)
+      return NextResponse.json({ error: `Erreur IA (${response.status}): ${err.slice(0, 200)}` }, { status: response.status })
     }
 
     const data = await response.json()
