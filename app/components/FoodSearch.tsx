@@ -35,11 +35,12 @@ interface FoodSearchProps {
   supabase: any
   userId: string
   defaultMealType?: string
+  dateOverride?: string
   onAdded: () => void
   onClose: () => void
 }
 
-export default function FoodSearch({ supabase, userId, defaultMealType, onAdded, onClose }: FoodSearchProps) {
+export default function FoodSearch({ supabase, userId, defaultMealType, dateOverride, onAdded, onClose }: FoodSearchProps) {
   const [query, setQuery] = useState('')
   const [allFoods, setAllFoods] = useState<any[]>([])
   const [ansesResults, setAnsesResults] = useState<any[]>([])
@@ -53,7 +54,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, onAdded,
   const [showScanner, setShowScanner] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const today = new Date().toISOString().split('T')[0]
+  const today = dateOverride || new Date().toISOString().split('T')[0]
 
   // Load all fitness foods + user favorites once
   useEffect(() => {

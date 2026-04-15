@@ -5,6 +5,7 @@ import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
+import { normalizeFoodItem } from '../../../lib/utils/food'
 import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
@@ -661,7 +662,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           supabase={supabase}
           userId={userId}
           defaultMealType={showFoodSearch}
-          onAdded={async () => { if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }; setShowFoodSearch(null); fetchTodayMealLogs(); fetchDailyLogs() }}
+          dateOverride={selectedDate}
+          onAdded={async () => { if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }; setShowFoodSearch(null); await fetchDailyLogs(); await fetchTodayMealLogs(); setDaysWithMeals(prev => new Set([...prev, selectedDate])) }}
           onClose={() => { setShowFoodSearch(null); setSwappingFoodId(null) }}
         />
       )}
@@ -1022,21 +1024,21 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               <input value={editAddFoodQuery} onChange={async (e) => {
                 setEditAddFoodQuery(e.target.value)
                 if (e.target.value.length >= 2) {
-                  const { data } = await supabase.from('food_items').select('id, nom, calories, proteines, glucides, lipides').ilike('nom', `%${e.target.value}%`).limit(6)
-                  setEditAddFoodResults(data || [])
+                  const { data } = await supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').ilike('name', `%${e.target.value}%`).limit(12)
+                  setEditAddFoodResults((data || []).map((f: any) => normalizeFoodItem(f)))
                 } else { setEditAddFoodResults([]) }
               }} placeholder="+ Ajouter un aliment..." style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none' }} />
               {editAddFoodResults.length > 0 && (
                 <div style={{ maxHeight: 150, overflowY: 'auto', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, background: colors.surface, marginTop: 4 }}>
                   {editAddFoodResults.map((f: any) => (
                     <button key={f.id} onClick={() => {
-                      const newFood = { name: f.nom, calories: Math.round(f.calories || 0), protein: Math.round(f.proteines || 0), carbs: Math.round(f.glucides || 0), fat: Math.round(f.lipides || 0), quantity: 100 }
+                      const newFood = { name: f.nom, calories: f.calories, protein: f.proteines, carbs: f.glucides, fat: f.lipides, quantity: 100 }
                       setEditingMeal({ ...editingMeal, foods: [...(editingMeal.foods || []), newFood] })
                       setEditAddFoodQuery('')
                       setEditAddFoodResults([])
                     }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{f.nom}</div>
-                      <div style={{ fontSize: 9, color: colors.textDim }}>{Math.round(f.calories || 0)} kcal · {Math.round(f.proteines || 0)}g P</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{f.nom}{f.source === 'ANSES' ? ' 📊' : ''}</div>
+                      <div style={{ fontSize: 9, color: colors.textDim }}>{f.calories} kcal · {f.proteines}g P · {f.glucides}g G · {f.lipides}g L</div>
                     </button>
                   ))}
                 </div>
@@ -1044,8 +1046,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             </div>
             <button onClick={async () => {
               setEditMealSaving(true)
-              await supabase.from('saved_meals').update({ foods: editingMeal.foods }).eq('id', editingMeal.id)
-              setMyMeals(prev => prev.map(m => m.id === editingMeal.id ? { ...m, foods: editingMeal.foods } : m))
+              const foods = editingMeal.foods || []
+              const totals = {
+                total_calories: foods.reduce((s: number, f: any) => s + (f.calories || 0), 0),
+                total_proteins: foods.reduce((s: number, f: any) => s + (f.protein || f.proteins || 0), 0),
+                total_carbs: foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0),
+                total_fats: foods.reduce((s: number, f: any) => s + (f.fat || f.fats || 0), 0),
+              }
+              await supabase.from('saved_meals').update({ foods, ...totals }).eq('id', editingMeal.id)
+              setMyMeals(prev => prev.map(m => m.id === editingMeal.id ? { ...m, foods, ...totals } : m))
               setEditMealSaving(false)
               setEditMealSaved(true)
               setTimeout(() => setEditMealSaved(false), 2000)
