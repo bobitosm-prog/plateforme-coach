@@ -110,12 +110,15 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-              {[['SETS', 'targetSets', 'number'], ['REPS', 'targetReps', 'text'], ['REPOS s', 'rest', 'number']].map(([label, key, type]) => (
+              {[['SETS', 'targetSets', 'number', ''], ['REPS', 'targetReps', 'text', ''], ['REPOS', 'rest', 'number', 's']].map(([label, key, type, unit]) => (
                 <div key={key} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12 }}>
                   <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' as const, marginBottom: 6 }}>{label}</div>
-                  <input type={type} value={(e as any)[key]}
-                    onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))}
-                    style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 18 }} />
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                    <input type={type} value={(e as any)[key]}
+                      onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))}
+                      style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 18 }} />
+                    {unit && <span style={{ fontSize: 11, color: TEXT_DIM, fontFamily: FONT_BODY }}>{unit}</span>}
+                  </div>
                 </div>
               ))}
             </div>
@@ -498,26 +501,28 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       {/* HEADER */}
-      <div className="sticky top-0 z-40 border-b" style={{ background: '#0D0B08', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '40px 16px 12px', position: 'relative' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/stitch-barbell.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, pointerEvents: 'none' }} />
-        <div className="flex items-center justify-between mb-2" style={{ position: 'relative', zIndex: 1 }}>
-          <h1 className="text-xl truncate" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', margin: 0 }}>{sessionName}</h1>
-          <div className="flex items-center gap-2 px-3 py-1.5" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD }}>
-            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: GREEN }} />
-            <span className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY }}>{dur(elapsed)}</span>
+      <div className="sticky top-0 z-40 border-b" style={{ background: '#0D0B08', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '0 16px 10px', paddingTop: 'max(12px, env(safe-area-inset-top, 12px))', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
+            <ArrowLeft size={22} color={TEXT_PRIMARY} />
+          </button>
+          <h1 style={{ flex: 1, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', margin: 0, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sessionName || 'SÉANCE LIBRE'}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN, animation: 'pulse 2s infinite' }} />
+            <span style={{ fontSize: 14, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '1px' }}>{dur(elapsed)}</span>
           </div>
         </div>
-        <div className="flex justify-between items-center mb-1.5" style={{ position: 'relative', zIndex: 1 }}>
-          <span className="text-[10px]" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>Progression</span>
-          <span className="text-[11px]" style={{ color: GOLD, fontFamily: FONT_DISPLAY }}>{completed}/{total} sets</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <span style={{ fontSize: 10, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>Progression</span>
+          <span style={{ fontSize: 11, color: GOLD, fontFamily: FONT_DISPLAY }}>{completed}/{total} sets</span>
         </div>
-        <div className="overflow-hidden" style={{ height: 2, background: TEXT_DIM, position: 'relative', zIndex: 1 }}>
-          <div className="h-full transition-all duration-500" style={{ width: `${pct}%`, background: GOLD }} />
+        <div style={{ height: 2, background: TEXT_DIM, overflow: 'hidden' }}>
+          <div style={{ width: `${pct}%`, height: '100%', background: GOLD, transition: 'width 0.5s ease' }} />
         </div>
       </div>
 
       {/* EXERCICES */}
-      <div className="py-4" style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px 200px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px 120px' }}>
         {/* Add exercise button */}
         <div style={{ margin: '0 4px 16px', width: 'calc(100% - 8px)' }}>
           <button onClick={() => setMode('custom')} style={{
@@ -552,9 +557,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 <div className="flex-1 min-w-0">
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span style={{ fontSize: 9, padding: '2px 8px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.targetSets}×{exo.targetReps}</span>
-                  <span style={{ fontSize: 9, padding: '2px 8px', background: GOLD_DIM, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700 }}>⏱{fmt(exo.rest)}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                  <span style={{ fontSize: 9, padding: '2px 6px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, borderRadius: 4, whiteSpace: 'nowrap' }}>{exo.targetSets}×{exo.targetReps}</span>
                   <span style={{ fontSize: 10, color: cnt > 0 ? GOLD : TEXT_DIM, fontFamily: FONT_DISPLAY }}>{cnt}/{exo.sets.length}</span>
                   {exo.open ? <ChevronUp size={14} style={{ color: TEXT_DIM }} /> : <ChevronDown size={14} style={{ color: TEXT_DIM }} />}
                 </div>
@@ -732,7 +736,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       </div>
 
       {/* BARRE BAS */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, minHeight: 70, padding: '12px 16px', paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center' }}>
           <button onClick={onClose} className="active:scale-95" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '10px 16px', color: colors.error, fontSize: 13, fontWeight: 500, fontFamily: FONT_BODY, cursor: 'pointer' }}>Abandonner</button>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
