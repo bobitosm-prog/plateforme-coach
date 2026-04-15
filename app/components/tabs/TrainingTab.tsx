@@ -331,10 +331,10 @@ export default function TrainingTab({
 
   async function deactivateProgram(programId: string) {
     await supabase.from('custom_programs').update({ is_active: false }).eq('id', programId).eq('user_id', session.user.id)
-    const updated = customPrograms.map(p => ({ ...p, is_active: false }))
+    const updated = customPrograms.map(p => p.id === programId ? { ...p, is_active: false } : p)
     setCustomPrograms(updated)
     setActiveCustomProgram(null)
-    toast.success('Programme désactivé — retour au programme coach')
+    toast.success('Programme désactivé')
   }
 
   async function deleteProgram(programId: string) {
@@ -878,10 +878,12 @@ export default function TrainingTab({
 
           {/* Session content */}
           {!coachProgram && !activeCustomProgram ? (
-            /* Empty state — no program */
+            /* Empty state — no active program */
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
               <Dumbbell size={40} color={colors.textDim} strokeWidth={1.5} />
-              <p style={{ ...bodyStyle, marginTop: 12 }}>Aucun programme actif</p>
+              <p style={{ ...bodyStyle, marginTop: 12 }}>
+                {customPrograms.length > 0 ? 'Aucun programme actif — active un programme' : 'Aucun programme actif'}
+              </p>
               <button onClick={() => setShowProgramManager(true)} style={{ ...btnPrimary, width: '100%', padding: 14, marginTop: 16 }}>
                 {customPrograms.length > 0 ? 'MES PROGRAMMES' : 'CRÉER UN PROGRAMME'}
               </button>
@@ -1476,7 +1478,7 @@ export default function TrainingTab({
                   const days = prog.days || []
 
                   return (
-                    <div key={prog.id} style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
+                    <div key={prog.id} style={{ ...cardStyle, padding: 0, overflow: 'hidden', opacity: prog.is_active ? 1 : 0.7 }}>
                       {/* Program header — always visible */}
                       <button
                         onClick={() => setExpandedProgram(isExpanded ? null : prog.id)}
@@ -1489,8 +1491,10 @@ export default function TrainingTab({
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          {prog.is_active && (
+                          {prog.is_active ? (
                             <span style={{ fontSize: 10, fontWeight: 700, color: colors.success, background: 'rgba(74,222,128,0.1)', padding: '3px 10px', borderRadius: 999 }}>● Actif</span>
+                          ) : (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: 999 }}>○ Inactif</span>
                           )}
                           <span style={{ color: colors.textMuted, fontSize: 14, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
                         </div>
