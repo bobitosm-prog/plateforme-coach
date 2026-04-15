@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { addXP, updateStreak } from '../../../lib/gamification'
+import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
 import {
   Dumbbell, Search, Award, Moon,
@@ -117,15 +118,14 @@ export default function TrainingTab({
 
   // Keep screen awake during workout + rest timer
   useWakeLock(!!workoutStarted || restRunning)
-  // Priorité : programme custom actif > programme coach
+  // Priorité : programme custom actif > programme coach — using shared utility
   const customDayData = (() => {
     if (!activeCustomProgram?.days?.length) return null
-    const dayIndex = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-    const paddedDays = padTo7Days(activeCustomProgram.days)
-    const customDay = paddedDays[dayIndex]
-    if (!customDay) return null
-    if (customDay.is_rest) return { repos: true, exercises: [] }
-    return { repos: false, exercises: (customDay.exercises || []).map((ex: any) => ({ name: ex.exercise_name || ex.custom_name || ex.name || 'Exercice', sets: ex.sets || 3, reps: ex.reps || 10, rest_seconds: ex.rest_seconds || 90, muscle_group: ex.muscle_group || customDay.focus || '' })) }
+    const dayIndex = frDayToIndex(trainingDay)
+    if (dayIndex < 0) return null
+    const session = getSessionForDay(activeCustomProgram.days, dayIndex)
+    if (session.type === 'rest') return { repos: true, exercises: [] }
+    return { repos: false, exercises: session.exercises }
   })()
   const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
   const baseExercises: any[] = trainingDayData?.exercises || []
@@ -759,8 +759,8 @@ export default function TrainingTab({
           const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
           const ws = weekSessions.find((s: any) => s.scheduled_date === dateStr)
           // Also check if this day is rest in the active program
-          const programDay = activeCustomProgram?.days?.length ? padTo7Days(activeCustomProgram.days)[i] : null
-          const isProgRest = programDay?.is_rest === true
+          const progSession = activeCustomProgram?.days?.length ? getSessionForDay(activeCustomProgram.days, i) : null
+          const isProgRest = progSession?.type === 'rest'
           return { date: d, dateStr, ws, isProgRest }
         })
 

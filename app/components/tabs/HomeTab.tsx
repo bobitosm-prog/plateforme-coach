@@ -8,6 +8,7 @@ import {
   Ruler, Camera, Zap, Moon, CheckCircle, Flame, Dumbbell, TrendingUp, Droplets,
 } from 'lucide-react'
 import ExercisePreview from '../ExercisePreview'
+import { getTodaySession } from '../../../lib/get-today-session'
 import { resolveSessionType } from '../../../lib/session-types'
 import {
   colors, fonts, cardStyle, titleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
@@ -231,21 +232,16 @@ export default function HomeTab({
       .gte('created_at', oneWeekAgo).eq('completed', true).limit(20)
       .then(({ data }: any) => setWeekSessions(data?.length || 0))
 
-    // Fetch active custom program exercises for today
+    // Fetch active custom program exercises for today — using shared utility
     supabase.from('custom_programs').select('days').eq('user_id', userId).eq('is_active', true).maybeSingle()
       .then(({ data }: any) => {
         if (data?.days) {
-          const dow = new Date().getDay()
-          const realIdx = dow === 0 ? 6 : dow - 1 // Mon=0, Sun=6
-          // Pad to 7 days to handle short programs
-          const padded = [...data.days]
-          while (padded.length < 7) padded.push({ name: '', is_rest: true, exercises: [] })
-          const customDay = padded[realIdx]
-          if (customDay?.is_rest) {
+          const session = getTodaySession(data.days)
+          if (session.type === 'rest') {
             setCustomDayName('Repos')
-          } else if (customDay?.exercises?.length) {
-            setCustomProgramExercises((customDay.exercises || []).map((ex: any) => ({ name: ex.exercise_name || ex.custom_name || ex.name || 'Exercice', sets: ex.sets || 3, reps: ex.reps || 10, rest_seconds: ex.rest_seconds || 90, muscle_group: ex.muscle_group || '' })))
-            setCustomDayName(customDay.name || customDay.weekday || null)
+          } else {
+            setCustomProgramExercises(session.exercises)
+            setCustomDayName(session.name)
           }
         }
       })
