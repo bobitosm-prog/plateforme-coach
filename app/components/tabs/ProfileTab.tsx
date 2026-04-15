@@ -58,33 +58,36 @@ export default function ProfileTab({
 
   useEffect(() => {
     if (!session?.user?.id) return
-    // Load badges + user progress
-    Promise.all([
-      supabase.from('badges').select('*').order('sort_order'),
-      supabase.from('user_badges').select('badge_id, badge_type').eq('user_id', session.user.id).limit(100),
-      supabase.from('user_xp').select('total_xp').eq('user_id', session.user.id).single(),
-    ]).then(([badgesRes, unlockedRes, xpRes]: any[]) => {
-      setAllBadges(badgesRes.data || [])
-      const ids = new Set<string>((unlockedRes.data || []).map((u: any) => u.badge_id || u.badge_type))
-      setUnlockedBadgeIds(ids)
-      setTotalXp(xpRes.data?.total_xp || 0)
-    })
-    // Check for new badges then refetch everything
-    checkAndUnlockBadges(session.user.id, supabase).then(async ({ newBadges, currentValues: cv }) => {
+    const uid = session.user.id
+
+    async function loadAndCheck() {
+      // 1. Snapshot BEFORE — get existing badge IDs
+      const { data: beforeBadges } = await supabase.from('user_badges').select('badge_id').eq('user_id', uid)
+      const beforeIds = new Set<string>((beforeBadges || []).map((b: any) => b.badge_id).filter(Boolean))
+
+      // 2. Run badge check (unlocks new ones)
+      const { currentValues: cv } = await checkAndUnlockBadges(uid, supabase)
       setCurrentValues(cv)
-      if (newBadges.length > 0) {
-        setCelebrateBadge(newBadges[0])
-      }
-      // Refetch to get accurate state after unlock
+
+      // 3. Refetch AFTER — get full state
       const [bRes, uRes, xRes] = await Promise.all([
         supabase.from('badges').select('*').order('sort_order'),
-        supabase.from('user_badges').select('badge_id, badge_type').eq('user_id', session.user.id).limit(100),
-        supabase.from('user_xp').select('total_xp').eq('user_id', session.user.id).maybeSingle(),
+        supabase.from('user_badges').select('badge_id, badge_type, celebrated').eq('user_id', uid).limit(100),
+        supabase.from('user_xp').select('total_xp').eq('user_id', uid).maybeSingle(),
       ])
       setAllBadges(bRes.data || [])
-      setUnlockedBadgeIds(new Set<string>((uRes.data || []).map((u: any) => u.badge_id || u.badge_type)))
+      const afterIds = new Set<string>((uRes.data || []).map((u: any) => u.badge_id || u.badge_type).filter(Boolean))
+      setUnlockedBadgeIds(afterIds)
       setTotalXp(xRes.data?.total_xp || 0)
-    })
+
+      // 4. Find truly new badges (in after but not in before) AND uncelebrated
+      const uncelebrated = (uRes.data || []).filter((u: any) => u.celebrated === false && u.badge_id && !beforeIds.has(u.badge_id))
+      if (uncelebrated.length > 0 && bRes.data) {
+        const badgeToShow = (bRes.data as Badge[]).find(b => b.id === uncelebrated[0].badge_id)
+        if (badgeToShow) setCelebrateBadge(badgeToShow)
+      }
+    }
+    loadAndCheck()
   }, [session?.user?.id])
 
   function urlBase64ToUint8Array(base64String: string) {
@@ -450,8 +453,8 @@ export default function ProfileTab({
       {/* Badge celebration */}
       {celebrateBadge && (
         <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={async () => {
-          // Mark as celebrated in DB so it never shows again (match both badge_id and legacy badge_type)
-          await supabase.from('user_badges').update({ celebrated: true, badge_id: celebrateBadge.id }).eq('user_id', session.user.id).or(`badge_id.eq.${celebrateBadge.id},badge_type.eq.${celebrateBadge.id}`)
+          // Mark ALL uncelebrated badges as celebrated (belt and suspenders)
+          await supabase.from('user_badges').update({ celebrated: true }).eq('user_id', session.user.id).eq('celebrated', false)
           setCelebrateBadge(null)
         }} />
       )}
