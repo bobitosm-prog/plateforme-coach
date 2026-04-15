@@ -9,8 +9,7 @@ import { toast } from 'sonner'
 import {
   colors, fonts,
   titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, ORANGE, GOLD, GOLD_DIM, GOLD_RULE, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  radii,
 } from '../../../lib/design-tokens'
 import AnalyticsSection from '../AnalyticsSection'
 import AbsCalculator from '../progress/AbsCalculator'
@@ -263,7 +262,7 @@ export default function ProgressTab({
     if (curr == null || prev == null) return null
     const d = curr - prev
     if (d === 0) return null
-    return { val: Math.abs(d), icon: d > 0 ? ChevronUp : ChevronDown, color: d > 0 ? '#EF4444' : GREEN }
+    return { val: Math.abs(d), icon: d > 0 ? ChevronUp : ChevronDown, color: d > 0 ? '#EF4444' : colors.success }
   }
 
   // Evolution chart data
@@ -283,10 +282,7 @@ export default function ProgressTab({
 
   return (
     <div style={{ padding: '20px 20px 20px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ ...pageTitleStyle, fontSize: 36, fontWeight: 800, letterSpacing: '2px', margin: 0 }}>PALMARÈS & ANALYTICS</h1>
-        <div style={{ width: 1 }} /> {/* spacer */}
-      </div>
+      <h1 style={{ ...pageTitleStyle, margin: '0 0 20px' }}>ANALYTICS</h1>
 
       {/* Sub-tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
@@ -300,12 +296,12 @@ export default function ProgressTab({
           return (
             <button key={id} onClick={() => setSubTab(id)} style={{
               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-              padding: '10px 8px', borderRadius: 12, border: 'none', cursor: 'pointer',
-              fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700,
-              letterSpacing: '0.04em', textTransform: 'uppercase',
-              background: BG_CARD,
-              borderBottom: active ? '2px solid #C9A84C' : '2px solid transparent',
-              color: active ? GOLD : TEXT_MUTED, transition: 'all 150ms',
+              padding: '10px 8px', borderRadius: radii.button, border: 'none', cursor: 'pointer',
+              fontFamily: fonts.headline, fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+              background: active ? colors.goldDim : colors.surface,
+              borderBottom: active ? `2px solid ${colors.gold}` : '2px solid transparent',
+              color: active ? colors.gold : colors.textMuted, transition: 'all 150ms',
             }}>
               <Icon size={14} strokeWidth={2.5} />
               {label}
@@ -319,26 +315,35 @@ export default function ProgressTab({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Weight chart */}
           {displayWeights.length > 1 && (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderLeft: '2px solid #60A5FA', borderRadius: RADIUS_CARD, padding: 20 }}>
+            <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={cardTitleAbove}>ÉVOLUTION DU POIDS</span>
+              <div style={titleLineStyle} />
+            </div>
+            <div style={{ ...cardStyle, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ ...subtitleStyle, fontSize: 11, fontWeight: 800, letterSpacing: '2px' }}>Poids (30j)</span>
-                <span style={{ ...statStyle, fontWeight: 400, fontSize: '3rem', color: colors.gold }}>{displayWeights[displayWeights.length - 1]?.poids}<span style={{ ...mutedStyle, fontSize: '1rem', marginLeft: 4 }}>KG</span></span>
+                <span style={{ ...mutedStyle, fontSize: 11 }}>30 derniers jours</span>
+                <span style={{ ...statStyle, color: colors.gold }}>{displayWeights[displayWeights.length - 1]?.poids}<span style={{ ...mutedStyle, fontSize: 14, marginLeft: 4 }}>KG</span></span>
               </div>
               <svg viewBox="0 0 300 90" style={{ width: '100%', height: 90, overflow: 'visible' }} preserveAspectRatio="none">
-                <polyline points={displayWeights.map((p, i) => { const x = (i / (displayWeights.length - 1)) * 300; const y = 90 - ((p.poids - cMin) / ((cMax - cMin) || 1)) * 86; return `${x.toFixed(1)},${y.toFixed(1)}` }).join(' ')} fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                <circle cx={300} cy={90 - ((displayWeights[displayWeights.length - 1]?.poids - cMin) / ((cMax - cMin) || 1)) * 86} r="5" fill={GOLD} />
+                <polyline points={displayWeights.map((p, i) => { const x = (i / (displayWeights.length - 1)) * 300; const y = 90 - ((p.poids - cMin) / ((cMax - cMin) || 1)) * 86; return `${x.toFixed(1)},${y.toFixed(1)}` }).join(' ')} fill="none" stroke={colors.gold} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                <circle cx={300} cy={90 - ((displayWeights[displayWeights.length - 1]?.poids - cMin) / ((cMax - cMin) || 1)) * 86} r="5" fill={colors.gold} />
               </svg>
+              {goalWeight && <div style={{ ...mutedStyle, fontSize: 11, marginTop: 8 }}>Objectif : {goalWeight} kg</div>}
             </div>
+            </>
           )}
 
           {/* Latest measurements with deltas */}
           {latestMeasure && (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ ...subtitleStyle, fontSize: 11, fontWeight: 800, letterSpacing: '2px' }}>Dernières mesures</span>
-                <span style={{ ...mutedStyle, fontSize: '0.68rem', fontWeight: 300 }}>{format(new Date(latestMeasure.date), 'd MMM yyyy', { locale: fr })}</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: BORDER, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
+            <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={cardTitleAbove}>MENSURATIONS</span>
+              <div style={titleLineStyle} />
+              <span style={{ ...mutedStyle, fontSize: 10 }}>{format(new Date(latestMeasure.date), 'd MMM yyyy', { locale: fr })}</span>
+            </div>
+            <div style={{ ...cardStyle, padding: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: colors.goldBorder, borderRadius: radii.card, overflow: 'hidden' }}>
                 {[
                   { l: 'Poitrine', v: latestMeasure.chest, f: 'chest', u: 'cm' },
                   { l: 'Taille', v: latestMeasure.waist, f: 'waist', u: 'cm' },
@@ -349,10 +354,10 @@ export default function ProgressTab({
                 ].filter(x => x.v != null).map(({ l, v, f, u }) => {
                   const d = delta(f)
                   return (
-                    <div key={l} style={{ background: BG_CARD, padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', ...(f === 'body_fat' ? { borderLeft: '2px solid #C9A84C' } : {}) }}>
-                      <span style={{ ...subtitleStyle, fontSize: 11, fontWeight: 700, letterSpacing: '2px' }}>{l}</span>
+                    <div key={l} style={{ background: colors.surface, padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ ...subtitleStyle, fontSize: 10 }}>{l}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ ...statSmallStyle, fontSize: '1.1rem' }}>{v}<span style={{ ...mutedStyle, fontSize: '0.65rem', marginLeft: 2 }}>{u}</span></span>
+                        <span style={{ ...statSmallStyle }}>{v}<span style={{ ...mutedStyle, fontSize: 10, marginLeft: 2 }}>{u}</span></span>
                         {d && <d.icon size={12} color={d.color} strokeWidth={3} />}
                       </div>
                     </div>
@@ -360,6 +365,7 @@ export default function ProgressTab({
                 })}
               </div>
             </div>
+            </>
           )}
 
           {/* Action buttons */}
@@ -371,14 +377,18 @@ export default function ProgressTab({
           {/* Recent history */}
           {measurements.length > 0 && (
             <div>
-              <span style={{ ...subtitleStyle, fontSize: 11, fontWeight: 800, letterSpacing: '2px', display: 'block', marginBottom: 10 }}>Historique ({measurements.length})</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <span style={cardTitleAbove}>HISTORIQUE</span>
+                <div style={titleLineStyle} />
+                <span style={{ ...mutedStyle, fontSize: 10 }}>({measurements.length})</span>
+              </div>
               {measurements.slice(0, 5).map((m: any, i: number) => (
-                <div key={m.id || i} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '10px 14px', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ ...bodyStyle, fontSize: '0.78rem', color: i === 0 ? GOLD : colors.textMuted, fontWeight: 600 }}>{format(new Date(m.date), 'd MMM yyyy', { locale: fr })}</span>
-                  <div style={{ display: 'flex', gap: 10, fontFamily: fonts.body, fontSize: '0.72rem' }}>
-                    {m.waist && <span style={{ color: TEXT_MUTED }}>T:{m.waist}</span>}
-                    {m.chest && <span style={{ color: TEXT_MUTED }}>P:{m.chest}</span>}
-                    {m.hips && <span style={{ color: TEXT_MUTED }}>H:{m.hips}</span>}
+                <div key={m.id || i} style={{ ...cardStyle, padding: '10px 14px', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ ...bodyStyle, fontSize: 12, color: i === 0 ? colors.gold : colors.textMuted, fontWeight: 600 }}>{format(new Date(m.date), 'd MMM yyyy', { locale: fr })}</span>
+                  <div style={{ display: 'flex', gap: 10, ...mutedStyle, fontSize: 11 }}>
+                    {m.waist && <span>T:{m.waist}</span>}
+                    {m.chest && <span>P:{m.chest}</span>}
+                    {m.hips && <span>H:{m.hips}</span>}
                   </div>
                 </div>
               ))}
@@ -407,10 +417,10 @@ export default function ProgressTab({
               toast.success('Fichier exporté ✓')
             }} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              width: '100%', padding: 14, borderRadius: 12,
-              background: 'transparent', border: `1px solid ${BORDER}`,
-              color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700,
-              letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase',
+              width: '100%', padding: 14, borderRadius: radii.button,
+              background: 'transparent', border: `1px solid ${colors.goldBorder}`,
+              color: colors.textMuted, fontFamily: fonts.headline, fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.08em', cursor: 'pointer', textTransform: 'uppercase' as const,
             }}>
               <Download size={14} /> Exporter mes données (.xlsx)
             </button>
@@ -431,31 +441,29 @@ export default function ProgressTab({
 
       {subTab === 'photos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* Body assessment CTA */}
-          <div style={{ height: 140, overflow: 'hidden', marginBottom: 16, position: 'relative' }}>
-            <img src="/images/progress-hero.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'grayscale(40%)' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, #080808 100%)' }} />
-            <div style={{ position: 'absolute', bottom: 12, left: 16, fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: '#D4A843', letterSpacing: '1px' }}>PROGRESSION VISUELLE</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={cardTitleAbove}>PHOTOS AVANT / APRÈS</span>
+            <div style={titleLineStyle} />
           </div>
           <button
             onClick={() => setShowAssessment(true)}
             style={{
-              width: '100%', padding: '18px 16px', marginBottom: 16,
-              background: GOLD_DIM, border: `2px solid ${GOLD}`,
-              color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 18,
-              letterSpacing: '2px', cursor: 'pointer',
+              width: '100%', padding: '16px', marginBottom: 4,
+              background: colors.goldDim, border: `1px solid ${colors.goldRule}`,
+              color: colors.gold, fontFamily: fonts.headline, fontSize: 13,
+              letterSpacing: '0.1em', cursor: 'pointer', fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              borderRadius: 10,
+              borderRadius: radii.button, textTransform: 'uppercase' as const,
             }}
           >
             BILAN CORPOREL COMPLET (3 ANGLES)
           </button>
           {/* Photo grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-            <button onClick={() => photoRef.current?.click()} style={{ aspectRatio: '1', border: `2px dashed ${BORDER}`, borderRadius: RADIUS_CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: BG_CARD, cursor: 'pointer' }}>
+            <button onClick={() => photoRef.current?.click()} style={{ aspectRatio: '1', border: `2px dashed ${colors.goldBorder}`, borderRadius: radii.card, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: colors.surface, cursor: 'pointer' }}>
               {photoUploading
-                ? <div style={{ width: 24, height: 24, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                : <><Plus size={22} color={TEXT_MUTED} /><span style={{ fontSize: '0.55rem', color: TEXT_MUTED, fontWeight: 600 }}>Ajouter</span></>}
+                ? <div style={{ width: 24, height: 24, border: `2px solid ${colors.gold}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                : <><Plus size={22} color={colors.textMuted} /><span style={{ fontSize: '0.55rem', color: colors.textMuted, fontWeight: 600 }}>Ajouter</span></>}
             </button>
             {progressPhotos.map((p: any, idx: number) => {
               const imgSrc = signedUrls[p.id] || ''
@@ -464,19 +472,19 @@ export default function ProgressTab({
               const hasAnalysis = !!analyses[p.id]
               return (
                 <React.Fragment key={p.id}>
-                  <div style={{ aspectRatio: '1', borderRadius: RADIUS_CARD, overflow: 'hidden', position: 'relative', border: `1px solid ${BORDER}`, background: BG_CARD }} className="photo-cell">
+                  <div style={{ aspectRatio: '1', borderRadius: radii.card, overflow: 'hidden', position: 'relative', border: `1px solid ${colors.goldBorder}`, background: colors.surface }} className="photo-cell">
                     {imgSrc && <img src={imgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Photo de progression" />}
                     {!imgSrc && (
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Camera size={24} color={TEXT_MUTED} />
+                        <Camera size={24} color={colors.textMuted} />
                       </div>
                     )}
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', padding: '20px 8px 6px', fontSize: '0.55rem', color: '#fff', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 2 }}>
                       <span>{p.date ? format(new Date(p.date), 'd MMM', { locale: fr }) : ''}</span>
                       <button onClick={(e) => { e.stopPropagation(); analyzePhoto(p, idx) }}
-                        style={{ background: hasAnalysis ? `${GOLD}30` : GOLD, border: 'none', borderRadius: 4, padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, zIndex: 3 }}>
-                        <Sparkles size={10} color={hasAnalysis ? GOLD : '#000'} />
-                        <span style={{ fontSize: '0.55rem', fontWeight: 700, color: hasAnalysis ? GOLD : '#000' }}>IA</span>
+                        style={{ background: hasAnalysis ? `${colors.gold}30` : colors.gold, border: 'none', borderRadius: 4, padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, zIndex: 3 }}>
+                        <Sparkles size={10} color={hasAnalysis ? colors.gold : '#000'} />
+                        <span style={{ fontSize: '0.55rem', fontWeight: 700, color: hasAnalysis ? colors.gold : '#000' }}>IA</span>
                       </button>
                     </div>
                     <button onClick={() => deletePhoto(p)} className="photo-delete-btn" style={{ position: 'absolute', top: 6, right: 6, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 200ms' }}>
@@ -485,29 +493,29 @@ export default function ProgressTab({
                   </div>
                   {/* Analysis panel — spans full row */}
                   {isExpanded && (
-                    <div style={{ gridColumn: '1 / -1', background: BG_CARD, border: `1px solid ${GOLD}30`, borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ gridColumn: '1 / -1', ...cardStyle, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {isAnalyzing ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '20px 0' }}>
-                          <div style={{ width: 20, height: 20, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                          <span style={{ fontSize: '0.82rem', color: GOLD, fontWeight: 600 }}>Analyse en cours...</span>
+                          <div style={{ width: 20, height: 20, border: `2px solid ${colors.gold}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                          <span style={{ fontSize: '0.82rem', color: colors.gold, fontWeight: 600 }}>Analyse en cours...</span>
                         </div>
                       ) : hasAnalysis ? (
                         <>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <Sparkles size={14} color={GOLD} />
+                              <Sparkles size={14} color={colors.gold} />
                               <span style={{ ...titleStyle, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.82rem', letterSpacing: '0.04em' }}>Analyse IA</span>
                             </div>
                             <button onClick={() => setExpandedAnalysis(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
-                              <X size={14} color={TEXT_MUTED} />
+                              <X size={14} color={colors.textMuted} />
                             </button>
                           </div>
                           <AnalysisDisplay text={analyses[p.id]} />
                           {coachId && (
                             <button onClick={() => shareAnalysis(p.id)} disabled={sharingId === p.id}
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: `1px solid ${GOLD}40`, background: `${GOLD}08`, cursor: 'pointer', width: '100%' }}>
-                              <Send size={14} color={GOLD} />
-                              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: GOLD }}>
+                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: `1px solid ${colors.gold}40`, background: `${colors.gold}08`, cursor: 'pointer', width: '100%' }}>
+                              <Send size={14} color={colors.gold} />
+                              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: colors.gold }}>
                                 {sharingId === p.id ? 'Envoi...' : 'Partager avec mon coach'}
                               </span>
                             </button>
@@ -523,7 +531,7 @@ export default function ProgressTab({
 
           {progressPhotos.length === 0 && (
             <div style={{ textAlign: 'center', padding: '30px 0' }}>
-              <Camera size={36} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
+              <Camera size={36} color={colors.textMuted} style={{ marginBottom: 8 }} />
               <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>Aucune photo encore. Ajoute ta première !</p>
             </div>
           )}
@@ -533,9 +541,9 @@ export default function ProgressTab({
           {/* Compare button */}
           {progressPhotos.length >= 2 && (
             <button onClick={() => { setCompareIdx([progressPhotos.length - 1, 0]); setSliderValue(50); setShowCompare(true) }}
-              style={{ width: '100%', padding: '14px', borderRadius: RADIUS_CARD, border: `1px solid ${GOLD_RULE}`, background: GOLD_DIM, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-              <span style={{ fontSize: '1rem' }}>📸</span>
-              <span style={{ ...labelStyle, fontSize: '0.88rem', letterSpacing: '2px' }}>Comparer avant / après</span>
+              style={{ width: '100%', padding: 14, borderRadius: radii.button, border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+              <span style={{ fontSize: 16 }}>📸</span>
+              <span style={{ ...labelStyle, letterSpacing: '0.1em' }}>Comparer avant / après</span>
             </button>
           )}
         </div>
@@ -567,7 +575,7 @@ export default function ProgressTab({
             {/* Photo selectors */}
             <div style={{ display: 'flex', gap: 8, padding: '8px 16px', borderBottom: '1px solid #1a1a1a' }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' }}>Avant</label>
+                <label style={{ fontSize: '0.6rem', color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>Avant</label>
                 <select value={compareIdx[0]} onChange={e => setCompareIdx([Number(e.target.value), compareIdx[1]])}
                   style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 8, padding: '6px 8px', color: '#fff', fontSize: '0.75rem' }}>
                   {progressPhotos.map((p: any, i: number) => (
@@ -576,7 +584,7 @@ export default function ProgressTab({
                 </select>
               </div>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' }}>Après</label>
+                <label style={{ fontSize: '0.6rem', color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>Après</label>
                 <select value={compareIdx[1]} onChange={e => setCompareIdx([compareIdx[0], Number(e.target.value)])}
                   style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 8, padding: '6px 8px', color: '#fff', fontSize: '0.75rem' }}>
                   {progressPhotos.map((p: any, i: number) => (
@@ -593,8 +601,8 @@ export default function ProgressTab({
               {/* Before photo (clipped) */}
               <img src={beforeUrl} alt="Avant" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000', clipPath: `inset(0 ${100 - sliderValue}% 0 0)` }} />
               {/* Slider line */}
-              <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${sliderValue}%`, width: 2, background: GOLD, transform: 'translateX(-50%)', zIndex: 2 }}>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${sliderValue}%`, width: 2, background: colors.gold, transform: 'translateX(-50%)', zIndex: 2 }}>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 36, height: 36, borderRadius: '50%', background: colors.gold, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ color: '#000', fontSize: '0.7rem', fontWeight: 700 }}>⟷</span>
                 </div>
               </div>
@@ -612,14 +620,18 @@ export default function ProgressTab({
       {/* ═══ EVOLUTION SUB-TAB ═══ */}
       {subTab === 'evolution' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={cardTitleAbove}>ÉVOLUTION</span>
+            <div style={titleLineStyle} />
+          </div>
           {/* Metric selector */}
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
             {EVOLUTION_METRICS.map(m => (
               <button key={m.key} onClick={() => setEvoMetric(m.key)} style={{
-                flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700,
-                background: evoMetric === m.key ? GOLD : BG_CARD,
-                color: evoMetric === m.key ? '#0D0B08' : TEXT_MUTED, transition: 'all 150ms',
+                flexShrink: 0, padding: '8px 14px', borderRadius: radii.pill, border: 'none', cursor: 'pointer',
+                fontFamily: fonts.headline, fontSize: 11, fontWeight: 700,
+                background: evoMetric === m.key ? colors.gold : colors.surface,
+                color: evoMetric === m.key ? '#0D0B08' : colors.textMuted, transition: 'all 150ms',
               }}>
                 {m.label}
               </button>
@@ -636,19 +648,19 @@ export default function ProgressTab({
             const diff = last - first
             const diffPct = first !== 0 ? ((diff / first) * 100).toFixed(1) : '0'
             return (
-              <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20 }}>
+              <div style={{ ...cardStyle, padding: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span style={{ ...subtitleStyle, fontSize: 11, fontWeight: 800, letterSpacing: '2px' }}>
+                  <span style={subtitleStyle}>
                     {EVOLUTION_METRICS.find(m => m.key === evoMetric)?.label}
                   </span>
-                  <span style={{ ...statStyle, fontWeight: 400, fontSize: 28, color: colors.gold }}>
+                  <span style={{ ...statStyle, color: colors.gold }}>
                     {last} {unit}
                   </span>
                 </div>
                 <svg viewBox="0 0 300 100" style={{ width: '100%', height: 100, overflow: 'visible' }} preserveAspectRatio="none">
                   {/* Grid lines */}
                   {[0, 25, 50, 75, 100].map(y => (
-                    <line key={y} x1="0" y1={y} x2="300" y2={y} stroke={TEXT_DIM} strokeWidth="0.5" />
+                    <line key={y} x1="0" y1={y} x2="300" y2={y} stroke={colors.textDim} strokeWidth="0.5" />
                   ))}
                   <polyline
                     points={evoData.map((p, i) => {
@@ -656,13 +668,13 @@ export default function ProgressTab({
                       const y = 100 - ((p.value - min) / ((max - min) || 1)) * 96
                       return `${x.toFixed(1)},${y.toFixed(1)}`
                     }).join(' ')}
-                    fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"
+                    fill="none" stroke={colors.gold} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"
                   />
                   {/* Dots */}
                   {evoData.map((p, i) => {
                     const x = (i / (evoData.length - 1)) * 300
                     const y = 100 - ((p.value - min) / ((max - min) || 1)) * 96
-                    return <circle key={i} cx={x} cy={y} r={i === evoData.length - 1 ? 5 : 3} fill={i === evoData.length - 1 ? GOLD : `${GOLD}80`} />
+                    return <circle key={i} cx={x} cy={y} r={i === evoData.length - 1 ? 5 : 3} fill={i === evoData.length - 1 ? colors.gold : `${colors.gold}80`} />
                   })}
                 </svg>
                 {/* Date labels */}
@@ -672,18 +684,18 @@ export default function ProgressTab({
                 </div>
 
                 {/* Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: BORDER, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden', marginTop: 14 }}>
-                  <div style={{ background: BG_CARD, padding: '10px 8px', textAlign: 'center' }}>
-                    <div style={{ ...subtitleStyle, fontSize: 11, fontWeight: 700, letterSpacing: '2px' }}>Début</div>
-                    <div style={{ ...statSmallStyle, fontSize: '1rem', color: colors.text }}>{first} {unit}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: colors.goldBorder, borderRadius: radii.card, overflow: 'hidden', marginTop: 14 }}>
+                  <div style={{ background: colors.surface, padding: '10px 8px', textAlign: 'center' }}>
+                    <div style={{ ...subtitleStyle, fontSize: 10 }}>Début</div>
+                    <div style={{ ...statSmallStyle, color: colors.text }}>{first} {unit}</div>
                   </div>
-                  <div style={{ background: BG_CARD, padding: '10px 8px', textAlign: 'center' }}>
-                    <div style={{ ...subtitleStyle, fontSize: 11, fontWeight: 700, letterSpacing: '2px' }}>Actuel</div>
-                    <div style={{ ...statSmallStyle, fontSize: '1rem' }}>{last} {unit}</div>
+                  <div style={{ background: colors.surface, padding: '10px 8px', textAlign: 'center' }}>
+                    <div style={{ ...subtitleStyle, fontSize: 10 }}>Actuel</div>
+                    <div style={statSmallStyle}>{last} {unit}</div>
                   </div>
-                  <div style={{ background: BG_CARD, padding: '10px 8px', textAlign: 'center' }}>
-                    <div style={{ ...subtitleStyle, fontSize: 11, fontWeight: 700, letterSpacing: '2px' }}>Diff</div>
-                    <div style={{ ...statSmallStyle, fontSize: '1rem', color: diff > 0 ? '#EF4444' : diff < 0 ? GREEN : TEXT_MUTED }}>
+                  <div style={{ background: colors.surface, padding: '10px 8px', textAlign: 'center' }}>
+                    <div style={{ ...subtitleStyle, fontSize: 10 }}>Diff</div>
+                    <div style={{ ...statSmallStyle, color: diff > 0 ? colors.error : diff < 0 ? colors.success : colors.textMuted }}>
                       {diff > 0 ? '+' : ''}{diff.toFixed(1)} ({diffPct}%)
                     </div>
                   </div>
@@ -691,10 +703,10 @@ export default function ProgressTab({
               </div>
             )
           })() : (
-            <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 20px', textAlign: 'center' }}>
-              <TrendingUp size={32} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
-              <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>Pas assez de données pour ce graphique.</p>
-              <p style={{ ...bodyStyle, fontSize: '0.72rem', margin: '6px 0 0' }}>Ajoute au moins 2 mesures.</p>
+            <div style={{ ...cardStyle, padding: '40px 20px', textAlign: 'center' }}>
+              <TrendingUp size={32} color={colors.textMuted} style={{ marginBottom: 8 }} />
+              <p style={{ ...bodyStyle, fontSize: 13, margin: 0 }}>Pas assez de données pour ce graphique.</p>
+              <p style={{ ...mutedStyle, fontSize: 11, margin: '6px 0 0' }}>Ajoute au moins 2 mesures.</p>
             </div>
           )}
         </div>
@@ -735,22 +747,22 @@ export default function ProgressTab({
       {/* ── WEIGHT MODAL ── */}
       {showWeight && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '28px 20px 48px', width: '100%' }}>
+          <div style={{ background: colors.surface, borderTop: `1px solid ${colors.goldBorder}`, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-              <h3 style={{ ...subtitleStyle, fontSize: '1.4rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: 0 }}>ENREGISTRER MON POIDS</h3>
-              <button onClick={() => { setShowWeight(false); setWeightVal('') }} style={{ width: 36, height: 36, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={TEXT_MUTED} /></button>
+              <h3 style={{ ...titleStyle, fontSize: 18, margin: 0 }}>ENREGISTRER MON POIDS</h3>
+              <button onClick={() => { setShowWeight(false); setWeightVal('') }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
             </div>
             <div style={{ position: 'relative', marginBottom: 20 }}>
               <input type="number" inputMode="decimal" step="0.1" min="0" value={weightVal} onChange={e => setWeightVal(e.target.value)} placeholder="0.0" autoFocus
-                style={{ width: '100%', background: BG_BASE, border: `2px solid ${weightVal ? GOLD : BORDER}`, borderRadius: RADIUS_CARD, padding: '22px 56px 22px 20px', color: TEXT_PRIMARY, fontSize: '3.2rem', fontFamily: FONT_DISPLAY, textAlign: 'center', outline: 'none', transition: 'border-color 200ms' }} />
-              <span style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, fontSize: '1rem', fontWeight: 600 }}>kg</span>
+                style={{ width: '100%', background: colors.background, border: `2px solid ${weightVal ? colors.gold : colors.goldBorder}`, borderRadius: radii.card, padding: '22px 56px 22px 20px', color: colors.text, fontSize: '3.2rem', fontFamily: fonts.headline, textAlign: 'center', outline: 'none', transition: 'border-color 200ms' }} />
+              <span style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', color: colors.textMuted, fontSize: '1rem', fontWeight: 600 }}>kg</span>
             </div>
             {weightHistory30.length > 0 && <p style={{ textAlign: 'center', ...bodyStyle, fontSize: '0.75rem', marginBottom: 20 }}>Précédent : {weightHistory30[weightHistory30.length - 1].poids} kg</p>}
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', ...subtitleStyle, fontSize: 11, fontWeight: 700, letterSpacing: '2px', marginBottom: 8 }}>Date</label>
-              <input type="date" value={weightDate} onChange={e => setWeightDate(e.target.value)} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px', color: TEXT_PRIMARY, fontFamily: fonts.body, fontSize: '1rem', outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
+              <input type="date" value={weightDate} onChange={e => setWeightDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: '1rem', outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
             </div>
-            <button onClick={handleSaveWeight} disabled={!weightVal || savingWeight} style={{ width: '100%', background: weightVal && !savingWeight ? GOLD : '#2A2A2A', color: weightVal && !savingWeight ? '#000' : TEXT_MUTED, fontWeight: 700, padding: '17px', borderRadius: RADIUS_CARD, border: 'none', cursor: weightVal && !savingWeight ? 'pointer' : 'default', fontFamily: FONT_ALT, fontSize: '1.1rem', letterSpacing: '2px', textTransform: 'uppercase', minHeight: 56 }}>
+            <button onClick={handleSaveWeight} disabled={!weightVal || savingWeight} style={{ width: '100%', background: weightVal && !savingWeight ? colors.gold : '#2A2A2A', color: weightVal && !savingWeight ? '#000' : colors.textMuted, fontWeight: 700, padding: '17px', borderRadius: radii.card, border: 'none', cursor: weightVal && !savingWeight ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: '1.1rem', letterSpacing: '2px', textTransform: 'uppercase', minHeight: 56 }}>
               {savingWeight ? 'Enregistrement...' : 'Sauvegarder'}
             </button>
           </div>
@@ -760,27 +772,27 @@ export default function ProgressTab({
       {/* ── MEASUREMENTS MODAL ── */}
       {showMeasure && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, overflowY: 'auto' }}>
-          <div style={{ background: BG_CARD, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '28px 20px 48px', marginTop: 60, minHeight: 'calc(100vh - 60px)' }}>
+          <div style={{ background: colors.surface, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', marginTop: 60, minHeight: 'calc(100vh - 60px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h3 style={{ ...subtitleStyle, fontSize: '1.4rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: 0 }}>MES MENSURATIONS</h3>
-              <button onClick={() => { setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }) }} style={{ width: 36, height: 36, background: '#2A2A2A', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={TEXT_MUTED} /></button>
+              <h3 style={{ ...titleStyle, fontSize: 18, margin: 0 }}>MES MENSURATIONS</h3>
+              <button onClick={() => { setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }) }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
               {MEASURE_FIELDS.map(({ key, label, unit }) => (
-                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, background: BG_BASE, border: `1px solid ${measureForm[key] ? GOLD + '60' : BORDER}`, borderRadius: RADIUS_CARD, padding: '0 16px', minHeight: 56, transition: 'border-color 200ms' }}>
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.background, border: `1px solid ${measureForm[key] ? colors.gold + '60' : colors.goldBorder}`, borderRadius: radii.card, padding: '0 16px', minHeight: 56, transition: 'border-color 200ms' }}>
                   <span style={{ ...bodyStyle, fontSize: '0.88rem', flex: 1 }}>{label}</span>
                   <input type="number" inputMode="decimal" step="0.1" min="0" value={measureForm[key]} onChange={e => setMeasureForm(p => ({ ...p, [key]: e.target.value }))} placeholder="—"
-                    style={{ background: 'transparent', color: TEXT_PRIMARY, fontSize: '1.1rem', fontFamily: FONT_DISPLAY, textAlign: 'right', width: 72, outline: 'none', border: 'none', padding: '14px 0' }} />
+                    style={{ background: 'transparent', color: colors.text, fontSize: '1.1rem', fontFamily: fonts.headline, textAlign: 'right', width: 72, outline: 'none', border: 'none', padding: '14px 0' }} />
                   <span style={{ ...mutedStyle, fontSize: '0.78rem', width: 28 }}>{unit}</span>
                 </div>
               ))}
             </div>
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', ...subtitleStyle, fontSize: 11, fontWeight: 700, letterSpacing: '2px', marginBottom: 8 }}>Date</label>
-              <input type="date" value={measureDate} onChange={e => setMeasureDate(e.target.value)} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px', color: TEXT_PRIMARY, fontFamily: fonts.body, fontSize: '1rem', outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
+              <input type="date" value={measureDate} onChange={e => setMeasureDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: '1rem', outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
             </div>
             <button onClick={handleSaveMeasure} disabled={Object.values(measureForm).every(v => !v) || savingMeasure}
-              style={{ width: '100%', background: Object.values(measureForm).some(v => v) && !savingMeasure ? GOLD : '#2A2A2A', color: Object.values(measureForm).some(v => v) && !savingMeasure ? '#000' : TEXT_MUTED, fontWeight: 700, padding: '17px', borderRadius: RADIUS_CARD, border: 'none', cursor: Object.values(measureForm).some(v => v) && !savingMeasure ? 'pointer' : 'default', fontFamily: FONT_ALT, fontSize: '1.1rem', letterSpacing: '2px', textTransform: 'uppercase', minHeight: 56, marginBottom: 32 }}>
+              style={{ width: '100%', background: Object.values(measureForm).some(v => v) && !savingMeasure ? colors.gold : '#2A2A2A', color: Object.values(measureForm).some(v => v) && !savingMeasure ? '#000' : colors.textMuted, fontWeight: 700, padding: '17px', borderRadius: radii.card, border: 'none', cursor: Object.values(measureForm).some(v => v) && !savingMeasure ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: '1.1rem', letterSpacing: '2px', textTransform: 'uppercase', minHeight: 56, marginBottom: 32 }}>
               {savingMeasure ? 'Enregistrement...' : 'Sauvegarder'}
             </button>
           </div>
