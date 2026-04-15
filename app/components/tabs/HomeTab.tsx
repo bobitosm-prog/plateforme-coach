@@ -395,11 +395,29 @@ export default function HomeTab({
                 {(waterToday / 1000).toFixed(1)} <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_MUTED }}>L</span>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 48 }}>
-              {[60, 80, 40, 95, 20].map((h, i) => (
-                <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '4px 4px 0 0', background: i === 3 ? `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})` : '#2a2a2a', transition: 'height 0.5s ease' }} />
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 48, flex: 1 }}>
+                {[60, 80, 40, 95, 20].map((h, i) => (
+                  <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '4px 4px 0 0', background: i === 3 ? `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})` : '#2a2a2a', transition: 'height 0.5s ease' }} />
+                ))}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 10 }}>
+                <button onClick={() => addWater(250)} style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+                  <span style={{ fontSize: 20, color: colors.gold, lineHeight: 1 }}>+</span>
+                </button>
+                <span style={{ fontSize: 8, color: colors.textDim, marginTop: 2 }}>+250ml</span>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* ═══ COACH BANNER ═══ */}
+        <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: `1px solid ${colors.goldBorder}`, cursor: 'pointer' }}>
+          <img src="/images/hero-coaching.webp" alt="Coaching personnalise" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.92) 0%, rgba(13,11,8,0.5) 50%, rgba(13,11,8,0.15) 100%)' }} />
+          <div style={{ position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)' }}>
+            <div style={{ ...T, marginBottom: 3 }}>Coaching personnel</div>
+            <div style={{ ...statSmallStyle, fontWeight: 800, color: colors.text, letterSpacing: '0.05em', lineHeight: 1.15 }}>VOTRE COACH<br />VOUS ACCOMPAGNE</div>
           </div>
         </div>
 
@@ -475,15 +493,6 @@ export default function HomeTab({
           )
         })()}
 
-        {/* ═══ COACH BANNER ═══ */}
-        <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: `1px solid ${colors.goldBorder}`, cursor: 'pointer' }}>
-          <img src="/images/hero-coaching.webp" alt="Coaching personnalise" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.92) 0%, rgba(13,11,8,0.5) 50%, rgba(13,11,8,0.15) 100%)' }} />
-          <div style={{ position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)' }}>
-            <div style={{ ...T, marginBottom: 3 }}>Coaching personnel</div>
-            <div style={{ ...statSmallStyle, fontWeight: 800, color: colors.text, letterSpacing: '0.05em', lineHeight: 1.15 }}>VOTRE COACH<br />VOUS ACCOMPAGNE</div>
-          </div>
-        </div>
 
         {/* ═══ PROGRAMME — Title with line ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
@@ -581,43 +590,6 @@ export default function HomeTab({
           </div>
         </div>
 
-        {/* ═══ HYDRATATION — Visual glasses ═══ */}
-        {(() => {
-          const waterGoal = (profile?.water_goal || 3000) / 1000
-          const glassSize = 0.25
-          const totalGlasses = Math.ceil(waterGoal / glassSize)
-          const waterL = waterToday / 1000
-          const filledGlasses = Math.floor(waterL / glassSize)
-          const partialFill = (waterL % glassSize) / glassSize
-          return (
-            <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={T}>HYDRATATION</span>
-              <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: 2, flexShrink: 0 }}>OBJECTIF : {waterGoal}L</div>
-              <div style={titleLineStyle} />
-              <div style={{ ...statStyle, fontSize: 32, color: colors.gold, lineHeight: 1, flexShrink: 0 }}>{waterL.toFixed(1)}L</div>
-            </div>
-            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                <div style={{ display: 'flex', gap: 5, flex: 1, flexWrap: 'wrap' }}>
-                  {Array.from({ length: totalGlasses }).map((_, i) => {
-                    const filled = i < filledGlasses
-                    const isPartial = i === filledGlasses && partialFill > 0
-                    return (
-                      <div key={i} style={{ width: 28, height: 28, borderRadius: 6, position: 'relative', overflow: 'hidden', background: filled ? 'linear-gradient(180deg, #E8C97A, #D4A843, #B8922F)' : colors.surfaceHigh, border: filled ? '1px solid rgba(232,201,122,0.4)' : `1px solid ${colors.goldDim}`, transition: 'all 0.4s ease', boxShadow: filled ? '0 0 8px rgba(212,168,67,0.15)' : 'none' }}>
-                        {isPartial && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${partialFill * 100}%`, background: 'linear-gradient(180deg, #E8C97A, #D4A843)', transition: 'height 0.4s ease' }} />}
-                      </div>
-                    )
-                  })}
-                </div>
-                <button onClick={() => addWater(250)} style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 4px 16px rgba(212,168,67,0.25)' }}>
-                  <span style={{ fontFamily: fonts.headline, fontSize: 24, color: '#0D0B08', lineHeight: 1 }}>+</span>
-                </button>
-              </div>
-            </div>
-            </>
-          )
-        })()}
 
         {/* ═══ MUSCLE HEAT MAP ═══ */}
         <MuscleHeatMap muscleStatus={muscleStatus} />
