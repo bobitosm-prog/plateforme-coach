@@ -130,7 +130,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
       // In continuous mode: save to preferences, DON'T add to daily_food_logs
       // Increment scan count if already exists
       try {
-        await supabase.rpc('increment_scan_count', { p_user_id: userId, p_barcode: product.barcode }).catch(() => {})
+        await supabase.rpc('increment_scan_count', { p_user_id: userId, p_barcode: product.barcode })
       } catch {}
       setSaving(false)
       setScanCount(prev => prev + 1)

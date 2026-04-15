@@ -161,7 +161,7 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
       duration_min: Math.round(elapsed / 60), calories_burned: cal,
       exercises: workout.exercises, completed: true, completed_at: new Date().toISOString(),
       scheduled_date: new Date().toISOString().split('T')[0],
-    }).catch(() => {})
+    })
     toast.success(`${workout.name} terminé ! ~${cal} kcal`)
     onFinish()
   }
@@ -261,7 +261,7 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
       duration_min: mins, calories_burned: cal,
       notes: workout.notes, completed: true, completed_at: new Date().toISOString(),
       scheduled_date: new Date().toISOString().split('T')[0],
-    }).catch(() => {})
+    })
     toast.success(`${workout.name} terminé ! ~${cal} kcal`)
     onFinish()
   }

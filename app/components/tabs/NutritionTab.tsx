@@ -189,7 +189,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         carbs: food.carbs || 0, fat: food.fats || food.fat || 0,
       })
     }
-    await supabase.from('saved_meals').update({ use_count: (meal.use_count || 0) + 1 }).eq('id', meal.id).catch(() => {})
+    await supabase.from('saved_meals').update({ use_count: (meal.use_count || 0) + 1 }).eq('id', meal.id)
     fetchDailyLogs()
   }
 
