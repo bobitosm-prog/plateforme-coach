@@ -8,7 +8,7 @@ import {
   Ruler, Camera, Zap, Moon, CheckCircle, Flame, Dumbbell, TrendingUp, Droplets,
 } from 'lucide-react'
 import ExercisePreview from '../ExercisePreview'
-import { getTodaySession } from '../../../lib/get-today-session'
+import { getTodaySession, getSessionForDay } from '../../../lib/get-today-session'
 import { resolveSessionType } from '../../../lib/session-types'
 import {
   colors, fonts, cardStyle, cardTitleAbove, titleStyle, titleLineStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
@@ -130,6 +130,8 @@ export default function HomeTab({
   const [habitValues, setHabitValues] = useState<Record<string, number>>({})
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
   const [customDayName, setCustomDayName] = useState<string | null>(null)
+  const [customIsRest, setCustomIsRest] = useState(false)
+  const [nextSessionLabel, setNextSessionLabel] = useState<string | null>(null)
   const [todayScheduledSession, setTodayScheduledSession] = useState<any>(null)
 
   // Fetch today's consumed calories
@@ -239,15 +241,30 @@ export default function HomeTab({
           const session = getTodaySession(data.days)
           if (session.type === 'rest') {
             setCustomDayName('Repos')
+            setCustomIsRest(true)
+            setCustomProgramExercises([]) // empty array, not null — prevents coach fallthrough
+            // Find next workout day
+            const todayIdx = session.dayIndex
+            for (let offset = 1; offset <= 6; offset++) {
+              const nextIdx = (todayIdx + offset) % 7
+              const nextSession = getSessionForDay(data.days, nextIdx)
+              if (nextSession.type === 'workout') {
+                const dayNames = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+                setNextSessionLabel(`${nextSession.name} — ${offset === 1 ? 'demain' : dayNames[nextIdx]}`)
+                break
+              }
+            }
           } else {
             setCustomProgramExercises(session.exercises)
             setCustomDayName(session.name)
+            setCustomIsRest(false)
           }
         }
       })
 
     // Fetch today's scheduled session (same source as Training page calendar)
-    const todayDateStr = new Date().toISOString().split('T')[0]
+    const localNow = new Date()
+    const todayDateStr = `${localNow.getFullYear()}-${String(localNow.getMonth() + 1).padStart(2, '0')}-${String(localNow.getDate()).padStart(2, '0')}`
     supabase.from('scheduled_sessions').select('id, title, session_type, completed')
       .eq('user_id', userId).eq('scheduled_date', todayDateStr)
       .neq('session_type', 'rest').limit(1).maybeSingle()
@@ -271,14 +288,14 @@ export default function HomeTab({
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
   // Ring values used by MetallicRing via calPct
 
-  // Custom program exercises take priority over coach program
-  const todayExercises = customProgramExercises || todayCoachDay?.exercises || []
-  // Session title: scheduled session > custom program > coach program
-  const rawSessionTitle = todayScheduledSession?.title || customDayName || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour')
+  // Custom program is authoritative: if it says rest, it's rest — don't fall through to coach
+  const todayExercises = customIsRest ? [] : (customProgramExercises?.length ? customProgramExercises : todayCoachDay?.exercises || [])
+  // Session title: custom program > scheduled session > coach program
+  const rawSessionTitle = customIsRest ? 'Repos' : (customDayName || todayScheduledSession?.title || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour'))
   const sessionTypeInfo = resolveSessionType(rawSessionTitle)
   const sessionTitle = rawSessionTitle
-  // Has workout today: scheduled session exists (not rest) OR custom program has exercises
-  const hasWorkoutToday = !!todayScheduledSession || (customProgramExercises && customProgramExercises.length > 0)
+  // Has workout today: custom program says rest → no. Otherwise check exercises exist.
+  const hasWorkoutToday = !customIsRest && (!!todayScheduledSession || (customProgramExercises && customProgramExercises.length > 0))
 
   // Weekly bar chart data
   const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
@@ -493,12 +510,17 @@ export default function HomeTab({
           <div style={{ padding: 20 }}>
             {!coachProgram && !customProgramExercises && !todayScheduledSession ? (
               <p style={{ ...bodyStyle, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
-            ) : !hasWorkoutToday && (customDayName === 'Repos' || todayCoachDay?.repos) ? (
+            ) : !hasWorkoutToday && (customIsRest || customDayName === 'Repos' || todayCoachDay?.repos) ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Moon size={24} color={colors.textMuted} />
                 <div>
                   <div style={T}>JOUR DE REPOS</div>
                   <div style={mutedStyle}>Récupère bien, étirements bienvenus</div>
+                  {nextSessionLabel && (
+                    <div style={{ ...mutedStyle, marginTop: 6, color: colors.gold, fontSize: 11 }}>
+                      Prochaine séance : {nextSessionLabel}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : !todayExercises.length ? (
