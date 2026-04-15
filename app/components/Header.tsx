@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { Calendar, MessageCircle } from 'lucide-react'
+import { Calendar, MessageCircle, Sparkles } from 'lucide-react'
 import { colors, fonts } from '../../lib/design-tokens'
 
 interface HeaderProps {
@@ -8,14 +8,14 @@ interface HeaderProps {
   displayAvatar?: string
   objective?: string
   unreadCount: number
+  onCoachIA?: () => void
   onCalendar?: () => void
   onMessages?: () => void
   onAvatar?: () => void
-  onLogo?: () => void
   scrollContainerRef?: React.RefObject<HTMLElement | null>
 }
 
-export default function Header({ firstName, displayAvatar, objective, unreadCount, onCalendar, onMessages, onAvatar, onLogo, scrollContainerRef }: HeaderProps) {
+export default function Header({ firstName, displayAvatar, objective, unreadCount, onCoachIA, onCalendar, onMessages, onAvatar, scrollContainerRef }: HeaderProps) {
   const [visible, setVisible] = useState(true)
   const lastScrollY = useRef(0)
   const ticking = useRef(false)
@@ -42,7 +42,7 @@ export default function Header({ firstName, displayAvatar, objective, unreadCoun
     : objective === 'mass' || objective === 'bulk' ? 'PRISE DE MASSE' : 'MAINTIEN'
 
   const iconBtn: React.CSSProperties = {
-    width: 28, height: 28, borderRadius: 8,
+    width: 32, height: 32, borderRadius: 8,
     background: 'rgba(201,168,76,0.06)',
     border: '1px solid rgba(201,168,76,0.12)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -79,18 +79,16 @@ export default function Header({ firstName, displayAvatar, objective, unreadCoun
           <div style={{ fontFamily: fonts.body, fontSize: 8, fontWeight: 600, color: colors.textDim, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{objLabel}</div>
         </div>
 
-        {/* Logo MX */}
-        <button onClick={onLogo} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>
-          <span style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.gold, letterSpacing: '0.15em' }}>MX</span>
-        </button>
-
-        {/* Icons */}
-        <div style={{ display: 'flex', gap: 6 }}>
+        {/* Icons: Coach IA, Calendar, Messages */}
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={onCoachIA} style={iconBtn}>
+            <Sparkles size={16} color={colors.gold} strokeWidth={1.5} />
+          </button>
           <button onClick={onCalendar} style={iconBtn}>
-            <Calendar size={14} color={colors.gold} strokeWidth={1.5} />
+            <Calendar size={16} color={colors.gold} strokeWidth={1.5} />
           </button>
           <button onClick={onMessages} style={iconBtn}>
-            <MessageCircle size={14} color={colors.gold} strokeWidth={1.5} />
+            <MessageCircle size={16} color={colors.gold} strokeWidth={1.5} />
             {unreadCount > 0 && (
               <div style={{ position: 'absolute', top: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: colors.gold, border: '2px solid rgba(14,14,14,0.95)' }} />
             )}

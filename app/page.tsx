@@ -294,7 +294,7 @@ export default function CoachApp() {
         objective={h.profile?.objective}
         unreadCount={h.unreadCount}
         onAvatar={() => h.setActiveTab('profil')}
-        onLogo={() => h.setActiveTab('home')}
+        onCoachIA={() => h.setActiveTab('coachIA')}
         onCalendar={() => h.setActiveTab('training')}
         onMessages={() => h.setActiveTab('messages')}
         scrollContainerRef={h.mainRef}

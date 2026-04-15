@@ -729,16 +729,19 @@ export default function TrainingTab({
       <WorkoutCelebration visible={workoutFinished} />
 
       {/* ═══ SECTION 1 — HEADER ═══ */}
-      <div style={{ padding: '8px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '8px 24px 0', marginBottom: 16 }}>
         <span style={pageTitleStyle}>TRAINING</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {activeCustomProgram && (
-            <span style={mutedStyle}>{activeCustomProgram.name} · Actif</span>
-          )}
-          <button onClick={() => setShowProgramManager(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <span style={{ fontSize: 18, color: colors.gold }}>✏️</span>
-          </button>
-        </div>
+        {activeCustomProgram && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+            <div>
+              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>{activeCustomProgram.name}</div>
+              <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim }}>{(activeCustomProgram.days || []).length} jours · Actif</div>
+            </div>
+            <button onClick={() => setShowProgramManager(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+              <span style={{ fontSize: 18, color: colors.gold }}>✏️</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
