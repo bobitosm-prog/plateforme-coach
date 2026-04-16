@@ -2,21 +2,17 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { colors, fonts, titleStyle, bodyStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM } from '../../lib/design-tokens'
+import { colors, fonts, radii, cardStyle, pageTitleStyle, titleStyle, titleLineStyle, bodyStyle, labelStyle, mutedStyle, btnPrimary, btnSecondary } from '../../lib/design-tokens'
+import { Camera, ChevronLeft, Upload, Shield } from 'lucide-react'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
-const BG = '#0D0B08'
-const GOLD_C = '#D4A843'
-const FONT_DM = fonts.body
-const FONT_BEBAS = fonts.headline
-
 const ANALYSIS_MESSAGES = [
   'Analyse de ta composition corporelle...',
-  'Croisement avec tes données de profil...',
-  'Calcul de tes besoins réels...',
-  'Génération de ton plan personnalisé...',
+  'Croisement avec tes donnees de profil...',
+  'Calcul de tes besoins reels...',
+  'Generation de ton plan personnalise...',
 ]
 
 const ANALYSIS_SECTIONS = [
@@ -24,7 +20,7 @@ const ANALYSIS_SECTIONS = [
   { title: 'COHÉRENCE PROGRAMME', color: '#A78BFA', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
   { title: 'POINTS POSITIFS', color: '#34D399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
   { title: 'AXES DE PROGRESSION', color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.2)' },
-  { title: 'RECOMMANDATION PRIORITAIRE', color: GOLD_C, bg: colors.goldDim, border: colors.goldRule },
+  { title: 'RECOMMANDATION PRIORITAIRE', color: colors.gold, bg: colors.goldDim, border: colors.goldRule },
 ]
 
 type Phase = 'upload' | 'analyzing' | 'results'
@@ -206,8 +202,8 @@ export default function OnboardingPhotoPage() {
     }
 
     return blocks.map((b, i) => (
-      <div key={i} style={{ padding: 16, background: b.section.bg, border: `1px solid ${b.section.border}`, marginBottom: 12 }}>
-        <h3 style={{ ...titleStyle, fontSize: 16, color: b.section.color, letterSpacing: '0.08em', marginBottom: 8 }}>
+      <div key={i} style={{ ...cardStyle, padding: 16, background: b.section.bg, border: `1px solid ${b.section.border}`, marginBottom: 12 }}>
+        <h3 style={{ ...titleStyle, fontSize: 14, color: b.section.color, letterSpacing: '0.12em', marginBottom: 8 }}>
           {b.section.title}
         </h3>
         <p style={{ ...bodyStyle, fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: 0 }}>
@@ -220,14 +216,23 @@ export default function OnboardingPhotoPage() {
   // ─── PHASE 1: Upload ───
   if (phase === 'upload') {
     return (
-      <div style={{ minHeight: '100dvh', background: BG, fontFamily: fonts.body, color: TEXT_PRIMARY }}>
-        <div style={{ maxWidth: 480, margin: '0 auto', padding: '60px 20px 40px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: fonts.body, color: colors.text, display: 'flex', flexDirection: 'column' }}>
+        {/* Progress bar */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', gap: 4 }}>
+            {[0, 1, 2, 3].map(i => (
+              <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < 3 ? colors.gold : `${colors.gold}33` }} />
+            ))}
+          </div>
+        </div>
+
+        <div style={{ flex: 1, maxWidth: 480, margin: '0 auto', padding: '40px 20px 0', width: '100%' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <h1 style={{ ...pageTitleStyle, fontSize: 40, letterSpacing: '0.04em', marginBottom: 12, lineHeight: 1 }}>
-              TON POINT DE DÉPART
+            <h1 style={{ ...pageTitleStyle, fontSize: 32, letterSpacing: '0.08em', marginBottom: 12, lineHeight: 1 }}>
+              TON POINT DE DEPART
             </h1>
             <p style={{ ...bodyStyle, fontSize: 15, lineHeight: 1.6, marginBottom: 36 }}>
-              Une photo nous aide à personnaliser ton plan avec précision
+              Une photo nous aide a personnaliser ton plan avec precision
             </p>
 
             {/* Drop zone */}
@@ -238,25 +243,28 @@ export default function OnboardingPhotoPage() {
               onDrop={onDrop}
               onClick={() => fileRef.current?.click()}
               style={{
-                border: `2px dashed ${dragOver ? GOLD_C : 'rgba(255,255,255,0.1)'}`,
-                background: dragOver ? colors.goldDim : 'rgba(255,255,255,0.02)',
-                padding: '60px 24px', textAlign: 'center', cursor: 'pointer',
+                border: `2px dashed ${dragOver ? colors.gold : colors.goldRule}`,
+                borderRadius: 20,
+                padding: '40px 24px',
+                textAlign: 'center',
+                background: dragOver ? colors.goldDim : colors.surface,
+                cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
             >
               {uploading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 32, height: 32, border: `3px solid ${BORDER}`, borderTopColor: GOLD_C, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  <div style={{ width: 32, height: 32, border: `3px solid ${colors.goldBorder}`, borderTopColor: colors.gold, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   <span style={{ ...bodyStyle }}>Upload en cours...</span>
                 </div>
               ) : (
                 <>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>📸</div>
-                  <p style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '0.06em', marginBottom: 8 }}>
+                  <Camera size={40} color={colors.gold} style={{ margin: '0 auto 16px', display: 'block' }} />
+                  <p style={{ ...titleStyle, fontSize: 18, letterSpacing: '0.1em', marginBottom: 8 }}>
                     PRENDRE UNE PHOTO
                   </p>
-                  <p style={{ ...bodyStyle, fontSize: 13 }}>
-                    Glisse une photo ici ou touche pour ouvrir la caméra
+                  <p style={{ ...bodyStyle, fontSize: 12 }}>
+                    Glisse une photo ici ou touche pour ouvrir la camera
                   </p>
                 </>
               )}
@@ -271,39 +279,49 @@ export default function OnboardingPhotoPage() {
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
             />
 
-            <p style={{ ...mutedStyle, fontSize: 11, marginTop: 16, textAlign: 'center' }}>
-              Photo de face, buste visible · Éclairage neutre · Stockée en privé
-            </p>
-
-            {/* Skip button */}
-            <button
-              onClick={handleSkip}
-              disabled={generating}
-              style={{
-                display: 'block', width: '100%', marginTop: 48,
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                fontFamily: fonts.body, fontSize: 13, color: TEXT_MUTED,
-                textDecoration: 'underline', padding: 12,
-              }}
-            >
-              {generating ? 'Génération du plan...' : 'Passer cette étape'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16 }}>
+              <Shield size={12} color={colors.textDim} />
+              <p style={{ ...mutedStyle, fontSize: 10, margin: 0 }}>
+                Photo de face, buste visible · Eclairage neutre · Stockee en prive
+              </p>
+            </div>
 
             {generating && (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+              <div style={{ marginTop: 24 }}>
+                <div style={{ height: 4, background: `${colors.gold}1a`, borderRadius: 2, overflow: 'hidden' }}>
                   <motion.div
                     animate={{ width: `${genProgress}%` }}
                     transition={{ duration: 0.3 }}
-                    style={{ height: '100%', background: GOLD_C }}
+                    style={{ height: '100%', background: colors.gold, borderRadius: 2 }}
                   />
                 </div>
-                <p style={{ ...mutedStyle, textAlign: 'center', marginTop: 8 }}>
-                  Génération de ton plan nutritionnel... {genProgress}%
+                <p style={{ ...bodyStyle, textAlign: 'center', marginTop: 8 }}>
+                  Generation de ton plan nutritionnel... {genProgress}%
                 </p>
               </div>
             )}
           </motion.div>
+        </div>
+
+        {/* Sticky footer */}
+        <div style={{ position: 'sticky', bottom: 0, padding: '16px 20px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))', background: colors.background, borderTop: `1px solid ${colors.goldBorder}` }}>
+          <div style={{ maxWidth: 480, margin: '0 auto' }}>
+            <button
+              onClick={handleSkip}
+              disabled={generating}
+              style={{
+                display: 'block', width: '100%',
+                ...labelStyle,
+                fontSize: 13,
+                color: colors.textMuted,
+                textDecoration: 'underline',
+                textAlign: 'center',
+                padding: 12,
+              }}
+            >
+              {generating ? 'Generation du plan...' : 'Passer cette etape'}
+            </button>
+          </div>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
@@ -313,12 +331,12 @@ export default function OnboardingPhotoPage() {
   // ─── PHASE 2: Analyzing ───
   if (phase === 'analyzing') {
     return (
-      <div style={{ minHeight: '100dvh', background: BG, fontFamily: fonts.body, color: TEXT_PRIMARY, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: fonts.body, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ maxWidth: 400, textAlign: 'center' }}>
           {photoUrl && (
-            <img src={photoUrl} alt="Ta photo" style={{ width: 200, height: 200, objectFit: 'cover', margin: '0 auto 32px', border: `1px solid rgba(255,255,255,0.08)` }} />
+            <img src={photoUrl} alt="Ta photo" style={{ width: 200, height: 200, objectFit: 'cover', borderRadius: radii.card, margin: '0 auto 32px', border: `1px solid ${colors.goldBorder}` }} />
           )}
-          <div style={{ width: 48, height: 48, border: `3px solid ${BORDER}`, borderTopColor: GOLD_C, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 24px' }} />
+          <div style={{ width: 48, height: 48, border: `3px solid ${colors.goldBorder}`, borderTopColor: colors.gold, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 24px' }} />
           <AnimatePresence mode="wait">
             <motion.p
               key={analysisMsg}
@@ -339,20 +357,20 @@ export default function OnboardingPhotoPage() {
 
   // ─── PHASE 3: Results ───
   return (
-    <div style={{ minHeight: '100dvh', background: BG, fontFamily: fonts.body, color: TEXT_PRIMARY }}>
-      <div style={{ maxWidth: 520, margin: '0 auto', padding: '40px 20px 60px' }}>
+    <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: fonts.body, color: colors.text, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, maxWidth: 520, margin: '0 auto', padding: '40px 20px 120px', width: '100%' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <h1 style={{ ...pageTitleStyle, fontSize: 36, letterSpacing: '0.04em', marginBottom: 8 }}>
+          <h1 style={{ ...pageTitleStyle, fontSize: 32, letterSpacing: '0.08em', marginBottom: 8 }}>
             TON ANALYSE
           </h1>
           <p style={{ ...bodyStyle, marginBottom: 24 }}>
-            Basée sur ta photo et tes données de profil
+            Basee sur ta photo et tes donnees de profil
           </p>
 
           {/* Photo thumbnail */}
           {photoUrl && (
             <div style={{ marginBottom: 24, textAlign: 'center' }}>
-              <img src={photoUrl} alt="" style={{ width: 120, height: 120, objectFit: 'cover', border: `1px solid rgba(255,255,255,0.08)` }} />
+              <img src={photoUrl} alt="" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: radii.card, border: `1px solid ${colors.goldBorder}` }} />
             </div>
           )}
 
@@ -361,54 +379,58 @@ export default function OnboardingPhotoPage() {
             {renderAnalysis(analysisText)}
           </div>
 
-          {/* Generate plan CTA */}
-          <button
-            onClick={() => generateMealPlan(analysisText)}
-            disabled={generating}
-            style={{
-              width: '100%', padding: 18,
-              background: generating ? 'rgba(255,255,255,0.05)' : GOLD_C,
-              color: generating ? TEXT_MUTED : '#0D0B08',
-              border: 'none', borderRadius: 12,
-              fontFamily: fonts.headline, fontSize: 22, letterSpacing: '0.08em',
-              cursor: generating ? 'wait' : 'pointer',
-              opacity: generating ? 0.6 : 1,
-              transition: 'all 0.2s',
-            }}
-          >
-            {generating ? 'GÉNÉRATION EN COURS...' : 'GÉNÉRER MON PLAN'}
-          </button>
-
           {generating && (
             <div style={{ marginTop: 16 }}>
-              <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+              <div style={{ height: 4, background: `${colors.gold}1a`, borderRadius: 2, overflow: 'hidden' }}>
                 <motion.div
                   animate={{ width: `${genProgress}%` }}
                   transition={{ duration: 0.3 }}
-                  style={{ height: '100%', background: GOLD_C }}
+                  style={{ height: '100%', background: colors.gold, borderRadius: 2 }}
                 />
               </div>
-              <p style={{ ...mutedStyle, textAlign: 'center', marginTop: 8 }}>
+              <p style={{ ...bodyStyle, textAlign: 'center', marginTop: 8 }}>
                 Plan nutritionnel sur 7 jours... {genProgress}%
               </p>
             </div>
           )}
+        </motion.div>
+      </div>
 
-          {/* Skip */}
+      {/* Sticky footer */}
+      <div style={{ position: 'sticky', bottom: 0, padding: '16px 20px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))', background: colors.background, borderTop: `1px solid ${colors.goldBorder}` }}>
+        <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {!generating && (
             <button
               onClick={handleSkip}
               style={{
-                display: 'block', width: '100%', marginTop: 24,
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                fontFamily: fonts.body, fontSize: 13, color: TEXT_MUTED,
-                textDecoration: 'underline', padding: 12,
+                ...labelStyle,
+                display: 'block', width: '100%',
+                background: 'transparent',
+                color: colors.gold,
+                textDecoration: 'underline',
+                textAlign: 'center',
+                padding: 8,
+                fontSize: 13,
               }}
             >
-              Passer et aller au dashboard
+              PASSER CETTE ETAPE
             </button>
           )}
-        </motion.div>
+          <button
+            onClick={() => generateMealPlan(analysisText)}
+            disabled={generating}
+            style={{
+              ...btnPrimary,
+              width: '100%', padding: 16,
+              fontSize: 16, letterSpacing: '0.1em',
+              opacity: generating ? 0.6 : 1,
+              cursor: generating ? 'wait' : 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            {generating ? 'GENERATION EN COURS...' : 'CONTINUER'}
+          </button>
+        </div>
       </div>
     </div>
   )

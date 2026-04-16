@@ -3,12 +3,33 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { colors, fonts } from '../../lib/design-tokens'
+import { colors, fonts, radii, cardStyle, titleStyle, bodyStyle, mutedStyle, btnPrimary, btnSecondary, statStyle } from '../../lib/design-tokens'
+import { Zap, Dumbbell, Target, Clock, ChevronLeft, Flame, Activity, TrendingUp, Award, UtensilsCrossed, BarChart3, Leaf, GraduationCap, Medal, Trophy, Armchair, PersonStanding, CheckCircle2 } from 'lucide-react'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 const TOTAL_STEPS = 5
+
+// ─── Icon map (replaces material symbols) ───
+
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>> = {
+  local_fire_department: Flame,
+  fitness_center: Dumbbell,
+  directions_run: Activity,
+  refresh: Target,
+  weekend: Armchair,
+  directions_walk: PersonStanding,
+  bolt: Zap,
+  fastfood: UtensilsCrossed,
+  restaurant: UtensilsCrossed,
+  analytics: BarChart3,
+  eco: Leaf,
+  school: GraduationCap,
+  trending_up: TrendingUp,
+  military_tech: Medal,
+  emoji_events: Trophy,
+}
 
 // ─── Step data ───
 
@@ -17,53 +38,53 @@ type Option = { label: string; pts: number; icon: string }
 const GOALS: Option[] = [
   { label: 'Perdre du poids', pts: 3, icon: 'local_fire_department' },
   { label: 'Prendre du muscle', pts: 4, icon: 'fitness_center' },
-  { label: 'Améliorer ma condition', pts: 2, icon: 'directions_run' },
+  { label: 'Ameliorer ma condition', pts: 2, icon: 'directions_run' },
   { label: 'Me remettre en forme', pts: 3, icon: 'refresh' },
 ]
 
 const ACTIVITY: Option[] = [
-  { label: 'Sédentaire <1x/sem', pts: 1, icon: 'weekend' },
+  { label: 'Sedentaire <1x/sem', pts: 1, icon: 'weekend' },
   { label: 'Actif 1-2x/sem', pts: 3, icon: 'directions_walk' },
-  { label: 'Régulier 3-4x/sem', pts: 5, icon: 'directions_run' },
-  { label: 'Avancé 5x+/sem', pts: 7, icon: 'bolt' },
+  { label: 'Regulier 3-4x/sem', pts: 5, icon: 'directions_run' },
+  { label: 'Avance 5x+/sem', pts: 7, icon: 'bolt' },
 ]
 
 const NUTRITION: Option[] = [
   { label: 'Sans faire attention', pts: 1, icon: 'fastfood' },
   { label: "J'essaie de bien manger", pts: 3, icon: 'restaurant' },
   { label: 'Je suis mes macros', pts: 5, icon: 'analytics' },
-  { label: 'Régime spécifique', pts: 4, icon: 'eco' },
+  { label: 'Regime specifique', pts: 4, icon: 'eco' },
 ]
 
 const EXPERIENCE: Option[] = [
-  { label: 'Débutant <6 mois', pts: 1, icon: 'school' },
-  { label: 'Intermédiaire 6m-2ans', pts: 3, icon: 'trending_up' },
-  { label: 'Expérimenté 2-5ans', pts: 6, icon: 'military_tech' },
-  { label: 'Vétéran 5ans+', pts: 8, icon: 'emoji_events' },
+  { label: 'Debutant <6 mois', pts: 1, icon: 'school' },
+  { label: 'Intermediaire 6m-2ans', pts: 3, icon: 'trending_up' },
+  { label: 'Experimente 2-5ans', pts: 6, icon: 'military_tech' },
+  { label: 'Veteran 5ans+', pts: 8, icon: 'emoji_events' },
 ]
 
 const SLIDER_LABELS: Record<number, string> = {
   1: 'Minimum pour progresser',
-  2: 'Bien pour débuter',
+  2: 'Bien pour debuter',
   3: 'Bonne cadence',
   4: 'Rythme soutenu',
   5: 'Programme intensif',
-  6: 'Niveau athlète',
+  6: 'Niveau athlete',
 }
 
 const STEP_TITLES = [
   'Quel est votre objectif principal ?',
-  "Votre niveau d'activité actuel ?",
-  'Séances par semaine souhaitées',
+  "Votre niveau d'activite actuel ?",
+  'Seances par semaine souhaitees',
   'Votre alimentation actuelle ?',
-  'Votre expérience en musculation ?',
+  'Votre experience en musculation ?',
 ]
 
 const STEP_SUBTITLES = [
-  'Sélectionnez l\'objectif qui correspond à votre vision.',
-  'Décrivez votre routine actuelle.',
-  'Définissez votre fréquence idéale.',
-  'Évaluez vos habitudes alimentaires.',
+  'Selectionnez l\'objectif qui correspond a votre vision.',
+  'Decrivez votre routine actuelle.',
+  'Definissez votre frequence ideale.',
+  'Evaluez vos habitudes alimentaires.',
   'Indiquez votre parcours fitness.',
 ]
 
@@ -75,6 +96,15 @@ const stepVariants = {
   exit: { opacity: 0, y: -20 },
 }
 const stepTransition = { duration: 0.35, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }
+
+// ─── Metric icon map ───
+
+const METRIC_ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>> = {
+  local_fire_department: Flame,
+  military_tech: Medal,
+  fitness_center: Dumbbell,
+  bolt: Zap,
+}
 
 // ─── Component ───
 
@@ -112,7 +142,7 @@ export default function OnboardingFitnessPage() {
   const finalScore = Math.round((rawScore / 24) * 100)
 
   const level = finalScore >= 70 ? 'avance' : finalScore >= 40 ? 'intermediaire' : 'debutant'
-  const levelLabel = level === 'avance' ? 'Niveau avancé' : level === 'intermediaire' ? 'Niveau intermédiaire' : 'Niveau débutant'
+  const levelLabel = level === 'avance' ? 'Niveau avance' : level === 'intermediaire' ? 'Niveau intermediaire' : 'Niveau debutant'
 
   // ─── Dynamic objectives ───
 
@@ -128,8 +158,8 @@ export default function OnboardingFitnessPage() {
     if (goalLabel === 'Perdre du poids') {
       objs.push(finalScore >= 50 ? 'Perdre 8 kg en 10 semaines' : 'Perdre 4 kg en 10 semaines')
     }
-    objs.push(`${sessions}x séances/semaine pendant 8 semaines`)
-    if (nutritionPts <= 2) objs.push('Améliorer la qualité nutritionnelle')
+    objs.push(`${sessions}x seances/semaine pendant 8 semaines`)
+    if (nutritionPts <= 2) objs.push('Ameliorer la qualite nutritionnelle')
     if (activityPts <= 2) objs.push('Construire une routine stable')
     return objs
   }, [goal, activity, sessions, nutrition, finalScore])
@@ -208,82 +238,97 @@ export default function OnboardingFitnessPage() {
   const circumference = 2 * Math.PI * radius
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference
 
-  const progressPct = (step / TOTAL_STEPS) * 100
-
-  // ─── Result screen (Stitch: Fitness Score Reveal) ───
+  // ─── Result screen ───
 
   if (showResult) {
     const objectives = generateObjectives()
     const metricCards = [
       { label: 'Flamme', value: goal !== null ? GOALS[goal].label : '-', icon: 'local_fire_department' },
       { label: 'Niveau', value: levelLabel, icon: 'military_tech' },
-      { label: 'Séances', value: `${sessions}x/sem`, icon: 'fitness_center' },
-      { label: 'Énergie', value: nutrition !== null ? NUTRITION[nutrition].label : '-', icon: 'bolt' },
+      { label: 'Seances', value: `${sessions}x/sem`, icon: 'fitness_center' },
+      { label: 'Energie', value: nutrition !== null ? NUTRITION[nutrition].label : '-', icon: 'bolt' },
     ]
 
     return (
-      <div className="min-h-dvh bg-[var(--background)] text-[var(--text)] font-['Inter',sans-serif]">
+      <div style={{ minHeight: '100dvh', background: colors.background, color: colors.text, fontFamily: fonts.body }}>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="max-w-md mx-auto px-6 pt-8 pb-32"
+          style={{ maxWidth: 448, margin: '0 auto', padding: '32px 24px 128px' }}
         >
-          {/* 3D Hero */}
-          <div className="relative w-full flex items-center justify-center mb-4">
-            <div className="absolute inset-0 bg-[var(--gold)]/5 rounded-full blur-[80px]" />
-            <Image
-              src="/images/onboarding/fitness-score-3d.png"
-              alt="Fitness Score"
-              width={280}
-              height={280}
-              className="relative z-10 object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
-              priority
-            />
-            {/* Score overlay */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
-              <span className="font-['Plus_Jakarta_Sans'] text-6xl font-extrabold tracking-tighter text-[var(--gold)]" style={{ textShadow: `0 0 20px ${colors.goldDim}` }}>
-                {animatedScore}
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-bold">/100</span>
+          {/* Score ring */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
+            <div style={{ position: 'relative', width: ringSize, height: ringSize }}>
+              <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)' }}>
+                <circle
+                  cx={ringSize / 2}
+                  cy={ringSize / 2}
+                  r={radius}
+                  fill="none"
+                  stroke={`${colors.gold}1a`}
+                  strokeWidth={strokeWidth}
+                />
+                <motion.circle
+                  cx={ringSize / 2}
+                  cy={ringSize / 2}
+                  r={radius}
+                  fill="none"
+                  stroke={colors.gold}
+                  strokeWidth={strokeWidth}
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  animate={{ strokeDashoffset }}
+                  transition={{ duration: 1.2, ease: 'easeOut' }}
+                />
+              </svg>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ ...statStyle, fontSize: 48, color: colors.gold }}>
+                  {animatedScore}
+                </span>
+                <span style={{ ...mutedStyle, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 700 }}>/100</span>
+              </div>
             </div>
           </div>
 
           {/* Level title */}
-          <div className="text-center mb-8">
-            <h2 className="font-['Plus_Jakarta_Sans'] text-3xl font-extrabold tracking-tight mb-2">{levelLabel}</h2>
-            <p className="text-[var(--text-muted)] text-sm font-medium">
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <h2 style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.text, marginBottom: 8 }}>{levelLabel}</h2>
+            <p style={{ ...bodyStyle, fontSize: 12 }}>
               {finalScore >= 70
-                ? 'Vous êtes dans le top 5% des membres MoovX.'
+                ? 'Vous etes dans le top 5% des membres MoovX.'
                 : finalScore >= 40
                 ? 'Votre potentiel est excellent. Construisons dessus.'
-                : 'Un super point de départ. On va progresser ensemble.'}
+                : 'Un super point de depart. On va progresser ensemble.'}
             </p>
           </div>
 
-          {/* Metric cards — Bento grid */}
-          <div className="grid grid-cols-2 gap-4 mb-10">
-            {metricCards.map(c => (
-              <div key={c.label} className="bg-[#201f1f] rounded-xl p-5 flex flex-col gap-4 group hover:bg-[#2a2a2a] transition-colors">
-                <div className="flex justify-between items-start">
-                  <div className="p-2 bg-[var(--gold)]/10 rounded-lg text-[var(--gold)]">
-                    <span className="material-symbols-outlined">{c.icon}</span>
+          {/* Metric cards -- 2x2 grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 40 }}>
+            {metricCards.map(c => {
+              const IconComp = METRIC_ICON_MAP[c.icon] || Zap
+              return (
+                <div key={c.label} style={{ ...cardStyle, padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `${colors.gold}14`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <IconComp size={20} color={colors.gold} />
+                    </div>
+                    <span style={{ ...mutedStyle, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{c.label}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-widest uppercase">{c.label}</span>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.text }}>{c.value}</div>
                 </div>
-                <div className="font-['Plus_Jakarta_Sans'] text-lg font-bold">{c.value}</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Objectives */}
-          <div className="mb-10">
-            <h3 className="font-['Plus_Jakarta_Sans'] text-xl font-bold uppercase tracking-tighter mb-4">Vos objectifs</h3>
-            <div className="flex flex-col gap-3">
+          <div style={{ marginBottom: 40 }}>
+            <h3 style={{ ...titleStyle, fontSize: 14, marginBottom: 16 }}>Vos objectifs</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {objectives.map((obj, i) => (
-                <div key={i} className="flex items-center gap-3 p-4 bg-[var(--gold)]/5 border border-[var(--gold)]/15 rounded-xl">
-                  <span className="material-symbols-outlined text-[var(--gold)] text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                  <span className="text-sm font-medium">{obj}</span>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: `${colors.gold}0d`, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card }}>
+                  <CheckCircle2 size={16} color={colors.gold} />
+                  <span style={{ ...bodyStyle, fontSize: 14, fontWeight: 500 }}>{obj}</span>
                 </div>
               ))}
             </div>
@@ -293,68 +338,78 @@ export default function OnboardingFitnessPage() {
           <button
             onClick={handleFinish}
             disabled={saving}
-            className="w-full py-4 bg-gradient-to-br from-[var(--gold)] to-[var(--gold-container)] text-[#3d2e00] font-['Plus_Jakarta_Sans'] font-bold rounded-full shadow-lg shadow-[var(--gold)]/20 active:scale-[0.98] transition-all uppercase tracking-widest text-sm disabled:opacity-60"
+            style={{
+              ...btnPrimary,
+              width: '100%',
+              padding: 18,
+              borderRadius: 14,
+              opacity: saving ? 0.6 : 1,
+            }}
           >
             {saving ? 'Sauvegarde...' : 'Commencer mon programme'}
           </button>
         </motion.div>
-
-        {/* Material Symbols font */}
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
       </div>
     )
   }
 
-  // ─── Quiz layout (Stitch: Fitness Goals Quiz) ───
+  // ─── Quiz layout ───
 
   return (
-    <div className="min-h-dvh bg-[var(--background)] text-[var(--text)] font-['Inter',sans-serif] flex flex-col">
+    <div style={{ minHeight: '100dvh', background: colors.background, color: colors.text, fontFamily: fonts.body, display: 'flex', flexDirection: 'column' }}>
       {/* Header + Progress */}
-      <header className="fixed top-0 left-0 w-full z-50 px-6 pt-8 pb-4 bg-[var(--background)]/80 backdrop-blur-md">
-        <div className="max-w-md mx-auto flex flex-col gap-4">
-          <div className="flex justify-between items-end">
+      <header style={{ position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 50, padding: '32px 24px 16px', background: `${colors.background}cc`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+        <div style={{ maxWidth: 448, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <div>
-              <span className="font-['Plus_Jakarta_Sans'] text-[var(--gold)] text-[10px] uppercase tracking-[0.3em] font-bold">
+              <span style={{ ...mutedStyle, fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>
                 Question {String(step).padStart(2, '0')} / {String(TOTAL_STEPS).padStart(2, '0')}
               </span>
-              <h1 className="font-['Plus_Jakarta_Sans'] text-xl font-black tracking-tighter uppercase mt-1">
-                Définissez votre parcours
+              <h1 style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 700, color: colors.text, marginTop: 4, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+                Definissez votre parcours
               </h1>
             </div>
-            <span className="material-symbols-outlined text-[var(--gold-container)] text-2xl">bolt</span>
+            <Zap size={24} color={colors.goldContainer} />
           </div>
-          {/* Gold progress bar */}
-          <div className="relative w-full h-[6px] bg-[#353534] rounded-full overflow-hidden">
-            <motion.div
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 0.3 }}
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[var(--gold)] to-[var(--gold-container)] rounded-full shadow-[0_0_15px_var(--gold-dim)]"
-            />
+          {/* 5-segment progress bar */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  height: 3,
+                  borderRadius: 999,
+                  background: i < step ? colors.gold : `${colors.gold}1a`,
+                  opacity: i < step ? (i < step - 1 ? 0.7 : 1) : 1,
+                  transition: 'all 0.3s ease',
+                }}
+              />
+            ))}
           </div>
         </div>
       </header>
 
-      <main className="flex-grow pt-32 pb-24 px-6 max-w-md mx-auto w-full">
+      <main style={{ flexGrow: 1, paddingTop: 128, paddingBottom: 96, paddingLeft: 24, paddingRight: 24, maxWidth: 448, margin: '0 auto', width: '100%' }}>
         {/* 3D Illustration */}
-        <div className="relative mb-8 flex justify-center items-center">
-          <div className="absolute w-[300px] h-[300px] bg-[var(--gold)]/5 rounded-full blur-[80px] -z-10" />
+        <div style={{ position: 'relative', marginBottom: 32, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', width: 300, height: 300, background: `${colors.gold}0d`, borderRadius: '50%', filter: 'blur(80px)', zIndex: -1 }} />
           <Image
             src="/images/onboarding/fitness-goals-3d.png"
             alt="Fitness Goals"
             width={220}
             height={220}
-            className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+            style={{ objectFit: 'contain' }}
             priority
           />
         </div>
 
         {/* Step title */}
-        <div className="text-center mb-8">
-          <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-extrabold tracking-tight mb-2">
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h2 style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 700, color: colors.text, marginBottom: 8, letterSpacing: '-0.01em' }}>
             {STEP_TITLES[step - 1]}
           </h2>
-          <p className="text-[var(--text-muted)] text-sm font-medium">{STEP_SUBTITLES[step - 1]}</p>
+          <p style={{ ...bodyStyle, fontSize: 12 }}>{STEP_SUBTITLES[step - 1]}</p>
         </div>
 
         {/* Step content */}
@@ -369,54 +424,79 @@ export default function OnboardingFitnessPage() {
           >
             {step === 3 ? (
               /* Slider step */
-              <div className="flex flex-col items-center">
-                <span className="font-['Plus_Jakarta_Sans'] text-6xl font-extrabold text-[var(--gold)] mb-2" style={{ textShadow: `0 0 20px ${colors.goldDim}` }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ fontFamily: fonts.headline, fontSize: 48, fontWeight: 700, color: colors.gold, marginBottom: 8, textAlign: 'center' }}>
                   {sessions}
                 </span>
-                <span className="text-sm text-[var(--text-muted)] font-medium mb-8">{SLIDER_LABELS[sessions]}</span>
+                <span style={{ ...mutedStyle, fontSize: 12, marginBottom: 32 }}>{SLIDER_LABELS[sessions]}</span>
                 <input
                   type="range"
                   min={1}
                   max={6}
                   value={sessions}
                   onChange={e => setSessions(Number(e.target.value))}
-                  className="w-full h-[6px] rounded-full appearance-none cursor-pointer"
-                  style={{ accentColor: colors.gold, background: '#353534' }}
+                  style={{ width: '100%', height: 4, borderRadius: 999, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', accentColor: colors.gold, background: `${colors.gold}1a` }}
                 />
-                <div className="flex justify-between w-full text-xs text-[var(--text-muted)] mt-2 font-medium">
-                  <span>1x</span><span>6x</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: 8 }}>
+                  <span style={{ ...mutedStyle, fontSize: 12 }}>1x</span>
+                  <span style={{ ...mutedStyle, fontSize: 12 }}>6x</span>
                 </div>
               </div>
             ) : (
               /* Choice cards */
-              <div className="flex flex-col gap-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {(step === 1 ? GOALS : step === 2 ? ACTIVITY : step === 4 ? NUTRITION : EXPERIENCE).map((opt, i) => {
                   const sel = step === 1 ? goal : step === 2 ? activity : step === 4 ? nutrition : experience
                   const setSel = step === 1 ? setGoal : step === 2 ? setActivity : step === 4 ? setNutrition : setExperience
                   const isSelected = sel === i
+                  const IconComp = ICON_MAP[opt.icon] || Zap
 
                   return (
                     <button
                       key={i}
                       onClick={() => setSel(i)}
-                      className={`group relative flex items-center p-4 rounded-xl transition-all duration-300 text-left ${
-                        isSelected
-                          ? 'bg-[var(--surface-high)] border-2 border-[var(--gold)]/60 shadow-[0_0_20px_var(--gold-dim)]'
-                          : 'bg-[#201f1f] border border-[#4d4637]/20 hover:bg-[#2a2a2a] hover:border-[var(--gold)]/40'
-                      }`}
+                      style={{
+                        ...cardStyle,
+                        padding: 16,
+                        display: 'flex',
+                        alignItems: 'center',
+                        textAlign: 'left',
+                        width: '100%',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        border: isSelected ? `1px solid ${colors.gold}66` : `1px solid ${colors.goldBorder}`,
+                        background: isSelected ? `${colors.gold}14` : colors.surface,
+                      }}
                     >
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center mr-4 transition-transform group-hover:scale-110 ${
-                        isSelected ? 'bg-[var(--gold)]/20' : 'bg-[#353534]'
-                      }`}>
-                        <span className={`material-symbols-outlined text-2xl ${isSelected ? 'text-[var(--gold)]' : 'text-[${colors.textMuted}]'}`}>
-                          {opt.icon}
-                        </span>
+                      <div style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        background: `${colors.gold}14`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12,
+                        flexShrink: 0,
+                      }}>
+                        <IconComp size={20} color={colors.gold} />
                       </div>
-                      <span className={`font-semibold text-[15px] flex-grow ${isSelected ? 'text-[${colors.gold}]' : ''}`}>
+                      <span style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 600, color: colors.text, flexGrow: 1 }}>
                         {opt.label}
                       </span>
                       {isSelected && (
-                        <span className="material-symbols-outlined text-[var(--gold)]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                        <div style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 12,
+                          background: colors.gold,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}>
+                          <CheckCircle2 size={16} color={colors.background} />
+                        </div>
                       )}
                     </button>
                   )
@@ -428,29 +508,51 @@ export default function OnboardingFitnessPage() {
       </main>
 
       {/* Footer CTA */}
-      <footer className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent">
-        <div className="max-w-md mx-auto flex gap-3">
+      <footer style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        width: '100%',
+        background: colors.background,
+        borderTop: `1px solid ${colors.goldBorder}`,
+        padding: '16px 20px',
+        paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
+      }}>
+        <div style={{ maxWidth: 448, margin: '0 auto', display: 'flex', gap: 12 }}>
           {step > 1 && (
             <button
               onClick={() => setStep(s => s - 1)}
-              className="px-6 py-4 rounded-full border border-[#4d4637]/30 text-[var(--text-muted)] font-bold text-sm uppercase tracking-widest hover:bg-[#201f1f] transition-colors"
+              style={{
+                ...btnSecondary,
+                background: 'transparent',
+                color: colors.gold,
+                padding: 16,
+                borderRadius: 14,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
             >
+              <ChevronLeft size={16} color={colors.gold} />
               Retour
             </button>
           )}
           <button
             onClick={handleNext}
             disabled={!canContinue}
-            className="flex-1 py-4 rounded-full font-['Plus_Jakarta_Sans'] font-bold bg-gradient-to-br from-[var(--gold)] to-[var(--gold-container)] text-[#3d2e00] shadow-lg shadow-[var(--gold)]/10 active:scale-[0.98] transition-all uppercase tracking-widest text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              ...btnPrimary,
+              flex: 1,
+              padding: 16,
+              borderRadius: 14,
+              opacity: canContinue ? 1 : 0.3,
+              cursor: canContinue ? 'pointer' : 'not-allowed',
+            }}
           >
-            {step === TOTAL_STEPS ? 'Voir mon résultat' : 'Continuer'}
+            {step === TOTAL_STEPS ? 'Voir mon resultat' : 'Continuer'}
           </button>
         </div>
       </footer>
-
-      {/* Material Symbols font */}
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
     </div>
   )
 }

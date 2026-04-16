@@ -3,8 +3,8 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, Check, ChevronRight, ChevronLeft, Dumbbell, Flame, Scale, Activity, User, Heart } from 'lucide-react'
-import { ACTIVITY_LEVELS, calcMifflinStJeor, fonts, titleStyle, subtitleStyle, statStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../lib/design-tokens'
+import { Check, ChevronRight, ChevronLeft, Scale, User, Search, Utensils, Leaf, Apple, Coffee, Salad, Sun, Moon, CheckCircle } from 'lucide-react'
+import { ACTIVITY_LEVELS, calcMifflinStJeor, colors, fonts, radii, cardStyle, titleStyle, titleLineStyle, subtitleStyle, statStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, btnPrimary } from '../../lib/design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -12,12 +12,12 @@ const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 const TOTAL_STEPS = 6
 
 const ALLERGY_OPTIONS = [
-  { id: 'gluten', label: 'Gluten', emoji: '🌾' },
-  { id: 'lactose', label: 'Lactose', emoji: '🥛' },
-  { id: 'nuts', label: 'Fruits à coque', emoji: '🥜' },
-  { id: 'eggs', label: 'Oeufs', emoji: '🥚' },
-  { id: 'soy', label: 'Soja', emoji: '🫘' },
-  { id: 'shellfish', label: 'Crustacés', emoji: '🦐' },
+  { id: 'gluten', label: 'Gluten' },
+  { id: 'lactose', label: 'Lactose' },
+  { id: 'nuts', label: 'Fruits à coque' },
+  { id: 'eggs', label: 'Oeufs' },
+  { id: 'soy', label: 'Soja' },
+  { id: 'shellfish', label: 'Crustacés' },
 ]
 
 // Map fitness onboarding activity_score → ACTIVITY_LEVELS id
@@ -168,7 +168,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div style={{ minHeight: '100svh', background: BG_BASE, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: fonts.body }}>
+    <div style={{ minHeight: '100svh', background: colors.background, color: colors.text, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: fonts.body }}>
       <style>{`
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
         input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.4); cursor: pointer; }
@@ -177,17 +177,15 @@ export default function OnboardingPage() {
       {/* Segmented progress bar */}
       {step > 1 && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', gap: 4, padding: '8px 16px' }}>
-          {Array.from({ length: TOTAL_STEPS - 1 }, (_, i) => (
-            <div key={i} style={{ flex: 1, height: 3, borderRadius: 12, background: BORDER, overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 12, background: GOLD, width: i < step - 1 ? '100%' : '0%', transition: 'width 400ms ease' }} />
-            </div>
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+            <div key={i} style={{ flex: 1, height: 3, borderRadius: 12, background: i < step - 1 ? colors.gold : i === step - 1 ? colors.gold : `${colors.gold}1a`, opacity: i < step - 1 ? 0.7 : 1, transition: 'all 400ms ease' }} />
           ))}
         </div>
       )}
 
       {/* Back button */}
       {step > 1 && (
-        <button onClick={goBack} style={{ position: 'fixed', top: 20, left: 16, zIndex: 50, background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, fontFamily: fonts.body }}>
+        <button onClick={goBack} style={{ position: 'fixed', top: 20, left: 16, zIndex: 50, background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, fontFamily: fonts.body }}>
           <ChevronLeft size={18} strokeWidth={2.5} /> Retour
         </button>
       )}
@@ -200,7 +198,7 @@ export default function OnboardingPage() {
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', gap: 32 }}>
               <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.15, type: 'spring', stiffness: 260, damping: 20 }}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                <img src="/logo-moovx.png" alt="MoovX" width={88} height={88} style={{ borderRadius: RADIUS_CARD }} className="animate-pulse-gold" />
+                <img src="/logo-moovx.png" alt="MoovX" width={88} height={88} style={{ borderRadius: radii.card }} className="animate-pulse-gold" />
                 <span style={{ ...T, fontSize: '2.8rem', fontWeight: 800, letterSpacing: '3px' }}>MOOVX</span>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={{ textAlign: 'center' }}>
@@ -210,7 +208,7 @@ export default function OnboardingPage() {
                 <p style={{ ...bodyStyle, fontSize: '1rem', margin: 0, fontWeight: 300 }}>Finalisons ton profil nutritionnel</p>
               </motion.div>
               <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} whileTap={{ scale: 0.97 }} onClick={goNext}
-                style={{ width: '100%', maxWidth: 320, padding: '18px', background: GOLD, border: 'none', borderRadius: 12, color: BG_BASE, fontSize: '1.1rem', fontWeight: 800, fontFamily: fonts.body, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,  }}>
+                style={{ ...btnPrimary, width: '100%', maxWidth: 320, padding: '18px', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 C'est parti <ChevronRight size={20} strokeWidth={2.5} />
               </motion.button>
             </motion.div>
@@ -227,11 +225,11 @@ export default function OnboardingPage() {
                   <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark' }} /></div>
                 <div><label style={formLabelStyle}>Genre</label>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    {[{ k: 'male', l: 'Homme', icon: '♂️' }, { k: 'female', l: 'Femme', icon: '♀️' }].map(g => (
+                    {[{ k: 'male', l: 'Homme' }, { k: 'female', l: 'Femme' }].map(g => (
                       <button key={g.k} onClick={() => setGender(g.k as any)}
-                        style={{ flex: 1, padding: '16px', borderRadius: 12, border: `2px solid ${gender === g.k ? GOLD : BORDER}`, background: gender === g.k ? GOLD_DIM : BG_CARD, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 200ms' }}>
-                        <span style={{ fontSize: '1.6rem' }}>{g.icon}</span>
-                        <span style={{ fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 700, color: gender === g.k ? GOLD : TEXT_PRIMARY }}>{g.l}</span>
+                        style={{ flex: 1, padding: '14px 16px', borderRadius: 14, border: `1px solid ${gender === g.k ? `${colors.gold}66` : colors.goldBorder}`, background: gender === g.k ? `${colors.gold}14` : colors.surface, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 200ms', fontFamily: fonts.body }}>
+                        <User size={20} color={gender === g.k ? colors.gold : colors.textMuted} />
+                        <span style={{ fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 700, color: gender === g.k ? colors.gold : colors.text }}>{g.l}</span>
                       </button>
                     ))}
                   </div>
@@ -253,9 +251,9 @@ export default function OnboardingPage() {
                 </div>
                 <NumField label="Objectif poids" value={goalWeight} onChange={setGoalWeight} unit="kg" placeholder="70" />
                 {bmi && (
-                  <div style={{ background: BG_CARD, borderRadius: RADIUS_CARD, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, border: `1px solid ${BORDER}` }}>
-                    <Scale size={16} color={GOLD} />
-                    <span style={{ ...bodyStyle, fontSize: '0.82rem', color: TEXT_PRIMARY }}>IMC : <strong style={{ color: GOLD }}>{bmi}</strong></span>
+                  <div style={{ ...cardStyle, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Scale size={16} color={colors.gold} />
+                    <span style={{ ...bodyStyle, fontSize: '0.82rem', color: colors.text }}>IMC : <strong style={{ color: colors.gold }}>{bmi}</strong></span>
                     <span style={{ ...mutedStyle, fontSize: '0.72rem', marginLeft: 'auto' }}>
                       {parseFloat(bmi) < 18.5 ? 'Insuffisant' : parseFloat(bmi) < 25 ? 'Normal' : parseFloat(bmi) < 30 ? 'Surpoids' : 'Obèse'}
                     </span>
@@ -273,23 +271,26 @@ export default function OnboardingPage() {
               <div><h2 style={h2Style}>Ton alimentation</h2><p style={subStyle}>Ces infos personnaliseront ton plan</p></div>
 
               <div>
-                <label style={formLabelStyle}>Mon régime</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <span style={titleStyle}>MON REGIME</span>
+                  <div style={titleLineStyle} />
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {[
-                    { k: 'omnivore', l: 'Omnivore', d: 'Je mange de tout', e: '🍖' },
-                    { k: 'vegetarian', l: 'Végétarien', d: 'Pas de viande ni poisson', e: '🥗' },
-                    { k: 'vegan', l: 'Vegan', d: '100% végétal', e: '🌱' },
+                    { k: 'omnivore', l: 'Omnivore', d: 'Je mange de tout', Icon: Utensils },
+                    { k: 'vegetarian', l: 'Vegetarien', d: 'Pas de viande ni poisson', Icon: Salad },
+                    { k: 'vegan', l: 'Vegan', d: '100% vegetal', Icon: Leaf },
                   ].map(o => {
                     const sel = dietaryType === o.k
                     return (
                       <button key={o.k} onClick={() => setDietaryType(o.k)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, border: `2px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', transition: 'all 200ms' }}>
-                        <span style={{ fontSize: '1.4rem' }}>{o.e}</span>
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 14, border: `1px solid ${sel ? `${colors.gold}66` : colors.goldBorder}`, background: sel ? `${colors.gold}14` : colors.surface, cursor: 'pointer', transition: 'all 200ms', fontFamily: fonts.body }}>
+                        <o.Icon size={20} color={sel ? colors.gold : colors.textMuted} />
                         <div style={{ flex: 1, textAlign: 'left' }}>
-                          <div style={{ fontFamily: fonts.body, fontSize: '0.95rem', fontWeight: 700, color: sel ? GOLD : TEXT_PRIMARY }}>{o.l}</div>
-                          <div style={{ ...mutedStyle, fontSize: '0.72rem', color: TEXT_MUTED }}>{o.d}</div>
+                          <div style={{ fontFamily: fonts.body, fontSize: '0.95rem', fontWeight: 700, color: sel ? colors.gold : colors.text }}>{o.l}</div>
+                          <div style={{ ...mutedStyle, fontSize: '0.72rem', color: colors.textMuted }}>{o.d}</div>
                         </div>
-                        {sel && <Check size={16} color={GOLD} strokeWidth={3} />}
+                        {sel && <Check size={16} color={colors.gold} strokeWidth={3} />}
                       </button>
                     )
                   })}
@@ -297,16 +298,18 @@ export default function OnboardingPage() {
               </div>
 
               <div>
-                <label style={formLabelStyle}>Allergies & intolérances</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <span style={titleStyle}>ALLERGIES</span>
+                  <div style={titleLineStyle} />
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {ALLERGY_OPTIONS.map(a => {
                     const sel = allergies.includes(a.id)
                     return (
                       <button key={a.id} onClick={() => setAllergies(prev => sel ? prev.filter(x => x !== a.id) : [...prev, a.id])}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${sel ? RED : BORDER}`, background: sel ? 'rgba(239,68,68,0.08)' : BG_CARD, cursor: 'pointer', transition: 'all 200ms' }}>
-                        <span style={{ fontSize: '1.1rem' }}>{a.emoji}</span>
-                        <span style={{ ...bodyStyle, fontSize: '0.82rem', fontWeight: 600, color: sel ? RED : TEXT_PRIMARY, flex: 1, textAlign: 'left' }}>{a.label}</span>
-                        {sel && <Check size={14} color={RED} strokeWidth={3} />}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderRadius: 14, border: `1px solid ${sel ? `${colors.gold}66` : colors.goldBorder}`, background: sel ? `${colors.gold}14` : colors.surface, cursor: 'pointer', transition: 'all 200ms', fontFamily: fonts.body }}>
+                        <span style={{ ...bodyStyle, fontSize: '0.82rem', fontWeight: 600, color: sel ? colors.gold : colors.text, flex: 1, textAlign: 'left' }}>{a.label}</span>
+                        {sel && <Check size={14} color={colors.gold} strokeWidth={3} />}
                       </button>
                     )
                   })}
@@ -320,23 +323,23 @@ export default function OnboardingPage() {
           {/* Step 5: Mes repas — sequential sub-steps */}
           {step === 5 && (() => {
             const MEALS = [
-              { id: 'petit_dejeuner', label: 'PETIT-DÉJEUNER', emoji: '🥐' },
-              { id: 'dejeuner', label: 'DÉJEUNER', emoji: '☀️' },
-              { id: 'collation', label: 'COLLATION', emoji: '🍎' },
-              { id: 'diner', label: 'DÎNER', emoji: '🌙' },
+              { id: 'petit_dejeuner', label: 'PETIT-DEJEUNER', Icon: Coffee },
+              { id: 'dejeuner', label: 'DEJEUNER', Icon: Sun },
+              { id: 'collation', label: 'COLLATION', Icon: Apple },
+              { id: 'diner', label: 'DINER', Icon: Moon },
             ]
             const currentMeal = MEALS[mealSubStep]
             const currentIds = mealPrefs[currentMeal.id] || []
 
             const CATS = [
-              { key: 'proteines', label: 'Protéines', icon: '🥩', patterns: ['poulet', 'dinde', 'boeuf', 'bœuf', 'veau', 'porc', 'saumon', 'thon', 'cabillaud', 'crevette', 'oeuf', 'œuf', 'steak', 'filet', 'escalope', 'jambon', 'bacon', 'merlu', 'sardine', 'truite', 'canard', 'agneau', 'poisson', 'viande'] },
-              { key: 'laitiers', label: 'Produits laitiers', icon: '🥛', patterns: ['yaourt', 'fromage', 'skyr', 'cottage', 'mozzarella', 'parmesan', 'emmental', 'gruyère', 'lait', 'beurre', 'crème'] },
-              { key: 'feculents', label: 'Féculents', icon: '🍚', patterns: ['riz', 'pâtes', 'pasta', 'quinoa', 'patate', 'pomme de terre', 'pain', 'avoine', 'flocon', 'semoule', 'blé', 'sarrasin', 'lentille', 'pois chiche', 'haricot', 'maïs', 'galette', 'wrap', 'toast', 'muesli', 'céréale', 'granola'] },
-              { key: 'legumes', label: 'Légumes', icon: '🥦', patterns: ['brocoli', 'épinard', 'courgette', 'tomate', 'concombre', 'salade', 'carotte', 'poivron', 'aubergine', 'chou', 'haricot vert', 'asperge', 'champignon', 'oignon', 'ail', 'avocat', 'légume'] },
-              { key: 'fruits', label: 'Fruits', icon: '🍎', patterns: ['banane', 'pomme', 'fraise', 'myrtille', 'orange', 'kiwi', 'mangue', 'ananas', 'poire', 'raisin', 'pêche', 'abricot', 'melon', 'pastèque', 'fruit', 'baie', 'datte', 'figue'] },
-              { key: 'oleagineux', label: 'Oléagineux', icon: '🥜', patterns: ['amande', 'noix', 'cacahuète', 'noisette', 'cajou', 'pistache', 'beurre de', 'graines', 'sésame', 'tournesol', 'lin', 'chia'] },
-              { key: 'boissons', label: 'Boissons', icon: '🥤', patterns: ["lait d'", 'lait de', 'boisson', 'smoothie', 'jus', 'eau de coco'] },
-              { key: 'supplements', label: 'Suppléments', icon: '💪', patterns: ['whey', 'protéine', 'caséine', 'barre', 'créatine', 'bcaa', 'shaker', 'iso', 'mass'] },
+              { key: 'proteines', label: 'Proteines', icon: 'beef', patterns: ['poulet', 'dinde', 'boeuf', 'bœuf', 'veau', 'porc', 'saumon', 'thon', 'cabillaud', 'crevette', 'oeuf', 'œuf', 'steak', 'filet', 'escalope', 'jambon', 'bacon', 'merlu', 'sardine', 'truite', 'canard', 'agneau', 'poisson', 'viande'] },
+              { key: 'laitiers', label: 'Produits laitiers', icon: 'milk', patterns: ['yaourt', 'fromage', 'skyr', 'cottage', 'mozzarella', 'parmesan', 'emmental', 'gruyère', 'lait', 'beurre', 'crème'] },
+              { key: 'feculents', label: 'Feculents', icon: 'wheat', patterns: ['riz', 'pâtes', 'pasta', 'quinoa', 'patate', 'pomme de terre', 'pain', 'avoine', 'flocon', 'semoule', 'blé', 'sarrasin', 'lentille', 'pois chiche', 'haricot', 'maïs', 'galette', 'wrap', 'toast', 'muesli', 'céréale', 'granola'] },
+              { key: 'legumes', label: 'Legumes', icon: 'leaf', patterns: ['brocoli', 'épinard', 'courgette', 'tomate', 'concombre', 'salade', 'carotte', 'poivron', 'aubergine', 'chou', 'haricot vert', 'asperge', 'champignon', 'oignon', 'ail', 'avocat', 'légume'] },
+              { key: 'fruits', label: 'Fruits', icon: 'apple', patterns: ['banane', 'pomme', 'fraise', 'myrtille', 'orange', 'kiwi', 'mangue', 'ananas', 'poire', 'raisin', 'pêche', 'abricot', 'melon', 'pastèque', 'fruit', 'baie', 'datte', 'figue'] },
+              { key: 'oleagineux', label: 'Oleagineux', icon: 'nut', patterns: ['amande', 'noix', 'cacahuète', 'noisette', 'cajou', 'pistache', 'beurre de', 'graines', 'sésame', 'tournesol', 'lin', 'chia'] },
+              { key: 'boissons', label: 'Boissons', icon: 'coffee', patterns: ["lait d'", 'lait de', 'boisson', 'smoothie', 'jus', 'eau de coco'] },
+              { key: 'supplements', label: 'Supplements', icon: 'dumbbell', patterns: ['whey', 'protéine', 'caséine', 'barre', 'créatine', 'bcaa', 'shaker', 'iso', 'mass'] },
             ]
             const categorize = (name: string) => {
               const n = name.toLowerCase()
@@ -378,7 +381,7 @@ export default function OnboardingPage() {
 
             const grouped = CATS.map(cat => ({ ...cat, foods: filtered.filter(f => f.cat === cat.key) })).filter(g => g.foods.length > 0)
             const autres = filtered.filter(f => f.cat === 'autres')
-            if (autres.length > 0) grouped.push({ key: 'autres', label: 'Autres', icon: '🍽️', patterns: [], foods: autres })
+            if (autres.length > 0) grouped.push({ key: 'autres', label: 'Autres', icon: 'utensils', patterns: [], foods: autres })
 
             const advanceMeal = () => {
               setFoodQuery('')
@@ -393,7 +396,7 @@ export default function OnboardingPage() {
                 {/* Sub-step progress */}
                 <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
                   {MEALS.map((_, i) => (
-                    <div key={i} style={{ flex: 1, height: 3, background: i <= mealSubStep ? GOLD : BORDER, transition: 'background 300ms' }} />
+                    <div key={i} style={{ flex: 1, height: 3, borderRadius: 12, background: i < mealSubStep ? colors.gold : i === mealSubStep ? colors.gold : `${colors.gold}1a`, opacity: i < mealSubStep ? 0.7 : 1, transition: 'all 300ms' }} />
                   ))}
                 </div>
                 <div style={{ ...subtitleStyle, fontSize: '0.68rem', letterSpacing: '2px' }}>
@@ -403,7 +406,7 @@ export default function OnboardingPage() {
                 {/* Meal title */}
                 <div>
                   <h2 style={{ ...h2Style, display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '1.8rem' }}>{currentMeal.emoji}</span> {currentMeal.label}
+                    <currentMeal.Icon size={24} color={colors.gold} /> {currentMeal.label}
                   </h2>
                   <p style={subStyle}>Sélectionne les aliments que tu manges habituellement</p>
                 </div>
@@ -412,11 +415,11 @@ export default function OnboardingPage() {
                 <div style={{ position: 'relative' }}>
                   <input value={foodQuery} onChange={e => setFoodQuery(e.target.value)} placeholder={`Filtrer ${fitnessFoods.length} aliments...`}
                     style={{ ...inputStyle, paddingLeft: 38, padding: '10px 14px 10px 38px', fontSize: '0.82rem' }} />
-                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: GOLD, fontSize: '0.82rem' }}>🔍</span>
+                  <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: colors.gold }} />
                 </div>
 
                 {/* Selected count */}
-                <div style={{ ...subtitleStyle, fontSize: '0.72rem', color: currentIds.length > 0 ? GOLD : TEXT_MUTED, fontWeight: 600 }}>
+                <div style={{ ...subtitleStyle, fontSize: '0.72rem', color: currentIds.length > 0 ? colors.gold : colors.textMuted, fontWeight: 600 }}>
                   {currentIds.length} aliment{currentIds.length !== 1 ? 's' : ''} sélectionné{currentIds.length !== 1 ? 's' : ''}
                 </div>
 
@@ -424,30 +427,30 @@ export default function OnboardingPage() {
                 <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 8 }}>
                   {fitnessFoods.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                      <div style={{ width: 28, height: 28, border: `2px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 8px' }} />
-                      <p style={{ ...mutedStyle, fontSize: '0.75rem', color: TEXT_MUTED }}>Chargement des aliments...</p>
+                      <div style={{ width: 28, height: 28, border: `2px solid ${colors.goldBorder}`, borderTopColor: colors.gold, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 8px' }} />
+                      <p style={{ ...mutedStyle, fontSize: '0.75rem', color: colors.textMuted }}>Chargement des aliments...</p>
                     </div>
                   )}
                   {grouped.map(cat => (
                     <div key={cat.key}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'sticky', top: 0, background: BG_BASE, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
-                        <span style={{ fontSize: '0.9rem' }}>{cat.icon}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'sticky', top: 0, background: colors.background, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
+                        <Utensils size={14} color={colors.gold} />
                         <span style={{ ...labelStyle, fontSize: '0.78rem', letterSpacing: '2px' }}>{cat.label}</span>
-                        <span style={{ fontSize: '0.6rem', color: TEXT_MUTED }}>({cat.foods.length})</span>
+                        <span style={{ fontSize: '0.6rem', color: colors.textMuted }}>({cat.foods.length})</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                         {cat.foods.map((food: any) => {
                           const selected = currentIds.includes(food.id)
                           return (
                             <button key={food.id} onClick={() => toggleFood(food)}
-                              style={{ background: selected ? GOLD_DIM : BG_BASE, border: `1px solid ${selected ? GOLD : BORDER}`, borderRadius: 12, padding: '10px 10px 8px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', position: 'relative' }}>
-                              {selected && <span style={{ position: 'absolute', top: 6, right: 8, color: GOLD, fontSize: '0.7rem', fontWeight: 700 }}>✓</span>}
-                              <div style={{ ...bodyStyle, fontSize: '0.76rem', fontWeight: 600, color: TEXT_PRIMARY, lineHeight: 1.3, marginBottom: 4, paddingRight: selected ? 16 : 0 }}>{food.nom}</div>
-                              <div style={{ display: 'flex', gap: 6, fontSize: '0.58rem', fontWeight: 500 }}>
-                                <span style={{ color: GOLD }}>{food.kcal}</span>
-                                <span style={{ color: '#60a5fa' }}>P{food.p}</span>
-                                <span style={{ color: GREEN }}>G{food.g}</span>
-                                <span style={{ color: '#f59e0b' }}>L{food.l}</span>
+                              style={{ ...cardStyle, padding: 12, background: selected ? `${colors.gold}08` : colors.surface, border: `1px solid ${selected ? `${colors.gold}66` : colors.goldBorder}`, textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', position: 'relative' }}>
+                              {selected && <Check size={12} color={colors.gold} style={{ position: 'absolute', top: 6, right: 8 }} />}
+                              <div style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text, lineHeight: 1.3, marginBottom: 4, paddingRight: selected ? 16 : 0 }}>{food.nom}</div>
+                              <div style={{ display: 'flex', gap: 6, fontSize: 10, fontWeight: 500 }}>
+                                <span style={{ color: colors.gold }}>{food.kcal}</span>
+                                <span style={{ color: colors.blue }}>P{food.p}</span>
+                                <span style={{ color: colors.success }}>G{food.g}</span>
+                                <span style={{ color: colors.orange }}>L{food.l}</span>
                               </div>
                             </button>
                           )
@@ -456,14 +459,14 @@ export default function OnboardingPage() {
                     </div>
                   ))}
                   {foodQuery.length >= 1 && filtered.length === 0 && (
-                    <p style={{ ...mutedStyle, fontSize: '0.75rem', color: TEXT_MUTED, textAlign: 'center', padding: '12px 0' }}>Aucun aliment trouvé pour &quot;{foodQuery}&quot;</p>
+                    <p style={{ ...mutedStyle, fontSize: '0.75rem', color: colors.textMuted, textAlign: 'center', padding: '12px 0' }}>Aucun aliment trouve pour &quot;{foodQuery}&quot;</p>
                   )}
                 </div>
 
                 {/* Next / Skip */}
                 <div style={{ flexShrink: 0, paddingTop: 4 }}>
                   <NextBtn onClick={advanceMeal} label={mealSubStep < 3 ? 'Suivant' : 'Continuer'} />
-                  <button onClick={advanceMeal} style={{ width: '100%', marginTop: 6, padding: '8px', background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'underline', fontFamily: fonts.body }}>Passer ce repas</button>
+                  <button onClick={advanceMeal} style={{ width: '100%', marginTop: 6, padding: '8px', background: 'none', border: 'none', color: colors.textMuted, fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'underline', fontFamily: fonts.body }}>Passer ce repas</button>
                 </div>
               </motion.div>
             )
@@ -475,56 +478,56 @@ export default function OnboardingPage() {
               style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '56px 24px 32px', gap: 20, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
               <div><h2 style={h2Style}>Récapitulatif</h2><p style={subStyle}>Vérifie tes informations</p></div>
 
-              <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ ...cardStyle, padding: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 {[
-                  { l: 'Prénom', v: firstName },
-                  { l: 'Genre', v: gender === 'male' ? 'Homme' : gender === 'female' ? 'Femme' : '—' },
-                  { l: 'Poids', v: weight ? `${weight} kg` : '—' },
-                  { l: 'Taille', v: height ? `${height} cm` : '—' },
-                  { l: 'Régime', v: { omnivore: 'Omnivore', vegetarian: 'Végétarien', vegan: 'Vegan' }[dietaryType] || '—' },
-                  { l: 'Poids cible', v: goalWeight ? `${goalWeight} kg` : '—' },
+                  { l: 'Prenom', v: firstName },
+                  { l: 'Genre', v: gender === 'male' ? 'Homme' : gender === 'female' ? 'Femme' : '--' },
+                  { l: 'Poids', v: weight ? `${weight} kg` : '--' },
+                  { l: 'Taille', v: height ? `${height} cm` : '--' },
+                  { l: 'Regime', v: { omnivore: 'Omnivore', vegetarian: 'Vegetarien', vegan: 'Vegan' }[dietaryType] || '--' },
+                  { l: 'Poids cible', v: goalWeight ? `${goalWeight} kg` : '--' },
                 ].map(({ l, v }) => (
                   <div key={l}>
-                    <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: '2px' }}>{l}</div>
-                    <div style={{ ...bodyStyle, fontSize: '0.9rem', color: TEXT_PRIMARY, fontWeight: 600, marginTop: 2 }}>{v}</div>
+                    <div style={{ ...labelStyle, fontSize: 11, letterSpacing: '2px' }}>{l}</div>
+                    <div style={{ ...bodyStyle, fontSize: '0.9rem', color: colors.text, fontWeight: 600, marginTop: 2 }}>{v}</div>
                   </div>
                 ))}
               </div>
 
               {/* Diet / allergies / foods badges */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: fonts.body, background: dietaryType === 'vegan' ? 'rgba(34,197,94,0.12)' : dietaryType === 'vegetarian' ? 'rgba(249,115,22,0.12)' : GOLD_DIM, color: dietaryType === 'vegan' ? GREEN : dietaryType === 'vegetarian' ? '#F97316' : GOLD, border: `1px solid ${dietaryType === 'vegan' ? 'rgba(34,197,94,0.2)' : dietaryType === 'vegetarian' ? 'rgba(249,115,22,0.2)' : GOLD_RULE}`, textTransform: 'uppercase' }}>
-                  {dietaryType === 'omnivore' ? '🍖 Omnivore' : dietaryType === 'vegetarian' ? '🥗 Végétarien' : '🌱 Vegan'}
+                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: fonts.body, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldRule}`, textTransform: 'uppercase' }}>
+                  {dietaryType === 'omnivore' ? 'Omnivore' : dietaryType === 'vegetarian' ? 'Vegetarien' : 'Vegan'}
                 </span>
                 {allergies.map(a => (
-                  <span key={a} style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: fonts.body, background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.2)', textTransform: 'uppercase' }}>
-                    {ALLERGY_OPTIONS.find(o => o.id === a)?.emoji} {a}
+                  <span key={a} style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: fonts.body, background: 'rgba(239,68,68,0.12)', color: colors.error, border: '1px solid rgba(239,68,68,0.2)', textTransform: 'uppercase' }}>
+                    {a}
                   </span>
                 ))}
-                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: fonts.body, background: 'rgba(156,163,175,0.08)', color: TEXT_MUTED, border: '1px solid rgba(156,163,175,0.12)' }}>
-                  {[...new Set(Object.values(mealPrefs).flat())].length} aliments · {Object.values(mealPrefs).filter(ids => ids.length > 0).length}/4 repas
+                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.68rem', fontWeight: 700, fontFamily: fonts.body, background: 'rgba(156,163,175,0.08)', color: colors.textMuted, border: '1px solid rgba(156,163,175,0.12)' }}>
+                  {[...new Set(Object.values(mealPrefs).flat())].length} aliments -- {Object.values(mealPrefs).filter(ids => ids.length > 0).length}/4 repas
                 </span>
               </div>
 
               {/* TDEE card */}
               {tdeeData && (
-                <div style={{ background: GOLD_DIM, border: `1.5px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-                  <div style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 10 }}>
+                <div style={{ ...cardStyle, padding: 16, background: colors.goldDim, border: `1.5px solid ${colors.goldRule}` }}>
+                  <div style={{ ...titleStyle, fontSize: 11, letterSpacing: '2px', marginBottom: 10 }}>
                     Tes besoins caloriques
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 12 }}>
-                    <span style={{ ...statStyle, fontSize: '2rem', color: GOLD }}>{tdeeData.adjusted}</span>
+                    <span style={{ ...statStyle, fontSize: 48, color: colors.gold }}>{tdeeData.adjusted}</span>
                     <span style={{ ...bodyStyle, fontSize: '0.85rem' }}>kcal / jour</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                     {[
-                      { l: 'Protéines', v: `${tdeeData.proteinG}g`, c: '#3B82F6' },
-                      { l: 'Glucides', v: `${tdeeData.carbsG}g`, c: GREEN },
-                      { l: 'Lipides', v: `${tdeeData.fatG}g`, c: '#F97316' },
+                      { l: 'Proteines', v: `${tdeeData.proteinG}g`, c: colors.blue },
+                      { l: 'Glucides', v: `${tdeeData.carbsG}g`, c: colors.success },
+                      { l: 'Lipides', v: `${tdeeData.fatG}g`, c: colors.orange },
                     ].map(m => (
-                      <div key={m.l} style={{ background: BG_BASE, borderRadius: RADIUS_CARD, padding: '8px', textAlign: 'center' }}>
-                        <div style={{ fontFamily: fonts.body, fontSize: '1.1rem', fontWeight: 700, color: m.c }}>{m.v}</div>
-                        <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', fontFamily: fonts.body }}>{m.l}</div>
+                      <div key={m.l} style={{ background: colors.background, borderRadius: radii.card, padding: '8px', textAlign: 'center' }}>
+                        <div style={{ fontFamily: fonts.headline, fontSize: '1.1rem', fontWeight: 700, color: m.c }}>{m.v}</div>
+                        <div style={{ ...labelStyle, fontSize: '0.58rem', color: colors.textMuted }}>{m.l}</div>
                       </div>
                     ))}
                   </div>
@@ -533,9 +536,9 @@ export default function OnboardingPage() {
 
               <div style={{ marginTop: 'auto' }}>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={finish} disabled={saving}
-                  style={{ width: '100%', padding: '18px', background: saving ? BORDER : GOLD, border: 'none', borderRadius: 12, color: saving ? TEXT_MUTED : BG_BASE, fontSize: '1.05rem', fontWeight: 800, fontFamily: fonts.body, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 200ms, color 200ms',  }}>
+                  style={{ ...btnPrimary, width: '100%', padding: '18px', fontSize: '1.05rem', opacity: saving ? 0.3 : 1, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 200ms' }}>
                   {saving ? <><div style={{ width: 18, height: 18, border: '2px solid #fff4', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Enregistrement...</>
-                    : <>Valider mon profil <Check size={20} strokeWidth={2.5} /></>}
+                    : <>Valider mon profil <CheckCircle size={20} strokeWidth={2.5} /></>}
                 </motion.button>
               </div>
             </motion.div>
@@ -547,10 +550,10 @@ export default function OnboardingPage() {
 }
 
 /* ── Shared styles & components ── */
-const h2Style: React.CSSProperties = { ...pageTitleStyle, fontSize: '2rem', margin: '0 0 4px', letterSpacing: '2px' }
+const h2Style: React.CSSProperties = { ...pageTitleStyle, fontSize: 22, margin: '0 0 4px', letterSpacing: '0.15em' }
 const subStyle: React.CSSProperties = { ...bodyStyle, fontSize: '0.9rem', margin: 0, fontWeight: 300 }
-const formLabelStyle: React.CSSProperties = { ...subtitleStyle, display: 'block', fontSize: 11, marginBottom: 8, letterSpacing: '2px' }
-const inputStyle: React.CSSProperties = { width: '100%', padding: '14px 16px', background: BG_BASE, border: `1.5px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: '1rem', fontFamily: fonts.body, outline: 'none', transition: 'border-color 200ms, box-shadow 200ms' }
+const formLabelStyle: React.CSSProperties = { ...labelStyle, display: 'block', fontSize: 11, marginBottom: 8, letterSpacing: '2px' }
+const inputStyle: React.CSSProperties = { width: '100%', padding: '14px 16px', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.input, color: colors.text, fontSize: 16, fontFamily: fonts.body, outline: 'none', transition: 'border-color 200ms, box-shadow 200ms' }
 
 function InputField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (<div><label style={formLabelStyle}>{label}</label><input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={inputStyle} /></div>)
@@ -561,7 +564,7 @@ function NumField({ label, value, onChange, unit, placeholder }: { label: string
     <div><label style={formLabelStyle}>{label}</label>
       <div style={{ position: 'relative' }}>
         <input type="number" inputMode="decimal" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ ...inputStyle, paddingRight: 40 }} />
-        <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, fontSize: '0.85rem', pointerEvents: 'none' }}>{unit}</span>
+        <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: colors.textMuted, fontSize: '0.85rem', pointerEvents: 'none' }}>{unit}</span>
       </div>
     </div>
   )
@@ -570,7 +573,7 @@ function NumField({ label, value, onChange, unit, placeholder }: { label: string
 function NextBtn({ onClick, disabled, label = 'Continuer' }: { onClick: () => void; disabled?: boolean; label?: string }) {
   return (
     <motion.button whileTap={disabled ? {} : { scale: 0.97 }} onClick={onClick} disabled={disabled}
-      style={{ width: '100%', padding: '18px', background: disabled ? BORDER : GOLD, border: 'none', borderRadius: 12, color: disabled ? TEXT_MUTED : BG_BASE, fontSize: '1.05rem', fontWeight: 800, fontFamily: fonts.body, cursor: disabled ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 200ms, color 200ms', clipPath: disabled ? 'none' : 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' }}>
+      style={{ ...btnPrimary, width: '100%', padding: 16, fontSize: '1.05rem', opacity: disabled ? 0.3 : 1, cursor: disabled ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 200ms' }}>
       {label} <ChevronRight size={20} strokeWidth={2.5} />
     </motion.button>
   )
