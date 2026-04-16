@@ -120,6 +120,7 @@ export default function TrainingTab({
   const [altResults, setAltResults] = useState<any[]>([])
   const [techniqueTooltip, setTechniqueTooltip] = useState<string | null>(null)
   const [importPreview, setImportPreview] = useState<ImportResult['program'] | null>(null)
+  const [importSkipped, setImportSkipped] = useState<string[]>([])
   const [importName, setImportName] = useState('')
   const importFileRef = useRef<HTMLInputElement>(null)
   const restIntervalRef  = useRef<any>(null)
@@ -1506,7 +1507,11 @@ export default function TrainingTab({
             if (!file) return
             const result = await parseProgramFromXlsx(file)
             if (!result.success) { toast.error(result.error || 'Erreur'); return }
-            if (result.program) { setImportPreview(result.program); setImportName(result.program.name) }
+            if (result.program) {
+              setImportPreview(result.program)
+              setImportName(result.program.name)
+              setImportSkipped(result.skippedSheets || [])
+            }
             e.target.value = ''
           }} />
 
@@ -1660,10 +1665,21 @@ export default function TrainingTab({
                     {day.is_rest ? `Jour ${i + 1} — Repos` : `Jour ${i + 1} — ${day.name}`}
                   </span>
                   <span style={{ ...mutedStyle, fontSize: 12 }}>
-                    {day.is_rest ? '🌙' : `${(day.exercises || []).length} ex.`}
+                    {day.is_rest ? '🌙' : `${(day.exercises || []).length} ex. ✓`}
                   </span>
                 </div>
               ))}
+              {importSkipped.map((name, i) => (
+                <div key={`skip-${i}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid rgba(239,68,68,0.2)`, opacity: 0.6 }}>
+                  <span style={{ ...bodyStyle, fontSize: 13 }}>{name}</span>
+                  <span style={{ ...mutedStyle, fontSize: 12 }}>ignorée</span>
+                </div>
+              ))}
+              {importSkipped.length > 0 && (
+                <div style={{ ...mutedStyle, fontSize: 11, marginTop: 4 }}>
+                  {importPreview.days.length} jour{importPreview.days.length > 1 ? 's' : ''} importé{importPreview.days.length > 1 ? 's' : ''} sur {importPreview.days.length + importSkipped.length} feuilles ({importSkipped.length} ignorée{importSkipped.length > 1 ? 's' : ''})
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>

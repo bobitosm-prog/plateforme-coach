@@ -139,15 +139,179 @@ const TECHNIQUE_REVERSE: Record<string, string> = {
   'mechanical': 'mechanical',
 }
 
+// Flexible column name matching
+const COL_EXERCISE = ['exercice', 'exercise', 'nom', 'name', 'mouvement', 'exercise name']
+const COL_SETS = ['sets', 'séries', 'series', 's', 'set order']
+const COL_REPS = ['reps', 'répétitions', 'repetitions', 'r']
+const COL_REST = ['repos', 'rest', 'pause', 'recovery']
+const COL_TEMPO = ['tempo', 'cadence']
+const COL_WEIGHT = ['poids', 'weight', 'charge', 'kg']
+const COL_TECHNIQUE = ['technique']
+const COL_DETAIL = ['détail', 'détails', 'detail', 'details']
+
+function findCol(header: string[], aliases: string[]): number {
+  return header.findIndex(h => aliases.some(a => h === a || h.includes(a)))
+}
+
 export interface ImportResult {
   success: boolean
   error?: string
+  skippedSheets?: string[]
   program?: {
     name: string
     description: string
     days: DayData[]
     source: string
   }
+}
+
+// Detect Strong/Hevy format: has "Exercise Name" + "Set Order" columns (one row per set)
+function isThirdPartyFormat(header: string[]): boolean {
+  const hasExName = header.some(h => h === 'exercise name' || h === 'exercise_name')
+  const hasSetOrder = header.some(h => h === 'set order' || h === 'set_order' || h === 'set #')
+  return hasExName && hasSetOrder
+}
+
+function parseThirdPartySheet(rows: any[][], header: string[]): ExerciseData[] {
+  const exCol = findCol(header, ['exercise name', 'exercise_name'])
+  const weightCol = findCol(header, COL_WEIGHT)
+  const repsCol = findCol(header, COL_REPS)
+  if (exCol === -1) return []
+
+  // Group rows by exercise name → count sets, avg reps/weight
+  const grouped: Record<string, { sets: number; reps: number[]; weights: number[] }> = {}
+  const order: string[] = []
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r]
+    if (!row?.[exCol]) continue
+    const name = String(row[exCol]).trim()
+    if (!grouped[name]) { grouped[name] = { sets: 0, reps: [], weights: [] }; order.push(name) }
+    grouped[name].sets++
+    if (repsCol >= 0) grouped[name].reps.push(parseInt(String(row[repsCol] || '0')) || 0)
+    if (weightCol >= 0) grouped[name].weights.push(parseFloat(String(row[weightCol] || '0')) || 0)
+  }
+
+  return order.map(name => {
+    const g = grouped[name]
+    const avgReps = g.reps.length > 0 ? Math.round(g.reps.reduce((a, b) => a + b, 0) / g.reps.length) : 10
+    return {
+      name,
+      exercise_name: name,
+      sets: g.sets,
+      reps: avgReps,
+      rest_seconds: 90,
+      tempo: '2-0-2',
+      technique: null,
+      technique_details: '',
+    }
+  })
+}
+
+interface SheetParseResult {
+  type: 'day' | 'rest' | 'info' | 'skipped'
+  day?: DayData
+  sheetName: string
+  programName?: string
+  description?: string
+}
+
+function parseSheet(sheetName: string, ws: any): SheetParseResult {
+  const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
+  if (!rows.length) return { type: 'skipped', sheetName }
+
+  // Check if info sheet (has "Champ"/"Valeur" or "Nom"/value pattern)
+  const firstCell = String(rows[0]?.[0] || '').toLowerCase().trim()
+  if (firstCell === 'champ' || firstCell === 'nom' || firstCell === 'name') {
+    // Could be info sheet — check if it has key/value pairs
+    let pName = ''
+    let desc = ''
+    let looksLikeInfo = false
+    for (const row of rows) {
+      const field = String(row[0] || '').toLowerCase().trim()
+      const value = String(row[1] || '').trim()
+      if (field === 'nom' || field === 'name') { pName = value; looksLikeInfo = true }
+      if (field === 'description') { desc = value; looksLikeInfo = true }
+      if (field === 'champ') looksLikeInfo = true
+    }
+    if (looksLikeInfo) return { type: 'info', sheetName, programName: pName, description: desc }
+  }
+
+  // Check if rest day
+  if (rows.length <= 1) {
+    if (firstCell.includes('repos') || firstCell.includes('rest') || firstCell.includes('off')) {
+      return { type: 'rest', sheetName, day: { name: 'Repos', is_rest: true, exercises: [] } }
+    }
+  }
+
+  // Parse header
+  const header = (rows[0] || []).map((h: any) => String(h).toLowerCase().trim())
+
+  // Try third-party format (Strong, Hevy)
+  if (isThirdPartyFormat(header)) {
+    const exercises = parseThirdPartySheet(rows, header)
+    if (exercises.length > 0) {
+      const dayName = sheetName.replace(/^Jour \d+ ?-? ?/, '').trim() || sheetName
+      return { type: 'day', sheetName, day: { name: dayName, is_rest: false, exercises } }
+    }
+  }
+
+  // Standard MoovX format — find columns flexibly
+  const exCol = findCol(header, COL_EXERCISE)
+  const setsCol = findCol(header, COL_SETS)
+  const repsCol = findCol(header, COL_REPS)
+
+  // Need at least exercise name + (sets OR reps) to be a valid day sheet
+  if (exCol === -1 || (setsCol === -1 && repsCol === -1)) {
+    return { type: 'skipped', sheetName }
+  }
+
+  const restCol = findCol(header, COL_REST)
+  const tempoCol = findCol(header, COL_TEMPO)
+  const weightCol = findCol(header, COL_WEIGHT)
+  const techCol = findCol(header, COL_TECHNIQUE)
+  const detailCol = findCol(header, COL_DETAIL)
+
+  const exercises: ExerciseData[] = []
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r]
+    if (!row || !row[exCol]) continue
+
+    const name = String(row[exCol]).trim()
+    if (!name) continue
+
+    const sets = setsCol >= 0 ? (parseInt(String(row[setsCol] || '3')) || 3) : 3
+    const reps = repsCol >= 0 ? (parseInt(String(row[repsCol] || '10')) || 10) : 10
+    const restRaw = restCol >= 0 ? String(row[restCol] || '90').replace(/s$/i, '') : '90'
+    const rest_seconds = parseInt(restRaw) || 90
+    const tempo = tempoCol >= 0 ? String(row[tempoCol] || '2-0-2').trim() : '2-0-2'
+    const techRaw = techCol >= 0 ? String(row[techCol] || '').trim().toLowerCase() : ''
+    const technique = (techRaw && techRaw !== '-' && techRaw !== '') ? (TECHNIQUE_REVERSE[techRaw] || null) : null
+    const rawDetails = detailCol >= 0 ? String(row[detailCol] || '').trim() : ''
+    const technique_details = rawDetails === '-' ? '' : rawDetails
+
+    const ex: ExerciseData = {
+      name,
+      exercise_name: name,
+      sets,
+      reps,
+      rest_seconds,
+      tempo: /^\d-\d-\d$/.test(tempo) ? tempo : '2-0-2',
+      technique,
+      technique_details,
+    }
+
+    // Store weight if present (for reference, not used in program but useful)
+    if (weightCol >= 0 && row[weightCol]) {
+      (ex as any).weight = parseFloat(String(row[weightCol])) || undefined
+    }
+
+    exercises.push(ex)
+  }
+
+  if (exercises.length === 0) return { type: 'skipped', sheetName }
+
+  const dayName = sheetName.replace(/^Jour \d+ ?-? ?/, '').trim() || sheetName
+  return { type: 'day', sheetName, day: { name: dayName, is_rest: false, exercises } }
 }
 
 export function parseProgramFromXlsx(file: File): Promise<ImportResult> {
@@ -158,108 +322,53 @@ export function parseProgramFromXlsx(file: File): Promise<ImportResult> {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const wb = XLSX.read(data, { type: 'array' })
 
-        if (wb.SheetNames.length < 2) {
-          resolve({ success: false, error: 'Le fichier doit contenir au moins 2 feuilles (Programme + jours).' })
+        if (wb.SheetNames.length === 0) {
+          resolve({ success: false, error: 'Le fichier est vide.' })
           return
         }
 
-        // Parse info sheet
         let programName = ''
         let description = ''
-        const infoSheet = wb.Sheets[wb.SheetNames[0]]
-        if (infoSheet) {
-          const infoRows: any[][] = XLSX.utils.sheet_to_json(infoSheet, { header: 1 })
-          for (const row of infoRows) {
-            const field = String(row[0] || '').toLowerCase().trim()
-            const value = String(row[1] || '').trim()
-            if (field === 'nom') programName = value
-            if (field === 'description') description = value
-          }
-        }
-
-        if (!programName) programName = 'Programme importé'
-
-        // Parse day sheets
         const days: DayData[] = []
-        for (let i = 1; i < wb.SheetNames.length; i++) {
-          const sheetName = wb.SheetNames[i]
+        const skippedSheets: string[] = []
+
+        for (const sheetName of wb.SheetNames) {
           const ws = wb.Sheets[sheetName]
-          const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
+          const result = parseSheet(sheetName, ws)
 
-          // Check if rest day
-          if (rows.length <= 1) {
-            const firstCell = String(rows[0]?.[0] || '').toLowerCase()
-            if (firstCell.includes('repos') || rows.length === 0) {
-              days.push({ name: 'Repos', is_rest: true, exercises: [] })
-              continue
-            }
+          switch (result.type) {
+            case 'info':
+              if (result.programName) programName = result.programName
+              if (result.description) description = result.description
+              break
+            case 'day':
+              if (result.day) days.push(result.day)
+              break
+            case 'rest':
+              if (result.day) days.push(result.day)
+              break
+            case 'skipped':
+              skippedSheets.push(sheetName)
+              break
           }
-
-          // Parse header to find column indices
-          const header = (rows[0] || []).map((h: any) => String(h).toLowerCase().trim())
-          const exCol = header.findIndex((h: string) => h.includes('exercice') || h.includes('exercise'))
-          const setsCol = header.findIndex((h: string) => h.includes('set') || h.includes('série'))
-          const repsCol = header.findIndex((h: string) => h.includes('rep'))
-          const restCol = header.findIndex((h: string) => h.includes('repos') || h.includes('rest'))
-          const tempoCol = header.findIndex((h: string) => h.includes('tempo'))
-          const techCol = header.findIndex((h: string) => h.includes('technique'))
-          const detailCol = header.findIndex((h: string) => h.includes('détail') || h.includes('detail'))
-
-          if (exCol === -1 || setsCol === -1 || repsCol === -1) {
-            resolve({ success: false, error: `Feuille "${sheetName}" : colonnes obligatoires manquantes (Exercice, Sets, Reps).` })
-            return
-          }
-
-          const exercises: ExerciseData[] = []
-          for (let r = 1; r < rows.length; r++) {
-            const row = rows[r]
-            if (!row || !row[exCol]) continue
-
-            const name = String(row[exCol]).trim()
-            const sets = parseInt(String(row[setsCol] || '3'))
-            const reps = parseInt(String(row[repsCol] || '10'))
-
-            if (isNaN(sets) || isNaN(reps)) {
-              resolve({ success: false, error: `Feuille "${sheetName}", ligne ${r + 1} : Sets et Reps doivent être des nombres.` })
-              return
-            }
-
-            const restRaw = restCol >= 0 ? String(row[restCol] || '90').replace('s', '') : '90'
-            const rest_seconds = parseInt(restRaw) || 90
-            const tempo = tempoCol >= 0 ? String(row[tempoCol] || '2-0-2').trim() : '2-0-2'
-            const techRaw = techCol >= 0 ? String(row[techCol] || '').trim().toLowerCase() : ''
-            const technique = (techRaw && techRaw !== '-') ? (TECHNIQUE_REVERSE[techRaw] || null) : null
-            const technique_details = detailCol >= 0 ? String(row[detailCol] || '').trim() : ''
-
-            exercises.push({
-              name,
-              exercise_name: name,
-              sets,
-              reps,
-              rest_seconds,
-              tempo: /^\d-\d-\d$/.test(tempo) ? tempo : '2-0-2',
-              technique,
-              technique_details: technique_details === '-' ? '' : technique_details,
-            })
-          }
-
-          // Extract day name from sheet name (remove "Jour X - " prefix)
-          const dayName = sheetName.replace(/^Jour \d+ ?-? ?/, '').trim() || sheetName
-
-          days.push({
-            name: dayName,
-            is_rest: false,
-            exercises,
-          })
         }
 
         if (days.length === 0) {
-          resolve({ success: false, error: 'Aucun jour trouvé dans le fichier.' })
+          resolve({
+            success: false,
+            error: 'Aucune feuille compatible trouvée. Les colonnes obligatoires sont : Exercice (nom du mouvement), Sets (nombre de séries), Reps (nombre de répétitions). Télécharge le modèle vierge pour voir le format attendu.',
+          })
           return
+        }
+
+        if (!programName) {
+          // Try to derive name from filename
+          programName = file.name.replace(/\.(xlsx|xls)$/i, '').replace(/[_-]/g, ' ').trim() || 'Programme importé'
         }
 
         resolve({
           success: true,
+          skippedSheets: skippedSheets.length > 0 ? skippedSheets : undefined,
           program: { name: programName, description, days, source: 'import' },
         })
       } catch {
