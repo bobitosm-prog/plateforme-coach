@@ -6,6 +6,7 @@ import {
   modalOverlay, modalContainer, titleStyle,
   calcMifflinStJeor, ACTIVITY_LEVELS,
 } from '../../../lib/design-tokens'
+import { updateProfile } from '../../../lib/profile-service'
 
 interface ObjectiveModalProps {
   profile: any
@@ -102,7 +103,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
   async function handleConfirm() {
     setSaving(true)
     const tw = parseFloat(targetWeight)
-    const { error } = await supabase.from('profiles').update({
+    const { error } = await updateProfile(session.user.id, {
       objective,
       target_weight: tw,
       activity_level: activity,
@@ -110,7 +111,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
       protein_goal: newMacros.protein,
       carb_goal: newMacros.carbs,
       fat_goal: newMacros.fat,
-    }).eq('id', session.user.id)
+    }, supabase)
 
     setSaving(false)
     if (!error) {
@@ -125,7 +126,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
       {[1, 2, 3, 4].map(s => (
         <div key={s} style={{
           flex: 1, height: 3, borderRadius: 2,
-          background: s <= step ? colors.gold : 'rgba(201,168,76,0.15)',
+          background: s <= step ? colors.gold : colors.goldBorder,
           transition: 'background 300ms',
         }} />
       ))}

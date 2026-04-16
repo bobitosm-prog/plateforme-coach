@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { AlertTriangle, CheckCircle, Target, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { updateProfile } from '../../../lib/profile-service'
 
 const GOLD = '#D4A843'
 const BG_CARD = '#1A1A1A'
@@ -70,12 +71,12 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
     const fat_goal = Math.round((newCalories * 0.25) / 9)
     const carbs_goal = Math.round((newCalories - protein_goal * 4 - fat_goal * 9) / 4)
 
-    await supabase.from('profiles').update({
+    await updateProfile(session.user.id, {
       calorie_goal: newCalories,
       protein_goal,
       carbs_goal,
       fat_goal,
-    }).eq('id', session.user.id)
+    }, supabase)
 
     setApplied(true)
     setApplying(false)

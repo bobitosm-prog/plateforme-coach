@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus } from 'lucide-react'
 import { ACTIVITY_LEVELS, calcMifflinStJeor, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
+import { updateProfile } from '../../lib/profile-service'
 
 // ─── Constants ───
 
@@ -257,7 +258,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   async function save() {
     setSaving(true)
     const objMap: Record<ObjectiveType, string> = { cut: 'weight_loss', maintain: 'maintenance', bulk: 'mass' }
-    const { data, error } = await supabase.from('profiles').update({
+    const { data, error } = await updateProfile(userId, {
       calorie_goal: objectiveKcal,
       protein_goal: finalMacros.protein,
       carbs_goal: finalMacros.carbs,
@@ -272,7 +273,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       target_weight: targetWeight,
       height,
       gender,
-    }).eq('id', userId).select()
+    }, supabase)
     setSaving(false)
     if (error) {
       console.error('Save error:', error)

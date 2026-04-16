@@ -10,6 +10,7 @@ import useMessages from './useMessages'
 import useAnalytics from './useAnalytics'
 import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
+import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -138,7 +139,7 @@ export default function useClientDashboard() {
     // If role is missing but user_metadata has it (RLS blocked the UPDATE at signup), fix it now
     const metaRole = session?.user?.user_metadata?.role
     if (!profRes.data.role && metaRole) {
-      await supabase.from('profiles').update({ role: metaRole }).eq('id', uid)
+      await updateProfile(uid, { role: metaRole }, supabase)
       profRes.data.role = metaRole
     }
     if (profRes.data.role === 'super_admin' || profRes.data.role === 'admin') {
@@ -256,15 +257,14 @@ export default function useClientDashboard() {
     await supabase.from('scheduled_sessions').update({ completed: true, completed_at: new Date().toISOString() })
       .eq('user_id', session.user.id).eq('scheduled_date', todayStr).eq('completed', false)
     // Update last_workout_at
-    await supabase.from('profiles').update({ last_workout_at: new Date().toISOString() }).eq('id', session.user.id)
+    await updateProfile(session.user.id, { last_workout_at: new Date().toISOString() }, supabase)
     toast.success('Séance terminée ! Bien joué 💪')
     fetchAll(true)
   }
 
   async function saveWeight(value: number, date: string) {
     await supabase.from('weight_logs').upsert({ user_id: session.user.id, poids: value, date }, { onConflict: 'user_id,date' })
-    await supabase.from('profiles').upsert({ id: session.user.id, current_weight: value })
-    if (!profile?.start_weight) await supabase.from('profiles').update({ start_weight: value }).eq('id', session.user.id)
+    await updateProfile(session.user.id, { current_weight: value, ...(profile?.start_weight ? {} : { start_weight: value }) }, supabase)
     toast.success('Poids enregistré !'); setModal(null); fetchAll(true)
   }
 
@@ -286,7 +286,7 @@ export default function useClientDashboard() {
       // Get public URL
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
       // Update profile
-      const { error: updateErr } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id)
+      const { error: updateErr } = await updateProfile(session.user.id, { avatar_url: publicUrl }, supabase)
       if (updateErr) { toast.error('Erreur sauvegarde: ' + updateErr.message); return }
       toast.success('Photo de profil mise à jour !')
       fetchAll(true)

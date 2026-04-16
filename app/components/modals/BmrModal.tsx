@@ -6,6 +6,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
   ACTIVITY_LEVELS, calcMifflinStJeor, calcKatchMcArdle, calcHarrisBenedict,
 } from '../../../lib/design-tokens'
+import { updateProfile } from '../../../lib/profile-service'
 
 interface BmrModalProps {
   supabase: any
@@ -46,7 +47,7 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
     const carbs = Math.round((tdee - proteinCal - fatCal) / 4)
 
     setBmrResult({ mifflin: Math.round(mifflin), harris: Math.round(harris), katch: katch ? Math.round(katch) : null, tdee, fatLoss, massGain, protein, fat, carbs })
-    supabase.from('profiles').upsert({ id: session.user.id, current_weight: w, height: h, gender: bmrForm.gender, activity_level: bmrForm.activity, body_fat_pct: bf || null, calorie_goal: tdee })
+    updateProfile(session.user.id, { current_weight: w, height: h, gender: bmrForm.gender, activity_level: bmrForm.activity, body_fat_pct: bf || null, calorie_goal: tdee }, supabase)
   }
 
   return (

@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   ScheduledSession, buildWeekSessions, getMonday, toDateStr, scheduleLocalReminder,
 } from '../../lib/schedule-utils'
+import { updateProfile } from '../../lib/profile-service'
 
 interface UseScheduledSessionsParams {
   supabase: SupabaseClient
@@ -128,7 +129,7 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
 
   async function updateReminderSettings(supabaseClient: SupabaseClient, uid: string, settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }, setProfile: (fn: (prev: any) => any) => void) {
     if (!uid) return
-    await supabaseClient.from('profiles').update(settings).eq('id', uid)
+    await updateProfile(uid, settings, supabaseClient)
     setProfile((prev: any) => ({ ...prev, ...settings }))
     toast.success('Préférences mises à jour')
   }

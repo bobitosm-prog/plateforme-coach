@@ -6,6 +6,7 @@ import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
 import { colors, fonts, titleStyle, titleLineStyle, subtitleStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, radii } from '../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../lib/timer-audio'
+import { updateProfile } from '../../../lib/profile-service'
 import SwissBadge from '../ui/SwissBadge'
 import CoachSection from './profile/CoachSection'
 import PaymentHistory from './profile/PaymentHistory'
@@ -112,7 +113,7 @@ export default function ProfileTab({
   }
 
   async function savePhone() {
-    await supabase.from('profiles').update({ phone: phoneForm }).eq('id', session.user.id)
+    await updateProfile(session.user.id, { phone: phoneForm }, supabase)
     setPhoneEditing(false)
     fetchAll()
   }
