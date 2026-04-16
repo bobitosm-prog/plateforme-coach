@@ -30,6 +30,7 @@ import TrainingRestDay from './training/TrainingRestDay'
 import TrainingSessionDone from './training/TrainingSessionDone'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
 import { TechniqueTooltip } from './training/TechniquePopup'
+import StartProgramModal from './training/StartProgramModal'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
@@ -123,6 +124,10 @@ export default function TrainingTab({
   const [importSkipped, setImportSkipped] = useState<string[]>([])
   const [importName, setImportName] = useState('')
   const importFileRef = useRef<HTMLInputElement>(null)
+  // Start program modal: holds the program to activate/schedule + optional import data
+  const [startModalProgram, setStartModalProgram] = useState<any>(null)
+  const [startModalImportData, setStartModalImportData] = useState<any>(null)
+  const [scheduledBannerDismissed, setScheduledBannerDismissed] = useState(false)
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
@@ -270,13 +275,25 @@ export default function TrainingTab({
     setSetInputs(loadedInputs)
   }, [trainingDay, coachProgram])
 
-  // ── Load custom programs ──
+  // ── Load custom programs + auto-activate scheduled ──
   useEffect(() => {
     if (!session?.user?.id) return
     supabase.from('custom_programs').select('*').eq('user_id', session.user.id).order('updated_at', { ascending: false })
-      .then(({ data }: any) => {
-        setCustomPrograms(data || [])
-        const active = (data || []).find((p: any) => p.is_active)
+      .then(async ({ data }: any) => {
+        const programs = data || []
+        // Auto-activate scheduled programs that are due
+        const today = new Date().toISOString().split('T')[0]
+        const dueToStart = programs.filter((p: any) => p.scheduled && p.start_date && p.start_date <= today)
+        if (dueToStart.length > 0) {
+          await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).eq('is_active', true)
+          await supabase.from('custom_programs').update({ is_active: true, scheduled: false }).eq('id', dueToStart[0].id)
+          dueToStart[0].is_active = true
+          dueToStart[0].scheduled = false
+          programs.forEach((p: any) => { if (p.id !== dueToStart[0].id) p.is_active = false })
+          toast.success(`Ton nouveau programme démarre aujourd'hui !`)
+        }
+        setCustomPrograms(programs)
+        const active = programs.find((p: any) => p.is_active)
         if (active) setActiveCustomProgram(active)
       })
   }, [session?.user?.id])
@@ -298,18 +315,21 @@ export default function TrainingTab({
     })
   }, [])
 
-  async function activateProgram(programId: string) {
-    // Désactive tous d'abord
+  // Open start modal instead of activating directly
+  function activateProgram(programId: string) {
+    const prog = customPrograms.find(p => p.id === programId)
+    if (prog) setStartModalProgram(prog)
+  }
+
+  async function doActivateProgram(programId: string) {
     await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).neq('id', programId)
-    // Active celui-ci
-    const { error } = await supabase.from('custom_programs').update({ is_active: true }).eq('id', programId).eq('user_id', session.user.id)
+    const { error } = await supabase.from('custom_programs').update({ is_active: true, scheduled: false, current_week: 1 }).eq('id', programId).eq('user_id', session.user.id)
     if (error) { toast.error('Erreur: ' + error.message); return }
-    const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId }))
+    const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId, scheduled: p.id === programId ? false : p.scheduled }))
     setCustomPrograms(updated)
     const activeProg = updated.find(p => p.id === programId) || null
     setActiveCustomProgram(activeProg)
 
-    // Regenerate scheduled_sessions with the activated program's day names
     if (activeProg?.days) {
       try {
         const today = new Date()
@@ -317,41 +337,62 @@ export default function TrainingTab({
         const monday = new Date(today)
         monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
         monday.setHours(0, 0, 0, 0)
-        const sunday = new Date(monday)
-        sunday.setDate(monday.getDate() + 6)
+        const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6)
         const mondayStr = monday.toISOString().split('T')[0]
         const sundayStr = sunday.toISOString().split('T')[0]
-
-        await supabase.from('scheduled_sessions').delete()
-          .eq('user_id', session.user.id)
-          .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
-          .eq('completed', false)
-
+        await supabase.from('scheduled_sessions').delete().eq('user_id', session.user.id).gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr).eq('completed', false)
         const paddedDays = padTo7Days(activeProg.days)
         const DAY_LABELS_FULL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
         const newSessions: any[] = []
         for (let i = 0; i < 7; i++) {
-          const day = paddedDays[i]
-          if (!day || day.is_rest) continue
-          const date = new Date(monday)
-          date.setDate(monday.getDate() + i)
-          newSessions.push({
-            user_id: session.user.id,
-            title: day.name || day.weekday || DAY_LABELS_FULL[i],
-            session_type: 'custom',
-            scheduled_date: date.toISOString().split('T')[0],
-            scheduled_time: '08:00',
-            duration_min: 60,
-            completed: false,
-          })
+          const day = paddedDays[i]; if (!day || day.is_rest) continue
+          const date = new Date(monday); date.setDate(monday.getDate() + i)
+          newSessions.push({ user_id: session.user.id, title: day.name || day.weekday || DAY_LABELS_FULL[i], session_type: 'custom', scheduled_date: date.toISOString().split('T')[0], scheduled_time: '08:00', duration_min: 60, completed: false })
         }
-        if (newSessions.length > 0) {
-          await supabase.from('scheduled_sessions').insert(newSessions)
-        }
+        if (newSessions.length > 0) await supabase.from('scheduled_sessions').insert(newSessions)
       } catch (e) { console.error('[activateProgram] sync error:', e) }
     }
-
     toast.success('Programme activé !')
+  }
+
+  async function scheduleProgram(programId: string, startDate: string) {
+    await supabase.from('custom_programs').update({ scheduled: true, start_date: startDate, current_week: 1 }).eq('id', programId)
+    const updated = customPrograms.map(p => p.id === programId ? { ...p, scheduled: true, start_date: startDate } : p)
+    setCustomPrograms(updated)
+    toast.success(`Programme planifié pour le ${new Date(startDate + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`)
+  }
+
+  async function handleStartProgram(option: 'now' | 'monday' | 'custom', date?: string) {
+    const prog = startModalProgram
+    const importData = startModalImportData
+    setStartModalProgram(null)
+    setStartModalImportData(null)
+
+    if (importData) {
+      // Import flow: insert program first
+      const insertData: any = { ...importData, user_id: session.user.id, is_active: false }
+      if (option === 'now') { insertData.is_active = true; insertData.scheduled = false }
+      else { insertData.scheduled = true; insertData.start_date = date; insertData.is_active = false }
+
+      // Deactivate others if starting now
+      if (option === 'now') {
+        await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).eq('is_active', true)
+      }
+
+      const { error } = await supabase.from('custom_programs').insert(insertData)
+      if (error) { toast.error('Erreur: ' + error.message); return }
+      if (option === 'now') toast.success('Programme importé et activé !')
+      else toast.success(`Programme importé — démarre le ${new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`)
+      refreshPrograms()
+      return
+    }
+
+    if (!prog?.id) return
+    if (option === 'now') {
+      await doActivateProgram(prog.id)
+    } else {
+      await scheduleProgram(prog.id, date!)
+    }
   }
 
   async function deactivateProgram(programId: string) {
@@ -910,6 +951,24 @@ export default function TrainingTab({
                 </div>
               ))}
             </div>
+          </div>
+        )
+      })()}
+
+      {/* Scheduled program banner */}
+      {!scheduledBannerDismissed && (() => {
+        const scheduled = customPrograms.find((p: any) => p.scheduled && p.start_date)
+        if (!scheduled) return null
+        const startDate = new Date(scheduled.start_date + 'T00:00:00')
+        const now = new Date(); now.setHours(0, 0, 0, 0)
+        const diffDays = Math.ceil((startDate.getTime() - now.getTime()) / 86400000)
+        if (diffDays < 1) return null
+        return (
+          <div style={{ margin: '0 24px 8px', padding: '10px 14px', background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.gold }}>
+              Prochain : <span style={{ fontWeight: 700 }}>{scheduled.name}</span> — dans {diffDays} jour{diffDays > 1 ? 's' : ''}
+            </div>
+            <button onClick={() => setScheduledBannerDismissed(true)} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 14, padding: 4 }}>✕</button>
           </div>
         )
       })()}
@@ -1633,6 +1692,8 @@ export default function TrainingTab({
                           )}
                           {prog.is_active ? (
                             <span style={{ fontSize: 10, fontWeight: 700, color: colors.success, background: 'rgba(74,222,128,0.1)', padding: '3px 10px', borderRadius: 999 }}>● Actif</span>
+                          ) : prog.scheduled ? (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 10px', borderRadius: 999 }}>📅 {new Date(prog.start_date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}</span>
                           ) : (
                             <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: 999 }}>○ Inactif</span>
                           )}
@@ -1784,25 +1845,21 @@ export default function TrainingTab({
 
             {/* Sticky footer with buttons */}
             <div style={{ flexShrink: 0, padding: '16px 20px 32px', borderTop: `0.5px solid rgba(201,168,76,0.1)`, background: colors.surface, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <button onClick={async () => {
+              <button onClick={() => {
                 const insertData: any = {
-                  user_id: session.user.id,
                   name: importName.trim() || 'Programme importé',
                   description: importPreview.description || '',
                   days: importPreview.days,
                   source: 'import',
-                  is_active: false,
                 }
                 if (importPreview.total_weeks) {
                   insertData.total_weeks = importPreview.total_weeks
                   insertData.current_week = importPreview.current_week || 1
                   insertData.phases = importPreview.phases || null
                 }
-                const { error } = await supabase.from('custom_programs').insert(insertData)
-                if (error) { toast.error('Erreur: ' + error.message); return }
-                toast.success('Programme importé avec succès ✓')
+                setStartModalImportData(insertData)
+                setStartModalProgram({ name: importName.trim() || 'Programme importé' })
                 setImportPreview(null)
-                refreshPrograms()
               }} style={{ ...btnPrimary, padding: 14 }}>IMPORTER</button>
               <button onClick={() => setImportPreview(null)} style={{ ...btnSecondary, padding: 14 }}>ANNULER</button>
             </div>
@@ -1878,6 +1935,15 @@ export default function TrainingTab({
 
       {/* Technique tooltip */}
       {techniqueTooltip && <TechniqueTooltip technique={techniqueTooltip} onClose={() => setTechniqueTooltip(null)} />}
+
+      {/* Start program modal */}
+      {startModalProgram && (
+        <StartProgramModal
+          programName={startModalProgram.name}
+          onStart={handleStartProgram}
+          onClose={() => { setStartModalProgram(null); setStartModalImportData(null) }}
+        />
+      )}
 
       {/* Variant popup */}
       {variantPopup && (
