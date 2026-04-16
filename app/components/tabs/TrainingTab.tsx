@@ -1727,59 +1727,63 @@ export default function TrainingTab({
 
       {/* ═══ IMPORT PREVIEW MODAL ═══ */}
       {importPreview && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setImportPreview(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={pageTitleStyle}>APERÇU IMPORT</span>
-              {importPreview.total_weeks && (
-                <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 8px', borderRadius: 999 }}>
-                  {importPreview.total_weeks} SEMAINES · PÉRIODISÉ
-                </span>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '24px 16px' }} onClick={() => setImportPreview(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Scrollable content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={pageTitleStyle}>APERÇU IMPORT</span>
+                {importPreview.total_weeks && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 8px', borderRadius: 999 }}>
+                    {importPreview.total_weeks} SEM
+                  </span>
+                )}
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <div style={{ ...labelStyle, marginBottom: 4 }}>Nom du programme</div>
+                <input value={importName} onChange={e => setImportName(e.target.value)} style={{ width: '100%', padding: 12, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none' }} />
+              </div>
+
+              {/* Phase summary for periodized programs */}
+              {importPreview.phases && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {importPreview.phases.map((phase, i) => (
+                    <div key={i} style={{ padding: '6px 10px', background: colors.goldDim, borderRadius: 6, display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: fonts.headline, fontSize: 11, color: colors.gold }}>{phase.name}</span>
+                      <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Sem. {phase.weeks[0]}-{phase.weeks[1]}</span>
+                    </div>
+                  ))}
+                </div>
               )}
-            </div>
 
-            <div style={{ marginTop: 16 }}>
-              <div style={{ ...labelStyle, marginBottom: 4 }}>Nom du programme</div>
-              <input value={importName} onChange={e => setImportName(e.target.value)} style={{ width: '100%', padding: 12, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none' }} />
-            </div>
-
-            {/* Phase summary for periodized programs */}
-            {importPreview.phases && (
-              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {importPreview.phases.map((phase, i) => (
-                  <div key={i} style={{ padding: '6px 10px', background: colors.goldDim, borderRadius: 6, display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: fonts.headline, fontSize: 11, color: colors.gold }}>{phase.name}</span>
-                    <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Sem. {phase.weeks[0]}-{phase.weeks[1]}</span>
+              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 16 }}>
+                {importPreview.days.map((day, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid ${colors.goldBorder}` }}>
+                    <span style={{ ...bodyStyle, fontSize: 13 }}>
+                      {day.is_rest ? `Jour ${i + 1} — Repos` : `Jour ${i + 1} — ${day.name}`}
+                    </span>
+                    <span style={{ ...mutedStyle, fontSize: 12 }}>
+                      {day.is_rest ? '🌙' : `${(day.exercises || []).length} ex. ✓`}
+                    </span>
                   </div>
                 ))}
+                {importSkipped.map((name, i) => (
+                  <div key={`skip-${i}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid rgba(239,68,68,0.2)`, opacity: 0.6 }}>
+                    <span style={{ ...bodyStyle, fontSize: 13 }}>{name}</span>
+                    <span style={{ ...mutedStyle, fontSize: 12 }}>ignorée</span>
+                  </div>
+                ))}
+                {importSkipped.length > 0 && (
+                  <div style={{ ...mutedStyle, fontSize: 11, marginTop: 4 }}>
+                    {importPreview.days.length} jour{importPreview.days.length > 1 ? 's' : ''} importé{importPreview.days.length > 1 ? 's' : ''} sur {importPreview.days.length + importSkipped.length} feuilles ({importSkipped.length} ignorée{importSkipped.length > 1 ? 's' : ''})
+                  </div>
+                )}
               </div>
-            )}
-
-            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {importPreview.days.map((day, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid ${colors.goldBorder}` }}>
-                  <span style={{ ...bodyStyle, fontSize: 13 }}>
-                    {day.is_rest ? `Jour ${i + 1} — Repos` : `Jour ${i + 1} — ${day.name}`}
-                  </span>
-                  <span style={{ ...mutedStyle, fontSize: 12 }}>
-                    {day.is_rest ? '🌙' : `${(day.exercises || []).length} ex. ✓`}
-                  </span>
-                </div>
-              ))}
-              {importSkipped.map((name, i) => (
-                <div key={`skip-${i}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid rgba(239,68,68,0.2)`, opacity: 0.6 }}>
-                  <span style={{ ...bodyStyle, fontSize: 13 }}>{name}</span>
-                  <span style={{ ...mutedStyle, fontSize: 12 }}>ignorée</span>
-                </div>
-              ))}
-              {importSkipped.length > 0 && (
-                <div style={{ ...mutedStyle, fontSize: 11, marginTop: 4 }}>
-                  {importPreview.days.length} jour{importPreview.days.length > 1 ? 's' : ''} importé{importPreview.days.length > 1 ? 's' : ''} sur {importPreview.days.length + importSkipped.length} feuilles ({importSkipped.length} ignorée{importSkipped.length > 1 ? 's' : ''})
-                </div>
-              )}
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+            {/* Sticky footer with buttons */}
+            <div style={{ flexShrink: 0, padding: '16px 20px 32px', borderTop: `0.5px solid rgba(201,168,76,0.1)`, background: colors.surface, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <button onClick={async () => {
                 const insertData: any = {
                   user_id: session.user.id,
@@ -1799,8 +1803,8 @@ export default function TrainingTab({
                 toast.success('Programme importé avec succès ✓')
                 setImportPreview(null)
                 refreshPrograms()
-              }} style={{ ...btnPrimary, flex: 1, padding: 14 }}>IMPORTER</button>
-              <button onClick={() => setImportPreview(null)} style={{ ...btnSecondary, flex: 1, padding: 14 }}>ANNULER</button>
+              }} style={{ ...btnPrimary, padding: 14 }}>IMPORTER</button>
+              <button onClick={() => setImportPreview(null)} style={{ ...btnSecondary, padding: 14 }}>ANNULER</button>
             </div>
           </div>
         </div>
