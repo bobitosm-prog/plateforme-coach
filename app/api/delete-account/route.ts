@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 function getServiceSupabase() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -9,19 +11,24 @@ function getServiceSupabase() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth check: user can only delete their own account
+    const cookieStore = await cookies()
+    const supabaseAuth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll() } }
+    )
+    const { data: { user } } = await supabaseAuth.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+    const userId = user.id
+
     const supabase = getServiceSupabase()
     if (!supabase) {
       return NextResponse.json(
         { error: 'Service temporairement indisponible' },
         { status: 500 }
-      )
-    }
-
-    const { userId } = await req.json()
-    if (!userId || typeof userId !== 'string') {
-      return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
       )
     }
 

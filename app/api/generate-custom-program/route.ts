@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
 import { PROGRAM_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
@@ -125,16 +127,29 @@ REGLES SCIENTIFIQUES OBLIGATOIRES :
    - Pour mechanical : technique_details = "description de la variation"`
 
 export async function POST(req: NextRequest) {
+  // Auth check
+  const cookieStore = await cookies()
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  }
+
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`custom-prog:${ip}`, 3, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
   try {
     const body = await req.json()
-    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender, userId } = body
+    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender } = body
+    const userId = user.id
 
     // Guard: invited clients cannot generate AI programs
-    if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
       const { guardInvitedClient } = await import('../../../lib/api-guard')
       const blocked = await guardInvitedClient(userId)
       if (blocked) return blocked

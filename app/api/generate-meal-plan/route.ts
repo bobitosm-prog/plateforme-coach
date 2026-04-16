@@ -1,4 +1,6 @@
 import { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 
@@ -266,6 +268,18 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
 }
 
 export async function POST(req: NextRequest) {
+  // Auth check
+  const cookieStore = await cookies()
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Non autorisé' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+  }
+
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`meal-plan:${ip}`, 3, 60000)
   if (!rl.allowed) return new Response(JSON.stringify({ error: 'Trop de requetes. Reessayez dans ' + rl.retryAfter + 's.' }), { status: 429 })
@@ -278,9 +292,10 @@ export async function POST(req: NextRequest) {
     const params = await req.json()
 
     // Guard: invited clients cannot generate AI meal plans
-    if (params.userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const userId = user.id
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
       const { guardInvitedClient } = await import('../../../lib/api-guard')
-      const blocked = await guardInvitedClient(params.userId)
+      const blocked = await guardInvitedClient(userId)
       if (blocked) return blocked
     }
     const encoder = new TextEncoder()

@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { COACH_SYSTEM_PROMPT } from '../../../lib/coach-knowledge'
 
-export const runtime = 'edge'
-
 export async function POST(req: NextRequest) {
+  // Auth check
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  }
+
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`chat:${ip}`, 15, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
@@ -13,7 +25,7 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { message, history, profile, userId } = await req.json()
+    const { message, history, profile } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: 'Message vide' }, { status: 400 })
 
     // Guard: invited clients cannot use AI coach

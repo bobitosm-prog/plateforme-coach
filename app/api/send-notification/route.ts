@@ -1,10 +1,23 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
 
 export async function POST(req: NextRequest) {
+  // Auth check
+  const cookieStore = await cookies()
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  }
 
   const vapidPublicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '')
     .replace(/=/g, '')
@@ -21,8 +34,6 @@ export async function POST(req: NextRequest) {
   )
 
   const { userId, title, body, url } = await req.json()
-
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
