@@ -1788,8 +1788,8 @@ export default function TrainingTab({
 
       {/* ═══ IMPORT PREVIEW MODAL ═══ */}
       {importPreview && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '24px 16px' }} onClick={() => setImportPreview(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setImportPreview(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#131313', border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Scrollable content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1843,8 +1843,8 @@ export default function TrainingTab({
               </div>
             </div>
 
-            {/* Sticky footer with buttons */}
-            <div style={{ flexShrink: 0, padding: '16px 20px 32px', borderTop: `0.5px solid rgba(201,168,76,0.1)`, background: colors.surface, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {/* Footer FIXE — toujours visible */}
+            <div style={{ flexShrink: 0, padding: '16px 20px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: '0.5px solid rgba(201,168,76,0.1)', background: '#131313', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <button onClick={() => {
                 const insertData: any = {
                   name: importName.trim() || 'Programme importé',
