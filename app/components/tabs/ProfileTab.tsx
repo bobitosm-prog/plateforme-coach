@@ -120,8 +120,8 @@ export default function ProfileTab({
 
   // Shared row style for list items
   const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', cursor: 'pointer' }
-  const iconBoxStyle: React.CSSProperties = { width: 30, height: 30, borderRadius: 8, background: 'rgba(230,195,100,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
-  const separatorStyle: React.CSSProperties = { height: 0.5, background: 'rgba(201,168,76,0.06)' }
+  const iconBoxStyle: React.CSSProperties = { width: 30, height: 30, borderRadius: 8, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
+  const separatorStyle: React.CSSProperties = { height: 0.5, background: colors.goldDim }
 
   // Toggle switch component
   const Toggle = ({ active, onToggle }: { active: boolean; onToggle: () => void }) => (
@@ -132,7 +132,7 @@ export default function ProfileTab({
 
   // Pill button component
   const Pill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
-    <button onClick={onClick} style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${active ? 'rgba(230,195,100,0.3)' : 'rgba(230,195,100,0.1)'}`, background: active ? 'rgba(230,195,100,0.15)' : 'transparent', color: active ? colors.gold : 'rgba(255,255,255,0.3)', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${active ? `${colors.gold}4d` : `${colors.gold}1a`}`, background: active ? colors.goldBorder : 'transparent', color: active ? colors.gold : 'rgba(255,255,255,0.3)', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, cursor: 'pointer' }}>
       {label}
     </button>
   )
@@ -143,7 +143,7 @@ export default function ProfileTab({
       {/* ═══ SECTION 1 — PROFIL HEADER ═══ */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ position: 'relative', marginBottom: 12 }}>
-          <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: '50%', background: displayAvatar ? 'transparent' : colors.surfaceHigh, border: '2px solid rgba(201,168,76,0.3)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+          <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: '50%', background: displayAvatar ? 'transparent' : colors.surfaceHigh, border: `2px solid ${colors.goldContainer}4d`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
             {displayAvatar
               ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt="Photo de profil" />
               : <span style={{ fontFamily: fonts.headline, fontWeight: 700, fontSize: 32, color: colors.gold }}>{firstName.charAt(0).toUpperCase()}</span>}
@@ -156,9 +156,9 @@ export default function ProfileTab({
         <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: '0.12em', textTransform: 'uppercase' as const, textAlign: 'center', marginBottom: 4 }}>{fullName}</div>
         <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 10 }}>{session.user.email}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 8, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, border: `1px solid rgba(201,168,76,0.2)`, borderRadius: 999, padding: '4px 10px', letterSpacing: '0.08em' }}>SWISS MADE</span>
+          <span style={{ fontSize: 8, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, border: `1px solid ${colors.goldContainer}33`, borderRadius: 999, padding: '4px 10px', letterSpacing: '0.08em' }}>SWISS MADE</span>
           {profile?.fitness_level && (
-            <span style={{ fontSize: 8, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.15)', border: `1px solid rgba(230,195,100,0.3)`, borderRadius: 999, padding: '4px 10px', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{profile.fitness_level}</span>
+            <span style={{ fontSize: 8, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: colors.goldBorder, border: `1px solid ${colors.gold}4d`, borderRadius: 999, padding: '4px 10px', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{profile.fitness_level}</span>
           )}
         </div>
         {profile?.created_at && (
@@ -344,7 +344,7 @@ export default function ProfileTab({
 
           if (st === 'lifetime') return (
             <div>
-              <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.1)', border: '1px solid rgba(230,195,100,0.2)', borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>Accès à vie</span>
+              <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>Accès à vie</span>
               <p style={{ fontSize: 12, color: colors.text, margin: 0, lineHeight: 1.6 }}>Accès permanent à toutes les fonctionnalités MoovX.</p>
             </div>
           )
@@ -360,7 +360,7 @@ export default function ProfileTab({
             const planLabel = subType === 'client_yearly' ? 'Plan Annuel — CHF 80/an' : subType === 'coach_monthly' ? 'Coach Pro — CHF 50/mois' : 'Plan Mensuel — CHF 10/mois'
             return (
               <div>
-                <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.1)', border: '1px solid rgba(230,195,100,0.2)', borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{planLabel}</span>
+                <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{planLabel}</span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
                   <span style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 800, color: colors.text }}>{days}</span>
                   <span style={{ ...mutedStyle, fontSize: 12 }}>jours restants</span>
@@ -420,7 +420,7 @@ export default function ProfileTab({
               {/* Level bar */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 800, color: colors.gold }}>LV.{level.level}</span>
-                <div style={{ flex: 1, height: 4, background: 'rgba(230,195,100,0.1)', borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ flex: 1, height: 4, background: `${colors.gold}1a`, borderRadius: 999, overflow: 'hidden' }}>
                   <div style={{ width: `${Math.min(100, Math.round(((totalXp - level.minXp) / (level.maxXp - level.minXp)) * 100))}%`, height: '100%', background: colors.gold, borderRadius: 999 }} />
                 </div>
                 <span style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.gold }}>{totalXp} XP</span>
@@ -429,7 +429,7 @@ export default function ProfileTab({
               {lastThree.length > 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {lastThree.map(b => (
-                    <div key={b.id} style={{ background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(230,195,100,0.3)', borderRadius: 12, padding: 10, textAlign: 'center' }}>
+                    <div key={b.id} style={{ background: colors.goldDim, border: `1px solid ${colors.gold}4d`, borderRadius: 12, padding: 10, textAlign: 'center' }}>
                       <div style={{ fontSize: 18, marginBottom: 3 }}>{EMOJIS[b.icon] || '🏆'}</div>
                       <div style={{ fontFamily: fonts.headline, fontSize: 7, fontWeight: 700, color: colors.text, letterSpacing: '0.05em' }}>{b.name}</div>
                     </div>

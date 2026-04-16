@@ -170,8 +170,8 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
                     onClick={() => setObjective(obj.id)}
                     style={{
                       ...cardStyle,
-                      border: `1px solid ${selected ? 'rgba(230,195,100,0.4)' : 'rgba(201,168,76,0.1)'}`,
-                      background: selected ? 'rgba(230,195,100,0.1)' : colors.surface,
+                      border: `1px solid ${selected ? `${colors.gold}66` : `${colors.goldContainer}1a`}`,
+                      background: selected ? `${colors.gold}1a` : colors.surface,
                       padding: '16px 18px',
                       textAlign: 'left',
                       cursor: 'pointer',
@@ -242,8 +242,8 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       padding: '14px 16px', borderRadius: radii.button,
-                      border: `1px solid ${selected ? 'rgba(230,195,100,0.3)' : 'rgba(201,168,76,0.1)'}`,
-                      background: selected ? 'rgba(230,195,100,0.15)' : 'transparent',
+                      border: `1px solid ${selected ? `${colors.gold}4d` : `${colors.goldContainer}1a`}`,
+                      background: selected ? colors.goldBorder : 'transparent',
                       cursor: 'pointer', transition: 'all 200ms',
                     }}
                   >
@@ -277,7 +277,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
                 { label: 'Glucides', old: `${oldMacros.carbs}g`, new_: `${newMacros.carbs}g` },
                 { label: 'Lipides', old: `${oldMacros.fat}g`, new_: `${newMacros.fat}g` },
               ].map(row => (
-                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid rgba(201,168,76,0.06)' }}>
+                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid ${colors.goldDim}` }}>
                   <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{row.label}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>{row.old}</span>

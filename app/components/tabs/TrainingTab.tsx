@@ -865,8 +865,8 @@ export default function TrainingTab({
 
         const arrowBtn: React.CSSProperties = {
           width: 32, height: 32, borderRadius: 10,
-          background: 'rgba(201,168,76,0.08)',
-          border: '0.5px solid rgba(201,168,76,0.15)',
+          background: colors.goldDim,
+          border: `0.5px solid ${colors.goldBorder}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', transition: 'background 0.2s',
         }
@@ -910,7 +910,7 @@ export default function TrainingTab({
                 const isRest = isProgRest || ws?.session_type === 'rest' || ws?.title === 'Repos'
                 const isDone = ws?.completed && !isRest
                 const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
-                const dotColor = isRest ? 'rgba(255,255,255,0.1)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : 'rgba(201,168,76,0.3)'
+                const dotColor = isRest ? 'rgba(255,255,255,0.1)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : `${colors.goldContainer}4d`
 
                 return (
                   <button
@@ -922,8 +922,8 @@ export default function TrainingTab({
                       setCalendarSelectedDate(date)
                     }}
                     style={{
-                      background: isToday ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.05)',
-                      border: isToday ? '1.5px solid rgba(230,195,100,0.5)' : '0.5px solid rgba(201,168,76,0.08)',
+                      background: isToday ? `${colors.goldContainer}33` : `${colors.goldContainer}0d`,
+                      border: isToday ? `1.5px solid ${colors.gold}80` : `0.5px solid ${colors.goldContainer}14`,
                       borderRadius: 10, padding: '8px 2px', cursor: 'pointer',
                       display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
                       transition: 'all 0.2s',
@@ -931,7 +931,7 @@ export default function TrainingTab({
                   >
                     <span style={{ fontSize: 9, fontWeight: 700, color: isToday ? colors.gold : colors.textDim, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{dayName}</span>
                     <span style={{ fontSize: 16, fontWeight: 700, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, boxShadow: isToday ? '0 0 8px rgba(230,195,100,0.5)' : 'none' }} />
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, boxShadow: isToday ? `0 0 8px ${colors.gold}80` : 'none' }} />
                   </button>
                 )
               })}
@@ -1059,7 +1059,7 @@ export default function TrainingTab({
 
               {/* Badge pills — exercises + duration + muscle groups */}
               {(() => {
-                const pillStyle: React.CSSProperties = { fontSize: 10, color: colors.gold, background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.2)', borderRadius: 999, padding: '3px 10px' }
+                const pillStyle: React.CSSProperties = { fontSize: 10, color: colors.gold, background: `${colors.goldContainer}1a`, border: `0.5px solid ${colors.goldContainer}33`, borderRadius: 999, padding: '3px 10px' }
                 const muscles = [...new Set(trainingExercises.map((e: any) => e.muscle_group).filter(Boolean))]
                 return (
                   <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 12 }}>
@@ -1077,7 +1077,7 @@ export default function TrainingTab({
                   { label: 'EXERCICES', value: trainingExercises.length },
                   { label: 'REPOS', value: `${Math.round(trainingExercises.reduce((s: number, e: any) => s + (Number(e.rest_seconds) || 90), 0) / 60)}min` },
                 ].map(s => (
-                  <div key={s.label} style={{ background: 'rgba(201,168,76,0.06)', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+                  <div key={s.label} style={{ background: colors.goldDim, borderRadius: 10, padding: 10, textAlign: 'center' }}>
                     <div style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 700, color: colors.text }}>{s.value}</div>
                     <div style={{ fontFamily: fonts.body, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', color: colors.textMuted, textTransform: 'uppercase' }}>{s.label}</div>
                   </div>
@@ -1373,9 +1373,9 @@ export default function TrainingTab({
               <button key={m} onClick={() => setLibMuscle(m)} style={{
                 fontSize: 9, fontFamily: fonts.body, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
                 padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', cursor: 'pointer', border: 'none',
-                background: libMuscle === m ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.08)',
+                background: libMuscle === m ? `${colors.goldContainer}33` : colors.goldDim,
                 color: libMuscle === m ? colors.gold : colors.textMuted,
-                ...(libMuscle === m ? { boxShadow: `inset 0 0 0 1px rgba(201,168,76,0.4)` } : { boxShadow: `inset 0 0 0 1px rgba(201,168,76,0.15)` }),
+                ...(libMuscle === m ? { boxShadow: `inset 0 0 0 1px ${colors.goldContainer}66` } : { boxShadow: `inset 0 0 0 1px ${colors.goldBorder}` }),
               }}>{m}</button>
             ))}
           </div>
@@ -1472,9 +1472,9 @@ export default function TrainingTab({
               <button key={m} onClick={() => setLibMuscle(m)} style={{
                 fontSize: 9, fontFamily: fonts.body, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
                 padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', cursor: 'pointer', border: 'none',
-                background: libMuscle === m ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.08)',
+                background: libMuscle === m ? `${colors.goldContainer}33` : colors.goldDim,
                 color: libMuscle === m ? colors.gold : colors.textMuted,
-                ...(libMuscle === m ? { boxShadow: `inset 0 0 0 1px rgba(201,168,76,0.4)` } : { boxShadow: `inset 0 0 0 1px rgba(201,168,76,0.15)` }),
+                ...(libMuscle === m ? { boxShadow: `inset 0 0 0 1px ${colors.goldContainer}66` } : { boxShadow: `inset 0 0 0 1px ${colors.goldBorder}` }),
               }}>{m}</button>
             ))}
           </div>
@@ -1569,7 +1569,7 @@ export default function TrainingTab({
                         const alts = exercisesCache.filter(a => a.id !== match.id && a.muscle_group?.toLowerCase() === match.muscle_group?.toLowerCase() && a.name !== match.name).slice(0, 3)
                         setAltResults(alts)
                       }
-                    }} style={{ fontSize: 9, fontFamily: fonts.body, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', cursor: 'pointer', border: 'none', background: 'rgba(201,168,76,0.08)', color: colors.textMuted, boxShadow: 'inset 0 0 0 1px rgba(201,168,76,0.15)' }}>
+                    }} style={{ fontSize: 9, fontFamily: fonts.body, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', cursor: 'pointer', border: 'none', background: colors.goldDim, color: colors.textMuted, boxShadow: `inset 0 0 0 1px ${colors.goldBorder}` }}>
                       {n}
                     </button>
                   )
@@ -1789,7 +1789,7 @@ export default function TrainingTab({
       {/* ═══ IMPORT PREVIEW MODAL ═══ */}
       {importPreview && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setImportPreview(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#131313', border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Scrollable content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1844,7 +1844,7 @@ export default function TrainingTab({
             </div>
 
             {/* Footer FIXE — toujours visible */}
-            <div style={{ flexShrink: 0, padding: '16px 20px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: '0.5px solid rgba(201,168,76,0.1)', background: '#131313', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ flexShrink: 0, padding: '16px 20px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: `0.5px solid ${colors.goldBorder}`, background: colors.background, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <button onClick={() => {
                 const insertData: any = {
                   name: importName.trim() || 'Programme importé',

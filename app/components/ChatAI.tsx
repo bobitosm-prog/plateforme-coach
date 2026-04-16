@@ -201,13 +201,13 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             <button onClick={handleClose} style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 0, width: 36, height: 36, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 16, color: colors.textMuted, lineHeight: 1 }}>&times;</span>
             </button>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(230,195,100,0.1)', border: '1px solid rgba(230,195,100,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
               <Bot size={28} color={colors.gold} strokeWidth={2} />
             </div>
             <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.text, letterSpacing: '0.08em', marginBottom: 6 }}>COACH MOOVX</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }} />
-              <span style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: '#22c55e' }}>EN LIGNE</span>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: colors.success }} />
+              <span style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.success }}>EN LIGNE</span>
             </div>
           </div>
 
@@ -233,7 +233,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', textAlign: 'center', marginBottom: 10 }}>SUGGESTIONS RAPIDES</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
                 {SUGGESTION_CARDS.map(({ label, sub, icon: Icon, msg }) => (
-                  <button key={label} onClick={() => sendMessage(msg)} style={{ background: colors.surface, border: `1px solid rgba(201,168,76,0.12)`, borderRadius: 14, padding: 12, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <button key={label} onClick={() => sendMessage(msg)} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 14, padding: 12, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Icon size={16} color={colors.gold} strokeWidth={2} />
                     <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.text, lineHeight: 1.3 }}>{label}</div>
                     <div style={{ fontSize: 9, color: colors.textMuted }}>{sub}</div>
@@ -244,7 +244,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               {/* ═══ SECTION 4 — PILLS RAPIDES ═══ */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
                 {QUICK_PILLS.map(pill => (
-                  <button key={pill} onClick={() => sendMessage(pill)} style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.08)', border: `1px solid ${colors.goldBorder}`, borderRadius: 999, padding: '6px 12px', cursor: 'pointer' }}>
+                  <button key={pill} onClick={() => sendMessage(pill)} style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, borderRadius: 999, padding: '6px 12px', cursor: 'pointer' }}>
                     {pill}
                   </button>
                 ))}
@@ -255,10 +255,10 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           {/* ═══ SECTION 5 — WELCOME MESSAGE (no conversation) ═══ */}
           {!hasConversation && (
             <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Bot size={14} color={colors.gold} />
               </div>
-              <div style={{ background: colors.surface, border: `1px solid rgba(201,168,76,0.12)`, borderRadius: '4px 14px 14px 14px', padding: '12px 14px' }}>
+              <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '4px 14px 14px 14px', padding: '12px 14px' }}>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
                   Salut {firstName} ! {profile?.calorie_goal ? `Ton objectif est de ${profile.calorie_goal} kcal/jour.` : ''} Pose-moi une question sur ta nutrition, ton entraînement ou tes objectifs.
                 </div>
@@ -270,18 +270,18 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           {messages.map((msg, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', gap: 8, marginBottom: 12 }}>
               {msg.role === 'assistant' && (
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
                   <Bot size={14} color={colors.gold} />
                 </div>
               )}
               <div>
                 {msg.role === 'assistant' ? (
-                  <div style={{ maxWidth: 280, padding: '12px 14px', background: colors.surface, border: `1px solid rgba(201,168,76,0.12)`, borderRadius: '4px 14px 14px 14px' }}>
+                  <div style={{ maxWidth: 280, padding: '12px 14px', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '4px 14px 14px 14px' }}>
                     <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
                       style={{ ...bodyStyle, fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }} />
                   </div>
                 ) : (
-                  <div style={{ maxWidth: 280, padding: '12px 14px', background: 'rgba(230,195,100,0.15)', border: '1px solid rgba(230,195,100,0.2)', borderRadius: '14px 14px 4px 14px', ...bodyStyle, fontSize: 12, color: colors.text, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  <div style={{ maxWidth: 280, padding: '12px 14px', background: colors.goldBorder, border: `1px solid ${colors.gold}33`, borderRadius: '14px 14px 4px 14px', ...bodyStyle, fontSize: 12, color: colors.text, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {msg.content}
                   </div>
                 )}
@@ -294,10 +294,10 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
 
           {loading && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Bot size={14} color={colors.gold} />
               </div>
-              <div style={{ padding: '12px 14px', borderRadius: '4px 14px 14px 14px', background: colors.surface, border: `1px solid rgba(201,168,76,0.12)` }}>
+              <div style={{ padding: '12px 14px', borderRadius: '4px 14px 14px 14px', background: colors.surface, border: `1px solid ${colors.goldBorder}` }}>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {[0, 1, 2].map(i => (
                     <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.gold, opacity: 0.5, animation: `dotPulse 1.2s ${i * 0.2}s ease-in-out infinite` }} />
@@ -317,7 +317,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           padding: '12px 20px',
           paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
           background: colors.surface,
-          borderTop: `1px solid rgba(201,168,76,0.1)`,
+          borderTop: `1px solid ${colors.goldBorder}`,
           flexShrink: 0,
         }}>
           <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
@@ -326,8 +326,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             rows={1}
             style={{
               flex: 1, padding: '12px 16px',
-              background: '#1a1a1a',
-              border: `1px solid rgba(201,168,76,0.12)`,
+              background: colors.surfaceHigh,
+              border: `1px solid ${colors.goldBorder}`,
               borderRadius: 14,
               color: colors.text, fontSize: 13,
               fontFamily: fonts.body, outline: 'none',
@@ -337,7 +337,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
             style={{
               width: 44, height: 44, borderRadius: 14,
-              background: input.trim() ? `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})` : 'rgba(230,195,100,0.1)',
+              background: input.trim() ? `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})` : `${colors.gold}1a`,
               border: 'none', cursor: input.trim() ? 'pointer' : 'default',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0, opacity: input.trim() ? 1 : 0.3,

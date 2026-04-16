@@ -429,8 +429,8 @@ export default function ProgressTab({
               flexShrink: 0, padding: '6px 14px', borderRadius: 999, cursor: 'pointer',
               fontFamily: fonts.headline, fontSize: 9, fontWeight: 700,
               letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-              background: active ? 'rgba(230,195,100,0.15)' : 'transparent',
-              border: `1px solid ${active ? 'rgba(230,195,100,0.4)' : colors.goldBorder}`,
+              background: active ? colors.goldBorder : 'transparent',
+              border: `1px solid ${active ? `${colors.gold}66` : colors.goldBorder}`,
               color: active ? colors.gold : 'rgba(255,255,255,0.4)', transition: 'all 150ms',
             }}>
               {label}
@@ -474,8 +474,8 @@ export default function ProgressTab({
               const active = weightPeriod === p
               return (
                 <button key={p} onClick={() => setWeightPeriod(p)} style={{
-                  padding: '4px 10px', borderRadius: 999, border: active ? '1px solid rgba(230,195,100,0.3)' : '1px solid transparent',
-                  background: active ? 'rgba(230,195,100,0.2)' : 'rgba(230,195,100,0.1)',
+                  padding: '4px 10px', borderRadius: 999, border: active ? `1px solid ${colors.gold}4d` : '1px solid transparent',
+                  background: active ? `${colors.gold}33` : `${colors.gold}1a`,
                   color: colors.gold, fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, cursor: 'pointer',
                   letterSpacing: '0.08em', textTransform: 'uppercase' as const,
                 }}>
@@ -486,7 +486,7 @@ export default function ProgressTab({
           </div>
         </div>
         <button onClick={() => setShowWeight(true)} style={{ ...cardStyle, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', cursor: 'pointer', border: `1px solid ${colors.goldBorder}`, marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Scale size={20} color={colors.gold} />
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
@@ -506,8 +506,8 @@ export default function ProgressTab({
         </div>
         <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
           {personalRecords.length > 0 ? personalRecords.slice(0, 10).map((pr: any, i: number) => (
-            <div key={pr.exercise || i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < Math.min(personalRecords.length, 10) - 1 ? '0.5px solid rgba(201,168,76,0.08)' : 'none' }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div key={pr.exercise || i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < Math.min(personalRecords.length, 10) - 1 ? `0.5px solid ${colors.goldDim}` : 'none' }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Star size={14} color={colors.gold} fill={colors.gold} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -570,7 +570,7 @@ export default function ProgressTab({
           )}
         </div>
         <button onClick={() => photoRef.current?.click()} style={{ ...cardStyle, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', cursor: 'pointer', border: `1px solid ${colors.goldBorder}`, marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Camera size={20} color={colors.gold} />
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
@@ -586,14 +586,14 @@ export default function ProgressTab({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <span style={cardTitleAbove}>ANALYSE IA</span>
           <div style={titleLineStyle} />
-          <span style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 999, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.goldContainer}1a`, border: `1px solid ${colors.goldRule}`, borderRadius: 999, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
             <Sparkles size={8} /> BETA
           </span>
         </div>
         <div style={{ ...cardStyle, padding: 16, marginBottom: 12 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <User size={18} color={colors.gold} />
             </div>
             <div>
@@ -603,7 +603,7 @@ export default function ProgressTab({
           </div>
 
           {/* Disclaimer */}
-          <div style={{ background: 'rgba(201,168,76,0.04)', border: '0.5px solid rgba(201,168,76,0.1)', borderRadius: 12, padding: 12, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <div style={{ background: `${colors.goldContainer}0a`, border: `0.5px solid ${colors.goldContainer}1a`, borderRadius: 12, padding: 12, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <Info size={14} color={colors.gold} style={{ flexShrink: 0, marginTop: 1 }} />
             <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
               Cette analyse est une estimation par intelligence artificielle. Elle peut contenir des erreurs. Rien ne remplace l&apos;avis d&apos;un professionnel qualifié.
@@ -623,12 +623,12 @@ export default function ProgressTab({
             <>
               {/* Estimated values */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-                <div style={{ background: 'rgba(230,195,100,0.06)', borderRadius: 12, padding: 14 }}>
+                <div style={{ background: colors.goldDim, borderRadius: 12, padding: 14 }}>
                   <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>MASSE GRASSE</div>
                   <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>~{bodyAnalysis.body_fat_estimate}%</div>
                   <div style={{ ...mutedStyle, fontSize: 9 }}>Estimation IA</div>
                 </div>
-                <div style={{ background: 'rgba(230,195,100,0.06)', borderRadius: 12, padding: 14 }}>
+                <div style={{ background: colors.goldDim, borderRadius: 12, padding: 14 }}>
                   <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>MASSE MAIGRE</div>
                   <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>~{Math.round(bodyAnalysis.lean_mass_estimate)} KG</div>
                   <div style={{ ...mutedStyle, fontSize: 9 }}>Estimation IA</div>
@@ -641,7 +641,7 @@ export default function ProgressTab({
                   <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 8 }}>POINTS FORTS</div>
                   {bodyAnalysis.strengths.map((s: string, i: number) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: colors.success, flexShrink: 0 }} />
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{s}</span>
                     </div>
                   ))}
@@ -666,7 +666,7 @@ export default function ProgressTab({
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 8 }}>SYMÉTRIE CORPORELLE</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ flex: 1, height: 6, background: 'rgba(230,195,100,0.1)', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ flex: 1, height: 6, background: `${colors.gold}1a`, borderRadius: 999, overflow: 'hidden' }}>
                       <div style={{ width: `${bodyAnalysis.symmetry_score}%`, height: '100%', background: colors.gold, borderRadius: 999 }} />
                     </div>
                     <span style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.gold }}>{bodyAnalysis.symmetry_score}%</span>
@@ -676,7 +676,7 @@ export default function ProgressTab({
               )}
 
               {/* Footer */}
-              <div style={{ background: 'rgba(230,195,100,0.04)', border: '1px solid rgba(230,195,100,0.1)', borderRadius: 10, padding: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ background: `${colors.gold}0a`, border: `1px solid ${colors.gold}1a`, borderRadius: 10, padding: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Clock size={12} color='rgba(255,255,255,0.25)' />
                 <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)' }}>
                   Dernière analyse : {bodyAnalysis.created_at ? format(new Date(bodyAnalysis.created_at), 'd MMM yyyy', { locale: fr }) : '—'} — Basée sur {bodyAnalysis.photos_used || 3} photos
@@ -711,7 +711,7 @@ export default function ProgressTab({
                   const labels = { front: 'FACE', back: 'DOS', side: 'PROFIL' }
                   return (
                     <div key={angle} onClick={() => { setBodyUploadTarget(angle); bodyUploadRef.current?.click() }}
-                      style={{ aspectRatio: '3/4', maxHeight: 140, borderRadius: radii.button, overflow: 'hidden', border: url ? `2px solid rgba(201,168,76,0.25)` : `2px dashed ${colors.goldBorder}`, background: url ? colors.surface : colors.goldDim, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', position: 'relative' }}>
+                      style={{ aspectRatio: '3/4', maxHeight: 140, borderRadius: radii.button, overflow: 'hidden', border: url ? `2px solid ${colors.goldRule}` : `2px dashed ${colors.goldBorder}`, background: url ? colors.surface : colors.goldDim, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', position: 'relative' }}>
                       {url ? <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} alt={labels[angle]} /> : (
                         <>
                           <Camera size={16} color={colors.textDim} />
@@ -741,7 +741,7 @@ export default function ProgressTab({
 
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-          <button onClick={() => setShowBodyUpload(true)} style={{ flex: 1, background: 'linear-gradient(135deg, rgba(230,195,100,0.15), rgba(230,195,100,0.08))', border: '1px solid rgba(230,195,100,0.25)', borderRadius: 14, padding: 14, cursor: 'pointer', textAlign: 'left' }}>
+          <button onClick={() => setShowBodyUpload(true)} style={{ flex: 1, background: `linear-gradient(135deg, ${colors.goldBorder}, ${colors.goldDim})`, border: `1px solid ${colors.goldRule}`, borderRadius: 14, padding: 14, cursor: 'pointer', textAlign: 'left' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <Camera size={14} color={colors.gold} />
               <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.08em' }}>NOUVELLE ANALYSE</span>
@@ -772,7 +772,7 @@ export default function ProgressTab({
               { l: 'BRAS', v: latestMeasure?.left_arm, u: 'cm' },
               { l: 'CUISSES', v: latestMeasure?.left_thigh, u: 'cm' },
             ].map(({ l, v, u }) => (
-              <div key={l} style={{ background: 'rgba(230,195,100,0.04)', borderRadius: 10, padding: 12 }}>
+              <div key={l} style={{ background: `${colors.gold}0a`, borderRadius: 10, padding: 12 }}>
                 <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>{l}</div>
                 <div>
                   <span style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 800, color: colors.text }}>{v ?? '—'}</span>
@@ -783,7 +783,7 @@ export default function ProgressTab({
           </div>
         </div>
         <button onClick={() => setShowMeasure(true)} style={{ ...cardStyle, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', cursor: 'pointer', border: `1px solid ${colors.goldBorder}`, marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(230,195,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Ruler size={20} color={colors.gold} />
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>

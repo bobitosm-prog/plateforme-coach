@@ -604,8 +604,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               padding: '6px 12px', cursor: 'pointer', whiteSpace: 'nowrap',
               fontFamily: fonts.body, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
               borderRadius: 12,
-              background: active ? 'rgba(201,168,76,0.15)' : 'transparent',
-              border: active ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(201,168,76,0.15)',
+              background: active ? colors.goldBorder : 'transparent',
+              border: active ? `1px solid ${colors.goldContainer}66` : `1px solid ${colors.goldBorder}`,
               color: active ? colors.gold : 'rgba(255,255,255,0.4)',
             }}>
               {label}
@@ -907,9 +907,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 <button key={k} onClick={() => setMyMealsFilter(k)} style={{
                   fontSize: 9, fontFamily: fonts.body, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
                   padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', cursor: 'pointer', border: 'none',
-                  background: myMealsFilter === k ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.08)',
+                  background: myMealsFilter === k ? `${colors.goldContainer}33` : colors.goldDim,
                   color: myMealsFilter === k ? colors.gold : colors.textMuted,
-                  boxShadow: myMealsFilter === k ? 'inset 0 0 0 1px rgba(201,168,76,0.4)' : 'inset 0 0 0 1px rgba(201,168,76,0.15)',
+                  boxShadow: myMealsFilter === k ? `inset 0 0 0 1px ${colors.goldContainer}66` : `inset 0 0 0 1px ${colors.goldBorder}`,
                 }}>{l}</button>
               ))}
             </div>
