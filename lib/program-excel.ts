@@ -162,6 +162,9 @@ export interface ImportResult {
     description: string
     days: DayData[]
     source: string
+    total_weeks?: number
+    current_week?: number
+    phases?: { name: string; weeks: number[]; description: string }[]
   }
 }
 
@@ -205,6 +208,70 @@ function parseThirdPartySheet(rows: any[][], header: string[]): ExerciseData[] {
       technique_details: '',
     }
   })
+}
+
+function parsePhaseDetails(text: string, baseSets: number, baseReps: string | number, baseTempo: string) {
+  // Parse strings like "4×8-10 tempo 3-0-2" or "4×8-10 drop set dernier set"
+  const result: any = { sets: baseSets, reps: String(baseReps), tempo: baseTempo, technique: null, technique_details: '' }
+
+  // Extract sets×reps pattern
+  const setsRepsMatch = text.match(/(\d+)\s*[×x]\s*(\d+(?:-\d+)?)/)
+  if (setsRepsMatch) { result.sets = parseInt(setsRepsMatch[1]); result.reps = setsRepsMatch[2] }
+
+  // Extract tempo
+  const tempoMatch = text.match(/tempo\s+(\d-\d-\d)/i)
+  if (tempoMatch) result.tempo = tempoMatch[1]
+
+  // Extract technique keywords
+  const lower = text.toLowerCase()
+  if (lower.includes('drop set') || lower.includes('dropset')) { result.technique = 'dropset'; result.technique_details = text }
+  else if (lower.includes('rest-pause') || lower.includes('rest pause') || lower.includes('restpause')) { result.technique = 'restpause'; result.technique_details = text }
+  else if (lower.includes('superset')) { result.technique = 'superset'; result.technique_details = text }
+  else if (lower.includes('excentrique') || lower.includes('eccentric')) { result.technique_details = text }
+  else if (lower.includes('mechanical')) { result.technique = 'mechanical'; result.technique_details = text }
+  else if (text.trim()) { result.technique_details = text }
+
+  return result
+}
+
+function parsePhasesFromTechnique(techniqueStr: string, baseSets: number, baseReps: string | number, baseTempo: string) {
+  const phases: any = { p1: { sets: baseSets, reps: String(baseReps), tempo: baseTempo, technique: null, technique_details: '' } }
+
+  if (!techniqueStr || techniqueStr === '-') return { phases, isPeriodized: false }
+
+  let isPeriodized = false
+
+  // Check for P2:/P3: markers
+  if (techniqueStr.includes('P2:') || techniqueStr.includes('P3:')) {
+    isPeriodized = true
+    const parts = techniqueStr.split(/\s*\|\s*/)
+
+    // First part without P prefix is P1 technique (or just base)
+    for (const part of parts) {
+      const trimmed = part.trim()
+      if (trimmed.startsWith('P2:')) {
+        phases.p2 = parsePhaseDetails(trimmed.replace(/^P2:\s*/, ''), baseSets, baseReps, baseTempo)
+      } else if (trimmed.startsWith('P3:')) {
+        phases.p3 = parsePhaseDetails(trimmed.replace(/^P3:\s*/, ''), baseSets, baseReps, baseTempo)
+      } else if (!trimmed.startsWith('P1:') && trimmed) {
+        // Non-prefixed part = P1 technique info
+        const p1Details = parsePhaseDetails(trimmed, baseSets, baseReps, baseTempo)
+        phases.p1 = { ...phases.p1, ...p1Details }
+      } else if (trimmed.startsWith('P1:')) {
+        phases.p1 = parsePhaseDetails(trimmed.replace(/^P1:\s*/, ''), baseSets, baseReps, baseTempo)
+      }
+    }
+
+    // Fill missing phases
+    if (!phases.p2) phases.p2 = { ...phases.p1 }
+    if (!phases.p3) phases.p3 = { ...phases.p2 }
+  } else {
+    // No phase markers — just a regular technique string, apply to p1
+    const details = parsePhaseDetails(techniqueStr, baseSets, baseReps, baseTempo)
+    phases.p1 = { ...phases.p1, ...details }
+  }
+
+  return { phases, isPeriodized }
 }
 
 interface SheetParseResult {
@@ -305,6 +372,13 @@ function parseSheet(sheetName: string, ws: any): SheetParseResult {
       (ex as any).weight = parseFloat(String(row[weightCol])) || undefined
     }
 
+    // Check technique column for periodization phase data (P2:/P3: markers)
+    const techCellRaw = techCol >= 0 ? String(row[techCol] || '').trim() : ''
+    const { phases, isPeriodized } = parsePhasesFromTechnique(techCellRaw, sets, reps, ex.tempo || '2-0-2')
+    if (isPeriodized) {
+      (ex as any).phases = phases
+    }
+
     exercises.push(ex)
   }
 
@@ -366,10 +440,24 @@ export function parseProgramFromXlsx(file: File): Promise<ImportResult> {
           programName = file.name.replace(/\.(xlsx|xls)$/i, '').replace(/[_-]/g, ' ').trim() || 'Programme importé'
         }
 
+        // Check if any exercise has periodization phase data
+        const hasPeriodization = days.some(d => (d.exercises || []).some((e: any) => e.phases))
+
+        const programData: any = { name: programName, description, days, source: 'import' }
+        if (hasPeriodization) {
+          programData.total_weeks = 12
+          programData.current_week = 1
+          programData.phases = [
+            { name: 'Phase 1 — Adaptation', weeks: [1, 4], description: 'Volume modéré, technique parfaite' },
+            { name: 'Phase 2 — Intensification', weeks: [5, 8], description: 'Volume augmenté, tempo lent' },
+            { name: 'Phase 3 — Peaking', weeks: [9, 12], description: 'Techniques avancées, charges lourdes' },
+          ]
+        }
+
         resolve({
           success: true,
           skippedSheets: skippedSheets.length > 0 ? skippedSheets : undefined,
-          program: { name: programName, description, days, source: 'import' },
+          program: programData,
         })
       } catch {
         resolve({ success: false, error: 'Erreur de lecture du fichier. Vérifie que c\'est un fichier .xlsx valide.' })

@@ -145,7 +145,25 @@ export default function TrainingTab({
   })()
   const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
   const baseExercises: any[] = trainingDayData?.exercises || []
-  const trainingExercises: any[] = [...baseExercises, ...addedExercises].map((ex: any) => {
+
+  // Resolve exercises for current phase (periodized programs)
+  const resolvedExercises: any[] = baseExercises.map((ex: any) => {
+    if (!ex.phases || !activeCustomProgram?.current_week) return ex
+    const week = activeCustomProgram.current_week || 1
+    const phaseKey = week <= 4 ? 'p1' : week <= 8 ? 'p2' : 'p3'
+    const phaseData = ex.phases[phaseKey] || ex.phases.p1 || {}
+    return {
+      ...ex,
+      sets: phaseData.sets ?? ex.sets,
+      reps: typeof phaseData.reps === 'string' ? parseInt(phaseData.reps) || ex.reps : phaseData.reps ?? ex.reps,
+      tempo: phaseData.tempo ?? ex.tempo,
+      technique: phaseData.technique ?? ex.technique,
+      technique_details: phaseData.technique_details ?? ex.technique_details,
+      rest_seconds: phaseData.rest_seconds ?? ex.rest_seconds,
+    }
+  })
+
+  const trainingExercises: any[] = [...resolvedExercises, ...addedExercises].map((ex: any) => {
     const dbMatch = exercisesCache.find((d: any) => d.name?.toLowerCase() === ex.name?.toLowerCase())
     return dbMatch?.gif_url ? { ...ex, gif_url: dbMatch.gif_url } : ex
   })
@@ -342,6 +360,28 @@ export default function TrainingTab({
     setCustomPrograms(updated)
     setActiveCustomProgram(null)
     toast.success('Programme désactivé')
+  }
+
+  async function advanceWeek() {
+    if (!activeCustomProgram?.total_weeks) return
+    const currentWeek = (activeCustomProgram.current_week || 1)
+    if (currentWeek >= activeCustomProgram.total_weeks) { toast('Programme terminé !'); return }
+    const newWeek = currentWeek + 1
+
+    // Update in local state
+    const updated = { ...activeCustomProgram, current_week: newWeek }
+    setActiveCustomProgram(updated)
+
+    // Persist to DB
+    await supabase.from('custom_programs').update({ current_week: newWeek }).eq('id', activeCustomProgram.id)
+
+    // Check phase transition
+    const oldPhase = currentWeek <= 4 ? 1 : currentWeek <= 8 ? 2 : 3
+    const newPhase = newWeek <= 4 ? 1 : newWeek <= 8 ? 2 : 3
+    if (newPhase > oldPhase) {
+      const phaseName = activeCustomProgram.phases?.[newPhase - 1]?.name || `Phase ${newPhase}`
+      toast.success(`Tu passes en ${phaseName} !`)
+    }
   }
 
   async function deleteProgram(programId: string) {
@@ -882,6 +922,38 @@ export default function TrainingTab({
           <span style={{ ...mutedStyle, flexShrink: 0 }}>{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
         </div>
         <div style={{ ...cardStyle, padding: 20 }}>
+
+          {/* Phase banner for periodized programs */}
+          {activeCustomProgram?.phases && activeCustomProgram?.total_weeks && (
+            <div style={{ marginBottom: 12 }}>
+              {(() => {
+                const week = activeCustomProgram.current_week || 1
+                const totalWeeks = activeCustomProgram.total_weeks
+                const phase = (activeCustomProgram.phases || []).find((p: any) => week >= p.weeks[0] && week <= p.weeks[1])
+                const progress = week / totalWeeks
+                return (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: colors.gold, background: colors.goldDim, padding: '3px 10px', borderRadius: 999 }}>
+                        {phase?.name || `Phase ${week <= 4 ? 1 : week <= 8 ? 2 : 3}`}
+                      </span>
+                      <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>
+                        Semaine {week}/{totalWeeks}
+                      </span>
+                    </div>
+                    <div style={{ height: 4, background: colors.goldDim, borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${progress * 100}%`, background: colors.gold, borderRadius: 2, transition: 'width 0.5s ease' }} />
+                    </div>
+                  </>
+                )
+              })()}
+              {activeCustomProgram.total_weeks && (activeCustomProgram.current_week || 1) < activeCustomProgram.total_weeks && (
+                <button onClick={advanceWeek} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, background: 'none', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '4px 10px', cursor: 'pointer', marginTop: 6 }}>
+                  Semaine suivante →
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Session content */}
           {!coachProgram && !activeCustomProgram ? (
@@ -1549,10 +1621,16 @@ export default function TrainingTab({
                         <div>
                           <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '0.05em' }}>{prog.name}</div>
                           <div style={{ ...mutedStyle, marginTop: 4 }}>
-                            {days.length} jours · {prog.source === 'ai' ? '🤖 IA' : '📋 Manuel'}
+                            {days.length} jours · {prog.source === 'ai' ? '🤖 IA' : prog.source === 'import' ? '📥 Import' : '📋 Manuel'}
+                            {prog.total_weeks && ` · ${prog.total_weeks} sem.`}
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {prog.total_weeks && (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 8px', borderRadius: 999 }}>
+                              {prog.total_weeks} SEM
+                            </span>
+                          )}
                           {prog.is_active ? (
                             <span style={{ fontSize: 10, fontWeight: 700, color: colors.success, background: 'rgba(74,222,128,0.1)', padding: '3px 10px', borderRadius: 999 }}>● Actif</span>
                           ) : (
@@ -1651,12 +1729,31 @@ export default function TrainingTab({
       {importPreview && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setImportPreview(null)}>
           <div onClick={e => e.stopPropagation()} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, padding: 24 }}>
-            <div style={pageTitleStyle}>APERÇU IMPORT</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={pageTitleStyle}>APERÇU IMPORT</span>
+              {importPreview.total_weeks && (
+                <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 8px', borderRadius: 999 }}>
+                  {importPreview.total_weeks} SEMAINES · PÉRIODISÉ
+                </span>
+              )}
+            </div>
 
             <div style={{ marginTop: 16 }}>
               <div style={{ ...labelStyle, marginBottom: 4 }}>Nom du programme</div>
               <input value={importName} onChange={e => setImportName(e.target.value)} style={{ width: '100%', padding: 12, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none' }} />
             </div>
+
+            {/* Phase summary for periodized programs */}
+            {importPreview.phases && (
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {importPreview.phases.map((phase, i) => (
+                  <div key={i} style={{ padding: '6px 10px', background: colors.goldDim, borderRadius: 6, display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontFamily: fonts.headline, fontSize: 11, color: colors.gold }}>{phase.name}</span>
+                    <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Sem. {phase.weeks[0]}-{phase.weeks[1]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {importPreview.days.map((day, i) => (
@@ -1684,14 +1781,20 @@ export default function TrainingTab({
 
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
               <button onClick={async () => {
-                const { error } = await supabase.from('custom_programs').insert({
+                const insertData: any = {
                   user_id: session.user.id,
                   name: importName.trim() || 'Programme importé',
                   description: importPreview.description || '',
                   days: importPreview.days,
                   source: 'import',
                   is_active: false,
-                })
+                }
+                if (importPreview.total_weeks) {
+                  insertData.total_weeks = importPreview.total_weeks
+                  insertData.current_week = importPreview.current_week || 1
+                  insertData.phases = importPreview.phases || null
+                }
+                const { error } = await supabase.from('custom_programs').insert(insertData)
                 if (error) { toast.error('Erreur: ' + error.message); return }
                 toast.success('Programme importé avec succès ✓')
                 setImportPreview(null)
