@@ -26,6 +26,7 @@ import NutritionTab from './components/tabs/NutritionTab'
 import ProgressTab from './components/tabs/ProgressTab'
 import ProfileTab from './components/tabs/ProfileTab'
 import MessagesTab from './components/tabs/MessagesTab'
+import DesktopDashboard from './(dashboard)/page-desktop'
 
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -39,6 +40,15 @@ import { checkAndShowReminder } from '../lib/notifications'
 
 export default function CoachApp() {
   const h = useClientDashboard()
+  const [isDesktop, setIsDesktop] = React.useState(false)
+
+  // Detect desktop viewport
+  React.useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth > 1024)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Check and schedule workout reminders
   React.useEffect(() => {
@@ -83,7 +93,28 @@ export default function CoachApp() {
   )
 
   /* ══════════════════════════════════════════════════════════════
-     MAIN APP SHELL
+     DESKTOP DASHBOARD (>1024px)
+  ══════════════════════════════════════════════════════════════ */
+  if (isDesktop && h.profile) return (
+    <DesktopDashboard
+      session={h.session}
+      profile={h.profile}
+      supabase={h.supabase}
+      coachProgram={h.coachProgram}
+      todayKey={h.todayKey}
+      todaySessionDone={h.todaySessionDone}
+      streak={h.streak}
+      wSessions={h.wSessions}
+      currentWeight={h.currentWeight}
+      personalRecords={h.personalRecords}
+      onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
+      onNavigate={(tab) => { setIsDesktop(false); h.setActiveTab(tab as Tab) }}
+      startProgramWorkout={h.startProgramWorkout}
+    />
+  )
+
+  /* ══════════════════════════════════════════════════════════════
+     MAIN APP SHELL (Mobile <1024px)
   ══════════════════════════════════════════════════════════════ */
   return (
     <div className="app-shell" style={{ display: 'flex', width: '100%', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>
