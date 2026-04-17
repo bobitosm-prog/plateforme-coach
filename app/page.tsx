@@ -101,15 +101,26 @@ export default function CoachApp() {
       profile={h.profile}
       supabase={h.supabase}
       coachProgram={h.coachProgram}
+      coachMealPlan={h.coachMealPlan}
       todayKey={h.todayKey}
       todaySessionDone={h.todaySessionDone}
       streak={h.streak}
       wSessions={h.wSessions}
       currentWeight={h.currentWeight}
+      goalWeight={h.goalWeight}
       personalRecords={h.personalRecords}
+      weightHistory={h.weightHistoryFull?.length ? h.weightHistoryFull : h.weightHistory30}
+      progressPhotos={h.progressPhotos}
+      measurements={h.measurements}
+      weeklyCalories={h.weeklyCalories}
+      weeklyVolume={h.weeklyVolume}
+      scheduledSessions={h.scheduledSessions}
+      completedSessions={h.completedSessions}
+      calorieGoal={h.calorieGoal}
       onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
       onNavigate={(tab) => { setIsDesktop(false); h.setActiveTab(tab as Tab) }}
       startProgramWorkout={h.startProgramWorkout}
+      setModal={h.setModal}
     />
   )
 
