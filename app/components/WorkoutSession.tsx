@@ -244,6 +244,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
   const [showFinishConfirm, setShowFinishConfirm] = useState(false)
+  const [repsWarning, setRepsWarning] = useState<{ eid: string; sid: string; reps: number } | null>(null)
 
   // Fetch previous performance for all exercises
   useEffect(() => {
@@ -327,11 +328,18 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const skipRest = () => { setRestOn(false); setRestSecs(0) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) =>
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
-  const validate = (eid: string, sid: string) => {
-    initAudio() // Unlock audio on iOS at user interaction
+  const doValidate = (eid: string, sid: string) => {
+    initAudio()
     let r = 90
     setExos(p => p.map(e => { if (e.id !== eid) return e; r = e.rest; return { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) } }))
     startRest(r)
+  }
+  const validate = (eid: string, sid: string) => {
+    const exo = exos.find(e => e.id === eid)
+    const set = exo?.sets.find(s => s.id === sid)
+    const reps = Number(set?.reps) || 0
+    if (reps > 15) { setRepsWarning({ eid, sid, reps }); return }
+    doValidate(eid, sid)
   }
   const unvalidate = (eid: string, sid: string) => { skipRest(); setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: false }) })) }
   const addSet = (eid: string) => setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: [...e.sets, { id: uid(), num: e.sets.length + 1, weight: e.sets.at(-1)?.weight ?? '', reps: e.sets.at(-1)?.reps ?? '', done: false }] }))
@@ -796,6 +804,41 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
                 fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer',
               }}>CONTINUER LA SÉANCE</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REPS WARNING MODAL */}
+      {repsWarning && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', textAlign: 'center' }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: '50%',
+              background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
+              margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+              </svg>
+            </div>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>
+              VÉRIFIE TES RÉPÉTITIONS
+            </h3>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
+              Tu as saisi <strong style={{ color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 22 }}>{repsWarning.reps} reps</strong> — c&apos;est beaucoup !<br />Es-tu sûr de ce nombre ?
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <button onClick={() => setRepsWarning(null)} className="active:scale-[0.98]" style={{
+                width: '100%', padding: 12, borderRadius: 12,
+                background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
+                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
+              }}>MODIFIER</button>
+              <button onClick={() => { doValidate(repsWarning.eid, repsWarning.sid); setRepsWarning(null) }} className="active:scale-[0.98]" style={{
+                width: '100%', padding: 12, borderRadius: 12,
+                background: GOLD, border: 'none', color: '#0D0B08',
+                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
+              }}>CONFIRMER</button>
             </div>
           </div>
         </div>
