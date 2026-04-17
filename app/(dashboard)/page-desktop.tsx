@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, Area, AreaChart, BarChart, Bar,
+  CartesianGrid, Area, AreaChart, BarChart, Bar, ReferenceLine,
 } from 'recharts'
 import { colors, fonts } from '../../lib/design-tokens'
 import MuscleHeatMap, { calculateMuscleStatus } from '../components/ui/MuscleHeatMap'
@@ -367,7 +367,7 @@ export default function DesktopDashboard({
           {activeNav === 'dashboard' && <DashboardView {...{ weeklyData, weekSessions, weekCalories, weekVolume, weeklyGoalPct, newRecords, todaySessionInfo, todaySessionDone, strengthGains, currentWeight, weightChange, bodyFat, objective, streak, nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, muscleStatus, recentSessions, badges, levelInfo, levelTitle, xpData, onNavigate, startProgramWorkout, coachProgram, todayKey, colors }} />}
           {activeNav === 'workouts' && <TrainingView {...{ todaySessionInfo, todaySessionDone, weekProgram, todayKey, recentSessions, personalRecords, strengthGains, weeklyVolume, weeklyData, startProgramWorkout, coachProgram, onNavigate }} />}
           {activeNav === 'analytics' && <ProgressView {...{ weightHistory, currentWeight, goalWeight, bodyFat, bmi, streak, strengthGains, personalRecords, progressPhotos, supabase, session }} />}
-          {activeNav === 'nutrition' && <NutritionView {...{ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal }} />}
+          {activeNav === 'nutrition' && <NutritionView {...{ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal, supabase, session }} />}
           {activeNav === 'goals' && <GoalsView {...{ objective, objectiveLabel, currentWeight, goalWeight, weekSessions, streak, completedSessions, allBadges, levelInfo, levelTitle, xpData }} />}
           {activeNav === 'profile' && <ProfileView {...{ profile, avatarUrl, displayName, currentWeight, goalWeight, bodyFat, bmi, completedSessions, streak, onNavigate, setModal }} />}
           {activeNav === 'settings' && <SettingsView {...{ profile, onNavigate, setModal }} />}
@@ -689,7 +689,10 @@ function ProgressView({ weightHistory, currentWeight, goalWeight, bodyFat, bmi, 
 /* ═══════════════════════════════════════════════════
    PAGE: NUTRITION
    ═══════════════════════════════════════════════════ */
-function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal }: any) {
+function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal, supabase, session }: any) {
+  const [openMeals, setOpenMeals] = useState<string[]>([])
+  const [weekChart, setWeekChart] = useState<{ day: string; calories: number }[]>([])
+
   const mealTypes = [
     { id: 'breakfast', label: 'Petit-dejeuner', icon: '🥣' },
     { id: 'lunch', label: 'Dejeuner', icon: '🍽️' },
@@ -697,7 +700,8 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
     { id: 'snack', label: 'Collation', icon: '🍎' },
   ]
 
-  // Group daily_food_logs by meal_type
+  const toggleMeal = (id: string) => setOpenMeals(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id])
+
   const logsByMeal = useMemo(() => {
     const grouped: Record<string, any[]> = { breakfast: [], lunch: [], dinner: [], snack: [] }
     ;(todayFoodLogs || []).forEach((log: any) => {
@@ -708,33 +712,61 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
     return grouped
   }, [todayFoodLogs])
 
+  // Fetch 7-day calories from daily_food_logs directly
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const uid = session.user.id
+    const startDate = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
+    supabase.from('daily_food_logs').select('date, calories').eq('user_id', uid).gte('date', startDate).order('date')
+      .then(({ data }: any) => {
+        const byDate: Record<string, number> = {}
+        ;(data || []).forEach((r: any) => { byDate[r.date] = (byDate[r.date] || 0) + (r.calories || 0) })
+        const chart: { day: string; calories: number }[] = []
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(Date.now() - i * 86400000)
+          const ds = d.toISOString().split('T')[0]
+          chart.push({ day: d.toLocaleDateString('fr-FR', { weekday: 'short' }).toUpperCase(), calories: Math.round(byDate[ds] || 0) })
+        }
+        setWeekChart(chart)
+      })
+  }, [session?.user?.id, todayFoodLogs])
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>
-      {/* Journal */}
-      <Card span={8} style={{ minHeight: 300 }}>
+      {/* Journal — Accordion */}
+      <Card span={8}>
         <CardTitle title="Journal du Jour" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {mealTypes.map(mt => {
             const foods = logsByMeal[mt.id] || []
             const mealCals = foods.reduce((s: number, f: any) => s + (f.calories || 0), 0)
+            const isOpen = openMeals.includes(mt.id)
             return (
-              <div key={mt.id} style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 16 }}>{mt.icon}</span>
-                  <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{mt.label}</span>
-                  <span style={{ fontFamily: BODY, fontSize: 10, color: MUTED, marginLeft: 'auto' }}>
-                    {foods.length > 0 ? `${foods.length} aliment${foods.length > 1 ? 's' : ''} · ${mealCals} kcal` : '0 aliment'}
+              <div key={mt.id} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: `1px solid ${isOpen ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.04)'}`, transition: 'border-color 200ms' }}>
+                {/* Accordion header */}
+                <button onClick={() => toggleMeal(mt.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 14px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontSize: 18 }}>{mt.icon}</span>
+                  <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.1em', flex: 1 }}>{mt.label}</span>
+                  <span style={{ fontFamily: BODY, fontSize: 10, color: MUTED }}>
+                    {foods.length > 0 ? `${foods.length} aliment${foods.length > 1 ? 's' : ''} · ${mealCals} kcal` : 'Vide'}
                   </span>
-                </div>
-                {foods.length > 0 ? foods.map((f: any, i: number) => (
-                  <div key={f.id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: i < foods.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: BODY, fontSize: 12, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.custom_name || f.food_name || 'Aliment'}</div>
-                      <div style={{ fontFamily: BODY, fontSize: 10, color: MUTED }}>P:{f.protein || 0}g · G:{f.carbs || 0}g · L:{f.fat || 0}g{f.quantity_g ? ` · ${f.quantity_g}g` : ''}</div>
-                    </div>
-                    <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: GOLD, flexShrink: 0, marginLeft: 8 }}>{f.calories || 0} kcal</span>
+                  {foods.length > 0 && <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: GOLD }}>{mealCals}</span>}
+                  <ChevronDown size={14} color={MUTED} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 200ms', flexShrink: 0 }} />
+                </button>
+                {/* Accordion body */}
+                {isOpen && (
+                  <div style={{ padding: '0 14px 14px', borderTop: '1px solid rgba(201,168,76,0.08)' }}>
+                    {foods.length > 0 ? foods.map((f: any, i: number) => (
+                      <div key={f.id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < foods.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: BODY, fontSize: 13, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.custom_name || f.food_name || 'Aliment'}</div>
+                          <div style={{ fontFamily: BODY, fontSize: 10, color: MUTED, marginTop: 2 }}>P:{f.protein || 0}g · G:{f.carbs || 0}g · L:{f.fat || 0}g{f.quantity_g ? ` · ${f.quantity_g}g` : ''}</div>
+                        </div>
+                        <span style={{ fontFamily: HEADLINE, fontSize: 13, fontWeight: 700, color: GOLD, flexShrink: 0, marginLeft: 12 }}>{f.calories || 0} kcal</span>
+                      </div>
+                    )) : <div style={{ fontFamily: BODY, fontSize: 12, color: MUTED, fontStyle: 'italic', padding: '10px 0' }}>Aucun aliment enregistre</div>}
                   </div>
-                )) : <div style={{ fontFamily: BODY, fontSize: 11, color: MUTED, fontStyle: 'italic' }}>Aucun aliment enregistre</div>}
+                )}
               </div>
             )
           })}
@@ -757,17 +789,18 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
           ))}
         </div>
       </Card>
-      {/* Weekly macros chart */}
-      <Card span={12} style={{ minHeight: 200 }}>
+      {/* Weekly calories chart — self-fetched */}
+      <Card span={12} style={{ minHeight: 220 }}>
         <CardTitle title="Calories Hebdomadaires" />
-        <div style={{ height: 160 }}>
+        <div style={{ height: 170 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weeklyCalories?.length > 0 ? weeklyCalories.map((d: any) => ({ ...d, date: new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short' }) })) : [{ date: '-', calories: 0 }]}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="date" tick={{ fill: MUTED, fontSize: 10, fontFamily: BODY }} axisLine={false} tickLine={false} />
+            <BarChart data={weekChart.length > 0 ? weekChart : [{ day: '-', calories: 0 }]} barSize={32}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(201,168,76,0.08)" />
+              <XAxis dataKey="day" tick={{ fill: MUTED, fontSize: 10, fontFamily: BODY }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: MUTED, fontSize: 10, fontFamily: BODY }} axisLine={false} tickLine={false} width={40} />
               <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="calories" name="Calories" fill={GOLD} radius={[4, 4, 0, 0]} />
+              <ReferenceLine y={calorieGoal} stroke={GOLD} strokeDasharray="6 4" strokeWidth={1} label={{ value: `Obj: ${calorieGoal}`, fill: MUTED, fontSize: 9, position: 'right' }} />
+              <Bar dataKey="calories" name="Calories" fill={GOLD} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
