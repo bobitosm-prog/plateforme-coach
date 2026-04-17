@@ -16,6 +16,7 @@ import AbsCalculator from '../progress/AbsCalculator'
 import BodyAssessment from '../progress/BodyAssessment'
 import AnalysisDisplay from './progress/AnalysisDisplay'
 import ActionBtn from './progress/ActionBtn'
+import { computeAlignment, type Alignment } from '../../../lib/photo-align'
 
 const MEASURE_FIELDS = [
   { key: 'waist',  label: 'Tour de taille',   unit: 'cm', dbKey: 'waist' },
@@ -82,6 +83,9 @@ export default function ProgressTab({
   const [showCompare, setShowCompare] = useState(false)
   const [compareIdx, setCompareIdx] = useState<[number, number]>([0, 0])
   const [sliderValue, setSliderValue] = useState(50)
+  const [alignment, setAlignment] = useState<{ before: Alignment; after: Alignment } | null>(null)
+  const [isAligning, setIsAligning] = useState(false)
+  const [alignError, setAlignError] = useState<string | null>(null)
   const latestMeasure = measurements[0]
   const prevMeasure = measurements[1]
 
@@ -834,20 +838,58 @@ export default function ProgressTab({
         const afterUrl = signedUrls[afterPhoto.id] || ''
         const beforeDate = beforePhoto.date ? format(new Date(beforePhoto.date), 'd MMM yyyy', { locale: fr }) : ''
         const afterDate = afterPhoto.date ? format(new Date(afterPhoto.date), 'd MMM yyyy', { locale: fr }) : ''
+        const afterTransform = alignment
+          ? `scale(${alignment.after.zoom}) translate(${alignment.after.x}%, ${alignment.after.y}%)`
+          : 'none'
+        const handleAutoAlign = async () => {
+          if (!beforeUrl || !afterUrl) return
+          setIsAligning(true); setAlignError(null)
+          try {
+            const result = await computeAlignment(beforeUrl, afterUrl)
+            if (!result) { setAlignError('Impossible de detecter la silhouette. Assure-toi que le corps est entierement visible.'); return }
+            setAlignment(result)
+            // Save to DB
+            await supabase.from('progress_photos').update({ adjustments: result.after }).eq('id', afterPhoto.id)
+            toast.success('Photos alignees automatiquement')
+          } catch (err) {
+            setAlignError('Erreur lors de l\'analyse. Reessaie.')
+          } finally { setIsAligning(false) }
+        }
         return (
           <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #222' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #222', flexShrink: 0 }}>
               <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
                 <span style={{ color: colors.error, fontWeight: 600 }}>Avant : {beforeDate}</span>
-                <span style={{ color: colors.success, fontWeight: 600 }}>Après : {afterDate}</span>
+                <span style={{ color: colors.success, fontWeight: 600 }}>Apres : {afterDate}</span>
               </div>
-              <button onClick={() => setShowCompare(false)} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#fff" /></button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button onClick={handleAutoAlign} disabled={isAligning}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: isAligning ? '#222' : `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: isAligning ? colors.textMuted : '#0D0B08', border: 'none', borderRadius: 10, cursor: isAligning ? 'default' : 'pointer', fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
+                  {isAligning ? (
+                    <><div style={{ width: 12, height: 12, border: '2px solid #555', borderTopColor: colors.gold, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />ANALYSE...</>
+                  ) : (
+                    <><Sparkles size={12} />ALIGNER</>
+                  )}
+                </button>
+                {alignment && (
+                  <button onClick={() => setAlignment(null)}
+                    style={{ padding: '7px 10px', background: '#222', border: '1px solid #333', borderRadius: 10, color: colors.textMuted, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: fonts.body }}>
+                    RESET
+                  </button>
+                )}
+                <button onClick={() => { setShowCompare(false); setAlignment(null); setAlignError(null) }} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#fff" /></button>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, padding: '8px 16px', borderBottom: '1px solid #1a1a1a' }}>
-              {[{ label: 'Avant', idx: 0 }, { label: 'Après', idx: 1 }].map(({ label, idx }) => (
+            {alignError && (
+              <div style={{ padding: '8px 16px', background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.15)', fontFamily: fonts.body, fontSize: 11, color: colors.error, textAlign: 'center' }}>
+                {alignError}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, padding: '8px 16px', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
+              {[{ label: 'Avant', idx: 0 }, { label: 'Apres', idx: 1 }].map(({ label, idx }) => (
                 <div key={idx} style={{ flex: 1 }}>
                   <label style={{ fontSize: 9, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>{label}</label>
-                  <select value={compareIdx[idx]} onChange={e => { const n = [...compareIdx] as [number, number]; n[idx] = Number(e.target.value); setCompareIdx(n) }}
+                  <select value={compareIdx[idx]} onChange={e => { const n = [...compareIdx] as [number, number]; n[idx] = Number(e.target.value); setCompareIdx(n); setAlignment(null) }}
                     style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 8, padding: '6px 8px', color: '#fff', fontSize: 12 }}>
                     {progressPhotos.map((p: any, i: number) => (
                       <option key={i} value={i}>{p.date ? format(new Date(p.date), 'd MMM yyyy', { locale: fr }) : `Photo ${i + 1}`}</option>
@@ -857,7 +899,7 @@ export default function ProgressTab({
               ))}
             </div>
             <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-              <img src={afterUrl} alt="Après" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000' }} />
+              <img src={afterUrl} alt="Apres" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000', transform: afterTransform, transition: 'transform 300ms ease-out', transformOrigin: 'center center' }} />
               <img src={beforeUrl} alt="Avant" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000', clipPath: `inset(0 ${100 - sliderValue}% 0 0)` }} />
               <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${sliderValue}%`, width: 2, background: colors.gold, transform: 'translateX(-50%)', zIndex: 2 }}>
                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 36, height: 36, borderRadius: '50%', background: colors.gold, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -866,7 +908,7 @@ export default function ProgressTab({
               </div>
               <input type="range" min={0} max={100} value={sliderValue} onChange={e => setSliderValue(Number(e.target.value))} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'ew-resize', zIndex: 3 }} />
               <div style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(239,68,68,0.8)', borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: '#fff', zIndex: 2 }}>AVANT</div>
-              <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(34,197,94,0.8)', borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: '#fff', zIndex: 2 }}>APRÈS</div>
+              <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(34,197,94,0.8)', borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: '#fff', zIndex: 2 }}>APRES</div>
             </div>
           </div>
         )
