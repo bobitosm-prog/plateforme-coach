@@ -243,6 +243,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false)
 
   // Fetch previous performance for all exercises
   useEffect(() => {
@@ -549,20 +550,37 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           return (
             <div key={exo.id} className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
               {/* ── Accordion Header ── */}
-              <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="w-full flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: exo.open ? 16 : 0 }}>
-                <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
-                  <ExercisePreview name={exo.name} size={80} animate={false} imageUrl={exo.imageUrl} />
-                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.goldRule, borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: exo.open ? 16 : 0 }}>
+                {/* ▲/▼ reorder arrows */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginRight: 8, flexShrink: 0 }}>
+                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, -1) }} disabled={idx === 0} style={{
+                    width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'transparent', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', padding: 0, borderRadius: 4,
+                  }}>
+                    <ChevronUp size={16} color={idx === 0 ? TEXT_DIM : GOLD} strokeWidth={idx === 0 ? 1.5 : 2.5} style={{ opacity: idx === 0 ? 0.3 : 0.7 }} />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, 1) }} disabled={idx === exos.length - 1} style={{
+                    width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'transparent', border: 'none', cursor: idx === exos.length - 1 ? 'default' : 'pointer', padding: 0, borderRadius: 4,
+                  }}>
+                    <ChevronDown size={16} color={idx === exos.length - 1 ? TEXT_DIM : GOLD} strokeWidth={idx === exos.length - 1 ? 1.5 : 2.5} style={{ opacity: idx === exos.length - 1 ? 0.3 : 0.7 }} />
+                  </button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                  <span style={{ fontSize: 9, padding: '2px 6px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, borderRadius: 4, whiteSpace: 'nowrap' }}>{exo.targetSets}×{exo.targetReps}</span>
-                  <span style={{ fontSize: 10, color: cnt > 0 ? GOLD : TEXT_DIM, fontFamily: FONT_DISPLAY }}>{cnt}/{exo.sets.length}</span>
-                  {exo.open ? <ChevronUp size={14} style={{ color: TEXT_DIM }} /> : <ChevronDown size={14} style={{ color: TEXT_DIM }} />}
-                </div>
-              </button>
+                <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="flex-1 flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
+                  <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
+                    <ExercisePreview name={exo.name} size={80} animate={false} imageUrl={exo.imageUrl} />
+                    {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.goldRule, borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, padding: '2px 6px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, borderRadius: 4, whiteSpace: 'nowrap' }}>{exo.targetSets}×{exo.targetReps}</span>
+                    <span style={{ fontSize: 10, color: cnt > 0 ? GOLD : TEXT_DIM, fontFamily: FONT_DISPLAY }}>{cnt}/{exo.sets.length}</span>
+                    {exo.open ? <ChevronUp size={14} style={{ color: TEXT_DIM }} /> : <ChevronDown size={14} style={{ color: TEXT_DIM }} />}
+                  </div>
+                </button>
+              </div>
 
               {/* ℹ️ + ⋯ menu buttons */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4, gap: 4 }}>
@@ -725,14 +743,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           )
         })}
 
-        {allDone && (
-          <div className="p-6 text-center" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD }}>
-            <Trophy size={32} className="mx-auto mb-2" style={{ color: GOLD }} />
-            <p className="text-base mb-1" style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px' }}>Séance complète ! 🔥</p>
-            <p className="text-sm mb-4" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{dur(elapsed)} · {Math.round(volume)} kg</p>
-            <button onClick={() => sessionModified ? setShowSavePopup(true) : finish()} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>🏆 Terminer</button>
-          </div>
-        )}
+        {/* Spacer to keep scroll above bottom bar */}
+        <div style={{ height: 8 }} />
       </div>
 
       {/* BARRE BAS */}
@@ -743,9 +755,51 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>TEMPS</span>
             <span style={{ fontSize: 24, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={() => sessionModified ? setShowSavePopup(true) : finish()} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
+          <button onClick={() => setShowFinishConfirm(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
         </div>
       </div>
+
+      {/* FINISH CONFIRMATION MODAL */}
+      {showFinishConfirm && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8, textAlign: 'center' }}>TERMINER LA SÉANCE ?</div>
+            <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+              Voici le résumé de ta séance :
+            </div>
+            {/* Summary stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
+              {[
+                ['⏱', dur(elapsed), 'Durée'],
+                ['✅', `${completed}/${total}`, 'Sets'],
+                ['💪', `${Math.round(volume)} kg`, 'Volume'],
+              ].map(([ico, v, l]) => (
+                <div key={String(l)} style={{ padding: '12px 8px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 14 }}>
+                  <div style={{ fontSize: 20, marginBottom: 4 }}>{ico}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD, letterSpacing: 1 }}>{v}</div>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' as const, color: TEXT_MUTED, marginTop: 2 }}>{l}</div>
+                </div>
+              ))}
+            </div>
+            {completed < total && (
+              <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: colors.orange, textAlign: 'center', marginBottom: 16, padding: '8px 12px', background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.15)', borderRadius: 10 }}>
+                {total - completed} set{total - completed > 1 ? 's' : ''} non complété{total - completed > 1 ? 's' : ''}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button onClick={() => { setShowFinishConfirm(false); sessionModified ? setShowSavePopup(true) : finish() }} className="active:scale-[0.98]" style={{
+                width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08',
+                fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer',
+              }}>OUI, TERMINER</button>
+              <button onClick={() => setShowFinishConfirm(false)} className="active:scale-[0.98]" style={{
+                width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
+                border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
+                fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer',
+              }}>CONTINUER LA SÉANCE</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Save as template popup */}
       {showSaveTemplate && (
