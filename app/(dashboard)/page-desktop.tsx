@@ -189,6 +189,7 @@ export default function DesktopDashboard({
   const [xpData, setXpData] = useState<{ total_xp: number; current_streak: number } | null>(null)
   const [prevWeight, setPrevWeight] = useState<number | null>(null)
   const [allBadges, setAllBadges] = useState<any[]>([])
+  const [todayFoodLogs, setTodayFoodLogs] = useState<any[]>([])
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -217,12 +218,13 @@ export default function DesktopDashboard({
     supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(10)
       .then(({ data }: any) => { if (data) setRecentSessions(data) })
 
-    supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today)
+    supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).order('created_at', { ascending: true })
       .then(({ data }: any) => {
         if (!data) return
         let c = 0, p = 0, ca = 0, f = 0
-        data.forEach((x: any) => { c += x.calories || 0; p += x.proteins || 0; ca += x.carbs || 0; f += x.fats || 0 })
+        data.forEach((x: any) => { c += x.calories || 0; p += x.protein || 0; ca += x.carbs || 0; f += x.fat || 0 })
         setNutritionToday({ calories: Math.round(c), proteins: Math.round(p), carbs: Math.round(ca), fats: Math.round(f) })
+        setTodayFoodLogs(data)
       })
 
     supabase.from('personal_records').select('id').eq('user_id', uid).gte('achieved_at', weekAgo)
@@ -365,7 +367,7 @@ export default function DesktopDashboard({
           {activeNav === 'dashboard' && <DashboardView {...{ weeklyData, weekSessions, weekCalories, weekVolume, weeklyGoalPct, newRecords, todaySessionInfo, todaySessionDone, strengthGains, currentWeight, weightChange, bodyFat, objective, streak, nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, muscleStatus, recentSessions, badges, levelInfo, levelTitle, xpData, onNavigate, startProgramWorkout, coachProgram, todayKey, colors }} />}
           {activeNav === 'workouts' && <TrainingView {...{ todaySessionInfo, todaySessionDone, weekProgram, todayKey, recentSessions, personalRecords, strengthGains, weeklyVolume, weeklyData, startProgramWorkout, coachProgram, onNavigate }} />}
           {activeNav === 'analytics' && <ProgressView {...{ weightHistory, currentWeight, goalWeight, bodyFat, bmi, streak, strengthGains, personalRecords, progressPhotos, supabase, session }} />}
-          {activeNav === 'nutrition' && <NutritionView {...{ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, coachMealPlan, todayKey, weeklyCalories, onNavigate, setModal }} />}
+          {activeNav === 'nutrition' && <NutritionView {...{ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal }} />}
           {activeNav === 'goals' && <GoalsView {...{ objective, objectiveLabel, currentWeight, goalWeight, weekSessions, streak, completedSessions, allBadges, levelInfo, levelTitle, xpData }} />}
           {activeNav === 'profile' && <ProfileView {...{ profile, avatarUrl, displayName, currentWeight, goalWeight, bodyFat, bmi, completedSessions, streak, onNavigate, setModal }} />}
           {activeNav === 'settings' && <SettingsView {...{ profile, onNavigate, setModal }} />}
@@ -687,9 +689,24 @@ function ProgressView({ weightHistory, currentWeight, goalWeight, bodyFat, bmi, 
 /* ═══════════════════════════════════════════════════
    PAGE: NUTRITION
    ═══════════════════════════════════════════════════ */
-function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, coachMealPlan, todayKey, weeklyCalories, onNavigate, setModal }: any) {
-  const mealTypes = [{ id: 'petit_dejeuner', label: 'Petit-dejeuner', icon: '🥣' }, { id: 'dejeuner', label: 'Dejeuner', icon: '🍽️' }, { id: 'diner', label: 'Diner', icon: '🌙' }, { id: 'collation', label: 'Collation', icon: '🍎' }]
-  const todayMeals = coachMealPlan?.[todayKey]?.repas || {}
+function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal }: any) {
+  const mealTypes = [
+    { id: 'breakfast', label: 'Petit-dejeuner', icon: '🥣' },
+    { id: 'lunch', label: 'Dejeuner', icon: '🍽️' },
+    { id: 'dinner', label: 'Diner', icon: '🌙' },
+    { id: 'snack', label: 'Collation', icon: '🍎' },
+  ]
+
+  // Group daily_food_logs by meal_type
+  const logsByMeal = useMemo(() => {
+    const grouped: Record<string, any[]> = { breakfast: [], lunch: [], dinner: [], snack: [] }
+    ;(todayFoodLogs || []).forEach((log: any) => {
+      const mt = log.meal_type || 'snack'
+      if (grouped[mt]) grouped[mt].push(log)
+      else grouped.snack.push(log)
+    })
+    return grouped
+  }, [todayFoodLogs])
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>
@@ -698,18 +715,24 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
         <CardTitle title="Journal du Jour" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {mealTypes.map(mt => {
-            const foods = todayMeals[mt.id] || []
+            const foods = logsByMeal[mt.id] || []
+            const mealCals = foods.reduce((s: number, f: any) => s + (f.calories || 0), 0)
             return (
               <div key={mt.id} style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <span style={{ fontSize: 16 }}>{mt.icon}</span>
                   <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{mt.label}</span>
-                  <span style={{ fontFamily: BODY, fontSize: 10, color: MUTED, marginLeft: 'auto' }}>{(foods as any[]).length} aliment{(foods as any[]).length !== 1 ? 's' : ''}</span>
+                  <span style={{ fontFamily: BODY, fontSize: 10, color: MUTED, marginLeft: 'auto' }}>
+                    {foods.length > 0 ? `${foods.length} aliment${foods.length > 1 ? 's' : ''} · ${mealCals} kcal` : '0 aliment'}
+                  </span>
                 </div>
-                {(foods as any[]).length > 0 ? (foods as any[]).map((f: any, i: number) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontFamily: BODY, fontSize: 12, color: MUTED }}>
-                    <span>{f.name || f.aliment || 'Aliment'}</span>
-                    <span style={{ color: GOLD }}>{f.kcal || f.calories || '—'} kcal</span>
+                {foods.length > 0 ? foods.map((f: any, i: number) => (
+                  <div key={f.id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: i < foods.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: BODY, fontSize: 12, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.custom_name || f.food_name || 'Aliment'}</div>
+                      <div style={{ fontFamily: BODY, fontSize: 10, color: MUTED }}>P:{f.protein || 0}g · G:{f.carbs || 0}g · L:{f.fat || 0}g{f.quantity_g ? ` · ${f.quantity_g}g` : ''}</div>
+                    </div>
+                    <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: GOLD, flexShrink: 0, marginLeft: 8 }}>{f.calories || 0} kcal</span>
                   </div>
                 )) : <div style={{ fontFamily: BODY, fontSize: 11, color: MUTED, fontStyle: 'italic' }}>Aucun aliment enregistre</div>}
               </div>
