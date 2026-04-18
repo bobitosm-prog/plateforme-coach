@@ -471,9 +471,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         .ws-input { -webkit-appearance: none; appearance: none; }
         .ws-input::-webkit-inner-spin-button,
         .ws-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .ws-input:focus { border-color: ${GOLD} !important; }
+        .ws-input:focus { background: rgba(201,168,76,0.08) !important; border-radius: 6px !important; }
+        .ws-input::placeholder { color: rgba(255,255,255,0.15); }
         @media(max-width:420px){
-          .ws-grid { grid-template-columns: 30px 60px 1fr 1fr 36px !important; }
+          .ws-grid { grid-template-columns: 36px 1fr 56px 48px 36px !important; }
         }
         @keyframes wsPopIn {
           0% { opacity: 0; transform: scale(0.8); }
@@ -568,219 +569,145 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           const cnt = exo.sets.filter(s => s.done).length
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
+          // Progression badge
+          const progressBadge = (() => {
+            const prev = previousData[exo.name]
+            if (!prev?.length) return null
+            const doneSets = exo.sets.filter(s => s.done && s.weight !== '' && s.reps !== '')
+            if (!doneSets.length) return null
+            const curVol = doneSets.reduce((s, st) => s + Number(st.weight) * Number(st.reps), 0) / doneSets.length
+            const prevVol = prev.reduce((s, st) => s + st.weight * st.reps, 0) / prev.length
+            if (!prevVol) return null
+            return Math.round(((curVol - prevVol) / prevVol) * 100)
+          })()
           return (
-            <div key={exo.id} className="border-l-2" style={{ borderLeftColor: '#60A5FA', borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 24, paddingLeft: 12 }}>
-              {/* ── Accordion Header ── */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: exo.open ? 16 : 0 }}>
-                {/* ▲/▼ reorder arrows */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginRight: 8, flexShrink: 0 }}>
-                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, -1) }} disabled={idx === 0} style={{
-                    width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'transparent', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', padding: 0, borderRadius: 4,
-                  }}>
-                    <ChevronUp size={16} color={idx === 0 ? TEXT_DIM : GOLD} strokeWidth={idx === 0 ? 1.5 : 2.5} style={{ opacity: idx === 0 ? 0.3 : 0.7 }} />
+            <div key={exo.id} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, marginBottom: 12 }}>
+              {/* ── Exercise Header ── */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 12, borderBottom: `1px solid rgba(201,168,76,0.08)` }}>
+                {/* Reorder arrows */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, -1) }} disabled={idx === 0} style={{ width: 20, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', padding: 0 }}>
+                    <ChevronUp size={14} color={idx === 0 ? TEXT_DIM : GOLD} strokeWidth={2} style={{ opacity: idx === 0 ? 0.25 : 0.6 }} />
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, 1) }} disabled={idx === exos.length - 1} style={{
-                    width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'transparent', border: 'none', cursor: idx === exos.length - 1 ? 'default' : 'pointer', padding: 0, borderRadius: 4,
-                  }}>
-                    <ChevronDown size={16} color={idx === exos.length - 1 ? TEXT_DIM : GOLD} strokeWidth={idx === exos.length - 1 ? 1.5 : 2.5} style={{ opacity: idx === exos.length - 1 ? 0.3 : 0.7 }} />
+                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, 1) }} disabled={idx === exos.length - 1} style={{ width: 20, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: idx === exos.length - 1 ? 'default' : 'pointer', padding: 0 }}>
+                    <ChevronDown size={14} color={idx === exos.length - 1 ? TEXT_DIM : GOLD} strokeWidth={2} style={{ opacity: idx === exos.length - 1 ? 0.25 : 0.6 }} />
                   </button>
                 </div>
-                <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} className="flex-1 flex items-center gap-3 text-left" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
-                  <div style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 80, height: 80 }}>
-                    <ExercisePreview name={exo.name} size={80} animate={false} imageUrl={exo.imageUrl} />
-                    {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.goldRule, borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
-                      {(() => {
-                        const prev = previousData[exo.name]
-                        if (!prev?.length) return null
-                        const doneSets = exo.sets.filter(s => s.done && s.weight !== '' && s.reps !== '')
-                        if (!doneSets.length) return null
-                        const curVol = doneSets.reduce((s, st) => s + Number(st.weight) * Number(st.reps), 0) / doneSets.length
-                        const prevVol = prev.reduce((s, st) => s + st.weight * st.reps, 0) / prev.length
-                        if (!prevVol) return null
-                        const delta = Math.round(((curVol - prevVol) / prevVol) * 100)
-                        const positive = delta > 0
-                        const negative = delta < 0
-                        return (
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 8,
-                            fontFamily: FONT_ALT, letterSpacing: '0.5px',
-                            background: positive ? 'rgba(34,197,94,0.15)' : negative ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.1)',
-                            color: positive ? '#22c55e' : negative ? '#ef4444' : 'rgba(255,255,255,0.6)',
-                          }}>
-                            {positive ? '+' : ''}{delta}%
-                          </span>
-                        )
-                      })()}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                    <span style={{ fontSize: 9, padding: '2px 6px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, borderRadius: 4, whiteSpace: 'nowrap' }}>{exo.targetSets}×{exo.targetReps}</span>
-                    <span style={{ fontSize: 10, color: cnt > 0 ? GOLD : TEXT_DIM, fontFamily: FONT_DISPLAY }}>{cnt}/{exo.sets.length}</span>
-                    {exo.open ? <ChevronUp size={14} style={{ color: TEXT_DIM }} /> : <ChevronDown size={14} style={{ color: TEXT_DIM }} />}
-                  </div>
+                {/* Photo */}
+                <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 40, height: 40, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <ExercisePreview name={exo.name} size={40} animate={false} imageUrl={exo.imageUrl} />
+                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.goldRule, borderRadius: 8 }}><Check size={14} color="#0D0B08" strokeWidth={3} /></div>}
                 </button>
+                {/* Name + muscle + progression */}
+                <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GOLD, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{exo.name}</span>
+                    {progressBadge !== null && (
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 6, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.12)' : progressBadge < 0 ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.08)', color: progressBadge > 0 ? '#22c55e' : progressBadge < 0 ? '#ef4444' : 'rgba(255,255,255,0.5)' }}>
+                        {progressBadge > 0 ? '+' : ''}{progressBadge}%
+                      </span>
+                    )}
+                  </div>
+                  {exo.muscle && <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_DIM, fontStyle: 'italic', marginTop: 2 }}>{exo.muscle}</div>}
+                </button>
+                {/* Right side: badges + actions */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  {(exo.tempo || exo.rir != null) && (
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {exo.tempo && <span style={{ fontSize: 8, padding: '2px 5px', background: 'rgba(255,255,255,0.04)', color: TEXT_DIM, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.tempo}</span>}
+                      {exo.rir != null && <span style={{ fontSize: 8, padding: '2px 5px', background: 'rgba(255,255,255,0.04)', color: TEXT_DIM, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>R{exo.rir}</span>}
+                    </div>
+                  )}
+                  <span style={{ fontSize: 9, padding: '3px 8px', background: GOLD_DIM, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, borderRadius: 6, whiteSpace: 'nowrap' }}>{exo.targetSets}×{exo.targetReps}</span>
+                  <button onClick={() => openExerciseInfo(exo)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 2, fontSize: 18, lineHeight: 1, display: 'flex' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  </button>
+                  <button onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 2, fontSize: 18, lineHeight: 1 }}>⋯</button>
+                  {exo.open ? <ChevronUp size={14} color={TEXT_DIM} /> : <ChevronDown size={14} color={TEXT_DIM} />}
+                </div>
               </div>
 
-              {/* ℹ️ + ⋯ menu buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4, gap: 4 }}>
-                <button onClick={() => openExerciseInfo(exo)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', padding: '4px 8px', minWidth: 36, minHeight: 32, fontSize: 16 }}>ℹ️</button>
-                <button onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: 20, cursor: 'pointer', padding: '4px 8px', minWidth: 44, minHeight: 32 }}>⋯</button>
-              </div>
+              {/* Exercise menu */}
               {exerciseMenu === idx && (
-                <div style={{ display: 'flex', gap: 6, padding: '0 0 12px', flexWrap: 'wrap' }}>
-                  <button disabled={idx === 0} onClick={() => { moveExercise(idx, -1); setExerciseMenu(null) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: idx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`, color: idx === 0 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: idx === 0 ? 'default' : 'pointer' }}>↑ MONTER</button>
-                  <button disabled={idx === exos.length - 1} onClick={() => { moveExercise(idx, 1); setExerciseMenu(null) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`, color: idx === exos.length - 1 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: idx === exos.length - 1 ? 'default' : 'pointer' }}>↓ DESCENDRE</button>
-                  <button onClick={() => { setExerciseMenu(null); loadVariantsForSession(exo, idx) }} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer' }}>🔄 REMPLACER</button>
-                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 10, borderRadius: 12, minWidth: 70, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: colors.error, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer' }}>🗑 SUPPRIMER</button>
+                <div style={{ display: 'flex', gap: 6, padding: '10px 0 4px', flexWrap: 'wrap' }}>
+                  <button disabled={idx === 0} onClick={() => { moveExercise(idx, -1); setExerciseMenu(null) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: idx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`, color: idx === 0 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: idx === 0 ? 'default' : 'pointer' }}>↑ MONTER</button>
+                  <button disabled={idx === exos.length - 1} onClick={() => { moveExercise(idx, 1); setExerciseMenu(null) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`, color: idx === exos.length - 1 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: idx === exos.length - 1 ? 'default' : 'pointer' }}>↓ DESCENDRE</button>
+                  <button onClick={() => { setExerciseMenu(null); loadVariantsForSession(exo, idx) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: 'pointer' }}>REMPLACER</button>
+                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: colors.error, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: 'pointer' }}>SUPPRIMER</button>
                 </div>
               )}
 
-              {/* ── Expanded Content ── */}
+              {/* ── Sets Table ── */}
               {exo.open && (
-                <div>
-                  {/* Description + action icons */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {(exo.notes || exo.muscle) && (
-                        <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, color: TEXT_MUTED, margin: 0, fontStyle: 'italic' }}>
-                          {exo.notes || exo.muscle}
-                        </p>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', gap: 12, flexShrink: 0, paddingTop: 2 }}>
-                      {exo.videoUrl && (
-                        <button onClick={() => setShowVideo(exo.videoUrl!)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
-                          <Play size={20} style={{ color: TEXT_MUTED }} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Tempo/RIR badges */}
-                  {(exo.tempo || exo.rir != null) && (
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-                      {exo.tempo && <span style={{ fontSize: 9, padding: '2px 8px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700 }}>Tempo {exo.tempo}</span>}
-                      {exo.rir != null && <span style={{ fontSize: 9, padding: '2px 8px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700 }}>RIR {exo.rir}</span>}
-                    </div>
-                  )}
-
-                  {/* Table header */}
-                  <div className="ws-grid" style={{ display: 'grid', gridTemplateColumns: '30px 60px 1fr 1fr 36px', gap: 2, padding: '0 0 6px', alignItems: 'center' }}>
-                    {['SET', 'PRÉC.', 'KG', 'REPS', ''].map(h => (
-                      <span key={h} style={{ fontSize: 9, textAlign: 'center', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{h}</span>
+                <div style={{ paddingTop: 8 }}>
+                  {/* Column headers */}
+                  <div className="ws-grid" style={{ display: 'grid', gridTemplateColumns: '40px 1fr 64px 56px 40px', gap: 0, padding: '4px 0 6px', alignItems: 'center' }}>
+                    {['SERIE', 'PREC.', 'KG', 'REPS', ''].map(h => (
+                      <span key={h} style={{ fontSize: 8, textAlign: h === 'PREC.' ? 'left' : 'center', paddingLeft: h === 'PREC.' ? 4 : 0, color: 'rgba(255,255,255,0.3)', fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>{h}</span>
                     ))}
                   </div>
 
                   {/* Set rows */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {exo.sets.map((set: ExSet) => {
-                      const ok = !set.done && (set.weight !== '' || set.reps !== '')
-                      return (
-                        <div key={set.id} className="ws-grid" style={{
-                          display: 'grid', gridTemplateColumns: '30px 60px 1fr 1fr 36px', gap: 2,
-                          alignItems: 'center', padding: '4px 0',
-                          background: set.done ? `${GOLD}08` : 'transparent',
-                          transition: 'background 0.3s',
-                        }}>
-                          {/* Set number */}
-                          <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            <div style={{
-                              width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              border: `1px solid ${set.done ? GREEN : TEXT_DIM}`,
-                              background: set.done ? GREEN : 'transparent',
-                              transition: 'all 0.2s',
-                            }}>
-                              {set.done
-                                ? <Check size={12} strokeWidth={3} style={{ color: '#fff' }} />
-                                : <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_MUTED }}>{set.num}</span>
-                              }
-                            </div>
-                          </div>
+                  {exo.sets.map((set: ExSet, si: number) => {
+                    const ok = !set.done && (set.weight !== '' || set.reps !== '')
+                    const prevSet = previousData[exo.name]?.[set.num - 1]
+                    return (
+                      <div key={set.id} className="ws-grid" style={{
+                        display: 'grid', gridTemplateColumns: '40px 1fr 64px 56px 40px', gap: 0,
+                        alignItems: 'center', height: 40,
+                        borderTop: si > 0 ? '0.5px solid rgba(201,168,76,0.05)' : 'none',
+                        background: set.done ? 'rgba(230,195,100,0.04)' : 'transparent',
+                        transition: 'background 0.2s',
+                      }}>
+                        {/* Set number — just the digit */}
+                        <span style={{ textAlign: 'center', fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: set.done ? GOLD : TEXT_PRIMARY }}>{set.num}</span>
 
-                          {/* Previous */}
-                          <span style={{ textAlign: 'center', fontSize: 11, color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {previousData[exo.name]?.[set.num - 1]
-                              ? `${previousData[exo.name][set.num - 1].weight}×${previousData[exo.name][set.num - 1].reps}`
-                              : '—'}
-                          </span>
+                        {/* Previous — wider column */}
+                        <span style={{ textAlign: 'left', paddingLeft: 4, fontSize: 12, color: prevSet ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', fontFamily: FONT_BODY, fontWeight: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {prevSet ? `${prevSet.weight} kg × ${prevSet.reps}` : '—'}
+                        </span>
 
-                          {/* KG input */}
-                          <input
-                            type="number" inputMode="decimal" step="0.5"
-                            className="ws-input"
-                            value={set.weight}
-                            onChange={e => setField(exo.id, set.id, 'weight', e.target.value)}
-                            disabled={set.done}
-                            placeholder={last?.weight ? String(last.weight) : '0'}
-                            style={{
-                              width: '100%', height: 44, textAlign: 'center',
-                              background: set.done ? GOLD_DIM : BG_BASE,
-                              border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
-                              borderRadius: 12, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
-                              color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none',
-                              opacity: set.done ? 0.7 : 1, transition: 'border-color 0.2s, opacity 0.3s',
-                            }}
-                          />
+                        {/* KG input — transparent, no border */}
+                        <input type="number" inputMode="decimal" step="0.5" className="ws-input"
+                          value={set.weight} onChange={e => setField(exo.id, set.id, 'weight', e.target.value)}
+                          disabled={set.done} placeholder={last?.weight ? String(last.weight) : '0'}
+                          style={{ width: '100%', height: 32, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: 14, fontFamily: FONT_BODY, fontWeight: 700, color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none', opacity: set.done ? 0.6 : 1 }} />
 
-                          {/* Reps input */}
-                          <input
-                            type="number" inputMode="numeric"
-                            className="ws-input"
-                            value={set.reps}
-                            onChange={e => setField(exo.id, set.id, 'reps', e.target.value)}
-                            disabled={set.done}
-                            placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
-                            style={{
-                              width: '100%', height: 44, textAlign: 'center',
-                              background: set.done ? GOLD_DIM : BG_BASE,
-                              border: `1px solid ${set.done ? GOLD_RULE : TEXT_DIM}`,
-                              borderRadius: 12, fontSize: 16, fontFamily: FONT_BODY, fontWeight: 500,
-                              color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none',
-                              opacity: set.done ? 0.7 : 1, transition: 'border-color 0.2s, opacity 0.3s',
-                            }}
-                          />
+                        {/* Reps input — transparent, no border */}
+                        <input type="number" inputMode="numeric" className="ws-input"
+                          value={set.reps} onChange={e => setField(exo.id, set.id, 'reps', e.target.value)}
+                          disabled={set.done} placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
+                          style={{ width: '100%', height: 32, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: 14, fontFamily: FONT_BODY, fontWeight: 700, color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none', opacity: set.done ? 0.6 : 1 }} />
 
-                          {/* Check button */}
-                          <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            {set.done ? (
-                              <button onClick={() => unvalidate(exo.id, set.id)} style={{
-                                width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, cursor: 'pointer',
-                              }}><RotateCcw size={14} style={{ color: GOLD }} /></button>
-                            ) : (
-                              <button onClick={() => ok ? validate(exo.id, set.id) : undefined} style={{
-                                width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: ok ? GOLD : 'transparent', border: `1px solid ${ok ? 'transparent' : TEXT_DIM}`,
-                                borderRadius: 12, cursor: ok ? 'pointer' : 'default',
-                                transition: 'all 0.2s', transform: 'scale(1)',
-                              }}
-                              onMouseDown={e => { if (ok) (e.currentTarget.style.transform = 'scale(1.05)') }}
-                              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
-                              ><Check size={16} strokeWidth={3} style={{ color: ok ? '#0D0B08' : TEXT_DIM }} /></button>
-                            )}
-                          </div>
+                        {/* Checkmark — circular 28px */}
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                          {set.done ? (
+                            <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GREEN, border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
+                              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.9)' }}
+                              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
+                              <Check size={13} strokeWidth={3} color="#fff" />
+                            </button>
+                          ) : (
+                            <button onClick={() => ok ? validate(exo.id, set.id) : undefined} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ok ? GOLD : 'transparent', border: ok ? 'none' : '1.5px solid rgba(255,255,255,0.15)', borderRadius: '50%', cursor: ok ? 'pointer' : 'default', transition: 'all 0.15s' }}
+                              onMouseDown={e => { if (ok) e.currentTarget.style.transform = 'scale(0.9)' }}
+                              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
+                              <Check size={13} strokeWidth={3} color={ok ? '#0D0B08' : 'rgba(255,255,255,0.2)'} />
+                            </button>
+                          )}
                         </div>
-                      )
-                    })}
-                  </div>
+                      </div>
+                    )
+                  })}
 
-                  {/* Add set button */}
+                  {/* Add set */}
                   <button onClick={() => addSet(exo.id)} style={{
-                    width: '100%', marginTop: 10, padding: '12px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    background: 'transparent', border: `1px solid ${TEXT_DIM}`, borderRadius: 12, cursor: 'pointer',
-                    fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, color: TEXT_MUTED, letterSpacing: '1px', textTransform: 'uppercase' as const,
-                    transition: 'background 0.15s, border-color 0.15s', minHeight: 44,
+                    width: '100%', marginTop: 8, padding: '10px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    background: 'transparent', border: `1px dashed rgba(201,168,76,0.2)`, borderRadius: 8, cursor: 'pointer',
+                    fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, color: GOLD, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = BG_CARD_2; e.currentTarget.style.borderColor = GOLD_RULE }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = TEXT_DIM }}
-                  >
-                    <Plus size={13} /> Ajouter un set
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(230,195,100,0.04)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                    <Plus size={12} /> Ajouter une serie
                   </button>
                 </div>
               )}
