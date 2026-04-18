@@ -250,7 +250,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
-  const [showFinishConfirm, setShowFinishConfirm] = useState(false)
+  const [showEndModal, setShowEndModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [repsWarning, setRepsWarning] = useState<{ eid: string; sid: string; reps: number } | null>(null)
 
   // Fetch previous performance for all exercises (last completed session per exercise)
@@ -499,6 +500,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           0% { opacity: 0; transform: scale(0.8); }
           100% { opacity: 1; transform: scale(1); }
         }
+        @keyframes wsSlideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
@@ -746,55 +751,86 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         <div style={{ height: 8 }} />
       </div>
 
-      {/* BARRE BAS */}
+      {/* BARRE BAS — centered TERMINER */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center' }}>
-          <button onClick={onClose} className="active:scale-95" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '10px 16px', color: colors.error, fontSize: 13, fontWeight: 500, fontFamily: FONT_BODY, cursor: 'pointer' }}>Abandonner</button>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>TEMPS</span>
-            <span style={{ fontSize: 24, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
+            <span style={{ fontSize: 18, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={() => setShowFinishConfirm(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 20px', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px', cursor: 'pointer' }}>TERMINER</button>
+          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>TERMINER</button>
         </div>
       </div>
 
-      {/* FINISH CONFIRMATION MODAL */}
-      {showFinishConfirm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8, textAlign: 'center' }}>TERMINER LA SÉANCE ?</div>
-            <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
-              Voici le résumé de ta séance :
-            </div>
+      {/* END SESSION MODAL — slide up sheet */}
+      {showEndModal && !showDeleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: BG_BASE, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTop: `1px solid ${BORDER}`, width: '100%', maxWidth: 480, padding: 24, paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))', animation: 'wsSlideUp 300ms ease-out' }}>
+            {/* Handle */}
+            <div style={{ width: 40, height: 4, background: 'rgba(201,168,76,0.3)', borderRadius: 2, margin: '0 auto 20px' }} />
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY, textAlign: 'center', margin: '0 0 4px' }}>FIN DE SEANCE</h3>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 20px' }}>Que veux-tu faire de cette seance ?</p>
             {/* Summary stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
-              {[
-                ['⏱', dur(elapsed), 'Durée'],
-                ['✅', `${completed}/${total}`, 'Sets'],
-                ['💪', `${Math.round(volume)} kg`, 'Volume'],
-              ].map(([ico, v, l]) => (
-                <div key={String(l)} style={{ padding: '12px 8px', textAlign: 'center', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 14 }}>
-                  <div style={{ fontSize: 20, marginBottom: 4 }}>{ico}</div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD, letterSpacing: 1 }}>{v}</div>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' as const, color: TEXT_MUTED, marginTop: 2 }}>{l}</div>
+              {[['⏱', dur(elapsed), 'Duree'], ['✅', `${completed}/${total}`, 'Sets'], ['💪', `${Math.round(volume)} kg`, 'Volume']].map(([ico, v, l]) => (
+                <div key={String(l)} style={{ padding: '10px 6px', textAlign: 'center', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+                  <div style={{ fontSize: 18, marginBottom: 2 }}>{ico}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, color: GOLD, letterSpacing: 1 }}>{v}</div>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' as const, color: TEXT_DIM, marginTop: 2 }}>{l}</div>
                 </div>
               ))}
             </div>
-            {completed < total && (
-              <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: colors.orange, textAlign: 'center', marginBottom: 16, padding: '8px 12px', background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.15)', borderRadius: 10 }}>
-                {total - completed} set{total - completed > 1 ? 's' : ''} non complété{total - completed > 1 ? 's' : ''}
-              </div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={() => { setShowFinishConfirm(false); sessionModified ? setShowSavePopup(true) : finish() }} className="active:scale-[0.98]" style={{
-                width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08',
-                fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer',
-              }}>OUI, TERMINER</button>
-              <button onClick={() => setShowFinishConfirm(false)} className="active:scale-[0.98]" style={{
-                width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
-                border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
-                fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer',
-              }}>CONTINUER LA SÉANCE</button>
+            {/* Save button */}
+            <button onClick={() => { setShowEndModal(false); sessionModified ? setShowSavePopup(true) : finish() }} className="active:scale-[0.98]" style={{
+              width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08',
+              fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
+            }}>
+              <Check size={16} strokeWidth={3} />SAUVEGARDER LA SEANCE
+            </button>
+            <p style={{ fontSize: 10, color: TEXT_DIM, textAlign: 'center', margin: '0 0 16px' }}>Enregistre ta progression et tes records</p>
+            {/* Delete button */}
+            <button onClick={() => setShowDeleteConfirm(true)} className="active:scale-[0.98]" style={{
+              width: '100%', padding: 14, borderRadius: 14,
+              background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)',
+              color: 'rgba(239,68,68,0.8)', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
+            }}>
+              <X size={16} strokeWidth={3} />SUPPRIMER LA SEANCE
+            </button>
+            <p style={{ fontSize: 10, color: TEXT_DIM, textAlign: 'center', margin: '0 0 20px' }}>Les donnees de cette seance seront perdues</p>
+            {/* Cancel */}
+            <button onClick={() => setShowEndModal(false)} className="active:scale-[0.98]" style={{
+              width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
+              border: `1px solid ${BORDER}`, color: TEXT_MUTED,
+              fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
+            }}>CONTINUER LA SEANCE</button>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION — double check */}
+      {showDeleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: BG_CARD, border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', textAlign: 'center' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <X size={28} color={colors.error} strokeWidth={2} />
+            </div>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 8px' }}>ES-TU SUR ?</h3>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 20px' }}>
+              {completed > 0 ? `${completed} set${completed > 1 ? 's' : ''} valide${completed > 1 ? 's' : ''} ser${completed > 1 ? 'ont' : 'a'} perdu${completed > 1 ? 's' : ''} definitivement.` : 'Cette seance sera supprimee.'}
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowDeleteConfirm(false)} className="active:scale-[0.98]" style={{
+                flex: 1, padding: 14, borderRadius: 12, background: 'transparent',
+                border: `1px solid ${BORDER}`, color: TEXT_MUTED,
+                fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
+              }}>ANNULER</button>
+              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); onClose() }} className="active:scale-[0.98]" style={{
+                flex: 1, padding: 14, borderRadius: 12,
+                background: colors.error, border: 'none', color: '#fff',
+                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
+              }}>SUPPRIMER</button>
             </div>
           </div>
         </div>
