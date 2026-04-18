@@ -231,6 +231,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
+  const [restExoId, setRestExoId] = useState<string | null>(null)
+  const [restDone, setRestDone] = useState(false)
+  const [restNextInfo, setRestNextInfo] = useState('')
   const restT = useRef<NodeJS.Timeout | null>(null)
   const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
   const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
@@ -287,15 +290,13 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   useEffect(() => {
     if (restOn && restSecs > 0) {
       restT.current = setTimeout(() => setRestSecs(s => s - 1), 1000)
-      // Warning tick at 5 seconds
-      if (restSecs === 5) playWarningTick()
+      if (restSecs === 5) { playWarningTick(); vibrateDevice() }
     } else if (restOn && restSecs === 0) {
       setRestOn(false)
       playBeep()
       vibrateDevice()
       setMotivationalMsg(getRandomMessage())
-      setShowTimerAlert(true)
-      setTimeout(() => setShowTimerAlert(false), 3000)
+      setRestDone(true)
     }
     return () => { if (restT.current) clearTimeout(restT.current) }
   }, [restOn, restSecs])
@@ -336,16 +337,34 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     }
   }, [])
 
-  const startRest = (s: number) => { if (restT.current) clearTimeout(restT.current); setRestMax(s); setRestSecs(s); setRestOn(true) }
-  const skipRest = () => { setRestOn(false); setRestSecs(0) }
+  const startRest = (s: number, exoId?: string, nextInfo?: string) => {
+    if (restT.current) clearTimeout(restT.current)
+    setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
+    if (exoId) setRestExoId(exoId)
+    if (nextInfo) setRestNextInfo(nextInfo)
+  }
+  const skipRest = () => { setRestOn(false); setRestSecs(0); setRestExoId(null) }
   const addRestTime = () => { setRestSecs(s => s + 30); setRestMax(m => m + 30) }
+  const dismissRestDone = () => { setRestDone(false); setRestExoId(null) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) =>
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
   const doValidate = (eid: string, sid: string) => {
     initAudio()
-    let r = 90
-    setExos(p => p.map(e => { if (e.id !== eid) return e; r = e.rest; return { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) } }))
-    startRest(r)
+    let r = 90, exoName = '', nextSetNum = 0
+    setExos(p => p.map(e => {
+      if (e.id !== eid) return e
+      r = e.rest; exoName = e.name
+      const updated = { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) }
+      const nextUndone = updated.sets.find(s => !s.done)
+      nextSetNum = nextUndone?.num || 0
+      return updated
+    }))
+    const prev = previousData[exoName]
+    const prevInfo = prev?.[nextSetNum - 1]
+    const nextInfo = nextSetNum > 0
+      ? `Set ${nextSetNum}${prevInfo ? ` — ${prevInfo.weight} kg × ${prevInfo.reps}` : ''}`
+      : 'Exercice termine'
+    startRest(r, eid, nextInfo)
   }
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
@@ -480,44 +499,27 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           0% { opacity: 0; transform: scale(0.8); }
           100% { opacity: 1; transform: scale(1); }
         }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
       `}</style>
-      {restOn && <RestOverlay secs={restSecs} max={restMax} onSkip={skipRest} onAdd30={addRestTime} />}
-
-      {/* Timer complete popup */}
-      {showTimerAlert && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, padding: 24,
-        }}>
-          <div style={{
-            background: BG_CARD, border: `2px solid ${GOLD}`,
-            padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
-            animation: 'wsPopIn 0.3s ease-out',
-          }}>
-            <div style={{
-              width: 64, height: 64, border: `2px solid ${GOLD}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px',
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill={GOLD}>
-                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
-              </svg>
+      {/* REST DONE POPUP — only shows when timer reaches 0 */}
+      {restDone && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 24 }}>
+          <div style={{ background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 32, textAlign: 'center', maxWidth: 340, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
+            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(201,168,76,0.15)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 36, color: GOLD, letterSpacing: 3, margin: '0 0 8px' }}>
-              REPOS TERMINÉ
-            </h2>
-            <p style={{ fontFamily: FONT_ALT, fontWeight: 800, fontSize: 20, color: TEXT_PRIMARY, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 24px' }}>
-              {motivationalMsg}
-            </p>
-            <button onClick={() => setShowTimerAlert(false)} style={{
-              background: GOLD, color: '#0D0B08', border: 'none',
-              fontFamily: FONT_ALT, fontWeight: 800, fontSize: 16, letterSpacing: 2,
-              padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
-              
-            }}>
-              C&apos;EST PARTI !
-            </button>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 3, margin: '0 0 8px' }}>REPOS TERMINE</h2>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: '0 0 8px' }}>Prochain :</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD, letterSpacing: 1, margin: '0 0 24px' }}>{restNextInfo || motivationalMsg}</p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => { dismissRestDone(); startRest(30, restExoId || undefined, restNextInfo) }} className="active:scale-95"
+                style={{ flex: 1, padding: '14px', background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: GOLD, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30S</button>
+              <button onClick={dismissRestDone} className="active:scale-95"
+                style={{ flex: 2, padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer' }}>COMMENCER →</button>
+            </div>
           </div>
         </div>
       )}
@@ -698,6 +700,31 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                       </div>
                     )
                   })}
+
+                  {/* INLINE REST TIMER BAR */}
+                  {restOn && restExoId === exo.id && (
+                    <div style={{
+                      marginTop: 6, padding: '8px 12px', borderRadius: 8,
+                      background: 'rgba(201,168,76,0.06)', border: `1px solid rgba(201,168,76,0.12)`,
+                      display: 'flex', alignItems: 'center', gap: 10,
+                    }}>
+                      <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_DIM, letterSpacing: 1, textTransform: 'uppercase' as const, flexShrink: 0 }}>REPOS</span>
+                      <div style={{ flex: 1, height: 4, background: 'rgba(201,168,76,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${restMax > 0 ? (restSecs / restMax) * 100 : 0}%`, height: '100%', borderRadius: 2,
+                          background: restSecs <= 5 ? '#fb923c' : GOLD,
+                          transition: 'width 1s linear, background 200ms',
+                        }} />
+                      </div>
+                      <span style={{
+                        fontFamily: FONT_DISPLAY, fontSize: 14, fontWeight: 700, minWidth: 40, textAlign: 'right',
+                        color: restSecs <= 5 ? '#fb923c' : GOLD,
+                        animation: restSecs <= 5 ? 'pulse 1s infinite' : 'none',
+                      }}>{fmt(restSecs)}</span>
+                      <button onClick={addRestTime} style={{ padding: '4px 8px', borderRadius: 6, background: BG_CARD_2, border: `1px solid ${BORDER}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>+30s</button>
+                      <button onClick={skipRest} style={{ padding: '4px 8px', borderRadius: 6, background: BG_CARD_2, border: `1px solid ${BORDER}`, color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>SKIP</button>
+                    </div>
+                  )}
 
                   {/* Add set */}
                   <button onClick={() => addSet(exo.id)} style={{
