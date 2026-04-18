@@ -274,10 +274,24 @@ export default function HomeTab({
     supabase.from('user_xp').select('total_xp, current_streak').eq('user_id', userId).maybeSingle()
       .then(({ data }: any) => { if (data) setXpData(data) })
 
-    // Fetch muscle status from recent workout sets
+    // Fetch muscle status from recent workout sets + sessions
     const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString()
-    supabase.from('workout_sets').select('exercise_name, created_at').eq('user_id', userId).gte('created_at', threeDaysAgo).limit(200)
-      .then(({ data }: any) => { if (data) setMuscleStatus(calculateMuscleStatus(data)) })
+    Promise.all([
+      supabase.from('workout_sets').select('exercise_name, created_at').eq('user_id', userId).gte('created_at', threeDaysAgo).limit(200),
+      supabase.from('workout_sessions').select('muscles_worked, created_at').eq('user_id', userId).eq('completed', true).gte('created_at', threeDaysAgo),
+    ]).then(([setsRes, sessRes]: any) => {
+      const sets = setsRes.data || []
+      // Supplement: for sessions with muscles_worked, add synthetic entries so the body map picks them up via MUSCLE_GROUP_MAP
+      const sessData = sessRes.data || []
+      sessData.forEach((s: any) => {
+        if (s.muscles_worked?.length) {
+          s.muscles_worked.forEach((mg: string) => {
+            sets.push({ exercise_name: '', muscle_group: mg, created_at: s.created_at })
+          })
+        }
+      })
+      setMuscleStatus(calculateMuscleStatus(sets))
+    })
 
     // Fetch today's habit check-in
     const todayDate = new Date().toISOString().split('T')[0]

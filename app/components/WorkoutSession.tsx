@@ -385,7 +385,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const finish = () => {
     if (elT.current) clearInterval(elT.current)
-    onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) })
+    onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) })
     if (exos.length > 0) {
       setShowSaveTemplate(true)
     } else {

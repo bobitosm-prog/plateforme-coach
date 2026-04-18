@@ -2,27 +2,91 @@
 import { colors, fonts } from '../../../lib/design-tokens'
 
 export const EXERCISE_MUSCLES: Record<string, string[]> = {
+  // Chest
   'bench press': ['chest', 'front_delts', 'triceps'], 'developpe couche': ['chest', 'front_delts', 'triceps'],
   'incline press': ['upper_chest', 'front_delts', 'triceps'], 'developpe incline': ['upper_chest', 'front_delts', 'triceps'],
+  'decline press': ['chest', 'triceps'], 'developpe decline': ['chest', 'triceps'],
+  'dips': ['chest', 'triceps', 'front_delts'], 'chest fly': ['chest'], 'ecartes': ['chest'],
+  'pec deck': ['chest'], 'butterfly': ['chest'], 'pompes': ['chest', 'triceps', 'front_delts'],
+  'push up': ['chest', 'triceps', 'front_delts'], 'cable cross': ['chest'],
+  'presse pectoraux': ['chest', 'front_delts', 'triceps'],
+  // Shoulders
   'overhead press': ['front_delts', 'side_delts', 'triceps'], 'developpe militaire': ['front_delts', 'side_delts', 'triceps'],
-  'dips': ['chest', 'triceps', 'front_delts'], 'lateral raise': ['side_delts'], 'elevations laterales': ['side_delts'],
-  'pull up': ['lats', 'biceps'], 'tractions': ['lats', 'biceps'], 'tirage vertical': ['lats', 'biceps'],
-  'barbell row': ['lats', 'traps', 'biceps'], 'rowing barre': ['lats', 'traps', 'biceps'], 'rowing haltere': ['lats', 'traps', 'biceps'],
+  'lateral raise': ['side_delts'], 'elevations laterales': ['side_delts'], 'elevation laterale': ['side_delts'],
+  'front raise': ['front_delts'], 'elevation frontale': ['front_delts'],
+  'face pull': ['rear_delts', 'traps'], 'oiseau': ['rear_delts'], 'rear delt': ['rear_delts'],
+  'arnold press': ['front_delts', 'side_delts'], 'shrug': ['traps'], 'haussements': ['traps'],
+  'epaule': ['front_delts', 'side_delts'], 'shoulder': ['front_delts', 'side_delts'],
+  // Back
+  'pull up': ['lats', 'biceps'], 'tractions': ['lats', 'biceps'], 'chin up': ['lats', 'biceps'],
+  'tirage vertical': ['lats', 'biceps'], 'tirage horizontal': ['lats', 'traps', 'biceps'],
+  'lat pulldown': ['lats', 'biceps'], 'poulie haute': ['lats', 'biceps'],
+  'barbell row': ['lats', 'traps', 'biceps'], 'rowing barre': ['lats', 'traps', 'biceps'],
+  'rowing haltere': ['lats', 'traps', 'biceps'], 'rowing': ['lats', 'traps', 'biceps'],
+  'cable row': ['lats', 'traps'], 'tirage poulie basse': ['lats', 'traps'],
+  't-bar': ['lats', 'traps'], 'tirage': ['lats', 'biceps'],
+  // Legs
   'deadlift': ['lower_back', 'glutes', 'hamstrings', 'traps'], 'souleve de terre': ['lower_back', 'glutes', 'hamstrings'],
-  'squat': ['quads', 'glutes', 'lower_back'], 'leg press': ['quads', 'glutes'], 'leg extension': ['quads'],
-  'leg curl': ['hamstrings'], 'hip thrust': ['glutes', 'hamstrings'], 'fente': ['quads', 'glutes', 'hamstrings'],
-  'bicep curl': ['biceps'], 'curl barre': ['biceps'], 'tricep pushdown': ['triceps'], 'triceps poulie': ['triceps'],
-  'crunch': ['abs'], 'planche': ['abs', 'lower_back'], 'mollets': ['calves'],
+  'squat': ['quads', 'glutes', 'lower_back'], 'leg press': ['quads', 'glutes'],
+  'presse': ['quads', 'glutes'], 'presse a cuisses': ['quads', 'glutes'],
+  'leg extension': ['quads'], 'extension jambe': ['quads'], 'extension de jambe': ['quads'],
+  'leg curl': ['hamstrings'], 'curl jambe': ['hamstrings'], 'ischio': ['hamstrings'],
+  'hip thrust': ['glutes', 'hamstrings'], 'fente': ['quads', 'glutes', 'hamstrings'],
+  'lunge': ['quads', 'glutes', 'hamstrings'], 'goblet squat': ['quads', 'glutes'],
+  'hack squat': ['quads', 'glutes'], 'sissy squat': ['quads'],
+  'bulgarian': ['quads', 'glutes'], 'split squat': ['quads', 'glutes'],
+  'sumo': ['quads', 'glutes', 'hamstrings'], 'front squat': ['quads'],
+  'jambes': ['quads', 'hamstrings', 'glutes', 'calves'],
+  'quadriceps': ['quads'], 'cuisse': ['quads', 'hamstrings'],
+  'fessier': ['glutes'], 'glute': ['glutes'],
+  // Arms
+  'bicep curl': ['biceps'], 'curl barre': ['biceps'], 'curl haltere': ['biceps'],
+  'curl': ['biceps'], 'hammer curl': ['biceps'], 'curl marteau': ['biceps'],
+  'preacher curl': ['biceps'], 'curl pupitre': ['biceps'], 'curl poulie': ['biceps'],
+  'concentration curl': ['biceps'],
+  'tricep pushdown': ['triceps'], 'triceps poulie': ['triceps'], 'tricep': ['triceps'],
+  'skull crusher': ['triceps'], 'barre au front': ['triceps'],
+  'extension triceps': ['triceps'], 'kickback': ['triceps'],
+  // Core
+  'crunch': ['abs'], 'planche': ['abs', 'lower_back'], 'plank': ['abs', 'lower_back'],
+  'sit up': ['abs'], 'russian twist': ['abs'], 'leg raise': ['abs'],
+  'abdos': ['abs'], 'abdomin': ['abs'], 'gainage': ['abs', 'lower_back'],
+  'cable crunch': ['abs'], 'wood chop': ['abs'],
+  // Calves
+  'mollets': ['calves'], 'calf raise': ['calves'], 'mollet': ['calves'],
+  'extension mollet': ['calves'],
+  // Cardio (no muscle mapping)
+  'cardio': [], 'velo': [], 'tapis': [], 'rameur': ['lats', 'lower_back'],
 }
 
-export function calculateMuscleStatus(recentSets: { exercise_name: string; created_at: string }[]): Record<string, number> {
+// Fallback: map muscle_group label to body map muscles
+export const MUSCLE_GROUP_MAP: Record<string, string[]> = {
+  'pectoraux': ['chest', 'upper_chest'], 'poitrine': ['chest', 'upper_chest'], 'chest': ['chest', 'upper_chest'],
+  'dos': ['lats', 'traps', 'lower_back'], 'back': ['lats', 'traps', 'lower_back'],
+  'epaules': ['front_delts', 'side_delts', 'rear_delts'], 'shoulders': ['front_delts', 'side_delts', 'rear_delts'],
+  'biceps': ['biceps'], 'triceps': ['triceps'], 'bras': ['biceps', 'triceps'],
+  'jambes': ['quads', 'hamstrings', 'glutes', 'calves'], 'legs': ['quads', 'hamstrings', 'glutes', 'calves'],
+  'quadriceps': ['quads'], 'ischio-jambiers': ['hamstrings'], 'ischio': ['hamstrings'],
+  'fessiers': ['glutes'], 'glutes': ['glutes'],
+  'mollets': ['calves'], 'calves': ['calves'],
+  'abdos': ['abs'], 'core': ['abs', 'lower_back'], 'abs': ['abs'],
+  'cardio': [],
+}
+
+export function calculateMuscleStatus(recentSets: { exercise_name: string; created_at: string; muscle_group?: string }[]): Record<string, number> {
   const now = Date.now()
   const status: Record<string, number> = {}
   const allMuscles = ['chest', 'upper_chest', 'front_delts', 'side_delts', 'rear_delts', 'triceps', 'biceps', 'lats', 'traps', 'lower_back', 'abs', 'quads', 'hamstrings', 'glutes', 'calves']
   allMuscles.forEach(m => { status[m] = 0 })
   for (const set of recentSets) {
     const name = (set.exercise_name || '').toLowerCase()
-    const muscles = Object.entries(EXERCISE_MUSCLES).find(([k]) => name.includes(k))?.[1] || []
+    // Try exercise name mapping first
+    let muscles = Object.entries(EXERCISE_MUSCLES).find(([k]) => name.includes(k))?.[1] || []
+    // Fallback: use muscle_group if no exercise name match
+    if (muscles.length === 0 && set.muscle_group) {
+      const mg = set.muscle_group.toLowerCase()
+      muscles = Object.entries(MUSCLE_GROUP_MAP).find(([k]) => mg.includes(k))?.[1] || []
+    }
     const hoursAgo = (now - new Date(set.created_at).getTime()) / 3600000
     for (const m of muscles) {
       if (hoursAgo < 24) status[m] = Math.max(status[m], 2)

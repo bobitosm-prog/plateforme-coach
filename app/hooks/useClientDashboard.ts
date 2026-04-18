@@ -232,10 +232,13 @@ export default function useClientDashboard() {
 
   async function onFinishWorkout(data: any) {
     try { localStorage.removeItem('moovx_active_workout') } catch {}
+    // Extract unique muscles worked from exercises
+    const musclesWorked = [...new Set(data.exercises.map((e: any) => e.muscle).filter(Boolean))] as string[]
     const { data: sess } = await supabase.from('workout_sessions').insert({
       user_id: session.user.id, name: workoutSession?.name, completed: true,
       duration_minutes: Math.round(data.duration / 60000),
       notes: `${data.completedSets}/${data.totalSets} sets · ${Math.round(data.totalVolume)} kg volume`,
+      muscles_worked: musclesWorked.length > 0 ? musclesWorked : null,
     }).select().single()
     if (sess) {
       const setsToInsert: any[] = []
