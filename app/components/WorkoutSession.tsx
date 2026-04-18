@@ -20,7 +20,7 @@ const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ 
 const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt(s) || 0 : s; return n >= 60 ? `${Math.floor(n / 60)}:${(n % 60).toString().padStart(2, '0')}` : `${n}s` }
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
 
-function RestOverlay({ secs, max, onSkip }: { secs: number; max: number; onSkip: () => void }) {
+function RestOverlay({ secs, max, onSkip, onAdd30 }: { secs: number; max: number; onSkip: () => void; onAdd30: () => void }) {
   const r = 52, c = 2 * Math.PI * r, offset = c * (1 - secs / max), hot = secs <= 10
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center px-6" style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(16px)' }}>
@@ -41,9 +41,13 @@ function RestOverlay({ secs, max, onSkip }: { secs: number; max: number; onSkip:
             {hot && <span className="text-[10px] uppercase tracking-widest animate-pulse mt-1" style={{ color: GOLD, fontFamily: FONT_ALT, fontWeight: 700 }}>GO !</span>}
           </div>
         </div>
-        <button onClick={onSkip} className="relative z-10 w-full py-4 active:scale-95"
-          style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Passer →</button>
-        <p className="text-[10px] relative z-10" style={{ color: TEXT_DIM, fontFamily: FONT_BODY }}>Recommandé : {fmt(max)}</p>
+        <div className="relative z-10 w-full flex gap-3">
+          <button onClick={onAdd30} className="flex-1 py-4 active:scale-95"
+            style={{ background: BG_CARD_2, color: GOLD, fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.8rem' }}>+30s</button>
+          <button onClick={onSkip} className="flex-[2] py-4 active:scale-95"
+            style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Passer →</button>
+        </div>
+        <p className="text-[10px] relative z-10" style={{ color: TEXT_DIM, fontFamily: FONT_BODY }}>Recommande : {fmt(max)}</p>
       </div>
     </div>
   )
@@ -246,24 +250,32 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [showFinishConfirm, setShowFinishConfirm] = useState(false)
   const [repsWarning, setRepsWarning] = useState<{ eid: string; sid: string; reps: number } | null>(null)
 
-  // Fetch previous performance for all exercises
+  // Fetch previous performance for all exercises (last completed session per exercise)
   useEffect(() => {
     const names = raw.map(e => e.exercise_name || e.name).filter(Boolean)
     if (!names.length) return
     const fetchPrev = async () => {
+      const { data: userData } = await supabase.auth.getUser()
+      const userId = userData?.user?.id
+      if (!userId) return
       const prev: Record<string, { weight: number; reps: number }[]> = {}
       for (const name of names) {
         const { data } = await supabase
           .from('workout_sets')
-          .select('weight, reps, created_at')
+          .select('weight, reps, set_number, session_id, created_at')
+          .eq('user_id', userId)
           .eq('exercise_name', name)
+          .eq('completed', true)
           .order('created_at', { ascending: false })
           .limit(20)
         if (data?.length) {
-          const first = new Date(data[0].created_at).getTime()
-          prev[name] = data
-            .filter((d: any) => Math.abs(new Date(d.created_at).getTime() - first) < 7200000)
+          // Group by session_id, take the most recent session
+          const latestSessionId = data[0].session_id
+          const latestSets = data
+            .filter((d: any) => d.session_id === latestSessionId)
+            .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
             .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 }))
+          if (latestSets.length > 0) prev[name] = latestSets
         }
       }
       setPreviousData(prev)
@@ -326,6 +338,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const startRest = (s: number) => { if (restT.current) clearTimeout(restT.current); setRestMax(s); setRestSecs(s); setRestOn(true) }
   const skipRest = () => { setRestOn(false); setRestSecs(0) }
+  const addRestTime = () => { setRestSecs(s => s + 30); setRestMax(m => m + 30) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) =>
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
   const doValidate = (eid: string, sid: string) => {
@@ -467,7 +480,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           100% { opacity: 1; transform: scale(1); }
         }
       `}</style>
-      {restOn && <RestOverlay secs={restSecs} max={restMax} onSkip={skipRest} />}
+      {restOn && <RestOverlay secs={restSecs} max={restMax} onSkip={skipRest} onAdd30={addRestTime} />}
 
       {/* Timer complete popup */}
       {showTimerAlert && (
@@ -580,7 +593,31 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.goldRule, borderRadius: 8 }}><Check size={22} color="#0D0B08" strokeWidth={3} /></div>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 20, color: '#60A5FA', letterSpacing: '1px', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>{exo.name}</h3>
+                      {(() => {
+                        const prev = previousData[exo.name]
+                        if (!prev?.length) return null
+                        const doneSets = exo.sets.filter(s => s.done && s.weight !== '' && s.reps !== '')
+                        if (!doneSets.length) return null
+                        const curVol = doneSets.reduce((s, st) => s + Number(st.weight) * Number(st.reps), 0) / doneSets.length
+                        const prevVol = prev.reduce((s, st) => s + st.weight * st.reps, 0) / prev.length
+                        if (!prevVol) return null
+                        const delta = Math.round(((curVol - prevVol) / prevVol) * 100)
+                        const positive = delta > 0
+                        const negative = delta < 0
+                        return (
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 8,
+                            fontFamily: FONT_ALT, letterSpacing: '0.5px',
+                            background: positive ? 'rgba(34,197,94,0.15)' : negative ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.1)',
+                            color: positive ? '#22c55e' : negative ? '#ef4444' : 'rgba(255,255,255,0.6)',
+                          }}>
+                            {positive ? '+' : ''}{delta}%
+                          </span>
+                        )
+                      })()}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                     <span style={{ fontSize: 9, padding: '2px 6px', background: BG_CARD, color: TEXT_MUTED, border: `1px solid ${BORDER}`, fontFamily: FONT_ALT, fontWeight: 700, borderRadius: 4, whiteSpace: 'nowrap' }}>{exo.targetSets}×{exo.targetReps}</span>
