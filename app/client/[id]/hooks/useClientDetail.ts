@@ -408,6 +408,7 @@ export default function useClientDetail() {
     setWeightLogs((weightRes.data ?? []) as WeightLog[]); setNotes(notesRes.data?.content ?? '')
 
     if (programRes.data) { setProgramId(programRes.data.id); setProgram({ ...defaultProgram(), ...(programRes.data.program as WeekProgram) }) }
+    console.log('[ClientDetail] custom_programs:', customProgsRes.data?.length || 0, customProgsRes.error?.message || '')
     setClientCustomPrograms(customProgsRes.data || [])
     if (mealPlanRes.data) {
       const mp = mealPlanRes.data; setMealPlanId(mp.id)
