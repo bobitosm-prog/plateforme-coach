@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import ExercisePreview from '../ExercisePreview'
 import { getTodaySession, getSessionForDay } from '../../../lib/get-today-session'
+import { toast } from 'sonner'
 import { resolveSessionType } from '../../../lib/session-types'
 import {
   colors, fonts, cardStyle, cardTitleAbove, titleStyle, titleLineStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
@@ -128,6 +129,10 @@ export default function HomeTab({
   const [muscleStatus, setMuscleStatus] = useState<Record<string, number>>({})
   const [todayHabit, setTodayHabit] = useState<any>(null)
   const [habitValues, setHabitValues] = useState<Record<string, number>>({})
+  const [checkinMood, setCheckinMood] = useState<string | null>(null)
+  const [checkinNote, setCheckinNote] = useState('')
+  const [checkinDone, setCheckinDone] = useState<any>(null)
+  const [checkinEditing, setCheckinEditing] = useState(false)
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
   const [customDayName, setCustomDayName] = useState<string | null>(null)
   const [customIsRest, setCustomIsRest] = useState(false)
@@ -297,6 +302,10 @@ export default function HomeTab({
     const todayDate = new Date().toISOString().split('T')[0]
     supabase.from('daily_habits').select('*').eq('user_id', userId).eq('date', todayDate).maybeSingle()
       .then(({ data }: any) => { if (data) setTodayHabit(data) })
+
+    // Fetch today's mood check-in
+    supabase.from('daily_checkins').select('*').eq('user_id', userId).eq('date', todayDate).maybeSingle()
+      .then(({ data }: any) => { if (data) { setCheckinDone(data); setCheckinMood(data.mood); setCheckinNote(data.note || '') } })
   }, [session?.user?.id])
 
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
@@ -331,13 +340,90 @@ export default function HomeTab({
     <div style={{ background: colors.background, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
-      {/* ═══ LOGO + CITATION ═══ */}
-      <div style={{ padding: '12px 24px 0', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-          <Image src="/logo-moovx.png" alt="MoovX" width={120} height={40} style={{ objectFit: 'contain' }} priority />
-        </div>
-        <div style={{ fontFamily: fonts.body, fontSize: 13, fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, maxWidth: 300, margin: '0 auto' }}>
-          &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
+      {/* ═══ COACHING PERSONNEL + CHECK-IN ═══ */}
+      <div style={{ padding: '12px 24px 0' }}>
+        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+          <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold, marginBottom: 4 }}>COACHING PERSONNEL</div>
+          <div style={{ fontFamily: fonts.body, fontSize: 12, fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>Votre coach de poche vous accompagne partout</div>
+          <div style={{ height: 1, background: 'rgba(201,168,76,0.1)', marginBottom: 16 }} />
+
+          {/* Check-in */}
+          {(!checkinDone || checkinEditing) ? (
+            <>
+              <div style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: colors.gold, marginBottom: 8 }}>CHECK-IN DU JOUR</div>
+              <div style={{ fontFamily: fonts.body, fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 14 }}>Comment te sens-tu aujourd&apos;hui ?</div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
+                {[
+                  { id: 'fatigue', icon: '😴', label: 'Fatigue' },
+                  { id: 'normal', icon: '😐', label: 'Normal' },
+                  { id: 'bien', icon: '💪', label: 'Bien' },
+                  { id: 'top', icon: '🔥', label: 'Top' },
+                  { id: 'energie', icon: '⚡', label: 'Energie' },
+                ].map(m => (
+                  <button key={m.id} onClick={() => setCheckinMood(m.id)} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+                  }}>
+                    <div style={{
+                      width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
+                      background: checkinMood === m.id ? colors.goldDim : colors.surface,
+                      border: `1.5px solid ${checkinMood === m.id ? colors.goldRule : colors.goldBorder}`,
+                      transform: checkinMood === m.id ? 'scale(1.08)' : 'scale(1)',
+                      transition: 'all 200ms',
+                    }}>{m.icon}</div>
+                    <span style={{ fontFamily: fonts.body, fontSize: 9, color: checkinMood === m.id ? colors.gold : colors.textDim }}>{m.label}</span>
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={checkinNote} onChange={e => setCheckinNote(e.target.value.slice(0, 200))}
+                placeholder="Ajoute une note pour ton coach (optionnel)..."
+                rows={2} maxLength={200}
+                style={{ width: '100%', padding: '10px 14px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', resize: 'none', marginBottom: 12 }}
+              />
+              <button
+                disabled={!checkinMood}
+                onClick={async () => {
+                  if (!checkinMood || !session?.user?.id) return
+                  const todayDate = new Date().toISOString().split('T')[0]
+                  await supabase.from('daily_checkins').upsert({
+                    user_id: session.user.id, date: todayDate, mood: checkinMood, note: checkinNote || null,
+                  }, { onConflict: 'user_id,date' })
+                  try { await addXP(session.user.id, 10, supabase) } catch {}
+                  setCheckinDone({ mood: checkinMood, note: checkinNote })
+                  setCheckinEditing(false)
+                  toast.success('Check-in valide')
+                }}
+                style={{
+                  width: '100%', padding: 14, borderRadius: 14,
+                  background: checkinMood ? `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})` : colors.surfaceHigh,
+                  color: checkinMood ? '#0D0B08' : colors.textDim,
+                  fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em',
+                  textTransform: 'uppercase', border: 'none', cursor: checkinMood ? 'pointer' : 'default',
+                }}
+              >VALIDER LE CHECK-IN</button>
+            </>
+          ) : (
+            <>
+              <div style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: colors.gold, marginBottom: 10 }}>CHECK-IN DU JOUR</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: checkinDone.note ? 8 : 0 }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: colors.goldDim, border: `1.5px solid ${colors.goldRule}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+                  {{ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' }[checkinDone.mood as string] || '💪'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.gold, textTransform: 'capitalize' }}>{checkinDone.mood}</div>
+                  <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>Enregistre aujourd&apos;hui</div>
+                </div>
+                <button onClick={() => setCheckinEditing(true)} style={{
+                  padding: '6px 14px', borderRadius: 8, background: 'transparent',
+                  border: `1px solid ${colors.goldBorder}`, color: colors.gold,
+                  fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+                  textTransform: 'uppercase', cursor: 'pointer',
+                }}>MODIFIER</button>
+              </div>
+              {checkinDone.note && <div style={{ fontFamily: fonts.body, fontSize: 12, fontStyle: 'italic', color: colors.textMuted, padding: '6px 0 0 60px' }}>&ldquo;{checkinDone.note}&rdquo;</div>}
+            </>
+          )}
         </div>
       </div>
 
@@ -608,56 +694,7 @@ export default function HomeTab({
         {/* ═══ MUSCLE HEAT MAP ═══ */}
         <MuscleHeatMap muscleStatus={muscleStatus} />
 
-        {/* ═══ DAILY HABIT CHECK-IN ═══ */}
-        {!todayHabit ? (
-          <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={T}>CHECK-IN DU JOUR</span>
-            <div style={titleLineStyle} />
-          </div>
-          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {[
-                { key: 'mood', label: 'Humeur', emojis: ['\u{1F62B}','\u{1F615}','\u{1F610}','\u{1F60A}','\u{1F525}'] },
-                { key: 'energy', label: 'Energie', emojis: ['\u{1FAB4}','\u{1F634}','\u26A1','\u{1F4AA}','\u{1F680}'] },
-              ].map(({ key, label, emojis }) => (
-                <div key={key} style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ fontFamily: fonts.body, fontSize: 8, color: colors.textMuted, letterSpacing: 1, marginBottom: 6 }}>{label}</div>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                    {emojis.map((e, i) => (
-                      <button key={i} onClick={() => setHabitValues(prev => ({ ...prev, [key]: i + 1 }))} style={{ background: habitValues[key] === i + 1 ? colors.goldDim : 'transparent', border: habitValues[key] === i + 1 ? `1px solid ${colors.goldRule}` : '1px solid transparent', borderRadius: 6, width: 28, height: 28, fontSize: 14, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{e}</button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
-              <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, letterSpacing: 1 }}>SOMMEIL</span>
-              <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={habitValues.sleep_hours || ''} onChange={e => setHabitValues(prev => ({ ...prev, sleep_hours: parseFloat(e.target.value) }))} style={{ width: 60, padding: '6px 8px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.headline, fontSize: 18, textAlign: 'center', outline: 'none' }} />
-              <span style={mutedStyle}>heures</span>
-            </div>
-            <button onClick={async () => {
-              const todayDate = new Date().toISOString().split('T')[0]
-              await supabase.from('daily_habits').upsert({ user_id: session.user.id, date: todayDate, ...habitValues })
-              try { await addXP(session.user.id, 10, supabase) } catch {}
-              setTodayHabit({ ...habitValues })
-            }} style={{ width: '100%', padding: 12, marginTop: 12, background: Object.keys(habitValues).length >= 2 ? 'linear-gradient(135deg, #E8C97A, #D4A843, #8B6914)' : colors.surfaceHigh, color: Object.keys(habitValues).length >= 2 ? '#0D0B08' : colors.textDim, fontFamily: fonts.headline, fontSize: 14, letterSpacing: 2, border: 'none', borderRadius: 16, cursor: 'pointer' }}>ENREGISTRER</button>
-          </div>
-          </>
-        ) : (
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            {[
-              { emoji: ['\u{1F62B}','\u{1F615}','\u{1F610}','\u{1F60A}','\u{1F525}'][((todayHabit.mood || 3) - 1)], label: 'HUMEUR' },
-              { emoji: ['\u{1FAB4}','\u{1F634}','\u26A1','\u{1F4AA}','\u{1F680}'][((todayHabit.energy || 3) - 1)], label: 'ENERGIE' },
-              { emoji: `${todayHabit.sleep_hours || '?'}h`, label: 'SOMMEIL', isText: true },
-            ].map(i => (
-              <div key={i.label} style={{ flex: 1, background: colors.surface, borderRadius: 16, padding: '8px 10px', textAlign: 'center', border: `1px solid ${colors.goldDim}` }}>
-                <div style={i.isText ? statSmallStyle : { fontSize: 18 }}>{i.emoji}</div>
-                <div style={{ ...mutedStyle, fontSize: 8, letterSpacing: 1 }}>{i.label}</div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Old daily habit section removed — check-in is now at the top of the page */}
 
         {/* ═══ NUTRITION MACROS ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
