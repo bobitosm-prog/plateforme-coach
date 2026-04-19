@@ -20,6 +20,7 @@ export interface ClientRow {
   profiles: {
     id: string
     full_name: string | null
+    email: string | null
     avatar_url: string | null
     current_weight: number | null
     calorie_goal: number | null
@@ -340,7 +341,7 @@ export default function useCoachDashboard(initialSession?: any) {
     const clientIds = links.map(l => l.client_id)
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name, avatar_url, current_weight, calorie_goal')
+      .select('id, full_name, email, avatar_url, current_weight, calorie_goal')
       .in('id', clientIds)
       .limit(100)
 

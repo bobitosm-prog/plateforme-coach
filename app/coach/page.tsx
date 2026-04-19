@@ -105,6 +105,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteSending, setInviteSending] = useState(false)
   const [inviteSent, setInviteSent] = useState(false)
+  const [clientSearch, setClientSearch] = useState('')
 
   async function sendInviteEmail() {
     if (!inviteEmail.includes('@') || !h.session?.user?.id) return
@@ -295,42 +296,58 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                   </div>
                 </div>
 
-                {/* Clients list — enriched */}
+                {/* Clients list — with search + email */}
                 <div style={{ gridColumn: 'span 8', ...CARD }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                     <span style={SEC_TITLE}>Mes Clients</span><div style={SEC_LINE} />
                     <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{h.clients.length} actif{h.clients.length !== 1 ? 's' : ''}</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {h.filtered.slice(0, 8).map((c: any) => {
-                      const name = c.profiles?.full_name || 'Client'
-                      const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-                      const unread = h.unreadCounts[c.client_id] || 0
-                      const daysSince = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86400000)
-                      const isActive = daysSince < 7
-                      const isWarning = daysSince >= 7 && daysSince < 14
-                      const statusColor = isActive ? GREEN : isWarning ? GOLD : RED
-                      const statusLabel = isActive ? 'Actif' : isWarning ? 'Inactif 7j+' : 'Inactif 14j+'
-                      return (
-                        <div key={c.client_id} onClick={() => h.openChat(c.client_id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
-                          <div style={{ width: 34, height: 34, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 700, color: BG_BASE, flexShrink: 0 }}>{initials}</div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>{name}</span>
-                              <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
-                              <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: statusColor }}>{statusLabel}</span>
-                            </div>
-                            <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Depuis {daysSince}j</div>
-                          </div>
-                          {unread > 0 && <span style={{ minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 9, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unread}</span>}
-                          <ChevronLeft size={14} color={TEXT_DIM} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
-                        </div>
-                      )
-                    })}
+                  {/* Search */}
+                  <div style={{ position: 'relative', marginBottom: 12 }}>
+                    <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: TEXT_DIM, pointerEvents: 'none' }}>&#128269;</span>
+                    <input value={clientSearch} onChange={e => setClientSearch(e.target.value)} placeholder="Rechercher un client..."
+                      style={{ width: '100%', padding: '8px 12px 8px 34px', background: BG_BASE, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: FONT_BODY, fontSize: 12, color: TEXT_PRIMARY, outline: 'none' }} />
                   </div>
-                  {h.clients.length > 8 && <button onClick={() => h.setSection('dashboard' as any)} style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer' }}>VOIR TOUS</button>}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {(() => {
+                      const q = clientSearch.toLowerCase().trim()
+                      const list = q ? h.filtered.filter((c: any) => {
+                        const name = (c.profiles?.full_name || '').toLowerCase()
+                        const email = (c.profiles?.email || '').toLowerCase()
+                        return name.includes(q) || email.includes(q)
+                      }) : h.filtered
+                      return list.slice(0, 10).map((c: any) => {
+                        const name = c.profiles?.full_name || 'Client'
+                        const email = c.profiles?.email || ''
+                        const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+                        const unread = h.unreadCounts[c.client_id] || 0
+                        const daysSince = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86400000)
+                        const isActive = daysSince < 7
+                        const isWarning = daysSince >= 7 && daysSince < 14
+                        const statusColor = isActive ? GREEN : isWarning ? GOLD : RED
+                        const statusLabel = isActive ? 'Actif' : isWarning ? 'Inactif 7j+' : 'Inactif 14j+'
+                        return (
+                          <div key={c.client_id} onClick={() => h.openChat(c.client_id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                            <div style={{ width: 34, height: 34, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 700, color: BG_BASE, flexShrink: 0 }}>{initials}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY }}>{name}</div>
+                              {email && <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</div>}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
+                                <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: statusColor }}>{statusLabel}</span>
+                                <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_DIM }}>· Depuis {daysSince}j</span>
+                              </div>
+                            </div>
+                            {unread > 0 && <span style={{ minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 9, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unread}</span>}
+                            <ChevronLeft size={14} color={TEXT_DIM} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
+                          </div>
+                        )
+                      })
+                    })()}
+                  </div>
+                  {h.clients.length > 10 && !clientSearch && <button onClick={() => h.setSection('dashboard' as any)} style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer' }}>VOIR TOUS</button>}
                 </div>
 
                 {/* Quick actions */}
