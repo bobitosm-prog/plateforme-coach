@@ -310,7 +310,10 @@ export default function HomeTab({
 
     // Fetch today's mood check-in
     supabase.from('daily_checkins').select('*').eq('user_id', userId).eq('date', todayDate).maybeSingle()
-      .then(({ data }: any) => { if (data) { setCheckinMood(data.mood); setCheckinNote(data.note || ''); setCheckinSleep(data.sleep_hours?.toString() || ''); setCheckinSaved(true) } })
+      .then(({ data, error }: any) => {
+        if (error) console.error('[CheckIn] Fetch error:', error.message, '— Table may not exist. Run the migration in Supabase.')
+        if (data) { setCheckinMood(data.mood); setCheckinNote(data.note || ''); setCheckinSleep(data.sleep_hours?.toString() || ''); setCheckinSaved(true) }
+      })
     // Fetch last 7 days check-ins for mini-timeline
     const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
     supabase.from('daily_checkins').select('date, mood, sleep_hours').eq('user_id', userId).gte('date', weekAgo).order('date')
@@ -322,25 +325,30 @@ export default function HomeTab({
     if (checkinSaved) setCheckinModified(true)
   }, [checkinMood, checkinNote, checkinSleep])
 
+  // Save check-in helper (shared by auto-save and manual button)
+  const saveCheckin = async () => {
+    if (!session?.user?.id || !checkinMood) return
+    setCheckinSaving(true)
+    const todayDate = new Date().toISOString().split('T')[0]
+    const payload = { user_id: session.user.id, date: todayDate, mood: checkinMood, note: checkinNote || null, sleep_hours: checkinSleep ? parseFloat(checkinSleep) : null }
+    const { error } = await supabase.from('daily_checkins').upsert(payload, { onConflict: 'user_id,date' })
+    setCheckinSaving(false)
+    if (error) {
+      console.error('[CheckIn] Save error:', error.message, error)
+      toast.error(`Erreur check-in: ${error.message}`)
+      return false
+    }
+    if (!checkinSaved) { try { await addXP(session.user.id, 10, supabase) } catch {} }
+    setCheckinSaved(true); setCheckinModified(false)
+    setLastSavedTime(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
+    return true
+  }
+
   // Auto-save check-in (debounced 800ms)
   useEffect(() => {
     if (!session?.user?.id || !checkinMood) return
     clearTimeout(checkinSaveRef.current)
-    checkinSaveRef.current = setTimeout(async () => {
-      setCheckinSaving(true)
-      const todayDate = new Date().toISOString().split('T')[0]
-      const { error } = await supabase.from('daily_checkins').upsert({
-        user_id: session.user.id, date: todayDate, mood: checkinMood,
-        note: checkinNote || null, sleep_hours: checkinSleep ? parseFloat(checkinSleep) : null,
-      }, { onConflict: 'user_id,date' })
-      setCheckinSaving(false)
-      if (!error) {
-        if (!checkinSaved) { try { await addXP(session.user.id, 10, supabase) } catch {} }
-        setCheckinSaved(true)
-        setCheckinModified(false)
-        setLastSavedTime(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
-      }
-    }, 800)
+    checkinSaveRef.current = setTimeout(() => saveCheckin(), 800)
     return () => clearTimeout(checkinSaveRef.current)
   }, [checkinMood, checkinNote, checkinSleep])
 
@@ -451,22 +459,7 @@ export default function HomeTab({
           {/* Save button */}
           <button
             disabled={!checkinMood || checkinSaving}
-            onClick={async () => {
-              if (!checkinMood || !session?.user?.id) return
-              setCheckinSaving(true)
-              clearTimeout(checkinSaveRef.current)
-              const todayDate = new Date().toISOString().split('T')[0]
-              const { error } = await supabase.from('daily_checkins').upsert({
-                user_id: session.user.id, date: todayDate, mood: checkinMood,
-                note: checkinNote || null, sleep_hours: checkinSleep ? parseFloat(checkinSleep) : null,
-              }, { onConflict: 'user_id,date' })
-              setCheckinSaving(false)
-              if (!error) {
-                if (!checkinSaved) { try { await addXP(session.user.id, 10, supabase) } catch {} }
-                setCheckinSaved(true); setCheckinModified(false)
-                setLastSavedTime(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
-              }
-            }}
+            onClick={() => { clearTimeout(checkinSaveRef.current); saveCheckin() }}
             style={{
               width: '100%', padding: 13, borderRadius: 14, border: 'none', cursor: checkinMood && !checkinSaving ? 'pointer' : 'not-allowed',
               opacity: checkinMood ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
