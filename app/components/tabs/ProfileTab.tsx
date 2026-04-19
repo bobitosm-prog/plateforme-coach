@@ -103,15 +103,26 @@ export default function ProfileTab({
   }
 
   async function enableNotifications() {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) return
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      console.warn('[Push] Not supported'); return false
+    }
     setNotifStatus('loading')
-    const permission = await Notification.requestPermission()
-    if (permission !== 'granted') { setNotifStatus('denied'); return }
-    const reg = await navigator.serviceWorker.ready
-    const existing = await reg.pushManager.getSubscription()
-    const sub = existing || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!) })
-    await supabasePush.from('push_subscriptions').upsert({ user_id: session.user.id, subscription: sub.toJSON() }, { onConflict: 'user_id' })
-    setNotifStatus('done')
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') { setNotifStatus('denied'); return false }
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      if (!vapidKey) { console.error('[Push] VAPID key missing'); setNotifStatus('denied'); return false }
+      const reg = await navigator.serviceWorker.ready
+      const existing = await reg.pushManager.getSubscription()
+      const sub = existing || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapidKey) })
+      await supabasePush.from('push_subscriptions').upsert({ user_id: session.user.id, subscription: sub.toJSON() }, { onConflict: 'user_id' })
+      setNotifStatus('done')
+      return true
+    } catch (err) {
+      console.error('[Push] Error:', err)
+      setNotifStatus('denied')
+      return false
+    }
   }
 
   async function savePhone() {
