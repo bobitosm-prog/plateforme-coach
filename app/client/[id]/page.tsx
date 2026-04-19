@@ -150,11 +150,8 @@ export default function ClientProfilePage() {
             {(profile.allergies||[]).map((a:string)=>(<span key={a} style={{display:'inline-flex',padding:'3px 8px',borderRadius:0,fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,background:'rgba(239,68,68,.12)',color:RED,border:'1px solid rgba(239,68,68,.2)',letterSpacing:'1px',textTransform:'uppercase'}}>{a}</span>))}
           </div>
         )}
-        <div style={{marginTop:'auto',paddingTop:16,display:'flex',flexDirection:'column',gap:8}}>
-          <button onClick={h.generateAiMealPlan} disabled={h.aiMealGenerating} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:0,border:'none',cursor:'pointer',background:GOLD,color:'#0D0B08',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:800,width:'100%'}}>
-            <Sparkles size={14}/>Générer plan IA
-          </button>
-          <button onClick={()=>h.router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:0,border:`1px solid ${GOLD_RULE}`,background:'transparent',color:TEXT_MUTED,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:700,width:'100%'}}>
+        <div style={{marginTop:'auto',paddingTop:16}}>
+          <button onClick={()=>h.router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.06)',background:'transparent',color:TEXT_MUTED,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:700,width:'100%'}}>
             <ArrowLeft size={14}/>Retour clients
           </button>
         </div>

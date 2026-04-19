@@ -88,7 +88,7 @@ export default function ClientNutrition({
         <button
           onClick={generateAiMealPlan}
           disabled={aiMealGenerating}
-          style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:0,border:'none',cursor:aiMealGenerating?'wait':'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#0D0B08',minHeight:38,opacity:aiMealGenerating?0.6:1}}
+          style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:10,border:'none',cursor:aiMealGenerating?'wait':'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#0D0B08',minHeight:36,opacity:aiMealGenerating?0.6:1}}
         >
           {aiMealGenerating ? <Loader2 size={13} strokeWidth={2.5} style={{animation:'spin 0.7s linear infinite'}}/> : <Sparkles size={13} strokeWidth={2.5}/>}
           {aiMealGenerating ? 'Génération...' : 'Générer plan IA'}
@@ -97,7 +97,7 @@ export default function ClientNutrition({
 
       {/* ── Client TDEE / preferences summary ── */}
       {profile && (
-        <div style={{background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:RADIUS_CARD,padding:'10px 14px',display:'flex',gap:10,flexWrap:'wrap',alignItems:'center'}}>
+        <div style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:RADIUS_CARD,padding:'10px 14px',display:'flex',gap:10,flexWrap:'wrap',alignItems:'center'}}>
           {profile.tdee ? (
             <>
               <span style={{fontFamily:FONT_DISPLAY,fontSize:'1rem',color:GOLD,fontWeight:400}}>{profile.tdee} kcal/j</span>
@@ -189,7 +189,7 @@ export default function ClientNutrition({
 
       {/* ── Active Meal Plan Summary ── */}
       {!aiMealPreview && clientActivePlan?.plan_data && (
-        <div style={{background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:RADIUS_CARD,overflow:'hidden'}}>
+        <div style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:RADIUS_CARD,overflow:'hidden'}}>
           <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',gap:8}}>
             <Utensils size={14} color={GOLD} strokeWidth={2.5}/>
             <span style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,flex:1,letterSpacing:'2px',textTransform:'uppercase'}}>Plan actif</span>
@@ -252,7 +252,7 @@ export default function ClientNutrition({
 
       {/* ── No plan message ── */}
       {!aiMealPreview && !clientActivePlan && (
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,padding:'30px 0',background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:RADIUS_CARD}}>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,padding:'30px 0',background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:RADIUS_CARD}}>
           <Utensils size={28} color={TEXT_MUTED}/>
           <p style={{fontSize:'0.85rem',fontFamily:FONT_BODY,color:TEXT_MUTED,margin:0,textAlign:'center'}}>Aucun plan actif pour ce client</p>
           <p style={{fontSize:'0.72rem',fontFamily:FONT_BODY,color:TEXT_DIM,margin:0}}>Clique sur &quot;Générer plan IA&quot; pour en créer un</p>
@@ -281,7 +281,7 @@ export default function ClientNutrition({
         const pctVal = total > 0 ? Math.round((completed / total) * 100) : 0
 
         return (
-          <div style={{background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:RADIUS_CARD,padding:'12px 10px',marginBottom:4}}>
+          <div style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:RADIUS_CARD,padding:'12px 10px',marginBottom:4}}>
             <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:'2px',marginBottom:10}}>
               Suivi de la semaine
             </div>
@@ -353,7 +353,7 @@ export default function ClientNutrition({
               { label:'Glucides', unit:'g', color:MACRO_COLORS.carb, val:carbTarget, set:setCarbTarget },
               { label:'Lipides', unit:'g', color:MACRO_COLORS.fat, val:fatTarget, set:setFatTarget },
             ].map(({ label, unit, color, val, set }) => (
-              <div key={label} style={{background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:RADIUS_CARD,padding:'11px 12px',borderTop:`3px solid ${color}`}}>
+              <div key={label} style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:RADIUS_CARD,padding:'11px 12px',borderTop:`3px solid ${color}`}}>
                 <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,letterSpacing:'2px',textTransform:'uppercase',color:TEXT_MUTED,marginBottom:7}}>{label}</div>
                 <div style={{display:'flex',alignItems:'center',gap:4}}>
                   <input
@@ -362,7 +362,7 @@ export default function ClientNutrition({
                     inputMode="numeric"
                     value={val}
                     onChange={e=>set(parseInt(e.target.value)||0)}
-                    style={{flex:1,background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'6px 7px',fontFamily:FONT_DISPLAY,fontSize:'1.3rem',fontWeight:400,color,outline:'none',textAlign:'center',minHeight:38}}
+                    style={{flex:1,background:BG_BASE,border:'1px solid rgba(255,255,255,0.06)',borderRadius:0,padding:'6px 7px',fontFamily:FONT_DISPLAY,fontSize:'1.3rem',fontWeight:400,color,outline:'none',textAlign:'center',minHeight:38}}
                     onFocus={e=>{e.target.style.borderColor=color}}
                     onBlur={e=>{e.target.style.borderColor=BORDER}}
                   />
@@ -403,7 +403,7 @@ export default function ClientNutrition({
             return (
               <div style={{display:'flex',flexDirection:'column',gap:10,animation:'fadeIn 150ms ease'}}>
                 {/* Macro summary */}
-                <div style={{background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:RADIUS_CARD,padding:'12px 14px'}}>
+                <div style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:RADIUS_CARD,padding:'12px 14px'}}>
                   <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,letterSpacing:'2px',textTransform:'uppercase',color:TEXT_MUTED,marginBottom:10}}>Total du jour</div>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
                     {[
@@ -453,7 +453,7 @@ export default function ClientNutrition({
                                   placeholder="Ex: Riz cuit"
                                   value={food.name}
                                   onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,'name',e.target.value)}
-                                  style={{flex:1,background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'8px 10px',fontFamily:FONT_BODY,fontSize:'0.85rem',color:TEXT_PRIMARY,outline:'none',minHeight:36}}
+                                  style={{flex:1,background:BG_BASE,border:'1px solid rgba(255,255,255,0.06)',borderRadius:0,padding:'8px 10px',fontFamily:FONT_BODY,fontSize:'0.85rem',color:TEXT_PRIMARY,outline:'none',minHeight:36}}
                                   onFocus={e=>{e.target.style.borderColor=GOLD}}
                                   onBlur={e=>{e.target.style.borderColor=BORDER}}
                                 />
@@ -479,7 +479,7 @@ export default function ClientNutrition({
                                       value={val}
                                       placeholder={field==='qty'?'100g':'0'}
                                       onChange={e=>updateFood(expandedMealDay,mealIdx,foodIdx,field,type==='number'?parseInt(e.target.value)||0:e.target.value)}
-                                      style={{width:'100%',background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'5px 4px',fontFamily:FONT_BODY,fontSize:'0.75rem',color,outline:'none',textAlign:'center',minHeight:30}}
+                                      style={{width:'100%',background:BG_BASE,border:'1px solid rgba(255,255,255,0.06)',borderRadius:0,padding:'5px 4px',fontFamily:FONT_BODY,fontSize:'0.75rem',color,outline:'none',textAlign:'center',minHeight:30}}
                                       onFocus={e=>{e.target.style.borderColor=color}}
                                       onBlur={e=>{e.target.style.borderColor=BORDER}}
                                     />
