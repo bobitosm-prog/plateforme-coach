@@ -247,6 +247,7 @@ export default function ClientProfilePage() {
             exerciseInfo={h.exerciseInfo}
             setExerciseInfo={h.setExerciseInfo}
             loadExInfo={h.loadExInfo}
+            clientCustomPrograms={h.clientCustomPrograms}
           />
         )}
 

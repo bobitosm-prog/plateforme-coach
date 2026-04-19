@@ -104,6 +104,7 @@ export default function useClientDetail() {
   // Programme
   const [program,      setProgram]      = useState<WeekProgram>(defaultProgram())
   const [programId,    setProgramId]    = useState<string | null>(null)
+  const [clientCustomPrograms, setClientCustomPrograms] = useState<any[]>([])
   const [programSaving,setProgramSaving]= useState(false)
   const [programSaved, setProgramSaved] = useState(false)
   const [expandedDay,  setExpandedDay]  = useState<string | null>('lundi')
@@ -377,7 +378,7 @@ export default function useClientDetail() {
     if (!coachId) return
     setLoading(true); setError(null)
 
-    const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes] = await Promise.all([
+    const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes, customProgsRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(20),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id).eq('completed', true),
@@ -386,6 +387,7 @@ export default function useClientDetail() {
       supabase.from('client_programs').select('id,program').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('id,calorie_target,protein_target,carb_target,fat_target,plan').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('meal_plans').select('*').eq('user_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('custom_programs').select('id, name, days, is_active, created_at, source').eq('user_id', id).order('created_at', { ascending: false }).limit(10),
     ])
 
     if (profileRes.error) { setError(profileRes.error.message); setLoading(false); return }
@@ -406,6 +408,7 @@ export default function useClientDetail() {
     setWeightLogs((weightRes.data ?? []) as WeightLog[]); setNotes(notesRes.data?.content ?? '')
 
     if (programRes.data) { setProgramId(programRes.data.id); setProgram({ ...defaultProgram(), ...(programRes.data.program as WeekProgram) }) }
+    setClientCustomPrograms(customProgsRes.data || [])
     if (mealPlanRes.data) {
       const mp = mealPlanRes.data; setMealPlanId(mp.id)
       setCalorieTarget(mp.calorie_target ?? 2000); setProtTarget(mp.protein_target ?? 150); setCarbTarget(mp.carb_target ?? 200); setFatTarget(mp.fat_target ?? 70)
@@ -698,6 +701,7 @@ export default function useClientDetail() {
     // Programme
     program, expandedDay, setExpandedDay,
     programSaving, programSaved, saveProgram,
+    clientCustomPrograms,
     toggleRepos, addExercise, removeExercise, updateExercise, openExDbModal,
     swapMode, setSwapMode, swapFirst, handleDayClick,
     variantPopup, setVariantPopup, loadVariants, selectVariant,
