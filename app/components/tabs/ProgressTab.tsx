@@ -11,6 +11,7 @@ import {
   titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
   radii,
 } from '../../../lib/design-tokens'
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import AnalyticsSection from '../AnalyticsSection'
 import AbsCalculator from '../progress/AbsCalculator'
 import BodyAssessment from '../progress/BodyAssessment'
@@ -35,7 +36,7 @@ const EVOLUTION_METRICS = [
   { key: 'body_fat', label: '% MG', unit: '%', source: 'measure' },
 ]
 
-type PillSection = 'poids' | 'records' | 'photos' | 'mensurations'
+type PillSection = 'poids' | 'records' | 'photos' | 'mensurations' | 'bienetre'
 
 interface ProgressTabProps {
   supabase: any
@@ -77,7 +78,7 @@ export default function ProgressTab({
   streak, currentWeight,
 }: ProgressTabProps) {
   const [activePill, setActivePill] = useState<PillSection>('poids')
-  const sectionRefs = { poids: React.useRef<HTMLDivElement>(null), records: React.useRef<HTMLDivElement>(null), photos: React.useRef<HTMLDivElement>(null), mensurations: React.useRef<HTMLDivElement>(null) }
+  const sectionRefs = { poids: React.useRef<HTMLDivElement>(null), records: React.useRef<HTMLDivElement>(null), photos: React.useRef<HTMLDivElement>(null), mensurations: React.useRef<HTMLDivElement>(null), bienetre: React.useRef<HTMLDivElement>(null) }
   const [weightPeriod, setWeightPeriod] = useState<'7' | '30' | '90' | 'all'>('30')
   const [showAssessment, setShowAssessment] = useState(false)
   const [showCompare, setShowCompare] = useState(false)
@@ -86,6 +87,8 @@ export default function ProgressTab({
   const [alignment, setAlignment] = useState<{ before: Alignment; after: Alignment } | null>(null)
   const [isAligning, setIsAligning] = useState(false)
   const [alignError, setAlignError] = useState<string | null>(null)
+  const [checkinData, setCheckinData] = useState<any[]>([])
+  const [checkinPeriod, setCheckinPeriod] = useState(7)
   const latestMeasure = measurements[0]
   const prevMeasure = measurements[1]
 
@@ -228,6 +231,14 @@ export default function ProgressTab({
     generateUrls()
     return () => { cancelled = true }
   }, [photoIds])
+
+  // Fetch check-in data for well-being section
+  React.useEffect(() => {
+    if (!session?.user?.id) return
+    const startDate = new Date(Date.now() - checkinPeriod * 86400000).toISOString().split('T')[0]
+    supabase.from('daily_checkins').select('*').eq('user_id', session.user.id).gte('date', startDate).order('date', { ascending: true })
+      .then(({ data }: any) => setCheckinData(data || []))
+  }, [session?.user?.id, checkinPeriod])
 
   // Load cached analyses from progressPhotos
   React.useEffect(() => {
@@ -426,6 +437,7 @@ export default function ProgressTab({
           { id: 'records' as PillSection, label: 'RECORDS' },
           { id: 'photos' as PillSection, label: 'PHOTOS' },
           { id: 'mensurations' as PillSection, label: 'MENSURATIONS' },
+          { id: 'bienetre' as PillSection, label: 'BIEN-ETRE' },
         ]).map(({ id, label }) => {
           const active = activePill === id
           return (
@@ -796,6 +808,120 @@ export default function ProgressTab({
           </div>
           <ChevronRight size={16} color={colors.textDim} />
         </button>
+      </div>
+
+      {/* ═══ SECTION 7.5 — MON BIEN-ÊTRE ═══ */}
+      <div ref={sectionRefs.bienetre} style={{ scrollMarginTop: 20, marginTop: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <span style={cardTitleAbove}>MON BIEN-ETRE</span>
+          <div style={titleLineStyle} />
+        </div>
+        {/* Period selector */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+          {[{ v: 7, l: '7J' }, { v: 30, l: '30J' }, { v: 90, l: '90J' }].map(p => (
+            <button key={p.v} onClick={() => setCheckinPeriod(p.v)} style={{
+              padding: '5px 14px', borderRadius: 999, cursor: 'pointer',
+              fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em',
+              background: checkinPeriod === p.v ? colors.goldBorder : 'transparent',
+              border: `1px solid ${checkinPeriod === p.v ? `${colors.gold}66` : colors.goldBorder}`,
+              color: checkinPeriod === p.v ? colors.gold : 'rgba(255,255,255,0.4)',
+            }}>{p.l}</button>
+          ))}
+        </div>
+
+        {(() => {
+          const moodScore = (m: string) => ({ fatigue: 1, normal: 2, bien: 3, top: 4, energie: 5 } as any)[m] || null
+          const moodEmoji = (m: string) => ({ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' } as any)[m] || '—'
+          // Prepare chart data with all days filled
+          const chartData: any[] = []
+          for (let i = checkinPeriod - 1; i >= 0; i--) {
+            const d = new Date(Date.now() - i * 86400000)
+            const ds = d.toISOString().split('T')[0]
+            const c = checkinData.find((x: any) => x.date === ds)
+            chartData.push({ date: ds, day: d.toLocaleDateString('fr-FR', { weekday: 'short' }), mood: c ? moodScore(c.mood) : null, sleep: c?.sleep_hours || null, note: c?.note })
+          }
+          // Stats
+          const moods = checkinData.filter((c: any) => c.mood).map((c: any) => moodScore(c.mood)).filter(Boolean)
+          const sleeps = checkinData.filter((c: any) => c.sleep_hours).map((c: any) => c.sleep_hours)
+          const moodAvg = moods.length ? (moods.reduce((a: number, b: number) => a + b, 0) / moods.length).toFixed(1) : '—'
+          const sleepAvg = sleeps.length ? (sleeps.reduce((a: number, b: number) => a + b, 0) / sleeps.length).toFixed(1) : '—'
+          // Most frequent mood
+          const moodCounts: Record<string, number> = {}
+          checkinData.forEach((c: any) => { if (c.mood) moodCounts[c.mood] = (moodCounts[c.mood] || 0) + 1 })
+          const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'
+          // Tooltip
+          const ChartTip = ({ active, payload, label }: any) => {
+            if (!active || !payload?.length) return null
+            return (<div style={{ background: colors.surface, border: `1px solid ${colors.gold}`, borderRadius: 8, padding: '6px 10px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+              <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>{label}</div>
+              {payload.map((p: any, i: number) => <div key={i} style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: p.color }}>{p.name}: {p.value ?? '—'}</div>)}
+            </div>)
+          }
+
+          return checkinData.length === 0 ? (
+            <div style={{ ...cardStyle, padding: 32, textAlign: 'center' }}>
+              <p style={{ ...bodyStyle, color: colors.textDim }}>Aucun check-in enregistre sur cette periode.</p>
+              <p style={{ ...mutedStyle, marginTop: 4 }}>Fais ton check-in quotidien dans l&apos;onglet Accueil.</p>
+            </div>
+          ) : (
+            <>
+              {/* Mood chart */}
+              <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
+                <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>HUMEUR</div>
+                <div style={{ height: 160 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <defs><linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={colors.gold} stopOpacity={0.25} /><stop offset="100%" stopColor={colors.gold} stopOpacity={0} /></linearGradient></defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="day" tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} />
+                      <YAxis domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} width={20} tickFormatter={(v: number) => ['', '😴', '😐', '💪', '🔥', '⚡'][v] || ''} />
+                      <Tooltip content={<ChartTip />} />
+                      <Area type="monotone" dataKey="mood" name="Humeur" stroke={colors.gold} strokeWidth={2.5} fill="url(#moodGrad)" dot={{ fill: colors.gold, r: 4, strokeWidth: 0 }} connectNulls />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Sleep chart */}
+              <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase' }}>SOMMEIL</span>
+                  <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Moy. {sleepAvg}h</span>
+                </div>
+                <div style={{ height: 140 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} barSize={checkinPeriod <= 7 ? 20 : checkinPeriod <= 30 ? 8 : 4}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="day" tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} />
+                      <YAxis domain={[0, 12]} tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} width={20} />
+                      <Tooltip content={<ChartTip />} />
+                      <ReferenceLine y={8} stroke={colors.gold} strokeDasharray="6 4" strokeWidth={1} />
+                      <Bar dataKey="sleep" name="Sommeil (h)" fill={colors.gold} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Stats grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                {[
+                  { label: 'MOOD MOYEN', value: `${moodAvg}/5`, icon: moodEmoji(topMood) },
+                  { label: 'SOMMEIL MOYEN', value: `${sleepAvg}h / 8h`, icon: '🌙' },
+                  { label: 'MOOD DOMINANT', value: topMood, icon: moodEmoji(topMood) },
+                  { label: 'CHECK-INS', value: `${checkinData.length}`, icon: '✓' },
+                ].map(s => (
+                  <div key={s.label} style={{ ...cardStyle, padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{s.icon}</div>
+                    <div>
+                      <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.text }}>{s.value}</div>
+                      <div style={{ fontFamily: fonts.body, fontSize: 8, color: colors.textDim, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{s.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       {/* ═══ SECTION 8 — EXPORT ═══ */}

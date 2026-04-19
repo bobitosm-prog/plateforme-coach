@@ -135,6 +135,7 @@ export default function HomeTab({
   const [checkinSaved, setCheckinSaved] = useState(false)
   const [checkinSaving, setCheckinSaving] = useState(false)
   const checkinSaveRef = useRef<any>(null)
+  const [last7Checkins, setLast7Checkins] = useState<any[]>([])
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
   const [customDayName, setCustomDayName] = useState<string | null>(null)
   const [customIsRest, setCustomIsRest] = useState(false)
@@ -308,6 +309,10 @@ export default function HomeTab({
     // Fetch today's mood check-in
     supabase.from('daily_checkins').select('*').eq('user_id', userId).eq('date', todayDate).maybeSingle()
       .then(({ data }: any) => { if (data) { setCheckinMood(data.mood); setCheckinNote(data.note || ''); setCheckinSleep(data.sleep_hours?.toString() || ''); setCheckinSaved(true) } })
+    // Fetch last 7 days check-ins for mini-timeline
+    const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
+    supabase.from('daily_checkins').select('date, mood, sleep_hours').eq('user_id', userId).gte('date', weekAgo).order('date')
+      .then(({ data }: any) => setLast7Checkins(data || []))
   }, [session?.user?.id])
 
   // Auto-save check-in (debounced 800ms)
@@ -437,7 +442,37 @@ export default function HomeTab({
         </div>
       </div>
 
-      <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* ═══ MINI-TIMELINE 7 JOURS ═══ */}
+      {last7Checkins.length > 0 && (
+        <div style={{ padding: '8px 24px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            {(() => {
+              const moodEmoji = (m: string) => ({ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' } as any)[m] || ''
+              const moodColor = (m: string) => ({ fatigue: colors.error, normal: colors.textDim, bien: colors.gold, top: '#fb923c', energie: colors.success } as any)[m] || colors.textDim
+              const days: any[] = []
+              for (let i = 6; i >= 0; i--) {
+                const d = new Date(Date.now() - i * 86400000)
+                const ds = d.toISOString().split('T')[0]
+                const c = last7Checkins.find((x: any) => x.date === ds)
+                days.push({ day: d.toLocaleDateString('fr-FR', { weekday: 'narrow' }).toUpperCase(), c })
+              }
+              return days.map((d, i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: 1 }}>{d.day}</span>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.c ? moodColor(d.c.mood) : 'rgba(255,255,255,0.08)' }} />
+                  <span style={{ fontSize: 12 }}>{d.c ? moodEmoji(d.c.mood) : '—'}</span>
+                  <span style={{ fontSize: 8, color: d.c?.sleep_hours ? colors.textMuted : 'rgba(255,255,255,0.15)' }}>{d.c?.sleep_hours ? `${d.c.sleep_hours}h` : '--'}</span>
+                </div>
+              ))
+            })()}
+          </div>
+          <button onClick={() => setActiveTab('progress')} style={{ width: '100%', marginTop: 8, padding: '6px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.1em', textAlign: 'right' }}>
+            VOIR TOUT →
+          </button>
+        </div>
+      )}
+
+      <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* ═══ SECTION 2 — SÉANCE DU JOUR ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
