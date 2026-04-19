@@ -33,6 +33,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
   MEAL_TYPES,
 } from '../lib/design-tokens'
+import { useClientPermissions } from '../lib/use-client-permissions'
 
 const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
 
@@ -40,6 +41,7 @@ import { checkAndShowReminder } from '../lib/notifications'
 
 export default function CoachApp() {
   const h = useClientDashboard()
+  const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const [isDesktop, setIsDesktop] = React.useState(false)
 
   // Detect desktop viewport
@@ -376,13 +378,15 @@ export default function CoachApp() {
       </div>{/* end main-content-area */}
 
       <BugReport session={h.session} profile={h.profile} />
-      <ChatAI
-        session={h.session}
-        profile={h.profile}
-        externalOpen={h.activeTab === 'coachIA'}
-        onExternalClose={() => h.setActiveTab('home')}
-        hideFloatingButton={true}
-      />
+      {!perms.isInvited && (
+        <ChatAI
+          session={h.session}
+          profile={h.profile}
+          externalOpen={h.activeTab === 'coachIA'}
+          onExternalClose={() => h.setActiveTab('home')}
+          hideFloatingButton={true}
+        />
+      )}
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
       {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '8px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 8px)', zIndex: 999, display: 'flex', justifyContent: 'center' }}>

@@ -987,9 +987,15 @@ export default function TrainingTab({
               <p style={{ ...bodyStyle, marginTop: 12 }}>
                 {customPrograms.length > 0 ? 'Aucun programme actif — active un programme' : 'Aucun programme actif'}
               </p>
-              <button onClick={() => setShowProgramManager(true)} style={{ ...btnPrimary, width: '100%', padding: 14, marginTop: 16 }}>
-                {customPrograms.length > 0 ? 'MES PROGRAMMES' : 'CRÉER UN PROGRAMME'}
-              </button>
+              {aiAllowed ? (
+                <button onClick={() => setShowProgramManager(true)} style={{ ...btnPrimary, width: '100%', padding: 14, marginTop: 16 }}>
+                  {customPrograms.length > 0 ? 'MES PROGRAMMES' : 'CREER UN PROGRAMME'}
+                </button>
+              ) : (
+                <div style={{ padding: '12px 16px', background: colors.goldDim, borderRadius: 12, border: `1px solid ${colors.goldBorder}`, marginTop: 16, textAlign: 'center' }}>
+                  <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.gold }}>Programme gere par ton coach</span>
+                </div>
+              )}
             </div>
           ) : trainingDayData?.repos ? (
             /* Rest day — enhanced */

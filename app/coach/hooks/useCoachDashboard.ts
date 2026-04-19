@@ -17,6 +17,7 @@ export interface ClientRow {
   id: string
   client_id: string
   created_at: string
+  invited_by_coach?: boolean
   profiles: {
     id: string
     full_name: string | null
@@ -331,7 +332,7 @@ export default function useCoachDashboard(initialSession?: any) {
     setLoading(true)
     const { data: links, error: linksError } = await supabase
       .from('coach_clients')
-      .select('id, client_id, created_at')
+      .select('id, client_id, created_at, invited_by_coach')
       .eq('coach_id', coachId)
       .order('created_at', { ascending: false })
       .limit(100)
@@ -348,6 +349,7 @@ export default function useCoachDashboard(initialSession?: any) {
     const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
     const rows: ClientRow[] = links.map(l => ({
       id: l.id, client_id: l.client_id, created_at: l.created_at,
+      invited_by_coach: l.invited_by_coach ?? false,
       profiles: profileMap[l.client_id] ?? null,
     }))
     setClients(rows)

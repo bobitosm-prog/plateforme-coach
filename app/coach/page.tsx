@@ -338,6 +338,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
                                 <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: statusColor }}>{statusLabel}</span>
                                 <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_DIM }}>· Depuis {daysSince}j</span>
+                                {c.invited_by_coach && <span style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: GOLD_DIM, color: GOLD, letterSpacing: '0.08em' }}>INVITE</span>}
                               </div>
                             </div>
                             {unread > 0 && <span style={{ minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 9, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unread}</span>}
