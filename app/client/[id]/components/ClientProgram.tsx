@@ -66,6 +66,31 @@ export default function ClientProgram({
           {programSaving ? <Loader2 size={14} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <><Save size={14} strokeWidth={2}/>SAUVEGARDER</>}
         </button>
       </div>
+      {/* ── Client's own programs (custom_programs) — shown at top ── */}
+      {clientCustomPrograms.length > 0 && (
+        <div style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:16}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+            <span style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:GOLD}}>PROGRAMMES DU CLIENT</span>
+            <div style={{flex:1,height:1,background:'rgba(201,168,76,0.25)'}} />
+            <span style={{fontFamily:FONT_BODY,fontSize:10,color:TEXT_MUTED}}>{clientCustomPrograms.length}</span>
+          </div>
+          {clientCustomPrograms.map((cp: any) => {
+            const dayCount = Array.isArray(cp.days) ? cp.days.filter((d: any) => !d.is_rest && d.exercises?.length > 0).length : 0
+            const exCount = Array.isArray(cp.days) ? cp.days.reduce((s: number, d: any) => s + (d.exercises?.length || 0), 0) : 0
+            const ago = Math.floor((Date.now() - new Date(cp.created_at).getTime()) / 86400000)
+            return (
+              <div key={cp.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
+                <div>
+                  <div style={{fontFamily:FONT_DISPLAY,fontSize:14,fontWeight:700,color:TEXT_PRIMARY,textTransform:'uppercase',letterSpacing:'0.05em'}}>{cp.name || 'Programme'}</div>
+                  <div style={{fontFamily:FONT_BODY,fontSize:10,color:TEXT_MUTED,marginTop:2}}>{dayCount}j · {exCount} exo · {ago === 0 ? "Aujourd'hui" : ago === 1 ? 'Hier' : `il y a ${ago}j`}</div>
+                </div>
+                <span style={{fontFamily:FONT_ALT,fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:6,letterSpacing:'0.08em',textTransform:'uppercase',background:cp.is_active ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',color:cp.is_active ? '#22c55e' : TEXT_DIM}}>{cp.is_active ? 'ACTIF' : 'INACTIF'}</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {programSaved && (
         <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 12px',background:GOLD_DIM,border:`1px solid ${GOLD_RULE}`,borderRadius:RADIUS_CARD,color:GOLD,fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700}}>
           <Check size={12} strokeWidth={2.5}/>Programme sauvegardé
@@ -275,37 +300,7 @@ export default function ClientProgram({
         </div>
       )}
 
-      {/* ── Client's own programs (custom_programs) ── */}
-      {clientCustomPrograms.length > 0 && (
-        <div style={{marginTop:20}}>
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-            <span style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:GOLD}}>PROGRAMMES DU CLIENT</span>
-            <div style={{flex:1,height:1,background:'rgba(201,168,76,0.25)'}} />
-            <span style={{fontFamily:FONT_BODY,fontSize:10,color:TEXT_MUTED}}>{clientCustomPrograms.length} programme{clientCustomPrograms.length > 1 ? 's' : ''}</span>
-          </div>
-          <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            {clientCustomPrograms.map((cp: any) => {
-              const exCount = Array.isArray(cp.days) ? cp.days.reduce((s: number, d: any) => s + (d.exercises?.length || 0), 0) : 0
-              const dayCount = Array.isArray(cp.days) ? cp.days.filter((d: any) => !d.is_rest && d.exercises?.length > 0).length : 0
-              const created = new Date(cp.created_at)
-              const ago = Math.floor((Date.now() - created.getTime()) / 86400000)
-              const agoLabel = ago === 0 ? "Aujourd'hui" : ago === 1 ? 'Hier' : `il y a ${ago}j`
-              return (
-                <div key={cp.id} style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'14px 16px'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
-                    <span style={{fontFamily:FONT_DISPLAY,fontSize:'0.95rem',fontWeight:700,color:TEXT_PRIMARY,textTransform:'uppercase',letterSpacing:'0.05em'}}>{cp.name || 'Programme sans nom'}</span>
-                    <span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:6,letterSpacing:'0.08em',textTransform:'uppercase',background:cp.is_active ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',color:cp.is_active ? '#22c55e' : TEXT_DIM}}>{cp.is_active ? 'ACTIF' : 'INACTIF'}</span>
-                  </div>
-                  <div style={{fontFamily:FONT_BODY,fontSize:11,color:TEXT_MUTED}}>
-                    {dayCount} jour{dayCount > 1 ? 's' : ''} · {exCount} exercice{exCount > 1 ? 's' : ''} · {agoLabel}
-                    {cp.source && <span style={{marginLeft:6,color:TEXT_DIM}}>· {cp.source === 'ai' ? 'IA' : cp.source === 'free_session' ? 'Seance libre' : cp.source}</span>}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/* Client custom programs section moved to top */}
     </div>
   )
 }
