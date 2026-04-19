@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
   )
   const { data: { user } } = await supabaseAuth.auth.getUser()
   if (!user) {
+    console.log('[Push] Auth failed — no user')
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
@@ -24,12 +25,14 @@ export async function POST(req: NextRequest) {
   const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:support@moovx.ch'
 
   if (!vapidPublicKey || !vapidPrivateKey) {
+    console.error('[Push] VAPID keys missing — publicKey:', !!vapidPublicKey, 'privateKey:', !!vapidPrivateKey)
     return NextResponse.json({ error: 'VAPID keys not configured' }, { status: 500 })
   }
 
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey)
 
   const { userId, title, body, url, tag } = await req.json()
+  console.log('[Push] Target userId:', userId, '| title:', title)
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,29 +45,32 @@ export async function POST(req: NextRequest) {
     .eq('user_id', userId)
     .limit(100)
 
+  console.log('[Push] Subs found:', rows?.length || 0, dbError ? `DB error: ${dbError.message}` : '')
 
   if (!rows?.length) return NextResponse.json({ sent: 0 })
 
   const payload = JSON.stringify({ title, body, url: url || '/', tag: tag || 'moovx-msg' })
-  const expired: string[] = []
+  let sent = 0
+  const toDelete: string[] = []
 
-  const results = await Promise.allSettled(
-    rows.map(async (row, i) => {
-      try {
-        await webpush.sendNotification(row.subscription, payload)
-      } catch (err: any) {
-        if (err?.statusCode === 410 || err?.statusCode === 404) {
-          expired.push(row.id || '')
-        }
-        console.error(`[send-notification] push ${i} failed:`, err?.statusCode || err?.message)
+  for (const sub of rows) {
+    try {
+      const result = await webpush.sendNotification(sub.subscription, payload)
+      console.log('[Push] Sent OK, statusCode:', result.statusCode)
+      sent++
+    } catch (err: any) {
+      console.error('[Push] FAILED:', err.statusCode, err.body, err.message)
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        toDelete.push(sub.id)
       }
-    })
-  )
-
-  // Clean expired subscriptions
-  if (expired.filter(Boolean).length) {
-    await supabase.from('push_subscriptions').delete().in('id', expired.filter(Boolean))
+    }
   }
 
-  return NextResponse.json({ sent: rows.length, expired: expired.length })
+  // Clean expired subscriptions
+  if (toDelete.length) {
+    await supabase.from('push_subscriptions').delete().in('id', toDelete)
+  }
+
+  console.log('[Push] Final: sent=', sent, 'cleaned=', toDelete.length)
+  return NextResponse.json({ sent, cleaned: toDelete.length })
 }
