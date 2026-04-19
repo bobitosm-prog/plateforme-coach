@@ -643,7 +643,11 @@ export default function HomeTab({
         </div>
 
         {/* ═══ SECTION 5 — RÉCUPÉRATION MUSCULAIRE ═══ */}
-        <MuscleHeatMap muscleStatus={muscleStatus} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+          <span style={T}>RECUPERATION</span>
+          <div style={titleLineStyle} />
+        </div>
+        <MuscleHeatMap muscleStatus={muscleStatus} hideTitle />
 
         {/* ═══ SECTION 6 — NUTRITION MACROS ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
