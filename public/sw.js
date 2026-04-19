@@ -1,4 +1,4 @@
-// MoovX Service Worker — minimal caching + push notifications
+// MoovX Service Worker — caching + push notifications
 self.addEventListener('install', () => self.skipWaiting())
 
 self.addEventListener('activate', (event) => {
@@ -9,53 +9,51 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
   if (event.request.method !== 'GET') return
-
   event.respondWith(
     fetch(event.request)
       .then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const clone = response.clone()
-          caches.open('moovx-v2').then((cache) => {
+          caches.open('moovx-v3').then((cache) => {
             cache.put(event.request, clone).catch(() => {})
           })
         }
         return response
       })
-      .catch(() => {
-        return caches.match(event.request).then((cached) => {
-          return cached || new Response('Offline', { status: 503 })
-        })
-      })
+      .catch(() => caches.match(event.request).then(c => c || new Response('Offline', { status: 503 })))
   )
 })
 
-// Handle push notifications
+// Push notification received
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : { title: 'MoovX', body: 'Nouvelle notification' }
   event.waitUntil(
     self.registration.showNotification(data.title || 'MoovX', {
       body: data.body || '',
-      icon: '/logo-moovx-192.png',
-      badge: '/logo-moovx-192.png',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
       vibrate: [200, 100, 200],
-      tag: 'moovx',
+      tag: data.tag || 'moovx-notif',
       renotify: true,
       data: { url: data.url || '/' },
     })
   )
 })
 
-// Handle notification click — open app
+// Notification clicked — open/focus app
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
+  const url = event.notification.data?.url || '/'
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if ('focus' in client) return client.focus()
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(url)
+          return client.focus()
+        }
       }
-      if (clients.openWindow) return clients.openWindow(event.notification.data?.url || '/')
+      if (clients.openWindow) return clients.openWindow(url)
     })
   )
 })

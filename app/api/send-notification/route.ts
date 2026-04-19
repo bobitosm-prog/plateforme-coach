@@ -19,21 +19,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
-  const vapidPublicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '')
-    .replace(/=/g, '')
-    .trim()
+  const vapidPublicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').replace(/=/g, '').trim()
+  const vapidPrivateKey = (process.env.VAPID_PRIVATE_KEY || '').replace(/=/g, '').trim()
+  const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:support@moovx.ch'
 
-  const vapidPrivateKey = (process.env.VAPID_PRIVATE_KEY || '')
-    .replace(/=/g, '')
-    .trim()
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    return NextResponse.json({ error: 'VAPID keys not configured' }, { status: 500 })
+  }
 
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT!,
-    vapidPublicKey,
-    vapidPrivateKey,
-  )
+  webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey)
 
-  const { userId, title, body, url } = await req.json()
+  const { userId, title, body, url, tag } = await req.json()
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,25 +38,33 @@ export async function POST(req: NextRequest) {
 
   const { data: rows, error: dbError } = await supabase
     .from('push_subscriptions')
-    .select('subscription')
+    .select('id, subscription')
     .eq('user_id', userId)
     .limit(100)
 
 
   if (!rows?.length) return NextResponse.json({ sent: 0 })
 
+  const payload = JSON.stringify({ title, body, url: url || '/', tag: tag || 'moovx-msg' })
+  const expired: string[] = []
+
   const results = await Promise.allSettled(
-    rows.map(row =>
-      webpush.sendNotification(row.subscription, JSON.stringify({ title, body, url: url || '/' }))
-    )
+    rows.map(async (row, i) => {
+      try {
+        await webpush.sendNotification(row.subscription, payload)
+      } catch (err: any) {
+        if (err?.statusCode === 410 || err?.statusCode === 404) {
+          expired.push(row.id || '')
+        }
+        console.error(`[send-notification] push ${i} failed:`, err?.statusCode || err?.message)
+      }
+    })
   )
 
-  results.forEach((result, i) => {
-    if (result.status === 'fulfilled') {
-    } else {
-      console.error(`[send-notification] push ${i} failed:`, result.reason)
-    }
-  })
+  // Clean expired subscriptions
+  if (expired.filter(Boolean).length) {
+    await supabase.from('push_subscriptions').delete().in('id', expired.filter(Boolean))
+  }
 
-  return NextResponse.json({ sent: rows.length })
+  return NextResponse.json({ sent: rows.length, expired: expired.length })
 }

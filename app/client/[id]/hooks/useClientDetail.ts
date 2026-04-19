@@ -467,6 +467,7 @@ export default function useClientDetail() {
     const optimistic = { id: `opt-${Date.now()}`, sender_id: coachId, receiver_id: id, content, read: false, created_at: new Date().toISOString() }
     setCoachMessages(prev => [...prev, optimistic])
     await supabase.from('messages').insert({ sender_id: coachId, receiver_id: id, content })
+    fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, title: 'Nouveau message', body: content.slice(0, 80), url: '/' }) }).catch(() => {})
     loadCoachMessages()
   }
 
