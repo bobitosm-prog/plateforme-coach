@@ -408,8 +408,13 @@ export default function useClientDetail() {
     setWeightLogs((weightRes.data ?? []) as WeightLog[]); setNotes(notesRes.data?.content ?? '')
 
     if (programRes.data) { setProgramId(programRes.data.id); setProgram({ ...defaultProgram(), ...(programRes.data.program as WeekProgram) }) }
-    console.log('[ClientDetail] custom_programs:', customProgsRes.data?.length || 0, customProgsRes.error?.message || '')
-    setClientCustomPrograms(customProgsRes.data || [])
+    // Filter out empty programs (no days or no exercises)
+    const validProgs = (customProgsRes.data || []).filter((p: any) => {
+      if (!Array.isArray(p.days) || p.days.length === 0) return false
+      return p.days.some((d: any) => d.exercises?.length > 0)
+    })
+    console.log('[ClientDetail] custom_programs:', customProgsRes.data?.length || 0, 'valid:', validProgs.length)
+    setClientCustomPrograms(validProgs)
     if (mealPlanRes.data) {
       const mp = mealPlanRes.data; setMealPlanId(mp.id)
       setCalorieTarget(mp.calorie_target ?? 2000); setProtTarget(mp.protein_target ?? 150); setCarbTarget(mp.carb_target ?? 200); setFatTarget(mp.fat_target ?? 70)
