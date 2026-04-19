@@ -965,10 +965,35 @@ export default function TrainingTab({
         )
       })()}
 
+      {/* ═══ SECTION 2.5 — MES PROGRAMMES (always visible for AUTO clients) ═══ */}
+      {aiAllowed && (
+        <div style={{ margin: '16px 24px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <span style={T}>MES PROGRAMMES</span>
+            <div style={titleLineStyle} />
+            <span style={{ ...mutedStyle, flexShrink: 0 }}>{customPrograms.length}</span>
+          </div>
+          <button onClick={() => setShowProgramManager(true)} style={{ width: '100%', padding: '12px 16px', background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Dumbbell size={16} color={colors.gold} />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.text }}>
+                  {activeCustomProgram ? activeCustomProgram.name : customPrograms.length > 0 ? `${customPrograms.length} programme${customPrograms.length > 1 ? 's' : ''}` : 'Creer un programme'}
+                </div>
+                {activeCustomProgram && <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, marginTop: 1 }}>Programme actif · Tap pour gerer</div>}
+              </div>
+            </div>
+            <ChevronRight size={16} color={colors.textMuted} />
+          </button>
+        </div>
+      )}
+
       {/* ═══ SECTION 3 — SÉANCE DU JOUR ═══ */}
       <div style={{ margin: '16px 24px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <span style={T}>SÉANCE DU JOUR</span>
+          <span style={T}>SEANCE DU JOUR</span>
           <div style={titleLineStyle} />
           <span style={{ ...mutedStyle, flexShrink: 0 }}>{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
         </div>
