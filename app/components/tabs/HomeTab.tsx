@@ -463,193 +463,13 @@ export default function HomeTab({
 
       <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* ═══ HERO DIORAMA — Stitch floating stats ═══ */}
-        <div style={{ position: 'relative', width: '100%', height: 280, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-          {/* Background bar chart faint */}
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.08, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '0 32px 16px' }}>
-            {[40, 60, 35, 80, 50].map((h, i) => <div key={i} style={{ width: 24, height: `${h}%`, background: GOLD, borderRadius: '8px 8px 0 0' }} />)}
-          </div>
-          {/* Calorie ring center */}
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ position: 'relative', width: 120, height: 120 }}>
-              <svg viewBox="0 0 140 140" width={120} height={120} style={{ filter: 'drop-shadow(0 0 10px rgba(212,168,67,0.12))', transform: 'rotate(-90deg)' }}>
-                <defs>
-                  <linearGradient id="heroGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor={colors.gold} /><stop offset="100%" stopColor={colors.goldContainer} />
-                  </linearGradient>
-                </defs>
-                <circle cx="70" cy="70" r="56" fill="none" stroke="#2a2a2a" strokeWidth="6" />
-                <circle cx="70" cy="70" r="56" fill="none" stroke="url(#heroGold)" strokeWidth="6" strokeLinecap="round" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - calPct / 100)} style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
-              </svg>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={statStyle}>{consumedKcal}</span>
-                <span style={{ ...subtitleStyle, fontSize: 9, letterSpacing: 2 }}>kcal</span>
-              </div>
-            </div>
-          </div>
-          {/* Floating stat: Daily Burn — top left */}
-          <div style={{ position: 'absolute', top: 20, left: 20, padding: '12px 16px', background: 'rgba(32,31,31,0.6)', backdropFilter: 'blur(24px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 30px rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Flame size={12} color={GOLD} />
-              <span style={T}>Objectif</span>
-            </div>
-            <div style={{ ...statStyle, fontSize: 22, marginTop: 4 }}>
-              {calorieGoal} <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED }}>kcal</span>
-            </div>
-          </div>
-          {/* Floating stat: Volume — bottom right */}
-          <div style={{ position: 'absolute', bottom: 36, right: 20, padding: '12px 16px', background: 'rgba(32,31,31,0.6)', backdropFilter: 'blur(24px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 30px rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Dumbbell size={12} color={GOLD} />
-              <span style={T}>Volume</span>
-            </div>
-            <div style={{ ...statStyle, fontSize: 22, marginTop: 4 }}>
-              {weekSessions} <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED }}>séances</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══ BENTO STATS — Active Energy + Hydration ═══ */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          {/* Active Energy */}
-          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <div>
-              <span style={T}>Énergie</span>
-              <div style={{ ...statStyle, marginTop: 4 }}>{calPct}%</div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <Zap size={40} color={GOLD} fill={GOLD} opacity={0.6} />
-            </div>
-          </div>
-          {/* Hydration */}
-          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', aspectRatio: '1', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <div>
-              <span style={T}>Hydratation</span>
-              <div style={{ ...statStyle, marginTop: 4 }}>
-                {(waterToday / 1000).toFixed(1)} <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_MUTED }}>L</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 48, flex: 1 }}>
-                {[60, 80, 40, 95, 20].map((h, i) => (
-                  <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '4px 4px 0 0', background: i === 3 ? `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})` : '#2a2a2a', transition: 'height 0.5s ease' }} />
-                ))}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 10 }}>
-                <button onClick={() => addWater(250)} style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
-                  <span style={{ fontSize: 20, color: colors.gold, lineHeight: 1 }}>+</span>
-                </button>
-                <span style={{ fontSize: 8, color: colors.textDim, marginTop: 2 }}>+250ml</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══ COACH BANNER ═══ */}
-        <div style={{ position: 'relative', width: '100%', height: 120, borderRadius: 16, overflow: 'hidden', border: `1px solid ${colors.goldBorder}`, cursor: 'pointer' }}>
-          <img src="/images/hero-coaching.webp" alt="Coaching personnalise" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(13,11,8,0.92) 0%, rgba(13,11,8,0.5) 50%, rgba(13,11,8,0.15) 100%)' }} />
-          <div style={{ position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)' }}>
-            <div style={{ ...T, marginBottom: 3 }}>Coaching personnel</div>
-            <div style={{ ...statSmallStyle, fontWeight: 800, color: colors.text, letterSpacing: '0.05em', lineHeight: 1.15 }}>VOTRE COACH<br />VOUS ACCOMPAGNE</div>
-          </div>
-        </div>
-
-        {/* ═══ STREAK CARD — Stitch "ON FIRE" ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <span style={T}>On Fire</span>
-          <div style={titleLineStyle} />
-        </div>
-        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ ...statStyle, fontSize: 30, letterSpacing: '-0.02em' }}>
-              {streak} JOUR{streak > 1 ? 'S' : ''} STREAK
-            </div>
-            <p style={{ ...bodyStyle, fontSize: 13, marginTop: 6, maxWidth: 200, lineHeight: 1.4 }}>
-              Continue pour débloquer le badge &ldquo;Titan&rdquo;.
-            </p>
-          </div>
-          <div style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '33%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
-            <Flame size={100} color={GOLD} />
-          </div>
-        </div>
-
-        {/* ═══ WEIGHT + OBJECTIVE CARD ═══ */}
-        {currentWeight && (
-          <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={T}>
-              {objLabel === 'bulk' && 'PRISE DE MASSE'}
-              {objLabel === 'cut' && 'SÈCHE'}
-              {objLabel === 'maintain' && 'MAINTIEN'}
-            </span>
-            <div style={titleLineStyle} />
-          </div>
-          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <div>
-              <div style={{ ...statStyle, fontSize: 32, lineHeight: 1 }}>
-                {currentWeight} <span style={{ fontSize: 16, color: colors.textMuted }}>KG</span>
-              </div>
-            </div>
-            {goalWeight && (
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: 2, marginBottom: 4 }}>OBJECTIF</div>
-                <div style={{ ...statStyle, fontSize: 28, color: colors.gold, lineHeight: 1 }}>
-                  {goalWeight} <span style={{ fontSize: 14, color: colors.textMuted }}>KG</span>
-                </div>
-              </div>
-            )}
-            <div style={{ ...statSmallStyle, color: objLabel === 'bulk' ? colors.gold : objLabel === 'cut' ? colors.gold : colors.success }}>
-              {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}
-            </div>
-          </div>
-          </>
-        )}
-
-        {/* ═══ XP BAR ═══ */}
-        {(() => {
-          const xp = xpData?.total_xp || 0
-          const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
-          const title = getLevelTitle(level)
-          return (
-            <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={T}>LV.{level} — {title}</span>
-              <div style={titleLineStyle} />
-              <span style={{ ...mutedStyle, fontSize: 11, flexShrink: 0 }}>{xpInLevel} / {xpForNext} XP</span>
-            </div>
-            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-              <div style={{ width: '100%', height: 6, borderRadius: 3, background: colors.surfaceHigh, overflow: 'hidden' }}>
-                <div style={{ width: `${progress * 100}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #D4A843, #E8C97A)', transition: 'width 1s ease' }} />
-              </div>
-            </div>
-            </>
-          )
-        })()}
-
-
-        {/* ═══ PROGRAMME — Title with line ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        {/* ═══ SECTION 2 — SÉANCE DU JOUR ═══ */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
           <span style={T}>PROGRAMME</span>
           <div style={titleLineStyle} />
           <button onClick={() => setActiveTab('training')} style={{ ...labelStyle, fontSize: 10, letterSpacing: 1, flexShrink: 0 }}>Voir tout</button>
         </div>
-
-        {/* ═══ SÉANCE DU JOUR ═══ */}
         <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-          {/* Background image overlay */}
-          <div style={{ height: todayExercises.length > 0 && !todaySession ? 160 : 0, position: 'relative', overflow: 'hidden' }}>
-            {todayExercises.length > 0 && !todaySession && (
-              <>
-                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 0%, ${colors.surface} 100%)`, zIndex: 1 }} />
-                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${colors.goldDim} 0%, transparent 60%)` }} />
-                <img src="/images/stitch-gym.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'grayscale(100%)' }} />
-              </>
-            )}
-            <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, background: colors.gold, padding: '4px 12px' }}>
-              <span style={{ fontFamily: fonts.body, fontSize: 10, fontWeight: 700, color: '#0D0B08', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Séance du jour</span>
-            </div>
-          </div>
           <div style={{ padding: 20 }}>
             {!coachProgram && !customProgramExercises && !todayScheduledSession ? (
               <p style={{ ...bodyStyle, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
@@ -658,80 +478,138 @@ export default function HomeTab({
                 <Moon size={24} color={colors.textMuted} />
                 <div>
                   <div style={T}>JOUR DE REPOS</div>
-                  <div style={mutedStyle}>Récupère bien, étirements bienvenus</div>
-                  {nextSessionLabel && (
-                    <div style={{ ...mutedStyle, marginTop: 6, color: colors.gold, fontSize: 11 }}>
-                      Prochaine séance : {nextSessionLabel}
-                    </div>
-                  )}
+                  <div style={mutedStyle}>Recupere bien, etirements bienvenus</div>
+                  {nextSessionLabel && <div style={{ ...mutedStyle, marginTop: 6, color: colors.gold, fontSize: 11 }}>Prochaine seance : {nextSessionLabel}</div>}
                 </div>
               </div>
             ) : !todayExercises.length ? (
-              <p style={{ ...bodyStyle, margin: 0 }}>Aucun exercice prévu.</p>
+              <p style={{ ...bodyStyle, margin: 0 }}>Aucun exercice prevu.</p>
             ) : todaySession ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <CheckCircle size={32} color={colors.success} style={{ flexShrink: 0 }} />
                 <div>
-                  <div style={{ ...T, color: colors.success }}>SÉANCE TERMINÉE</div>
-                  <div style={{ ...mutedStyle, marginTop: 2 }}>
-                    {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
-                  </div>
+                  <div style={{ ...T, color: colors.success }}>SEANCE TERMINEE</div>
+                  <div style={{ ...mutedStyle, marginTop: 2 }}>{format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}</div>
                 </div>
               </div>
             ) : (
               <>
-                <h3 style={{ ...statStyle, letterSpacing: '1px', lineHeight: 1, margin: '0 0 8px' }}>
-                  {sessionTitle.toUpperCase()}
-                </h3>
-                <div style={{ display: 'flex', gap: 16, ...subtitleStyle, fontSize: 11, letterSpacing: '0.12em', marginBottom: 20 }}>
-                  <span>{todayExercises.length} exercices</span>
-                  <span>·</span>
-                  <span>~45 min</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{ background: colors.gold, padding: '3px 10px', borderRadius: 4 }}>
+                    <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: '#0D0B08', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Seance du jour</span>
+                  </div>
                 </div>
-                <button
-                  onClick={() => startProgramWorkout({ day_name: sessionTitle || todayKey, name: sessionTitle || todayKey }, todayExercises)}
-                  style={{ width: '100%', background: colors.gold, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
-                  COMMENCER
-                </button>
+                <h3 style={{ ...statStyle, letterSpacing: '1px', lineHeight: 1, margin: '0 0 8px' }}>{sessionTitle.toUpperCase()}</h3>
+                <div style={{ display: 'flex', gap: 16, ...subtitleStyle, fontSize: 11, letterSpacing: '0.12em', marginBottom: 20 }}>
+                  <span>{todayExercises.length} exercices</span><span>·</span><span>~45 min</span>
+                </div>
+                <button onClick={() => startProgramWorkout({ day_name: sessionTitle || todayKey, name: sessionTitle || todayKey }, todayExercises)}
+                  style={{ width: '100%', background: colors.gold, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 12, cursor: 'pointer' }}>COMMENCER</button>
               </>
             )}
           </div>
         </div>
 
-        {/* ═══ PERFORMANCE HEBDO — Stitch bar chart ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <span style={T}>Performance</span>
+        {/* ═══ SECTION 3 — CALORIES + ENERGIE + HYDRATATION ═══ */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+          <span style={T}>Energie</span>
           <div style={titleLineStyle} />
-          <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 11, flexShrink: 0 }}>Semaine</button>
         </div>
         <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 8 }}>
-            {barData.map((b, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <div style={{
-                  width: '100%',
-                  height: Math.max(8, (b.value / barMax) * 90),
-                  borderRadius: 999,
-                  background: b.isToday
-                    ? `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})`
-                    : '#353534',
-                  boxShadow: b.isToday ? `0 0 20px ${colors.goldDim}` : 'none',
-                  transition: 'height 0.5s ease',
-                }} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: b.isToday ? GOLD : TEXT_MUTED }}>{b.label}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            {/* Calorie ring */}
+            <div style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
+              <svg viewBox="0 0 120 120" width={100} height={100} style={{ transform: 'rotate(-90deg)' }}>
+                <defs><linearGradient id="heroGold2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={colors.gold} /><stop offset="100%" stopColor={colors.goldContainer} /></linearGradient></defs>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#2a2a2a" strokeWidth="5" />
+                <circle cx="60" cy="60" r="50" fill="none" stroke="url(#heroGold2)" strokeWidth="5" strokeLinecap="round" strokeDasharray="314.16" strokeDashoffset={314.16 * (1 - calPct / 100)} style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
+              </svg>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ ...statStyle, fontSize: 22 }}>{consumedKcal}</span>
+                <span style={{ fontSize: 8, color: TEXT_MUTED, letterSpacing: 1 }}>/ {calorieGoal}</span>
               </div>
-            ))}
+            </div>
+            {/* Mini stats */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={GOLD} /><span style={{ fontFamily: fonts.body, fontSize: 11, color: TEXT_MUTED }}>Energie</span></div>
+                <span style={{ ...statSmallStyle, fontSize: 16 }}>{calPct}%</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Droplets size={14} color={colors.blue} /><span style={{ fontFamily: fonts.body, fontSize: 11, color: TEXT_MUTED }}>Hydratation</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ ...statSmallStyle, fontSize: 16 }}>{(waterToday / 1000).toFixed(1)}L</span>
+                  <button onClick={() => addWater(250)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+                    <span style={{ fontSize: 16, color: colors.gold, lineHeight: 1 }}>+</span>
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Dumbbell size={14} color={GOLD} /><span style={{ fontFamily: fonts.body, fontSize: 11, color: TEXT_MUTED }}>Seances</span></div>
+                <span style={{ ...statSmallStyle, fontSize: 16 }}>{weekSessions}x</span>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* ═══ SECTION 4 — PROGRESSION (streak + weight + XP) ═══ */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+          <span style={T}>Progression</span>
+          <div style={titleLineStyle} />
+          <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 10, flexShrink: 0 }}>Details</button>
+        </div>
+        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)', position: 'relative', overflow: 'hidden' }}>
+          {/* Streak */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Flame size={22} color={GOLD} fill={GOLD} style={{ opacity: 0.8 }} />
+              <div>
+                <div style={{ ...statStyle, fontSize: 24, letterSpacing: '-0.02em' }}>{streak} JOUR{streak > 1 ? 'S' : ''}</div>
+                <div style={{ ...mutedStyle, fontSize: 10 }}>Streak actif</div>
+              </div>
+            </div>
+            {currentWeight && (
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ ...statStyle, fontSize: 24, lineHeight: 1 }}>{currentWeight} <span style={{ fontSize: 12, color: TEXT_MUTED }}>KG</span></div>
+                {goalWeight && <div style={{ ...mutedStyle, fontSize: 10 }}>Objectif : {goalWeight} kg {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}</div>}
+              </div>
+            )}
+          </div>
+          {/* XP bar */}
+          {(() => {
+            const xp = xpData?.total_xp || 0
+            const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
+            const title = getLevelTitle(level)
+            return (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: colors.gold, letterSpacing: '0.1em', textTransform: 'uppercase' }}>LV.{level} — {title}</span>
+                  <span style={{ ...mutedStyle, fontSize: 10 }}>{xpInLevel} / {xpForNext} XP</span>
+                </div>
+                <div style={{ width: '100%', height: 6, borderRadius: 3, background: colors.surfaceHigh, overflow: 'hidden' }}>
+                  <div style={{ width: `${progress * 100}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #D4A843, #E8C97A)', transition: 'width 1s ease' }} />
+                </div>
+              </div>
+            )
+          })()}
+          {/* Performance bar chart */}
+          <div style={{ marginTop: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 60, gap: 6 }}>
+              {barData.map((b, i) => (
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: '100%', height: Math.max(4, (b.value / barMax) * 50), borderRadius: 999, background: b.isToday ? `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})` : '#353534', boxShadow: b.isToday ? `0 0 12px ${colors.goldDim}` : 'none', transition: 'height 0.5s ease' }} />
+                  <span style={{ fontSize: 8, fontWeight: 700, color: b.isToday ? GOLD : TEXT_MUTED }}>{b.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-        {/* ═══ MUSCLE HEAT MAP ═══ */}
+        {/* ═══ SECTION 5 — RÉCUPÉRATION MUSCULAIRE ═══ */}
         <MuscleHeatMap muscleStatus={muscleStatus} />
 
-        {/* Old daily habit section removed — check-in is now at the top of the page */}
-
-        {/* ═══ NUTRITION MACROS ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        {/* ═══ SECTION 6 — NUTRITION MACROS ═══ */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
           <span style={T}>NUTRITION</span>
           <div style={titleLineStyle} />
           <button onClick={() => setActiveTab('nutrition')} style={{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em', flexShrink: 0 }}>Voir plan</button>
