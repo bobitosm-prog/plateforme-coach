@@ -63,7 +63,15 @@ export default function TrainingTab({
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
 }: TrainingTabProps) {
   const T = titleStyle
-  const aiAllowed = profile?.subscription_type !== 'invited'
+  // aiAllowed: true for AUTO clients, false only for explicitly invited clients
+  // subscription_type === 'invited' is for billing (free access), NOT for feature gating
+  const [invitedByCoach, setInvitedByCoach] = useState(false)
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase.from('coach_clients').select('invited_by_coach').eq('client_id', session.user.id).maybeSingle()
+      .then(({ data }: any) => { if (data?.invited_by_coach) setInvitedByCoach(true) })
+  }, [session?.user?.id])
+  const aiAllowed = !invitedByCoach
   const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [dayExpanded, setDayExpanded] = useState(false)
