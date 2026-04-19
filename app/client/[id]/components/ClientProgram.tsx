@@ -1,6 +1,6 @@
 'use client'
 import {
-  Check, Plus, Minus, Moon, Save, Sparkles, Loader2,
+  Check, Plus, Minus, Moon, Save, Sparkles, Loader2, Info, ArrowRightLeft,
 } from 'lucide-react'
 import ExerciseInfoPopup from '../../../components/ExerciseInfoPopup'
 import {
@@ -53,16 +53,15 @@ export default function ClientProgram({
 }: ClientProgramProps) {
   return (
     <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
-      {/* Actions */}
-      <div style={{display:'flex',gap:8}}>
-        <button
-          onClick={()=>{setShowAiModal(true);setAiPreview(null)}}
-          style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'12px 16px',borderRadius:0,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.9rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#0D0B08',minHeight:44}}
-        >
-          <Sparkles size={14} strokeWidth={2.5}/>Générer avec l&apos;IA
+      {/* Actions toolbar */}
+      <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+        <button onClick={()=>{setShowAiModal(true);setAiPreview(null)}}
+          style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#0D0B08',minHeight:36}}>
+          <Sparkles size={13} strokeWidth={2.5}/>GENERER IA
         </button>
-        <button className="btn-secondary" style={{padding:'12px 14px',flexShrink:0,gap:0}} onClick={saveProgram} disabled={programSaving} aria-label="Sauvegarder">
-          {programSaving ? <Loader2 size={15} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <Save size={15} strokeWidth={2.5}/>}
+        <div style={{flex:1}} />
+        <button className="btn-secondary" style={{padding:'9px 16px',flexShrink:0,gap:6,minHeight:36,borderRadius:10,fontSize:'0.78rem'}} onClick={saveProgram} disabled={programSaving}>
+          {programSaving ? <Loader2 size={14} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <><Save size={14} strokeWidth={2}/>SAUVEGARDER</>}
         </button>
       </div>
       {programSaved && (
@@ -188,8 +187,12 @@ export default function ClientProgram({
                     />
                     {ex.name && (
                       <>
-                        <button onClick={()=>loadExInfo(ex.name)} title="Instructions" style={{background:'rgba(212,168,67,0.06)',border:`1px solid ${BORDER}`,cursor:'pointer',padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0,fontSize:16}}>ℹ️</button>
-                        <button onClick={()=>loadVariants(ex.name,expandedDay,idx)} title="Variantes" style={{background:'rgba(212,168,67,0.08)',border:`1px solid rgba(212,168,67,0.2)`,cursor:'pointer',color:GOLD,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0,fontSize:16}}>🔄</button>
+                        <button onClick={()=>loadExInfo(ex.name)} title="Instructions" style={{background:'rgba(230,195,100,0.06)',border:'1px solid rgba(255,255,255,0.06)',cursor:'pointer',padding:0,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,flexShrink:0}}>
+                          <Info size={15} color={GOLD} strokeWidth={2}/>
+                        </button>
+                        <button onClick={()=>loadVariants(ex.name,expandedDay,idx)} title="Variantes" style={{background:'rgba(230,195,100,0.06)',border:'1px solid rgba(255,255,255,0.06)',cursor:'pointer',padding:0,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,flexShrink:0}}>
+                          <ArrowRightLeft size={14} color={GOLD} strokeWidth={2}/>
+                        </button>
                       </>
                     )}
                     <button onClick={()=>removeExercise(expandedDay,idx)} style={{background:'rgba(239,68,68,.08)',border:`1px solid rgba(239,68,68,.15)`,cursor:'pointer',color:RED,padding:0,borderRadius:0,display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,flexShrink:0}}>
