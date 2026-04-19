@@ -53,9 +53,9 @@ export const radii = {
 /** Standard card container */
 export const cardStyle: React.CSSProperties = {
   background: colors.surface,
-  border: `1px solid ${colors.goldBorder}`,
+  border: '1px solid rgba(255,255,255,0.06)',
   borderRadius: radii.card,
-  boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
 }
 
 // ─── Typography inline presets ───
@@ -73,12 +73,15 @@ export const pageTitleStyle: React.CSSProperties = {
 /** Card section title — gold, uppercase, small (ex: "HYDRATATION", "ON FIRE") */
 export const titleStyle: React.CSSProperties = {
   fontFamily: fonts.headline,
-  fontSize: 14,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.15em',
   color: colors.gold,
 }
+
+/** Alias for section titles — same as titleStyle, use everywhere */
+export const sectionTitleStyle = titleStyle
 
 /** Card with external title pattern — title sits ABOVE the card */
 export const cardTitleAbove: React.CSSProperties = {
@@ -223,7 +226,7 @@ export const modalContainer: React.CSSProperties = {
 
 export const tw = {
   // Layout
-  card: "bg-[#0e0e0e] border border-[rgba(201,168,76,0.15)] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.6)]",
+  card: "bg-[#0e0e0e] border border-white/[0.06] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.4)]",
   modalOverlay: "fixed inset-0 bg-black/75 backdrop-blur-sm z-50",
   modalContainer: "bg-[#131313] border border-[rgba(201,168,76,0.15)] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6",
   navBar: "bg-[#0e0e0e] border-t border-[rgba(201,168,76,0.15)]",

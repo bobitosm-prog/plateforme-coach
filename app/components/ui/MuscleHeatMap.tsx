@@ -106,7 +106,7 @@ export default function MuscleHeatMap({ muscleStatus }: { muscleStatus: Record<s
   const g = (m: string) => SC[(muscleStatus[m] ?? 0) as keyof typeof SC]
 
   return (
-    <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+    <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <span style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: colors.gold }}>RÉCUPÉRATION MUSCULAIRE</span>
         <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${colors.goldRule}, transparent)` }} />

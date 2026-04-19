@@ -414,7 +414,7 @@ export default function HomeTab({
               <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.25)' }} />
               <button onClick={() => setActiveTab('progress')} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', cursor: 'pointer', padding: '4px 0' }}>VOIR TOUT →</button>
             </div>
-            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+            <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 12 }}>
                 {(() => {
                   const moodIcon = (m: string) => ({ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' } as any)[m] || '—'
@@ -443,7 +443,7 @@ export default function HomeTab({
           </>
         ) : (
           /* ── FULL CHECK-IN CARD ── */
-          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+          <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold }}>CHECK-IN DU JOUR</div>
               {checkinSaved && <button onClick={() => setCheckinEditMode(false)} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.textDim, cursor: 'pointer', padding: '2px 6px' }}>FERMER</button>}
@@ -506,7 +506,7 @@ export default function HomeTab({
           <div style={titleLineStyle} />
           <button onClick={() => setActiveTab('training')} style={{ ...labelStyle, fontSize: 10, letterSpacing: 1, flexShrink: 0 }}>Voir tout</button>
         </div>
-        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+        <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
           <div style={{ padding: 20 }}>
             {!coachProgram && !customProgramExercises && !todayScheduledSession ? (
               <p style={{ ...bodyStyle, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
@@ -552,7 +552,7 @@ export default function HomeTab({
           <span style={T}>Energie</span>
           <div style={titleLineStyle} />
         </div>
-        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+        <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             {/* Calorie ring */}
             <div style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
@@ -595,7 +595,7 @@ export default function HomeTab({
           <div style={titleLineStyle} />
           <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 10, flexShrink: 0 }}>Details</button>
         </div>
-        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden' }}>
           {/* Streak */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -651,7 +651,7 @@ export default function HomeTab({
           <div style={titleLineStyle} />
           <button onClick={() => setActiveTab('nutrition')} style={{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em', flexShrink: 0 }}>Voir plan</button>
         </div>
-        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+        <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
               { label: 'Cible', value: calorieGoal },
@@ -659,7 +659,7 @@ export default function HomeTab({
               { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—' },
               { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—' },
             ].map(({ label, value }) => (
-              <div key={label} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 4px', textAlign: 'center' }}>
+              <div key={label} style={{ background: colors.surfaceHigh, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '10px 4px', textAlign: 'center' }}>
                 <div style={{ ...statSmallStyle, fontSize: 22 }}>{value}</div>
                 <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: '0.1em' }}>{label}</div>
               </div>
