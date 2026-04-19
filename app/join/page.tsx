@@ -60,7 +60,7 @@ function JoinContent() {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: redirectUrl },
+      options: { emailRedirectTo: redirectUrl, data: { role: 'client', invited_coach_id: coachId } },
     })
 
     if (authError) {

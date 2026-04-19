@@ -57,10 +57,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Assign to coach
+    const isInvited = !autoAssign && !!coachId
     const { error: ccError } = await supabaseAdmin
       .from('coach_clients')
       .upsert(
-        { coach_id: finalCoachId, client_id: clientId, status: 'active' },
+        { coach_id: finalCoachId, client_id: clientId, status: 'active', invited_by_coach: isInvited },
         { onConflict: 'coach_id,client_id' }
       )
 
