@@ -134,6 +134,8 @@ export default function HomeTab({
   const [checkinSleep, setCheckinSleep] = useState<string>('')
   const [checkinSaved, setCheckinSaved] = useState(false)
   const [checkinSaving, setCheckinSaving] = useState(false)
+  const [checkinModified, setCheckinModified] = useState(false)
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null)
   const checkinSaveRef = useRef<any>(null)
   const [last7Checkins, setLast7Checkins] = useState<any[]>([])
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
@@ -315,6 +317,11 @@ export default function HomeTab({
       .then(({ data }: any) => setLast7Checkins(data || []))
   }, [session?.user?.id])
 
+  // Track modifications after initial save
+  useEffect(() => {
+    if (checkinSaved) setCheckinModified(true)
+  }, [checkinMood, checkinNote, checkinSleep])
+
   // Auto-save check-in (debounced 800ms)
   useEffect(() => {
     if (!session?.user?.id || !checkinMood) return
@@ -330,6 +337,8 @@ export default function HomeTab({
       if (!error) {
         if (!checkinSaved) { try { await addXP(session.user.id, 10, supabase) } catch {} }
         setCheckinSaved(true)
+        setCheckinModified(false)
+        setLastSavedTime(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
       }
     }, 800)
     return () => clearTimeout(checkinSaveRef.current)
@@ -437,8 +446,53 @@ export default function HomeTab({
             value={checkinNote} onChange={e => setCheckinNote(e.target.value.slice(0, 200))}
             placeholder="Note pour ton coach (optionnel)..."
             rows={2} maxLength={200}
-            style={{ width: '100%', padding: '8px 12px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none', resize: 'none' }}
+            style={{ width: '100%', padding: '8px 12px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none', resize: 'none', marginBottom: 12 }}
           />
+          {/* Save button */}
+          <button
+            disabled={!checkinMood || checkinSaving}
+            onClick={async () => {
+              if (!checkinMood || !session?.user?.id) return
+              setCheckinSaving(true)
+              clearTimeout(checkinSaveRef.current)
+              const todayDate = new Date().toISOString().split('T')[0]
+              const { error } = await supabase.from('daily_checkins').upsert({
+                user_id: session.user.id, date: todayDate, mood: checkinMood,
+                note: checkinNote || null, sleep_hours: checkinSleep ? parseFloat(checkinSleep) : null,
+              }, { onConflict: 'user_id,date' })
+              setCheckinSaving(false)
+              if (!error) {
+                if (!checkinSaved) { try { await addXP(session.user.id, 10, supabase) } catch {} }
+                setCheckinSaved(true); setCheckinModified(false)
+                setLastSavedTime(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
+              }
+            }}
+            style={{
+              width: '100%', padding: 13, borderRadius: 14, border: 'none', cursor: checkinMood && !checkinSaving ? 'pointer' : 'not-allowed',
+              opacity: checkinMood ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+              background: checkinSaved && !checkinModified
+                ? colors.surface
+                : `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`,
+              color: checkinSaved && !checkinModified ? colors.gold : '#0D0B08',
+              ...(checkinSaved && !checkinModified ? { border: `1px solid ${colors.goldBorder}` } : {}),
+            }}
+          >
+            {checkinSaving ? (
+              <><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: checkinSaved ? colors.gold : '#0D0B08', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />SAUVEGARDE...</>
+            ) : checkinSaved && !checkinModified ? (
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>CHECK-IN SAUVEGARDE</>
+            ) : checkinSaved && checkinModified ? (
+              'METTRE A JOUR'
+            ) : (
+              'VALIDER LE CHECK-IN'
+            )}
+          </button>
+          {lastSavedTime && !checkinModified && (
+            <div style={{ textAlign: 'center', marginTop: 4 }}>
+              <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textDim }}>Sauvegarde a {lastSavedTime}</span>
+            </div>
+          )}
         </div>
       </div>
 
