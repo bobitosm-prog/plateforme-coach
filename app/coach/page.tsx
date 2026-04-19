@@ -327,7 +327,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                         const statusColor = isActive ? GREEN : isWarning ? GOLD : RED
                         const statusLabel = isActive ? 'Actif' : isWarning ? 'Inactif 7j+' : 'Inactif 14j+'
                         return (
-                          <div key={c.client_id} onClick={() => h.openChat(c.client_id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
+                          <div key={c.client_id} onClick={() => h.router.push(`/client/${c.client_id}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
                             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
                             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                             <div style={{ width: 34, height: 34, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 700, color: BG_BASE, flexShrink: 0 }}>{initials}</div>
