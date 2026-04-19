@@ -15,6 +15,16 @@ interface ClientMessagesProps {
   coachId: string | null
 }
 
+function smartTime(iso: string): string {
+  const d = new Date(iso), now = new Date(), diff = now.getTime() - d.getTime()
+  if (diff < 60000) return 'A l\'instant'
+  if (diff < 3600000) return `il y a ${Math.floor(diff / 60000)} min`
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  const y = new Date(now); y.setDate(y.getDate() - 1)
+  if (d.toDateString() === y.toDateString()) return `Hier ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+}
+
 export default function ClientMessages({ coachMessages, coachMsgInput, setCoachMsgInput, sendCoachMessage, coachId }: ClientMessagesProps) {
   const coachMsgEndRef = useRef<HTMLDivElement>(null)
   const coachMsgPrevLen = useRef(0)
@@ -56,7 +66,7 @@ export default function ClientMessages({ coachMessages, coachMsgInput, setCoachM
                 <div style={{maxWidth:'78%',background:isCoach?GOLD_DIM:BG_CARD_2,color:isCoach?TEXT_PRIMARY:TEXT_PRIMARY,borderRadius:RADIUS_CARD,padding:'10px 14px',border:`1px solid ${isCoach?GOLD_RULE:BORDER}`}}>
                   <p style={{margin:0,fontSize:'0.88rem',fontFamily:FONT_BODY,lineHeight:1.45,whiteSpace:'pre-wrap'}}>{msg.content}</p>
                   <div style={{display:'flex',alignItems:'center',justifyContent:isCoach?'flex-end':'flex-start',gap:4,marginTop:3}}>
-                    <span style={{fontSize:'0.58rem',fontFamily:FONT_BODY,opacity:0.5}}>{new Date(msg.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
+                    <span style={{fontSize:'0.58rem',fontFamily:FONT_BODY,opacity:0.5}}>{smartTime(msg.created_at)}</span>
                     {isCoach && (msg.read ? <CheckCheck size={12} style={{opacity:0.6}}/> : null)}
                   </div>
                 </div>
@@ -68,10 +78,10 @@ export default function ClientMessages({ coachMessages, coachMsgInput, setCoachM
       </div>
       {/* Input always at bottom */}
       <div style={{flexShrink:0,padding:'12px 14px',background:BG_BASE,borderTop:`1px solid ${BORDER}`,display:'flex',gap:8,alignItems:'flex-end'}}>
-        <textarea value={coachMsgInput} onChange={e=>setCoachMsgInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCoachMessage()}}} placeholder="Écrire un message..." rows={1}
-          style={{flex:1,background:BG_BASE,border:`1px solid ${BORDER}`,borderRadius:0,padding:'10px 16px',color:TEXT_PRIMARY,fontSize:'0.88rem',fontFamily:FONT_BODY,outline:'none',resize:'none',maxHeight:100,lineHeight:1.4}}/>
+        <textarea value={coachMsgInput} onChange={e=>setCoachMsgInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCoachMessage()}}} placeholder="Ecrire un message..." rows={1}
+          style={{flex:1,background:BG_BASE,border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'10px 16px',color:TEXT_PRIMARY,fontSize:'0.88rem',fontFamily:FONT_BODY,outline:'none',resize:'none',maxHeight:100,lineHeight:1.4}}/>
         <button onClick={sendCoachMessage} disabled={!coachMsgInput.trim()}
-          style={{width:40,height:40,borderRadius:0,background:coachMsgInput.trim()?GOLD:BORDER,border:'none',cursor:coachMsgInput.trim()?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+          style={{width:40,height:40,borderRadius:12,background:coachMsgInput.trim()?GOLD:'rgba(255,255,255,0.06)',border:'none',cursor:coachMsgInput.trim()?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
           <Send size={16} color={coachMsgInput.trim()?'#0D0B08':TEXT_MUTED}/>
         </button>
       </div>
