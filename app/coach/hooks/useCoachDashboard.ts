@@ -402,15 +402,36 @@ export default function useCoachDashboard(initialSession?: any) {
     const days = getWeekDays(weekOffset)
     const from = days[0]; from.setHours(0, 0, 0, 0)
     const to   = days[6]; to.setHours(23, 59, 59, 999)
-    const { data, error } = await supabase
+    const fromStr = from.toISOString().split('T')[0]
+    const toStr = to.toISOString().split('T')[0]
+    // Try scheduled_at first (coach calendar), fallback to scheduled_date (client)
+    let { data, error } = await supabase
       .from('scheduled_sessions')
       .select('*')
       .eq('coach_id', coachId)
       .gte('scheduled_at', from.toISOString())
       .lte('scheduled_at', to.toISOString())
       .order('scheduled_at', { ascending: true })
-      .limit(500)
-    if (error) console.error('[fetchScheduledSessions]', error)
+      .limit(100)
+    if (error) {
+      // Fallback: table might not have coach_id/scheduled_at columns
+      console.warn('[fetchScheduledSessions] primary query failed, trying fallback:', error.message)
+      const clientIds = clients.map(c => c.client_id)
+      if (clientIds.length > 0) {
+        const fallback = await supabase
+          .from('scheduled_sessions')
+          .select('*')
+          .in('user_id', clientIds)
+          .gte('scheduled_date', fromStr)
+          .lte('scheduled_date', toStr)
+          .order('scheduled_date', { ascending: true })
+          .limit(100)
+        data = fallback.data
+        if (fallback.error) console.error('[fetchScheduledSessions] fallback also failed:', fallback.error.message)
+      } else {
+        data = []
+      }
+    }
     setScheduledSessions(data ?? [])
   }
 
