@@ -19,6 +19,7 @@ type Profile = {
 type WorkoutSession = {
   id: string; created_at: string; name: string | null
   completed: boolean | null; duration_minutes: number | null; notes: string | null
+  muscles_worked: string[] | null
 }
 
 interface ClientOverviewProps {
@@ -131,31 +132,46 @@ export default function ClientOverview({
         </div>
       </div>
 
-      {/* Session history — cards */}
+      {/* Session history — enriched cards */}
       <section>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-          <p className="section-title" style={{marginBottom:0}}>Historique séances</p>
+          <p className="section-title" style={{marginBottom:0}}>Historique seances</p>
           <span style={{fontSize:'0.72rem',color:'#8A8070'}}>{totalSessionsCount} total</span>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:8}}>
           {sessions.length === 0 ? (
-            <div className="card" style={{textAlign:'center',color:'#8A8070',padding:'28px 16px',fontSize:'0.85rem'}}>Aucune séance enregistrée</div>
-          ) : sessions.map(s => (
-            <div key={s.id} style={{background:'#141209',border:'1px solid rgba(212,168,67,0.15)',borderRadius:12,padding:'12px 14px'}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,color:'#F5EDD8',fontSize:'0.95rem',textTransform:'capitalize'}}>{s.name ?? '—'}</div>
-                  <div style={{fontSize:'0.7rem',color:'#8A8070',marginTop:2}}>{formatDate(s.created_at)}</div>
+            <div className="card" style={{textAlign:'center',color:'#8A8070',padding:'28px 16px',fontSize:'0.85rem'}}>Aucune seance enregistree</div>
+          ) : sessions.slice(0, 10).map(s => {
+            const d = new Date(s.created_at)
+            const today = new Date(); const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1)
+            const dayLabel = d.toDateString() === today.toDateString() ? "Aujourd'hui" : d.toDateString() === yesterday.toDateString() ? 'Hier' : d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+            return (
+              <div key={s.id} style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'12px 14px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
+                    <div style={{width:36,height:36,borderRadius:10,background:'rgba(230,195,100,0.08)',border:'1px solid rgba(230,195,100,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <Dumbbell size={16} color={GOLD} />
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:FONT_DISPLAY,fontWeight:700,color:TEXT_PRIMARY,fontSize:'0.9rem',textTransform:'uppercase',letterSpacing:'0.05em'}}>{s.name ?? 'Seance'}</div>
+                      <div style={{fontSize:'0.7rem',color:TEXT_MUTED,marginTop:2}}>{dayLabel}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ''}</div>
+                    </div>
+                  </div>
+                  {s.completed && <CheckCircle size={16} color={GOLD} strokeWidth={2}/>}
                 </div>
-                <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-                  {s.duration_minutes && <span style={{fontSize:'0.72rem',color:'#8A8070',background:'rgba(212,168,67,0.1)',borderRadius:6,padding:'2px 7px'}}>{s.duration_minutes} min</span>}
-                  {s.completed && <CheckCircle size={14} color="#D4A843" strokeWidth={2}/>}
-                </div>
+                {s.notes && <div style={{fontSize:'0.7rem',color:TEXT_MUTED,marginTop:6,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.notes}</div>}
+                {s.muscles_worked && s.muscles_worked.length > 0 && (
+                  <div style={{display:'flex',gap:4,marginTop:6,flexWrap:'wrap'}}>
+                    {s.muscles_worked.map(m => (
+                      <span key={m} style={{fontSize:'0.62rem',fontWeight:700,padding:'2px 6px',borderRadius:4,background:'rgba(230,195,100,0.08)',color:GOLD,fontFamily:FONT_ALT,letterSpacing:'0.05em',textTransform:'uppercase'}}>{m}</span>
+                    ))}
+                  </div>
+                )}
               </div>
-              {s.notes && <div style={{fontSize:'0.7rem',color:'#8A8070',marginTop:6,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.notes}</div>}
-            </div>
-          ))}
+            )
+          })}
         </div>
+        {totalSessionsCount > 10 && <div style={{textAlign:'center',marginTop:8}}><span style={{fontSize:'0.72rem',color:GOLD,cursor:'pointer',fontFamily:FONT_ALT,fontWeight:700,letterSpacing:'0.08em'}}>VOIR TOUTES LES SEANCES</span></div>}
       </section>
     </div>
   )

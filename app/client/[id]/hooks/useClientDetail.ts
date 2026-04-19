@@ -27,6 +27,7 @@ export type Profile = {
 export type WorkoutSession = {
   id: string; created_at: string; name: string | null
   completed: boolean | null; duration_minutes: number | null; notes: string | null
+  muscles_worked: string[] | null
 }
 export type WeightLog = { id: string; poids: number; date: string }
 export type Exercise = { name: string; sets: number; reps: number; rest: string; notes: string }
@@ -378,8 +379,8 @@ export default function useClientDetail() {
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
-      supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
-      supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id),
+      supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(20),
+      supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id).eq('completed', true),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
       supabase.from('client_programs').select('id,program').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
