@@ -120,8 +120,9 @@ export default function ClientProfilePage() {
           .desktop-tabs{display:flex !important;gap:4px;padding:0 32px;border-bottom:1px solid ${BORDER};background:${BG_BASE};}
           .desktop-tabs button{padding:12px 16px;border:none;background:transparent;cursor:pointer;font-family:${FONT_ALT};font-size:.85rem;font-weight:700;letter-spacing:.04em;color:${TEXT_MUTED};border-bottom:2px solid transparent;transition:all 150ms;}
           .desktop-tabs button.dt-active{color:${GOLD};border-bottom-color:${GOLD};}
-          .main-client-content{max-width:100% !important;padding:16px 14px 140px !important;margin:0 !important;}
+          .main-client-content{max-width:100% !important;padding:16px 14px 40px !important;margin:0 !important;}
           .client-page-root{flex-direction:row !important;}
+          .bottom-nav{display:none !important;}
         }
         .food-row-m:last-child{border-bottom:none;}
         input[type=number]::-webkit-inner-spin-button{opacity:.4;}
@@ -162,11 +163,14 @@ export default function ClientProfilePage() {
       {/* ── DESKTOP CONTENT WRAPPER ── */}
       <div style={{flex:1,display:'flex',flexDirection:'column',minHeight:0,minWidth:0}}>
 
-      {/* ── DESKTOP HEADER ── */}
+      {/* ── DESKTOP HEADER (compact — no duplicate name) ── */}
       <div className="desktop-header-client">
         <button onClick={()=>h.router.push('/coach')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,borderRadius:0,background:BG_CARD,border:`1px solid ${BORDER}`,cursor:'pointer',color:TEXT_MUTED}}><ArrowLeft size={16} strokeWidth={2.5}/></button>
-        <div style={{width:32,height:32,borderRadius:0,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:FONT_DISPLAY,fontWeight:400,fontSize:'0.8rem',color:'#0D0B08'}}>{initials(profile.full_name)}</div>
-        <span style={{fontFamily:FONT_DISPLAY,fontSize:'1.2rem',fontWeight:400,color:TEXT_PRIMARY,letterSpacing:'1px',textTransform:'uppercase'}}>{profile.full_name}</span>
+        <span style={{fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:700,color:TEXT_MUTED,letterSpacing:'0.04em',textTransform:'uppercase'}}>FICHE CLIENT</span>
+        <div style={{flex:1}} />
+        <button onClick={()=>{h.setEditTab('info');h.setEditOpen(true)}} style={{display:'flex',alignItems:'center',gap:6,padding:'6px 12px',borderRadius:8,background:'transparent',border:`1px solid rgba(255,255,255,0.06)`,cursor:'pointer',color:TEXT_MUTED,fontFamily:FONT_ALT,fontSize:'0.75rem',fontWeight:700,letterSpacing:'0.04em'}}>
+          <Pencil size={12}/>MODIFIER
+        </button>
       </div>
 
       {/* ── DESKTOP TABS ── */}
