@@ -340,8 +340,15 @@ export default function HomeTab({
     <div style={{ background: colors.background, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
+      {/* ═══ PHRASE MOTIVANTE ═══ */}
+      <div style={{ padding: '20px 20px 16px', textAlign: 'center' }}>
+        <div style={{ fontFamily: fonts.body, fontSize: 13, fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, maxWidth: 320, margin: '0 auto' }}>
+          &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
+        </div>
+      </div>
+
       {/* ═══ COACHING PERSONNEL + CHECK-IN ═══ */}
-      <div style={{ padding: '12px 24px 0' }}>
+      <div style={{ padding: '0 24px' }}>
         <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
           <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold, marginBottom: 4 }}>COACHING PERSONNEL</div>
           <div style={{ fontFamily: fonts.body, fontSize: 12, fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>Votre coach de poche vous accompagne partout</div>
