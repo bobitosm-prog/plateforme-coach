@@ -138,6 +138,7 @@ export default function HomeTab({
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null)
   const checkinSaveRef = useRef<any>(null)
   const [last7Checkins, setLast7Checkins] = useState<any[]>([])
+  const [checkinEditMode, setCheckinEditMode] = useState(false)
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
   const [customDayName, setCustomDayName] = useState<string | null>(null)
   const [customIsRest, setCustomIsRest] = useState(false)
@@ -341,6 +342,10 @@ export default function HomeTab({
     if (!checkinSaved) { try { await addXP(session.user.id, 10, supabase) } catch {} }
     setCheckinSaved(true); setCheckinModified(false)
     setLastSavedTime(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
+    // Reload week data for compact card
+    const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
+    supabase.from('daily_checkins').select('date, mood, sleep_hours').eq('user_id', session.user.id).gte('date', weekAgo).order('date')
+      .then(({ data }: any) => setLast7Checkins(data || []))
     return true
   }
 
@@ -399,125 +404,99 @@ export default function HomeTab({
         </p>
       </div>
 
-      {/* ═══ COACHING PERSONNEL + CHECK-IN (auto-save) ═══ */}
+      {/* ═══ CHECK-IN — COMPACT (saved) or FULL (editing) ═══ */}
       <div style={{ padding: '0 24px' }}>
-        <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold }}>COACHING PERSONNEL</div>
-            {checkinSaved && <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.success, display: 'flex', alignItems: 'center', gap: 4 }}>
-              {checkinSaving ? <span style={{ width: 8, height: 8, border: '1.5px solid rgba(255,255,255,0.2)', borderTopColor: colors.gold, borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} /> : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
-              {checkinSaving ? 'Sauvegarde...' : 'Sauvegarde'}
-            </span>}
-          </div>
-          <div style={{ height: 1, background: 'rgba(201,168,76,0.1)', margin: '8px 0 14px' }} />
-
-          {/* Check-in — always editable, auto-saves */}
-          <div style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: colors.gold, marginBottom: 8 }}>CHECK-IN DU JOUR</div>
-          <div style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 12 }}>Comment te sens-tu aujourd&apos;hui ?</div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
-            {[
-              { id: 'fatigue', icon: '😴', label: 'Fatigue' },
-              { id: 'normal', icon: '😐', label: 'Normal' },
-              { id: 'bien', icon: '💪', label: 'Bien' },
-              { id: 'top', icon: '🔥', label: 'Top' },
-              { id: 'energie', icon: '⚡', label: 'Energie' },
-            ].map(m => (
-              <button key={m.id} onClick={() => setCheckinMood(m.id)} style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+        {checkinSaved && !checkinEditMode ? (
+          /* ── COMPACT CARD: week calendar ── */
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.15em', margin: 0 }}>MON BIEN-ETRE</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.25)' }} />
+              <button onClick={() => setActiveTab('progress')} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', cursor: 'pointer', padding: '4px 0' }}>VOIR TOUT →</button>
+            </div>
+            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 12 }}>
+                {(() => {
+                  const moodIcon = (m: string) => ({ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' } as any)[m] || '—'
+                  const days: any[] = []
+                  for (let i = 6; i >= 0; i--) {
+                    const d = new Date(Date.now() - i * 86400000)
+                    const ds = d.toISOString().split('T')[0]
+                    const c = last7Checkins.find((x: any) => x.date === ds)
+                    days.push({ ds, day: d.toLocaleDateString('fr-FR', { weekday: 'narrow' }).toUpperCase(), isToday: i === 0, c })
+                  }
+                  return days.map((d) => (
+                    <div key={d.ds} onClick={() => { if (d.isToday) setCheckinEditMode(true) }} style={{
+                      background: d.isToday ? 'rgba(201,168,76,0.1)' : 'transparent',
+                      border: d.isToday ? '1px solid rgba(201,168,76,0.3)' : '1px solid rgba(201,168,76,0.05)',
+                      borderRadius: 10, padding: '8px 2px', cursor: d.isToday ? 'pointer' : 'default', textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: 8, fontWeight: 700, color: d.isToday ? colors.gold : 'rgba(255,255,255,0.3)', letterSpacing: '0.05em', marginBottom: 4 }}>{d.day}</div>
+                      <div style={{ fontSize: 18, height: 22, opacity: d.c ? 1 : 0.2 }}>{d.c ? moodIcon(d.c.mood) : '—'}</div>
+                      <div style={{ fontSize: 9, color: d.c?.sleep_hours ? colors.gold : 'rgba(255,255,255,0.2)', fontWeight: 600, marginTop: 4 }}>{d.c?.sleep_hours ? `${d.c.sleep_hours}h` : '—'}</div>
+                    </div>
+                  ))
+                })()}
+              </div>
+              <button onClick={() => setCheckinEditMode(true)} style={{ width: '100%', padding: '8px 0', background: 'transparent', border: 'none', color: 'rgba(201,168,76,0.7)', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>MODIFIER AUJOURD&apos;HUI</button>
+            </div>
+          </>
+        ) : (
+          /* ── FULL CHECK-IN CARD ── */
+          <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold }}>CHECK-IN DU JOUR</div>
+              {checkinSaved && <button onClick={() => setCheckinEditMode(false)} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.textDim, cursor: 'pointer', padding: '2px 6px' }}>FERMER</button>}
+            </div>
+            <div style={{ height: 1, background: 'rgba(201,168,76,0.1)', margin: '8px 0 14px' }} />
+            <div style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 12 }}>Comment te sens-tu aujourd&apos;hui ?</div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
+              {[
+                { id: 'fatigue', icon: '😴', label: 'Fatigue' },
+                { id: 'normal', icon: '😐', label: 'Normal' },
+                { id: 'bien', icon: '💪', label: 'Bien' },
+                { id: 'top', icon: '🔥', label: 'Top' },
+                { id: 'energie', icon: '⚡', label: 'Energie' },
+              ].map(m => (
+                <button key={m.id} onClick={() => setCheckinMood(m.id)} style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+                }}>
+                  <div style={{
+                    width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
+                    background: checkinMood === m.id ? colors.goldDim : colors.surface,
+                    border: `1.5px solid ${checkinMood === m.id ? colors.goldRule : colors.goldBorder}`,
+                    transform: checkinMood === m.id ? 'scale(1.08)' : 'scale(1)', transition: 'all 200ms',
+                  }}>{m.icon}</div>
+                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: checkinMood === m.id ? colors.gold : colors.textDim }}>{m.label}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>SOMMEIL</span>
+              <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={checkinSleep} onChange={e => setCheckinSleep(e.target.value)}
+                style={{ width: 60, padding: '7px 8px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
+              <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>h</span>
+              <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: 2, background: colors.gold, width: `${Math.min(100, (parseFloat(checkinSleep) || 0) / 8 * 100)}%`, transition: 'width 300ms' }} />
+              </div>
+              <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textDim, flexShrink: 0 }}>/ 8h</span>
+            </div>
+            <textarea value={checkinNote} onChange={e => setCheckinNote(e.target.value.slice(0, 200))} placeholder="Note pour ton coach (optionnel)..." rows={2} maxLength={200}
+              style={{ width: '100%', padding: '8px 12px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none', resize: 'none', marginBottom: 12 }} />
+            <button disabled={!checkinMood || checkinSaving} onClick={() => { clearTimeout(checkinSaveRef.current); saveCheckin().then(ok => { if (ok) setCheckinEditMode(false) }) }}
+              style={{
+                width: '100%', padding: 13, borderRadius: 14, border: 'none', cursor: checkinMood && !checkinSaving ? 'pointer' : 'not-allowed',
+                opacity: checkinMood ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08',
               }}>
-                <div style={{
-                  width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
-                  background: checkinMood === m.id ? colors.goldDim : colors.surface,
-                  border: `1.5px solid ${checkinMood === m.id ? colors.goldRule : colors.goldBorder}`,
-                  transform: checkinMood === m.id ? 'scale(1.08)' : 'scale(1)',
-                  transition: 'all 200ms',
-                }}>{m.icon}</div>
-                <span style={{ fontFamily: fonts.body, fontSize: 9, color: checkinMood === m.id ? colors.gold : colors.textDim }}>{m.label}</span>
-              </button>
-            ))}
+              {checkinSaving ? (<><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#0D0B08', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />SAUVEGARDE...</>)
+                : checkinSaved ? 'METTRE A JOUR' : 'VALIDER LE CHECK-IN'}
+            </button>
           </div>
-          {/* Sleep */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>SOMMEIL</span>
-            <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={checkinSleep}
-              onChange={e => setCheckinSleep(e.target.value)}
-              style={{ width: 60, padding: '7px 8px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
-            <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>h</span>
-            <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 2, background: colors.gold, width: `${Math.min(100, (parseFloat(checkinSleep) || 0) / 8 * 100)}%`, transition: 'width 300ms' }} />
-            </div>
-            <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textDim, flexShrink: 0 }}>/ 8h</span>
-          </div>
-          {/* Note */}
-          <textarea
-            value={checkinNote} onChange={e => setCheckinNote(e.target.value.slice(0, 200))}
-            placeholder="Note pour ton coach (optionnel)..."
-            rows={2} maxLength={200}
-            style={{ width: '100%', padding: '8px 12px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none', resize: 'none', marginBottom: 12 }}
-          />
-          {/* Save button */}
-          <button
-            disabled={!checkinMood || checkinSaving}
-            onClick={() => { clearTimeout(checkinSaveRef.current); saveCheckin() }}
-            style={{
-              width: '100%', padding: 13, borderRadius: 14, border: 'none', cursor: checkinMood && !checkinSaving ? 'pointer' : 'not-allowed',
-              opacity: checkinMood ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-              background: checkinSaved && !checkinModified
-                ? colors.surface
-                : `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`,
-              color: checkinSaved && !checkinModified ? colors.gold : '#0D0B08',
-              ...(checkinSaved && !checkinModified ? { border: `1px solid ${colors.goldBorder}` } : {}),
-            }}
-          >
-            {checkinSaving ? (
-              <><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: checkinSaved ? colors.gold : '#0D0B08', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />SAUVEGARDE...</>
-            ) : checkinSaved && !checkinModified ? (
-              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>CHECK-IN SAUVEGARDE</>
-            ) : checkinSaved && checkinModified ? (
-              'METTRE A JOUR'
-            ) : (
-              'VALIDER LE CHECK-IN'
-            )}
-          </button>
-          {lastSavedTime && !checkinModified && (
-            <div style={{ textAlign: 'center', marginTop: 4 }}>
-              <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textDim }}>Sauvegarde a {lastSavedTime}</span>
-            </div>
-          )}
-        </div>
+        )}
       </div>
-
-      {/* ═══ MINI-TIMELINE 7 JOURS ═══ */}
-      {last7Checkins.length > 0 && (
-        <div style={{ padding: '8px 24px 0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            {(() => {
-              const moodEmoji = (m: string) => ({ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' } as any)[m] || ''
-              const moodColor = (m: string) => ({ fatigue: colors.error, normal: colors.textDim, bien: colors.gold, top: '#fb923c', energie: colors.success } as any)[m] || colors.textDim
-              const days: any[] = []
-              for (let i = 6; i >= 0; i--) {
-                const d = new Date(Date.now() - i * 86400000)
-                const ds = d.toISOString().split('T')[0]
-                const c = last7Checkins.find((x: any) => x.date === ds)
-                days.push({ day: d.toLocaleDateString('fr-FR', { weekday: 'narrow' }).toUpperCase(), c })
-              }
-              return days.map((d, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: 1 }}>{d.day}</span>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.c ? moodColor(d.c.mood) : 'rgba(255,255,255,0.08)' }} />
-                  <span style={{ fontSize: 12 }}>{d.c ? moodEmoji(d.c.mood) : '—'}</span>
-                  <span style={{ fontSize: 8, color: d.c?.sleep_hours ? colors.textMuted : 'rgba(255,255,255,0.15)' }}>{d.c?.sleep_hours ? `${d.c.sleep_hours}h` : '--'}</span>
-                </div>
-              ))
-            })()}
-          </div>
-          <button onClick={() => setActiveTab('progress')} style={{ width: '100%', marginTop: 8, padding: '6px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.1em', textAlign: 'right' }}>
-            VOIR TOUT →
-          </button>
-        </div>
-      )}
 
       <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
