@@ -131,6 +131,7 @@ export default function HomeTab({
   const [habitValues, setHabitValues] = useState<Record<string, number>>({})
   const [checkinMood, setCheckinMood] = useState<string | null>(null)
   const [checkinNote, setCheckinNote] = useState('')
+  const [checkinSleep, setCheckinSleep] = useState<string>('')
   const [checkinDone, setCheckinDone] = useState<any>(null)
   const [checkinEditing, setCheckinEditing] = useState(false)
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
@@ -305,7 +306,7 @@ export default function HomeTab({
 
     // Fetch today's mood check-in
     supabase.from('daily_checkins').select('*').eq('user_id', userId).eq('date', todayDate).maybeSingle()
-      .then(({ data }: any) => { if (data) { setCheckinDone(data); setCheckinMood(data.mood); setCheckinNote(data.note || '') } })
+      .then(({ data }: any) => { if (data) { setCheckinDone(data); setCheckinMood(data.mood); setCheckinNote(data.note || ''); setCheckinSleep(data.sleep_hours?.toString() || '') } })
   }, [session?.user?.id])
 
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
@@ -382,6 +383,18 @@ export default function HomeTab({
                   </button>
                 ))}
               </div>
+              {/* Sleep hours */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>SOMMEIL</span>
+                <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={checkinSleep}
+                  onChange={e => setCheckinSleep(e.target.value)}
+                  style={{ width: 64, padding: '8px 10px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.headline, fontSize: 18, textAlign: 'center', outline: 'none' }} />
+                <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textDim }}>heures</span>
+                <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 2, background: colors.gold, width: `${Math.min(100, (parseFloat(checkinSleep) || 0) / 8 * 100)}%`, transition: 'width 300ms' }} />
+                </div>
+                <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textDim, flexShrink: 0 }}>/ 8h</span>
+              </div>
               <textarea
                 value={checkinNote} onChange={e => setCheckinNote(e.target.value.slice(0, 200))}
                 placeholder="Ajoute une note pour ton coach (optionnel)..."
@@ -395,9 +408,10 @@ export default function HomeTab({
                   const todayDate = new Date().toISOString().split('T')[0]
                   await supabase.from('daily_checkins').upsert({
                     user_id: session.user.id, date: todayDate, mood: checkinMood, note: checkinNote || null,
+                    sleep_hours: checkinSleep ? parseFloat(checkinSleep) : null,
                   }, { onConflict: 'user_id,date' })
                   try { await addXP(session.user.id, 10, supabase) } catch {}
-                  setCheckinDone({ mood: checkinMood, note: checkinNote })
+                  setCheckinDone({ mood: checkinMood, note: checkinNote, sleep_hours: checkinSleep ? parseFloat(checkinSleep) : null })
                   setCheckinEditing(false)
                   toast.success('Check-in valide')
                 }}
@@ -428,7 +442,20 @@ export default function HomeTab({
                   textTransform: 'uppercase', cursor: 'pointer',
                 }}>MODIFIER</button>
               </div>
-              {checkinDone.note && <div style={{ fontFamily: fonts.body, fontSize: 12, fontStyle: 'italic', color: colors.textMuted, padding: '6px 0 0 60px' }}>&ldquo;{checkinDone.note}&rdquo;</div>}
+              {(checkinDone.note || checkinDone.sleep_hours) && (
+                <div style={{ padding: '6px 0 0 60px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {checkinDone.sleep_hours != null && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.gold }}>{checkinDone.sleep_hours}h</span>
+                      <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>de sommeil</span>
+                      <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', maxWidth: 80 }}>
+                        <div style={{ height: '100%', borderRadius: 2, background: checkinDone.sleep_hours >= 7 ? colors.success : checkinDone.sleep_hours >= 5 ? colors.gold : colors.error, width: `${Math.min(100, (checkinDone.sleep_hours / 8) * 100)}%` }} />
+                      </div>
+                    </div>
+                  )}
+                  {checkinDone.note && <div style={{ fontFamily: fonts.body, fontSize: 12, fontStyle: 'italic', color: colors.textMuted }}>&ldquo;{checkinDone.note}&rdquo;</div>}
+                </div>
+              )}
             </>
           )}
         </div>

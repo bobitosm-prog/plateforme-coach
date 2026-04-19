@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS daily_checkins (
   date DATE NOT NULL DEFAULT CURRENT_DATE,
   mood TEXT NOT NULL,
   note TEXT,
+  sleep_hours NUMERIC(3,1),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, date)
 );
