@@ -48,6 +48,8 @@ export default function ProfileTab({
   const [phoneForm, setPhoneForm] = useState<string>(profile?.phone || '')
   const [phoneEditing, setPhoneEditing] = useState(false)
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle')
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
   const [timerSound, setTimerSound] = useState(() => isTimerSoundEnabled())
   const [unlockedBadgeIds, setUnlockedBadgeIds] = useState<Set<string>>(new Set())
@@ -119,6 +121,13 @@ export default function ProfileTab({
   }
 
   // Shared row style for list items
+  // Check initial push subscription status
+  React.useEffect(() => {
+    if (!session?.user?.id) return
+    supabase.from('push_subscriptions').select('id').eq('user_id', session.user.id).limit(1)
+      .then(({ data }: any) => setPushEnabled((data?.length || 0) > 0))
+  }, [session?.user?.id])
+
   const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', cursor: 'pointer' }
   const iconBoxStyle: React.CSSProperties = { width: 30, height: 30, borderRadius: 8, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
   const separatorStyle: React.CSSProperties = { height: 0.5, background: colors.goldDim }
@@ -259,11 +268,48 @@ export default function ProfileTab({
         <div style={titleLineStyle} />
       </div>
       <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
+        {/* Push notifications toggle */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={pushEnabled ? colors.success : colors.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <div>
+              <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.text }}>Notifications push</div>
+              <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginTop: 1 }}>Messages du coach + rappels</div>
+            </div>
+          </div>
+          <Toggle active={pushEnabled} onToggle={async () => {
+            if (pushLoading) return
+            setPushLoading(true)
+            if (pushEnabled) {
+              // Unsubscribe
+              try {
+                const reg = await navigator.serviceWorker.ready
+                const sub = await reg.pushManager.getSubscription()
+                if (sub) await sub.unsubscribe()
+                await supabase.from('push_subscriptions').delete().eq('user_id', session.user.id)
+              } catch {}
+              setPushEnabled(false)
+            } else {
+              // Check iOS PWA
+              const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
+              const isPWA = window.matchMedia('(display-mode: standalone)').matches
+              if (isIOS && !isPWA) {
+                alert('Pour activer les notifications sur iPhone, ajoute d\'abord MoovX a ton ecran d\'accueil : Safari > Partager > Sur l\'ecran d\'accueil')
+                setPushLoading(false); return
+              }
+              await enableNotifications()
+              const { data } = await supabase.from('push_subscriptions').select('id').eq('user_id', session.user.id).limit(1)
+              setPushEnabled((data?.length || 0) > 0)
+            }
+            setPushLoading(false)
+          }} />
+        </div>
+
         {/* Toggle reminders */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Bell size={14} color={profile?.reminder_enabled ? colors.success : colors.textMuted} />
-            <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>Rappels séance</span>
+            <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>Rappels seance</span>
           </div>
           <Toggle active={!!profile?.reminder_enabled} onToggle={async () => {
             const newVal = !profile?.reminder_enabled
