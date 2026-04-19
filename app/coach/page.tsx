@@ -96,6 +96,12 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [revMonth, setRevMonth] = useState(new Date().getMonth())
   const [revYear, setRevYear] = useState(new Date().getFullYear())
+  const [isDesktop, setIsDesktop] = useState(false)
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth > 1024)
+    check(); window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteSending, setInviteSending] = useState(false)
   const [inviteSent, setInviteSent] = useState(false)
@@ -144,6 +150,253 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
     return null
   }
 
+  /* ══════════════════════════════════════════════════════════
+     DESKTOP LAYOUT (>1024px)
+  ══════════════════════════════════════════════════════════ */
+  if (isDesktop) {
+    const SIDEBAR_W = 240
+    const CARD = { background: BG_CARD, border: '1px solid rgba(255,255,255,0.06)', borderRadius: RADIUS_CARD, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' } as React.CSSProperties
+    const SEC_TITLE = { fontFamily: FONT_DISPLAY, fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: GOLD, whiteSpace: 'nowrap' as const }
+    const SEC_LINE = { flex: 1, height: 1, background: 'rgba(201,168,76,0.25)' }
+
+    const navItems = [
+      { id: 'accueil', icon: Home, label: 'ACCUEIL' },
+      { id: 'dashboard', icon: Users, label: 'MES CLIENTS' },
+      { id: 'programs', icon: Dumbbell, label: 'PROGRAMMES' },
+      { id: 'aliments', icon: UtensilsCrossed, label: 'NUTRITION' },
+      { id: 'messages', icon: MessageCircle, label: 'MESSAGES' },
+      { id: 'calendar', icon: Calendar, label: 'CALENDRIER' },
+      { id: 'profil', icon: User, label: 'MON PROFIL' },
+    ]
+
+    // Revenue calc
+    const startDate = new Date(revYear, revMonth, 1).toISOString()
+    const endDate = new Date(revYear, revMonth + 1, 0, 23, 59, 59).toISOString()
+    let mRevTotal = 0, mRevCount = 0
+    for (const p of h.allPayments) { if (p.paid_at && p.paid_at >= startDate && p.paid_at <= endDate) { mRevTotal += p.amount || 0; mRevCount++ } }
+    const fmtRev = Math.round(mRevTotal).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
+
+    // Today sessions
+    const todayStr = new Date().toISOString().split('T')[0]
+    const todaySessions = h.scheduledSessions.filter((s: any) => s.scheduled_at.startsWith(todayStr))
+
+    return (
+      <div style={{ display: 'flex', width: '100%', minHeight: '100dvh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>
+        {/* SIDEBAR */}
+        <aside style={{ width: SIDEBAR_W, flexShrink: 0, position: 'fixed', top: 0, left: 0, height: '100dvh', background: BG_BASE, borderRight: `1px solid rgba(255,255,255,0.06)`, display: 'flex', flexDirection: 'column', zIndex: 50 }}>
+          <div style={{ padding: '24px 20px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src="/logo-moovx.png" alt="MoovX" style={{ height: 40, width: 40, borderRadius: 10, objectFit: 'contain' }} />
+            <div>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, fontWeight: 700, color: GOLD, letterSpacing: '0.15em' }}>MOOVX</span>
+              <span style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 2, color: '#0D0B08', padding: '1px 5px', background: GOLD, borderRadius: 3, marginLeft: 6 }}>PRO</span>
+            </div>
+          </div>
+          <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0 20px 16px' }} />
+          <div style={{ padding: '0 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 700, color: BG_BASE }}>{h.coachInitials}</div>
+            <div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.05em' }}>{h.coachName}</div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 9, fontWeight: 700, color: GOLD, letterSpacing: '0.15em' }}>COACH PRO · {h.clients.length} clients</div>
+            </div>
+          </div>
+          <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: '0 12px' }}>
+            {navItems.map(({ id, icon: Icon, label }) => {
+              const active = h.section === id
+              const badge = id === 'messages' ? h.totalUnread : 0
+              return (
+                <button key={id} onClick={() => h.setSection(id as any)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, background: active ? 'rgba(230,195,100,0.08)' : 'transparent', border: 'none', borderLeft: `3px solid ${active ? GOLD : 'transparent'}`, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 150ms', position: 'relative' }}>
+                  <Icon size={18} color={active ? GOLD : TEXT_MUTED} strokeWidth={active ? 2.5 : 1.8} />
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: active ? GOLD : 'rgba(255,255,255,0.6)', letterSpacing: '0.12em' }}>{label}</span>
+                  {badge > 0 && <span style={{ marginLeft: 'auto', minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 9, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{badge > 9 ? '9+' : badge}</span>}
+                </button>
+              )
+            })}
+          </nav>
+          <div style={{ padding: '16px 20px' }}>
+            <button onClick={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
+              <LogOut size={14} />Deconnexion
+            </button>
+          </div>
+        </aside>
+
+        {/* MAIN */}
+        <div style={{ marginLeft: SIDEBAR_W, flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
+          {/* Header */}
+          <header style={{ position: 'sticky', top: 0, zIndex: 40, height: 64, background: 'rgba(19,19,19,0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 36px' }}>
+            <div>
+              <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '0.08em' }}>BONJOUR {h.coachName.split(' ')[0].toUpperCase()}</h1>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, margin: 0 }}>{h.clients.length} clients actifs · {h.totalUnread} messages non lus</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {h.coachProfile && !h.coachProfile.stripe_onboarding_complete && (
+                <button onClick={h.handleStripeConnect} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, cursor: 'pointer', color: RED, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em' }}>
+                  <Zap size={12} />STRIPE
+                </button>
+              )}
+            </div>
+          </header>
+
+          {/* Content */}
+          <main style={{ flex: 1, padding: '28px 36px 40px', overflowY: 'auto' }}>
+            {/* ACCUEIL — Dashboard grid */}
+            {h.section === 'accueil' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>
+                {/* Stripe banner */}
+                {h.coachProfile && !h.coachProfile.stripe_onboarding_complete && (
+                  <div style={{ gridColumn: 'span 12', background: 'rgba(230,195,100,0.06)', border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 13, color: GOLD }}>Configure Stripe pour recevoir les paiements de tes clients</span>
+                    <button onClick={h.handleStripeConnect} disabled={h.stripeConnecting} style={{ background: GOLD, color: BG_BASE, border: 'none', padding: '8px 18px', borderRadius: 10, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{h.stripeConnecting ? '...' : 'CONFIGURER'}</button>
+                  </div>
+                )}
+
+                {/* Today + Messages + Videos */}
+                <div style={{ gridColumn: 'span 8', ...CARD }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Activite Aujourd&apos;hui</span><div style={SEC_LINE} /></div>
+                  {/* Today sessions */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>SEANCES PREVUES</div>
+                    {todaySessions.length === 0 ? <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_DIM, fontStyle: 'italic' }}>Aucune seance aujourd&apos;hui</div>
+                      : todaySessions.map((s: any) => {
+                        const cn = h.clients.find((c: any) => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
+                        return (
+                          <div key={s.id} onClick={() => h.setSelectedSession(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, marginBottom: 4, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div style={{ width: 4, height: 28, borderRadius: 2, background: GOLD }} />
+                            <div style={{ flex: 1 }}><div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY }}>{cn}</div><div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{s.session_type} · {format(new Date(s.scheduled_at), 'HH:mm')} · {s.duration_minutes}min</div></div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                  {/* Messages + Videos */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div onClick={() => h.setSection('messages' as any)} style={{ padding: '14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>MESSAGES NON LUS</div>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 700, color: h.totalUnread > 0 ? RED : TEXT_DIM }}>{h.totalUnread}</div>
+                    </div>
+                    <div style={{ padding: '14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>VIDEOS A REVIEWER</div>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 700, color: h.pendingVideoCount > 0 ? GOLD : TEXT_DIM }}>{h.pendingVideoCount}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Revenue KPI */}
+                <div style={{ gridColumn: 'span 4', ...CARD }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Revenus</span><div style={SEC_LINE} /></div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 700, color: GOLD, lineHeight: 1, marginBottom: 8 }}>CHF {fmtRev}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginBottom: 16 }}>{mRevCount} paiement{mRevCount !== 1 ? 's' : ''} ce mois</div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <select value={revMonth} onChange={e => setRevMonth(Number(e.target.value))} style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 8px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
+                      {WP_MONTHS.map((m: string, i: number) => <option key={i} value={i}>{m}</option>)}
+                    </select>
+                    <select value={revYear} onChange={e => setRevYear(Number(e.target.value))} style={{ width: 'auto', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 8px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
+                      {WP_YEARS.map((y: string) => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Clients list */}
+                <div style={{ gridColumn: 'span 8', ...CARD }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <span style={SEC_TITLE}>Mes Clients</span><div style={SEC_LINE} />
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{h.clients.length} actifs</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {h.filtered.slice(0, 8).map((c: any) => {
+                      const name = c.profiles?.full_name || 'Client'
+                      const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+                      const unread = h.unreadCounts[c.client_id] || 0
+                      const daysSinceJoin = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86400000)
+                      return (
+                        <div key={c.client_id} onClick={() => h.openChat(c.client_id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                          <div style={{ width: 34, height: 34, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 700, color: BG_BASE, flexShrink: 0 }}>{initials}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>{name}</div>
+                            <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Depuis {daysSinceJoin}j</div>
+                          </div>
+                          {unread > 0 && <span style={{ minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 9, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unread}</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {h.clients.length > 8 && <button onClick={() => h.setSection('dashboard' as any)} style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 8, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer' }}>VOIR TOUS</button>}
+                </div>
+
+                {/* Quick actions */}
+                <div style={{ gridColumn: 'span 4', ...CARD }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Actions Rapides</span><div style={SEC_LINE} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <button onClick={() => { h.setShowInvite(true); h.setSection('dashboard' as any) }} style={{ width: '100%', padding: '12px', background: GOLD, color: BG_BASE, border: 'none', borderRadius: 10, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Plus size={14} />NOUVEAU CLIENT</button>
+                    <button onClick={() => h.setSection('programs' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Dumbbell size={14} />NOUVEAU PROGRAMME</button>
+                    <button onClick={() => h.setSection('aliments' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><UtensilsCrossed size={14} />PLAN NUTRITION</button>
+                    <button onClick={() => h.setSection('messages' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><MessageCircle size={14} />ENVOYER UN MESSAGE</button>
+                  </div>
+                </div>
+
+                {/* Invite */}
+                <div style={{ gridColumn: 'span 12', ...CARD, padding: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>LIEN D&apos;INVITATION</div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input readOnly value={h.inviteLink} onClick={e => (e.target as HTMLInputElement).select()} style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, outline: 'none', overflow: 'hidden', textOverflow: 'ellipsis' }} />
+                        <button onClick={h.copyInviteLink} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: h.copied ? 'rgba(74,222,128,0.15)' : GOLD, color: h.copied ? GREEN : BG_BASE, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{h.copied ? '✓ Copie' : 'Copier'}</button>
+                      </div>
+                    </div>
+                    <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.06)' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>INVITER PAR EMAIL</div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input type="email" placeholder="email@client.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendInviteEmail() }}
+                          style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_PRIMARY, outline: 'none' }} />
+                        <button onClick={sendInviteEmail} disabled={!inviteEmail.includes('@') || inviteSending} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: inviteSent ? 'rgba(74,222,128,0.15)' : GOLD, color: inviteSent ? GREEN : BG_BASE, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', opacity: !inviteEmail.includes('@') ? 0.5 : 1 }}>{inviteSent ? '✓ Envoye' : inviteSending ? '...' : 'Inviter'}</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Other sections — render existing components with desktop padding */}
+            {h.section === 'dashboard' && (
+              <ClientsList filtered={h.filtered} loading={h.loading} search={h.search} setSearch={h.setSearch} showInvite={h.showInvite} setShowInvite={h.setShowInvite} inviteLink={h.inviteLink} copied={h.copied} copyInviteLink={h.copyInviteLink} unreadCounts={h.unreadCounts} setSection={h.setSection} openChat={h.openChat} setShowNewSession={h.setShowNewSession} coachInitials={h.coachInitials} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} SESSION_COLORS={SESSION_COLORS} />
+            )}
+            {h.section === 'calendar' && <CoachCalendar calWeekOffset={h.calWeekOffset} setCalWeekOffset={h.setCalWeekOffset} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} setShowNewSession={h.setShowNewSession} setNsDate={h.setNsDate} setSection={h.setSection} />}
+            {h.section === 'messages' && <CoachMessages clients={h.clients} selectedClient={h.selectedClient} setSelectedClient={h.setSelectedClient} openChat={h.openChat} chatMessages={h.chatMessages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} unreadCounts={h.unreadCounts} session={h.session} msgEndRef={h.msgEndRef} />}
+            {h.section === 'programs' && <CoachPrograms session={h.session} clients={h.clients} />}
+            {h.section === 'aliments' && <CoachAliments foodList={h.foodList} foodFilter={h.foodFilter} setFoodFilter={h.setFoodFilter} foodSearchQ={h.foodSearchQ} setFoodSearchQ={h.setFoodSearchQ} foodLoading={h.foodLoading} loadFoods={h.loadFoods} showAddFood={h.showAddFood} setShowAddFood={h.setShowAddFood} newFood={h.newFood} setNewFood={h.setNewFood} saveNewFood={h.saveNewFood} deleteFood={h.deleteFood} />}
+            {h.section === 'profil' && <CoachProfile coachName={h.coachName} coachInitials={h.coachInitials} session={h.session} coachProfile={h.coachProfile} setSection={h.setSection} supabaseSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} />}
+          </main>
+        </div>
+
+        {/* Modals (same as mobile) */}
+        {h.showNewSession && (
+          <div className="modal-bg" onClick={() => h.setShowNewSession(false)}>
+            <div className="modal-box" onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: `1px solid ${BORDER}` }}>
+                <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Nouvelle seance</h2>
+                <button onClick={() => h.setShowNewSession(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: 4 }}><X size={18} /></button>
+              </div>
+              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div><label className="form-label">Client *</label><select value={h.nsClientId} onChange={e => h.setNsClientId(e.target.value)} className="form-input" style={{ cursor: 'pointer' }}><option value="">Selectionner un client…</option>{h.clients.map((c: any) => <option key={c.client_id} value={c.client_id}>{c.profiles?.full_name ?? c.client_id}</option>)}</select></div>
+                <div><label className="form-label">Date *</label><input type="date" value={h.nsDate} onChange={e => h.setNsDate(e.target.value)} className="form-input" style={{ colorScheme: 'dark' }} /></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}><div><label className="form-label">Debut</label><input type="time" value={h.nsStartTime} onChange={e => h.setNsStartTime(e.target.value)} className="form-input" style={{ colorScheme: 'dark' }} /></div><div><label className="form-label">Fin</label><input type="time" value={h.nsEndTime} onChange={e => h.setNsEndTime(e.target.value)} className="form-input" style={{ colorScheme: 'dark' }} /></div></div>
+                <div><label className="form-label">Type</label><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{SESSION_TYPES.map((t: any) => <button key={t.key} onClick={() => h.setNsType(t.key)} className="type-chip" style={{ background: h.nsType === t.key ? `${t.color}20` : BG_CARD_2, borderColor: h.nsType === t.key ? t.color : 'transparent', color: h.nsType === t.key ? t.color : TEXT_MUTED }}>{t.emoji} {t.label}</button>)}</div></div>
+                <div><label className="form-label">Notes</label><textarea value={h.nsNotes} onChange={e => h.setNsNotes(e.target.value)} className="form-input" rows={2} placeholder="Instructions..." /></div>
+                <button onClick={h.saveNewSession} disabled={!h.nsClientId || !!h.nsSaving} className="btn-primary" style={{ marginTop: 8 }}>{h.nsSaving ? 'Enregistrement...' : 'CREER LA SEANCE'}</button>
+              </div>
+            </div>
+          </div>
+        )}
+        <BugReport session={h.session} profile={h.coachProfile} />
+      </div>
+    )
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     MOBILE LAYOUT (<1024px) — original code below
+  ══════════════════════════════════════════════════════════ */
   return (
     <div style={{ minHeight: '100vh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY, overflowX: 'hidden', maxWidth: '100vw' }}>
       <style>{`
