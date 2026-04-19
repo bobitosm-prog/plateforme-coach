@@ -162,7 +162,7 @@ export default function useCoachDashboard(initialSession?: any) {
     return clients.filter(c => (c.profiles?.full_name ?? '').toLowerCase().includes(q))
   }, [clients, search])
 
-  const coachName = session?.user?.user_metadata?.full_name || session?.user?.email || 'Coach'
+  const coachName = coachProfile?.full_name || session?.user?.user_metadata?.full_name || 'Coach'
   const coachInitials = initials(coachName)
   const activeCount = clients.filter(c => statusFor(c.created_at) === 'active').length
 

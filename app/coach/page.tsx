@@ -224,16 +224,12 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           {/* Header */}
           <header style={{ position: 'sticky', top: 0, zIndex: 40, height: 64, background: 'rgba(19,19,19,0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 36px' }}>
             <div>
-              <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '0.08em' }}>BONJOUR {h.coachName.split(' ')[0].toUpperCase()}</h1>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, margin: 0 }}>{h.clients.length} clients actifs · {h.totalUnread} messages non lus</p>
+              <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: '0.08em' }}>
+                BONJOUR{h.coachName !== 'Coach' && !h.coachName.includes('@') ? ` ${h.coachName.split(' ')[0].toUpperCase()}` : ''}
+              </h1>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, margin: 0 }}>{h.clients.length} client{h.clients.length !== 1 ? 's' : ''} actif{h.clients.length !== 1 ? 's' : ''} · {h.totalUnread} message{h.totalUnread !== 1 ? 's' : ''} non lu{h.totalUnread !== 1 ? 's' : ''}</p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {h.coachProfile && !h.coachProfile.stripe_onboarding_complete && (
-                <button onClick={h.handleStripeConnect} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, cursor: 'pointer', color: RED, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em' }}>
-                  <Zap size={12} />STRIPE
-                </button>
-              )}
-            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} />
           </header>
 
           {/* Content */}
@@ -241,86 +237,100 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             {/* ACCUEIL — Dashboard grid */}
             {h.section === 'accueil' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>
-                {/* Stripe banner */}
+                {/* Stripe banner — single, discreet */}
                 {h.coachProfile && !h.coachProfile.stripe_onboarding_complete && (
-                  <div style={{ gridColumn: 'span 12', background: 'rgba(230,195,100,0.06)', border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: FONT_BODY, fontSize: 13, color: GOLD }}>Configure Stripe pour recevoir les paiements de tes clients</span>
-                    <button onClick={h.handleStripeConnect} disabled={h.stripeConnecting} style={{ background: GOLD, color: BG_BASE, border: 'none', padding: '8px 18px', borderRadius: 10, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{h.stripeConnecting ? '...' : 'CONFIGURER'}</button>
+                  <div style={{ gridColumn: 'span 12', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: RADIUS_CARD, padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Zap size={14} color={GOLD} />
+                      <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED }}>Configure Stripe pour recevoir les paiements</span>
+                    </div>
+                    <button onClick={h.handleStripeConnect} disabled={h.stripeConnecting} style={{ background: GOLD, color: BG_BASE, border: 'none', padding: '6px 14px', borderRadius: 8, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 10, letterSpacing: 1, cursor: 'pointer' }}>{h.stripeConnecting ? '...' : 'CONFIGURER'}</button>
                   </div>
                 )}
 
-                {/* Today + Messages + Videos */}
+                {/* Activity today — richer content */}
                 <div style={{ gridColumn: 'span 8', ...CARD }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Activite Aujourd&apos;hui</span><div style={SEC_LINE} /></div>
-                  {/* Today sessions */}
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>SEANCES PREVUES</div>
-                    {todaySessions.length === 0 ? <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_DIM, fontStyle: 'italic' }}>Aucune seance aujourd&apos;hui</div>
-                      : todaySessions.map((s: any) => {
+                  {/* Stats row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    <div onClick={() => h.setSection('messages' as any)} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: h.totalUnread > 0 ? RED : TEXT_DIM }}>{h.totalUnread}</div>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>Messages non lus</div>
+                    </div>
+                    <div style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: h.pendingVideoCount > 0 ? GOLD : TEXT_DIM }}>{h.pendingVideoCount}</div>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>Videos a reviewer</div>
+                    </div>
+                    <div style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: todaySessions.length > 0 ? GOLD : TEXT_DIM }}>{todaySessions.length}</div>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>Seances prevues</div>
+                    </div>
+                  </div>
+                  {/* Today sessions list */}
+                  {todaySessions.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {todaySessions.map((s: any) => {
                         const cn = h.clients.find((c: any) => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
                         return (
-                          <div key={s.id} onClick={() => h.setSelectedSession(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, marginBottom: 4, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
+                          <div key={s.id} onClick={() => h.setSelectedSession(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
                             <div style={{ width: 4, height: 28, borderRadius: 2, background: GOLD }} />
                             <div style={{ flex: 1 }}><div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY }}>{cn}</div><div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{s.session_type} · {format(new Date(s.scheduled_at), 'HH:mm')} · {s.duration_minutes}min</div></div>
+                            <ChevronLeft size={14} color={TEXT_DIM} style={{ transform: 'rotate(180deg)' }} />
                           </div>
                         )
                       })}
-                  </div>
-                  {/* Messages + Videos */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div onClick={() => h.setSection('messages' as any)} style={{ padding: '14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
-                      <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>MESSAGES NON LUS</div>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 700, color: h.totalUnread > 0 ? RED : TEXT_DIM }}>{h.totalUnread}</div>
                     </div>
-                    <div style={{ padding: '14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
-                      <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>VIDEOS A REVIEWER</div>
-                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 700, color: h.pendingVideoCount > 0 ? GOLD : TEXT_DIM }}>{h.pendingVideoCount}</div>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* Revenue KPI */}
+                {/* Revenue KPI — month pills */}
                 <div style={{ gridColumn: 'span 4', ...CARD }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Revenus</span><div style={SEC_LINE} /></div>
                   <div style={{ fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 700, color: GOLD, lineHeight: 1, marginBottom: 8 }}>CHF {fmtRev}</div>
                   <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, marginBottom: 16 }}>{mRevCount} paiement{mRevCount !== 1 ? 's' : ''} ce mois</div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <select value={revMonth} onChange={e => setRevMonth(Number(e.target.value))} style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 8px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
-                      {WP_MONTHS.map((m: string, i: number) => <option key={i} value={i}>{m}</option>)}
-                    </select>
-                    <select value={revYear} onChange={e => setRevYear(Number(e.target.value))} style={{ width: 'auto', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 8px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
-                      {WP_YEARS.map((y: string) => <option key={y} value={y}>{y}</option>)}
-                    </select>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                    <button onClick={() => { const m = revMonth - 1; if (m < 0) { setRevMonth(11); setRevYear(y => y - 1) } else setRevMonth(m) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: TEXT_MUTED }}><ChevronLeft size={16} /></button>
+                    <span style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.05em', minWidth: 100, textAlign: 'center' }}>{WP_MONTHS[revMonth]} {revYear}</span>
+                    <button onClick={() => { const m = revMonth + 1; if (m > 11) { setRevMonth(0); setRevYear(y => y + 1) } else setRevMonth(m) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: TEXT_MUTED }}><ChevronLeft size={16} style={{ transform: 'rotate(180deg)' }} /></button>
                   </div>
                 </div>
 
-                {/* Clients list */}
+                {/* Clients list — enriched */}
                 <div style={{ gridColumn: 'span 8', ...CARD }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                     <span style={SEC_TITLE}>Mes Clients</span><div style={SEC_LINE} />
-                    <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{h.clients.length} actifs</span>
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{h.clients.length} actif{h.clients.length !== 1 ? 's' : ''}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {h.filtered.slice(0, 8).map((c: any) => {
                       const name = c.profiles?.full_name || 'Client'
                       const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
                       const unread = h.unreadCounts[c.client_id] || 0
-                      const daysSinceJoin = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86400000)
+                      const daysSince = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86400000)
+                      const isActive = daysSince < 7
+                      const isWarning = daysSince >= 7 && daysSince < 14
+                      const statusColor = isActive ? GREEN : isWarning ? GOLD : RED
+                      const statusLabel = isActive ? 'Actif' : isWarning ? 'Inactif 7j+' : 'Inactif 14j+'
                       return (
-                        <div key={c.client_id} onClick={() => h.openChat(c.client_id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
+                        <div key={c.client_id} onClick={() => h.openChat(c.client_id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
                           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                           <div style={{ width: 34, height: 34, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 700, color: BG_BASE, flexShrink: 0 }}>{initials}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>{name}</div>
-                            <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Depuis {daysSinceJoin}j</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>{name}</span>
+                              <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: statusColor }}>{statusLabel}</span>
+                            </div>
+                            <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>Depuis {daysSince}j</div>
                           </div>
                           {unread > 0 && <span style={{ minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 9, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unread}</span>}
+                          <ChevronLeft size={14} color={TEXT_DIM} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
                         </div>
                       )
                     })}
                   </div>
-                  {h.clients.length > 8 && <button onClick={() => h.setSection('dashboard' as any)} style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 8, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer' }}>VOIR TOUS</button>}
+                  {h.clients.length > 8 && <button onClick={() => h.setSection('dashboard' as any)} style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer' }}>VOIR TOUS</button>}
                 </div>
 
                 {/* Quick actions */}
@@ -328,19 +338,19 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Actions Rapides</span><div style={SEC_LINE} /></div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <button onClick={() => { h.setShowInvite(true); h.setSection('dashboard' as any) }} style={{ width: '100%', padding: '12px', background: GOLD, color: BG_BASE, border: 'none', borderRadius: 10, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Plus size={14} />NOUVEAU CLIENT</button>
-                    <button onClick={() => h.setSection('programs' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Dumbbell size={14} />NOUVEAU PROGRAMME</button>
-                    <button onClick={() => h.setSection('aliments' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><UtensilsCrossed size={14} />PLAN NUTRITION</button>
-                    <button onClick={() => h.setSection('messages' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><MessageCircle size={14} />ENVOYER UN MESSAGE</button>
+                    <button onClick={() => h.setSection('programs' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Dumbbell size={14} />NOUVEAU PROGRAMME</button>
+                    <button onClick={() => h.setSection('aliments' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><UtensilsCrossed size={14} />PLAN NUTRITION</button>
+                    <button onClick={() => h.setSection('messages' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><MessageCircle size={14} />ENVOYER UN MESSAGE</button>
                   </div>
                 </div>
 
-                {/* Invite */}
+                {/* Invite — compact */}
                 <div style={{ gridColumn: 'span 12', ...CARD, padding: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>LIEN D&apos;INVITATION</div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <input readOnly value={h.inviteLink} onClick={e => (e.target as HTMLInputElement).select()} style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, outline: 'none', overflow: 'hidden', textOverflow: 'ellipsis' }} />
+                        <input readOnly value={h.inviteLink} onClick={e => (e.target as HTMLInputElement).select()} style={{ flex: 1, background: BG_BASE, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, outline: 'none', overflow: 'hidden', textOverflow: 'ellipsis' }} />
                         <button onClick={h.copyInviteLink} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: h.copied ? 'rgba(74,222,128,0.15)' : GOLD, color: h.copied ? GREEN : BG_BASE, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{h.copied ? '✓ Copie' : 'Copier'}</button>
                       </div>
                     </div>
@@ -349,7 +359,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                       <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>INVITER PAR EMAIL</div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <input type="email" placeholder="email@client.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendInviteEmail() }}
-                          style={{ flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_PRIMARY, outline: 'none' }} />
+                          style={{ flex: 1, background: BG_BASE, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_PRIMARY, outline: 'none' }} />
                         <button onClick={sendInviteEmail} disabled={!inviteEmail.includes('@') || inviteSending} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: inviteSent ? 'rgba(74,222,128,0.15)' : GOLD, color: inviteSent ? GREEN : BG_BASE, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', opacity: !inviteEmail.includes('@') ? 0.5 : 1 }}>{inviteSent ? '✓ Envoye' : inviteSending ? '...' : 'Inviter'}</button>
                       </div>
                     </div>
