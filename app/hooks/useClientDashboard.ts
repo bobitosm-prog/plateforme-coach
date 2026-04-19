@@ -217,7 +217,7 @@ export default function useClientDashboard() {
       setCoachId(coachLink.coach_id)
       setIsDefaultCoach(!!defaultCoachId && coachLink.coach_id === defaultCoachId)
     } else if (defaultCoachId) {
-      await supabase.from('coach_clients').insert({ coach_id: defaultCoachId, client_id: uid }).select().maybeSingle()
+      await supabase.from('coach_clients').upsert({ coach_id: defaultCoachId, client_id: uid }, { onConflict: 'coach_id,client_id', ignoreDuplicates: true }).select().maybeSingle()
       setCoachId(defaultCoachId)
       setIsDefaultCoach(true)
     }
