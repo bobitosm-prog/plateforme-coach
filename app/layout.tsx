@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Bebas_Neue, Barlow_Condensed, Outfit, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -33,14 +33,6 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
-};
-
 export const metadata: Metadata = {
   title: "MoovX",
   description: "Coaching fitness Swiss Made · Swiss Quality",
@@ -56,6 +48,7 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#D4A843" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="MoovX" />
