@@ -227,7 +227,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: e.rest_seconds || e.rest || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, sets: makeSets(e.sets || 3), open: true })))
+  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: parseInt(String(e.rest_seconds || e.rest || 90)) || 90, tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, sets: makeSets(e.sets || 3), open: true })))
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
@@ -354,7 +354,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     let r = 90, exoName = '', nextSetNum = 0
     setExos(p => p.map(e => {
       if (e.id !== eid) return e
-      r = e.rest; exoName = e.name
+      r = parseInt(String(e.rest)) || 90; exoName = e.name
       const updated = { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) }
       const nextUndone = updated.sets.find(s => !s.done)
       nextSetNum = nextUndone?.num || 0
