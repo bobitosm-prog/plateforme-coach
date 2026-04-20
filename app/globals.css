@@ -1,10 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  --header-height: 64px;
-  --bottomnav-height: 80px;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --background: #0D0B08;
   --foreground: #F5EDD8;
   --gold: #D4A843;
