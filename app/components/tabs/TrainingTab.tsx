@@ -1111,46 +1111,53 @@ export default function TrainingTab({
                   <div style={{ background: colors.surface, border: `1px solid ${colors.goldRule}`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                     <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>MODE EDITION</div>
                     {day.exercises.map((ex: any, i: number) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
-                          <button onClick={() => editMoveEx(dayIdx, i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: i === 0 ? colors.textDim : colors.gold, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▲</button>
-                          <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? colors.textDim : colors.gold, fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}>▼</button>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
-                          <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Sets</span>
-                              <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                            </div>
-                            <span style={{ color: colors.textDim, alignSelf: 'center', fontSize: 10 }}>x</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Reps</span>
-                              <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '3px 4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Repos</span>
-                              <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 42, padding: '3px 4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>s</span>
-                            </div>
+                      <div key={i} style={{ padding: '12px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
+                        {/* Row 1: arrows + name + action icons */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 1, flexShrink: 0 }}>
+                            <button onClick={() => editMoveEx(dayIdx, i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: i === 0 ? colors.textDim : colors.gold, fontSize: 11, cursor: 'pointer', padding: '1px 3px', lineHeight: 1 }}>▲</button>
+                            <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? colors.textDim : colors.gold, fontSize: 11, cursor: 'pointer', padding: '1px 3px', lineHeight: 1 }}>▼</button>
                           </div>
-                          {/* Tempo */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 6 }}>
-                            <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Tempo</span>
-                            {[0, 1, 2].map(idx => {
-                              const parts = (ex.tempo || '2-0-2').split('-')
-                              return (
-                                <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                  <input type="number" min={0} max={9} value={parts[idx] || (idx === 1 ? '0' : '2')} onChange={e => { const p = [...parts]; p[idx] = e.target.value; editExField(dayIdx, i, 'tempo', p.join('-')) }} style={{ width: 28, padding: '3px 2px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 12, outline: 'none' }} />
-                                  {idx < 2 && <span style={{ color: colors.textDim, fontSize: 10 }}>-</span>}
-                                </span>
-                              )
-                            })}
+                          <div style={{ flex: 1, ...bodyStyle, color: colors.text, fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
+                          <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(230,195,100,0.06)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                          </button>
+                          <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(230,195,100,0.06)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M8 3H3v5M21 3l-7 7M3 21l7-7M21 21h-5v-5M3 21V16h5"/></svg>
+                          </button>
+                          <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.error, fontSize: 12, cursor: 'pointer', flexShrink: 0 }}>✕</button>
+                        </div>
+                        {/* Row 2: Sets × Reps · Repos */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 26 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Sets</span>
+                            <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
+                          </div>
+                          <span style={{ color: colors.textDim, fontSize: 10 }}>×</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Reps</span>
+                            <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
+                          </div>
+                          <span style={{ color: colors.textDim, fontSize: 10 }}>·</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Repos</span>
+                            <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 44, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
+                            <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted }}>s</span>
                           </div>
                         </div>
-                        <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(212,168,67,0.06)', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>ℹ️</button>
-                        <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>🔄</button>
-                        <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.error, fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>✕</button>
+                        {/* Row 3: Tempo */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 6, marginLeft: 26 }}>
+                          <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Tempo</span>
+                          {[0, 1, 2].map(idx => {
+                            const parts = (ex.tempo || '2-0-2').split('-')
+                            return (
+                              <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <input type="number" min={0} max={9} value={parts[idx] || (idx === 1 ? '0' : '2')} onChange={e => { const p = [...parts]; p[idx] = e.target.value; editExField(dayIdx, i, 'tempo', p.join('-')) }} style={{ width: 28, padding: '3px 2px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 12, outline: 'none' }} />
+                                {idx < 2 && <span style={{ color: colors.textDim, fontSize: 10 }}>-</span>}
+                              </span>
+                            )
+                          })}
+                        </div>
                       </div>
                     ))}
                     <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${colors.goldRule}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>+ AJOUTER UN EXERCICE</button>
