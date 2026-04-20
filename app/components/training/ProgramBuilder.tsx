@@ -11,6 +11,8 @@ import {
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
 import { TechniqueExplanationCards } from '../tabs/training/TechniquePopup'
+import StickyCTA from '../ui/StickyCTA'
+import { NumberField } from '../ui/NumberField'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -356,7 +358,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60, background: BG_BASE, overflowY: 'auto',
     }}>
-      <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 16px 100px' }}>
+      <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 16px 128px' }}>
 
         {/* ──────── MODE SELECT ──────── */}
         {mode === 'select' && (
@@ -569,17 +571,19 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               return usedTechniques.length > 0 ? <TechniqueExplanationCards techniques={usedTechniques} /> : null
             })()}
 
-            <button
-              onClick={saveProgram}
-              disabled={saving}
-              style={{
-                width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
-                color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
-                cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
-              }}
-            >
-              {saving ? 'SAUVEGARDE...' : 'SAUVEGARDER'}
-            </button>
+            <StickyCTA>
+              <button
+                onClick={saveProgram}
+                disabled={saving}
+                style={{
+                  width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
+                  color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {saving ? 'SAUVEGARDE...' : 'SAUVEGARDER'}
+              </button>
+            </StickyCTA>
           </div>
         )}
 
@@ -664,17 +668,19 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               <div>
                 {renderDayEditor()}
 
-                <button
-                  onClick={saveProgram}
-                  disabled={saving}
-                  style={{
-                    width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
-                    color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
-                    cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
-                  }}
-                >
-                  {saving ? 'SAUVEGARDE...' : 'SAUVEGARDER LE PROGRAMME'}
-                </button>
+                <StickyCTA>
+                  <button
+                    onClick={saveProgram}
+                    disabled={saving}
+                    style={{
+                      width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
+                      color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                      cursor: saving ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {saving ? 'SAUVEGARDE...' : 'SAUVEGARDER LE PROGRAMME'}
+                  </button>
+                </StickyCTA>
               </div>
             )}
           </div>
@@ -731,13 +737,13 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             {/* Sets */}
             <div style={{ marginBottom: 20 }}>
               <div style={labelStyle}>Séries</div>
-              <input type="number" min={1} max={10} value={ceSets} onChange={e => setCeSets(Number(e.target.value))} style={{ ...inputStyle, width: 100 }} />
+              <NumberField min={1} max={20} fallback={3} value={ceSets} onChange={setCeSets} style={{ ...inputStyle, width: 100 }} />
             </div>
 
             {/* Reps */}
             <div style={{ marginBottom: 20 }}>
               <div style={labelStyle}>Répétitions</div>
-              <input type="number" min={1} max={30} value={ceReps} onChange={e => setCeReps(Number(e.target.value))} style={{ ...inputStyle, width: 100 }} />
+              <NumberField min={1} max={99} fallback={8} value={ceReps} onChange={setCeReps} style={{ ...inputStyle, width: 100 }} />
             </div>
 
             {/* Rest */}
@@ -1114,19 +1120,19 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <div>
                       <div style={{ ...labelStyle, marginBottom: 4 }}>Séries</div>
-                      <input
-                        type="number" min={1} max={10}
+                      <NumberField
+                        min={1} max={20} fallback={1}
                         value={ex.sets || 3}
-                        onChange={e => updateExerciseField(editingDayIndex, exIdx, 'sets', Number(e.target.value))}
+                        onChange={n => updateExerciseField(editingDayIndex, exIdx, 'sets', n)}
                         style={{ ...inputStyle, width: 60, padding: '8px', textAlign: 'center' }}
                       />
                     </div>
                     <div>
                       <div style={{ ...labelStyle, marginBottom: 4 }}>Reps</div>
-                      <input
-                        type="number" min={1} max={100}
+                      <NumberField
+                        min={1} max={99} fallback={8}
                         value={ex.reps || 10}
-                        onChange={e => updateExerciseField(editingDayIndex, exIdx, 'reps', Number(e.target.value))}
+                        onChange={n => updateExerciseField(editingDayIndex, exIdx, 'reps', n)}
                         style={{ ...inputStyle, width: 60, padding: '8px', textAlign: 'center' }}
                       />
                     </div>
@@ -1152,11 +1158,11 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                         const parts = (ex.tempo || '2-0-2').split('-')
                         return [0, 1, 2].map(i => (
                           <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <input
-                              type="number" min={0} max={9}
-                              value={parts[i] || (i === 1 ? '0' : '2')}
-                              onChange={e => {
-                                const p = [...parts]; p[i] = e.target.value
+                            <NumberField
+                              min={0} max={10} fallback={i === 1 ? 0 : 2}
+                              value={Number(parts[i]) || (i === 1 ? 0 : 2)}
+                              onChange={n => {
+                                const p = [...parts]; p[i] = String(n)
                                 updateExerciseField(editingDayIndex, exIdx, 'tempo', p.join('-'))
                               }}
                               style={{ ...inputStyle, width: 36, padding: '8px 4px', textAlign: 'center', fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD }}
