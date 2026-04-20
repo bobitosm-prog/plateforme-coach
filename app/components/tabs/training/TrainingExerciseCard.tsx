@@ -7,6 +7,7 @@ import {
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS,
 } from '../../../../lib/design-tokens'
 import ExercisePreview from '../../ExercisePreview'
+import { getRestSeconds } from '../../../../lib/utils/exercise'
 
 interface PreviousSet {
   weight: number
@@ -47,7 +48,7 @@ export default function TrainingExerciseCard({
   onToggleSet, onAddSet, onUpdateInput, onExerciseInfo, fmtRest, onCancelRest, onVideoFeedback, onTechniqueInfo,
   supabase, userId,
 }: TrainingExerciseCardProps) {
-  const restSecs   = parseInt(String(ex.rest_seconds || ex.rest)) || 90
+  const restSecs   = getRestSeconds(ex)
   const numSets    = setsArr.length
   const doneCount  = setsArr.filter(Boolean).length
   const allDone    = doneCount === numSets && numSets > 0

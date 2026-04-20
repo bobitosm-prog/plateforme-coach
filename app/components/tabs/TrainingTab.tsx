@@ -31,6 +31,7 @@ import TrainingSessionDone from './training/TrainingSessionDone'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
 import { TechniqueTooltip } from './training/TechniquePopup'
 import StartProgramModal from './training/StartProgramModal'
+import { getRestSeconds } from '../../../lib/utils/exercise'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
@@ -1079,7 +1080,7 @@ export default function TrainingTab({
                 {[
                   { label: 'SETS', value: trainingExercises.reduce((s: number, e: any) => s + (Number(e.sets) || 3), 0) },
                   { label: 'EXERCICES', value: trainingExercises.length },
-                  { label: 'REPOS', value: `${Math.round(trainingExercises.reduce((s: number, e: any) => s + (Number(e.rest_seconds) || 90), 0) / 60)}min` },
+                  { label: 'REPOS', value: `${Math.round(trainingExercises.reduce((s: number, e: any) => s + getRestSeconds(e), 0) / 60)}min` },
                 ].map(s => (
                   <div key={s.label} style={{ background: colors.goldDim, borderRadius: 10, padding: 10, textAlign: 'center' }}>
                     <div style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 700, color: colors.text }}>{s.value}</div>

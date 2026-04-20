@@ -13,6 +13,7 @@ import {
 import { colors, fonts } from '../../lib/design-tokens'
 import MuscleHeatMap, { calculateMuscleStatus } from '../components/ui/MuscleHeatMap'
 import { getLevelFromXP, getLevelTitle } from '../../lib/gamification'
+import { getRestSeconds } from '../../lib/utils/exercise'
 
 /* ═══════════════════════════════════════════════════
    TYPES
@@ -271,7 +272,7 @@ export default function DesktopDashboard({
     const name = dayData.day_name || dayData.name || 'Seance du jour'
     const muscles = [...new Set(exercises.map((e: any) => e.muscle_group || '').filter(Boolean))] as string[]
     const totalSets = exercises.reduce((s: number, e: any) => s + (e.sets || 3), 0)
-    const avgRest = exercises.length > 0 ? Math.round(exercises.reduce((s: number, e: any) => s + (e.rest_seconds || 90), 0) / exercises.length) : 90
+    const avgRest = exercises.length > 0 ? Math.round(exercises.reduce((s: number, e: any) => s + getRestSeconds(e), 0) / exercises.length) : 90
     return { name, exercises, muscles, totalSets, avgRest, dayData }
   }, [coachProgram, todayKey])
 
@@ -544,7 +545,7 @@ function TrainingView({ todaySessionInfo, todaySessionDone, weekProgram, todayKe
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(230,195,100,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: GOLD }}>{i + 1}</div>
                 <div style={{ flex: 1 }}><div style={{ fontFamily: BODY, fontSize: 13, fontWeight: 600, color: TEXT }}>{ex.exercise_name || ex.name}</div>{ex.muscle_group && <div style={{ fontFamily: BODY, fontSize: 10, color: MUTED }}>{ex.muscle_group}</div>}</div>
                 <span style={{ fontFamily: BODY, fontSize: 11, color: MUTED }}>{ex.sets || 3}x{ex.reps || '10-12'}</span>
-                <span style={{ fontFamily: BODY, fontSize: 10, color: MUTED }}>{ex.rest_seconds || 90}s</span>
+                <span style={{ fontFamily: BODY, fontSize: 10, color: MUTED }}>{getRestSeconds(ex)}s</span>
               </div>
             ))}
           </div>
