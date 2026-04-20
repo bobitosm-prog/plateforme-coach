@@ -47,7 +47,7 @@ export default function TrainingExerciseCard({
   onToggleSet, onAddSet, onUpdateInput, onExerciseInfo, fmtRest, onCancelRest, onVideoFeedback, onTechniqueInfo,
   supabase, userId,
 }: TrainingExerciseCardProps) {
-  const restSecs   = Number(ex.rest) || 90
+  const restSecs   = parseInt(String(ex.rest_seconds || ex.rest)) || 90
   const numSets    = setsArr.length
   const doneCount  = setsArr.filter(Boolean).length
   const allDone    = doneCount === numSets && numSets > 0

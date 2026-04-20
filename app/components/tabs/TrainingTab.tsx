@@ -1174,8 +1174,10 @@ export default function TrainingTab({
               {trainingExercises.map((ex: any, exIdx: number) => {
                 const storageKey = `moovx-sets-${todayStr}-${ex.name}`
                 const n = Number(ex.sets) || 3
-                const setsArr: boolean[] = completedSets[storageKey] || Array.from({ length: n }, () => false)
-                const numSets = setsArr.length
+                const stored = completedSets[storageKey]
+                // Use program's set count, not stale localStorage length
+                const setsArr: boolean[] = stored ? stored.slice(0, n).concat(Array.from({ length: Math.max(0, n - stored.length) }, () => false)) : Array.from({ length: n }, () => false)
+                const numSets = n
                 const inputs = setInputs[ex.name] || Array.from({ length: numSets }, () => ({ kg: '', reps: String(ex.reps || '') }))
                 // Check if this exercise is part of a superset pair
                 const nextEx = trainingExercises[exIdx + 1]
