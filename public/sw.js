@@ -15,7 +15,7 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const clone = response.clone()
-          caches.open('moovx-v3').then((cache) => {
+          caches.open('moovx-v4').then((cache) => {
             cache.put(event.request, clone).catch(() => {})
           })
         }
