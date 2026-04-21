@@ -340,7 +340,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   }, [])
 
   const startRest = (s: number, exoId?: string, nextInfo?: string) => {
+    console.log('[WorkoutSession.startRest] called with', { s, s_type: typeof s });
     if (restT.current) clearTimeout(restT.current)
+    console.log('[WorkoutSession.startRest] APPLYING', { s });
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
     if (exoId) setRestExoId(exoId)
     if (nextInfo) setRestNextInfo(nextInfo)
@@ -356,6 +358,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     setExos(p => p.map(e => {
       if (e.id !== eid) return e
       r = getRestSeconds(e); exoName = e.name
+      console.log('[WorkoutSession] r calculation', {
+        exoName: e.name,
+        e_rest: e.rest,
+        e_rest_seconds: (e as any).rest_seconds,
+        r_after_getRestSeconds: r,
+      })
       const updated = { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) }
       const nextUndone = updated.sets.find(s => !s.done)
       nextSetNum = nextUndone?.num || 0
