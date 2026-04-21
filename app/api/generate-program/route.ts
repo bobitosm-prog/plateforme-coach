@@ -86,7 +86,7 @@ RÈGLES HYPERTROPHIE :
 
 Réponds avec SEULEMENT ce JSON (pas de texte avant ou après):
 {
-  "lundi": {"isRest": false, "day_name": "Push A", "exercises": [{"name": "Développé couché barre", "sets": 4, "reps": 10, "rest": "90s", "notes": ""}]},
+  "lundi": {"isRest": false, "day_name": "Push A", "exercises": [{"name": "Développé couché barre", "sets": 4, "reps": 10, "rest_seconds": 90, "notes": ""}]},
   "mardi": {"isRest": false, "day_name": "Pull A", "exercises": [...]},
   "mercredi": {"isRest": false, "day_name": "Legs A", "exercises": [...]},
   "jeudi": {"isRest": false, "day_name": "Push B", "exercises": [...]},
@@ -99,7 +99,8 @@ IMPORTANT :
 - Génère exactement ${days} jours d'entraînement et ${7 - days} jours de repos
 - Chaque jour doit avoir un "day_name" descriptif (ex: "Push A", "Full Body A", "Upper A")
 - Les exercices doivent être réalistes et adaptés au niveau ${level}
-- Varie les exercices entre les sessions A et B pour le même groupe musculaire`
+- Varie les exercices entre les sessions A et B pour le même groupe musculaire
+- Le champ rest_seconds DOIT être un nombre entier représentant des secondes (ex: 90, 120, 180), JAMAIS une string avec suffixe`
 
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

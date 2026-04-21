@@ -352,10 +352,13 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
   const doValidate = (eid: string, sid: string) => {
     initAudio()
-    let r = 90, exoName = '', nextSetNum = 0
+    // Compute r SYNCHRONOUSLY before any state update
+    const targetExo = exos.find(e => e.id === eid)
+    const r = targetExo ? getRestSeconds(targetExo) : 90
+    const exoName = targetExo?.name || ''
+    let nextSetNum = 0
     setExos(p => p.map(e => {
       if (e.id !== eid) return e
-      r = getRestSeconds(e); exoName = e.name
       const updated = { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) }
       const nextUndone = updated.sets.find(s => !s.done)
       nextSetNum = nextUndone?.num || 0
