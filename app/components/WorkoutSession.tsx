@@ -228,7 +228,10 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, sets: makeSets(e.sets || 3), open: true })))
+  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => {
+    console.log('[WorkoutSession] init exercise:', { name: e.exercise_name || e.name, rest: e.rest, rest_seconds: e.rest_seconds })
+    return { id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, sets: makeSets(e.sets || 3), open: true }
+  }))
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
@@ -356,6 +359,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     setExos(p => p.map(e => {
       if (e.id !== eid) return e
       r = getRestSeconds(e); exoName = e.name
+      console.log('[WorkoutSession] timer trigger:', { name: e.name, rest: e.rest, rest_seconds: (e as any).rest_seconds, resolved: r })
       const updated = { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) }
       const nextUndone = updated.sets.find(s => !s.done)
       nextSetNum = nextUndone?.num || 0

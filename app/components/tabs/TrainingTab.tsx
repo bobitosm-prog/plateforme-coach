@@ -154,10 +154,19 @@ export default function TrainingTab({
 
   // Resolve exercises for current phase (periodized programs)
   const resolvedExercises: any[] = baseExercises.map((ex: any) => {
-    if (!ex.phases || !activeCustomProgram?.current_week) return ex
+    if (!ex.phases || !activeCustomProgram?.current_week) {
+      console.log('[TrainingTab] non-periodized exercise:', { name: ex.name, rest: ex.rest, rest_seconds: ex.rest_seconds })
+      return ex
+    }
     const week = activeCustomProgram.current_week || 1
     const phaseKey = week <= 4 ? 'p1' : week <= 8 ? 'p2' : 'p3'
     const phaseData = ex.phases[phaseKey] || ex.phases.p1 || {}
+    console.log('[TrainingTab] resolved exercise:', {
+      name: ex.name,
+      original_rest: ex.rest,
+      original_rest_seconds: ex.rest_seconds,
+      phase_rest_seconds: phaseData.rest_seconds,
+    })
     return {
       ...ex,
       sets: phaseData.sets ?? ex.sets,
