@@ -340,9 +340,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   }, [])
 
   const startRest = (s: number, exoId?: string, nextInfo?: string) => {
-    console.log('[WorkoutSession.startRest] called with', { s, s_type: typeof s });
     if (restT.current) clearTimeout(restT.current)
-    console.log('[WorkoutSession.startRest] APPLYING', { s });
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
     if (exoId) setRestExoId(exoId)
     if (nextInfo) setRestNextInfo(nextInfo)
@@ -358,12 +356,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     const targetExo = exos.find(e => e.id === eid)
     const r = targetExo ? getRestSeconds(targetExo) : 90
     const exoName = targetExo?.name || ''
-    console.log('[WorkoutSession] r calculation', {
-      exoName,
-      e_rest: targetExo?.rest,
-      e_rest_seconds: (targetExo as any)?.rest_seconds,
-      r_after_getRestSeconds: r,
-    })
     let nextSetNum = 0
     setExos(p => p.map(e => {
       if (e.id !== eid) return e
@@ -377,7 +369,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     const nextInfo = nextSetNum > 0
       ? `Set ${nextSetNum}${prevInfo ? ` — ${prevInfo.weight} kg × ${prevInfo.reps}` : ''}`
       : 'Exercice termine'
-    console.log('[WorkoutSession] calling startRest with', { r })
     startRest(r, eid, nextInfo)
   }
   const validate = (eid: string, sid: string) => {

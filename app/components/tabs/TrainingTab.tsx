@@ -496,13 +496,6 @@ export default function TrainingTab({
 
   function toggleSet(exName: string, setIdx: number, totalSetsCount: number, restSecs: number) {
     initAudio() // Unlock audio on iOS at user interaction
-    console.log('[toggleSet] INPUT', {
-      exName,
-      setIdx,
-      totalSetsCount,
-      restSecs,
-      restSecs_type: typeof restSecs,
-    });
     const key  = `moovx-sets-${todayStr}-${exName}`
     const prev = completedSets[key] || Array.from({ length: totalSetsCount }, () => false)
     const next = [...prev]
@@ -513,11 +506,6 @@ export default function TrainingTab({
     if (next[setIdx]) {
       const allDone = next.every(Boolean)
       if (!allDone && restSecs > 0) {
-        console.log('[toggleSet] APPLYING TO TIMER', {
-          restSecs,
-          willSetRestMax: restSecs,
-          willSetRestTimer: restSecs,
-        });
         setRestingSet({ exName, setIdx })
         setActiveRestExName(exName)
         setRestMax(restSecs)

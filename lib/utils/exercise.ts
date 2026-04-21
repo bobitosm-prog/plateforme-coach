@@ -60,12 +60,5 @@ export function getRestSeconds(
 ): number {
   const parsed =
     parseRestValue(ex.rest_seconds) ?? parseRestValue(ex.rest);
-
-  console.log("[getRestSeconds]", {
-    input: { rest: ex.rest, rest_seconds: ex.rest_seconds },
-    parsed,
-    output: parsed ?? fallback,
-  });
-
   return parsed ?? fallback;
 }
