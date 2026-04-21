@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import ErudaLoader from "@/app/components/debug/ErudaLoader";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -81,6 +82,7 @@ export default function RootLayout({
         <Toaster position="top-center" richColors theme="dark" />
         <Analytics />
         <SpeedInsights />
+        <ErudaLoader />
       </body>
     </html>
   );
