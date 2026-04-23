@@ -1645,7 +1645,7 @@ export default function TrainingTab({
           <div onClick={e=>e.stopPropagation()} style={{background:colors.surface,border:`1px solid ${colors.goldRule}`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.goldBorder}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span style={{fontFamily:fonts.headline,fontSize:20,letterSpacing:2,color:colors.text}}>VARIANTES</span>
-              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:colors.textMuted,fontSize:20,cursor:'pointer'}}>✕</button>
+              <button aria-label="Fermer les variantes" onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:colors.textMuted,fontSize:20,cursor:'pointer'}}>✕</button>
             </div>
             <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px 30px'}}>
               {variantPopup.variants.length===0?(
@@ -1678,7 +1678,7 @@ export default function TrainingTab({
                   {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
                 </div>
               </div>
-              <button onClick={()=>setSelectedWorkout(null)} style={{width:36,height:36,borderRadius:12,background:colors.goldDim,border:`1px solid ${colors.goldBorder}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:colors.textMuted,fontSize:16}}>✕</button>
+              <button aria-label="Fermer le detail de l'exercice" onClick={()=>setSelectedWorkout(null)} style={{width:36,height:36,borderRadius:12,background:colors.goldDim,border:`1px solid ${colors.goldBorder}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:colors.textMuted,fontSize:16}}>✕</button>
             </div>
             <div style={{flex:1,overflowY:'auto',padding:'12px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
               {loadingDetail?(

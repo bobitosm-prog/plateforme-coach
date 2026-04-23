@@ -78,7 +78,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
           <div style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflow: 'auto', padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <span style={{ ...titleStyle, fontSize: 16 }}>{libDetail.name}</span>
-              <button onClick={() => setLibDetail(null)} style={{ background: colors.surfaceHigh, border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} color={colors.text} /></button>
+              <button aria-label="Fermer les details de l'exercice" onClick={() => setLibDetail(null)} style={{ background: colors.surfaceHigh, border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} color={colors.text} /></button>
             </div>
             {libDetail.video_url && <video src={libDetail.video_url} controls autoPlay loop muted playsInline style={{ width: '100%', borderRadius: 12, marginBottom: 16, maxHeight: 240, objectFit: 'cover' }} />}
             {!libDetail.video_url && libDetail.gif_url && <img src={libDetail.gif_url} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 16, maxHeight: 240, objectFit: 'cover' }} />}
@@ -96,7 +96,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
       {libShowAll && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: colors.background, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', paddingTop: 'max(16px, env(safe-area-inset-top))', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => setLibShowAll(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}><X size={22} color={colors.text} /></button>
+            <button aria-label="Fermer la bibliotheque" onClick={() => setLibShowAll(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}><X size={22} color={colors.text} /></button>
             <span style={{ ...titleStyle, fontSize: 16, flex: 1 }}>BIBLIOTH&Egrave;QUE</span>
           </div>
           <div style={{ padding: '12px 20px' }}>
