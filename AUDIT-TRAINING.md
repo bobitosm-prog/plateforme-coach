@@ -497,4 +497,86 @@ programmes templates pour ses clients" est activee en production.
 
 ---
 
+## BUG DESKTOP — Bouton "Demarrer" ne reagit pas au clic
+
+**Decouvert le : 2026-04-22**
+**Impact utilisateurs actuels : inconnu** (probablement peu, l'app est PWA mobile first)
+**Priorite : moyenne**
+
+### Symptome
+
+Sur Safari desktop (Mac), quand l'utilisateur clique sur "Demarrer la seance"
+depuis un programme, le bouton ne reagit pas au clic. Aucune action, aucune
+erreur visible.
+
+### Impact du bug
+
+- Impossible de tester l'app en conditions reelles sur desktop
+- Bloquant pour le debug iPhone via remote debugging (on doit passer par
+  eruda a la place)
+- A l'avenir : utilisateurs desktop (coaches qui preparent des programmes)
+  seront bloques
+
+### Reproduction
+
+1. Ouvrir l'app sur Safari Mac ou Chrome desktop
+2. Se connecter
+3. Aller dans Training
+4. Choisir un programme (PPL Hypertrophie Elite par exemple)
+5. Cliquer sur "Demarrer la seance"
+6. Observer : rien ne se passe
+
+### Hypotheses de cause
+
+A investiguer :
+- Event handler manquant sur la version desktop
+- Breakpoint responsive qui cache le bouton (z-index ?)
+- Prop `trainingIsToday` qui vaudrait false en desktop
+- Test `window.matchMedia('...')` bloquant
+
+### Effort estime
+
+30 min a 1h selon la cause.
+
+---
+
+## LIMITATION IOS — beforeunload inconsistent sur Safari mobile
+
+**Decouvert le : 2026-04-22** (lors du merge du fix beforeunload)
+**Pas un bug** - c'est une limitation documentee d'iOS Safari
+**Priorite : basse (informationnelle)**
+
+### Symptome
+
+Le hook useBeforeUnload (deploye dans TrainingTab + WorkoutSession)
+fonctionne sur certaines actions mais pas d'autres sur iOS Safari :
+
+| Action | Popup ? |
+|--------|---------|
+| Pull-to-refresh | Non |
+| Fermer onglet | Incoherent |
+| Swipe gesture retour | Non |
+| Nouvelle URL dans la barre | Non |
+| Tap lien externe | Oui |
+
+### Cause
+
+Apple a choisi de limiter beforeunload sur mobile pour preserver l'UX native
+des gestes. Ce n'est pas un bug de notre code.
+
+### Contournement actuel
+
+LocalStorage deja en place (`moovx-sets-${todayStr}-${exName}`) qui persiste
+les sets et inputs entre les rechargements. La perte de donnees est minime
+meme sans le popup.
+
+### Action recommandee
+
+Aucune. Documenter, accepter la limitation. Le hook reste utile pour :
+- Android Chrome
+- Desktop (quand le bug "bouton Demarrer" sera fix)
+- Safari iOS en fermeture d'onglet (parfois)
+
+---
+
 *Fin du rapport d'audit Training.*
