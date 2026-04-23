@@ -6,6 +6,7 @@ import { fr } from 'date-fns/locale'
 import { addXP, updateStreak } from '../../../lib/gamification'
 import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
+import { useBeforeUnload } from '../../hooks/useBeforeUnload'
 import {
   Dumbbell, Search, Award, Moon, ChevronRight, ArrowRightLeft, X, Play,
 } from 'lucide-react'
@@ -91,6 +92,7 @@ export default function TrainingTab({
   const [workoutHistory, setWorkoutHistory] = useState<any[]>([])
   const [workoutFinished, setWorkoutFinished] = useState(false)
   const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
+  useBeforeUnload(workoutStarted !== null)
   const [videoExercise, setVideoExercise]     = useState<string | null>(null)
   const [activeRestExName, setActiveRestExName] = useState<string | null>(null)
   const [restingSet, setRestingSet]     = useState<{ exName: string; setIdx: number } | null>(null)
