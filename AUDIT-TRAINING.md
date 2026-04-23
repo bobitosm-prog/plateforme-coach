@@ -579,4 +579,54 @@ Aucune. Documenter, accepter la limitation. Le hook reste utile pour :
 
 ---
 
+## CHAOS SCHEMATIQUE — Training module (decouvert 2026-04-22)
+
+**Priorite : haute** (bloque tout refacto types stricts)
+**Effort estime : 3-5h pour normalisation complete**
+
+Le code utilise plusieurs variantes pour les memes champs, resultat
+d'une evolution sans gardien de schema. Chaque variante est un vecteur
+potentiel de bugs type "rest=120s" (deja rencontre).
+
+### Variantes detectees
+
+| Champ | Variantes | Fichiers concernes |
+|-------|-----------|---------------------|
+| Repos exercice | `rest` (number) / `rest_seconds` (number\|string) | ProgramBuilder vs API vs TrainingTab |
+| Nom exercice | `name` / `exercise_name` / `custom_name` / `exerciseName` | WorkoutSession vs TrainingTab vs 2 API routes |
+| Image exercice | `gif_url` / `image_url` | exercises_db vs WorkoutSession |
+| Muscle cible | `muscle_group` / `muscle_primary` / `muscle` | DB vs API vs WorkoutSession |
+| Nom du jour | `name` / `day_name` | ProgramBuilder vs API generate-program |
+
+### Impact
+
+- Helper `getRestSeconds()` doit deja tolerer 5 formats (strings "120s",
+  "2min", etc.) a cause de ces variantes
+- Bugs silencieux probables dans l'affichage des muscles cibles,
+  images, noms
+- Impossibilite d'ecrire des types TypeScript stricts sans migrer
+  d'abord le schema
+- 88 `as any` dans le module Training en consequence
+
+### Plan de remediation recommande
+
+**Phase A — Choix canonique par champ (decision)**
+- Decider pour chaque variante quelle est la "vraie" (canonique)
+- Ex : `name` pour l'exercice, `rest_seconds: number` pour le repos
+
+**Phase B — Migration DB**
+- Migration SQL pour unifier les colonnes JSONB existantes
+- Script one-shot pour normaliser les donnees existantes
+
+**Phase C — Migration code**
+- Types TypeScript stricts (`lib/types/training.ts`)
+- Remplacement progressif des `as any` dans les 3 fichiers critiques
+- Tests unitaires sur les helpers de parsing
+
+**Phase D — Gardiens**
+- Tests d'integration sur le flux de creation programme
+- Typage strict de l'API route `generate-program` (zod schema)
+
+---
+
 *Fin du rapport d'audit Training.*
