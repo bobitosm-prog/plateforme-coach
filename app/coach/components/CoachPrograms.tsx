@@ -213,6 +213,16 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={!!programToDelete}
+        variant="danger"
+        title="Supprimer ce programme ?"
+        message={`Cette action est irréversible. Le programme "${programToDelete?.name}" sera définitivement supprimé.`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => programToDelete && deleteProgram(programToDelete.id)}
+        onCancel={() => setProgramToDelete(null)}
+      />
     </div>
   )
 
@@ -292,16 +302,6 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
           <Save size={18} /> {saving ? 'Sauvegarde...' : editing ? 'Mettre à jour' : 'Sauvegarder le programme'}
         </button>
       </div>
-      <ConfirmDialog
-        open={!!programToDelete}
-        variant="danger"
-        title="Supprimer ce programme ?"
-        message={`Cette action est irréversible. Le programme "${programToDelete?.name}" sera définitivement supprimé.`}
-        confirmLabel="Supprimer"
-        cancelLabel="Annuler"
-        onConfirm={() => programToDelete && deleteProgram(programToDelete.id)}
-        onCancel={() => setProgramToDelete(null)}
-      />
     </div>
   )
 }
