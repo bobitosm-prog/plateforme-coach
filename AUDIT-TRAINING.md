@@ -629,4 +629,98 @@ potentiel de bugs type "rest=120s" (deja rencontre).
 
 ---
 
+## FEATURE FUTURE — Multi-client program assignment
+
+**Besoin utilisateur (2026-04-22)**
+En tant que coach, je veux pouvoir assigner un meme programme template
+a plusieurs clients en une seule action, et voir la liste des clients
+qui ont ce programme.
+
+### Etat du code actuel
+
+Le code utilise deja la table `client_programs` avec un snapshot
+JSONB dans la colonne `program`. Architecture correcte deja en place
+pour la feature :
+
+```sql
+CREATE TABLE client_programs (
+  id uuid PRIMARY KEY,
+  client_id uuid REFERENCES auth.users(id),
+  coach_id uuid REFERENCES auth.users(id),
+  program jsonb NOT NULL DEFAULT '{}',
+  created_at, updated_at
+);
+```
+
+Au moment de l'assignation, le contenu du programme est copie (snapshot),
+ce qui veut dire que les modifications ulterieures du coach sur son
+template n'affectent pas les clients deja assignes. Comportement
+souhaite (equivalent Netflix : ce que t'as dans ta liste reste, meme
+si retire du catalogue).
+
+### Bloqueurs techniques
+
+**1. Contrainte ON CONFLICT 'client_id' dans assignToClient()**
+
+Fichier : `app/coach/components/CoachPrograms.tsx`, ligne ~144
+
+Le code fait un upsert avec `onConflict: 'client_id'` qui force le
+1-a-1 : si un client a deja un programme assigne, le nouveau
+remplace l'ancien.
+
+Pour permettre multi-programmes par client :
+- Retirer le onConflict
+- Utiliser un insert pur
+- Verifier qu'il n'y a pas de contrainte UNIQUE au niveau DB
+
+**2. Colonne program_name peut manquer**
+
+Le code ligne 148 passe un champ `program_name`, mais la table
+`client_programs` ne semble pas avoir cette colonne dans la migration
+d'origine. A verifier via Supabase SQL editor.
+
+### Question UX non resolue
+
+**Quand un client a plusieurs programmes assignes, que voit-il dans
+son dashboard ?**
+
+Options :
+- Liste des programmes disponibles, client choisit lequel suivre
+- Seul le plus recent est "actif", autres en archives
+- Client peut passer d'un programme a l'autre
+
+A trancher avant implementation.
+
+### Plan d'implementation (~2h30)
+
+**Etape 1 : Migration DB (15 min)**
+- Verifier / ajouter colonne program_name
+- Verifier / retirer contrainte unique
+
+**Etape 2 : Backend assignToClient (30 min)**
+- Remplacer l'upsert par un insert pur
+- Faire N inserts en une Promise.all si N clients selectionnes
+- Gerer les erreurs individuellement
+
+**Etape 3 : Frontend multi-select (45 min)**
+- Remplacer le `<select>` par une liste de checkboxes
+- Stocker un `Set<client_id>` dans l'etat
+- Bouton "Assigner a N clients" avec compteur
+
+**Etape 4 : Liste des clients assignes (45 min)**
+- Sur chaque programme : badge "X clients assignes"
+- Clic sur le badge : modale avec liste des clients
+- Bouton "Desassigner" par client dans la modale
+
+**Etape 5 : UX cote client (30 min)**
+- Decider comment afficher les programmes multiples cote client
+- Implementer selon la decision
+
+### Estimation totale
+
+2h30 - 3h pour implementation + tests end-to-end.
+Necessite une session dediee avec tete fraiche.
+
+---
+
 *Fin du rapport d'audit Training.*
