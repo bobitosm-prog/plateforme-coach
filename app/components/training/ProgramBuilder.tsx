@@ -900,7 +900,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
           <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>VARIANTES</span>
-              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
+              <button aria-label="Fermer" onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
             </div>
             <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px'}}>
               {variantPopup.variants.length === 0 ? (
@@ -1104,10 +1104,10 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button disabled={exIdx === 0} onClick={() => moveExerciseInDay(exIdx, -1)} title="Monter" style={{ background: exIdx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === 0 ? BORDER : GOLD_RULE}`, color: exIdx === 0 ? TEXT_DIM : GOLD, cursor: exIdx === 0 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↑</button>
-                      <button disabled={exIdx === exCount - 1} onClick={() => moveExerciseInDay(exIdx, 1)} title="Descendre" style={{ background: exIdx === exCount - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === exCount - 1 ? BORDER : GOLD_RULE}`, color: exIdx === exCount - 1 ? TEXT_DIM : GOLD, cursor: exIdx === exCount - 1 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↓</button>
-                      <button onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)} title="Variantes" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}>🔄</button>
-                      <button onClick={() => removeExerciseFromDay(editingDayIndex, exIdx)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
+                      <button aria-label={`Monter ${exerciseName}`} disabled={exIdx === 0} onClick={() => moveExerciseInDay(exIdx, -1)} title="Monter" style={{ background: exIdx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === 0 ? BORDER : GOLD_RULE}`, color: exIdx === 0 ? TEXT_DIM : GOLD, cursor: exIdx === 0 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↑</button>
+                      <button aria-label={`Descendre ${exerciseName}`} disabled={exIdx === exCount - 1} onClick={() => moveExerciseInDay(exIdx, 1)} title="Descendre" style={{ background: exIdx === exCount - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === exCount - 1 ? BORDER : GOLD_RULE}`, color: exIdx === exCount - 1 ? TEXT_DIM : GOLD, cursor: exIdx === exCount - 1 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↓</button>
+                      <button aria-label={`Voir les variantes de ${exerciseName}`} onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)} title="Variantes" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}>🔄</button>
+                      <button aria-label={`Supprimer ${exerciseName}`} onClick={() => removeExerciseFromDay(editingDayIndex, exIdx)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
                     </div>
                   </div>
 

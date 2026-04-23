@@ -186,6 +186,7 @@ export default function TrainingExerciseCard({
           {/* ⋯ menu button */}
           <div style={{ position: 'relative' }} ref={menuRef}>
             <button
+              aria-label={`Plus d'options pour ${ex.name || "l'exercice"}`}
               onClick={() => setMenuOpen(!menuOpen)}
               style={{
                 background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px',
@@ -395,6 +396,7 @@ export default function TrainingExerciseCard({
                   >
                     <div style={{ flex: 1, height: 1, background: BORDER }} />
                     <button
+                      aria-label={`Annuler le repos de ${ex.name || "l'exercice"}`}
                       onClick={onCancelRest}
                       style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 8px' }}
                     >
