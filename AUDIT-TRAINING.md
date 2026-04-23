@@ -422,4 +422,79 @@ WorkoutSession: onClick validate button
 
 ---
 
+## BUG CRITIQUE NON CORRIGE — Creation programme coach
+
+**Decouvert le : 2026-04-22**
+**Impact utilisateurs actuels : 0** (feature jamais utilisee en prod)
+**Impact futur : bloquant si activation de la feature coach**
+
+### Symptome
+
+Quand un coach cree un programme depuis l'interface `CoachPrograms`,
+le clic sur "Enregistrer" redirige vers la liste sans erreur visible,
+mais **aucune ligne n'est creee en base de donnees**.
+
+### Cause racine
+
+Le code `saveProgram()` dans `app/coach/components/CoachPrograms.tsx:97-113`
+ecrit dans une colonne `program_data` qui **n'existe pas** dans la table
+`training_programs`. La colonne reelle s'appelle `program` (JSONB).
+
+```
+-- Schema reel (migration 20260415_master_rls_fix.sql:53-61)
+CREATE TABLE training_programs (
+  id uuid PRIMARY KEY,
+  name text NOT NULL,
+  description text,
+  program jsonb NOT NULL DEFAULT '{}',   -- ← colonne reelle
+  is_template boolean DEFAULT false,
+  coach_id uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now()
+);
+```
+
+Le code ecrit `program_data` (inexistant) au lieu de `program` :
+```ts
+// CoachPrograms.tsx:107-110
+await supabase.from('training_programs').insert({
+  name: pName.trim(),
+  program_data: programData,  // ← BUG : colonne inexistante
+  coach_id: session.user.id,
+  is_template: true,
+})
+```
+
+La lecture (ligne 60) cherche aussi `p.program_data?.days` → `undefined` → `[]`.
+
+### Reproduction
+
+1. Se connecter avec un compte coach
+2. Aller dans "Mes programmes"
+3. Cliquer "Nouveau programme"
+4. Remplir le formulaire (name, jours, exercices)
+5. Cliquer "Enregistrer"
+6. Observer : redirect vers liste, programme absent, pas d'erreur UX
+
+### Fix recommande
+
+Renommer `program_data` → `program` dans les 3 endroits :
+- `saveProgram()` insert (ligne 108)
+- `saveProgram()` update (ligne 104)
+- `loadPrograms()` read (ligne 60 : `p.program_data?.days` → `p.program?.days`)
+
+Effort : **~30 min** (renommage simple, pas de migration DB necessaire).
+
+### Priorite
+
+Moyenne. A traiter **seulement quand** la feature "coach cree des
+programmes templates pour ses clients" est activee en production.
+
+### Liens
+
+- Fichier : `app/coach/components/CoachPrograms.tsx:97-113`
+- Table DB : `public.training_programs`
+- Schema : `supabase/migrations/20260415_master_rls_fix.sql:53-61`
+
+---
+
 *Fin du rapport d'audit Training.*
