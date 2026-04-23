@@ -204,7 +204,11 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             <label style={labelStyle}>Choisir un client</label>
             <select value={assignClientId} onChange={e => setAssignClientId(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }}>
               <option value="">Sélectionner...</option>
-              {clients.map((c: any) => <option key={c.id} value={c.id}>{c.full_name || c.email}</option>)}
+              {clients.map((c: any) => (
+                <option key={c.id} value={c.client_id}>
+                  {c.profiles?.full_name || c.profiles?.email || 'Client sans nom'}
+                </option>
+              ))}
             </select>
             <button onClick={assignToClient} disabled={!assignClientId || saving}
               style={{ width: '100%', background: GOLD, border: 'none', borderRadius: 12, padding: '12px', color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, cursor: saving ? 'wait' : 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const,  }}>
