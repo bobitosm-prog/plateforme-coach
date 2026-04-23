@@ -59,7 +59,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
       .eq('is_template', true)
       .order('created_at', { ascending: false })
       .limit(50)
-    setPrograms(data?.map((p: any) => ({ ...p, days: p.program_data?.days || [] })) || [])
+    setPrograms(data?.map((p: any) => ({ ...p, days: p.program?.days || [] })) || [])
     setLoading(false)
   }
 
@@ -103,11 +103,11 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
     if (editing?.id) {
       await supabase.from('training_programs').update({
-        name: pName.trim(), program_data: programData,
+        name: pName.trim(), program: programData,
       }).eq('id', editing.id)
     } else {
       await supabase.from('training_programs').insert({
-        name: pName.trim(), program_data: programData,
+        name: pName.trim(), program: programData,
         coach_id: session.user.id, is_template: true,
       })
     }
