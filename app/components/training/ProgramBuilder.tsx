@@ -11,6 +11,7 @@ import {
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
 import { TechniqueExplanationCards } from '../tabs/training/TechniquePopup'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -104,6 +105,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
   const [exerciseSearchFilter, setExerciseSearchFilter] = useState('')
   const [editingDayIndex, setEditingDayIndex] = useState(0)
+  const [exerciseToDelete, setExerciseToDelete] = useState<{ dayIdx: number; exIdx: number; name: string } | null>(null)
   const [swapMode, setSwapMode] = useState(false)
   const [swapFirst, setSwapFirst] = useState<number | null>(null)
   const [variantPopup, setVariantPopup] = useState<{dayIdx: number, exIdx: number, variants: any[]} | null>(null)
@@ -1107,7 +1109,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       <button aria-label={`Monter ${exerciseName}`} disabled={exIdx === 0} onClick={() => moveExerciseInDay(exIdx, -1)} title="Monter" style={{ background: exIdx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === 0 ? BORDER : GOLD_RULE}`, color: exIdx === 0 ? TEXT_DIM : GOLD, cursor: exIdx === 0 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↑</button>
                       <button aria-label={`Descendre ${exerciseName}`} disabled={exIdx === exCount - 1} onClick={() => moveExerciseInDay(exIdx, 1)} title="Descendre" style={{ background: exIdx === exCount - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === exCount - 1 ? BORDER : GOLD_RULE}`, color: exIdx === exCount - 1 ? TEXT_DIM : GOLD, cursor: exIdx === exCount - 1 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↓</button>
                       <button aria-label={`Voir les variantes de ${exerciseName}`} onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)} title="Variantes" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}>🔄</button>
-                      <button aria-label={`Supprimer ${exerciseName}`} onClick={() => removeExerciseFromDay(editingDayIndex, exIdx)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
+                      <button aria-label={`Supprimer ${exerciseName}`} onClick={() => setExerciseToDelete({ dayIdx: editingDayIndex, exIdx, name: exerciseName })} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
                     </div>
                   </div>
 
@@ -1274,6 +1276,21 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             </>)}
           </div>
         )}
+      <ConfirmDialog
+        open={!!exerciseToDelete}
+        variant="danger"
+        title="Supprimer cet exercice ?"
+        message={`L'exercice "${exerciseToDelete?.name}" sera retire du programme. Cette action ne peut pas etre annulee.`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          if (exerciseToDelete) {
+            removeExerciseFromDay(exerciseToDelete.dayIdx, exerciseToDelete.exIdx);
+            setExerciseToDelete(null);
+          }
+        }}
+        onCancel={() => setExerciseToDelete(null)}
+      />
       </div>
     )
   }
