@@ -52,19 +52,13 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   async function loadPrograms() {
     setLoading(true)
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('training_programs')
       .select('*')
       .eq('coach_id', session.user.id)
       .eq('is_template', true)
       .order('created_at', { ascending: false })
       .limit(50)
-    console.log("[DEBUG loadPrograms] RESULT", {
-      count: data?.length,
-      first_row: data?.[0],
-      first_row_program: data?.[0]?.program,
-      error
-    })
     setPrograms(data?.map((p: any) => ({ ...p, days: p.program?.days || [] })) || [])
     setLoading(false)
   }
@@ -107,30 +101,27 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setSaving(true)
     const programData = { days: pDays, split: pSplit, duration: pDuration }
 
-    console.log("[DEBUG saveProgram] START", {
-      name: pName,
-      days_count: pDays.length,
-      first_day_exercises: pDays[0]?.exercises?.length,
-      programData_sample: JSON.stringify(programData).substring(0, 200),
-      editing_id: editing?.id,
-      coach_id: session?.user?.id
-    })
-
     if (editing?.id) {
-      const { data, error } = await supabase.from('training_programs').update({
+      const { error } = await supabase.from('training_programs').update({
         name: pName.trim(), program: programData,
-      }).eq('id', editing.id).select()
+      }).eq('id', editing.id)
 
-      console.log("[DEBUG saveProgram] UPDATE result", { data, error })
-      if (error) alert(`Erreur update: ${error.message}`)
+      if (error) {
+        console.error("Erreur lors de la mise a jour du programme :", error)
+        setSaving(false)
+        return
+      }
     } else {
-      const { data, error } = await supabase.from('training_programs').insert({
+      const { error } = await supabase.from('training_programs').insert({
         name: pName.trim(), program: programData,
         coach_id: session?.user?.id, is_template: true,
-      }).select()
+      })
 
-      console.log("[DEBUG saveProgram] INSERT result", { data, error })
-      if (error) alert(`Erreur insert: ${error.message}`)
+      if (error) {
+        console.error("Erreur lors de la creation du programme :", error)
+        setSaving(false)
+        return
+      }
     }
     setSaving(false); resetForm(); loadPrograms()
   }
