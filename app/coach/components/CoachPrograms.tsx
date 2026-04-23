@@ -59,7 +59,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
       .eq('is_template', true)
       .order('created_at', { ascending: false })
       .limit(50)
-    setPrograms(data?.map((p: any) => ({ ...p, days: p.program_data?.days || [] })) || [])
+    setPrograms(data?.map((p: any) => ({ ...p, days: p.program?.days || [] })) || [])
     setLoading(false)
   }
 
@@ -102,14 +102,26 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     const programData = { days: pDays, split: pSplit, duration: pDuration }
 
     if (editing?.id) {
-      await supabase.from('training_programs').update({
-        name: pName.trim(), program_data: programData,
+      const { error } = await supabase.from('training_programs').update({
+        name: pName.trim(), program: programData,
       }).eq('id', editing.id)
+
+      if (error) {
+        console.error("Erreur lors de la mise a jour du programme :", error)
+        setSaving(false)
+        return
+      }
     } else {
-      await supabase.from('training_programs').insert({
-        name: pName.trim(), program_data: programData,
-        coach_id: session.user.id, is_template: true,
+      const { error } = await supabase.from('training_programs').insert({
+        name: pName.trim(), program: programData,
+        coach_id: session?.user?.id, is_template: true,
       })
+
+      if (error) {
+        console.error("Erreur lors de la creation du programme :", error)
+        setSaving(false)
+        return
+      }
     }
     setSaving(false); resetForm(); loadPrograms()
   }
