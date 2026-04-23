@@ -7,6 +7,7 @@ import {
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -28,6 +29,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [assignModal, setAssignModal] = useState<Program | null>(null)
   const [assignClientId, setAssignClientId] = useState('')
   const [saving, setSaving] = useState(false)
+  const [programToDelete, setProgramToDelete] = useState<{ id: string; name: string } | null>(null)
 
   // New program state
   const [pName, setPName] = useState('')
@@ -113,9 +115,9 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   }
 
   async function deleteProgram(id: string) {
-    if (!confirm('Supprimer ce programme ?')) return
     await supabase.from('training_programs').delete().eq('id', id)
     loadPrograms()
+    setProgramToDelete(null)
   }
 
   function startEdit(p: Program) {
@@ -172,7 +174,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
                 <button onClick={() => startEdit(p)} title="Modifier" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED }}><ChevronDown size={14} /></button>
-                <button onClick={() => deleteProgram(p.id!)} title="Supprimer" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: RED }}><Trash2 size={14} /></button>
+                <button onClick={() => setProgramToDelete({ id: p.id!, name: p.name })} title="Supprimer" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: RED }}><Trash2 size={14} /></button>
               </div>
             </div>
           ))}
@@ -278,6 +280,16 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
           <Save size={18} /> {saving ? 'Sauvegarde...' : editing ? 'Mettre à jour' : 'Sauvegarder le programme'}
         </button>
       </div>
+      <ConfirmDialog
+        open={!!programToDelete}
+        variant="danger"
+        title="Supprimer ce programme ?"
+        message={`Cette action est irréversible. Le programme "${programToDelete?.name}" sera définitivement supprimé.`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => programToDelete && deleteProgram(programToDelete.id)}
+        onCancel={() => setProgramToDelete(null)}
+      />
     </div>
   )
 }
