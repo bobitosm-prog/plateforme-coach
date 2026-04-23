@@ -52,13 +52,19 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   async function loadPrograms() {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('training_programs')
       .select('*')
       .eq('coach_id', session.user.id)
       .eq('is_template', true)
       .order('created_at', { ascending: false })
       .limit(50)
+    console.log("[DEBUG loadPrograms] RESULT", {
+      count: data?.length,
+      first_row: data?.[0],
+      first_row_program: data?.[0]?.program,
+      error
+    })
     setPrograms(data?.map((p: any) => ({ ...p, days: p.program?.days || [] })) || [])
     setLoading(false)
   }
@@ -101,15 +107,30 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setSaving(true)
     const programData = { days: pDays, split: pSplit, duration: pDuration }
 
+    console.log("[DEBUG saveProgram] START", {
+      name: pName,
+      days_count: pDays.length,
+      first_day_exercises: pDays[0]?.exercises?.length,
+      programData_sample: JSON.stringify(programData).substring(0, 200),
+      editing_id: editing?.id,
+      coach_id: session?.user?.id
+    })
+
     if (editing?.id) {
-      await supabase.from('training_programs').update({
+      const { data, error } = await supabase.from('training_programs').update({
         name: pName.trim(), program: programData,
-      }).eq('id', editing.id)
+      }).eq('id', editing.id).select()
+
+      console.log("[DEBUG saveProgram] UPDATE result", { data, error })
+      if (error) alert(`Erreur update: ${error.message}`)
     } else {
-      await supabase.from('training_programs').insert({
+      const { data, error } = await supabase.from('training_programs').insert({
         name: pName.trim(), program: programData,
-        coach_id: session.user.id, is_template: true,
-      })
+        coach_id: session?.user?.id, is_template: true,
+      }).select()
+
+      console.log("[DEBUG saveProgram] INSERT result", { data, error })
+      if (error) alert(`Erreur insert: ${error.message}`)
     }
     setSaving(false); resetForm(); loadPrograms()
   }
