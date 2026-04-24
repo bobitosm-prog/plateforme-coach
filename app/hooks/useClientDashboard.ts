@@ -28,6 +28,7 @@ export default function useClientDashboard() {
   const [wSessions, setWSessions] = useState<any[]>([])
   const [coachProgram, setCoachProgram] = useState<any>(null)
   const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
+  const [lastCompletedByIndex, setLastCompletedByIndex] = useState<Map<number, string>>(new Map())
   const [weightHistory30, setWeightHistory30] = useState<{ date: string; poids: number }[]>([])
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [loading, setLoading] = useState(true)
@@ -125,7 +126,7 @@ export default function useClientDashboard() {
       }
     }
 
-    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes] = await Promise.all([
+    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
@@ -136,6 +137,7 @@ export default function useClientDashboard() {
       supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).maybeSingle(),
       supabase.from('client_programs').select('id, program, coach_id').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('completed_sessions').select('session_index, session_name, completed_at').eq('client_id', uid).order('completed_at', { ascending: false }).limit(50),
     ])
 
     if (!profRes.data) { router.replace('/onboarding'); return }
@@ -182,6 +184,13 @@ export default function useClientDashboard() {
     clientProgramIdRef.current = coachProgRes.data?.id ?? null
     coachOfProgramIdRef.current = coachProgRes.data?.coach_id ?? null
     const coachMealData = coachMealRes.data?.plan || null
+
+    // Build last-completed map for session cards
+    const lcMap = new Map<number, string>()
+    for (const cs of (completedSessionsRes.data || [])) {
+      if (!lcMap.has(cs.session_index)) lcMap.set(cs.session_index, cs.completed_at)
+    }
+    setLastCompletedByIndex(lcMap)
 
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
 
@@ -405,7 +414,7 @@ export default function useClientDashboard() {
     mounted, session, loading, roleChecked, userRole, router, supabase,
     // Profile / data
     profile, measurements, progressPhotos, wSessions,
-    coachProgram, coachMealPlan, weightHistory30,
+    coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex,
     // Tabs
     activeTab, setActiveTab,
     // Workout session

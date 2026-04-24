@@ -33,6 +33,7 @@ import TrainingExerciseCard from './training/TrainingExerciseCard'
 import { TechniqueTooltip } from './training/TechniquePopup'
 import StartProgramModal from './training/StartProgramModal'
 import { getRestSeconds } from '../../../lib/utils/exercise'
+import { formatRelativeTime } from '../../../lib/formatRelativeTime'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
@@ -58,11 +59,13 @@ interface TrainingTabProps {
   setCalendarSelectedDate: (d: Date) => void
   markSessionCompleted: (id: string) => Promise<void>
   checkForPR: (exerciseName: string, weight: number, reps: number) => Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }>
+  lastCompletedByIndex?: Map<number, string>
 }
 
 export default function TrainingTab({
   supabase, session, profile, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
+  lastCompletedByIndex,
 }: TrainingTabProps) {
   const T = titleStyle
   // aiAllowed: true for AUTO clients, false only for explicitly invited clients
@@ -1014,6 +1017,8 @@ export default function TrainingTab({
               const exercises = day.exercises || []
               if (exercises.length === 0) return null
               const isToday = weekday === todayKey
+              const sessionIndex = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].indexOf(weekday)
+              const lastDone = lastCompletedByIndex?.get(sessionIndex)
               return (
                 <div key={weekday} style={{ ...cardStyle, padding: 16, border: isToday ? `1.5px solid ${colors.gold}` : undefined }}>
                   {isToday && (
@@ -1051,6 +1056,9 @@ export default function TrainingTab({
                         +{exercises.length - 4}
                       </span>
                     )}
+                  </div>
+                  <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginTop: 8 }}>
+                    Derniere fois : {formatRelativeTime(lastDone)}
                   </div>
                 </div>
               )
