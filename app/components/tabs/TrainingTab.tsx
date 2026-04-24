@@ -1093,7 +1093,7 @@ export default function TrainingTab({
 
               {/* Action buttons — DÉMARRER + MODIFIER */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                {trainingIsToday && !todaySessionDone && !workoutStarted && (
+                {!todaySessionDone && !workoutStarted && trainingExercises.length > 0 && (
                   <button onClick={() => startProgramWorkout(trainingDayData, trainingExercises)} style={{ ...btnPrimary, flex: 1, padding: 16, borderRadius: 14 }}>
                     DÉMARRER LA SÉANCE
                   </button>
