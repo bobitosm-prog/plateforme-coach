@@ -33,6 +33,7 @@ import TrainingExerciseCard from './training/TrainingExerciseCard'
 import { TechniqueTooltip } from './training/TechniquePopup'
 import StartProgramModal from './training/StartProgramModal'
 import { getRestSeconds } from '../../../lib/utils/exercise'
+import { formatRelativeTime } from '../../../lib/formatRelativeTime'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
@@ -51,18 +52,20 @@ interface TrainingTabProps {
   coachProgram: any
   todayKey: string
   todaySessionDone: boolean
-  startProgramWorkout: (day: any, exercises: any[]) => void
+  startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
   fetchAll: () => Promise<void>
   scheduledSessions: ScheduledSession[]
   calendarSelectedDate: Date
   setCalendarSelectedDate: (d: Date) => void
   markSessionCompleted: (id: string) => Promise<void>
   checkForPR: (exerciseName: string, weight: number, reps: number) => Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }>
+  lastCompletedByIndex?: Map<number, string>
 }
 
 export default function TrainingTab({
   supabase, session, profile, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
+  lastCompletedByIndex,
 }: TrainingTabProps) {
   const T = titleStyle
   // aiAllowed: true for AUTO clients, false only for explicitly invited clients
@@ -998,6 +1001,69 @@ export default function TrainingTab({
             </div>
             <ChevronRight size={16} color={colors.textMuted} />
           </button>
+        </div>
+      )}
+
+      {/* ═══ SECTION 2.7 — LISTE SEANCES COACH (invited clients only) ═══ */}
+      {!aiAllowed && coachProgram && (
+        <div style={{ margin: '16px 24px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <span style={T}>TON PROGRAMME</span>
+            <div style={titleLineStyle} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Object.entries(coachProgram).map(([weekday, day]: [string, any]) => {
+              if (!day || day.is_rest || day.repos) return null
+              const exercises = day.exercises || []
+              if (exercises.length === 0) return null
+              const isToday = weekday === todayKey
+              const sessionIndex = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].indexOf(weekday)
+              const lastDone = lastCompletedByIndex?.get(sessionIndex)
+              return (
+                <div key={weekday} style={{ ...cardStyle, padding: 16, border: isToday ? `1.5px solid ${colors.gold}` : undefined }}>
+                  {isToday && (
+                    <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                      {"SUGGERE AUJOURD'HUI"}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <div>
+                      <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: isToday ? colors.gold : colors.text, letterSpacing: 1 }}>
+                        {(day.name || weekday).toUpperCase()}
+                      </div>
+                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
+                        {exercises.length} exercice{exercises.length > 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setTrainingDay(weekday)
+                        startProgramWorkout(day, exercises, weekday)
+                      }}
+                      style={{ ...btnPrimary, padding: '10px 20px', borderRadius: 12, fontSize: 12 }}
+                    >
+                      COMMENCER
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {exercises.slice(0, 4).map((ex: any, i: number) => (
+                      <span key={i} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, background: colors.goldDim, padding: '2px 8px', borderRadius: 6 }}>
+                        {ex.name || ex.exercise_name || 'Exercice'}
+                      </span>
+                    ))}
+                    {exercises.length > 4 && (
+                      <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.gold, padding: '2px 8px' }}>
+                        +{exercises.length - 4}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginTop: 8 }}>
+                    Derniere fois : {formatRelativeTime(lastDone)}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

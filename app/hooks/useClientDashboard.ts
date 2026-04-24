@@ -12,6 +12,7 @@ import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
 import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
+import { suggestNextSession, SuggestedSession } from '../../lib/suggestNextSession'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -28,13 +29,14 @@ export default function useClientDashboard() {
   const [wSessions, setWSessions] = useState<any[]>([])
   const [coachProgram, setCoachProgram] = useState<any>(null)
   const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
+  const [lastCompletedByIndex, setLastCompletedByIndex] = useState<Map<number, string>>(new Map())
   const [weightHistory30, setWeightHistory30] = useState<{ date: string; poids: number }[]>([])
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
 
-  const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[]; startedAt?: string } | null>(() => {
+  const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[]; startedAt?: string; weekdayKey?: string } | null>(() => {
     if (typeof window === 'undefined') return null
     try { const s = localStorage.getItem('moovx_active_workout'); return s ? JSON.parse(s) : null } catch { return null }
   })
@@ -53,6 +55,10 @@ export default function useClientDashboard() {
 
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
+  const clientProgramIdRef = useRef<string | null>(null)
+  const coachOfProgramIdRef = useRef<string | null>(null)
+  const [completedThisWeek, setCompletedThisWeek] = useState<Map<number, string>>(new Map())
+  const [nextSession, setNextSession] = useState<SuggestedSession | null>(null)
 
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -123,7 +129,7 @@ export default function useClientDashboard() {
       }
     }
 
-    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes] = await Promise.all([
+    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
@@ -132,8 +138,9 @@ export default function useClientDashboard() {
       supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
       supabase.from('training_programs').select('*').eq('is_template', true).limit(50),
       supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).maybeSingle(),
-      supabase.from('client_programs').select('program').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('client_programs').select('id, program, coach_id').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('completed_sessions').select('session_index, session_name, completed_at').eq('client_id', uid).order('completed_at', { ascending: false }).limit(50),
     ])
 
     if (!profRes.data) { router.replace('/onboarding'); return }
@@ -177,7 +184,24 @@ export default function useClientDashboard() {
     const measureData = measureRes.data || []
     const photosData = photosRes.data || []
     const coachProgData = normalizeCoachProgram(coachProgRes.data?.program)
+    clientProgramIdRef.current = coachProgRes.data?.id ?? null
+    coachOfProgramIdRef.current = coachProgRes.data?.coach_id ?? null
     const coachMealData = coachMealRes.data?.plan || null
+
+    // Build last-completed map for session cards
+    const lcMap = new Map<number, string>()
+    const startOfWeek = new Date()
+    const dow = startOfWeek.getDay() || 7
+    startOfWeek.setDate(startOfWeek.getDate() - (dow - 1))
+    startOfWeek.setHours(0, 0, 0, 0)
+    const cwMap = new Map<number, string>()
+    for (const cs of (completedSessionsRes.data || [])) {
+      if (!lcMap.has(cs.session_index)) lcMap.set(cs.session_index, cs.completed_at)
+      if (new Date(cs.completed_at) >= startOfWeek) cwMap.set(cs.session_index, cs.completed_at)
+    }
+    setLastCompletedByIndex(lcMap)
+    setCompletedThisWeek(cwMap)
+    setNextSession(suggestNextSession(coachProgData, lcMap))
 
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
 
@@ -225,8 +249,8 @@ export default function useClientDashboard() {
   }
 
   /* ── Handlers ── */
-  async function startProgramWorkout(day: any, exercises: any[]) {
-    const ws = { name: day.day_name || day.name || 'Séance', exercises, startedAt: new Date().toISOString() }
+  async function startProgramWorkout(day: any, exercises: any[], weekdayKey?: string) {
+    const ws = { name: day.day_name || day.name || 'Séance', exercises, startedAt: new Date().toISOString(), weekdayKey }
     setWorkoutSession(ws)
     try { localStorage.setItem('moovx_active_workout', JSON.stringify(ws)) } catch {}
   }
@@ -262,6 +286,24 @@ export default function useClientDashboard() {
       .eq('user_id', session.user.id).eq('scheduled_date', todayStr).eq('completed', false)
     // Update last_workout_at
     await updateProfile(session.user.id, { last_workout_at: new Date().toISOString() }, supabase)
+
+    // Track completed session for invited clients with coach program
+    if (clientProgramIdRef.current && workoutSession?.weekdayKey) {
+      const WEEKDAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+      const sessionIndex = WEEKDAYS.indexOf(workoutSession.weekdayKey)
+      const { error: trackingError } = await supabase
+        .from('completed_sessions')
+        .insert({
+          client_id: session.user.id,
+          coach_id: coachOfProgramIdRef.current,
+          program_id: clientProgramIdRef.current,
+          session_index: sessionIndex >= 0 ? sessionIndex : 0,
+          session_name: workoutSession.name,
+          duration_minutes: data.duration ? Math.round(data.duration / 60000) : null,
+        })
+      if (trackingError) console.error('Error tracking completed_sessions:', trackingError)
+    }
+
     toast.success('Séance terminée ! Bien joué 💪')
     fetchAll(true)
   }
@@ -383,7 +425,7 @@ export default function useClientDashboard() {
     mounted, session, loading, roleChecked, userRole, router, supabase,
     // Profile / data
     profile, measurements, progressPhotos, wSessions,
-    coachProgram, coachMealPlan, weightHistory30,
+    coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,
     // Tabs
     activeTab, setActiveTab,
     // Workout session
