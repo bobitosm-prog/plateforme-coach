@@ -11,6 +11,7 @@ import useAnalytics from './useAnalytics'
 import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
+import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -175,7 +176,7 @@ export default function useClientDashboard() {
     const sessData = sessRes.data || []
     const measureData = measureRes.data || []
     const photosData = photosRes.data || []
-    const coachProgData = coachProgRes.data?.program || null
+    const coachProgData = normalizeCoachProgram(coachProgRes.data?.program)
     const coachMealData = coachMealRes.data?.plan || null
 
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
