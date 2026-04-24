@@ -32,7 +32,14 @@ type DayShape = {
 type NormalizedProgram = Partial<Record<WeekdayFr, DayShape>>
 
 export function normalizeCoachProgram(raw: unknown): NormalizedProgram | null {
-  if (!raw) return null
+  console.log('[DEBUG normalize] input:', raw)
+  console.log('[DEBUG normalize] isArray:', Array.isArray(raw))
+  console.log('[DEBUG normalize] typeof:', typeof raw)
+
+  if (!raw) {
+    console.log('[DEBUG normalize] returning null (falsy)')
+    return null
+  }
 
   // Nouveau format : array of days
   if (Array.isArray(raw)) {
@@ -49,13 +56,16 @@ export function normalizeCoachProgram(raw: unknown): NormalizedProgram | null {
       }
     }
 
+    console.log('[DEBUG normalize] array mapped to:', result)
     return result
   }
 
   // Ancien format : deja un objet
   if (typeof raw === 'object') {
+    console.log('[DEBUG normalize] object format, returning as-is:', raw)
     return raw as NormalizedProgram
   }
 
+  console.log('[DEBUG normalize] fallback return null')
   return null
 }
