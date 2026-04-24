@@ -142,13 +142,6 @@ export default function TrainingTab({
 
   // Keep screen awake during workout + rest timer
   useWakeLock(!!workoutStarted || restRunning)
-
-  useEffect(() => {
-    console.log('[DEBUG TrainingTab] coachProgram:', coachProgram)
-    console.log('[DEBUG TrainingTab] trainingDay:', trainingDay)
-    console.log('[DEBUG TrainingTab] coachProgram[trainingDay]:', coachProgram?.[trainingDay])
-  }, [coachProgram, trainingDay])
-
   // Priorité : programme custom actif > programme coach — using shared utility
   const customDayData = (() => {
     if (!activeCustomProgram?.days?.length) return null

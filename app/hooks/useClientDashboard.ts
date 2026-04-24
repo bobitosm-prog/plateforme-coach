@@ -176,10 +176,7 @@ export default function useClientDashboard() {
     const sessData = sessRes.data || []
     const measureData = measureRes.data || []
     const photosData = photosRes.data || []
-    console.log('[DEBUG useClientDashboard] coachProgRes.data:', coachProgRes.data)
-    console.log('[DEBUG useClientDashboard] coachProgRes.data?.program:', coachProgRes.data?.program)
     const coachProgData = normalizeCoachProgram(coachProgRes.data?.program)
-    console.log('[DEBUG useClientDashboard] coachProgData (after normalize):', coachProgData)
     const coachMealData = coachMealRes.data?.plan || null
 
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
