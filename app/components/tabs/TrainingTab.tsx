@@ -1001,6 +1001,58 @@ export default function TrainingTab({
         </div>
       )}
 
+      {/* ═══ SECTION 2.7 — LISTE SEANCES COACH (invited clients only) ═══ */}
+      {!aiAllowed && coachProgram && (
+        <div style={{ margin: '16px 24px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <span style={T}>TON PROGRAMME</span>
+            <div style={titleLineStyle} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Object.entries(coachProgram).map(([weekday, day]: [string, any]) => {
+              if (!day || day.is_rest || day.repos) return null
+              const exercises = day.exercises || []
+              if (exercises.length === 0) return null
+              return (
+                <div key={weekday} style={{ ...cardStyle, padding: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <div>
+                      <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.text, letterSpacing: 1 }}>
+                        {(day.name || weekday).toUpperCase()}
+                      </div>
+                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
+                        {exercises.length} exercice{exercises.length > 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setTrainingDay(weekday)
+                        startProgramWorkout(day, exercises)
+                      }}
+                      style={{ ...btnPrimary, padding: '10px 20px', borderRadius: 12, fontSize: 12 }}
+                    >
+                      COMMENCER
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {exercises.slice(0, 4).map((ex: any, i: number) => (
+                      <span key={i} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, background: colors.goldDim, padding: '2px 8px', borderRadius: 6 }}>
+                        {ex.name || ex.exercise_name || 'Exercice'}
+                      </span>
+                    ))}
+                    {exercises.length > 4 && (
+                      <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.gold, padding: '2px 8px' }}>
+                        +{exercises.length - 4}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ═══ SECTION 3 — SÉANCE DU JOUR ═══ */}
       <div style={{ margin: '16px 24px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
