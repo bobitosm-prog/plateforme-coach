@@ -119,6 +119,13 @@ export default function HomeTab({
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
 }: HomeTabProps) {
+  useEffect(() => {
+    console.log('[DEBUG HomeTab] aiAllowed:', aiAllowed)
+    console.log('[DEBUG HomeTab] coachProgram:', coachProgram)
+    console.log('[DEBUG HomeTab] completedThisWeek:', completedThisWeek)
+    console.log('[DEBUG HomeTab] Map size:', completedThisWeek?.size)
+    console.log('[DEBUG HomeTab] Map entries:', completedThisWeek ? Array.from(completedThisWeek.entries()) : null)
+  }, [aiAllowed, coachProgram, completedThisWeek])
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [consumedKcal, setConsumedKcal] = useState(0)
   const calorieGoal = profile?.calorie_goal || 2000
@@ -591,6 +598,7 @@ export default function HomeTab({
             <div style={{ ...cardStyle, padding: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
                 {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((label, idx) => {
+                  console.log('[DEBUG case]', { label, idx, has: completedThisWeek?.has(idx), value: completedThisWeek?.get(idx) })
                   const jsDay = new Date().getDay()
                   const todayIdx = jsDay === 0 ? 6 : jsDay - 1
                   const isToday = idx === todayIdx
