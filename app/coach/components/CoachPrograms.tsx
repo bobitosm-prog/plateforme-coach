@@ -152,14 +152,13 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
       .maybeSingle()
 
     if (existing) {
-      console.log('[DEBUG assignToClient] DUPLICATE - blocking')
       alert(`Le programme "${assignModal.name}" est deja assigne a ce client.`)
       setSaving(false)
       return
     }
 
-    // INSERT pur avec tous les champs
-    const { data, error } = await supabase
+    // INSERT du programme
+    const { error } = await supabase
       .from('client_programs')
       .insert({
         client_id: assignClientId,
@@ -167,13 +166,10 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
         program: assignModal.days,
         program_name: assignModal.name,
       })
-      .select()
-
-    console.log('[DEBUG assignToClient] RESULT', { data, error })
 
     if (error) {
-      console.error('[DEBUG assignToClient] ERROR', error)
-      alert(`Erreur assignation: ${error.message}`)
+      console.error('Erreur assignation programme :', error)
+      alert(`Erreur assignation : ${error.message}`)
       setSaving(false)
       return
     }
