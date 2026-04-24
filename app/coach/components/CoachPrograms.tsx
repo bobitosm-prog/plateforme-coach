@@ -142,20 +142,32 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     if (!assignModal || !assignClientId) return
     setSaving(true)
 
-    console.log('[DEBUG assignToClient] START', {
-      programId: assignModal?.id,
-      programName: assignModal?.name,
-      programDays: assignModal?.days,
-      selectedClientId: assignClientId,
-      coachId: session?.user?.id,
-    })
+    // Check anti-doublon : ce programme est-il deja assigne a ce client ?
+    const { data: existing } = await supabase
+      .from('client_programs')
+      .select('id')
+      .eq('client_id', assignClientId)
+      .eq('coach_id', session.user.id)
+      .eq('program_name', assignModal.name)
+      .maybeSingle()
 
-    const { data, error } = await supabase.from('client_programs').upsert({
-      client_id: assignClientId,
-      coach_id: session.user.id,
-      program: assignModal.days,
-      program_name: assignModal.name,
-    }, { onConflict: 'client_id' }).select()
+    if (existing) {
+      console.log('[DEBUG assignToClient] DUPLICATE - blocking')
+      alert(`Le programme "${assignModal.name}" est deja assigne a ce client.`)
+      setSaving(false)
+      return
+    }
+
+    // INSERT pur avec tous les champs
+    const { data, error } = await supabase
+      .from('client_programs')
+      .insert({
+        client_id: assignClientId,
+        coach_id: session.user.id,
+        program: assignModal.days,
+        program_name: assignModal.name,
+      })
+      .select()
 
     console.log('[DEBUG assignToClient] RESULT', { data, error })
 
