@@ -1013,11 +1013,17 @@ export default function TrainingTab({
               if (!day || day.is_rest || day.repos) return null
               const exercises = day.exercises || []
               if (exercises.length === 0) return null
+              const isToday = weekday === todayKey
               return (
-                <div key={weekday} style={{ ...cardStyle, padding: 16 }}>
+                <div key={weekday} style={{ ...cardStyle, padding: 16, border: isToday ? `1.5px solid ${colors.gold}` : undefined }}>
+                  {isToday && (
+                    <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                      {"SUGGERE AUJOURD'HUI"}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <div>
-                      <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.text, letterSpacing: 1 }}>
+                      <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: isToday ? colors.gold : colors.text, letterSpacing: 1 }}>
                         {(day.name || weekday).toUpperCase()}
                       </div>
                       <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
