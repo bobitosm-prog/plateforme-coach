@@ -51,7 +51,7 @@ interface TrainingTabProps {
   coachProgram: any
   todayKey: string
   todaySessionDone: boolean
-  startProgramWorkout: (day: any, exercises: any[]) => void
+  startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
   fetchAll: () => Promise<void>
   scheduledSessions: ScheduledSession[]
   calendarSelectedDate: Date
@@ -1033,7 +1033,7 @@ export default function TrainingTab({
                     <button
                       onClick={() => {
                         setTrainingDay(weekday)
-                        startProgramWorkout(day, exercises)
+                        startProgramWorkout(day, exercises, weekday)
                       }}
                       style={{ ...btnPrimary, padding: '10px 20px', borderRadius: 12, fontSize: 12 }}
                     >

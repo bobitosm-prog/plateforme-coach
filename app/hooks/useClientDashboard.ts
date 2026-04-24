@@ -34,7 +34,7 @@ export default function useClientDashboard() {
   const [roleChecked, setRoleChecked] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
 
-  const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[]; startedAt?: string } | null>(() => {
+  const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[]; startedAt?: string; weekdayKey?: string } | null>(() => {
     if (typeof window === 'undefined') return null
     try { const s = localStorage.getItem('moovx_active_workout'); return s ? JSON.parse(s) : null } catch { return null }
   })
@@ -53,6 +53,8 @@ export default function useClientDashboard() {
 
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
+  const clientProgramIdRef = useRef<string | null>(null)
+  const coachOfProgramIdRef = useRef<string | null>(null)
 
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -132,7 +134,7 @@ export default function useClientDashboard() {
       supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
       supabase.from('training_programs').select('*').eq('is_template', true).limit(50),
       supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).maybeSingle(),
-      supabase.from('client_programs').select('program').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('client_programs').select('id, program, coach_id').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
 
@@ -177,6 +179,8 @@ export default function useClientDashboard() {
     const measureData = measureRes.data || []
     const photosData = photosRes.data || []
     const coachProgData = normalizeCoachProgram(coachProgRes.data?.program)
+    clientProgramIdRef.current = coachProgRes.data?.id ?? null
+    coachOfProgramIdRef.current = coachProgRes.data?.coach_id ?? null
     const coachMealData = coachMealRes.data?.plan || null
 
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
@@ -225,8 +229,8 @@ export default function useClientDashboard() {
   }
 
   /* ── Handlers ── */
-  async function startProgramWorkout(day: any, exercises: any[]) {
-    const ws = { name: day.day_name || day.name || 'Séance', exercises, startedAt: new Date().toISOString() }
+  async function startProgramWorkout(day: any, exercises: any[], weekdayKey?: string) {
+    const ws = { name: day.day_name || day.name || 'Séance', exercises, startedAt: new Date().toISOString(), weekdayKey }
     setWorkoutSession(ws)
     try { localStorage.setItem('moovx_active_workout', JSON.stringify(ws)) } catch {}
   }
@@ -262,6 +266,24 @@ export default function useClientDashboard() {
       .eq('user_id', session.user.id).eq('scheduled_date', todayStr).eq('completed', false)
     // Update last_workout_at
     await updateProfile(session.user.id, { last_workout_at: new Date().toISOString() }, supabase)
+
+    // Track completed session for invited clients with coach program
+    if (clientProgramIdRef.current && workoutSession?.weekdayKey) {
+      const WEEKDAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+      const sessionIndex = WEEKDAYS.indexOf(workoutSession.weekdayKey)
+      const { error: trackingError } = await supabase
+        .from('completed_sessions')
+        .insert({
+          client_id: session.user.id,
+          coach_id: coachOfProgramIdRef.current,
+          program_id: clientProgramIdRef.current,
+          session_index: sessionIndex >= 0 ? sessionIndex : 0,
+          session_name: workoutSession.name,
+          duration_minutes: data.duration ? Math.round(data.duration / 60000) : null,
+        })
+      if (trackingError) console.error('Error tracking completed_sessions:', trackingError)
+    }
+
     toast.success('Séance terminée ! Bien joué 💪')
     fetchAll(true)
   }
