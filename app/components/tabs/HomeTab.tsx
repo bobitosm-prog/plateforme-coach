@@ -105,9 +105,10 @@ interface HomeTabProps {
   todaySessionDone: boolean
   setActiveTab: (tab: any) => void
   setModal: (modal: string) => void
-  startProgramWorkout: (day: any, exercises: any[]) => void
+  startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
   completedThisWeek?: Map<number, string>
   aiAllowed?: boolean
+  nextSession?: { sessionIndex: number; weekday: string; day: any; reason: string } | null
 }
 
 export default function HomeTab({
@@ -116,7 +117,7 @@ export default function HomeTab({
   currentWeight, goalWeight, completedSessions, streak,
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
   setActiveTab, setModal, startProgramWorkout,
-  completedThisWeek, aiAllowed,
+  completedThisWeek, aiAllowed, nextSession,
 }: HomeTabProps) {
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [consumedKcal, setConsumedKcal] = useState(0)
@@ -673,6 +674,36 @@ export default function HomeTab({
             ))}
           </div>
         </div>
+
+        {/* ═══ PROCHAINE SEANCE — invited clients only ═══ */}
+        {!aiAllowed && coachProgram && nextSession && (
+          <div style={{ marginTop: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <span style={titleStyle}>PROCHAINE SEANCE</span>
+              <div style={titleLineStyle} />
+            </div>
+            <div style={{ ...cardStyle, padding: 20 }}>
+              <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                {"SUGGERE POUR TOI"}
+              </div>
+              <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: 1, marginBottom: 4 }}>
+                {(nextSession.day.name || 'Seance').toUpperCase()}
+              </div>
+              <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
+                {nextSession.day.exercises?.length || 0} exercice{(nextSession.day.exercises?.length || 0) > 1 ? 's' : ''}
+              </div>
+              <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim, fontStyle: 'italic', marginBottom: 16 }}>
+                {nextSession.reason}
+              </div>
+              <button
+                onClick={() => startProgramWorkout(nextSession.day, nextSession.day.exercises || [], nextSession.weekday)}
+                style={{ ...btnPrimary, width: '100%', padding: 14, borderRadius: 14 }}
+              >
+                LANCER MAINTENANT
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ═══ TA SEMAINE — invited clients only ═══ */}
         {!aiAllowed && coachProgram && (

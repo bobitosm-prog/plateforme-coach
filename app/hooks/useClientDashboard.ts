@@ -12,6 +12,7 @@ import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
 import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
+import { suggestNextSession, SuggestedSession } from '../../lib/suggestNextSession'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -57,6 +58,7 @@ export default function useClientDashboard() {
   const clientProgramIdRef = useRef<string | null>(null)
   const coachOfProgramIdRef = useRef<string | null>(null)
   const [completedThisWeek, setCompletedThisWeek] = useState<Map<number, string>>(new Map())
+  const [nextSession, setNextSession] = useState<SuggestedSession | null>(null)
 
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -199,6 +201,7 @@ export default function useClientDashboard() {
     }
     setLastCompletedByIndex(lcMap)
     setCompletedThisWeek(cwMap)
+    setNextSession(suggestNextSession(coachProgData, lcMap))
 
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
 
@@ -422,7 +425,7 @@ export default function useClientDashboard() {
     mounted, session, loading, roleChecked, userRole, router, supabase,
     // Profile / data
     profile, measurements, progressPhotos, wSessions,
-    coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex, completedThisWeek,
+    coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,
     // Tabs
     activeTab, setActiveTab,
     // Workout session
