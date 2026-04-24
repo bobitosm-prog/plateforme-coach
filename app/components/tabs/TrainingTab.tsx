@@ -1019,14 +1019,6 @@ export default function TrainingTab({
               const isToday = weekday === todayKey
               const sessionIndex = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].indexOf(weekday)
               const lastDone = lastCompletedByIndex?.get(sessionIndex)
-              console.log('[DEBUG card]', {
-                weekday,
-                sessionIndex,
-                lastDone,
-                mapSize: lastCompletedByIndex?.size,
-                mapKeys: lastCompletedByIndex ? Array.from(lastCompletedByIndex.keys()) : null,
-                mapEntries: lastCompletedByIndex ? Array.from(lastCompletedByIndex.entries()) : null,
-              })
               return (
                 <div key={weekday} style={{ ...cardStyle, padding: 16, border: isToday ? `1.5px solid ${colors.gold}` : undefined }}>
                   {isToday && (
