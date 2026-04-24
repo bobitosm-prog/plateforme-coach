@@ -141,12 +141,39 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   async function assignToClient() {
     if (!assignModal || !assignClientId) return
     setSaving(true)
-    await supabase.from('client_programs').upsert({
-      client_id: assignClientId,
-      coach_id: session.user.id,
-      program: assignModal.days,
-      program_name: assignModal.name,
-    }, { onConflict: 'client_id' })
+
+    // Check anti-doublon : ce programme est-il deja assigne a ce client ?
+    const { data: existing } = await supabase
+      .from('client_programs')
+      .select('id')
+      .eq('client_id', assignClientId)
+      .eq('coach_id', session.user.id)
+      .eq('program_name', assignModal.name)
+      .maybeSingle()
+
+    if (existing) {
+      alert(`Le programme "${assignModal.name}" est deja assigne a ce client.`)
+      setSaving(false)
+      return
+    }
+
+    // INSERT du programme
+    const { error } = await supabase
+      .from('client_programs')
+      .insert({
+        client_id: assignClientId,
+        coach_id: session.user.id,
+        program: assignModal.days,
+        program_name: assignModal.name,
+      })
+
+    if (error) {
+      console.error('Erreur assignation programme :', error)
+      alert(`Erreur assignation : ${error.message}`)
+      setSaving(false)
+      return
+    }
+
     setSaving(false); setAssignModal(null); setAssignClientId('')
   }
 
