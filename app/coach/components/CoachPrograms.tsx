@@ -141,12 +141,31 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   async function assignToClient() {
     if (!assignModal || !assignClientId) return
     setSaving(true)
-    await supabase.from('client_programs').upsert({
+
+    console.log('[DEBUG assignToClient] START', {
+      programId: assignModal?.id,
+      programName: assignModal?.name,
+      programDays: assignModal?.days,
+      selectedClientId: assignClientId,
+      coachId: session?.user?.id,
+    })
+
+    const { data, error } = await supabase.from('client_programs').upsert({
       client_id: assignClientId,
       coach_id: session.user.id,
       program: assignModal.days,
       program_name: assignModal.name,
-    }, { onConflict: 'client_id' })
+    }, { onConflict: 'client_id' }).select()
+
+    console.log('[DEBUG assignToClient] RESULT', { data, error })
+
+    if (error) {
+      console.error('[DEBUG assignToClient] ERROR', error)
+      alert(`Erreur assignation: ${error.message}`)
+      setSaving(false)
+      return
+    }
+
     setSaving(false); setAssignModal(null); setAssignClientId('')
   }
 
