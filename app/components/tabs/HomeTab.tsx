@@ -106,6 +106,8 @@ interface HomeTabProps {
   setActiveTab: (tab: any) => void
   setModal: (modal: string) => void
   startProgramWorkout: (day: any, exercises: any[]) => void
+  completedThisWeek?: Map<number, string>
+  aiAllowed?: boolean
 }
 
 export default function HomeTab({
@@ -114,6 +116,7 @@ export default function HomeTab({
   currentWeight, goalWeight, completedSessions, streak,
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
   setActiveTab, setModal, startProgramWorkout,
+  completedThisWeek, aiAllowed,
 }: HomeTabProps) {
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [consumedKcal, setConsumedKcal] = useState(0)
@@ -670,6 +673,43 @@ export default function HomeTab({
             ))}
           </div>
         </div>
+
+        {/* ═══ TA SEMAINE — invited clients only ═══ */}
+        {!aiAllowed && coachProgram && (
+          <div style={{ marginTop: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <span style={titleStyle}>TA SEMAINE</span>
+              <div style={titleLineStyle} />
+            </div>
+            <div style={{ ...cardStyle, padding: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((label, idx) => {
+                  const jsDay = new Date().getDay()
+                  const todayIdx = jsDay === 0 ? 6 : jsDay - 1
+                  const isToday = idx === todayIdx
+                  const completed = completedThisWeek?.has(idx)
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: '10px 4px',
+                        textAlign: 'center',
+                        borderRadius: 10,
+                        background: completed ? colors.goldDim : 'rgba(255,255,255,0.02)',
+                        border: isToday ? `1.5px solid ${colors.gold}` : '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: isToday ? colors.gold : colors.textMuted, letterSpacing: 0.5 }}>{label}</div>
+                      <div style={{ fontSize: 18, marginTop: 4, color: completed ? colors.gold : colors.textDim }}>
+                        {completed ? '✓' : '·'}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div style={{ height: 20 }} />
       </div>

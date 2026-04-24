@@ -56,6 +56,7 @@ export default function useClientDashboard() {
   const fetchAllComplete = useRef(false)
   const clientProgramIdRef = useRef<string | null>(null)
   const coachOfProgramIdRef = useRef<string | null>(null)
+  const [completedThisWeek, setCompletedThisWeek] = useState<Map<number, string>>(new Map())
 
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -187,10 +188,17 @@ export default function useClientDashboard() {
 
     // Build last-completed map for session cards
     const lcMap = new Map<number, string>()
+    const startOfWeek = new Date()
+    const dow = startOfWeek.getDay() || 7
+    startOfWeek.setDate(startOfWeek.getDate() - (dow - 1))
+    startOfWeek.setHours(0, 0, 0, 0)
+    const cwMap = new Map<number, string>()
     for (const cs of (completedSessionsRes.data || [])) {
       if (!lcMap.has(cs.session_index)) lcMap.set(cs.session_index, cs.completed_at)
+      if (new Date(cs.completed_at) >= startOfWeek) cwMap.set(cs.session_index, cs.completed_at)
     }
     setLastCompletedByIndex(lcMap)
+    setCompletedThisWeek(cwMap)
 
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
 
@@ -414,7 +422,7 @@ export default function useClientDashboard() {
     mounted, session, loading, roleChecked, userRole, router, supabase,
     // Profile / data
     profile, measurements, progressPhotos, wSessions,
-    coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex,
+    coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex, completedThisWeek,
     // Tabs
     activeTab, setActiveTab,
     // Workout session
