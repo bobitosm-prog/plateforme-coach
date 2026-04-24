@@ -504,7 +504,37 @@ export default function HomeTab({
 
       <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* ═══ SECTION 2 — SÉANCE DU JOUR ═══ */}
+        {/* ═══ PROCHAINE SEANCE — invited clients only ═══ */}
+        {!aiAllowed && coachProgram && nextSession && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <span style={titleStyle}>PROCHAINE SEANCE</span>
+              <div style={titleLineStyle} />
+            </div>
+            <div style={{ ...cardStyle, padding: 20 }}>
+              <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                {"SUGGERE POUR TOI"}
+              </div>
+              <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: 1, marginBottom: 4 }}>
+                {(nextSession.day.name || 'Seance').toUpperCase()}
+              </div>
+              <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
+                {nextSession.day.exercises?.length || 0} exercice{(nextSession.day.exercises?.length || 0) > 1 ? 's' : ''}
+              </div>
+              <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim, fontStyle: 'italic', marginBottom: 16 }}>
+                {nextSession.reason}
+              </div>
+              <button
+                onClick={() => startProgramWorkout(nextSession.day, nextSession.day.exercises || [], nextSession.weekday)}
+                style={{ ...btnPrimary, width: '100%', padding: 14, borderRadius: 14 }}
+              >
+                LANCER MAINTENANT
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ PROGRAMME — SÉANCE DU JOUR ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
           <span style={T}>PROGRAMME</span>
           <div style={titleLineStyle} />
@@ -550,6 +580,43 @@ export default function HomeTab({
             )}
           </div>
         </div>
+
+        {/* ═══ TA SEMAINE — invited clients only ═══ */}
+        {!aiAllowed && coachProgram && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <span style={titleStyle}>TA SEMAINE</span>
+              <div style={titleLineStyle} />
+            </div>
+            <div style={{ ...cardStyle, padding: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((label, idx) => {
+                  const jsDay = new Date().getDay()
+                  const todayIdx = jsDay === 0 ? 6 : jsDay - 1
+                  const isToday = idx === todayIdx
+                  const completed = completedThisWeek?.has(idx)
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: '10px 4px',
+                        textAlign: 'center',
+                        borderRadius: 10,
+                        background: completed ? colors.goldDim : 'rgba(255,255,255,0.02)',
+                        border: isToday ? `1.5px solid ${colors.gold}` : '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: isToday ? colors.gold : colors.textMuted, letterSpacing: 0.5 }}>{label}</div>
+                      <div style={{ fontSize: 18, marginTop: 4, color: completed ? colors.gold : colors.textDim }}>
+                        {completed ? '✓' : '·'}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ═══ SECTION 3 — CALORIES + ENERGIE + HYDRATATION ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
@@ -674,73 +741,6 @@ export default function HomeTab({
             ))}
           </div>
         </div>
-
-        {/* ═══ PROCHAINE SEANCE — invited clients only ═══ */}
-        {!aiAllowed && coachProgram && nextSession && (
-          <div style={{ marginTop: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={titleStyle}>PROCHAINE SEANCE</span>
-              <div style={titleLineStyle} />
-            </div>
-            <div style={{ ...cardStyle, padding: 20 }}>
-              <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
-                {"SUGGERE POUR TOI"}
-              </div>
-              <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: 1, marginBottom: 4 }}>
-                {(nextSession.day.name || 'Seance').toUpperCase()}
-              </div>
-              <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
-                {nextSession.day.exercises?.length || 0} exercice{(nextSession.day.exercises?.length || 0) > 1 ? 's' : ''}
-              </div>
-              <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim, fontStyle: 'italic', marginBottom: 16 }}>
-                {nextSession.reason}
-              </div>
-              <button
-                onClick={() => startProgramWorkout(nextSession.day, nextSession.day.exercises || [], nextSession.weekday)}
-                style={{ ...btnPrimary, width: '100%', padding: 14, borderRadius: 14 }}
-              >
-                LANCER MAINTENANT
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ TA SEMAINE — invited clients only ═══ */}
-        {!aiAllowed && coachProgram && (
-          <div style={{ marginTop: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={titleStyle}>TA SEMAINE</span>
-              <div style={titleLineStyle} />
-            </div>
-            <div style={{ ...cardStyle, padding: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
-                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((label, idx) => {
-                  const jsDay = new Date().getDay()
-                  const todayIdx = jsDay === 0 ? 6 : jsDay - 1
-                  const isToday = idx === todayIdx
-                  const completed = completedThisWeek?.has(idx)
-                  return (
-                    <div
-                      key={idx}
-                      style={{
-                        padding: '10px 4px',
-                        textAlign: 'center',
-                        borderRadius: 10,
-                        background: completed ? colors.goldDim : 'rgba(255,255,255,0.02)',
-                        border: isToday ? `1.5px solid ${colors.gold}` : '1px solid rgba(255,255,255,0.05)',
-                      }}
-                    >
-                      <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: isToday ? colors.gold : colors.textMuted, letterSpacing: 0.5 }}>{label}</div>
-                      <div style={{ fontSize: 18, marginTop: 4, color: completed ? colors.gold : colors.textDim }}>
-                        {completed ? '✓' : '·'}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
 
         <div style={{ height: 20 }} />
       </div>
