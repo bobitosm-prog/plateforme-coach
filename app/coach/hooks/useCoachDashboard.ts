@@ -114,6 +114,8 @@ export default function useCoachDashboard(initialSession?: any) {
   const [allPayments, setAllPayments] = useState<{ amount: number; paid_at: string }[]>([])
   const [atRiskClients, setAtRiskClients] = useState<any[]>([])
   const [pendingVideoCount, setPendingVideoCount] = useState(0)
+  const [lastSessionByClient, setLastSessionByClient] = useState<Map<string, { name: string; completedAt: string }>>(new Map())
+  const [sessionsThisWeekByClient, setSessionsThisWeekByClient] = useState<Map<string, number>>(new Map())
 
   // Food management state
   const [foodList, setFoodList] = useState<any[]>([])
@@ -356,6 +358,31 @@ export default function useCoachDashboard(initialSession?: any) {
     setLoading(false)
     fetchUnreadCounts(coachId, clientIds)
     fetchAtRiskClients(rows)
+
+    // Fetch completed sessions for all clients of this coach
+    supabase.from('completed_sessions')
+      .select('client_id, session_name, completed_at')
+      .eq('coach_id', coachId)
+      .order('completed_at', { ascending: false })
+      .limit(200)
+      .then(({ data: completedRows }) => {
+        const lsMap = new Map<string, { name: string; completedAt: string }>()
+        const swMap = new Map<string, number>()
+        const startOfWeek = new Date()
+        const dow = startOfWeek.getDay() || 7
+        startOfWeek.setDate(startOfWeek.getDate() - (dow - 1))
+        startOfWeek.setHours(0, 0, 0, 0)
+        for (const row of (completedRows || [])) {
+          if (!lsMap.has(row.client_id)) {
+            lsMap.set(row.client_id, { name: row.session_name, completedAt: row.completed_at })
+          }
+          if (new Date(row.completed_at) >= startOfWeek) {
+            swMap.set(row.client_id, (swMap.get(row.client_id) || 0) + 1)
+          }
+        }
+        setLastSessionByClient(lsMap)
+        setSessionsThisWeekByClient(swMap)
+      })
   }
 
   async function fetchAtRiskClients(clientRows: ClientRow[]) {
@@ -600,6 +627,8 @@ export default function useCoachDashboard(initialSession?: any) {
     clients,
     filtered,
     search, setSearch,
+    lastSessionByClient,
+    sessionsThisWeekByClient,
 
     // Sections / navigation
     section, setSection,

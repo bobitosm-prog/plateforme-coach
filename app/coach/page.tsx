@@ -388,7 +388,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
 
             {/* Other sections — render existing components with desktop padding */}
             {h.section === 'dashboard' && (
-              <ClientsList filtered={h.filtered} loading={h.loading} search={h.search} setSearch={h.setSearch} showInvite={h.showInvite} setShowInvite={h.setShowInvite} inviteLink={h.inviteLink} copied={h.copied} copyInviteLink={h.copyInviteLink} unreadCounts={h.unreadCounts} setSection={h.setSection} openChat={h.openChat} setShowNewSession={h.setShowNewSession} coachInitials={h.coachInitials} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} SESSION_COLORS={SESSION_COLORS} />
+              <ClientsList filtered={h.filtered} loading={h.loading} search={h.search} setSearch={h.setSearch} showInvite={h.showInvite} setShowInvite={h.setShowInvite} inviteLink={h.inviteLink} copied={h.copied} copyInviteLink={h.copyInviteLink} unreadCounts={h.unreadCounts} setSection={h.setSection} openChat={h.openChat} setShowNewSession={h.setShowNewSession} coachInitials={h.coachInitials} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} SESSION_COLORS={SESSION_COLORS} lastSessionByClient={h.lastSessionByClient} sessionsThisWeekByClient={h.sessionsThisWeekByClient} />
             )}
             {h.section === 'calendar' && <CoachCalendar calWeekOffset={h.calWeekOffset} setCalWeekOffset={h.setCalWeekOffset} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} setShowNewSession={h.setShowNewSession} setNsDate={h.setNsDate} setSection={h.setSection} />}
             {h.section === 'messages' && <CoachMessages clients={h.clients} selectedClient={h.selectedClient} setSelectedClient={h.setSelectedClient} openChat={h.openChat} chatMessages={h.chatMessages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} unreadCounts={h.unreadCounts} session={h.session} msgEndRef={h.msgEndRef} />}
@@ -470,8 +470,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         }
         @media (max-width: 1024px) { .lg-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 767px) { .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1px !important; } }
-        .client-cards-m { display: none; flex-direction: column; gap: 10px; }
-        @media (max-width: 767px) { .client-table-wrap { display: none !important; } .client-cards-m { display: flex; } }
+        /* .client-cards-m responsive rules moved to globals.css */
         .client-card-m { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; cursor: pointer; transition: border-color 150ms; overflow: hidden; }
         .client-card-m:active { border-color: ${GOLD}; }
         .client-card-m-inner { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
@@ -837,6 +836,8 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             scheduledSessions={h.scheduledSessions} clients={h.clients}
             setSelectedSession={h.setSelectedSession}
             SESSION_COLORS={SESSION_COLORS}
+            lastSessionByClient={h.lastSessionByClient}
+            sessionsThisWeekByClient={h.sessionsThisWeekByClient}
           />
         </div>
       )}
