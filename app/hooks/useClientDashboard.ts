@@ -383,6 +383,14 @@ export default function useClientDashboard() {
 
   const hasPaidSub = (() => {
     if (!profile) return false
+
+    // Bypass priority: subscription_type is the source of truth for
+    // lifetime/invited accounts. This protects against subscription_status
+    // being temporarily desynced (e.g. Stripe webhook missed an event).
+    if (profile.subscription_type === 'lifetime') return true
+    if (profile.subscription_type === 'invited') return true
+
+    // Fallback: subscription_status (for older profiles or status-driven flows)
     const st = profile.subscription_status
     if (st === 'lifetime' || st === 'invited') return true
     if (st === 'active') {
