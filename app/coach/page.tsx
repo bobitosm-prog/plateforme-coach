@@ -388,7 +388,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
 
             {/* Other sections — render existing components with desktop padding */}
             {h.section === 'dashboard' && (
-              <ClientsList filtered={h.filtered} loading={h.loading} search={h.search} setSearch={h.setSearch} showInvite={h.showInvite} setShowInvite={h.setShowInvite} inviteLink={h.inviteLink} copied={h.copied} copyInviteLink={h.copyInviteLink} unreadCounts={h.unreadCounts} setSection={h.setSection} openChat={h.openChat} setShowNewSession={h.setShowNewSession} coachInitials={h.coachInitials} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} SESSION_COLORS={SESSION_COLORS} />
+              <ClientsList filtered={h.filtered} loading={h.loading} search={h.search} setSearch={h.setSearch} showInvite={h.showInvite} setShowInvite={h.setShowInvite} inviteLink={h.inviteLink} copied={h.copied} copyInviteLink={h.copyInviteLink} unreadCounts={h.unreadCounts} setSection={h.setSection} openChat={h.openChat} setShowNewSession={h.setShowNewSession} coachInitials={h.coachInitials} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} SESSION_COLORS={SESSION_COLORS} lastSessionByClient={h.lastSessionByClient} sessionsThisWeekByClient={h.sessionsThisWeekByClient} />
             )}
             {h.section === 'calendar' && <CoachCalendar calWeekOffset={h.calWeekOffset} setCalWeekOffset={h.setCalWeekOffset} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} setShowNewSession={h.setShowNewSession} setNsDate={h.setNsDate} setSection={h.setSection} />}
             {h.section === 'messages' && <CoachMessages clients={h.clients} selectedClient={h.selectedClient} setSelectedClient={h.setSelectedClient} openChat={h.openChat} chatMessages={h.chatMessages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} unreadCounts={h.unreadCounts} session={h.session} msgEndRef={h.msgEndRef} />}
@@ -837,6 +837,8 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             scheduledSessions={h.scheduledSessions} clients={h.clients}
             setSelectedSession={h.setSelectedSession}
             SESSION_COLORS={SESSION_COLORS}
+            lastSessionByClient={h.lastSessionByClient}
+            sessionsThisWeekByClient={h.sessionsThisWeekByClient}
           />
         </div>
       )}

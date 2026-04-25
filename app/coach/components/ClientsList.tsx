@@ -13,6 +13,7 @@ import {
 
 import { initials, statusFor, STATUS_META } from '../hooks/useCoachDashboard'
 import type { ClientRow, ScheduledSession } from '../hooks/useCoachDashboard'
+import { formatRelativeTime } from '../../../lib/formatRelativeTime'
 
 interface ClientsListProps {
   filtered: ClientRow[]
@@ -33,6 +34,8 @@ interface ClientsListProps {
   clients: ClientRow[]
   SESSION_COLORS: Record<string, string>
   setSelectedSession: (s: ScheduledSession | null) => void
+  lastSessionByClient: Map<string, { name: string; completedAt: string }>
+  sessionsThisWeekByClient: Map<string, number>
 }
 
 export default function ClientsList({
@@ -42,6 +45,7 @@ export default function ClientsList({
   coachInitials,
   scheduledSessions, clients, SESSION_COLORS,
   setSelectedSession,
+  lastSessionByClient, sessionsThisWeekByClient,
 }: ClientsListProps) {
   return (
     <div>
@@ -63,6 +67,8 @@ export default function ClientsList({
                 <th scope="col">Client</th>
                 <th scope="col">Membre depuis</th>
                 <th scope="col">Poids</th>
+                <th scope="col">Derniere seance</th>
+                <th scope="col">Semaine</th>
                 <th scope="col">Statut</th>
                 <th scope="col">Messages</th>
                 <th scope="col"><span style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden' }}>Actions</span></th>
@@ -71,10 +77,10 @@ export default function ClientsList({
             <tbody>
               {loading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i}><td colSpan={6}><div style={{ height: '20px', background: BORDER, borderRadius: RADIUS_CARD, opacity: 0.5 }} /></td></tr>
+                  <tr key={i}><td colSpan={8}><div style={{ height: '20px', background: BORDER, borderRadius: RADIUS_CARD, opacity: 0.5 }} /></td></tr>
                 ))
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', color: TEXT_MUTED, padding: '40px 16px' }}>
+                <tr><td colSpan={8} style={{ textAlign: 'center', color: TEXT_MUTED, padding: '40px 16px' }}>
                   {search ? 'Aucun client trouvé.' : "Aucun client pour l'instant."}
                 </td></tr>
               ) : (
@@ -101,6 +107,14 @@ export default function ClientsList({
                       </td>
                       <td style={{ color: TEXT_MUTED }} onClick={() => window.location.href = `/client/${c.client_id}`}>{since}</td>
                       <td onClick={() => window.location.href = `/client/${c.client_id}`}>{p?.current_weight ? `${p.current_weight} kg` : '—'}</td>
+                      <td onClick={() => window.location.href = `/client/${c.client_id}`}>
+                        {(() => { const ls = lastSessionByClient.get(c.client_id); return ls ? (
+                          <div><div style={{ fontSize: 12 }}>{ls.name}</div><div style={{ color: TEXT_MUTED, fontSize: 11 }}>{formatRelativeTime(ls.completedAt)}</div></div>
+                        ) : <span style={{ color: TEXT_DIM, fontStyle: 'italic' }}>—</span> })()}
+                      </td>
+                      <td onClick={() => window.location.href = `/client/${c.client_id}`}>
+                        {sessionsThisWeekByClient.get(c.client_id) || 0}
+                      </td>
                       <td onClick={() => window.location.href = `/client/${c.client_id}`}><span className={`badge ${meta.cls}`}>{meta.label}</span></td>
                       <td>
                         <button
@@ -165,6 +179,11 @@ export default function ClientsList({
                       <div className="client-card-sub">
                         {p?.current_weight ? `${p.current_weight} kg · ` : ''}Membre depuis {since}
                       </div>
+                      {(() => { const ls = lastSessionByClient.get(c.client_id); const sw = sessionsThisWeekByClient.get(c.client_id) || 0; return ls ? (
+                        <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 4 }}>
+                          {ls.name} · {formatRelativeTime(ls.completedAt)}{sw > 0 ? ` · ${sw}x cette sem.` : ''}
+                        </div>
+                      ) : null })()}
                     </div>
                     <div className="client-card-actions">
                       <button
