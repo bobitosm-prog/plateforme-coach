@@ -153,6 +153,12 @@ export default function useClientDetail() {
   const [aiMealPreviewDay, setAiMealPreviewDay] = useState('lundi')
   const [clientActivePlan, setClientActivePlan] = useState<any>(null)
   const [clientActivePlanDay, setClientActivePlanDay] = useState('lundi')
+
+  // Progression data (coach view)
+  const [weightLogsFull, setWeightLogsFull] = useState<any[]>([])
+  const [bodyMeasurements, setBodyMeasurements] = useState<any[]>([])
+  const [clientProgressPhotos, setClientProgressPhotos] = useState<any[]>([])
+  const [clientCompletedSessions, setClientCompletedSessions] = useState<any[]>([])
   const [weeklyTracking, setWeeklyTracking] = useState<Record<string, Set<string>>>({})
   const [resolvedFoods, setResolvedFoods] = useState<{ id: string; name: string; emoji: string | null }[]>([])
   const [showAllFoods, setShowAllFoods] = useState(false)
@@ -389,6 +395,21 @@ export default function useClientDetail() {
       supabase.from('meal_plans').select('*').eq('user_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('custom_programs').select('id, name, days, is_active, created_at, source').eq('user_id', id).order('created_at', { ascending: false }).limit(10),
     ])
+
+    // Fetch progression data in parallel (non-blocking for main render)
+    Promise.all([
+      supabase.from('weight_logs').select('date, poids').eq('user_id', id).order('date', { ascending: true }).limit(90),
+      supabase.from('body_measurements').select('*').eq('user_id', id).order('date', { ascending: false }).limit(10),
+      supabase.from('progress_photos').select('*').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
+      supabase.from('completed_sessions').select('id, session_index, session_name, completed_at, duration_minutes').eq('client_id', id).eq('coach_id', coachId).order('completed_at', { ascending: false }).limit(50),
+    ]).then(([wlRes, bmRes, ppRes, csRes]) => {
+      setWeightLogsFull(wlRes.data || [])
+      setBodyMeasurements(bmRes.data || [])
+      setClientProgressPhotos(ppRes.data || [])
+      setClientCompletedSessions(csRes.data || [])
+    }).catch(err => {
+      console.warn('[useClientDetail] progression fetch failed:', err)
+    })
 
     if (profileRes.error) { setError(profileRes.error.message); setLoading(false); return }
     const p = profileRes.data as Profile
@@ -735,5 +756,7 @@ export default function useClientDetail() {
     coachId, coachMessages, coachMsgInput, setCoachMsgInput, sendCoachMessage,
     // Notes
     notes, notesSaved, notesSaving, onNotesChange, saveNotes,
+    // Progression
+    weightLogsFull, bodyMeasurements, clientProgressPhotos, clientCompletedSessions,
   }
 }
