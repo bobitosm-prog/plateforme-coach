@@ -103,7 +103,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
         <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>CONFIGURER</span>
         <button onClick={launch} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>LANCER</button>
       </div>
-      <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ flex: 1, padding: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {cfg.map((e, i) => (
           <div key={e.id} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -130,6 +130,11 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
             </div>
           </div>
         ))}
+      </div>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}`, zIndex: 51 }}>
+        <button onClick={launch} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
+          LANCER LA SEANCE
+        </button>
       </div>
     </div>
   )
@@ -187,7 +192,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       </div>
 
       {/* Exercise list */}
-      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, padding: '8px 16px 120px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, padding: '8px 16px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
         {dbExos.map((e: any) => {
           const sel = !!selected.find(x => x.id === e.id)
           return (
@@ -558,7 +563,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       </div>
 
       {/* EXERCICES */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px 120px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
         {/* Add exercise button */}
         <div style={{ margin: '0 4px 16px', width: 'calc(100% - 8px)' }}>
           <button onClick={() => setMode('custom')} style={{
