@@ -3,7 +3,7 @@ import React from 'react'
 import {
   ArrowLeft, Zap, Dumbbell,
   Check, X, Plus, Moon, Utensils, Search, Pencil, Sparkles, Loader2,
-  LayoutDashboard, FileText, MessageCircle, CheckCircle,
+  LayoutDashboard, FileText, MessageCircle, CheckCircle, TrendingUp,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import useClientDetail from './hooks/useClientDetail'
@@ -13,6 +13,7 @@ import ClientProgram from './components/ClientProgram'
 import ClientNutrition from './components/ClientNutrition'
 import ClientMessages from './components/ClientMessages'
 import ClientNotes from './components/ClientNotes'
+import ClientProgress from './components/ClientProgress'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS as MC, MUSCLE_GROUPS_FILTER as MUSCLE_FILTERS } from '@/lib/design-tokens'
 
 /* ══════════════════════════════════════════════════════════════
@@ -172,9 +173,9 @@ export default function ClientProfilePage() {
 
       {/* ── DESKTOP TABS ── */}
       <div className="desktop-tabs">
-        {(['apercu','programme','nutrition','messages','notes'] as const).map(t=>(
-          <button key={t} className={h.activeTab===t?'dt-active':''} onClick={()=>h.setActiveTab(t)}>
-            {{apercu:'Aperçu',programme:'Programme',nutrition:'Nutrition',messages:'Messages',notes:'Notes'}[t]}
+        {(['apercu','programme','progression','nutrition','messages','notes'] as const).map(t=>(
+          <button key={t} className={h.activeTab===t?'dt-active':''} onClick={()=>h.setActiveTab(t as any)}>
+            {{apercu:'Aperçu',programme:'Programme',progression:'Progression',nutrition:'Nutrition',messages:'Messages',notes:'Notes'}[t]}
           </button>
         ))}
       </div>
@@ -251,6 +252,19 @@ export default function ClientProfilePage() {
           />
         )}
 
+        {/* ══ TAB: PROGRESSION ══ */}
+        {h.activeTab === 'progression' && (
+          <ClientProgress
+            weightLogs={h.weightLogsFull}
+            bodyMeasurements={h.bodyMeasurements}
+            progressPhotos={h.clientProgressPhotos}
+            completedSessions={h.sessions}
+            startWeight={profile?.start_weight}
+            targetWeight={profile?.target_weight}
+            currentWeight={profile?.current_weight}
+          />
+        )}
+
         {/* ══ TAB: NUTRITION ══ */}
         {h.activeTab === 'nutrition' && (
           <ClientNutrition
@@ -316,18 +330,19 @@ export default function ClientProfilePage() {
       <nav className="bottom-nav">
         <div style={{display:'flex',alignItems:'stretch',height:44}}>
           {([
-            {id:'apercu',    label:'Aperçu',  icon:(a:boolean)=><LayoutDashboard size={18} strokeWidth={a?2.5:1.5}/>},
-            {id:'programme', label:'Progr.',   icon:(a:boolean)=><Dumbbell        size={18} strokeWidth={a?2.5:1.5}/>},
-            {id:'nutrition', label:'Nutri.',   icon:(a:boolean)=><Utensils        size={18} strokeWidth={a?2.5:1.5}/>},
-            {id:'messages',  label:'Msgs',     icon:(a:boolean)=><MessageCircle   size={18} strokeWidth={a?2.5:1.5}/>},
-            {id:'notes',     label:'Notes',    icon:(a:boolean)=><FileText        size={18} strokeWidth={a?2.5:1.5}/>},
-          ] as {id:'apercu'|'programme'|'nutrition'|'notes'|'messages', label:string, icon:(a:boolean)=>React.ReactNode}[]).map(tab => {
+            {id:'apercu',      label:'Aperçu',  icon:(a:boolean)=><LayoutDashboard size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'programme',   label:'Progr.',   icon:(a:boolean)=><Dumbbell        size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'progression', label:'Progres.', icon:(a:boolean)=><TrendingUp      size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'nutrition',   label:'Nutri.',   icon:(a:boolean)=><Utensils        size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'messages',    label:'Msgs',     icon:(a:boolean)=><MessageCircle   size={18} strokeWidth={a?2.5:1.5}/>},
+            {id:'notes',       label:'Notes',    icon:(a:boolean)=><FileText        size={18} strokeWidth={a?2.5:1.5}/>},
+          ] as {id:string, label:string, icon:(a:boolean)=>React.ReactNode}[]).map(tab => {
             const active = h.activeTab === tab.id
             return (
               <button
                 key={tab.id}
                 className="nav-tab"
-                onClick={()=>h.setActiveTab(tab.id)}
+                onClick={()=>h.setActiveTab(tab.id as any)}
                 style={{color: active ? GOLD : '#3A3528'}}
                 aria-label={tab.label}
               >
