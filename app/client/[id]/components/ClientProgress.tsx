@@ -8,7 +8,7 @@ type Props = {
   weightLogs: { date: string; poids: number }[]
   bodyMeasurements: any[]
   progressPhotos: any[]
-  completedSessions: { id: string; session_index: number; session_name: string; completed_at: string; duration_minutes: number | null }[]
+  completedSessions: { id: string; name: string | null; created_at: string; duration_minutes: number | null }[]
   startWeight?: number | null
   targetWeight?: number | null
   currentWeight?: number | null
@@ -35,7 +35,7 @@ export default function ClientProgress({
   const dow = startOfWeek.getDay() || 7
   startOfWeek.setDate(startOfWeek.getDate() - (dow - 1))
   startOfWeek.setHours(0, 0, 0, 0)
-  const sessionsThisWeek = completedSessions.filter(cs => new Date(cs.completed_at) >= startOfWeek).length
+  const sessionsThisWeek = completedSessions.filter(cs => new Date(cs.created_at) >= startOfWeek).length
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -107,7 +107,7 @@ export default function ClientProgress({
         {progressPhotos.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10 }}>
             {progressPhotos.slice(0, 12).map((p: any) => {
-              const url = p.photo_url || p.url
+              const url = p.signedUrl
               if (!url) return null
               return (
                 <div key={p.id} style={{ position: 'relative' }}>
@@ -135,8 +135,8 @@ export default function ClientProgress({
             {completedSessions.slice(0, 20).map(cs => (
               <div key={cs.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: GOLD_DIM, borderRadius: 8, fontSize: 12, fontFamily: FONT_BODY }}>
                 <div>
-                  <div style={{ color: TEXT_PRIMARY, fontWeight: 600 }}>{cs.session_name}</div>
-                  <div style={{ color: TEXT_MUTED, fontSize: 11 }}>{formatRelativeTime(cs.completed_at)}</div>
+                  <div style={{ color: TEXT_PRIMARY, fontWeight: 600 }}>{cs.name || 'Seance'}</div>
+                  <div style={{ color: TEXT_MUTED, fontSize: 11 }}>{formatRelativeTime(cs.created_at)}</div>
                 </div>
                 {cs.duration_minutes != null && (
                   <span style={{ color: TEXT_MUTED, fontSize: 11 }}>{cs.duration_minutes} min</span>

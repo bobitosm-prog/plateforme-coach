@@ -258,7 +258,7 @@ export default function ClientProfilePage() {
             weightLogs={h.weightLogsFull}
             bodyMeasurements={h.bodyMeasurements}
             progressPhotos={h.clientProgressPhotos}
-            completedSessions={h.clientCompletedSessions}
+            completedSessions={h.sessions}
             startWeight={profile?.start_weight}
             targetWeight={profile?.target_weight}
             currentWeight={profile?.current_weight}

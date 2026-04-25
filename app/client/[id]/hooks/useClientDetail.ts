@@ -402,11 +402,21 @@ export default function useClientDetail() {
       supabase.from('body_measurements').select('*').eq('user_id', id).order('date', { ascending: false }).limit(10),
       supabase.from('progress_photos').select('*').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
       supabase.from('completed_sessions').select('id, session_index, session_name, completed_at, duration_minutes').eq('client_id', id).eq('coach_id', coachId).order('completed_at', { ascending: false }).limit(50),
-    ]).then(([wlRes, bmRes, ppRes, csRes]) => {
+    ]).then(async ([wlRes, bmRes, ppRes, csRes]) => {
       setWeightLogsFull(wlRes.data || [])
       setBodyMeasurements(bmRes.data || [])
-      setClientProgressPhotos(ppRes.data || [])
       setClientCompletedSessions(csRes.data || [])
+
+      // Sign photo URLs for display
+      const photos = ppRes.data || []
+      const signedPhotos = await Promise.all(
+        photos.map(async (p: any) => {
+          if (!p.photo_url) return p
+          const { data } = await supabase.storage.from('progress-photos').createSignedUrl(p.photo_url, 3600)
+          return { ...p, signedUrl: data?.signedUrl || null }
+        })
+      )
+      setClientProgressPhotos(signedPhotos)
     }).catch(err => {
       console.warn('[useClientDetail] progression fetch failed:', err)
     })
