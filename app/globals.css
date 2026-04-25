@@ -194,3 +194,19 @@ input:focus, textarea:focus, select:focus {
   input, select, textarea { font-size: 16px !important; }
   body { overflow-x: hidden; }
 }
+
+/* Coach dashboard — clients list responsive (mobile cards vs desktop table) */
+.client-cards-m {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 767px) {
+  .client-table-wrap {
+    display: none !important;
+  }
+  .client-cards-m {
+    display: flex;
+  }
+}

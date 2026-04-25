@@ -470,8 +470,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         }
         @media (max-width: 1024px) { .lg-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 767px) { .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1px !important; } }
-        .client-cards-m { display: none; flex-direction: column; gap: 10px; }
-        @media (max-width: 767px) { .client-table-wrap { display: none !important; } .client-cards-m { display: flex; } }
+        /* .client-cards-m responsive rules moved to globals.css */
         .client-card-m { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; cursor: pointer; transition: border-color 150ms; overflow: hidden; }
         .client-card-m:active { border-color: ${GOLD}; }
         .client-card-m-inner { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
