@@ -8,17 +8,11 @@ import {
 } from '../../../../lib/design-tokens'
 import ExercisePreview from '../../ExercisePreview'
 import { getRestSeconds } from '../../../../lib/utils/exercise'
+import { TECHNIQUE_LABELS } from '../../../../lib/technique-labels'
 
 interface PreviousSet {
   weight: number
   reps: number
-}
-
-const TECHNIQUE_LABELS: Record<string, { emoji: string; label: string }> = {
-  dropset: { emoji: '🔻', label: 'DROP SET' },
-  restpause: { emoji: '⏸️', label: 'REST PAUSE' },
-  superset: { emoji: '🔗', label: 'SUPERSET' },
-  mechanical: { emoji: '🔄', label: 'MECHANICAL' },
 }
 
 interface TrainingExerciseCardProps {
