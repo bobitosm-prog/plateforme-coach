@@ -22,6 +22,7 @@ const uid = () => Math.random().toString(36).slice(2)
 const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', reps: '', done: false }))
 const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt(s) || 0 : s; return n >= 60 ? `${Math.floor(n / 60)}:${(n % 60).toString().padStart(2, '0')}` : `${n}s` }
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
+const isDumbbell = (n: string) => /halt[eè]res?|dumbbell|\bDB\b/i.test(n)
 
 function RestOverlay({ secs, max, onSkip, onAdd30 }: { secs: number; max: number; onSkip: () => void; onAdd30: () => void }) {
   const r = 52, c = 2 * Math.PI * r, offset = c * (1 - secs / max), hot = secs <= 10
@@ -676,7 +677,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 <div style={{ paddingTop: 8 }}>
                   {/* Column headers */}
                   <div className="ws-grid" style={{ display: 'grid', gridTemplateColumns: '40px 1fr 64px 56px 40px', gap: 0, padding: '4px 0 6px', alignItems: 'center' }}>
-                    {['SERIE', 'PREC.', 'KG', 'REPS', ''].map(h => (
+                    {['SERIE', 'PREC.', isDumbbell(exo.name) ? 'KG ×2' : 'KG', 'REPS', ''].map(h => (
                       <span key={h} style={{ fontSize: 8, textAlign: h === 'PREC.' ? 'left' : 'center', paddingLeft: h === 'PREC.' ? 4 : 0, color: 'rgba(255,255,255,0.3)', fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>{h}</span>
                     ))}
                   </div>
