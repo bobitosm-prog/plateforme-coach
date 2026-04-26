@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { Plus, Copy, Trash2, ChevronDown, X, Save } from 'lucide-react'
+import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -30,6 +30,8 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [assignClientId, setAssignClientId] = useState('')
   const [saving, setSaving] = useState(false)
   const [programToDelete, setProgramToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [pushTarget, setPushTarget] = useState<{ template: Program; impactedClients: { id: string; name: string }[] } | null>(null)
+  const [pushing, setPushing] = useState(false)
 
   // New program state
   const [pName, setPName] = useState('')
@@ -132,6 +134,19 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setProgramToDelete(null)
   }
 
+  async function handlePushClick(template: Program) {
+    if (!template.id) return
+    const { data } = await supabase
+      .from('client_programs')
+      .select('client_id')
+      .eq('training_program_id', template.id)
+    const impactedIds = (data || []).map((d: any) => d.client_id)
+    const impactedClients = clients
+      .filter((c: any) => impactedIds.includes(c.client_id))
+      .map((c: any) => ({ id: c.client_id, name: c.profiles?.full_name || c.profiles?.email || 'Client' }))
+    setPushTarget({ template, impactedClients })
+  }
+
   function startEdit(p: Program) {
     setEditing(p); setPName(p.name); setPSplit(p.split || SPLITS[0])
     setPDuration(p.duration || DURATIONS[1]); setPDays(p.days || [])
@@ -213,6 +228,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
+                <button onClick={() => handlePushClick(p)} title="Pusher MAJ aux clients" style={{ background: BG_CARD_2, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><RefreshCw size={14} /></button>
                 <button onClick={() => startEdit(p)} title="Modifier" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED }}><ChevronDown size={14} /></button>
                 <button onClick={() => setProgramToDelete({ id: p.id!, name: p.name })} title="Supprimer" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: RED }}><Trash2 size={14} /></button>
               </div>
