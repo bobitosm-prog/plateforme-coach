@@ -580,11 +580,19 @@ export default function useClientDetail() {
   const saveProgram = async (programOverride?: typeof program) => {
     if (!coachId) return
     const raw = programOverride || program
+    console.log('[DEBUG saveProgram] raw keys:', Object.keys(raw))
     // Clean empty numeric values before saving
     const toSave: typeof program = {}
     for (const day of Object.keys(raw)) {
-      toSave[day] = { ...raw[day], exercises: (raw[day].exercises || []).map(ex => ({ ...ex, sets: ex.sets || 3, reps: ex.reps || 10, rest: ex.rest || '60s' })) }
+      const d = raw[day]
+      if (!d || typeof d !== 'object') {
+        console.warn('[DEBUG saveProgram] skipping invalid day:', day, d)
+        toSave[day] = { repos: true, exercises: [], day_name: '' }
+        continue
+      }
+      toSave[day] = { ...d, exercises: (d.exercises || []).map(ex => ({ ...ex, sets: ex.sets || 3, reps: ex.reps || 10, rest: ex.rest || '60s' })) }
     }
+    console.log('[DEBUG saveProgram] toSave ready, keys:', Object.keys(toSave))
     setProgramSaving(true)
     if (programId) {
       await supabase.from('client_programs').update({ program: toSave, updated_at: new Date().toISOString() }).eq('id', programId)
