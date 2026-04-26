@@ -540,13 +540,13 @@ export default function ClientProfilePage() {
                       {DAYS.map(d => {
                         const day = h.aiPreview![d]
                         return (
-                          <div key={d} style={{ background: BG_BASE, borderRadius: RADIUS_CARD, padding: '10px 14px', border: `1px solid ${day.repos ? BORDER : GOLD_RULE}` }}>
+                          <div key={d} style={{ background: BG_BASE, borderRadius: RADIUS_CARD, padding: '10px 14px', border: `1px solid ${day?.repos ? BORDER : GOLD_RULE}` }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <span style={{ fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: day.repos ? TEXT_DIM : GOLD, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{d.charAt(0).toUpperCase() + d.slice(1)}</span>
-                              {day.repos ? <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_DIM, display: 'flex', alignItems: 'center', gap: 4 }}><Moon size={10} /> Repos</span>
-                                : <span style={{ fontSize: '0.72rem', fontFamily: FONT_ALT, color: GOLD, fontWeight: 700 }}>{day.exercises.length} exercice{day.exercises.length !== 1 ? 's' : ''}</span>}
+                              <span style={{ fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: day?.repos ? TEXT_DIM : GOLD, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{d.charAt(0).toUpperCase() + d.slice(1)}</span>
+                              {day?.repos ? <span style={{ fontSize: '0.72rem', fontFamily: FONT_BODY, color: TEXT_DIM, display: 'flex', alignItems: 'center', gap: 4 }}><Moon size={10} /> Repos</span>
+                                : <span style={{ fontSize: '0.72rem', fontFamily: FONT_ALT, color: GOLD, fontWeight: 700 }}>{(day?.exercises || []).length} exercice{(day?.exercises || []).length !== 1 ? 's' : ''}</span>}
                             </div>
-                            {!day.repos && day.exercises.length > 0 && (
+                            {!day?.repos && (day?.exercises || []).length > 0 && (
                               <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                 {(day.exercises || []).map((ex, i) => <span key={i} style={{ fontFamily: FONT_BODY, fontSize: '0.68rem', background: GOLD_DIM, color: GOLD, borderRadius: 12, padding: '2px 8px' }}>{ex.name}</span>)}
                               </div>

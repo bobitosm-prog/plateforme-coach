@@ -196,7 +196,7 @@ export default function ClientProgram({
             <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'28px 16px',color:TEXT_MUTED}}>
               <Moon size={20} strokeWidth={1.5}/><span style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,letterSpacing:'1px',textTransform:'uppercase'}}>Jour de repos</span>
             </div>
-          ) : program[expandedDay].exercises.length === 0 ? (
+          ) : (program[expandedDay]?.exercises || []).length === 0 ? (
             <div style={{textAlign:'center',padding:'28px 16px',color:TEXT_MUTED,fontFamily:FONT_BODY,fontSize:'0.85rem'}}>Aucun exercice — cliquez Ajouter</div>
           ) : (
             <div style={{padding:'0 14px',overflowX:'auto'}}>

@@ -592,8 +592,8 @@ export default function useClientDetail() {
   /* ── Programme helpers ──────────────────────────────────────── */
   const toggleRepos = (day: string) => {
     const current = program[day]
-    if (!current.repos && current.exercises.length > 0) {
-      setSavedExercises(prev => ({ ...prev, [day]: current.exercises }))
+    if (!current?.repos && (current?.exercises || []).length > 0) {
+      setSavedExercises(prev => ({ ...prev, [day]: current.exercises || [] }))
     }
     const newProgram = {
       ...program,
@@ -654,19 +654,19 @@ export default function useClientDetail() {
     setVariantPopup(null)
     saveProgram(newProgram)
   }
-  const addExercise  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...p[day].exercises, { name:'', sets:3, reps:10, rest:'60s', notes:'' }] } }))
-  const removeExercise = (day: string, i: number) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: p[day].exercises.filter((_,j) => j !== i) } }))
+  const addExercise  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...(p[day]?.exercises || []), { name:'', sets:3, reps:10, rest:'60s', notes:'' }] } }))
+  const removeExercise = (day: string, i: number) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: (p[day]?.exercises || []).filter((_,j) => j !== i) } }))
 
   const openExDbModal = (day: string) => {
     setExDbTargetDay(day); setExDbSearch(''); setExDbResults([]); setExDbFilter('Tous'); setShowExDbModal(true)
   }
   const selectExercise = (ex: any) => {
     if (!exDbTargetDay) return
-    setProgram(p => ({ ...p, [exDbTargetDay]: { ...p[exDbTargetDay], exercises: [...p[exDbTargetDay].exercises, { name: ex.name, sets: 3, reps: ex.reps ?? 10, rest: ex.rest ? `${ex.rest}s` : '60s', notes: '' }] } }))
+    setProgram(p => ({ ...p, [exDbTargetDay]: { ...p[exDbTargetDay], exercises: [...(p[exDbTargetDay]?.exercises || []), { name: ex.name, sets: 3, reps: ex.reps ?? 10, rest: ex.rest ? `${ex.rest}s` : '60s', notes: '' }] } }))
     setShowExDbModal(false); setExDbSearch(''); setExDbResults([]); setExDbFilter('Tous')
   }
   const updateExercise = (day: string, i: number, field: keyof Exercise, val: string|number) =>
-    setProgram(p => { const ex=[...p[day].exercises]; ex[i]={...ex[i],[field]:val}; return {...p,[day]:{...p[day],exercises:ex}} })
+    setProgram(p => { const ex=[...(p[day]?.exercises || [])]; ex[i]={...ex[i],[field]:val}; return {...p,[day]:{...p[day],exercises:ex}} })
 
   /* ── Save meal plan ─────────────────────────────────────────── */
   const saveMealPlan = async () => {
