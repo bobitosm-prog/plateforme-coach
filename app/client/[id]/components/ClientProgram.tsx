@@ -102,7 +102,7 @@ export default function ClientProgram({
         {DAYS.map(day => {
           const d = program[day]
           const isActive = expandedDay === day
-          const hasEx = !d.repos && d.exercises.length > 0
+          const hasEx = !d.repos && (d.exercises || []).length > 0
           return (
             <button
               key={day}
@@ -128,7 +128,7 @@ export default function ClientProgram({
                 <span style={{
                   fontFamily:FONT_DISPLAY,fontSize:18,
                   color:isActive?'#0D0B08':hasEx?GOLD:TEXT_DIM,
-                }}>{d.exercises.length}</span>
+                }}>{(d.exercises || []).length}</span>
               )}
               {hasEx && !isActive && (
                 <div style={{width:4,height:4,borderRadius:'50%',background:GOLD}}/>
@@ -200,7 +200,7 @@ export default function ClientProgram({
             <div style={{textAlign:'center',padding:'28px 16px',color:TEXT_MUTED,fontFamily:FONT_BODY,fontSize:'0.85rem'}}>Aucun exercice — cliquez Ajouter</div>
           ) : (
             <div style={{padding:'0 14px',overflowX:'auto'}}>
-              {program[expandedDay].exercises.map((ex,idx)=>(
+              {(program[expandedDay].exercises || []).map((ex,idx)=>(
                 <div key={idx} className="ex-row-m">
                   {/* Name + variants + delete */}
                   <div style={{display:'flex',gap:6,alignItems:'center'}}>

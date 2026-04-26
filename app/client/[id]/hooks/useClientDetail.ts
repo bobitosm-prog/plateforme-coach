@@ -566,7 +566,7 @@ export default function useClientDetail() {
     // Clean empty numeric values before saving
     const toSave: typeof program = {}
     for (const day of Object.keys(raw)) {
-      toSave[day] = { ...raw[day], exercises: raw[day].exercises.map(ex => ({ ...ex, sets: ex.sets || 3, reps: ex.reps || 10, rest: ex.rest || '60s' })) }
+      toSave[day] = { ...raw[day], exercises: (raw[day].exercises || []).map(ex => ({ ...ex, sets: ex.sets || 3, reps: ex.reps || 10, rest: ex.rest || '60s' })) }
     }
     setProgramSaving(true)
     if (programId) {
@@ -638,7 +638,7 @@ export default function useClientDetail() {
   }
   function selectVariant(variant: any) {
     if (!variantPopup) return
-    const newProgram = { ...program, [variantPopup.day]: { ...program[variantPopup.day], exercises: program[variantPopup.day].exercises.map((ex, i) => i === variantPopup.idx ? { ...ex, name: variant.name } : ex) } }
+    const newProgram = { ...program, [variantPopup.day]: { ...program[variantPopup.day], exercises: (program[variantPopup.day].exercises || []).map((ex, i) => i === variantPopup.idx ? { ...ex, name: variant.name } : ex) } }
     setProgram(newProgram)
     setVariantPopup(null)
     saveProgram(newProgram)

@@ -548,7 +548,7 @@ export default function ClientProfilePage() {
                             </div>
                             {!day.repos && day.exercises.length > 0 && (
                               <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                {day.exercises.map((ex, i) => <span key={i} style={{ fontFamily: FONT_BODY, fontSize: '0.68rem', background: GOLD_DIM, color: GOLD, borderRadius: 12, padding: '2px 8px' }}>{ex.name}</span>)}
+                                {(day.exercises || []).map((ex, i) => <span key={i} style={{ fontFamily: FONT_BODY, fontSize: '0.68rem', background: GOLD_DIM, color: GOLD, borderRadius: 12, padding: '2px 8px' }}>{ex.name}</span>)}
                               </div>
                             )}
                           </div>
