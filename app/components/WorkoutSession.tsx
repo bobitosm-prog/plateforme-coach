@@ -24,38 +24,6 @@ const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
 const isDumbbell = (n: string) => /halt[eè]res?|dumbbell|\bDB\b/i.test(n)
 
-function RestOverlay({ secs, max, onSkip, onAdd30 }: { secs: number; max: number; onSkip: () => void; onAdd30: () => void }) {
-  const r = 52, c = 2 * Math.PI * r, offset = c * (1 - secs / max), hot = secs <= 10
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-6" style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(16px)' }}>
-      <div className="flex flex-col items-center gap-5 p-8 w-full max-w-xs relative overflow-hidden"
-        style={{ background: BG_CARD, borderRadius: RADIUS_CARD, border: `1px solid ${GOLD_RULE}` }}>
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: hot ? `radial-gradient(circle at 50% 0%, ${colors.goldRule} 0%, transparent 60%)` : `radial-gradient(circle at 50% 0%, ${colors.goldBorder} 0%, transparent 60%)` }} />
-        <p className="text-[11px] relative z-10" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>REPOS</p>
-        <div className="relative z-10">
-          <svg width="136" height="136" viewBox="0 0 136 136" style={{ transform: 'rotate(-90deg)' }}>
-            <circle cx="68" cy="68" r={r} fill="none" stroke={TEXT_DIM} strokeWidth="2" />
-            <circle cx="68" cy="68" r={r} fill="none" stroke={GOLD} strokeWidth="2"
-              strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset}
-              style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.4s ease' }} />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="leading-none" style={{ color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 64, fontWeight: 700 }}>{fmt(secs)}</span>
-            {hot && <span className="text-[10px] uppercase tracking-widest animate-pulse mt-1" style={{ color: GOLD, fontFamily: FONT_ALT, fontWeight: 700 }}>GO !</span>}
-          </div>
-        </div>
-        <div className="relative z-10 w-full flex gap-3">
-          <button onClick={onAdd30} className="flex-1 py-4 active:scale-95"
-            style={{ background: BG_CARD_2, color: GOLD, fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.8rem' }}>+30s</button>
-          <button onClick={onSkip} className="flex-[2] py-4 active:scale-95"
-            style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Passer →</button>
-        </div>
-        <p className="text-[10px] relative z-10" style={{ color: TEXT_DIM, fontFamily: FONT_BODY }}>Recommande : {fmt(max)}</p>
-      </div>
-    </div>
-  )
-}
 
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Cardio']
 
@@ -734,28 +702,34 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     )
                   })}
 
-                  {/* INLINE REST TIMER BAR */}
+                  {/* INLINE REST TIMER — SVG circle */}
                   {restOn && restExoId === exo.id && (
                     <div style={{
-                      marginTop: 6, padding: '8px 12px', borderRadius: 8,
-                      background: 'rgba(201,168,76,0.06)', border: `1px solid rgba(201,168,76,0.12)`,
-                      display: 'flex', alignItems: 'center', gap: 10,
+                      marginTop: 12, padding: 16, borderRadius: 12,
+                      background: 'rgba(201,168,76,0.08)',
+                      border: `1px solid ${restSecs <= 10 ? '#fb923c' : 'rgba(201,168,76,0.25)'}`,
+                      display: 'flex', alignItems: 'center', gap: 16,
+                      transition: 'border-color 200ms',
                     }}>
-                      <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_DIM, letterSpacing: 1, textTransform: 'uppercase' as const, flexShrink: 0 }}>REPOS</span>
-                      <div style={{ flex: 1, height: 4, background: 'rgba(201,168,76,0.1)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{
-                          width: `${restMax > 0 ? (restSecs / restMax) * 100 : 0}%`, height: '100%', borderRadius: 2,
-                          background: restSecs <= 5 ? '#fb923c' : GOLD,
-                          transition: 'width 1s linear, background 200ms',
-                        }} />
+                      {/* Cercle SVG */}
+                      <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
+                        <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
+                          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+                          <circle cx="40" cy="40" r="32" fill="none"
+                            stroke={restSecs <= 10 ? '#fb923c' : GOLD} strokeWidth="6" strokeLinecap="round"
+                            strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - (restMax > 0 ? restSecs / restMax : 0))}
+                            style={{ transition: 'stroke-dashoffset 1s linear, stroke 200ms' }} />
+                        </svg>
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                          <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONT_ALT, color: restSecs <= 10 ? '#fb923c' : GOLD, lineHeight: 1 }}>{restSecs}s</span>
+                          <span style={{ fontSize: 8, fontFamily: FONT_ALT, color: TEXT_DIM, letterSpacing: '0.1em', marginTop: 2 }}>REPOS</span>
+                        </div>
                       </div>
-                      <span style={{
-                        fontFamily: FONT_DISPLAY, fontSize: 14, fontWeight: 700, minWidth: 40, textAlign: 'right',
-                        color: restSecs <= 5 ? '#fb923c' : GOLD,
-                        animation: restSecs <= 5 ? 'pulse 1s infinite' : 'none',
-                      }}>{fmt(restSecs)}</span>
-                      <button onClick={addRestTime} style={{ padding: '4px 8px', borderRadius: 6, background: BG_CARD_2, border: `1px solid ${BORDER}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>+30s</button>
-                      <button onClick={skipRest} style={{ padding: '4px 8px', borderRadius: 6, background: BG_CARD_2, border: `1px solid ${BORDER}`, color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>SKIP</button>
+                      {/* Boutons */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                        <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
+                        <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Passer →</button>
+                      </div>
                     </div>
                   )}
 
