@@ -453,7 +453,18 @@ export default function useClientDetail() {
       } else {
         normalized = raw as WeekProgram
       }
-      setProgram({ ...defaultProgram(), ...normalized })
+      // Sanitize: ensure every day has { repos, exercises, day_name }
+      const WD_ALL = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
+      const sanitized: WeekProgram = {} as WeekProgram
+      for (const wd of WD_ALL) {
+        const d = normalized[wd]
+        if (d && typeof d === 'object') {
+          sanitized[wd] = { repos: d.repos === true, exercises: Array.isArray(d.exercises) ? d.exercises : [], day_name: typeof d.day_name === 'string' ? d.day_name : '' }
+        } else {
+          sanitized[wd] = { repos: true, exercises: [], day_name: '' }
+        }
+      }
+      setProgram({ ...defaultProgram(), ...sanitized })
     }
     // Filter out empty programs (no days or no exercises)
     const validProgs = (customProgsRes.data || []).filter((p: any) => {
