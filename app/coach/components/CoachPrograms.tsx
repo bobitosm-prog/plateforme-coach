@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { Plus, Copy, Trash2, ChevronDown, X, Save } from 'lucide-react'
+import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -30,6 +30,8 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [assignClientId, setAssignClientId] = useState('')
   const [saving, setSaving] = useState(false)
   const [programToDelete, setProgramToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [pushTarget, setPushTarget] = useState<{ template: Program; impactedClients: { id: string; name: string }[] } | null>(null)
+  const [pushing, setPushing] = useState(false)
 
   // New program state
   const [pName, setPName] = useState('')
@@ -132,6 +134,52 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setProgramToDelete(null)
   }
 
+  async function handlePushClick(template: Program) {
+    if (!template.id) return
+    const { data } = await supabase
+      .from('client_programs')
+      .select('client_id')
+      .eq('training_program_id', template.id)
+    const impactedIds = (data || []).map((d: any) => d.client_id)
+    const impactedClients = clients
+      .filter((c: any) => impactedIds.includes(c.client_id))
+      .map((c: any) => ({ id: c.client_id, name: c.profiles?.full_name || c.profiles?.email || 'Client' }))
+    setPushTarget({ template, impactedClients })
+  }
+
+  async function handleConfirmPush() {
+    if (!pushTarget || pushTarget.impactedClients.length === 0) return
+    setPushing(true)
+    try {
+      const tplDays = pushTarget.template.days || []
+      if (!Array.isArray(tplDays)) { setPushing(false); return }
+      if (tplDays.length === 0) {
+        console.error('[push] template days is empty, aborting to avoid wiping clients')
+        alert('Ce template n\'a aucun jour configure. Mise a jour annulee.')
+        setPushing(false)
+        return
+      }
+      const { error } = await supabase
+        .from('client_programs')
+        .update({ program: tplDays, updated_at: new Date().toISOString() })
+        .eq('training_program_id', pushTarget.template.id)
+      if (error) {
+        console.error('[push] update failed:', error)
+        alert('Erreur lors de la mise a jour : ' + error.message)
+        setPushing(false)
+        return
+      }
+      const count = pushTarget.impactedClients.length
+      setPushTarget(null)
+      setPushing(false)
+      alert(`${count} client(s) mis a jour avec succes`)
+    } catch (err) {
+      console.error('[push] exception:', err)
+      setPushing(false)
+      alert('Erreur inattendue')
+    }
+  }
+
   function startEdit(p: Program) {
     setEditing(p); setPName(p.name); setPSplit(p.split || SPLITS[0])
     setPDuration(p.duration || DURATIONS[1]); setPDays(p.days || [])
@@ -165,6 +213,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
         coach_id: session.user.id,
         program: assignModal.days,
         program_name: assignModal.name,
+        training_program_id: assignModal.id ?? null,
       })
 
     if (error) {
@@ -212,6 +261,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
+                <button onClick={() => handlePushClick(p)} title="Pusher MAJ aux clients" style={{ background: BG_CARD_2, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><RefreshCw size={14} /></button>
                 <button onClick={() => startEdit(p)} title="Modifier" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED }}><ChevronDown size={14} /></button>
                 <button onClick={() => setProgramToDelete({ id: p.id!, name: p.name })} title="Supprimer" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: RED }}><Trash2 size={14} /></button>
               </div>
@@ -254,6 +304,43 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
         onConfirm={() => programToDelete && deleteProgram(programToDelete.id)}
         onCancel={() => setProgramToDelete(null)}
       />
+
+      {/* Push MAJ dialog */}
+      {pushTarget && (
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }} onClick={() => !pushing && setPushTarget(null)}>
+          <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 16, padding: 24, maxWidth: 480, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.7)', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.95rem', fontWeight: 800, color: GOLD, margin: '0 0 12px' }}>
+              Pusher la mise a jour
+            </h2>
+            {pushTarget.impactedClients.length === 0 ? (
+              <p style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 24px' }}>
+                Aucun client n&apos;a actuellement le template &quot;{pushTarget.template.name}&quot; assigne.
+              </p>
+            ) : (
+              <>
+                <p style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 16px' }}>
+                  Les <strong style={{ color: GOLD }}>{pushTarget.impactedClients.length} client(s)</strong> suivants vont recevoir la mise a jour de &quot;{pushTarget.template.name}&quot;. Les modifications personnelles seront ecrasees.
+                </p>
+                <div style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, marginBottom: 24, maxHeight: 200, overflowY: 'auto' }}>
+                  {pushTarget.impactedClients.map(c => (
+                    <div key={c.id} style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_PRIMARY, padding: '6px 0' }}>{c.name}</div>
+                  ))}
+                </div>
+              </>
+            )}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => setPushTarget(null)} disabled={pushing} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '9px 18px', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', cursor: pushing ? 'not-allowed' : 'pointer', opacity: pushing ? 0.5 : 1 }}>
+                {pushTarget.impactedClients.length === 0 ? 'Fermer' : 'Annuler'}
+              </button>
+              {pushTarget.impactedClients.length > 0 && (
+                <button onClick={handleConfirmPush} disabled={pushing} style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '9px 18px', color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', cursor: pushing ? 'not-allowed' : 'pointer', opacity: pushing ? 0.5 : 1 }}>
+                  {pushing ? '...' : 'Confirmer'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 
