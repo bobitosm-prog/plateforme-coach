@@ -1,6 +1,7 @@
 'use client'
+import { useState } from 'react'
 import {
-  Check, Plus, Minus, Moon, Save, Sparkles, Loader2, Info, ArrowRightLeft,
+  Check, Plus, Minus, Moon, Save, Sparkles, Loader2, Info, ArrowRightLeft, RefreshCw,
 } from 'lucide-react'
 import ExerciseInfoPopup from '../../../components/ExerciseInfoPopup'
 import {
@@ -42,6 +43,8 @@ interface ClientProgramProps {
   setExerciseInfo: (v: any) => void
   loadExInfo: (name: string) => void
   clientCustomPrograms?: any[]
+  coachTemplates?: { id: string; name: string; program: any }[]
+  onResyncFromTemplate?: (template: { id: string; name: string; program: any }) => void
 }
 
 export default function ClientProgram({
@@ -52,7 +55,11 @@ export default function ClientProgram({
   variantPopup, setVariantPopup, loadVariants, selectVariant,
   exerciseInfo, setExerciseInfo, loadExInfo,
   clientCustomPrograms = [],
+  coachTemplates = [],
+  onResyncFromTemplate,
 }: ClientProgramProps) {
+  const [resyncOpen, setResyncOpen] = useState(false)
+
   return (
     <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
       {/* Actions toolbar */}
@@ -61,6 +68,26 @@ export default function ClientProgram({
           style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.04em',background:GOLD,color:'#0D0B08',minHeight:36}}>
           <Sparkles size={13} strokeWidth={2.5}/>GENERER IA
         </button>
+        {coachTemplates.length > 0 && (
+          <div style={{position:'relative'}}>
+            <button onClick={()=>setResyncOpen(p=>!p)}
+              style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:10,border:`1px solid ${GOLD_RULE}`,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.04em',background:'transparent',color:GOLD,minHeight:36}}>
+              <RefreshCw size={13} strokeWidth={2.5}/>RESYNC
+            </button>
+            {resyncOpen && (
+              <div style={{position:'absolute',top:'100%',left:0,marginTop:4,background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:10,padding:6,minWidth:220,zIndex:10,boxShadow:'0 8px 24px rgba(0,0,0,0.5)'}}>
+                {coachTemplates.map(tpl=>(
+                  <button key={tpl.id} onClick={()=>{setResyncOpen(false);onResyncFromTemplate?.(tpl)}}
+                    style={{display:'block',width:'100%',padding:'10px 12px',background:'none',border:'none',color:TEXT_PRIMARY,textAlign:'left',cursor:'pointer',fontFamily:FONT_BODY,fontSize:13,borderRadius:6}}
+                    onMouseEnter={e=>{(e.target as HTMLElement).style.background=GOLD_DIM}}
+                    onMouseLeave={e=>{(e.target as HTMLElement).style.background='none'}}>
+                    {tpl.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div style={{flex:1}} />
         <button className="btn-secondary" style={{padding:'9px 16px',flexShrink:0,gap:6,minHeight:36,borderRadius:10,fontSize:'0.78rem'}} onClick={() => saveProgram()} disabled={programSaving}>
           {programSaving ? <Loader2 size={14} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <><Save size={14} strokeWidth={2}/>SAUVEGARDER</>}
