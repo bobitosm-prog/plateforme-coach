@@ -635,7 +635,7 @@ export default function ClientProfilePage() {
         confirmLabel="Confirmer"
         cancelLabel="Annuler"
         onConfirm={() => {
-          // TODO step 4: resync logic
+          if (pendingTemplate) h.resyncFromTemplate(pendingTemplate)
           setPendingTemplate(null)
         }}
         onCancel={() => setPendingTemplate(null)}
