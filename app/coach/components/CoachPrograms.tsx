@@ -286,9 +286,9 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               {pDays.length > 1 && <button onClick={() => removeDay(di)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer' }}><Trash2 size={14} /></button>}
             </div>
 
-            {day.exercises.length > 0 && (
+            {(day.exercises || []).length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 12, background: BORDER }}>
-                {day.exercises.map((ex, ei) => (
+                {(day.exercises || []).map((ex, ei) => (
                   <div key={ei} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: BG_BASE, padding: '8px 12px' }}>
                     <div>
                       <span style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 600 }}>{ex.name}</span>

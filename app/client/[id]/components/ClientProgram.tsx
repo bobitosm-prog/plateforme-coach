@@ -200,7 +200,7 @@ export default function ClientProgram({
             <div style={{textAlign:'center',padding:'28px 16px',color:TEXT_MUTED,fontFamily:FONT_BODY,fontSize:'0.85rem'}}>Aucun exercice — cliquez Ajouter</div>
           ) : (
             <div style={{padding:'0 14px',overflowX:'auto'}}>
-              {(program[expandedDay].exercises || []).map((ex,idx)=>(
+              {(program[expandedDay]?.exercises || []).map((ex,idx)=>(
                 <div key={idx} className="ex-row-m">
                   {/* Name + variants + delete */}
                   <div style={{display:'flex',gap:6,alignItems:'center'}}>
