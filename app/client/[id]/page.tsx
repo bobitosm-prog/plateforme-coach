@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import {
   ArrowLeft, Zap, Dumbbell,
   Check, X, Plus, Moon, Utensils, Search, Pencil, Sparkles, Loader2,
@@ -14,6 +14,7 @@ import ClientNutrition from './components/ClientNutrition'
 import ClientMessages from './components/ClientMessages'
 import ClientNotes from './components/ClientNotes'
 import ClientProgress from './components/ClientProgress'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS as MC, MUSCLE_GROUPS_FILTER as MUSCLE_FILTERS } from '@/lib/design-tokens'
 
 /* ══════════════════════════════════════════════════════════════
@@ -48,6 +49,7 @@ function initials(name: string | null) {
 ══════════════════════════════════════════════════════════════ */
 export default function ClientProfilePage() {
   const h = useClientDetail()
+  const [pendingTemplate, setPendingTemplate] = useState<any>(null)
 
   /* ── Loading / error ────────────────────────────────────────── */
   if (h.loading) return (
@@ -249,6 +251,8 @@ export default function ClientProfilePage() {
             setExerciseInfo={h.setExerciseInfo}
             loadExInfo={h.loadExInfo}
             clientCustomPrograms={h.clientCustomPrograms}
+            coachTemplates={h.coachTemplates}
+            onResyncFromTemplate={(tpl) => setPendingTemplate(tpl)}
           />
         )}
 
@@ -622,6 +626,20 @@ export default function ClientProfilePage() {
           <span>{h.toast}</span>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingTemplate}
+        variant="danger"
+        title="Mettre a jour depuis le template"
+        message={`Remplacer le programme actuel par "${pendingTemplate?.name}" ? Les modifications faites pour ce client seront ecrasees.`}
+        confirmLabel="Confirmer"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          if (pendingTemplate) h.resyncFromTemplate(pendingTemplate)
+          setPendingTemplate(null)
+        }}
+        onCancel={() => setPendingTemplate(null)}
+      />
     </div>
   )
 }

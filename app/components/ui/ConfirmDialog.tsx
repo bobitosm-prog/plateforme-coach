@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import {
+  BG_CARD, BORDER, GOLD, GOLD_RULE, RED,
+  TEXT_PRIMARY, TEXT_MUTED, FONT_ALT, FONT_BODY,
+} from "@/lib/design-tokens";
 
 type Props = {
   open: boolean;
@@ -32,14 +36,10 @@ export default function ConfirmDialog({
 }: Props) {
   const cancelBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Focus sur le bouton annuler à l'ouverture (safer default)
   useEffect(() => {
-    if (open && cancelBtnRef.current) {
-      cancelBtnRef.current.focus();
-    }
+    if (open && cancelBtnRef.current) cancelBtnRef.current.focus();
   }, [open]);
 
-  // Gestion Escape pour fermer
   useEffect(() => {
     if (!open) return;
     const handleEsc = (e: KeyboardEvent) => {
@@ -51,10 +51,7 @@ export default function ConfirmDialog({
 
   if (!open) return null;
 
-  const confirmClasses =
-    variant === "danger"
-      ? "bg-red-500 hover:bg-red-600 text-white"
-      : "bg-amber-400 hover:bg-amber-500 text-black";
+  const isDanger = variant === "danger";
 
   return (
     <div
@@ -62,36 +59,94 @@ export default function ConfirmDialog({
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
       aria-describedby="confirm-dialog-message"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+        background: "rgba(0,0,0,0.6)",
+        backdropFilter: "blur(8px)",
+      }}
       onClick={onCancel}
     >
       <div
-        className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl"
+        style={{
+          background: BG_CARD,
+          border: `1px solid ${GOLD_RULE}`,
+          borderRadius: 16,
+          padding: 24,
+          maxWidth: 420,
+          width: "100%",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.7)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <h2
           id="confirm-dialog-title"
-          className="text-lg font-bold text-white mb-2"
+          style={{
+            fontFamily: FONT_ALT,
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+            fontSize: "0.95rem",
+            fontWeight: 800,
+            color: isDanger ? RED : GOLD,
+            marginBottom: 12,
+            margin: "0 0 12px",
+          }}
         >
           {title}
         </h2>
         <p
           id="confirm-dialog-message"
-          className="text-sm text-zinc-400 mb-6"
+          style={{
+            fontFamily: FONT_BODY,
+            fontSize: "0.875rem",
+            color: TEXT_MUTED,
+            lineHeight: 1.55,
+            marginBottom: 24,
+            margin: "0 0 24px",
+          }}
         >
           {message}
         </p>
-        <div className="flex gap-3 flex-col-reverse sm:flex-row sm:justify-end">
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button
             ref={cancelBtnRef}
             onClick={onCancel}
-            className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors"
+            style={{
+              background: "transparent",
+              border: `1px solid ${BORDER}`,
+              borderRadius: 12,
+              padding: "9px 18px",
+              color: TEXT_PRIMARY,
+              fontFamily: FONT_ALT,
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+            }}
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`px-4 py-3 rounded-xl font-bold transition-colors ${confirmClasses}`}
+            style={{
+              background: isDanger ? RED : GOLD,
+              border: "none",
+              borderRadius: 12,
+              padding: "9px 18px",
+              color: isDanger ? "#fff" : "#0D0B08",
+              fontFamily: FONT_ALT,
+              fontSize: "0.78rem",
+              fontWeight: 800,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+            }}
           >
             {confirmLabel}
           </button>

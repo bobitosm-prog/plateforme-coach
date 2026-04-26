@@ -51,6 +51,32 @@ const MEAL_TYPES = ['Petit-déjeuner','Déjeuner','Dîner','Collation']
 function defaultProgram(): WeekProgram {
   return Object.fromEntries(DAYS.map(d => [d, { repos: false, exercises: [] }]))
 }
+
+/** Convert raw program (array or object) to sanitized weekday object */
+function normalizeAndSanitize(raw: any): WeekProgram {
+  let normalized: WeekProgram
+  if (Array.isArray(raw)) {
+    normalized = {} as WeekProgram
+    for (const wd of DAYS) normalized[wd] = { repos: true, exercises: [] }
+    raw.forEach((day: any, idx: number) => {
+      if (idx < 7) normalized[DAYS[idx]] = { repos: !!day.is_rest || !!day.repos, exercises: day.exercises || [], day_name: day.name || '' }
+    })
+  } else if (raw && typeof raw === 'object') {
+    normalized = raw as WeekProgram
+  } else {
+    normalized = {} as WeekProgram
+  }
+  const sanitized: WeekProgram = {} as WeekProgram
+  for (const wd of DAYS) {
+    const d = normalized[wd]
+    if (d && typeof d === 'object') {
+      sanitized[wd] = { repos: d.repos === true, exercises: Array.isArray(d.exercises) ? d.exercises : [], day_name: typeof d.day_name === 'string' ? d.day_name : '' }
+    } else {
+      sanitized[wd] = { repos: true, exercises: [], day_name: '' }
+    }
+  }
+  return { ...defaultProgram(), ...sanitized }
+}
 function defaultMealPlan(): WeekMealPlan {
   return Object.fromEntries(DAYS.map(d => [d, { meals: MEAL_TYPES.map(type => ({ type, foods: [] })) }]))
 }
@@ -105,6 +131,7 @@ export default function useClientDetail() {
   const [program,      setProgram]      = useState<WeekProgram>(defaultProgram())
   const [programId,    setProgramId]    = useState<string | null>(null)
   const [clientCustomPrograms, setClientCustomPrograms] = useState<any[]>([])
+  const [coachTemplates, setCoachTemplates] = useState<any[]>([])
   const [programSaving,setProgramSaving]= useState(false)
   const [programSaved, setProgramSaved] = useState(false)
   const [expandedDay,  setExpandedDay]  = useState<string | null>('lundi')
@@ -440,31 +467,7 @@ export default function useClientDetail() {
 
     if (programRes.data) {
       setProgramId(programRes.data.id)
-      // Normalize: assignation stores array, editor expects weekday object
-      const raw = programRes.data.program
-      let normalized: WeekProgram
-      if (Array.isArray(raw)) {
-        const WD = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
-        normalized = {} as WeekProgram
-        for (const wd of WD) normalized[wd] = { repos: true, exercises: [] }
-        raw.forEach((day: any, idx: number) => {
-          if (idx < 7) normalized[WD[idx]] = { repos: !!day.is_rest || !!day.repos, exercises: day.exercises || [], day_name: day.name || '' }
-        })
-      } else {
-        normalized = raw as WeekProgram
-      }
-      // Sanitize: ensure every day has { repos, exercises, day_name }
-      const WD_ALL = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
-      const sanitized: WeekProgram = {} as WeekProgram
-      for (const wd of WD_ALL) {
-        const d = normalized[wd]
-        if (d && typeof d === 'object') {
-          sanitized[wd] = { repos: d.repos === true, exercises: Array.isArray(d.exercises) ? d.exercises : [], day_name: typeof d.day_name === 'string' ? d.day_name : '' }
-        } else {
-          sanitized[wd] = { repos: true, exercises: [], day_name: '' }
-        }
-      }
-      setProgram({ ...defaultProgram(), ...sanitized })
+      setProgram(normalizeAndSanitize(programRes.data.program))
     }
     // Filter out empty programs (no days or no exercises)
     const validProgs = (customProgsRes.data || []).filter((p: any) => {
@@ -473,6 +476,13 @@ export default function useClientDetail() {
     })
     console.log('[ClientDetail] custom_programs:', customProgsRes.data?.length || 0, 'valid:', validProgs.length)
     setClientCustomPrograms(validProgs)
+
+    // Fetch coach's training templates for resync feature
+    supabase.from('training_programs').select('id, name, program')
+      .eq('coach_id', coachId).eq('is_template', true)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => { if (!error && data) setCoachTemplates(data) })
+
     if (mealPlanRes.data) {
       const mp = mealPlanRes.data; setMealPlanId(mp.id)
       setCalorieTarget(mp.calorie_target ?? 2000); setProtTarget(mp.protein_target ?? 150); setCarbTarget(mp.carb_target ?? 200); setFatTarget(mp.fat_target ?? 70)
@@ -592,6 +602,14 @@ export default function useClientDetail() {
       if (data?.id) setProgramId(data.id)
     }
     setProgramSaving(false); setProgramSaved(true); showToast('Programme sauvegardé'); setTimeout(() => setProgramSaved(false), 2000)
+  }
+
+  const resyncFromTemplate = (template: { program: any }) => {
+    const tplDays = template.program?.days
+    if (!Array.isArray(tplDays)) return
+    const newProgram = normalizeAndSanitize(tplDays)
+    setProgram(newProgram)
+    saveProgram(newProgram)
   }
 
   /* ── Programme helpers ──────────────────────────────────────── */
@@ -769,8 +787,8 @@ export default function useClientDetail() {
     editStatus, setEditStatus, editObj, setEditObj, saveEdit,
     // Programme
     program, expandedDay, setExpandedDay,
-    programSaving, programSaved, saveProgram,
-    clientCustomPrograms,
+    programSaving, programSaved, saveProgram, resyncFromTemplate,
+    clientCustomPrograms, coachTemplates,
     toggleRepos, addExercise, removeExercise, updateExercise, openExDbModal,
     swapMode, setSwapMode, swapFirst, handleDayClick,
     variantPopup, setVariantPopup, loadVariants, selectVariant,
