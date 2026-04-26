@@ -147,6 +147,39 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setPushTarget({ template, impactedClients })
   }
 
+  async function handleConfirmPush() {
+    if (!pushTarget || pushTarget.impactedClients.length === 0) return
+    setPushing(true)
+    try {
+      const tplDays = pushTarget.template.days || []
+      if (!Array.isArray(tplDays)) { setPushing(false); return }
+      if (tplDays.length === 0) {
+        console.error('[push] template days is empty, aborting to avoid wiping clients')
+        alert('Ce template n\'a aucun jour configure. Mise a jour annulee.')
+        setPushing(false)
+        return
+      }
+      const { error } = await supabase
+        .from('client_programs')
+        .update({ program: tplDays, updated_at: new Date().toISOString() })
+        .eq('training_program_id', pushTarget.template.id)
+      if (error) {
+        console.error('[push] update failed:', error)
+        alert('Erreur lors de la mise a jour : ' + error.message)
+        setPushing(false)
+        return
+      }
+      const count = pushTarget.impactedClients.length
+      setPushTarget(null)
+      setPushing(false)
+      alert(`${count} client(s) mis a jour avec succes`)
+    } catch (err) {
+      console.error('[push] exception:', err)
+      setPushing(false)
+      alert('Erreur inattendue')
+    }
+  }
+
   function startEdit(p: Program) {
     setEditing(p); setPName(p.name); setPSplit(p.split || SPLITS[0])
     setPDuration(p.duration || DURATIONS[1]); setPDays(p.days || [])
@@ -300,7 +333,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                 {pushTarget.impactedClients.length === 0 ? 'Fermer' : 'Annuler'}
               </button>
               {pushTarget.impactedClients.length > 0 && (
-                <button onClick={() => { /* TODO step 3 */ }} disabled={pushing} style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '9px 18px', color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', cursor: pushing ? 'not-allowed' : 'pointer', opacity: pushing ? 0.5 : 1 }}>
+                <button onClick={handleConfirmPush} disabled={pushing} style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '9px 18px', color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', cursor: pushing ? 'not-allowed' : 'pointer', opacity: pushing ? 0.5 : 1 }}>
                   {pushing ? '...' : 'Confirmer'}
                 </button>
               )}
