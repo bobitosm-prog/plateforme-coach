@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react'
+import React from 'react'
 import {
   ArrowLeft, Zap, Dumbbell,
   Check, X, Plus, Moon, Utensils, Search, Pencil, Sparkles, Loader2,
@@ -48,20 +48,6 @@ function initials(name: string | null) {
 ══════════════════════════════════════════════════════════════ */
 export default function ClientProfilePage() {
   const h = useClientDetail()
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const handler = (event: ErrorEvent) => {
-      console.error('[GLOBAL ERROR HANDLER]', event.message, event.filename, event.lineno, event.colno)
-      console.error('[GLOBAL ERROR HANDLER] stack:', event.error?.stack)
-    }
-    const rejHandler = (event: PromiseRejectionEvent) => {
-      console.error('[GLOBAL REJECTION]', event.reason?.message, event.reason?.stack)
-    }
-    window.addEventListener('error', handler)
-    window.addEventListener('unhandledrejection', rejHandler)
-    return () => { window.removeEventListener('error', handler); window.removeEventListener('unhandledrejection', rejHandler) }
-  }, [])
 
   /* ── Loading / error ────────────────────────────────────────── */
   if (h.loading) return (
