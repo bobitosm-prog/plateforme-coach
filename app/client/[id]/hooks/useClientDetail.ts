@@ -31,7 +31,7 @@ export type WorkoutSession = {
 }
 export type WeightLog = { id: string; poids: number; date: string }
 export type Exercise = { name: string; sets: number; reps: number; rest: string; notes: string }
-export type DayData   = { repos: boolean; exercises: Exercise[] }
+export type DayData   = { repos: boolean; exercises: Exercise[]; day_name?: string }
 export type WeekProgram = Record<string, DayData>
 export type FoodItem = { name: string; qty: string; kcal: number; prot: number; carb: number; fat: number }
 export type Meal      = { type: string; foods: FoodItem[] }
@@ -438,7 +438,23 @@ export default function useClientDetail() {
     setSessions((sessionsRes.data ?? []) as WorkoutSession[]); setTotalSessionsCount(sessionsCountRes.count ?? 0)
     setWeightLogs((weightRes.data ?? []) as WeightLog[]); setNotes(notesRes.data?.content ?? '')
 
-    if (programRes.data) { setProgramId(programRes.data.id); setProgram({ ...defaultProgram(), ...(programRes.data.program as WeekProgram) }) }
+    if (programRes.data) {
+      setProgramId(programRes.data.id)
+      // Normalize: assignation stores array, editor expects weekday object
+      const raw = programRes.data.program
+      let normalized: WeekProgram
+      if (Array.isArray(raw)) {
+        const WD = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
+        normalized = {} as WeekProgram
+        for (const wd of WD) normalized[wd] = { repos: true, exercises: [] }
+        raw.forEach((day: any, idx: number) => {
+          if (idx < 7) normalized[WD[idx]] = { repos: !!day.is_rest || !!day.repos, exercises: day.exercises || [], day_name: day.name || '' }
+        })
+      } else {
+        normalized = raw as WeekProgram
+      }
+      setProgram({ ...defaultProgram(), ...normalized })
+    }
     // Filter out empty programs (no days or no exercises)
     const validProgs = (customProgsRes.data || []).filter((p: any) => {
       if (!Array.isArray(p.days) || p.days.length === 0) return false
