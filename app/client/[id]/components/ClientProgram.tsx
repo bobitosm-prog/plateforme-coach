@@ -62,7 +62,7 @@ export default function ClientProgram({
           <Sparkles size={13} strokeWidth={2.5}/>GENERER IA
         </button>
         <div style={{flex:1}} />
-        <button className="btn-secondary" style={{padding:'9px 16px',flexShrink:0,gap:6,minHeight:36,borderRadius:10,fontSize:'0.78rem'}} onClick={saveProgram} disabled={programSaving}>
+        <button className="btn-secondary" style={{padding:'9px 16px',flexShrink:0,gap:6,minHeight:36,borderRadius:10,fontSize:'0.78rem'}} onClick={() => saveProgram()} disabled={programSaving}>
           {programSaving ? <Loader2 size={14} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <><Save size={14} strokeWidth={2}/>SAUVEGARDER</>}
         </button>
       </div>
