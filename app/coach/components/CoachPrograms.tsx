@@ -165,6 +165,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
         coach_id: session.user.id,
         program: assignModal.days,
         program_name: assignModal.name,
+        training_program_id: assignModal.id ?? null,
       })
 
     if (error) {
