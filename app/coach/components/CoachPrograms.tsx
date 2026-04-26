@@ -271,6 +271,43 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
         onConfirm={() => programToDelete && deleteProgram(programToDelete.id)}
         onCancel={() => setProgramToDelete(null)}
       />
+
+      {/* Push MAJ dialog */}
+      {pushTarget && (
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }} onClick={() => !pushing && setPushTarget(null)}>
+          <div style={{ background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 16, padding: 24, maxWidth: 480, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.7)', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.95rem', fontWeight: 800, color: GOLD, margin: '0 0 12px' }}>
+              Pusher la mise a jour
+            </h2>
+            {pushTarget.impactedClients.length === 0 ? (
+              <p style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 24px' }}>
+                Aucun client n&apos;a actuellement le template &quot;{pushTarget.template.name}&quot; assigne.
+              </p>
+            ) : (
+              <>
+                <p style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 16px' }}>
+                  Les <strong style={{ color: GOLD }}>{pushTarget.impactedClients.length} client(s)</strong> suivants vont recevoir la mise a jour de &quot;{pushTarget.template.name}&quot;. Les modifications personnelles seront ecrasees.
+                </p>
+                <div style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, marginBottom: 24, maxHeight: 200, overflowY: 'auto' }}>
+                  {pushTarget.impactedClients.map(c => (
+                    <div key={c.id} style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_PRIMARY, padding: '6px 0' }}>{c.name}</div>
+                  ))}
+                </div>
+              </>
+            )}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => setPushTarget(null)} disabled={pushing} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '9px 18px', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', cursor: pushing ? 'not-allowed' : 'pointer', opacity: pushing ? 0.5 : 1 }}>
+                {pushTarget.impactedClients.length === 0 ? 'Fermer' : 'Annuler'}
+              </button>
+              {pushTarget.impactedClients.length > 0 && (
+                <button onClick={() => { /* TODO step 3 */ }} disabled={pushing} style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '9px 18px', color: '#0D0B08', fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', cursor: pushing ? 'not-allowed' : 'pointer', opacity: pushing ? 0.5 : 1 }}>
+                  {pushing ? '...' : 'Confirmer'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 
