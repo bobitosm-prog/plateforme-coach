@@ -105,6 +105,7 @@ export default function useClientDetail() {
   const [program,      setProgram]      = useState<WeekProgram>(defaultProgram())
   const [programId,    setProgramId]    = useState<string | null>(null)
   const [clientCustomPrograms, setClientCustomPrograms] = useState<any[]>([])
+  const [coachTemplates, setCoachTemplates] = useState<any[]>([])
   const [programSaving,setProgramSaving]= useState(false)
   const [programSaved, setProgramSaved] = useState(false)
   const [expandedDay,  setExpandedDay]  = useState<string | null>('lundi')
@@ -473,6 +474,13 @@ export default function useClientDetail() {
     })
     console.log('[ClientDetail] custom_programs:', customProgsRes.data?.length || 0, 'valid:', validProgs.length)
     setClientCustomPrograms(validProgs)
+
+    // Fetch coach's training templates for resync feature
+    supabase.from('training_programs').select('id, name, program')
+      .eq('coach_id', coachId).eq('is_template', true)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => { if (!error && data) setCoachTemplates(data) })
+
     if (mealPlanRes.data) {
       const mp = mealPlanRes.data; setMealPlanId(mp.id)
       setCalorieTarget(mp.calorie_target ?? 2000); setProtTarget(mp.protein_target ?? 150); setCarbTarget(mp.carb_target ?? 200); setFatTarget(mp.fat_target ?? 70)
@@ -770,7 +778,7 @@ export default function useClientDetail() {
     // Programme
     program, expandedDay, setExpandedDay,
     programSaving, programSaved, saveProgram,
-    clientCustomPrograms,
+    clientCustomPrograms, coachTemplates,
     toggleRepos, addExercise, removeExercise, updateExercise, openExDbModal,
     swapMode, setSwapMode, swapFirst, handleDayClick,
     variantPopup, setVariantPopup, loadVariants, selectVariant,
