@@ -464,7 +464,13 @@ export default function useClientDetail() {
           sanitized[wd] = { repos: true, exercises: [], day_name: '' }
         }
       }
-      setProgram({ ...defaultProgram(), ...sanitized })
+      const final = { ...defaultProgram(), ...sanitized }
+      console.log('[DEBUG] Program loaded — raw type:', Array.isArray(raw) ? 'array' : typeof raw)
+      for (const wd of ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']) {
+        const d = final[wd]
+        console.log(`  ${wd}:`, d ? `repos=${d.repos} exercises=${Array.isArray(d.exercises) ? d.exercises.length : 'NOT_ARRAY:' + typeof d.exercises}` : 'NULL/UNDEFINED')
+      }
+      setProgram(final)
     }
     // Filter out empty programs (no days or no exercises)
     const validProgs = (customProgsRes.data || []).filter((p: any) => {
