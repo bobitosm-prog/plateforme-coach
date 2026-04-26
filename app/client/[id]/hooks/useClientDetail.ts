@@ -31,7 +31,7 @@ export type WorkoutSession = {
 }
 export type WeightLog = { id: string; poids: number; date: string }
 export type Exercise = { name: string; sets: number; reps: number; rest: string; notes: string }
-export type DayData   = { repos: boolean; exercises: Exercise[] }
+export type DayData   = { repos: boolean; exercises: Exercise[]; day_name?: string }
 export type WeekProgram = Record<string, DayData>
 export type FoodItem = { name: string; qty: string; kcal: number; prot: number; carb: number; fat: number }
 export type Meal      = { type: string; foods: FoodItem[] }
@@ -438,7 +438,34 @@ export default function useClientDetail() {
     setSessions((sessionsRes.data ?? []) as WorkoutSession[]); setTotalSessionsCount(sessionsCountRes.count ?? 0)
     setWeightLogs((weightRes.data ?? []) as WeightLog[]); setNotes(notesRes.data?.content ?? '')
 
-    if (programRes.data) { setProgramId(programRes.data.id); setProgram({ ...defaultProgram(), ...(programRes.data.program as WeekProgram) }) }
+    if (programRes.data) {
+      setProgramId(programRes.data.id)
+      // Normalize: assignation stores array, editor expects weekday object
+      const raw = programRes.data.program
+      let normalized: WeekProgram
+      if (Array.isArray(raw)) {
+        const WD = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
+        normalized = {} as WeekProgram
+        for (const wd of WD) normalized[wd] = { repos: true, exercises: [] }
+        raw.forEach((day: any, idx: number) => {
+          if (idx < 7) normalized[WD[idx]] = { repos: !!day.is_rest || !!day.repos, exercises: day.exercises || [], day_name: day.name || '' }
+        })
+      } else {
+        normalized = raw as WeekProgram
+      }
+      // Sanitize: ensure every day has { repos, exercises, day_name }
+      const WD_ALL = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
+      const sanitized: WeekProgram = {} as WeekProgram
+      for (const wd of WD_ALL) {
+        const d = normalized[wd]
+        if (d && typeof d === 'object') {
+          sanitized[wd] = { repos: d.repos === true, exercises: Array.isArray(d.exercises) ? d.exercises : [], day_name: typeof d.day_name === 'string' ? d.day_name : '' }
+        } else {
+          sanitized[wd] = { repos: true, exercises: [], day_name: '' }
+        }
+      }
+      setProgram({ ...defaultProgram(), ...sanitized })
+    }
     // Filter out empty programs (no days or no exercises)
     const validProgs = (customProgsRes.data || []).filter((p: any) => {
       if (!Array.isArray(p.days) || p.days.length === 0) return false
@@ -550,7 +577,12 @@ export default function useClientDetail() {
     // Clean empty numeric values before saving
     const toSave: typeof program = {}
     for (const day of Object.keys(raw)) {
-      toSave[day] = { ...raw[day], exercises: raw[day].exercises.map(ex => ({ ...ex, sets: ex.sets || 3, reps: ex.reps || 10, rest: ex.rest || '60s' })) }
+      const d = raw[day]
+      if (!d || typeof d !== 'object') {
+        toSave[day] = { repos: true, exercises: [], day_name: '' }
+        continue
+      }
+      toSave[day] = { ...d, exercises: (d.exercises || []).map(ex => ({ ...ex, sets: ex.sets || 3, reps: ex.reps || 10, rest: ex.rest || '60s' })) }
     }
     setProgramSaving(true)
     if (programId) {
@@ -565,8 +597,8 @@ export default function useClientDetail() {
   /* ── Programme helpers ──────────────────────────────────────── */
   const toggleRepos = (day: string) => {
     const current = program[day]
-    if (!current.repos && current.exercises.length > 0) {
-      setSavedExercises(prev => ({ ...prev, [day]: current.exercises }))
+    if (!current?.repos && (current?.exercises || []).length > 0) {
+      setSavedExercises(prev => ({ ...prev, [day]: current.exercises || [] }))
     }
     const newProgram = {
       ...program,
@@ -622,24 +654,24 @@ export default function useClientDetail() {
   }
   function selectVariant(variant: any) {
     if (!variantPopup) return
-    const newProgram = { ...program, [variantPopup.day]: { ...program[variantPopup.day], exercises: program[variantPopup.day].exercises.map((ex, i) => i === variantPopup.idx ? { ...ex, name: variant.name } : ex) } }
+    const newProgram = { ...program, [variantPopup.day]: { ...program[variantPopup.day], exercises: (program[variantPopup.day].exercises || []).map((ex, i) => i === variantPopup.idx ? { ...ex, name: variant.name } : ex) } }
     setProgram(newProgram)
     setVariantPopup(null)
     saveProgram(newProgram)
   }
-  const addExercise  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...p[day].exercises, { name:'', sets:3, reps:10, rest:'60s', notes:'' }] } }))
-  const removeExercise = (day: string, i: number) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: p[day].exercises.filter((_,j) => j !== i) } }))
+  const addExercise  = (day: string) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: [...(p[day]?.exercises || []), { name:'', sets:3, reps:10, rest:'60s', notes:'' }] } }))
+  const removeExercise = (day: string, i: number) => setProgram(p => ({ ...p, [day]: { ...p[day], exercises: (p[day]?.exercises || []).filter((_,j) => j !== i) } }))
 
   const openExDbModal = (day: string) => {
     setExDbTargetDay(day); setExDbSearch(''); setExDbResults([]); setExDbFilter('Tous'); setShowExDbModal(true)
   }
   const selectExercise = (ex: any) => {
     if (!exDbTargetDay) return
-    setProgram(p => ({ ...p, [exDbTargetDay]: { ...p[exDbTargetDay], exercises: [...p[exDbTargetDay].exercises, { name: ex.name, sets: 3, reps: ex.reps ?? 10, rest: ex.rest ? `${ex.rest}s` : '60s', notes: '' }] } }))
+    setProgram(p => ({ ...p, [exDbTargetDay]: { ...p[exDbTargetDay], exercises: [...(p[exDbTargetDay]?.exercises || []), { name: ex.name, sets: 3, reps: ex.reps ?? 10, rest: ex.rest ? `${ex.rest}s` : '60s', notes: '' }] } }))
     setShowExDbModal(false); setExDbSearch(''); setExDbResults([]); setExDbFilter('Tous')
   }
   const updateExercise = (day: string, i: number, field: keyof Exercise, val: string|number) =>
-    setProgram(p => { const ex=[...p[day].exercises]; ex[i]={...ex[i],[field]:val}; return {...p,[day]:{...p[day],exercises:ex}} })
+    setProgram(p => { const ex=[...(p[day]?.exercises || [])]; ex[i]={...ex[i],[field]:val}; return {...p,[day]:{...p[day],exercises:ex}} })
 
   /* ── Save meal plan ─────────────────────────────────────────── */
   const saveMealPlan = async () => {
