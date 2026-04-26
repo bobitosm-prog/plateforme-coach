@@ -8,13 +8,14 @@ import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
+import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 interface ExSet { id: string; num: number; weight: number | ''; reps: number | ''; done: boolean }
-interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; sets: ExSet[]; open: boolean }
+interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; sets: ExSet[]; open: boolean }
 interface WorkoutSessionProps { sessionName: string; exercises: any[]; startedAt?: string; onFinish: (data: any) => void; onClose: () => void }
 
 const uid = () => Math.random().toString(36).slice(2)
@@ -235,7 +236,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, sets: makeSets(e.sets || 3), open: true })))
+  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, technique: e.technique, techniqueDetails: e.technique_details, sets: makeSets(e.sets || 3), open: true })))
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
@@ -640,10 +641,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 </button>
                 {/* Right side: badges + actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  {(exo.tempo || exo.rir != null) && (
-                    <div style={{ display: 'flex', gap: 4 }}>
+                  {(exo.tempo || exo.rir != null || exo.technique) && (
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       {exo.tempo && <span style={{ fontSize: 8, padding: '2px 5px', background: 'rgba(255,255,255,0.04)', color: TEXT_DIM, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.tempo}</span>}
                       {exo.rir != null && <span style={{ fontSize: 8, padding: '2px 5px', background: 'rgba(255,255,255,0.04)', color: TEXT_DIM, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>R{exo.rir}</span>}
+                      {exo.technique && TECHNIQUE_LABELS[exo.technique] && (
+                        <span style={{ fontSize: 8, padding: '2px 6px', background: `${GOLD}15`, border: `0.5px solid ${GOLD}25`, color: GOLD, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.04em' }}>
+                          {TECHNIQUE_LABELS[exo.technique].emoji} {TECHNIQUE_LABELS[exo.technique].label}{exo.techniqueDetails ? ` ×${exo.techniqueDetails.split(',')[0]}` : ''}
+                        </span>
+                      )}
                     </div>
                   )}
                   <span style={{ fontSize: 9, padding: '3px 8px', background: GOLD_DIM, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, borderRadius: 6, whiteSpace: 'nowrap' }}>{exo.targetSets}×{exo.targetReps}</span>
