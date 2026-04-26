@@ -183,6 +183,11 @@ input:focus, textarea:focus, select:focus {
   animation: bounceCheck 300ms ease-out;
 }
 
+@keyframes rest-autoclose-progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
 /* ── Custom Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg, #050505); }

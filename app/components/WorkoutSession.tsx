@@ -310,6 +310,13 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     return () => { if (restT.current) clearTimeout(restT.current) }
   }, [restOn, restSecs])
   useEffect(() => {
+    if (!restDone) return
+    const t = setTimeout(() => {
+      dismissRestDone()
+    }, 5000)
+    return () => clearTimeout(t)
+  }, [restDone])
+  useEffect(() => {
     let wl: any = null
     let videoEl: HTMLVideoElement | null = null
     const tryWL = async () => {
@@ -523,7 +530,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       {/* REST DONE POPUP — only shows when timer reaches 0 */}
       {restDone && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 24 }}>
-          <div style={{ background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 32, textAlign: 'center', maxWidth: 340, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
+          <div style={{ position: 'relative', overflow: 'hidden', background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 32, textAlign: 'center', maxWidth: 340, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
             <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(201,168,76,0.15)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
@@ -535,6 +542,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 style={{ flex: 1, padding: '14px', background: BG_CARD, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: GOLD, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30S</button>
               <button onClick={dismissRestDone} className="active:scale-95"
                 style={{ flex: 2, padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer' }}>COMMENCER →</button>
+            </div>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: GOLD, animation: 'rest-autoclose-progress 5s linear forwards' }} />
             </div>
           </div>
         </div>
