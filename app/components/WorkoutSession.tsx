@@ -206,6 +206,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   useBeforeUnload(true)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
   const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, technique: e.technique, techniqueDetails: e.technique_details, sets: makeSets(e.sets || 3), open: true })))
+  // Persist exos to localStorage after each mutation
+  useEffect(() => {
+    if (typeof window === 'undefined' || mode !== 'session') return
+    try {
+      const draft = { sessionName, startedAt: startedAt || new Date().toISOString(), savedAt: new Date().toISOString(), exos }
+      localStorage.setItem('moovx_workout_draft', JSON.stringify(draft))
+    } catch {}
+  }, [exos, sessionName, startedAt, mode])
+
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
@@ -323,6 +332,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     }
   }, [])
 
+  const cleanupDraft = () => { try { localStorage.removeItem('moovx_workout_draft') } catch {} }
+
   const startRest = (s: number, exoId?: string, nextInfo?: string) => {
     if (restT.current) clearTimeout(restT.current)
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
@@ -373,6 +384,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const finish = () => {
     if (elT.current) clearInterval(elT.current)
+    cleanupDraft()
     onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) })
     if (exos.length > 0) {
       setShowSaveTemplate(true)
@@ -828,7 +840,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 border: `1px solid ${BORDER}`, color: TEXT_MUTED,
                 fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
               }}>ANNULER</button>
-              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); onClose() }} className="active:scale-[0.98]" style={{
+              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12,
                 background: colors.error, border: 'none', color: '#fff',
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
