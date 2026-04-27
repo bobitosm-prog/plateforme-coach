@@ -225,20 +225,22 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
+  const draftCheckedRef = useRef(false)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
   const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, technique: e.technique, techniqueDetails: e.technique_details, sets: makeSets(e.sets || 3), open: true })))
-  // Persist exos to localStorage after each mutation
+  // Draft resume prompt
+  const [draftPrompt, setDraftPrompt] = useState<Exo[] | null>(null)
+  // Persist exos to localStorage after each mutation (gated by draftCheckedRef)
   useEffect(() => {
     if (typeof window === 'undefined' || mode !== 'session') return
+    if (!draftCheckedRef.current) return
+    if (draftPrompt) return
     console.log('[DEBUG SAVE] triggered', { sessionName, mode, exosCount: exos.length, firstExoSets: exos[0]?.sets?.map(s => ({ done: s.done, weight: s.weight, reps: s.reps })), timestamp: new Date().toISOString() })
     try {
       const draft = { sessionName, startedAt: startedAt || new Date().toISOString(), savedAt: new Date().toISOString(), exos }
       localStorage.setItem('moovx_workout_draft', JSON.stringify(draft))
     } catch {}
-  }, [exos, sessionName, startedAt, mode])
-
-  // Draft resume prompt
-  const [draftPrompt, setDraftPrompt] = useState<Exo[] | null>(null)
+  }, [exos, sessionName, startedAt, mode, draftPrompt])
   useEffect(() => {
     console.log('[DEBUG DETECT] triggered', { sessionName, timestamp: new Date().toISOString() })
     const draft = readDraft(sessionName)
@@ -248,6 +250,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       console.log('[DEBUG DETECT] hasProgress:', hasProgress)
       if (hasProgress) { setDraftPrompt(draft.exos); console.log('[DEBUG DETECT] setDraftPrompt called') }
     }
+    draftCheckedRef.current = true
   }, [sessionName])
   const resumeDraft = () => { if (draftPrompt) setExos(draftPrompt); setDraftPrompt(null) }
   const discardDraft = () => { cleanupDraft(); setDraftPrompt(null) }
