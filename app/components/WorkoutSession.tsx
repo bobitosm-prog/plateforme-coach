@@ -324,6 +324,25 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     restT.current = setInterval(tick, 200)
     return () => { if (restT.current) clearInterval(restT.current) }
   }, [restOn])
+  // Force recalc when app becomes visible (iOS Safari suspends setInterval)
+  useEffect(() => {
+    if (!restOn) return
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
+      setRestSecs(remaining)
+      if (remaining === 0) {
+        setRestOn(false); playBeep(); vibrateDevice()
+        setMotivationalMsg(getRandomMessage()); setRestDone(true)
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
+  }, [restOn])
   useEffect(() => {
     if (!restDone) return
     const t = setTimeout(() => {
