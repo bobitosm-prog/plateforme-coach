@@ -28,19 +28,14 @@ function readDraft(name: string): { exos: Exo[] } | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem('moovx_workout_draft')
-    console.log('[DEBUG readDraft] raw:', raw?.substring(0, 200))
     if (!raw) return null
     const draft = JSON.parse(raw)
-    console.log('[DEBUG readDraft] parsed sessionName:', draft.sessionName, 'expected:', name)
-    if (draft.sessionName !== name) { console.log('[DEBUG readDraft] sessionName mismatch'); return null }
+    if (draft.sessionName !== name) return null
     const ageH = (Date.now() - new Date(draft.savedAt).getTime()) / 3600000
-    console.log('[DEBUG readDraft] age hours:', ageH)
-    if (ageH > 24) { console.log('[DEBUG readDraft] expired'); return null }
-    if (!Array.isArray(draft.exos)) { console.log('[DEBUG readDraft] exos not array'); return null }
-    console.log('[DEBUG readDraft] valid draft, exos:', draft.exos.length)
+    if (ageH > 24) return null
+    if (!Array.isArray(draft.exos)) return null
     return { exos: draft.exos }
-  } catch (e) {
-    console.error('[DEBUG readDraft] error:', e)
+  } catch {
     return null
   }
 }
@@ -235,20 +230,16 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     if (typeof window === 'undefined' || mode !== 'session') return
     if (!draftCheckedRef.current) return
     if (draftPrompt) return
-    console.log('[DEBUG SAVE] triggered', { sessionName, mode, exosCount: exos.length, firstExoSets: exos[0]?.sets?.map(s => ({ done: s.done, weight: s.weight, reps: s.reps })), timestamp: new Date().toISOString() })
     try {
       const draft = { sessionName, startedAt: startedAt || new Date().toISOString(), savedAt: new Date().toISOString(), exos }
       localStorage.setItem('moovx_workout_draft', JSON.stringify(draft))
     } catch {}
   }, [exos, sessionName, startedAt, mode, draftPrompt])
   useEffect(() => {
-    console.log('[DEBUG DETECT] triggered', { sessionName, timestamp: new Date().toISOString() })
     const draft = readDraft(sessionName)
-    console.log('[DEBUG DETECT] readDraft returned:', draft ? `${draft.exos.length} exos` : null)
     if (draft && draft.exos.length > 0) {
       const hasProgress = draft.exos.some(e => Array.isArray(e.sets) && e.sets.some((s: any) => s.done))
-      console.log('[DEBUG DETECT] hasProgress:', hasProgress)
-      if (hasProgress) { setDraftPrompt(draft.exos); console.log('[DEBUG DETECT] setDraftPrompt called') }
+      if (hasProgress) setDraftPrompt(draft.exos)
     }
     draftCheckedRef.current = true
   }, [sessionName])
