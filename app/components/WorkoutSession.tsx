@@ -24,6 +24,22 @@ const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
 const isDumbbell = (n: string) => /halt[eè]res?|dumbbell|\bDB\b/i.test(n)
 
+function readDraft(name: string): { exos: Exo[] } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('moovx_workout_draft')
+    if (!raw) return null
+    const draft = JSON.parse(raw)
+    if (draft.sessionName !== name) return null
+    const ageH = (Date.now() - new Date(draft.savedAt).getTime()) / 3600000
+    if (ageH > 24) return null
+    if (!Array.isArray(draft.exos)) return null
+    return { exos: draft.exos }
+  } catch {
+    return null
+  }
+}
+
 
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Cardio']
 
@@ -204,8 +220,32 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
+  const draftCheckedRef = useRef(false)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
   const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, technique: e.technique, techniqueDetails: e.technique_details, sets: makeSets(e.sets || 3), open: true })))
+  // Draft resume prompt
+  const [draftPrompt, setDraftPrompt] = useState<Exo[] | null>(null)
+  // Persist exos to localStorage after each mutation (gated by draftCheckedRef)
+  useEffect(() => {
+    if (typeof window === 'undefined' || mode !== 'session') return
+    if (!draftCheckedRef.current) return
+    if (draftPrompt) return
+    try {
+      const draft = { sessionName, startedAt: startedAt || new Date().toISOString(), savedAt: new Date().toISOString(), exos }
+      localStorage.setItem('moovx_workout_draft', JSON.stringify(draft))
+    } catch {}
+  }, [exos, sessionName, startedAt, mode, draftPrompt])
+  useEffect(() => {
+    const draft = readDraft(sessionName)
+    if (draft && draft.exos.length > 0) {
+      const hasProgress = draft.exos.some(e => Array.isArray(e.sets) && e.sets.some((s: any) => s.done))
+      if (hasProgress) setDraftPrompt(draft.exos)
+    }
+    draftCheckedRef.current = true
+  }, [sessionName])
+  const resumeDraft = () => { if (draftPrompt) setExos(draftPrompt); setDraftPrompt(null) }
+  const discardDraft = () => { cleanupDraft(); setDraftPrompt(null) }
+
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
@@ -323,6 +363,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     }
   }, [])
 
+  const cleanupDraft = () => { try { localStorage.removeItem('moovx_workout_draft') } catch {} }
+
   const startRest = (s: number, exoId?: string, nextInfo?: string) => {
     if (restT.current) clearTimeout(restT.current)
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
@@ -373,6 +415,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const finish = () => {
     if (elT.current) clearInterval(elT.current)
+    cleanupDraft()
     onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps })) })) })
     if (exos.length > 0) {
       setShowSaveTemplate(true)
@@ -497,6 +540,22 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           50% { opacity: 0.5; }
         }
       `}</style>
+      {/* DRAFT RESUME PROMPT */}
+      {draftPrompt && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
+            <h2 style={{ fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.95rem', fontWeight: 800, color: GOLD, margin: '0 0 12px' }}>Reprendre la seance ?</h2>
+            <p style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 24px' }}>
+              Une seance interrompue a ete trouvee pour <strong style={{ color: TEXT_PRIMARY }}>{sessionName}</strong>. Veux-tu reprendre ou commencer une nouvelle seance ?
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={discardDraft} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Recommencer</button>
+              <button onClick={resumeDraft} style={{ flex: 2, padding: '12px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Reprendre</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* REST DONE POPUP — only shows when timer reaches 0 */}
       {restDone && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 24 }}>
@@ -828,7 +887,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 border: `1px solid ${BORDER}`, color: TEXT_MUTED,
                 fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
               }}>ANNULER</button>
-              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); onClose() }} className="active:scale-[0.98]" style={{
+              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12,
                 background: colors.error, border: 'none', color: '#fff',
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
