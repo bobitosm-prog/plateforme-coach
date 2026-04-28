@@ -327,12 +327,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   // Force recalc when app becomes visible (iOS Safari suspends setInterval)
   useEffect(() => {
     if (!restOn) return
-    const log = (ev: string) => {
-      const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
-      console.log('[DEBUG iOS]', ev, { visibilityState: document.visibilityState, timestamp: new Date().toISOString().slice(11, 23), remaining })
-    }
     const onVisible = () => {
-      log('visibilitychange')
       if (document.visibilityState !== 'visible') return
       const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
       setRestSecs(remaining)
@@ -341,21 +336,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         setMotivationalMsg(getRandomMessage()); setRestDone(true)
       }
     }
-    const onFocus = () => { log('focus'); onVisible() }
-    const onBlur = () => log('blur')
-    const onPageShow = () => { log('pageshow'); onVisible() }
-    const onPageHide = () => log('pagehide')
     document.addEventListener('visibilitychange', onVisible)
-    window.addEventListener('focus', onFocus)
-    window.addEventListener('blur', onBlur)
-    window.addEventListener('pageshow', onPageShow)
-    window.addEventListener('pagehide', onPageHide)
+    window.addEventListener('focus', onVisible)
     return () => {
       document.removeEventListener('visibilitychange', onVisible)
-      window.removeEventListener('focus', onFocus)
-      window.removeEventListener('blur', onBlur)
-      window.removeEventListener('pageshow', onPageShow)
-      window.removeEventListener('pagehide', onPageHide)
+      window.removeEventListener('focus', onVisible)
     }
   }, [restOn])
   useEffect(() => {
