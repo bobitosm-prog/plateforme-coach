@@ -253,6 +253,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [restDone, setRestDone] = useState(false)
   const [restNextInfo, setRestNextInfo] = useState('')
   const restT = useRef<NodeJS.Timeout | null>(null)
+  const restEndsAtRef = useRef(0)
   const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
   const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
   const elT = useRef<NodeJS.Timeout | null>(null)
@@ -306,19 +307,42 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   }, [raw])
 
   useEffect(() => { elT.current = setInterval(() => setElapsed(Date.now() - t0), 1000); return () => { if (elT.current) clearInterval(elT.current) } }, [])
+  const prevRemaining = useRef(Infinity)
   useEffect(() => {
-    if (restOn && restSecs > 0) {
-      restT.current = setTimeout(() => setRestSecs(s => s - 1), 1000)
-      if (restSecs === 5) { playWarningTick(); vibrateDevice() }
-    } else if (restOn && restSecs === 0) {
-      setRestOn(false)
-      playBeep()
-      vibrateDevice()
-      setMotivationalMsg(getRandomMessage())
-      setRestDone(true)
+    if (!restOn) { prevRemaining.current = Infinity; return }
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
+      setRestSecs(remaining)
+      if (remaining === 5 && prevRemaining.current > 5) { playWarningTick(); vibrateDevice() }
+      prevRemaining.current = remaining
+      if (remaining === 0) {
+        setRestOn(false); playBeep(); vibrateDevice()
+        setMotivationalMsg(getRandomMessage()); setRestDone(true)
+      }
     }
-    return () => { if (restT.current) clearTimeout(restT.current) }
-  }, [restOn, restSecs])
+    tick()
+    restT.current = setInterval(tick, 200)
+    return () => { if (restT.current) clearInterval(restT.current) }
+  }, [restOn])
+  // Force recalc when app becomes visible (iOS Safari suspends setInterval)
+  useEffect(() => {
+    if (!restOn) return
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
+      setRestSecs(remaining)
+      if (remaining === 0) {
+        setRestOn(false); playBeep(); vibrateDevice()
+        setMotivationalMsg(getRandomMessage()); setRestDone(true)
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
+  }, [restOn])
   useEffect(() => {
     if (!restDone) return
     const t = setTimeout(() => {
@@ -366,13 +390,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const cleanupDraft = () => { try { localStorage.removeItem('moovx_workout_draft') } catch {} }
 
   const startRest = (s: number, exoId?: string, nextInfo?: string) => {
-    if (restT.current) clearTimeout(restT.current)
+    if (restT.current) clearInterval(restT.current)
+    restEndsAtRef.current = Date.now() + s * 1000
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
     if (exoId) setRestExoId(exoId)
     if (nextInfo) setRestNextInfo(nextInfo)
   }
   const skipRest = () => { setRestOn(false); setRestSecs(0); setRestExoId(null) }
-  const addRestTime = () => { setRestSecs(s => s + 30); setRestMax(m => m + 30) }
+  const addRestTime = () => { restEndsAtRef.current += 30000; setRestMax(m => m + 30) }
   const dismissRestDone = () => { setRestDone(false); setRestExoId(null) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) =>
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
