@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell } from 'lucide-react'
 import { toast } from 'sonner'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
@@ -741,7 +741,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     const ok = !set.done && (set.weight !== '' || set.reps !== '')
                     const prevSet = previousData[exo.name]?.[set.num - 1]
                     return (
-                      <div key={set.id} className="ws-grid" style={{
+                      <Fragment key={set.id}>
+                      <div className="ws-grid" style={{
                         display: 'grid', gridTemplateColumns: '40px 1fr 64px 56px 40px', gap: 0,
                         alignItems: 'center', height: 40,
                         borderTop: si > 0 ? '0.5px solid rgba(201,168,76,0.05)' : 'none',
@@ -785,39 +786,37 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                           )}
                         </div>
                       </div>
+                      {/* INLINE REST TIMER — rendered below the set that triggered it */}
+                      {restOn && restExoId === exo.id && restSetId === set.id && (
+                        <div style={{
+                          marginTop: 8, marginBottom: 4, padding: 16, borderRadius: 12,
+                          background: 'rgba(201,168,76,0.08)',
+                          border: `1px solid ${restSecs <= 10 ? '#fb923c' : 'rgba(201,168,76,0.25)'}`,
+                          display: 'flex', alignItems: 'center', gap: 16,
+                          transition: 'border-color 200ms',
+                        }}>
+                          <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
+                            <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
+                              <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+                              <circle cx="40" cy="40" r="32" fill="none"
+                                stroke={restSecs <= 10 ? '#fb923c' : GOLD} strokeWidth="6" strokeLinecap="round"
+                                strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - (restMax > 0 ? restSecs / restMax : 0))}
+                                style={{ transition: 'stroke-dashoffset 1s linear, stroke 200ms' }} />
+                            </svg>
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                              <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONT_ALT, color: restSecs <= 10 ? '#fb923c' : GOLD, lineHeight: 1 }}>{restSecs}s</span>
+                              <span style={{ fontSize: 8, fontFamily: FONT_ALT, color: TEXT_DIM, letterSpacing: '0.1em', marginTop: 2 }}>REPOS</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                            <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
+                            <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Passer →</button>
+                          </div>
+                        </div>
+                      )}
+                      </Fragment>
                     )
                   })}
-
-                  {/* INLINE REST TIMER — SVG circle */}
-                  {restOn && restExoId === exo.id && (
-                    <div style={{
-                      marginTop: 12, padding: 16, borderRadius: 12,
-                      background: 'rgba(201,168,76,0.08)',
-                      border: `1px solid ${restSecs <= 10 ? '#fb923c' : 'rgba(201,168,76,0.25)'}`,
-                      display: 'flex', alignItems: 'center', gap: 16,
-                      transition: 'border-color 200ms',
-                    }}>
-                      {/* Cercle SVG */}
-                      <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
-                        <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
-                          <circle cx="40" cy="40" r="32" fill="none"
-                            stroke={restSecs <= 10 ? '#fb923c' : GOLD} strokeWidth="6" strokeLinecap="round"
-                            strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - (restMax > 0 ? restSecs / restMax : 0))}
-                            style={{ transition: 'stroke-dashoffset 1s linear, stroke 200ms' }} />
-                        </svg>
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                          <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONT_ALT, color: restSecs <= 10 ? '#fb923c' : GOLD, lineHeight: 1 }}>{restSecs}s</span>
-                          <span style={{ fontSize: 8, fontFamily: FONT_ALT, color: TEXT_DIM, letterSpacing: '0.1em', marginTop: 2 }}>REPOS</span>
-                        </div>
-                      </div>
-                      {/* Boutons */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-                        <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
-                        <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Passer →</button>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Add set */}
                   <button onClick={() => addSet(exo.id)} style={{
