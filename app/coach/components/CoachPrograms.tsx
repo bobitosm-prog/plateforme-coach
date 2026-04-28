@@ -8,6 +8,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import { toast } from 'sonner'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -155,7 +156,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
       if (!Array.isArray(tplDays)) { setPushing(false); return }
       if (tplDays.length === 0) {
         console.error('[push] template days is empty, aborting to avoid wiping clients')
-        alert('Ce template n\'a aucun jour configure. Mise a jour annulee.')
+        toast.error('Template vide — aucun jour configure')
         setPushing(false)
         return
       }
@@ -165,18 +166,18 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
         .eq('training_program_id', pushTarget.template.id)
       if (error) {
         console.error('[push] update failed:', error)
-        alert('Erreur lors de la mise a jour : ' + error.message)
+        toast.error(`Erreur de mise a jour : ${error.message}`)
         setPushing(false)
         return
       }
       const count = pushTarget.impactedClients.length
       setPushTarget(null)
       setPushing(false)
-      alert(`${count} client(s) mis a jour avec succes`)
+      toast.success(`${count} client(s) mis a jour ✓`)
     } catch (err) {
       console.error('[push] exception:', err)
       setPushing(false)
-      alert('Erreur inattendue')
+      toast.error('Erreur inattendue')
     }
   }
 
@@ -200,7 +201,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
       .maybeSingle()
 
     if (existing) {
-      alert(`Le programme "${assignModal.name}" est deja assigne a ce client.`)
+      toast.error(`"${assignModal.name}" est deja assigne a ce client`)
       setSaving(false)
       return
     }
@@ -218,7 +219,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
     if (error) {
       console.error('Erreur assignation programme :', error)
-      alert(`Erreur assignation : ${error.message}`)
+      toast.error(`Erreur d'assignation : ${error.message}`)
       setSaving(false)
       return
     }
