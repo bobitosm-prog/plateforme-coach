@@ -33,6 +33,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [programToDelete, setProgramToDelete] = useState<{ id: string; name: string } | null>(null)
   const [pushTarget, setPushTarget] = useState<{ template: Program; impactedClients: { id: string; name: string }[] } | null>(null)
   const [pushing, setPushing] = useState(false)
+  const [clientPrograms, setClientPrograms] = useState<Record<string, { program_name: string | null; training_program_id: string | null; coach_id: string | null } | null>>({})
 
   // New program state
   const [pName, setPName] = useState('')
@@ -52,6 +53,22 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     loadPrograms()
     supabase.from('exercises_db').select('name').order('name').limit(200).then(({ data }) => setExerciseDb(data || []))
   }, [])
+
+  useEffect(() => {
+    if (!assignModal) return
+    ;(async () => {
+      const clientIds = clients.map((c: any) => c.client_id)
+      if (clientIds.length === 0) return
+      const { data, error } = await supabase
+        .from('client_programs')
+        .select('client_id, program_name, training_program_id, coach_id')
+        .in('client_id', clientIds)
+      if (error) { console.error('[clientPrograms fetch] error:', error); return }
+      const map: Record<string, any> = {}
+      for (const row of (data || [])) { map[row.client_id] = row }
+      setClientPrograms(map)
+    })()
+  }, [assignModal])
 
   async function loadPrograms() {
     setLoading(true)
@@ -227,6 +244,14 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setSaving(false); setAssignModal(null); setAssignClientId('')
   }
 
+  const getClientStatus = (clientId: string): { label: string; disabled: boolean } => {
+    const cp = clientPrograms[clientId]
+    if (!cp) return { label: '(aucun)', disabled: false }
+    if (cp.training_program_id === assignModal?.id) return { label: 'deja assigne', disabled: true }
+    if (cp.coach_id === null) return { label: 'autonome', disabled: false }
+    return { label: cp.program_name || 'autre programme', disabled: false }
+  }
+
   const cardStyle: React.CSSProperties = { background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20 }
   const inputStyle: React.CSSProperties = { width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: 14, fontFamily: FONT_BODY, outline: 'none' }
   const labelStyle: React.CSSProperties = { fontFamily: FONT_ALT, fontSize: 11, color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '1.5px', marginBottom: 6, display: 'block' }
@@ -282,11 +307,15 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             <label style={labelStyle}>Choisir un client</label>
             <select value={assignClientId} onChange={e => setAssignClientId(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }}>
               <option value="">Sélectionner...</option>
-              {clients.map((c: any) => (
-                <option key={c.id} value={c.client_id}>
-                  {c.profiles?.full_name || c.profiles?.email || 'Client sans nom'}
-                </option>
-              ))}
+              {clients.map((c: any) => {
+                const name = c.profiles?.full_name || c.profiles?.email || 'Client sans nom'
+                const { label, disabled } = getClientStatus(c.client_id)
+                return (
+                  <option key={c.id} value={c.client_id} disabled={disabled}>
+                    {name} — {label}
+                  </option>
+                )
+              })}
             </select>
             <button onClick={assignToClient} disabled={!assignClientId || saving}
               style={{ width: '100%', background: GOLD, border: 'none', borderRadius: 12, padding: '12px', color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 700, cursor: saving ? 'wait' : 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const,  }}>
