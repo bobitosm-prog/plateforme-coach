@@ -250,6 +250,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [restSecs, setRestSecs] = useState(0)
   const [restMax, setRestMax] = useState(90)
   const [restExoId, setRestExoId] = useState<string | null>(null)
+  const [restSetId, setRestSetId] = useState<string | null>(null)
   const [restDone, setRestDone] = useState(false)
   const [restNextInfo, setRestNextInfo] = useState('')
   const restT = useRef<NodeJS.Timeout | null>(null)
@@ -389,16 +390,17 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const cleanupDraft = () => { try { localStorage.removeItem('moovx_workout_draft') } catch {} }
 
-  const startRest = (s: number, exoId?: string, nextInfo?: string) => {
+  const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
     if (restT.current) clearInterval(restT.current)
     restEndsAtRef.current = Date.now() + s * 1000
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
     if (exoId) setRestExoId(exoId)
+    if (setId) setRestSetId(setId)
     if (nextInfo) setRestNextInfo(nextInfo)
   }
-  const skipRest = () => { setRestOn(false); setRestSecs(0); setRestExoId(null) }
+  const skipRest = () => { setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null) }
   const addRestTime = () => { restEndsAtRef.current += 30000; setRestMax(m => m + 30) }
-  const dismissRestDone = () => { setRestDone(false); setRestExoId(null) }
+  const dismissRestDone = () => { setRestDone(false); setRestExoId(null); setRestSetId(null) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) =>
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
   const doValidate = (eid: string, sid: string) => {
@@ -420,7 +422,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     const nextInfo = nextSetNum > 0
       ? `Set ${nextSetNum}${prevInfo ? ` — ${prevInfo.weight} kg × ${prevInfo.reps}` : ''}`
       : 'Exercice termine'
-    startRest(r, eid, nextInfo)
+    startRest(r, eid, nextInfo, sid)
   }
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
