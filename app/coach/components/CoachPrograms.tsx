@@ -1,7 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw, Files } from 'lucide-react'
+import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw, Files, GripVertical } from 'lucide-react'
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -27,6 +30,22 @@ const DURATIONS = ['4 semaines', '6 semaines', '8 semaines', '12 semaines']
 
 interface Exercise { name: string; sets: number; reps: string; rest: number }
 interface ProgramDay { name: string; exercises: Exercise[] }
+
+function SortableExercise({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative' as const,
+    zIndex: isDragging ? 10 : 0,
+  }
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  )
+}
 interface Program { id?: string; name: string; split: string; duration: string; days: ProgramDay[]; coach_id?: string; created_at?: string; tags?: string[] }
 
 export default function CoachPrograms({ session, clients }: { session: any; clients: any[] }) {
@@ -149,6 +168,20 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
       return newDays
     })
   }
+
+  function reorderExercises(dayIdx: number, oldIdx: number, newIdx: number) {
+    setPDays(prev => {
+      const newDays = [...prev]
+      const day = { ...newDays[dayIdx] }
+      day.exercises = arrayMove([...day.exercises], oldIdx, newIdx)
+      newDays[dayIdx] = day
+      return newDays
+    })
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  )
 
   async function saveProgram() {
     if (!pName.trim() || pDays.length === 0) return
@@ -636,20 +669,39 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             </div>
 
             {(day.exercises || []).length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 12, background: BORDER }}>
-                {(day.exercises || []).map((ex, ei) => (
-                  <div key={ei} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: BG_BASE, padding: '8px 12px' }}>
-                    <div>
-                      <span style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 600 }}>{ex.name}</span>
-                      <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginLeft: 8 }}>{ex.sets}x{ex.reps} · {ex.rest}s repos</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={() => duplicateExercise(di, ei)} title="Dupliquer" type="button" style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><Files size={14} /></button>
-                      <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><X size={14} /></button>
-                    </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(e: DragEndEvent) => {
+                  const { active, over } = e
+                  if (!over || active.id === over.id) return
+                  const oldIdx = (day.exercises || []).findIndex((_, i) => `${di}-${i}` === active.id)
+                  const newIdx = (day.exercises || []).findIndex((_, i) => `${di}-${i}` === over.id)
+                  if (oldIdx !== -1 && newIdx !== -1) reorderExercises(di, oldIdx, newIdx)
+                }}
+              >
+                <SortableContext items={(day.exercises || []).map((_, i) => `${di}-${i}`)} strategy={verticalListSortingStrategy}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 12, background: BORDER }}>
+                    {(day.exercises || []).map((ex, ei) => (
+                      <SortableExercise key={`${di}-${ei}`} id={`${di}-${ei}`}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: BG_BASE, padding: '8px 12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <GripVertical size={14} style={{ color: TEXT_DIM, cursor: 'grab', flexShrink: 0 }} />
+                            <div>
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 600 }}>{ex.name}</span>
+                              <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginLeft: 8 }}>{ex.sets}x{ex.reps} · {ex.rest}s repos</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <button onClick={() => duplicateExercise(di, ei)} title="Dupliquer" type="button" style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><Files size={14} /></button>
+                            <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><X size={14} /></button>
+                          </div>
+                        </div>
+                      </SortableExercise>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             )}
 
             {addDayIdx === di ? (
