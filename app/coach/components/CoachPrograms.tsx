@@ -37,6 +37,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [assignModal, setAssignModal] = useState<Program | null>(null)
   const [assignClientId, setAssignClientId] = useState('')
   const [saving, setSaving] = useState(false)
+  const [search, setSearch] = useState('')
   const [programToDelete, setProgramToDelete] = useState<{ id: string; name: string } | null>(null)
   const [pushTarget, setPushTarget] = useState<{ template: Program; impactedClients: { id: string; name: string }[] } | null>(null)
   const [pushing, setPushing] = useState(false)
@@ -283,9 +284,42 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             Créer ton premier programme
           </button>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {programs.map(p => (
+      ) : (() => {
+        const filteredPrograms = programs.filter(p => {
+          if (!search.trim()) return true
+          const q = search.toLowerCase().trim()
+          const inName = p.name.toLowerCase().includes(q)
+          const inTags = (p.tags || []).some(t => t.toLowerCase().includes(q))
+          return inName || inTags
+        })
+        return (
+        <>
+          <div style={{ marginBottom: 16 }}>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher un template (nom, tag)..."
+              style={{
+                width: '100%',
+                background: BG_CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+                padding: '12px 16px',
+                color: TEXT_PRIMARY,
+                fontSize: 14,
+                fontFamily: FONT_BODY,
+                outline: 'none',
+              }}
+            />
+            {search.trim() && (
+              <div style={{ marginTop: 8, fontFamily: FONT_ALT, fontSize: 11, color: TEXT_MUTED, letterSpacing: 0.5 }}>
+                {filteredPrograms.length} resultat(s) sur {programs.length}
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {filteredPrograms.map(p => (
             <div key={p.id} style={{ ...cardStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY }}>{p.name}</div>
@@ -301,8 +335,10 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               </div>
             </div>
           ))}
-        </div>
-      )}
+          </div>
+        </>
+        )
+      })()}
 
       {/* Assign modal */}
       {assignModal && (
