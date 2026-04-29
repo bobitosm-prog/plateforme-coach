@@ -49,6 +49,7 @@ function SortableExercise({ id, children }: { id: string; children: React.ReactN
 interface Program { id?: string; name: string; split: string; duration: string; days: ProgramDay[]; coach_id?: string; created_at?: string; tags?: string[] }
 
 export default function CoachPrograms({ session, clients }: { session: any; clients: any[] }) {
+  const [isMobile, setIsMobile] = useState(false)
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -77,6 +78,15 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [exReps, setExReps] = useState('8-12')
   const [exRest, setExRest] = useState('90')
   const [exerciseDb, setExerciseDb] = useState<any[]>([])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 640px)')
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     loadPrograms()
@@ -621,7 +631,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Meta */}
         <div style={cardStyle}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div><label style={labelStyle}>Nom du programme</label><input value={pName} onChange={e => setPName(e.target.value)} placeholder="PPL Débutant" style={inputStyle} /></div>
             <div><label style={labelStyle}>Split</label><select value={pSplit} onChange={e => setPSplit(e.target.value)} style={inputStyle}>{SPLITS.map(s => <option key={s}>{s}</option>)}</select></div>
           </div>
@@ -711,7 +721,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                   <option value="">Choisir un exercice...</option>
                   {exerciseDb.map((e: any) => <option key={e.name} value={e.name}>{e.name}</option>)}
                 </select>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: 8 }}>
                   <div><label style={{ ...labelStyle, fontSize: 10 }}>Séries</label><input value={exSets} onChange={e => setExSets(e.target.value)} style={inputStyle} /></div>
                   <div><label style={{ ...labelStyle, fontSize: 10 }}>Reps</label><input value={exReps} onChange={e => setExReps(e.target.value)} style={inputStyle} /></div>
                   <div><label style={{ ...labelStyle, fontSize: 10 }}>Repos (s)</label><input value={exRest} onChange={e => setExRest(e.target.value)} style={inputStyle} /></div>
