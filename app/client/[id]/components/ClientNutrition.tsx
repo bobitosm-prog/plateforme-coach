@@ -1,12 +1,15 @@
 'use client'
+import { useState } from 'react'
 import {
   Check, Plus, Minus, Save, Sparkles, Loader2, Utensils, X,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '@/lib/design-tokens'
+import { useIsMobile } from '@/app/hooks/useIsMobile'
 
 type FoodItem = { name: string; qty: string; kcal: number; prot: number; carb: number; fat: number }
 type Meal      = { type: string; foods: FoodItem[] }
@@ -80,6 +83,9 @@ export default function ClientNutrition({
   clientActivePlan, clientActivePlanDay, setClientActivePlanDay,
   weeklyTracking,
 }: ClientNutritionProps) {
+  const isMobile = useIsMobile()
+  const [mobileTrackDayIdx, setMobileTrackDayIdx] = useState(0)
+
   return (
     <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
       {/* ── Header + AI Generate Button ── */}
@@ -286,34 +292,61 @@ export default function ClientNutrition({
               Suivi de la semaine
             </div>
             {/* Grid header */}
-            <div style={{display:'grid',gridTemplateColumns:'50px repeat(7, 1fr)',gap:3,marginBottom:4}}>
-              <div/>
-              {DAYS.map((d,i) => (
-                <div key={d} style={{textAlign:'center',fontFamily:FONT_ALT,fontSize:'0.58rem',fontWeight:700,color:weekDates[i]===todayStr?GOLD:TEXT_MUTED,textTransform:'uppercase',letterSpacing:'1px'}}>
-                  {DAY_LABELS[d]}
+            {isMobile ? (
+              /* Mobile: show 1 day at a time with nav */
+              <>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                  <button onClick={()=>setMobileTrackDayIdx(i=>(i-1+7)%7)} style={{width:28,height:28,borderRadius:8,background:BG_CARD_2,border:`1px solid ${BORDER}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:TEXT_MUTED}}><ChevronLeft size={14}/></button>
+                  <span style={{flex:1,textAlign:'center',fontFamily:FONT_ALT,fontSize:'0.72rem',fontWeight:700,color:weekDates[mobileTrackDayIdx]===todayStr?GOLD:TEXT_PRIMARY,letterSpacing:'1px',textTransform:'uppercase'}}>{DAY_LABELS[DAYS[mobileTrackDayIdx]]}</span>
+                  <button onClick={()=>setMobileTrackDayIdx(i=>(i+1)%7)} style={{width:28,height:28,borderRadius:8,background:BG_CARD_2,border:`1px solid ${BORDER}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:TEXT_MUTED}}><ChevronRight size={14}/></button>
                 </div>
-              ))}
-            </div>
-            {/* Grid rows */}
-            {mealTypes.map((mt, mi) => (
-              <div key={mt} style={{display:'grid',gridTemplateColumns:'50px repeat(7, 1fr)',gap:3,marginBottom:2}}>
-                <div style={{fontFamily:FONT_ALT,fontSize:'0.58rem',fontWeight:700,color:TEXT_MUTED,display:'flex',alignItems:'center',letterSpacing:'1px'}}>{mealLabels[mi]}</div>
-                {weekDates.map((date, di) => {
+                {mealTypes.map((mt, mi) => {
+                  const date = weekDates[mobileTrackDayIdx]
                   const isFuture = date > todayStr
                   const isDone = weeklyTracking[date]?.has(mt)
                   return (
-                    <div key={di} style={{
-                      display:'flex',alignItems:'center',justifyContent:'center',
-                      height:24,borderRadius:0,fontFamily:FONT_DISPLAY,fontSize:'0.65rem',fontWeight:400,
-                      background: isFuture ? BG_CARD_2 : isDone ? GOLD_DIM : 'rgba(138,133,128,.06)',
-                      color: isFuture ? TEXT_DIM : isDone ? GOLD : TEXT_DIM,
-                    }}>
-                      {isFuture ? '' : isDone ? '✓' : '○'}
+                    <div key={mt} style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                      <div style={{width:50,fontFamily:FONT_ALT,fontSize:'0.58rem',fontWeight:700,color:TEXT_MUTED,letterSpacing:'1px'}}>{mealLabels[mi]}</div>
+                      <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',height:28,borderRadius:0,fontFamily:FONT_DISPLAY,fontSize:'0.72rem',fontWeight:400,background:isFuture?BG_CARD_2:isDone?GOLD_DIM:'rgba(138,133,128,.06)',color:isFuture?TEXT_DIM:isDone?GOLD:TEXT_DIM}}>
+                        {isFuture ? '' : isDone ? '✓' : '○'}
+                      </div>
                     </div>
                   )
                 })}
+              </>
+            ) : (
+              /* Desktop: full 8-column grid */
+              <>
+              <div style={{display:'grid',gridTemplateColumns:'50px repeat(7, 1fr)',gap:3,marginBottom:4}}>
+                <div/>
+                {DAYS.map((d,i) => (
+                  <div key={d} style={{textAlign:'center',fontFamily:FONT_ALT,fontSize:'0.58rem',fontWeight:700,color:weekDates[i]===todayStr?GOLD:TEXT_MUTED,textTransform:'uppercase',letterSpacing:'1px'}}>
+                    {DAY_LABELS[d]}
+                  </div>
+                ))}
+              </div>
+              {/* Grid rows */}
+              {mealTypes.map((mt, mi) => (
+                <div key={mt} style={{display:'grid',gridTemplateColumns:'50px repeat(7, 1fr)',gap:3,marginBottom:2}}>
+                  <div style={{fontFamily:FONT_ALT,fontSize:'0.58rem',fontWeight:700,color:TEXT_MUTED,display:'flex',alignItems:'center',letterSpacing:'1px'}}>{mealLabels[mi]}</div>
+                  {weekDates.map((date, di) => {
+                    const isFuture = date > todayStr
+                    const isDone = weeklyTracking[date]?.has(mt)
+                    return (
+                      <div key={di} style={{
+                        display:'flex',alignItems:'center',justifyContent:'center',
+                        height:24,borderRadius:0,fontFamily:FONT_DISPLAY,fontSize:'0.65rem',fontWeight:400,
+                        background: isFuture ? BG_CARD_2 : isDone ? GOLD_DIM : 'rgba(138,133,128,.06)',
+                        color: isFuture ? TEXT_DIM : isDone ? GOLD : TEXT_DIM,
+                      }}>
+                        {isFuture ? '' : isDone ? '✓' : '○'}
+                      </div>
+                    )
+                  })}
               </div>
             ))}
+            </>
+            )}
             {/* Score */}
             <div style={{marginTop:10}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
@@ -405,7 +438,7 @@ export default function ClientNutrition({
                 {/* Macro summary */}
                 <div style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:RADIUS_CARD,padding:'12px 14px'}}>
                   <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,letterSpacing:'2px',textTransform:'uppercase',color:TEXT_MUTED,marginBottom:10}}>Total du jour</div>
-                  <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+                  <div style={{display:'grid',gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)',gap:10}}>
                     {[
                       {label:'Cal',val:totals.kcal,target:calorieTarget,color:MACRO_COLORS.kcal},
                       {label:'Prot',val:totals.prot,target:protTarget,color:MACRO_COLORS.prot},
@@ -462,7 +495,7 @@ export default function ClientNutrition({
                                 </button>
                               </div>
                               {/* Qty / Kcal / Prot / Carb / Fat */}
-                              <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:5}}>
+                              <div style={{display:'grid',gridTemplateColumns:isMobile?'repeat(3,1fr)':'repeat(5,1fr)',gap:5}}>
                                 {([
                                   {label:'Qté',field:'qty' as const,type:'text',val:food.qty,color:TEXT_MUTED},
                                   {label:'Kcal',field:'kcal' as const,type:'number',val:food.kcal,color:MACRO_COLORS.kcal},
