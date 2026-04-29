@@ -674,9 +674,19 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                 collisionDetection={closestCenter}
                 onDragEnd={(e: DragEndEvent) => {
                   const { active, over } = e
+                  console.log('[DnD] onDragEnd', {
+                    activeId: active.id,
+                    activeType: typeof active.id,
+                    overId: over?.id,
+                    overType: typeof over?.id,
+                    isSame: active.id === over?.id,
+                  })
                   if (!over || active.id === over.id) return
+                  const ids = (day.exercises || []).map((_, i) => `${di}-${i}`)
+                  console.log('[DnD] expected ids:', ids)
                   const oldIdx = (day.exercises || []).findIndex((_, i) => `${di}-${i}` === active.id)
                   const newIdx = (day.exercises || []).findIndex((_, i) => `${di}-${i}` === over.id)
+                  console.log('[DnD] indices:', { oldIdx, newIdx })
                   if (oldIdx !== -1 && newIdx !== -1) reorderExercises(di, oldIdx, newIdx)
                 }}
               >
