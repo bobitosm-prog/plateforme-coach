@@ -1,14 +1,15 @@
 'use client'
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell } from 'recharts'
 import { formatRelativeTime } from '@/lib/formatRelativeTime'
 import { BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_ALT, FONT_BODY, RADIUS_CARD } from '@/lib/design-tokens'
+import { useIsMobile } from '@/app/hooks/useIsMobile'
 
 type Props = {
   weightLogs: { date: string; poids: number }[]
   bodyMeasurements: any[]
   progressPhotos: any[]
-  completedSessions: { id: string; name: string | null; created_at: string; duration_minutes: number | null }[]
+  completedSessions: { id: string; name: string | null; created_at: string; duration_minutes: number | null; muscles_worked?: string[] | null }[]
   startWeight?: number | null
   targetWeight?: number | null
   currentWeight?: number | null
@@ -17,10 +18,127 @@ type Props = {
 const sectionStyle = { background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20 }
 const headingStyle = { color: GOLD, fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 2, margin: '0 0 16px', textTransform: 'uppercase' as const }
 
+/* ── Heatmap: training frequency ── */
+function HeatmapSection({ sessions, isMobile }: { sessions: { created_at: string }[]; isMobile: boolean }) {
+  const weeksToShow = isMobile ? 8 : 12
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  // Count sessions per day string
+  const countByDay: Record<string, number> = {}
+  for (const s of sessions) {
+    const d = s.created_at.split('T')[0]
+    countByDay[d] = (countByDay[d] || 0) + 1
+  }
+
+  // Build grid: rows = weeks (oldest first), cols = Mon-Sun
+  const dow = today.getDay() || 7 // Mon=1..Sun=7
+  const startDate = new Date(today)
+  startDate.setDate(today.getDate() - (weeksToShow * 7) - (dow - 1))
+
+  const weeks: { date: Date; count: number }[][] = []
+  const cursor = new Date(startDate)
+  for (let w = 0; w < weeksToShow; w++) {
+    const week: { date: Date; count: number }[] = []
+    for (let d = 0; d < 7; d++) {
+      const key = cursor.toISOString().split('T')[0]
+      week.push({ date: new Date(cursor), count: countByDay[key] || 0 })
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    weeks.push(week)
+  }
+
+  const cellSize = isMobile ? 14 : 16
+  const gap = 2
+
+  return (
+    <section style={sectionStyle}>
+      <h3 style={headingStyle}>FREQUENCE D&apos;ENTRAINEMENT</h3>
+      <div style={{ display: 'flex', gap: 2, fontSize: 9, color: TEXT_DIM, fontFamily: FONT_ALT, marginBottom: 4 }}>
+        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+          <div key={i} style={{ width: cellSize, textAlign: 'center' }}>{d}</div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap }}>
+        {weeks.map((week, wi) => (
+          <div key={wi} style={{ display: 'flex', gap }}>
+            {week.map((day, di) => {
+              const isFuture = day.date > today
+              const opacity = isFuture ? 0 : day.count === 0 ? 0.08 : day.count === 1 ? 0.3 : day.count === 2 ? 0.6 : 1
+              return (
+                <div
+                  key={di}
+                  title={`${day.date.toLocaleDateString('fr-CH', { day: '2-digit', month: 'short' })} — ${day.count} séance(s)`}
+                  style={{
+                    width: cellSize,
+                    height: cellSize,
+                    borderRadius: 3,
+                    background: isFuture ? 'transparent' : GOLD,
+                    opacity,
+                    border: isFuture ? 'none' : `1px solid rgba(212,168,67,${opacity > 0.1 ? 0.3 : 0.1})`,
+                  }}
+                />
+              )
+            })}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8, fontSize: 9, color: TEXT_DIM, fontFamily: FONT_BODY, alignItems: 'center' }}>
+        <span>Moins</span>
+        {[0.08, 0.3, 0.6, 1].map((o, i) => (
+          <div key={i} style={{ width: 10, height: 10, borderRadius: 2, background: GOLD, opacity: o }} />
+        ))}
+        <span>Plus</span>
+      </div>
+    </section>
+  )
+}
+
+/* ── Top muscles chart ── */
+function TopMusclesSection({ sessions, isMobile }: { sessions: { muscles_worked?: string[] | null }[]; isMobile: boolean }) {
+  const counts: Record<string, number> = {}
+  for (const s of sessions) {
+    for (const m of (s.muscles_worked || [])) {
+      counts[m] = (counts[m] || 0) + 1
+    }
+  }
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  if (sorted.length === 0) return null
+
+  const data = sorted.map(([name, count]) => ({ name, count }))
+
+  return (
+    <section style={sectionStyle}>
+      <h3 style={headingStyle}>TOP MUSCLES TRAVAILLES</h3>
+      <div style={{ height: isMobile ? 140 : 160 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="vertical" margin={{ left: isMobile ? 60 : 80, right: 16, top: 0, bottom: 0 }}>
+            <XAxis type="number" stroke={TEXT_DIM} fontSize={10} allowDecimals={false} />
+            <YAxis type="category" dataKey="name" stroke={TEXT_DIM} fontSize={isMobile ? 9 : 11} width={isMobile ? 55 : 75} />
+            <Tooltip
+              contentStyle={{ background: '#0D0B08', border: `1px solid ${GOLD}`, borderRadius: 8 }}
+              labelStyle={{ color: GOLD }}
+              itemStyle={{ color: TEXT_PRIMARY }}
+            />
+            <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+              {data.map((_, i) => (
+                <Cell key={i} fill={GOLD} fillOpacity={1 - i * 0.15} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  )
+}
+
+/* ── Main component ── */
 export default function ClientProgress({
   weightLogs, bodyMeasurements, progressPhotos, completedSessions,
   startWeight, targetWeight, currentWeight,
 }: Props) {
+  const isMobile = useIsMobile()
+
   const chartData = weightLogs.map(w => ({
     date: w.date,
     label: new Date(w.date).toLocaleDateString('fr-CH', { day: '2-digit', month: 'short' }),
@@ -40,6 +158,12 @@ export default function ClientProgress({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
+      {/* Section 0 — Training heatmap */}
+      <HeatmapSection sessions={completedSessions} isMobile={isMobile} />
+
+      {/* Section 0b — Top muscles */}
+      <TopMusclesSection sessions={completedSessions} isMobile={isMobile} />
+
       {/* Section 1 — Weight evolution */}
       <section style={sectionStyle}>
         <h3 style={headingStyle}>EVOLUTION DU POIDS</h3>
@@ -57,6 +181,9 @@ export default function ClientProgress({
                     itemStyle={{ color: TEXT_PRIMARY }}
                   />
                   <Line type="monotone" dataKey="poids" stroke={GOLD} strokeWidth={2} dot={{ fill: GOLD, r: 3 }} />
+                  {targetWeight != null && (
+                    <ReferenceLine y={targetWeight} stroke={GOLD} strokeDasharray="6 4" strokeOpacity={0.5} label={{ value: 'Objectif', fill: TEXT_DIM, fontSize: 10, position: 'right' }} />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
