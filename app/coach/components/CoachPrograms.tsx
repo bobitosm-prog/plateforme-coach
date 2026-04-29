@@ -169,11 +169,14 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     })
   }
 
-  function reorderExercises(dayIdx: number, oldIdx: number, newIdx: number) {
+  function reorderExercisesById(dayIdx: number, activeId: string, overId: string) {
     setPDays(prev => {
       const newDays = [...prev]
-      const day = { ...newDays[dayIdx] }
-      day.exercises = arrayMove([...day.exercises], oldIdx, newIdx)
+      const day = { ...newDays[dayIdx], exercises: [...newDays[dayIdx].exercises] }
+      const oldIdx = day.exercises.findIndex(ex => `${dayIdx}-${ex.name}` === activeId)
+      const newIdx = day.exercises.findIndex(ex => `${dayIdx}-${ex.name}` === overId)
+      if (oldIdx === -1 || newIdx === -1) return prev
+      day.exercises = arrayMove(day.exercises, oldIdx, newIdx)
       newDays[dayIdx] = day
       return newDays
     })
@@ -675,10 +678,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                 onDragEnd={(e: DragEndEvent) => {
                   const { active, over } = e
                   if (!over || active.id === over.id) return
-                  const exos = day.exercises || []
-                  const oldIdx = exos.findIndex(ex => `${di}-${ex.name}` === active.id)
-                  const newIdx = exos.findIndex(ex => `${di}-${ex.name}` === over.id)
-                  if (oldIdx !== -1 && newIdx !== -1) reorderExercises(di, oldIdx, newIdx)
+                  reorderExercisesById(di, String(active.id), String(over.id))
                 }}
               >
                 <SortableContext items={(day.exercises || []).map(ex => `${di}-${ex.name}`)} strategy={verticalListSortingStrategy}>
