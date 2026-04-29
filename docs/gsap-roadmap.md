@@ -1,6 +1,27 @@
 # GSAP Animation Roadmap
 
-## Skills installes (28 avril 2026)
+## ✅ Fait
+- Hero title slot-machine reveal (29 avril 2026)
+  - Fichier : app/landing/components/Hero.tsx
+  - yPercent 110 to 0 + skewY 4 to 0
+  - Stagger 0.15s, duration 1.4s, expo.out
+  - Gold textShadow pulse sur "TON CORPS"
+
+## ⏳ Prochain sprint Landing
+- Magnetic CTA buttons (Hero.tsx)
+- ScrollTrigger sections fade-in (Results, Nutrition, etc.)
+- Stats counters animes (1200, 163, 170)
+
+## ⏳ Sprint App polish (interieur)
+- Page transitions (Home, Training, Workout)
+- Stagger lists (sessions, exercices, sets)
+- PR confetti / pulse quand record battu
+
+## ⏳ Sprint avance
+- Onboarding anime pour nouveaux users
+- Dashboard coach avec graphiques qui se construisent
+
+## Skills installes (28 avril)
 - gsap-core
 - gsap-scrolltrigger
 - gsap-timeline
@@ -8,33 +29,9 @@
 - gsap-plugins
 
 ## Philosophie
-GSAP a fond sur la landing (impressionner les futurs users).
-GSAP cisele dans l'app (respecter les users qui s'entrainent).
-
-## Sprints prevus
-- [Sprint 1] Landing - 1-2h
-- [Sprint 2] App polish - 1h
-- [Sprint 3] Avance (onboarding) - 2h
-
-## Animations a faire
-
-### Landing page
-- [ ] Hero text reveal (titre qui apparait)
-- [ ] Stats counters animes (1200, 163, 170)
-- [ ] Scroll triggers sections
-- [ ] CTA micro-interactions
-
-### App interieur
-- [ ] Page transitions (Home → Training → Workout)
-- [ ] Stagger lists (sessions, exercices, sets)
-- [ ] PR confetti / pulse quand record battu
-- [ ] Apparition cards Home (subtle stagger)
-
-### Onboarding (Sprint 3)
-- [ ] Bienvenue anime pour nouveaux users
-- [ ] Tutorial avec animations guidees
+GSAP a fond sur la landing pour impressionner.
+GSAP cisele dans l'app pour respecter l'experience workout.
 
 ## References
 - GSAP docs : https://gsap.com/docs/v3/
 - ScrollTrigger : https://gsap.com/docs/v3/Plugins/ScrollTrigger/
-- Performance : https://gsap.com/docs/v3/GSAP/gsap.set()/
