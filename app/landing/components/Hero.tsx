@@ -1,5 +1,7 @@
 'use client'
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
+import gsap from 'gsap'
 import { useReveal, useCounter } from './shared'
 import { colors } from '../../../lib/design-tokens'
 
@@ -44,6 +46,7 @@ function StatItem({ target, label, first }: { target: number; label: string; fir
 }
 
 export default function Hero() {
+  const titleRef = useRef<HTMLHeadingElement>(null)
   const eyebrow = useReveal()
   const title = useReveal()
   const sub = useReveal()
@@ -51,6 +54,50 @@ export default function Hero() {
   const btns = useReveal()
   const trust = useReveal()
   const stats = useReveal()
+
+  useEffect(() => {
+    if (!titleRef.current) return
+
+    // Helper : split chaque mot en spans de lettres
+    const lines = titleRef.current.querySelectorAll('.split-line')
+    const allChars: HTMLElement[] = []
+
+    lines.forEach(line => {
+      const text = line.textContent || ''
+      line.innerHTML = ''
+      for (const char of text) {
+        const span = document.createElement('span')
+        span.textContent = char === ' ' ? '\u00a0' : char
+        span.style.display = 'inline-block'
+        span.style.willChange = 'transform, opacity'
+        line.appendChild(span)
+        allChars.push(span)
+      }
+    })
+
+    // Animation GSAP : chaque lettre apparait avec stagger
+    gsap.fromTo(allChars,
+      {
+        opacity: 0,
+        y: 60,
+        rotateX: -90,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        rotateX: 0,
+        duration: 0.8,
+        stagger: 0.04,
+        ease: 'power3.out',
+        delay: 0.2,
+      }
+    )
+
+    // Cleanup
+    return () => {
+      gsap.killTweensOf(allChars)
+    }
+  }, [])
 
   const revealStyle = (visible: boolean, delay = 0): React.CSSProperties => ({
     opacity: visible ? 1 : 0,
@@ -433,7 +480,7 @@ export default function Hero() {
 
           {/* Title */}
           <h1
-            ref={title.ref}
+            ref={titleRef}
             style={{
               fontFamily: 'var(--font-display)',
               fontSize: 'clamp(72px, 8.5vw, 120px)',
@@ -441,12 +488,11 @@ export default function Hero() {
               letterSpacing: 2,
               color: 'var(--text)',
               marginBottom: 8,
-              ...revealStyle(title.visible, 0.08),
+              perspective: '600px',
             }}
           >
-            TRANSFORME
-            <br />
-            <span style={{ color: 'var(--gold)', display: 'block' }}>TON CORPS</span>
+            <span className="split-line" style={{ display: 'block' }}>TRANSFORME</span>
+            <span className="split-line" style={{ display: 'block', color: 'var(--gold)' }}>TON CORPS</span>
           </h1>
 
           {/* Subtitle */}
