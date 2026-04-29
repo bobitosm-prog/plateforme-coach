@@ -38,6 +38,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [assignClientId, setAssignClientId] = useState('')
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
+  const [activeTagFilters, setActiveTagFilters] = useState<string[]>([])
   const [programToDelete, setProgramToDelete] = useState<{ id: string; name: string } | null>(null)
   const [pushTarget, setPushTarget] = useState<{ template: Program; impactedClients: { id: string; name: string }[] } | null>(null)
   const [pushing, setPushing] = useState(false)
@@ -285,12 +286,19 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
           </button>
         </div>
       ) : (() => {
+        const allUsedTags = Array.from(new Set(programs.flatMap(p => p.tags || []))).sort()
         const filteredPrograms = programs.filter(p => {
-          if (!search.trim()) return true
-          const q = search.toLowerCase().trim()
-          const inName = p.name.toLowerCase().includes(q)
-          const inTags = (p.tags || []).some(t => t.toLowerCase().includes(q))
-          return inName || inTags
+          if (search.trim()) {
+            const q = search.toLowerCase().trim()
+            const inName = p.name.toLowerCase().includes(q)
+            const inTags = (p.tags || []).some(t => t.toLowerCase().includes(q))
+            if (!inName && !inTags) return false
+          }
+          if (activeTagFilters.length > 0) {
+            const programTags = p.tags || []
+            if (!activeTagFilters.every(tag => programTags.includes(tag))) return false
+          }
+          return true
         })
         return (
         <>
@@ -318,6 +326,58 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               </div>
             )}
           </div>
+          {allUsedTags.length > 0 && (
+            <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {allUsedTags.map(tag => {
+                const active = activeTagFilters.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setActiveTagFilters(prev => active ? prev.filter(t => t !== tag) : [...prev, tag])}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 16,
+                      border: `1px solid ${active ? GOLD : BORDER}`,
+                      background: active ? GOLD : 'transparent',
+                      color: active ? '#0D0B08' : TEXT_MUTED,
+                      fontFamily: FONT_ALT,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: 0.5,
+                      textTransform: 'uppercase' as const,
+                      cursor: 'pointer',
+                      transition: 'all 150ms',
+                    }}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+              {activeTagFilters.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTagFilters([])}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 16,
+                    border: 'none',
+                    background: 'transparent',
+                    color: TEXT_MUTED,
+                    fontFamily: FONT_ALT,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: 0.5,
+                    textTransform: 'uppercase' as const,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Effacer
+                </button>
+              )}
+            </div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filteredPrograms.map(p => (
             <div key={p.id} style={{ ...cardStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
@@ -326,6 +386,26 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                 <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginTop: 4 }}>
                   {p.days?.length || 0} jours · {p.split || '–'} · {p.duration || '–'}
                 </div>
+                {p.tags && p.tags.length > 0 && (
+                  <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {p.tags.map(tag => (
+                      <span key={tag} style={{
+                        padding: '2px 8px',
+                        borderRadius: 10,
+                        background: 'rgba(201,168,76,0.12)',
+                        border: '1px solid rgba(201,168,76,0.25)',
+                        color: GOLD,
+                        fontFamily: FONT_ALT,
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
+                        textTransform: 'uppercase' as const,
+                      }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
