@@ -426,7 +426,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
      MOBILE LAYOUT (<1024px) — original code below
   ══════════════════════════════════════════════════════════ */
   return (
-    <div style={{ minHeight: '100vh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY, overflowX: 'hidden', maxWidth: '100vw' }}>
+    <div style={{ minHeight: '100vh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY, overflowX: 'hidden', maxWidth: '100vw', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; }
