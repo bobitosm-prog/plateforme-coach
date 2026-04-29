@@ -413,7 +413,7 @@ export default function useClientDetail() {
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes, customProgsRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,start_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
-      supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(20),
+      supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(100),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id).eq('completed', true),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
