@@ -4,6 +4,7 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { cache } from '../../lib/cache'
 import BugReport from '../components/BugReport'
+import { useIsMobile } from '../hooks/useIsMobile'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -96,6 +97,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [revMonth, setRevMonth] = useState(new Date().getMonth())
   const [revYear, setRevYear] = useState(new Date().getFullYear())
+  const isMobile = useIsMobile()
   const [isDesktop, setIsDesktop] = useState(false)
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth > 1024)
@@ -770,9 +772,9 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           {/* Bloc 2 — Chiffre d'affaires */}
           <div className="sidebar-card">
             <h2 className="section-title">Chiffre d&apos;affaires</h2>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, marginBottom: 16 }}>
               <select value={revMonth} onChange={e => setRevMonth(Number(e.target.value))}
-                style={{ flex: 1, maxWidth: 130, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
+                style={{ flex: 1, maxWidth: isMobile ? 'none' : 130, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_PRIMARY, cursor: 'pointer', outline: 'none' }}>
                 {WP_MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
               </select>
               <select value={revYear} onChange={e => setRevYear(Number(e.target.value))}
@@ -796,7 +798,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
               const formatted = Math.round(total).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
               return (
                 <div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? '1.6rem' : '2.4rem', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
                     CHF {formatted}
                   </div>
                   <div style={{ fontFamily: FONT_BODY, fontSize: '0.78rem', color: TEXT_MUTED, marginTop: 8 }}>
@@ -811,7 +813,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           {h.totalUnread > 0 && (
             <div className="sidebar-card" style={{ cursor: 'pointer' }} onClick={() => h.setSection('messages')}>
               <h2 className="section-title">Messages</h2>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: RED, lineHeight: 1 }}>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? '1.4rem' : '2rem', fontWeight: 700, color: RED, lineHeight: 1 }}>
                 {h.totalUnread}
               </div>
               <div style={{ fontFamily: FONT_BODY, fontSize: '0.78rem', color: TEXT_MUTED, marginTop: 8 }}>

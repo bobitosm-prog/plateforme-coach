@@ -14,6 +14,7 @@ import {
 import { initials, statusFor, STATUS_META } from '../hooks/useCoachDashboard'
 import type { ClientRow, ScheduledSession } from '../hooks/useCoachDashboard'
 import { formatRelativeTime } from '../../../lib/formatRelativeTime'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 interface ClientsListProps {
   filtered: ClientRow[]
@@ -47,16 +48,17 @@ export default function ClientsList({
   setSelectedSession,
   lastSessionByClient, sessionsThisWeekByClient,
 }: ClientsListProps) {
+  const isMobile = useIsMobile()
   return (
     <div>
 
       {/* Client table */}
       <div className="sidebar-card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <h2 className="section-title">Clients</h2>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', marginBottom: '20px', gap: isMobile ? 12 : 0 }}>
+          <h2 className="section-title" style={{ margin: 0 }}>Clients</h2>
           <div style={{ position: 'relative' }}>
             <Search size={14} color={TEXT_MUTED} strokeWidth={2} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input type="search" className="search-input" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} aria-label="Rechercher un client" />
+            <input type="search" className="search-input" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} aria-label="Rechercher un client" style={isMobile ? { width: '100%' } : undefined} />
           </div>
         </div>
 
