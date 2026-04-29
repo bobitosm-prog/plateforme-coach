@@ -745,6 +745,22 @@ export default function useClientDetail() {
     setEditingCalGoal(false); showToast('Objectif calorique mis à jour')
   }
 
+  /* ── Save target weight ─────────────────────────────────────── */
+  async function saveTargetWeight(val: number) {
+    if (!profile || isNaN(val) || val < 20) return
+    const { error } = await supabase.from('profiles').update({ target_weight: val }).eq('id', id)
+    if (error) { console.error('[saveTargetWeight] error:', error); return }
+    setProfile(p => p ? { ...p, target_weight: val } : p)
+  }
+
+  /* ── Save objective text ──────────────────────────────────────── */
+  async function saveObjective(val: string | null) {
+    if (!profile) return
+    const { error } = await supabase.from('profiles').update({ objective: val }).eq('id', id)
+    if (error) { console.error('[saveObjective] error:', error); return }
+    setProfile(p => p ? { ...p, objective: val } : p)
+  }
+
   /* ── Derived metrics ────────────────────────────────────────── */
   const currentWeight   = weightLogs[0]?.poids ?? profile?.current_weight ?? null
   const prevMonthWeight = weightLogs.find(w => { const d=new Date(w.date),n=new Date(); return d.getMonth()!==n.getMonth()||d.getFullYear()!==n.getFullYear() })?.poids ?? null
@@ -777,6 +793,7 @@ export default function useClientDetail() {
     currentWeight, weightDelta, totalSessions, goalProgress, streak,
     sessions, totalSessionsCount,
     editingCalGoal, calGoalInput, setCalGoalInput, saveCalorieGoal, setEditingCalGoal,
+    saveTargetWeight, saveObjective,
     showAllFoods, setShowAllFoods, resolvedFoods,
     // Edit modal
     editOpen, setEditOpen, editTab, setEditTab,
