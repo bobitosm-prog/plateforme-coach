@@ -676,7 +676,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               <input value={day.name} onChange={e => { const u = [...pDays]; u[di].name = e.target.value; setPDays(u) }}
                 style={{ ...inputStyle, width: 'auto', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, background: 'transparent', border: 'none', padding: '4px 0', color: GOLD, letterSpacing: '2px' }} />
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <button onClick={() => duplicateDay(di)} title="Dupliquer ce jour" type="button" style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: GOLD, display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' as const }}><Files size={12} /> Dupliquer</button>
+                <button onClick={() => duplicateDay(di)} title="Dupliquer ce jour" type="button" style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: GOLD, display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' as const }}><Files size={12} />{!isMobile && ' Dupliquer'}</button>
                 {pDays.length > 1 && <button onClick={() => removeDay(di)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer' }}><Trash2 size={14} /></button>}
               </div>
             </div>
@@ -697,15 +697,17 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                       <SortableExercise key={`${di}-${ex.name}`} id={`${di}-${ex.name}`}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: BG_BASE, padding: '8px 12px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <GripVertical size={14} style={{ color: TEXT_DIM, cursor: 'grab', flexShrink: 0 }} />
+                            <div style={{ padding: isMobile ? 10 : 4, marginLeft: isMobile ? -4 : 0, cursor: 'grab', flexShrink: 0, display: 'flex', alignItems: 'center', touchAction: 'none' }}>
+                              <GripVertical size={isMobile ? 18 : 14} style={{ color: TEXT_DIM }} />
+                            </div>
                             <div>
                               <span style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 600 }}>{ex.name}</span>
                               <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginLeft: 8 }}>{ex.sets}x{ex.reps} · {ex.rest}s repos</span>
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: 4 }}>
-                            <button onClick={() => duplicateExercise(di, ei)} title="Dupliquer" type="button" style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><Files size={14} /></button>
-                            <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><X size={14} /></button>
+                            <button onClick={() => duplicateExercise(di, ei)} title="Dupliquer" type="button" style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: isMobile ? 8 : 4, display: 'flex', alignItems: 'center' }}><Files size={14} /></button>
+                            <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', padding: isMobile ? 8 : 4, display: 'flex', alignItems: 'center' }}><X size={14} /></button>
                           </div>
                         </div>
                       </SortableExercise>
