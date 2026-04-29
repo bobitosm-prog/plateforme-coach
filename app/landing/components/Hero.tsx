@@ -58,56 +58,52 @@ export default function Hero() {
   useEffect(() => {
     if (!titleRef.current) return
 
-    // Helper : split chaque mot en spans de lettres
-    const lines = titleRef.current.querySelectorAll('.split-line')
-    const allChars: HTMLElement[] = []
+    const lines = titleRef.current.querySelectorAll('.split-line') as NodeListOf<HTMLElement>
 
+    // Pour chaque ligne, on wrap son contenu dans un inner-line
+    // pour pouvoir le translater sous le mask
     lines.forEach(line => {
+      line.style.overflow = 'hidden'
+      line.style.display = 'block'
+      // Verifier si deja wrappe pour eviter double wrap au strict mode
+      if (line.querySelector('.inner-line')) return
       const text = line.textContent || ''
       line.innerHTML = ''
-      for (const char of text) {
-        const span = document.createElement('span')
-        span.textContent = char === ' ' ? '\u00a0' : char
-        span.style.display = 'inline-block'
-        span.style.willChange = 'transform, opacity'
-        line.appendChild(span)
-        allChars.push(span)
-      }
+      const inner = document.createElement('span')
+      inner.className = 'inner-line'
+      inner.style.display = 'block'
+      inner.style.willChange = 'transform'
+      inner.textContent = text
+      line.appendChild(inner)
     })
 
-    // Animation GSAP : chaque lettre apparait avec stagger
-    gsap.fromTo(allChars,
+    const inners = titleRef.current.querySelectorAll('.inner-line') as NodeListOf<HTMLElement>
+
+    // Animation : chaque ligne SLIDE depuis le bas (100% → 0)
+    gsap.fromTo(inners,
       {
-        opacity: 0,
-        y: 80,
-        rotateX: -90,
-        scale: 1.4,
-        filter: 'blur(12px)',
-        skewY: 7,
+        yPercent: 110,
+        skewY: 4,
       },
       {
-        opacity: 1,
-        y: 0,
-        rotateX: 0,
-        scale: 1,
-        filter: 'blur(0px)',
+        yPercent: 0,
         skewY: 0,
-        duration: 1.2,
-        stagger: 0.05,
+        duration: 1.4,
+        stagger: 0.15,
         ease: 'expo.out',
-        delay: 0.3,
+        delay: 0.2,
       }
     )
 
-    // Glow gold pulse sur la 2eme ligne "TON CORPS"
+    // Glow gold pulse sur la 2eme ligne apres l'animation
     const goldLine = titleRef.current.querySelector('.split-line:nth-child(2)') as HTMLElement | null
     if (goldLine) {
       gsap.fromTo(goldLine,
         { textShadow: '0 0 0px rgba(201,168,76,0)' },
         {
-          textShadow: '0 0 40px rgba(201,168,76,0.6)',
-          duration: 0.8,
-          delay: 1.2,
+          textShadow: '0 0 50px rgba(201,168,76,0.7)',
+          duration: 0.9,
+          delay: 1.6,
           yoyo: true,
           repeat: 1,
           ease: 'sine.inOut',
@@ -115,9 +111,9 @@ export default function Hero() {
       )
     }
 
-    // Cleanup
     return () => {
-      gsap.killTweensOf(allChars)
+      gsap.killTweensOf(inners)
+      if (goldLine) gsap.killTweensOf(goldLine)
     }
   }, [])
 
@@ -510,7 +506,6 @@ export default function Hero() {
               letterSpacing: 2,
               color: 'var(--text)',
               marginBottom: 8,
-              perspective: '600px',
             }}
           >
             <span className="split-line" style={{ display: 'block' }}>TRANSFORME</span>
