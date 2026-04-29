@@ -15,12 +15,19 @@ const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 )
 
+const TAGS_OPTIONS = [
+  'Hypertrophie', 'Force', 'Cut', 'Maintenance', 'Bulk',
+  'Cardio', 'Mobilite', 'Endurance',
+  'Debutant', 'Intermediaire', 'Avance',
+  'PPL', 'Upper/Lower', 'Full Body', 'Split 5j',
+]
+
 const SPLITS = ['PPL (Push/Pull/Legs)', 'Full Body', 'Upper/Lower', 'Bro Split', 'Autre']
 const DURATIONS = ['4 semaines', '6 semaines', '8 semaines', '12 semaines']
 
 interface Exercise { name: string; sets: number; reps: string; rest: number }
 interface ProgramDay { name: string; exercises: Exercise[] }
-interface Program { id?: string; name: string; split: string; duration: string; days: ProgramDay[]; coach_id?: string; created_at?: string }
+interface Program { id?: string; name: string; split: string; duration: string; days: ProgramDay[]; coach_id?: string; created_at?: string; tags?: string[] }
 
 export default function CoachPrograms({ session, clients }: { session: any; clients: any[] }) {
   const [programs, setPrograms] = useState<Program[]>([])
@@ -40,6 +47,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [pSplit, setPSplit] = useState(SPLITS[0])
   const [pDuration, setPDuration] = useState(DURATIONS[1])
   const [pDays, setPDays] = useState<ProgramDay[]>([{ name: 'Jour 1', exercises: [] }])
+  const [pTags, setPTags] = useState<string[]>([])
 
   // Exercise add state
   const [addDayIdx, setAddDayIdx] = useState<number | null>(null)
@@ -85,7 +93,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   function resetForm() {
     setPName(''); setPSplit(SPLITS[0]); setPDuration(DURATIONS[1])
-    setPDays([{ name: 'Jour 1', exercises: [] }])
+    setPDays([{ name: 'Jour 1', exercises: [] }]); setPTags([])
     setCreating(false); setEditing(null)
   }
 
@@ -123,7 +131,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
     if (editing?.id) {
       const { error } = await supabase.from('training_programs').update({
-        name: pName.trim(), program: programData,
+        name: pName.trim(), program: programData, tags: pTags,
       }).eq('id', editing.id)
 
       if (error) {
@@ -134,7 +142,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     } else {
       const { error } = await supabase.from('training_programs').insert({
         name: pName.trim(), program: programData,
-        coach_id: session?.user?.id, is_template: true,
+        coach_id: session?.user?.id, is_template: true, tags: pTags,
       })
 
       if (error) {
@@ -200,7 +208,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   function startEdit(p: Program) {
     setEditing(p); setPName(p.name); setPSplit(p.split || SPLITS[0])
-    setPDuration(p.duration || DURATIONS[1]); setPDays(p.days || [])
+    setPDuration(p.duration || DURATIONS[1]); setPDays(p.days || []); setPTags(p.tags || [])
     setCreating(true)
   }
 
@@ -392,6 +400,37 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             <div><label style={labelStyle}>Split</label><select value={pSplit} onChange={e => setPSplit(e.target.value)} style={inputStyle}>{SPLITS.map(s => <option key={s}>{s}</option>)}</select></div>
           </div>
           <div><label style={labelStyle}>Durée</label><select value={pDuration} onChange={e => setPDuration(e.target.value)} style={inputStyle}>{DURATIONS.map(d => <option key={d}>{d}</option>)}</select></div>
+          <div style={{ marginTop: 12 }}>
+            <label style={labelStyle}>Tags</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+              {TAGS_OPTIONS.map(tag => {
+                const active = pTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setPTags(prev => active ? prev.filter(t => t !== tag) : [...prev, tag])}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 16,
+                      border: `1px solid ${active ? GOLD : BORDER}`,
+                      background: active ? GOLD : 'transparent',
+                      color: active ? '#0D0B08' : TEXT_MUTED,
+                      fontFamily: FONT_ALT,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: 0.5,
+                      textTransform: 'uppercase' as const,
+                      cursor: 'pointer',
+                      transition: 'all 150ms',
+                    }}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Days */}
