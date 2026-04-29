@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
 
 export async function GET(req: NextRequest) {
+  // Auth check
+  const cookieStore = await cookies()
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  }
+
   try {
     const q = req.nextUrl.searchParams.get('q') || ''
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10')
@@ -11,10 +25,10 @@ export async function GET(req: NextRequest) {
     }
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) {
-      console.error('[food-search] Missing SUPABASE_URL or key')
-      return NextResponse.json({ results: [], error: 'config' })
+      console.error('[food-search] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+      return NextResponse.json({ results: [], error: 'config' }, { status: 500 })
     }
 
     const supabase = createClient(url, key.trim())

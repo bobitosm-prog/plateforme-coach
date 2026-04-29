@@ -3,8 +3,11 @@ import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
 function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY manquante — utilisation de ANON_KEY en fallback. Configurer en production.')
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+function getServiceSupabase() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY required for Stripe webhook')
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,7 +33,7 @@ export async function POST(req: NextRequest) {
 
         if (isCoachSubscription && coachId) {
           // Coach subscription — client pays coach directly
-          await supabase.from('profiles').update({
+          await getServiceSupabase().from('profiles').update({
             stripe_customer_id: session.customer as string || null,
             subscription_status: 'active',
             subscription_type: 'coach_paid',
@@ -38,7 +41,7 @@ export async function POST(req: NextRequest) {
             subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           }).eq('id', clientId)
 
-          await supabase.from('payments').insert({
+          await getServiceSupabase().from('payments').insert({
             client_id: clientId,
             coach_id: coachId,
             amount: (session.amount_total || 0) / 100,
@@ -69,11 +72,11 @@ export async function POST(req: NextRequest) {
             updates.coach_subscription_active = true
           }
 
-          await supabase.from('profiles').update(updates).eq('id', clientId)
+          await getServiceSupabase().from('profiles').update(updates).eq('id', clientId)
         }
 
         // Update payment status
-        await supabase.from('payments')
+        await getServiceSupabase().from('payments')
           .update({ status: 'paid', paid_at: new Date().toISOString() })
           .eq('stripe_checkout_session_id', session.id)
       }
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
       const sub = event.data.object as Stripe.Subscription
       if (sub.customer) {
         const status = sub.status === 'active' ? 'active' : sub.status === 'past_due' ? 'past_due' : sub.status
-        await supabase.from('profiles').update({
+        await getServiceSupabase().from('profiles').update({
           subscription_status: status,
         }).eq('stripe_customer_id', sub.customer as string)
       }
@@ -95,17 +98,17 @@ export async function POST(req: NextRequest) {
       const invoice = event.data.object as any
       if (invoice.billing_reason === 'subscription_cycle' && invoice.customer) {
         // Determine interval from subscription type
-        const { data: client } = await supabase.from('profiles')
+        const { data: client } = await getServiceSupabase().from('profiles')
           .select('id, subscription_type').eq('stripe_customer_id', invoice.customer).single()
 
         if (client) {
           const interval = client.subscription_type === 'client_yearly' ? 365 : 30
-          await supabase.from('profiles').update({
+          await getServiceSupabase().from('profiles').update({
             subscription_status: 'active',
             subscription_end_date: new Date(Date.now() + interval * 24 * 60 * 60 * 1000).toISOString(),
           }).eq('id', client.id)
 
-          await supabase.from('payments').insert({
+          await getServiceSupabase().from('payments').insert({
             client_id: client.id,
             amount: (invoice.amount_paid || 0) / 100,
             currency: invoice.currency || 'chf',
@@ -121,7 +124,7 @@ export async function POST(req: NextRequest) {
     if (event.type === 'customer.subscription.deleted') {
       const sub = event.data.object as any
       if (sub.customer) {
-        await supabase.from('profiles').update({
+        await getServiceSupabase().from('profiles').update({
           subscription_status: 'canceled',
           stripe_subscription_id: null,
         }).eq('stripe_customer_id', sub.customer)
@@ -132,7 +135,7 @@ export async function POST(req: NextRequest) {
     if (event.type === 'account.updated') {
       const account = event.data.object as Stripe.Account
       if (account.charges_enabled && account.payouts_enabled) {
-        await supabase.from('profiles')
+        await getServiceSupabase().from('profiles')
           .update({ stripe_onboarding_complete: true })
           .eq('stripe_account_id', account.id)
       }

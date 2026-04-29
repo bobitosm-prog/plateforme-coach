@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) console.warn('SUPABASE_SERVICE_ROLE_KEY manquante — fallback ANON_KEY.')
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+function getServiceSupabase() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY required for Stripe connect')
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,7 +34,7 @@ export async function POST(req: NextRequest) {
         metadata: { coachId },
       })
       accountId = account.id
-      await supabase.from('profiles').update({ stripe_account_id: accountId }).eq('id', coachId)
+      await getServiceSupabase().from('profiles').update({ stripe_account_id: accountId }).eq('id', coachId)
     }
 
     // Create a new onboarding link (works for new AND existing accounts)
