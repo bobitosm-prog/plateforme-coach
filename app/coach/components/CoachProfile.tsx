@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Users, LogOut, Trash2, Save } from 'lucide-react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -26,6 +27,7 @@ export default function CoachProfile({
   coachName, coachInitials, session, coachProfile,
   setSection, supabaseSignOut,
 }: CoachProfileProps) {
+  const isMobile = useIsMobile()
   const [showDelete, setShowDelete] = useState(false)
   const [confirmText, setConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
@@ -75,7 +77,7 @@ export default function CoachProfile({
               </div>
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
             {coachProfile.coach_experience_years != null && <div><div style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px' }}>Expérience</div><div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', color: TEXT_PRIMARY, fontWeight: 600, marginTop: 2 }}>{coachProfile.coach_experience_years} ans</div></div>}
             <div><div style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px' }}>Clients</div><div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', color: TEXT_PRIMARY, fontWeight: 600, marginTop: 2 }}>{coachProfile.coach_max_clients || '--'}</div></div>
           </div>
@@ -85,7 +87,7 @@ export default function CoachProfile({
       {/* Tarif section */}
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginTop: 12 }}>
         <div style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 10 }}>Mon tarif client</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, alignItems: isMobile ? 'stretch' : 'center' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <input type="number" inputMode="decimal" value={rate} onChange={e => { setRate(e.target.value); setRateSaved(false) }}
               style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 50px 10px 14px', color: TEXT_PRIMARY, fontSize: '1rem', fontFamily: FONT_BODY, outline: 'none' }} />
