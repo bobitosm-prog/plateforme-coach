@@ -499,8 +499,8 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filteredPrograms.map(p => (
-            <div key={p.id} style={{ ...cardStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1 }}>
+            <div key={p.id} style={{ ...cardStyle, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? 10 : 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY }}>{p.name}</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginTop: 4 }}>
                   {p.days?.length || 0} jours · {p.split || '–'} · {p.duration || '–'}
@@ -526,7 +526,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                   </div>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
                 <button onClick={() => handlePushClick(p)} title="Pusher MAJ aux clients" style={{ background: BG_CARD_2, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><RefreshCw size={14} /></button>
                 <button onClick={() => cloneProgram(p)} title="Dupliquer" disabled={saving} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: saving ? 'wait' : 'pointer', color: GOLD, opacity: saving ? 0.5 : 1 }}><Files size={14} /></button>
