@@ -674,26 +674,17 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                 collisionDetection={closestCenter}
                 onDragEnd={(e: DragEndEvent) => {
                   const { active, over } = e
-                  console.log('[DnD] onDragEnd', {
-                    activeId: active.id,
-                    activeType: typeof active.id,
-                    overId: over?.id,
-                    overType: typeof over?.id,
-                    isSame: active.id === over?.id,
-                  })
                   if (!over || active.id === over.id) return
-                  const ids = (day.exercises || []).map((_, i) => `${di}-${i}`)
-                  console.log('[DnD] expected ids:', ids)
-                  const oldIdx = (day.exercises || []).findIndex((_, i) => `${di}-${i}` === active.id)
-                  const newIdx = (day.exercises || []).findIndex((_, i) => `${di}-${i}` === over.id)
-                  console.log('[DnD] indices:', { oldIdx, newIdx })
+                  const exos = day.exercises || []
+                  const oldIdx = exos.findIndex(ex => `${di}-${ex.name}` === active.id)
+                  const newIdx = exos.findIndex(ex => `${di}-${ex.name}` === over.id)
                   if (oldIdx !== -1 && newIdx !== -1) reorderExercises(di, oldIdx, newIdx)
                 }}
               >
-                <SortableContext items={(day.exercises || []).map((_, i) => `${di}-${i}`)} strategy={verticalListSortingStrategy}>
+                <SortableContext items={(day.exercises || []).map(ex => `${di}-${ex.name}`)} strategy={verticalListSortingStrategy}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 12, background: BORDER }}>
                     {(day.exercises || []).map((ex, ei) => (
-                      <SortableExercise key={`${di}-${ei}`} id={`${di}-${ei}`}>
+                      <SortableExercise key={`${di}-${ex.name}`} id={`${di}-${ex.name}`}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: BG_BASE, padding: '8px 12px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <GripVertical size={14} style={{ color: TEXT_DIM, cursor: 'grab', flexShrink: 0 }} />
