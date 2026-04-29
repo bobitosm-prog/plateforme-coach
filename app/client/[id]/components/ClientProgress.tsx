@@ -140,6 +140,14 @@ function TimelineSection({ weights, measurements, photos, sessions, isMobile }: 
 
 /* ── Heatmap: training frequency ── */
 function HeatmapSection({ sessions, isMobile }: { sessions: { created_at: string }[]; isMobile: boolean }) {
+  if (sessions.length === 0) {
+    return (
+      <section style={sectionStyle}>
+        <h3 style={headingStyle}>FREQUENCE D&apos;ENTRAINEMENT</h3>
+        <p style={{ color: TEXT_DIM, fontStyle: 'italic', fontFamily: FONT_BODY, fontSize: 13, margin: 0 }}>Aucune seance enregistree pour le moment.</p>
+      </section>
+    )
+  }
   const weeksToShow = isMobile ? 8 : 12
   const today = new Date()
   today.setHours(0, 0, 0, 0)
