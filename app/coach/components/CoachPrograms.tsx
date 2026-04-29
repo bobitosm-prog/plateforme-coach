@@ -126,6 +126,17 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setPDays(updated)
   }
 
+  function duplicateExercise(dayIdx: number, exIdx: number) {
+    setPDays(prev => {
+      const newDays = [...prev]
+      const day = { ...newDays[dayIdx], exercises: [...newDays[dayIdx].exercises] }
+      const copy = { ...day.exercises[exIdx] }
+      day.exercises.splice(exIdx + 1, 0, copy)
+      newDays[dayIdx] = day
+      return newDays
+    })
+  }
+
   async function saveProgram() {
     if (!pName.trim() || pDays.length === 0) return
     setSaving(true)
@@ -616,7 +627,10 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
                       <span style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, fontWeight: 600 }}>{ex.name}</span>
                       <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginLeft: 8 }}>{ex.sets}x{ex.reps} · {ex.rest}s repos</span>
                     </div>
-                    <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer' }}><X size={14} /></button>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={() => duplicateExercise(di, ei)} title="Dupliquer" type="button" style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><Files size={14} /></button>
+                      <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><X size={14} /></button>
+                    </div>
                   </div>
                 ))}
               </div>
