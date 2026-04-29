@@ -1,5 +1,7 @@
 'use client'
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
+import gsap from 'gsap'
 import { useReveal, useCounter } from './shared'
 import { colors } from '../../../lib/design-tokens'
 
@@ -44,6 +46,7 @@ function StatItem({ target, label, first }: { target: number; label: string; fir
 }
 
 export default function Hero() {
+  const titleRef = useRef<HTMLHeadingElement>(null)
   const eyebrow = useReveal()
   const title = useReveal()
   const sub = useReveal()
@@ -51,6 +54,68 @@ export default function Hero() {
   const btns = useReveal()
   const trust = useReveal()
   const stats = useReveal()
+
+  useEffect(() => {
+    if (!titleRef.current) return
+
+    const lines = titleRef.current.querySelectorAll('.split-line') as NodeListOf<HTMLElement>
+
+    // Pour chaque ligne, on wrap son contenu dans un inner-line
+    // pour pouvoir le translater sous le mask
+    lines.forEach(line => {
+      line.style.overflow = 'hidden'
+      line.style.display = 'block'
+      // Verifier si deja wrappe pour eviter double wrap au strict mode
+      if (line.querySelector('.inner-line')) return
+      const text = line.textContent || ''
+      line.innerHTML = ''
+      const inner = document.createElement('span')
+      inner.className = 'inner-line'
+      inner.style.display = 'block'
+      inner.style.willChange = 'transform'
+      inner.textContent = text
+      line.appendChild(inner)
+    })
+
+    const inners = titleRef.current.querySelectorAll('.inner-line') as NodeListOf<HTMLElement>
+
+    // Animation : chaque ligne SLIDE depuis le bas (100% → 0)
+    gsap.fromTo(inners,
+      {
+        yPercent: 110,
+        skewY: 4,
+      },
+      {
+        yPercent: 0,
+        skewY: 0,
+        duration: 1.4,
+        stagger: 0.15,
+        ease: 'expo.out',
+        delay: 0.2,
+      }
+    )
+
+    // Glow gold pulse sur la 2eme ligne apres l'animation
+    const goldLine = titleRef.current.querySelector('.split-line:nth-child(2)') as HTMLElement | null
+    if (goldLine) {
+      gsap.fromTo(goldLine,
+        { textShadow: '0 0 0px rgba(201,168,76,0)' },
+        {
+          textShadow: '0 0 50px rgba(201,168,76,0.7)',
+          duration: 0.9,
+          delay: 1.6,
+          yoyo: true,
+          repeat: 1,
+          ease: 'sine.inOut',
+        }
+      )
+    }
+
+    return () => {
+      gsap.killTweensOf(inners)
+      if (goldLine) gsap.killTweensOf(goldLine)
+    }
+  }, [])
 
   const revealStyle = (visible: boolean, delay = 0): React.CSSProperties => ({
     opacity: visible ? 1 : 0,
@@ -433,7 +498,7 @@ export default function Hero() {
 
           {/* Title */}
           <h1
-            ref={title.ref}
+            ref={titleRef}
             style={{
               fontFamily: 'var(--font-display)',
               fontSize: 'clamp(72px, 8.5vw, 120px)',
@@ -441,12 +506,10 @@ export default function Hero() {
               letterSpacing: 2,
               color: 'var(--text)',
               marginBottom: 8,
-              ...revealStyle(title.visible, 0.08),
             }}
           >
-            TRANSFORME
-            <br />
-            <span style={{ color: 'var(--gold)', display: 'block' }}>TON CORPS</span>
+            <span className="split-line" style={{ display: 'block' }}>TRANSFORME</span>
+            <span className="split-line" style={{ display: 'block', color: 'var(--gold)' }}>TON CORPS</span>
           </h1>
 
           {/* Subtitle */}
