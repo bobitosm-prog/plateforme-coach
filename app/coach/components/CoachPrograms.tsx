@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw } from 'lucide-react'
+import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw, Files } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -15,12 +15,19 @@ const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 )
 
+const TAGS_OPTIONS = [
+  'Hypertrophie', 'Force', 'Cut', 'Maintenance', 'Bulk',
+  'Cardio', 'Mobilite', 'Endurance',
+  'Debutant', 'Intermediaire', 'Avance',
+  'PPL', 'Upper/Lower', 'Full Body', 'Split 5j',
+]
+
 const SPLITS = ['PPL (Push/Pull/Legs)', 'Full Body', 'Upper/Lower', 'Bro Split', 'Autre']
 const DURATIONS = ['4 semaines', '6 semaines', '8 semaines', '12 semaines']
 
 interface Exercise { name: string; sets: number; reps: string; rest: number }
 interface ProgramDay { name: string; exercises: Exercise[] }
-interface Program { id?: string; name: string; split: string; duration: string; days: ProgramDay[]; coach_id?: string; created_at?: string }
+interface Program { id?: string; name: string; split: string; duration: string; days: ProgramDay[]; coach_id?: string; created_at?: string; tags?: string[] }
 
 export default function CoachPrograms({ session, clients }: { session: any; clients: any[] }) {
   const [programs, setPrograms] = useState<Program[]>([])
@@ -30,6 +37,8 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [assignModal, setAssignModal] = useState<Program | null>(null)
   const [assignClientId, setAssignClientId] = useState('')
   const [saving, setSaving] = useState(false)
+  const [search, setSearch] = useState('')
+  const [activeTagFilters, setActiveTagFilters] = useState<string[]>([])
   const [programToDelete, setProgramToDelete] = useState<{ id: string; name: string } | null>(null)
   const [pushTarget, setPushTarget] = useState<{ template: Program; impactedClients: { id: string; name: string }[] } | null>(null)
   const [pushing, setPushing] = useState(false)
@@ -40,6 +49,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [pSplit, setPSplit] = useState(SPLITS[0])
   const [pDuration, setPDuration] = useState(DURATIONS[1])
   const [pDays, setPDays] = useState<ProgramDay[]>([{ name: 'Jour 1', exercises: [] }])
+  const [pTags, setPTags] = useState<string[]>([])
 
   // Exercise add state
   const [addDayIdx, setAddDayIdx] = useState<number | null>(null)
@@ -85,7 +95,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   function resetForm() {
     setPName(''); setPSplit(SPLITS[0]); setPDuration(DURATIONS[1])
-    setPDays([{ name: 'Jour 1', exercises: [] }])
+    setPDays([{ name: 'Jour 1', exercises: [] }]); setPTags([])
     setCreating(false); setEditing(null)
   }
 
@@ -123,7 +133,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
     if (editing?.id) {
       const { error } = await supabase.from('training_programs').update({
-        name: pName.trim(), program: programData,
+        name: pName.trim(), program: programData, tags: pTags,
       }).eq('id', editing.id)
 
       if (error) {
@@ -134,7 +144,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     } else {
       const { error } = await supabase.from('training_programs').insert({
         name: pName.trim(), program: programData,
-        coach_id: session?.user?.id, is_template: true,
+        coach_id: session?.user?.id, is_template: true, tags: pTags,
       })
 
       if (error) {
@@ -150,6 +160,55 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     await supabase.from('training_programs').delete().eq('id', id)
     loadPrograms()
     setProgramToDelete(null)
+  }
+
+  async function cloneProgram(p: Program) {
+    if (!session?.user?.id) return
+    setSaving(true)
+    try {
+      const programData = {
+        days: p.days || [],
+        split: p.split || SPLITS[0],
+        duration: p.duration || DURATIONS[1],
+      }
+      const { data, error } = await supabase
+        .from('training_programs')
+        .insert({
+          name: `${p.name} (copie)`,
+          program: programData,
+          coach_id: session.user.id,
+          is_template: true,
+          tags: p.tags || [],
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('[clone] error:', error)
+        toast.error('Erreur de duplication')
+        setSaving(false)
+        return
+      }
+
+      await loadPrograms()
+      setSaving(false)
+      if (data) {
+        const cloned: Program = {
+          id: data.id,
+          name: data.name,
+          split: data.program?.split || SPLITS[0],
+          duration: data.program?.duration || DURATIONS[1],
+          days: data.program?.days || [],
+          tags: data.tags || [],
+        }
+        startEdit(cloned)
+        toast.success('Template dupliqué — mode édition')
+      }
+    } catch (err) {
+      console.error('[clone] exception:', err)
+      toast.error('Erreur inattendue')
+      setSaving(false)
+    }
   }
 
   async function handlePushClick(template: Program) {
@@ -200,7 +259,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   function startEdit(p: Program) {
     setEditing(p); setPName(p.name); setPSplit(p.split || SPLITS[0])
-    setPDuration(p.duration || DURATIONS[1]); setPDays(p.days || [])
+    setPDuration(p.duration || DURATIONS[1]); setPDays(p.days || []); setPTags(p.tags || [])
     setCreating(true)
   }
 
@@ -275,26 +334,141 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             Créer ton premier programme
           </button>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {programs.map(p => (
+      ) : (() => {
+        const allUsedTags = Array.from(new Set(programs.flatMap(p => p.tags || []))).sort()
+        const filteredPrograms = programs.filter(p => {
+          if (search.trim()) {
+            const q = search.toLowerCase().trim()
+            const inName = p.name.toLowerCase().includes(q)
+            const inTags = (p.tags || []).some(t => t.toLowerCase().includes(q))
+            if (!inName && !inTags) return false
+          }
+          if (activeTagFilters.length > 0) {
+            const programTags = p.tags || []
+            if (!activeTagFilters.every(tag => programTags.includes(tag))) return false
+          }
+          return true
+        })
+        return (
+        <>
+          <div style={{ marginBottom: 16 }}>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher un template (nom, tag)..."
+              style={{
+                width: '100%',
+                background: BG_CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+                padding: '12px 16px',
+                color: TEXT_PRIMARY,
+                fontSize: 14,
+                fontFamily: FONT_BODY,
+                outline: 'none',
+              }}
+            />
+            {search.trim() && (
+              <div style={{ marginTop: 8, fontFamily: FONT_ALT, fontSize: 11, color: TEXT_MUTED, letterSpacing: 0.5 }}>
+                {filteredPrograms.length} resultat(s) sur {programs.length}
+              </div>
+            )}
+          </div>
+          {allUsedTags.length > 0 && (
+            <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {allUsedTags.map(tag => {
+                const active = activeTagFilters.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setActiveTagFilters(prev => active ? prev.filter(t => t !== tag) : [...prev, tag])}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 16,
+                      border: `1px solid ${active ? GOLD : BORDER}`,
+                      background: active ? GOLD : 'transparent',
+                      color: active ? '#0D0B08' : TEXT_MUTED,
+                      fontFamily: FONT_ALT,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: 0.5,
+                      textTransform: 'uppercase' as const,
+                      cursor: 'pointer',
+                      transition: 'all 150ms',
+                    }}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+              {activeTagFilters.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTagFilters([])}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 16,
+                    border: 'none',
+                    background: 'transparent',
+                    color: TEXT_MUTED,
+                    fontFamily: FONT_ALT,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: 0.5,
+                    textTransform: 'uppercase' as const,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Effacer
+                </button>
+              )}
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {filteredPrograms.map(p => (
             <div key={p.id} style={{ ...cardStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY }}>{p.name}</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginTop: 4 }}>
                   {p.days?.length || 0} jours · {p.split || '–'} · {p.duration || '–'}
                 </div>
+                {p.tags && p.tags.length > 0 && (
+                  <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {p.tags.map(tag => (
+                      <span key={tag} style={{
+                        padding: '2px 8px',
+                        borderRadius: 10,
+                        background: 'rgba(201,168,76,0.12)',
+                        border: '1px solid rgba(201,168,76,0.25)',
+                        color: GOLD,
+                        fontFamily: FONT_ALT,
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
+                        textTransform: 'uppercase' as const,
+                      }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
                 <button onClick={() => handlePushClick(p)} title="Pusher MAJ aux clients" style={{ background: BG_CARD_2, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><RefreshCw size={14} /></button>
+                <button onClick={() => cloneProgram(p)} title="Dupliquer" disabled={saving} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: saving ? 'wait' : 'pointer', color: GOLD, opacity: saving ? 0.5 : 1 }}><Files size={14} /></button>
                 <button onClick={() => startEdit(p)} title="Modifier" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED }}><ChevronDown size={14} /></button>
                 <button onClick={() => setProgramToDelete({ id: p.id!, name: p.name })} title="Supprimer" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: RED }}><Trash2 size={14} /></button>
               </div>
             </div>
           ))}
-        </div>
-      )}
+          </div>
+        </>
+        )
+      })()}
 
       {/* Assign modal */}
       {assignModal && (
@@ -392,6 +566,37 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             <div><label style={labelStyle}>Split</label><select value={pSplit} onChange={e => setPSplit(e.target.value)} style={inputStyle}>{SPLITS.map(s => <option key={s}>{s}</option>)}</select></div>
           </div>
           <div><label style={labelStyle}>Durée</label><select value={pDuration} onChange={e => setPDuration(e.target.value)} style={inputStyle}>{DURATIONS.map(d => <option key={d}>{d}</option>)}</select></div>
+          <div style={{ marginTop: 12 }}>
+            <label style={labelStyle}>Tags</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+              {TAGS_OPTIONS.map(tag => {
+                const active = pTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setPTags(prev => active ? prev.filter(t => t !== tag) : [...prev, tag])}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 16,
+                      border: `1px solid ${active ? GOLD : BORDER}`,
+                      background: active ? GOLD : 'transparent',
+                      color: active ? '#0D0B08' : TEXT_MUTED,
+                      fontFamily: FONT_ALT,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: 0.5,
+                      textTransform: 'uppercase' as const,
+                      cursor: 'pointer',
+                      transition: 'all 150ms',
+                    }}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Days */}
