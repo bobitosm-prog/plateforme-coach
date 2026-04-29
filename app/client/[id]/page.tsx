@@ -216,6 +216,8 @@ export default function ClientProfilePage() {
             setCalGoalInput={h.setCalGoalInput}
             saveCalorieGoal={h.saveCalorieGoal}
             setEditingCalGoal={h.setEditingCalGoal}
+            saveTargetWeight={h.saveTargetWeight}
+            saveObjective={h.saveObjective}
             setEditTab={h.setEditTab}
             setEditOpen={h.setEditOpen}
             showAllFoods={h.showAllFoods}

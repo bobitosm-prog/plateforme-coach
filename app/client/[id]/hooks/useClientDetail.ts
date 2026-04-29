@@ -413,7 +413,7 @@ export default function useClientDetail() {
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes, customProgsRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,start_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
-      supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(20),
+      supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(100),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id).eq('completed', true),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
@@ -745,6 +745,22 @@ export default function useClientDetail() {
     setEditingCalGoal(false); showToast('Objectif calorique mis à jour')
   }
 
+  /* ── Save target weight ─────────────────────────────────────── */
+  async function saveTargetWeight(val: number) {
+    if (!profile || isNaN(val) || val < 20) return
+    const { error } = await supabase.from('profiles').update({ target_weight: val }).eq('id', id)
+    if (error) { console.error('[saveTargetWeight] error:', error); return }
+    setProfile(p => p ? { ...p, target_weight: val } : p)
+  }
+
+  /* ── Save objective text ──────────────────────────────────────── */
+  async function saveObjective(val: string | null) {
+    if (!profile) return
+    const { error } = await supabase.from('profiles').update({ objective: val }).eq('id', id)
+    if (error) { console.error('[saveObjective] error:', error); return }
+    setProfile(p => p ? { ...p, objective: val } : p)
+  }
+
   /* ── Derived metrics ────────────────────────────────────────── */
   const currentWeight   = weightLogs[0]?.poids ?? profile?.current_weight ?? null
   const prevMonthWeight = weightLogs.find(w => { const d=new Date(w.date),n=new Date(); return d.getMonth()!==n.getMonth()||d.getFullYear()!==n.getFullYear() })?.poids ?? null
@@ -777,6 +793,7 @@ export default function useClientDetail() {
     currentWeight, weightDelta, totalSessions, goalProgress, streak,
     sessions, totalSessionsCount,
     editingCalGoal, calGoalInput, setCalGoalInput, saveCalorieGoal, setEditingCalGoal,
+    saveTargetWeight, saveObjective,
     showAllFoods, setShowAllFoods, resolvedFoods,
     // Edit modal
     editOpen, setEditOpen, editTab, setEditTab,

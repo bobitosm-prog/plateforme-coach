@@ -5,14 +5,8 @@ import {
   Flame, TrendingDown, CheckCircle, Pencil,
   Check, X,
 } from 'lucide-react'
-import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '@/lib/design-tokens'
 import { useIsMobile } from '@/app/hooks/useIsMobile'
-
-const supabase = createBrowserClient(
-  (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
-  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
-)
 type Profile = {
   id: string; full_name: string | null; email: string | null
   current_weight: number | null; start_weight: number | null
@@ -44,6 +38,8 @@ interface ClientOverviewProps {
   setCalGoalInput: (val: string) => void
   saveCalorieGoal: () => void
   setEditingCalGoal: (val: boolean) => void
+  saveTargetWeight: (val: number) => void
+  saveObjective: (val: string | null) => void
   setEditTab: (tab: 'info'|'metrics'|'status') => void
   setEditOpen: (val: boolean) => void
   showAllFoods: boolean
@@ -65,7 +61,7 @@ function formatMonthYear(iso: string) {
 export default function ClientOverview({
   profile, currentWeight, weightDelta, totalSessions, goalProgress, streak,
   sessions, totalSessionsCount, editingCalGoal, calGoalInput, setCalGoalInput,
-  saveCalorieGoal, setEditingCalGoal, setEditTab, setEditOpen,
+  saveCalorieGoal, setEditingCalGoal, saveTargetWeight, saveObjective, setEditTab, setEditOpen,
   showAllFoods, setShowAllFoods, resolvedFoods,
 }: ClientOverviewProps) {
   const isMobile = useIsMobile()
@@ -74,11 +70,10 @@ export default function ClientOverview({
   const [editingTarget, setEditingTarget] = useState(false)
   const [targetInput, setTargetInput] = useState('')
 
-  async function saveTargetWeight() {
+  async function handleSaveTarget() {
     const val = parseFloat(targetInput)
     if (isNaN(val) || val < 20) return
-    await supabase.from('profiles').update({ target_weight: val }).eq('id', profile.id)
-    profile.target_weight = val
+    await saveTargetWeight(val)
     setEditingTarget(false)
   }
 
@@ -86,10 +81,9 @@ export default function ClientOverview({
   const [editingObjective, setEditingObjective] = useState(false)
   const [objectiveInput, setObjectiveInput] = useState('')
 
-  async function saveObjective() {
+  async function handleSaveObjective() {
     const val = objectiveInput.trim()
-    await supabase.from('profiles').update({ objective: val || null }).eq('id', profile.id)
-    profile.objective = val || null
+    await saveObjective(val || null)
     setEditingObjective(false)
   }
 
@@ -126,9 +120,9 @@ export default function ClientOverview({
           {/* Target weight — inline editable */}
           {editingTarget ? (
             <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:5}}>
-              <input type="number" inputMode="decimal" value={targetInput} onChange={e=>setTargetInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')saveTargetWeight();if(e.key==='Escape')setEditingTarget(false)}} autoFocus style={{background:'#0D0B08',border:'1px solid #D4A843',borderRadius:6,padding:'4px 6px',color:'#F5EDD8',fontSize:'0.9rem',fontWeight:700,width:68,outline:'none',fontFamily:"'Barlow Condensed',sans-serif"}}/>
+              <input type="number" inputMode="decimal" value={targetInput} onChange={e=>setTargetInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleSaveTarget();if(e.key==='Escape')setEditingTarget(false)}} autoFocus style={{background:'#0D0B08',border:'1px solid #D4A843',borderRadius:6,padding:'4px 6px',color:'#F5EDD8',fontSize:'0.9rem',fontWeight:700,width:68,outline:'none',fontFamily:"'Barlow Condensed',sans-serif"}}/>
               <span style={{fontSize:'0.68rem',color:'#8A8070'}}>kg</span>
-              <button onClick={saveTargetWeight} style={{background:'#D4A843',border:'none',borderRadius:6,padding:isMobile?'6px 8px':'4px 6px',cursor:'pointer',display:'flex',alignItems:'center',minHeight:28}}><Check size={11} color="#fff" strokeWidth={3}/></button>
+              <button onClick={handleSaveTarget} style={{background:'#D4A843',border:'none',borderRadius:6,padding:isMobile?'6px 8px':'4px 6px',cursor:'pointer',display:'flex',alignItems:'center',minHeight:28}}><Check size={11} color="#fff" strokeWidth={3}/></button>
               <button onClick={()=>setEditingTarget(false)} style={{background:'transparent',border:'none',cursor:'pointer',padding:isMobile?6:2,display:'flex',alignItems:'center'}}><X size={11} color="#8A8070"/></button>
             </div>
           ) : (
@@ -173,8 +167,8 @@ export default function ClientOverview({
           <div style={{marginTop:8}}>
             {editingObjective ? (
               <div style={{display:'flex',alignItems:'center',gap:4}}>
-                <input type="text" value={objectiveInput} onChange={e=>setObjectiveInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')saveObjective();if(e.key==='Escape')setEditingObjective(false)}} autoFocus placeholder="Ex: Perdre 5kg pour l'été" style={{background:'#0D0B08',border:'1px solid #D4A843',borderRadius:6,padding:'4px 6px',color:'#F5EDD8',fontSize:'0.72rem',flex:1,outline:'none',fontFamily:FONT_BODY}}/>
-                <button onClick={saveObjective} style={{background:'#D4A843',border:'none',borderRadius:6,padding:isMobile?'6px 8px':'4px 6px',cursor:'pointer',display:'flex',alignItems:'center',minHeight:28}}><Check size={11} color="#fff" strokeWidth={3}/></button>
+                <input type="text" value={objectiveInput} onChange={e=>setObjectiveInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleSaveObjective();if(e.key==='Escape')setEditingObjective(false)}} autoFocus placeholder="Ex: Perdre 5kg pour l'été" style={{background:'#0D0B08',border:'1px solid #D4A843',borderRadius:6,padding:'4px 6px',color:'#F5EDD8',fontSize:'0.72rem',flex:1,outline:'none',fontFamily:FONT_BODY}}/>
+                <button onClick={handleSaveObjective} style={{background:'#D4A843',border:'none',borderRadius:6,padding:isMobile?'6px 8px':'4px 6px',cursor:'pointer',display:'flex',alignItems:'center',minHeight:28}}><Check size={11} color="#fff" strokeWidth={3}/></button>
                 <button onClick={()=>setEditingObjective(false)} style={{background:'transparent',border:'none',cursor:'pointer',padding:isMobile?6:2,display:'flex',alignItems:'center'}}><X size={11} color="#8A8070"/></button>
               </div>
             ) : profile.objective ? (

@@ -3,7 +3,7 @@ import React from 'react'
 import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Home, Dumbbell, UtensilsCrossed, TrendingUp,
+  Home, Dumbbell, UtensilsCrossed, TrendingUp, Sparkles,
   User, MessageCircle, Bot, Plus, ChevronRight, Search, X,
 } from 'lucide-react'
 
@@ -396,6 +396,9 @@ export default function CoachApp() {
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
           { id: 'nutrition' as Tab, Icon: UtensilsCrossed, label: 'Nutrition' },
           { id: 'progress' as Tab, Icon: TrendingUp, label: 'Analytics' },
+          perms.isInvited
+            ? { id: 'messages' as Tab, Icon: MessageCircle, label: 'Messages' }
+            : { id: 'coachIA' as Tab, Icon: Sparkles, label: 'Coach IA' },
         ]).map(({ id, Icon, label }) => {
           const active = h.activeTab === id
           return (
