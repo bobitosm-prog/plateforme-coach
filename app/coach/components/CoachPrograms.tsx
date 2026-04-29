@@ -126,6 +126,19 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     setPDays(updated)
   }
 
+  function duplicateDay(dayIdx: number) {
+    setPDays(prev => {
+      const original = prev[dayIdx]
+      const copy: ProgramDay = {
+        name: `${original.name} (copie)`,
+        exercises: original.exercises.map(ex => ({ ...ex })),
+      }
+      const newDays = [...prev]
+      newDays.splice(dayIdx + 1, 0, copy)
+      return newDays
+    })
+  }
+
   function duplicateExercise(dayIdx: number, exIdx: number) {
     setPDays(prev => {
       const newDays = [...prev]
@@ -616,7 +629,10 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <input value={day.name} onChange={e => { const u = [...pDays]; u[di].name = e.target.value; setPDays(u) }}
                 style={{ ...inputStyle, width: 'auto', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, background: 'transparent', border: 'none', padding: '4px 0', color: GOLD, letterSpacing: '2px' }} />
-              {pDays.length > 1 && <button onClick={() => removeDay(di)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer' }}><Trash2 size={14} /></button>}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button onClick={() => duplicateDay(di)} title="Dupliquer ce jour" type="button" style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: GOLD, display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' as const }}><Files size={12} /> Dupliquer</button>
+                {pDays.length > 1 && <button onClick={() => removeDay(di)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer' }}><Trash2 size={14} /></button>}
+              </div>
             </div>
 
             {(day.exercises || []).length > 0 && (
