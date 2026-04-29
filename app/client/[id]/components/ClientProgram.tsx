@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import {
   Check, Plus, Minus, Moon, Save, Sparkles, Loader2, Info, ArrowRightLeft, RefreshCw,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import ExerciseInfoPopup from '../../../components/ExerciseInfoPopup'
 import {
@@ -9,6 +10,7 @@ import {
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '@/lib/design-tokens'
+import { useIsMobile } from '@/app/hooks/useIsMobile'
 
 type Exercise = { name: string; sets: number; reps: number; rest: string; notes: string }
 type DayData   = { repos: boolean; exercises: Exercise[]; day_name?: string }
@@ -58,7 +60,9 @@ export default function ClientProgram({
   coachTemplates = [],
   onResyncFromTemplate,
 }: ClientProgramProps) {
+  const isMobile = useIsMobile()
   const [resyncOpen, setResyncOpen] = useState(false)
+  const [mobileDayIdx, setMobileDayIdx] = useState(0)
 
   return (
     <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
@@ -125,45 +129,84 @@ export default function ClientProgram({
       )}
 
       {/* Calendrier semaine */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(7, 1fr)',gap:6,marginBottom:12}}>
-        {DAYS.map(day => {
-          const d = program[day]
-          const isActive = expandedDay === day
-          const hasEx = !d.repos && (d.exercises || []).length > 0
-          return (
-            <button
-              key={day}
-              onClick={()=>handleDayClick(day)}
-              style={{
-                display:'flex',flexDirection:'column',alignItems:'center',gap:4,
-                padding:'10px 4px',
-                background:swapFirst===day?'rgba(232,201,122,0.2)':isActive?GOLD:d.repos?BG_CARD_2:hasEx?GOLD_DIM:BG_CARD,
-                border:`1.5px solid ${swapFirst===day?'#E8C97A':isActive?GOLD:hasEx?GOLD_RULE:BORDER}`,
-                borderRadius:14,
-                cursor:'pointer',
-                transition:'all 0.2s',
-              }}
-            >
-              <span style={{
-                fontFamily:FONT_ALT,fontSize:11,fontWeight:700,
-                letterSpacing:1,textTransform:'uppercase',
-                color:isActive?'#0D0B08':d.repos?TEXT_DIM:hasEx?GOLD:TEXT_MUTED,
-              }}>{DAY_LABELS[day]}</span>
-              {d.repos ? (
-                <Moon size={14} color={TEXT_DIM}/>
-              ) : (
+      {isMobile ? (
+        /* Mobile: day selector with prev/next arrows */
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+          <button
+            onClick={()=>{const idx=(mobileDayIdx-1+7)%7;setMobileDayIdx(idx);handleDayClick(DAYS[idx])}}
+            style={{width:36,height:36,borderRadius:10,background:BG_CARD,border:`1px solid ${BORDER}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:TEXT_MUTED,flexShrink:0}}
+          ><ChevronLeft size={16}/></button>
+          <div style={{flex:1,display:'flex',gap:4,justifyContent:'center'}}>
+            {DAYS.map((day,i) => {
+              const d = program[day]
+              const isActive = expandedDay === day
+              const hasEx = !d.repos && (d.exercises || []).length > 0
+              return (
+                <button
+                  key={day}
+                  onClick={()=>{setMobileDayIdx(i);handleDayClick(day)}}
+                  style={{
+                    width:36,height:36,borderRadius:10,
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    background:isActive?GOLD:hasEx?GOLD_DIM:d.repos?BG_CARD_2:BG_CARD,
+                    border:`1.5px solid ${isActive?GOLD:hasEx?GOLD_RULE:BORDER}`,
+                    cursor:'pointer',transition:'all 0.2s',
+                  }}
+                >
+                  <span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,color:isActive?'#0D0B08':hasEx?GOLD:d.repos?TEXT_DIM:TEXT_MUTED}}>
+                    {DAY_LABELS[day]}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <button
+            onClick={()=>{const idx=(mobileDayIdx+1)%7;setMobileDayIdx(idx);handleDayClick(DAYS[idx])}}
+            style={{width:36,height:36,borderRadius:10,background:BG_CARD,border:`1px solid ${BORDER}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:TEXT_MUTED,flexShrink:0}}
+          ><ChevronRight size={16}/></button>
+        </div>
+      ) : (
+        /* Desktop: full 7-column grid */
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7, 1fr)',gap:6,marginBottom:12}}>
+          {DAYS.map(day => {
+            const d = program[day]
+            const isActive = expandedDay === day
+            const hasEx = !d.repos && (d.exercises || []).length > 0
+            return (
+              <button
+                key={day}
+                onClick={()=>handleDayClick(day)}
+                style={{
+                  display:'flex',flexDirection:'column',alignItems:'center',gap:4,
+                  padding:'10px 4px',
+                  background:swapFirst===day?'rgba(232,201,122,0.2)':isActive?GOLD:d.repos?BG_CARD_2:hasEx?GOLD_DIM:BG_CARD,
+                  border:`1.5px solid ${swapFirst===day?'#E8C97A':isActive?GOLD:hasEx?GOLD_RULE:BORDER}`,
+                  borderRadius:14,
+                  cursor:'pointer',
+                  transition:'all 0.2s',
+                }}
+              >
                 <span style={{
-                  fontFamily:FONT_DISPLAY,fontSize:18,
-                  color:isActive?'#0D0B08':hasEx?GOLD:TEXT_DIM,
-                }}>{(d.exercises || []).length}</span>
-              )}
-              {hasEx && !isActive && (
-                <div style={{width:4,height:4,borderRadius:'50%',background:GOLD}}/>
-              )}
-            </button>
-          )
-        })}
-      </div>
+                  fontFamily:FONT_ALT,fontSize:11,fontWeight:700,
+                  letterSpacing:1,textTransform:'uppercase',
+                  color:isActive?'#0D0B08':d.repos?TEXT_DIM:hasEx?GOLD:TEXT_MUTED,
+                }}>{DAY_LABELS[day]}</span>
+                {d.repos ? (
+                  <Moon size={14} color={TEXT_DIM}/>
+                ) : (
+                  <span style={{
+                    fontFamily:FONT_DISPLAY,fontSize:18,
+                    color:isActive?'#0D0B08':hasEx?GOLD:TEXT_DIM,
+                  }}>{(d.exercises || []).length}</span>
+                )}
+                {hasEx && !isActive && (
+                  <div style={{width:4,height:4,borderRadius:'50%',background:GOLD}}/>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* Swap days */}
       {!swapMode ? (
