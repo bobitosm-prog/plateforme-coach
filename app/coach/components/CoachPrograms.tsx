@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw } from 'lucide-react'
+import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw, Files } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
@@ -160,6 +160,55 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     await supabase.from('training_programs').delete().eq('id', id)
     loadPrograms()
     setProgramToDelete(null)
+  }
+
+  async function cloneProgram(p: Program) {
+    if (!session?.user?.id) return
+    setSaving(true)
+    try {
+      const programData = {
+        days: p.days || [],
+        split: p.split || SPLITS[0],
+        duration: p.duration || DURATIONS[1],
+      }
+      const { data, error } = await supabase
+        .from('training_programs')
+        .insert({
+          name: `${p.name} (copie)`,
+          program: programData,
+          coach_id: session.user.id,
+          is_template: true,
+          tags: p.tags || [],
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('[clone] error:', error)
+        toast.error('Erreur de duplication')
+        setSaving(false)
+        return
+      }
+
+      await loadPrograms()
+      setSaving(false)
+      if (data) {
+        const cloned: Program = {
+          id: data.id,
+          name: data.name,
+          split: data.program?.split || SPLITS[0],
+          duration: data.program?.duration || DURATIONS[1],
+          days: data.program?.days || [],
+          tags: data.tags || [],
+        }
+        startEdit(cloned)
+        toast.success('Template dupliqué — mode édition')
+      }
+    } catch (err) {
+      console.error('[clone] exception:', err)
+      toast.error('Erreur inattendue')
+      setSaving(false)
+    }
   }
 
   async function handlePushClick(template: Program) {
@@ -410,6 +459,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => setAssignModal(p)} title="Assigner" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><Copy size={14} /></button>
                 <button onClick={() => handlePushClick(p)} title="Pusher MAJ aux clients" style={{ background: BG_CARD_2, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: GOLD }}><RefreshCw size={14} /></button>
+                <button onClick={() => cloneProgram(p)} title="Dupliquer" disabled={saving} style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: saving ? 'wait' : 'pointer', color: GOLD, opacity: saving ? 0.5 : 1 }}><Files size={14} /></button>
                 <button onClick={() => startEdit(p)} title="Modifier" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: TEXT_MUTED }}><ChevronDown size={14} /></button>
                 <button onClick={() => setProgramToDelete({ id: p.id!, name: p.name })} title="Supprimer" style={{ background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '6px 10px', cursor: 'pointer', color: RED }}><Trash2 size={14} /></button>
               </div>
