@@ -79,19 +79,41 @@ export default function Hero() {
     gsap.fromTo(allChars,
       {
         opacity: 0,
-        y: 60,
+        y: 80,
         rotateX: -90,
+        scale: 1.4,
+        filter: 'blur(12px)',
+        skewY: 7,
       },
       {
         opacity: 1,
         y: 0,
         rotateX: 0,
-        duration: 0.8,
-        stagger: 0.04,
-        ease: 'power3.out',
-        delay: 0.2,
+        scale: 1,
+        filter: 'blur(0px)',
+        skewY: 0,
+        duration: 1.2,
+        stagger: 0.05,
+        ease: 'expo.out',
+        delay: 0.3,
       }
     )
+
+    // Glow gold pulse sur la 2eme ligne "TON CORPS"
+    const goldLine = titleRef.current.querySelector('.split-line:nth-child(2)') as HTMLElement | null
+    if (goldLine) {
+      gsap.fromTo(goldLine,
+        { textShadow: '0 0 0px rgba(201,168,76,0)' },
+        {
+          textShadow: '0 0 40px rgba(201,168,76,0.6)',
+          duration: 0.8,
+          delay: 1.2,
+          yoyo: true,
+          repeat: 1,
+          ease: 'sine.inOut',
+        }
+      )
+    }
 
     // Cleanup
     return () => {
