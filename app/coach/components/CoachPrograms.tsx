@@ -11,6 +11,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { toast } from 'sonner'
 
 const supabase = createBrowserClient(
@@ -49,7 +50,7 @@ function SortableExercise({ id, children }: { id: string; children: React.ReactN
 interface Program { id?: string; name: string; split: string; duration: string; days: ProgramDay[]; coach_id?: string; created_at?: string; tags?: string[] }
 
 export default function CoachPrograms({ session, clients }: { session: any; clients: any[] }) {
-  const [isMobile, setIsMobile] = useState(false)
+  const isMobile = useIsMobile()
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -78,15 +79,6 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [exReps, setExReps] = useState('8-12')
   const [exRest, setExRest] = useState('90')
   const [exerciseDb, setExerciseDb] = useState<any[]>([])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const mq = window.matchMedia('(max-width: 640px)')
-    setIsMobile(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
 
   useEffect(() => {
     loadPrograms()
