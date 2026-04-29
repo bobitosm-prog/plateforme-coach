@@ -10,6 +10,7 @@ import {
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 import { SESSION_COLORS, SESSION_TYPES } from '../hooks/useCoachDashboard'
 import type { ClientRow, ScheduledSession } from '../hooks/useCoachDashboard'
@@ -43,6 +44,7 @@ export default function CoachCalendar({
   setSelectedSession, setShowNewSession, setNsDate,
   setSection,
 }: CoachCalendarProps) {
+  const isMobile = useIsMobile()
   const days = getWeekDays(calWeekOffset)
   const todayStr = new Date().toISOString().split('T')[0]
   const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -61,7 +63,7 @@ export default function CoachCalendar({
             <button onClick={() => setSection('dashboard')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 12, background: BG_CARD, border: `1px solid ${BORDER}`, cursor: 'pointer', color: TEXT_MUTED }}>
               <ChevronLeft size={16} strokeWidth={2.5} />
             </button>
-            <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '3px', color: TEXT_PRIMARY, margin: 0, textTransform: 'uppercase' }}>CALENDRIER</h1>
+            <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? '1.2rem' : '1.6rem', fontWeight: 700, letterSpacing: '3px', color: TEXT_PRIMARY, margin: 0, textTransform: 'uppercase' }}>CALENDRIER</h1>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button onClick={() => setCalWeekOffset(0)} style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Aujourd&apos;hui</button>
@@ -74,14 +76,14 @@ export default function CoachCalendar({
           <button
             onClick={() => setCalWeekOffset(o => o - 1)}
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '9px 12px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, minHeight: 44, letterSpacing: '1px' }}
-          ><ChevronLeft size={14} /> Précédente</button>
+          ><ChevronLeft size={14} />{!isMobile && ' Précédente'}</button>
           <span style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, color: TEXT_MUTED, textAlign: 'center', flexShrink: 0, minWidth: 110, letterSpacing: '1px' }}>
             {format(days[0], 'd', { locale: fr })} – {format(days[6], 'd MMM yyyy', { locale: fr })}
           </span>
           <button
             onClick={() => setCalWeekOffset(o => o + 1)}
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '9px 12px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 600, minHeight: 44, letterSpacing: '1px' }}
-          >Suivante <ChevronRight size={14} /></button>
+          >{!isMobile && 'Suivante '}<ChevronRight size={14} /></button>
         </div>
       </div>
 
