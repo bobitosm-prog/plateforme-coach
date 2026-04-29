@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell } from 'recharts'
+import { Scale, Ruler, Camera, Dumbbell } from 'lucide-react'
 import { formatRelativeTime } from '@/lib/formatRelativeTime'
-import { BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_ALT, FONT_BODY, RADIUS_CARD } from '@/lib/design-tokens'
+import { BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_ALT, FONT_BODY, RADIUS_CARD } from '@/lib/design-tokens'
 import { useIsMobile } from '@/app/hooks/useIsMobile'
 
 type Props = {
@@ -17,6 +19,124 @@ type Props = {
 
 const sectionStyle = { background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20 }
 const headingStyle = { color: GOLD, fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, letterSpacing: 2, margin: '0 0 16px', textTransform: 'uppercase' as const }
+
+/* ── Timeline: chronological feed ── */
+const TIMELINE_TYPES = {
+  weight:      { label: 'Poids',   Icon: Scale,    color: GOLD },
+  measurement: { label: 'Mesures', Icon: Ruler,    color: GOLD },
+  photo:       { label: 'Photos',  Icon: Camera,   color: GOLD },
+  session:     { label: 'Séances', Icon: Dumbbell, color: GOLD },
+} as const
+type TimelineType = keyof typeof TIMELINE_TYPES
+
+interface TimelineEntry {
+  date: string
+  type: TimelineType
+  data: any
+}
+
+function buildTimeline(
+  weights: { date: string; poids: number }[],
+  measurements: any[],
+  photos: any[],
+  sessions: { id: string; created_at: string; name: string | null; duration_minutes: number | null }[],
+): TimelineEntry[] {
+  const entries: TimelineEntry[] = []
+  weights.forEach(w => entries.push({ date: w.date, type: 'weight', data: w }))
+  measurements.forEach(m => entries.push({ date: m.date || m.created_at, type: 'measurement', data: m }))
+  photos.forEach(p => entries.push({ date: p.created_at, type: 'photo', data: p }))
+  sessions.forEach(s => entries.push({ date: s.created_at, type: 'session', data: s }))
+  return entries.sort((a, b) => b.date.localeCompare(a.date))
+}
+
+function TimelineSection({ weights, measurements, photos, sessions, isMobile }: {
+  weights: { date: string; poids: number }[]
+  measurements: any[]
+  photos: any[]
+  sessions: { id: string; created_at: string; name: string | null; duration_minutes: number | null }[]
+  isMobile: boolean
+}) {
+  const [filters, setFilters] = useState<Set<TimelineType>>(new Set(['weight', 'measurement', 'photo', 'session']))
+  const allEntries = buildTimeline(weights, measurements, photos, sessions)
+  const filtered = allEntries.filter(e => filters.has(e.type))
+
+  const toggleFilter = (t: TimelineType) => {
+    setFilters(prev => {
+      const next = new Set(prev)
+      if (next.has(t)) { if (next.size > 1) next.delete(t) } else next.add(t)
+      return next
+    })
+  }
+
+  const renderEntry = (e: TimelineEntry, i: number) => {
+    const meta = TIMELINE_TYPES[e.type]
+    const IconComp = meta.Icon
+    return (
+      <div key={`${e.type}-${i}`} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: GOLD_DIM, borderRadius: 8 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(212,168,67,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <IconComp size={15} color={GOLD} strokeWidth={2} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, color: TEXT_DIM, fontFamily: FONT_ALT, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 }}>
+            {meta.label} · {formatRelativeTime(e.date)}
+          </div>
+          {e.type === 'weight' && (
+            <div style={{ fontSize: 13, color: TEXT_PRIMARY, fontWeight: 600, fontFamily: FONT_BODY }}>{e.data.poids} kg</div>
+          )}
+          {e.type === 'measurement' && (
+            <div style={{ fontSize: 12, color: TEXT_PRIMARY, fontFamily: FONT_BODY, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {e.data.chest != null && <span>Poit: <b>{e.data.chest}</b></span>}
+              {e.data.waist != null && <span>Taille: <b>{e.data.waist}</b></span>}
+              {e.data.hips != null && <span>Hanches: <b>{e.data.hips}</b></span>}
+              {e.data.biceps != null && <span>Bras: <b>{e.data.biceps}</b></span>}
+              {e.data.thighs != null && <span>Cuisses: <b>{e.data.thighs}</b></span>}
+            </div>
+          )}
+          {e.type === 'photo' && e.data.signedUrl && (
+            <img src={e.data.signedUrl} alt="" loading="lazy" style={{ width: isMobile ? 60 : 80, aspectRatio: '3/4', objectFit: 'cover', borderRadius: 6, border: `1px solid ${BORDER}`, marginTop: 4 }} />
+          )}
+          {e.type === 'session' && (
+            <div style={{ fontSize: 13, color: TEXT_PRIMARY, fontWeight: 600, fontFamily: FONT_BODY }}>
+              {e.data.name || 'Séance'}
+              {e.data.duration_minutes != null && <span style={{ fontWeight: 400, color: TEXT_MUTED, marginLeft: 6, fontSize: 11 }}>{e.data.duration_minutes} min</span>}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <section style={sectionStyle}>
+      <h3 style={headingStyle}>TIMELINE</h3>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+        {(Object.keys(TIMELINE_TYPES) as TimelineType[]).map(t => {
+          const active = filters.has(t)
+          return (
+            <button key={t} type="button" onClick={() => toggleFilter(t)} style={{
+              padding: '4px 10px', borderRadius: 12,
+              border: `1px solid ${active ? GOLD : BORDER}`,
+              background: active ? GOLD : 'transparent',
+              color: active ? '#0D0B08' : TEXT_MUTED,
+              fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
+              letterSpacing: 0.5, textTransform: 'uppercase',
+              cursor: 'pointer', transition: 'all 150ms',
+            }}>
+              {TIMELINE_TYPES[t].label}
+            </button>
+          )
+        })}
+      </div>
+      {filtered.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {filtered.slice(0, 30).map(renderEntry)}
+        </div>
+      ) : (
+        <p style={{ color: TEXT_DIM, fontStyle: 'italic', fontFamily: FONT_BODY, fontSize: 13, margin: 0 }}>Aucun evenement enregistre.</p>
+      )}
+    </section>
+  )
+}
 
 /* ── Heatmap: training frequency ── */
 function HeatmapSection({ sessions, isMobile }: { sessions: { created_at: string }[]; isMobile: boolean }) {
@@ -202,6 +322,15 @@ export default function ClientProgress({
           <p style={{ color: TEXT_DIM, fontStyle: 'italic', fontFamily: FONT_BODY, fontSize: 13, margin: 0 }}>Aucune donnee de poids enregistree.</p>
         )}
       </section>
+
+      {/* Section — Timeline */}
+      <TimelineSection
+        weights={weightLogs}
+        measurements={bodyMeasurements}
+        photos={progressPhotos}
+        sessions={completedSessions}
+        isMobile={isMobile}
+      />
 
       {/* Section 2 — Body measurements */}
       <section style={sectionStyle}>
