@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY manquante — utilisation de ANON_KEY en fallback.')
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+function getServiceSupabase() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY required for Stripe checkout')
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
+}
 
 const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
 
@@ -51,7 +54,7 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
 
     // Get the platform owner's Stripe Connect account for receiving payments
-    const { data: ownerProfile } = await supabase
+    const { data: ownerProfile } = await getServiceSupabase()
       .from('profiles')
       .select('stripe_account_id, stripe_onboarding_complete')
       .eq('email', OWNER_EMAIL)
@@ -94,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.checkout.sessions.create(sessionParams)
 
-    await supabase.from('payments').insert({
+    await getServiceSupabase().from('payments').insert({
       coach_id: coachId && coachId !== 'platform' ? coachId : null,
       client_id: clientId,
       stripe_checkout_session_id: session.id,
