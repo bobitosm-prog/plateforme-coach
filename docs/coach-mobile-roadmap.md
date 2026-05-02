@@ -17,7 +17,7 @@
 - CoachPage Home : fontSize revenue/messages + revenue selects stack
 - ClientsList : header titre + search stack vertical
 
-## ⏳ Sprint 3 mobile - Client (prochaine session, 1-2h)
+## ✅ Sprint 3 mobile - Client (29 avril 2026)
 - [ ] Bottom nav 5 tabs cote client (pattern valide)
 - [ ] Page Training (timer, exos, sets)
 - [ ] Page Mesures, Photos, Programme
