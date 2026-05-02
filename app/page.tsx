@@ -21,6 +21,9 @@ import MeasureModal from './components/modals/MeasureModal'
 import BmrModal from './components/modals/BmrModal'
 import ObjectiveModal from './components/modals/ObjectiveModal'
 import HomeTab from './components/tabs/HomeTab'
+import OverloadBanner from './components/dashboard/OverloadBanner'
+import OverloadModal from './components/dashboard/OverloadModal'
+import { useOverloadSuggestion } from './hooks/useOverloadSuggestion'
 import TrainingTab from './components/tabs/TrainingTab'
 import NutritionTab from './components/tabs/NutritionTab'
 import ProgressTab from './components/tabs/ProgressTab'
@@ -42,6 +45,8 @@ import { checkAndShowReminder } from '../lib/notifications'
 export default function CoachApp() {
   const h = useClientDashboard()
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
+  const overload = useOverloadSuggestion(h.session?.user?.id, h.supabase)
+  const [overloadOpen, setOverloadOpen] = React.useState(false)
   const [isDesktop, setIsDesktop] = React.useState(false)
 
   // Detect desktop viewport
@@ -363,6 +368,14 @@ export default function CoachApp() {
 
       {/* ── TAB CONTENT ── */}
       <main ref={h.mainRef} className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: 64 }}>
+
+      {/* ── Progressive Overload Banner (solo clients, home tab) ── */}
+      {h.activeTab === 'home' && !perms.isInvited && (
+        <div style={{ padding: '0 16px 8px' }}>
+          <OverloadBanner onOpen={() => setOverloadOpen(true)} suggestions={overload.suggestions} loading={overload.loading} />
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         <motion.div key={h.activeTab} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}>
           {h.activeTab === 'home' && <HomeTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} firstName={h.firstName} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} />}
@@ -411,6 +424,9 @@ export default function CoachApp() {
         })}
         </div>
       </nav>}
+
+      {/* ── Progressive Overload Modal ── */}
+      <OverloadModal open={overloadOpen} onClose={() => setOverloadOpen(false)} suggestions={overload.suggestions} accept={overload.accept} decline={overload.decline} />
     </div>
   )
 }

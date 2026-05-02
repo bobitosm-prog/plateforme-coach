@@ -279,6 +279,39 @@ export default function useClientDashboard() {
         })
       })
       if (setsToInsert.length > 0) await supabase.from('workout_sets').insert(setsToInsert)
+
+      // ── Sprint 6 - Progressive Overload IA (fire-and-forget) ──
+      // Pour chaque exercice où tous les sets ont meme reps + meme weight,
+      // declencher une suggestion IA pour la prochaine seance.
+      // L'API fait elle-meme la gate canUseAI (refuse les invites).
+      for (const exo of data.exercises) {
+        if (!exo.sets || exo.sets.length === 0) continue
+
+        const reps = Number(exo.sets[0].reps) || 0
+        const weight = Number(exo.sets[0].weight) || 0
+        if (reps <= 0 || weight <= 0) continue
+
+        const allSameReps = exo.sets.every((s: any) => Number(s.reps) === reps)
+        const allSameWeight = exo.sets.every((s: any) => Number(s.weight) === weight)
+        if (!allSameReps || !allSameWeight) continue
+
+        // Fire-and-forget : on ne bloque pas la fin de seance
+        fetch('/api/suggest-overload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            exerciseName: exo.name,
+            currentWeight: weight,
+            currentReps: reps,
+            setsCompleted: exo.sets.length,
+            setsTarget: exo.sets.length,
+            sessionId: sess.id,
+          }),
+        }).catch(err => {
+          // Silent fail : pas grave si l'IA est down ou refuse (invited)
+          console.warn('[overload] fetch error:', err?.message)
+        })
+      }
     }
     // Mark today's scheduled session as completed
     const todayStr = new Date().toISOString().split('T')[0]
