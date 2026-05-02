@@ -50,20 +50,22 @@
   /api/chat-ai, /api/analyze-body, /api/generate-custom-program
 - Tous gated par !isInvited cote client
 
-## ⏳ Sprint 4 - Communication + nutrition avancee (4-6h)
-### Messages chat in-app (cote coach + client coache)
-- [ ] Realtime Supabase ameliore
-- [ ] Notifications nouveau message
-- [ ] Badge non-lus dans bottom nav
-- [ ] Status read receipts
+## ✅ Sprint 4 - Meal Plan Coach (2 mai 2026)
+- Éditeur meal plan surfacé (bouton 'Éditer' visible dans header Nutrition)
+- 3 templates prédéfinis (Sèche 1800kcal / Maintien 2200kcal / Bulk 2800kcal)
+- Confirmation avant écrasement si plan existant
+- handleApplyMealTemplate dans page.tsx (deep copy + targets)
+- setMealPlan exposé dans useClientDetail.ts
+- Validé end-to-end : coach assigne → client invité voit le plan
+
+## ⏳ Sprint 4B - Communication polish (à planifier)
+### Messages chat in-app
+- [ ] Notifications nouveau message (push)
+- [ ] Badge non-lus dans bottom nav mobile header
+- [ ] Status read receipts améliorés (read_at timestamp)
 
 ### ChatAI cote client solo
-- [ ] Conditional bottom nav (Msgs OR ChatAI selon isInvited)
-- [ ] Polish UX ChatAI
-
-### Plan nutritionnel cote coach
-- [ ] Editeur cote coach (assigner un plan a un client)
-- [ ] Templates plans (cut/bulk/maintenance)
+- [ ] Polish UX ChatAI (persistance historique en DB)
 
 ## ⏳ Sprint 5 - Dashboard analytics global coach (3-4h)
 - [ ] CA mensuel/annuel
@@ -87,6 +89,22 @@
 - [ ] Sprint 4 audit : créer migration de rattrapage pour documenter
   le schema réel prod de meal_plans et client_meal_plans
   (les ALTER TABLE manuels ne sont pas dans Git, risque si DB regen)
+
+### Tech debt Sprint 4 (Meal Plan Coach)
+- [ ] Calorie targets templates ≠ somme réelle des aliments
+  (Sèche : target 1800 kcal, somme aliments = 1555 kcal.
+  Maintien et Bulk à vérifier. Fix : ajuster quantités dans
+  lib/meal-plan-templates.ts ou recalculer targets dynamiquement)
+- [ ] Mismatch format JSONB entre client_meal_plans et meal_plans
+  (coach : meals[{type, foods[{name, qty, kcal, prot, carb, fat}]}]
+  vs IA : repas{petit_dejeuner[{aliment, quantite_g, proteines}]}.
+  Code dupliqué dans viewers. Fix : unifier + migration data)
+- [ ] Hiérarchie écran Nutrition coach pas claire
+  (sections empilées : TDEE, Plan IA, Plan actif, Tracking, Éditeur.
+  Confusion si plan IA et manuel coexistent. Fix : 1 plan actif
+  + 1 éditeur, pas 2 sources parallèles visibles)
+- [ ] Convention debug logs : préfixer par [feature-debug] pour
+  retrouver facilement avec grep avant chaque commit
 
 ## Methodologie validee
 - 1 sprint = 1 session 2-4h
