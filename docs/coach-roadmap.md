@@ -84,6 +84,9 @@
   au milieu (55/55/0/55 -> 55/55/55 vu comme 3 sets identiques)
 - [ ] Sprint 6 : Unifier source de vérité 'is invited'
   (profiles.subscription_type vs coach_clients.invited_by_coach)
+- [ ] Sprint 4 audit : créer migration de rattrapage pour documenter
+  le schema réel prod de meal_plans et client_meal_plans
+  (les ALTER TABLE manuels ne sont pas dans Git, risque si DB regen)
 
 ## Methodologie validee
 - 1 sprint = 1 session 2-4h
