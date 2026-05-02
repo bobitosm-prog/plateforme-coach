@@ -15,6 +15,7 @@ import ClientMessages from './components/ClientMessages'
 import ClientNotes from './components/ClientNotes'
 import ClientProgress from './components/ClientProgress'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import type { MealPlanTemplate } from '@/lib/meal-plan-templates'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS as MC, MUSCLE_GROUPS_FILTER as MUSCLE_FILTERS } from '@/lib/design-tokens'
 
 /* ══════════════════════════════════════════════════════════════
@@ -50,6 +51,16 @@ function initials(name: string | null) {
 export default function ClientProfilePage() {
   const h = useClientDetail()
   const [pendingTemplate, setPendingTemplate] = useState<any>(null)
+
+  function handleApplyMealTemplate(tpl: MealPlanTemplate) {
+    const deepCopy = JSON.parse(JSON.stringify(tpl.plan))
+    h.setMealPlan(deepCopy)
+    h.setCalorieTarget(tpl.macros.calorieTarget)
+    h.setProtTarget(tpl.macros.protTarget)
+    h.setCarbTarget(tpl.macros.carbTarget)
+    h.setFatTarget(tpl.macros.fatTarget)
+    h.showToast(`Template "${tpl.name}" appliqué — n'oublie pas de sauvegarder`)
+  }
 
   /* ── Loading / error ────────────────────────────────────────── */
   if (h.loading) return (
@@ -304,6 +315,7 @@ export default function ClientProfilePage() {
             clientActivePlanDay={h.clientActivePlanDay}
             setClientActivePlanDay={h.setClientActivePlanDay}
             weeklyTracking={h.weeklyTracking}
+            onApplyTemplate={handleApplyMealTemplate}
           />
         )}
 

@@ -818,7 +818,7 @@ export default function useClientDetail() {
     aiGenerating, aiPreview, setAiPreview, toggleAiEquipment, generateAiProgram, acceptAiPreview,
     AI_EQUIPMENT, AI_LEVELS,
     // Nutrition
-    mealPlan, calorieTarget, protTarget, carbTarget, fatTarget,
+    mealPlan, setMealPlan, calorieTarget, protTarget, carbTarget, fatTarget,
     setCalorieTarget, setProtTarget, setCarbTarget, setFatTarget,
     mealPlanSaving, mealPlanSaved, saveMealPlan,
     expandedMealDay, setExpandedMealDay, addFood, removeFood, updateFood,

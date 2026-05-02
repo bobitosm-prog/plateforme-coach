@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import {
   Check, Plus, Minus, Save, Sparkles, Loader2, Utensils, X,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Pencil,
 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -10,6 +10,7 @@ import {
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '@/lib/design-tokens'
 import { useIsMobile } from '@/app/hooks/useIsMobile'
+import { MEAL_PLAN_TEMPLATES, type MealPlanTemplate } from '@/lib/meal-plan-templates'
 
 type FoodItem = { name: string; qty: string; kcal: number; prot: number; carb: number; fat: number }
 type Meal      = { type: string; foods: FoodItem[] }
@@ -71,6 +72,8 @@ interface ClientNutritionProps {
   setClientActivePlanDay: (day: string) => void
   // Weekly tracking
   weeklyTracking: Record<string, Set<string>>
+  // Template
+  onApplyTemplate: (tpl: MealPlanTemplate) => void
 }
 
 export default function ClientNutrition({
@@ -81,16 +84,25 @@ export default function ClientNutrition({
   aiMealGenerating, aiMealStreamStatus, aiMealPreview, aiMealPreviewDay,
   setAiMealPreviewDay, setAiMealPreview, generateAiMealPlan, acceptAiMealPlan,
   clientActivePlan, clientActivePlanDay, setClientActivePlanDay,
-  weeklyTracking,
+  weeklyTracking, onApplyTemplate,
 }: ClientNutritionProps) {
   const isMobile = useIsMobile()
   const [mobileTrackDayIdx, setMobileTrackDayIdx] = useState(0)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [templateConfirm, setTemplateConfirm] = useState<string | null>(null)
 
   return (
     <div style={{animation:'fadeIn 200ms ease',display:'flex',flexDirection:'column',gap:12}}>
       {/* ── Header + AI Generate Button ── */}
-      <div style={{display:'flex',gap:8,alignItems:'center'}}>
+      <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
         <span style={{flex:1,fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:TEXT_MUTED,letterSpacing:'2px',textTransform:'uppercase'}}>Plan alimentaire</span>
+        <button
+          onClick={() => setEditorOpen(o => !o)}
+          style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:10,border:`1px solid ${GOLD_RULE}`,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.04em',background:'transparent',color:GOLD,minHeight:36}}
+        >
+          <Pencil size={13} strokeWidth={2.5}/>
+          {isMobile ? '' : (editorOpen ? 'Fermer' : 'Éditer')}
+        </button>
         <button
           onClick={generateAiMealPlan}
           disabled={aiMealGenerating}
@@ -360,12 +372,47 @@ export default function ClientNutrition({
         )
       })()}
 
-      {/* ── Manual meal plan editor (old interface) ── */}
-      <details style={{marginTop:4}}>
-        <summary style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:TEXT_MUTED,cursor:'pointer',padding:'8px 0',letterSpacing:'2px',textTransform:'uppercase'}}>
-          Édition manuelle du plan
-        </summary>
-        <div style={{display:'flex',flexDirection:'column',gap:12,paddingTop:8}}>
+      {/* ── Meal plan editor (surfaced) ── */}
+      {editorOpen && (
+        <div style={{display:'flex',flexDirection:'column',gap:12,paddingTop:8,borderTop:`1px solid ${BORDER}`,marginTop:8}}>
+
+          {/* Template selector */}
+          <div>
+            <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,letterSpacing:'2px',textTransform:'uppercase',marginBottom:8}}>
+              Appliquer un template
+            </div>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {MEAL_PLAN_TEMPLATES.map(tpl => (
+                <button key={tpl.id}
+                  onClick={() => {
+                    const hasExisting = Object.values(mealPlan).some(d => d.meals.some(m => m.foods.length > 0))
+                    if (hasExisting) setTemplateConfirm(tpl.id)
+                    else onApplyTemplate(tpl)
+                  }}
+                  style={{flex:'1 1 calc(33% - 8px)',minWidth:100,padding:'12px',background:BG_CARD_2,border:`1px solid ${BORDER}`,borderRadius:RADIUS_CARD,cursor:'pointer',textAlign:'center'}}
+                >
+                  <div style={{fontFamily:FONT_DISPLAY,fontSize:'1rem',color:GOLD,marginBottom:2}}>{tpl.name}</div>
+                  <div style={{fontFamily:FONT_BODY,fontSize:'0.7rem',color:TEXT_MUTED}}>{tpl.macros.calorieTarget} kcal</div>
+                  <div style={{fontFamily:FONT_BODY,fontSize:'0.62rem',color:TEXT_DIM,marginTop:4}}>{tpl.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Confirmation modal pour template */}
+          {templateConfirm && (
+            <div style={{background:'rgba(239,68,68,.08)',border:`1px solid ${RED}`,borderRadius:RADIUS_CARD,padding:'12px 14px'}}>
+              <div style={{fontFamily:FONT_ALT,fontSize:'0.8rem',fontWeight:700,color:TEXT_PRIMARY,marginBottom:8}}>
+                Cela va remplacer le plan actuel
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={() => setTemplateConfirm(null)} style={{flex:1,padding:'8px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:10,color:TEXT_MUTED,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem'}}>Annuler</button>
+                <button onClick={() => { const tpl = MEAL_PLAN_TEMPLATES.find(t => t.id === templateConfirm); if (tpl) onApplyTemplate(tpl); setTemplateConfirm(null) }}
+                  style={{flex:1,padding:'8px',background:RED,border:'none',borderRadius:10,color:'#fff',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.78rem',fontWeight:700}}>Confirmer</button>
+              </div>
+            </div>
+          )}
+
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <button className="btn-secondary" style={{padding:'10px 14px',flexShrink:0,gap:6,fontSize:'0.78rem'}} onClick={saveMealPlan} disabled={mealPlanSaving}>
               {mealPlanSaving ? <Loader2 size={13} strokeWidth={2} style={{animation:'spin 0.7s linear infinite'}}/> : <Save size={13} strokeWidth={2.5}/>}
@@ -534,7 +581,7 @@ export default function ClientNutrition({
             )
           })()}
         </div>
-      </details>
+      )}
     </div>
   )
 }
