@@ -67,12 +67,14 @@
 ### ChatAI cote client solo
 - [ ] Polish UX ChatAI (persistance historique en DB)
 
-## ⏳ Sprint 5 - Dashboard analytics global coach (3-4h)
-- [ ] CA mensuel/annuel
-- [ ] Retention (clients actifs vs inactifs)
-- [ ] Top exos utilises tous clients confondus
-- [ ] Frequence moyenne entrainement par client
-- [ ] Alertes : clients inactifs depuis X jours
+## ✅ Sprint 5 - Dashboard Analytics Coach (3 mai 2026)
+- Onglet "Suivi" dans /coach (sidebar desktop + bottom nav mobile)
+- useCoachAnalytics : 4 queries parallèles, agrégation JS via Maps
+- KPI cards cliquables (Total/Actifs/Décrochent/Inactifs)
+- Chips filtre + select tri (statut/nom/dernière activité)
+- Statut auto par client (vert/or/rouge/gris selon dernière séance)
+- Métriques 7j : séances, streak, delta poids, adhérence nutrition
+- Click client → fiche détaillée /client/[id]
 
 ## Tech Debt
 - [ ] Lift up save callbacks Apercu (target_weight, objective) au parent
@@ -105,6 +107,26 @@
   + 1 éditeur, pas 2 sources parallèles visibles)
 - [ ] Convention debug logs : préfixer par [feature-debug] pour
   retrouver facilement avec grep avant chaque commit
+
+### Tech debt — Timer audio session iOS
+- [ ] Bug : son du timer disparaît quand l'écran iPhone se verrouille
+  pendant une séance. Timer visuel continue ✅ mais audio ❌.
+  Constaté le 3 mai 2026 (Marco). iOS Safari (PWA ou navigateur).
+  Reproductible : oui (à confirmer sur Android).
+  Pistes de fix :
+  1. Wake Lock API (navigator.wakeLock.request('screen'))
+  2. <audio> persistant dans le DOM (vs new Audio() à la volée)
+  3. Vibration API en fallback
+  4. Service Worker pour notifications timer
+  Fichiers : app/components/WorkoutSession.tsx (grep "new Audio|playSound")
+  Priorité : haute pour V1 publique (frustration pendant entraînement).
+  À corriger avant Sprint 7 Polish.
+
+### Tech debt Sprint 5 (Coach Analytics)
+- [ ] Typage Supabase non strict : 2 eslint-disable no-explicit-any
+  dans useCoachAnalytics.ts. Fix : créer types custom pour les rows
+- [ ] Bottom nav mobile à 6 onglets : peut être serré sur < 360px.
+  Alternative : 4 onglets fixes + menu "Plus" pour les autres
 
 ## Methodologie validee
 - 1 sprint = 1 session 2-4h
