@@ -103,7 +103,7 @@ export default function useCoachDashboard(initialSession?: any) {
   const [search, setSearch]     = useState('')
   const [copied, setCopied]     = useState(false)
   const [showInvite, setShowInvite] = useState(false)
-  const [section, setSection]   = useState<'accueil' | 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil' | 'programs'>('accueil')
+  const [section, setSection]   = useState<'accueil' | 'dashboard' | 'suivi' | 'messages' | 'calendar' | 'aliments' | 'profil' | 'programs'>('accueil')
   const [coachProfile, setCoachProfile] = useState<any>(null)
   const [stripeConnecting, setStripeConnecting] = useState(false)
   const [monthRevenue, setMonthRevenue] = useState(0)

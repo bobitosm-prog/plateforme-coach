@@ -11,7 +11,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
 import {
-  Zap, Users, ChevronLeft, Dumbbell, Calendar, Home,
+  Zap, Users, ChevronLeft, Dumbbell, Calendar, Home, Activity,
   LogOut, Check, X, Plus, MessageCircle, Clock, UtensilsCrossed, User,
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -30,6 +30,7 @@ import CoachMessages from './components/CoachMessages'
 import CoachAliments from './components/CoachAliments'
 import CoachProfile from './components/CoachProfile'
 import CoachPrograms from './components/CoachPrograms'
+import CoachAnalytics from './components/CoachAnalytics'
 import CoachVideoReviews from './components/CoachVideoReviews'
 
 /* ── WheelPicker ──────────────────────────────────────────── */
@@ -165,6 +166,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
     const navItems = [
       { id: 'accueil', icon: Home, label: 'ACCUEIL' },
       { id: 'dashboard', icon: Users, label: 'MES CLIENTS' },
+      { id: 'suivi', icon: Activity, label: 'SUIVI' },
       { id: 'programs', icon: Dumbbell, label: 'PROGRAMMES' },
       { id: 'aliments', icon: UtensilsCrossed, label: 'NUTRITION' },
       { id: 'messages', icon: MessageCircle, label: 'MESSAGES' },
@@ -394,6 +396,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             )}
             {h.section === 'calendar' && <CoachCalendar calWeekOffset={h.calWeekOffset} setCalWeekOffset={h.setCalWeekOffset} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} setShowNewSession={h.setShowNewSession} setNsDate={h.setNsDate} setSection={h.setSection} />}
             {h.section === 'messages' && <CoachMessages clients={h.clients} selectedClient={h.selectedClient} setSelectedClient={h.setSelectedClient} openChat={h.openChat} chatMessages={h.chatMessages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} unreadCounts={h.unreadCounts} session={h.session} msgEndRef={h.msgEndRef} />}
+            {h.section === 'suivi' && <CoachAnalytics coachId={h.session?.user?.id || null} />}
             {h.section === 'programs' && <CoachPrograms session={h.session} clients={h.clients} />}
             {h.section === 'aliments' && <CoachAliments foodList={h.foodList} foodFilter={h.foodFilter} setFoodFilter={h.setFoodFilter} foodSearchQ={h.foodSearchQ} setFoodSearchQ={h.setFoodSearchQ} foodLoading={h.foodLoading} loadFoods={h.loadFoods} showAddFood={h.showAddFood} setShowAddFood={h.setShowAddFood} newFood={h.newFood} setNewFood={h.setNewFood} saveNewFood={h.saveNewFood} deleteFood={h.deleteFood} />}
             {h.section === 'profil' && <CoachProfile coachName={h.coachName} coachInitials={h.coachInitials} session={h.session} coachProfile={h.coachProfile} setSection={h.setSection} supabaseSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} />}
@@ -845,6 +848,10 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
       )}
 
       {/* ══ ALIMENTS SECTION ══ */}
+      {h.section === 'suivi' && (
+        <CoachAnalytics coachId={h.session?.user?.id || null} />
+      )}
+
       {h.section === 'programs' && (
         <CoachPrograms session={h.session} clients={h.clients} />
       )}
@@ -877,6 +884,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         {([
           { key: 'accueil', icon: <Home size={20} strokeWidth={1.5} />, label: 'Accueil' },
           { key: 'dashboard', icon: <Users size={20} strokeWidth={1.5} />, label: 'Clients' },
+          { key: 'suivi', icon: <Activity size={20} strokeWidth={1.5} />, label: 'Suivi' },
           { key: 'programs', icon: <Dumbbell size={20} strokeWidth={1.5} />, label: 'Progr.' },
           { key: 'messages', icon: <MessageCircle size={20} strokeWidth={1.5} />, label: 'Messages' },
           { key: 'calendar', icon: <Calendar size={20} strokeWidth={1.5} />, label: 'Agenda' },
