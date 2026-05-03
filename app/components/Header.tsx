@@ -9,6 +9,7 @@ interface HeaderProps {
   objective?: string
   unreadCount: number
   onCoachIA?: () => void
+  aiAllowed?: boolean
   onCalendar?: () => void
   onMessages?: () => void
   onAvatar?: () => void
@@ -16,7 +17,7 @@ interface HeaderProps {
   scrollContainerRef?: React.RefObject<HTMLElement | null>
 }
 
-export default function Header({ firstName, displayAvatar, objective, unreadCount, onCoachIA, onCalendar, onMessages, onAvatar, onObjectiveChange, scrollContainerRef }: HeaderProps) {
+export default function Header({ firstName, displayAvatar, objective, unreadCount, onCoachIA, aiAllowed, onCalendar, onMessages, onAvatar, onObjectiveChange, scrollContainerRef }: HeaderProps) {
   const [visible, setVisible] = useState(true)
   const lastScrollY = useRef(0)
   const ticking = useRef(false)
@@ -85,9 +86,11 @@ export default function Header({ firstName, displayAvatar, objective, unreadCoun
             <span style={{ fontFamily: fonts.headline, fontSize: 7, fontWeight: 700, color: colors.gold, textTransform: 'uppercase', letterSpacing: '0.08em', lineHeight: 1 }}>{objLabel}</span>
             <span style={{ fontSize: 6, color: 'rgba(255,255,255,0.3)', lineHeight: 1 }}>▼</span>
           </button>
-          <button onClick={onCoachIA} style={iconBtn}>
-            <Sparkles size={16} color={colors.gold} strokeWidth={1.5} />
-          </button>
+          {aiAllowed !== false && (
+            <button onClick={onCoachIA} style={iconBtn}>
+              <Sparkles size={16} color={colors.gold} strokeWidth={1.5} />
+            </button>
+          )}
           <button onClick={onCalendar} style={iconBtn}>
             <Calendar size={16} color={colors.gold} strokeWidth={1.5} />
           </button>
