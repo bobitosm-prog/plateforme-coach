@@ -195,6 +195,37 @@ Question architecturale ouverte :
 - Garder les 2 tables avec format unifié ?
 - OU fusionner en une seule table avec champ source ('coach'/'ai') ?
 
+### Sprint Native — Capacitor + App Store / Play Store (long terme)
+Objectif : packager l'app web Next.js en application native iOS +
+Android via Capacitor pour distribution sur App Store et Play Store.
+
+Prerequis avant d'attaquer :
+- App web stable et mature
+- PWA fonctionnelle (installation testée)
+- Tests UX mobile validés
+- Compte Apple Developer ($99/an) + Google Play Console ($25)
+
+Scope :
+1. Setup Capacitor sur le projet Next.js (capacitor.config.ts)
+2. Configuration iOS (Xcode, certificats Apple Dev)
+3. Configuration Android (Gradle, Play Console)
+4. Migration push notifs : Web Push → APNS (Apple) + FCM (Google)
+   via @capacitor/push-notifications
+5. Audio background natif : plugins audio Capacitor
+6. Wake lock natif via @capacitor/screen
+7. Tests builds (TestFlight iOS, Internal Testing Android)
+8. Soumission App Store + Play Store
+9. Marketing : screenshots, descriptions, ASO
+
+Effort estimé : 3-5 sessions (~15-20h cumulé)
+Coût : $99/an (Apple) + $25 one-time (Google)
+
+Bénéfice :
+- Push notifs fiables sur iOS sans installer la PWA
+- Audio background sans hack (plus de problème lock screen)
+- Présence App Store = légitimité + découvrabilité
+- Possibilité d'achats in-app (à arbitrer vs 3% Stripe)
+
 ## Patterns techniques valides
 - useIsMobile (app/hooks/useIsMobile.ts) : matchMedia 640px breakpoint
 - Inline edit (Pencil + Check + X) > Modal pour champs simples
