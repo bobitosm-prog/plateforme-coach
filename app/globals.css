@@ -119,6 +119,11 @@
   animation: pulseGold 2s infinite;
 }
 
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.7); opacity: 0; }
+}
+
 /* ── Shimmer / skeleton ── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }

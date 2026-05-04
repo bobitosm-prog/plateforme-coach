@@ -128,6 +128,8 @@ export default function CoachApp() {
       onNavigate={(tab) => { setIsDesktop(false); h.setActiveTab(tab as Tab) }}
       startProgramWorkout={h.startProgramWorkout}
       setModal={h.setModal}
+      aiAllowed={h.aiAllowed}
+      unreadCount={h.unreadCount}
     />
   )
 
@@ -417,7 +419,17 @@ export default function CoachApp() {
           const active = h.activeTab === id
           return (
             <button key={id} onClick={() => h.setActiveTab(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>
-              <Icon size={20} color={active ? GOLD : TEXT_DIM} strokeWidth={active ? 2.5 : 1.5} style={{ transition: 'all 0.3s ease' }} />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={20} color={active ? GOLD : TEXT_DIM} strokeWidth={active ? 2.5 : 1.5} style={{ transition: 'all 0.3s ease' }} />
+                {id === 'messages' && h.unreadCount > 0 && (
+                  <span style={{ position: 'absolute', top: -6, right: -8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: 999, background: RED, opacity: 0.5, animation: 'badge-pulse 1.5s ease-in-out infinite', pointerEvents: 'none' }} />
+                    <span style={{ position: 'relative', background: RED, color: '#fff', fontSize: '0.6rem', fontFamily: FONT_DISPLAY, fontWeight: 700, borderRadius: 999, minWidth: 16, height: 16, padding: '0 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+                      {h.unreadCount > 99 ? '99+' : h.unreadCount}
+                    </span>
+                  </span>
+                )}
+              </div>
               <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: active ? GOLD : TEXT_DIM, transition: 'color 0.3s ease' }}>{label}</span>
               {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: GOLD, boxShadow: '0 0 8px rgba(212,168,67,0.5)' }} />}
             </button>

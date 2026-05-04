@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronRight, ArrowLeft, Send } from 'lucide-react'
+import { ChevronRight, ArrowLeft, Send, Check, CheckCheck } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import {
@@ -117,9 +117,10 @@ export default function CoachMessages({
                     border: isMine ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
                   }}>
                     <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45, fontFamily: FONT_BODY }}>{msg.content}</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.62rem', opacity: 0.6, textAlign: isMine ? 'right' : 'left', fontFamily: FONT_BODY }}>
-                      {format(new Date(msg.created_at), 'HH:mm', { locale: fr })}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 4 }}>
+                      <span style={{ fontSize: '0.62rem', opacity: 0.5, fontFamily: FONT_BODY }}>{format(new Date(msg.created_at), 'HH:mm', { locale: fr })}</span>
+                      {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.6, color: GOLD }} /> : <Check size={12} style={{ opacity: 0.4, color: TEXT_DIM }} />)}
+                    </div>
                   </div>
                 </div>
               )

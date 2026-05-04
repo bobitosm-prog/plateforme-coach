@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Calendar, MessageCircle, Sparkles } from 'lucide-react'
 import { colors, fonts } from '../../lib/design-tokens'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 interface HeaderProps {
   firstName: string
@@ -18,6 +19,7 @@ interface HeaderProps {
 }
 
 export default function Header({ firstName, displayAvatar, objective, unreadCount, onCoachIA, aiAllowed, onCalendar, onMessages, onAvatar, onObjectiveChange, scrollContainerRef }: HeaderProps) {
+  const isMobile = useIsMobile()
   const [visible, setVisible] = useState(true)
   const lastScrollY = useRef(0)
   const ticking = useRef(false)
@@ -94,12 +96,14 @@ export default function Header({ firstName, displayAvatar, objective, unreadCoun
           <button onClick={onCalendar} style={iconBtn}>
             <Calendar size={16} color={colors.gold} strokeWidth={1.5} />
           </button>
-          <button onClick={onMessages} style={iconBtn}>
-            <MessageCircle size={16} color={colors.gold} strokeWidth={1.5} />
-            {unreadCount > 0 && (
-              <div style={{ position: 'absolute', top: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: colors.gold, border: `2px solid ${colors.surface}f2` }} />
-            )}
-          </button>
+          {!isMobile && (
+            <button onClick={onMessages} style={iconBtn}>
+              <MessageCircle size={16} color={colors.gold} strokeWidth={1.5} />
+              {unreadCount > 0 && (
+                <div style={{ position: 'absolute', top: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: colors.gold, border: `2px solid ${colors.surface}f2` }} />
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

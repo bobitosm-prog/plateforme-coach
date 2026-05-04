@@ -886,7 +886,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           { key: 'dashboard', icon: <Users size={20} strokeWidth={1.5} />, label: 'Clients' },
           { key: 'suivi', icon: <Activity size={20} strokeWidth={1.5} />, label: 'Suivi' },
           { key: 'programs', icon: <Dumbbell size={20} strokeWidth={1.5} />, label: 'Progr.' },
-          { key: 'messages', icon: <MessageCircle size={20} strokeWidth={1.5} />, label: 'Messages' },
+          { key: 'messages', icon: <MessageCircle size={20} strokeWidth={1.5} />, label: 'Messages', badge: h.totalUnread },
           { key: 'calendar', icon: <Calendar size={20} strokeWidth={1.5} />, label: 'Agenda' },
         ] as { key: string; icon: React.ReactNode; label: string; badge?: number }[]).map(tab => (
           <button key={tab.key} className={`bottom-nav-btn${h.section === tab.key ? ' active' : ''}`}

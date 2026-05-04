@@ -36,6 +36,8 @@ interface DesktopDashboardProps {
   onSignOut: () => void; onNavigate?: (tab: string) => void
   startProgramWorkout?: (day: any, exercises: any[]) => void
   setModal?: (m: string) => void
+  aiAllowed?: boolean
+  unreadCount?: number
 }
 
 /* ═══════════════════════════════════════════════════
@@ -176,6 +178,7 @@ export default function DesktopDashboard({
   weightHistory, progressPhotos, measurements, weeklyCalories, weeklyVolume,
   scheduledSessions, completedSessions, calorieGoal,
   onSignOut, onNavigate, startProgramWorkout, setModal,
+  aiAllowed, unreadCount,
 }: DesktopDashboardProps) {
   const [activeNav, setActiveNav] = useState<NavItem>('dashboard')
   const [weeklyData, setWeeklyData] = useState<any[]>([])
@@ -357,9 +360,9 @@ export default function DesktopDashboard({
               <span style={{ fontFamily: BODY, fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.1em' }}>{objectiveLabel}</span>
               <ChevronDown size={12} color={GOLD} />
             </button>
-            <IconBtn Icon={Sparkles} onClick={() => onNavigate?.('home')} />
+            {aiAllowed !== false && <IconBtn Icon={Sparkles} onClick={() => onNavigate?.('home')} />}
             <IconBtn Icon={Calendar} onClick={() => onNavigate?.('training')} />
-            <IconBtn Icon={MessageCircle} onClick={() => onNavigate?.('messages')} />
+            <IconBtn Icon={MessageCircle} badge={unreadCount} onClick={() => onNavigate?.('messages')} />
           </div>
         </header>
 

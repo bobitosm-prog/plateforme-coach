@@ -136,6 +136,17 @@
   Supabase !inner. À planifier : sprint dédié pour ajouter les FK
   manquantes sur les ~10-15 tables métier importantes.
 
+### Tech debt — Layout desktop client incomplet
+- [ ] Pas d'item "Messages" dans la sidebar desktop
+  (seuls ACCUEIL, ENTRAINEMENT, PROGRESSION, NUTRITION, OBJECTIFS,
+  PROFIL, REGLAGES y figurent. Messages oublié.)
+- [ ] Pas de vue Messages intégrée en desktop
+  (onNavigate('messages') fait setIsDesktop(false) et bascule en
+  mode mobile pour afficher la conversation. Pas idéal UX.)
+  Fix : ajouter NavItem 'messages' dans page-desktop.tsx,
+  créer vue Messages desktop 2 colonnes (liste + chat actif).
+  Effort estimé : 2-3h.
+
 ## Methodologie validee
 - 1 sprint = 1 session 2-4h
 - 1 branche par feature
