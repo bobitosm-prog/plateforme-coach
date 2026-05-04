@@ -80,37 +80,28 @@ export default function useCoachAnalytics(coachId: string | null) {
     if (!coachId) return
     setLoading(true)
 
-    // 1a. Fetch liens coach_clients
-    const { data: coachClientLinks, error: ccError } = await supabase
+    // 1. Fetch clients + profiles en un seul join (FK coach_clients → profiles)
+    const { data: coachClientsRaw, error: ccError } = await supabase
       .from('coach_clients')
-      .select('client_id')
+      .select('client_id, profiles!coach_clients_client_id_fkey(id, full_name, email, avatar_url, subscription_type, created_at)')
       .eq('coach_id', coachId)
 
     if (ccError) {
-      console.warn('[useCoachAnalytics] coach_clients error:', ccError.message)
+      console.warn('[useCoachAnalytics] coach_clients query error:', ccError.message)
       setLoading(false)
       return
     }
-    if (!coachClientLinks || coachClientLinks.length === 0) {
+    if (!coachClientsRaw || coachClientsRaw.length === 0) {
       setClients([])
       setKpi({ totalClients: 0, totalActive: 0, totalDeclining: 0, totalInactive: 0, sessionsThisWeekTotal: 0 })
       setLoading(false)
       return
     }
 
-    const clientIds = coachClientLinks.map(cc => cc.client_id)
-
-    // 1b. Fetch profiles séparément (pas de join — FK pointe sur auth.users)
-    const { data: rawProfiles, error: profError } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, avatar_url, subscription_type, created_at')
-      .in('id', clientIds)
-
-    if (profError || !rawProfiles) {
-      console.warn('[useCoachAnalytics] profiles error:', profError?.message)
-      setLoading(false)
-      return
-    }
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const rawProfiles = coachClientsRaw.map((cc: any) => cc.profiles).filter((p: any) => p !== null && typeof p === 'object')
+    const clientIds = rawProfiles.map((p: any) => p.id)
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // 2-4. Fetch en parallèle : sessions 30j, weight 7j, meal tracking 7j
     const [sessionsRes, weightsRes, mealsRes] = await Promise.all([
