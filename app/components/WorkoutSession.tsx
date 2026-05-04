@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
-import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../lib/timer-audio'
+import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
@@ -393,6 +393,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
     if (restT.current) clearInterval(restT.current)
     restEndsAtRef.current = Date.now() + s * 1000
+    scheduleRestPeriodSounds(s)
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
     if (exoId) setRestExoId(exoId)
     if (setId) setRestSetId(setId)

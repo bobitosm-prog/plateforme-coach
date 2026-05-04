@@ -84,6 +84,61 @@ export function vibrateDevice() {
   }
 }
 
+/**
+ * Schedule a beep at a future point in audio context time.
+ * Works even when the JS event loop is suspended (iOS lock screen),
+ * as long as the AudioContext stays 'running'.
+ */
+export function scheduleBeep(
+  whenSeconds: number,
+  freq: number = 880,
+  volume: number = 0.4,
+  durationMs: number = 80
+): void {
+  if (!audioCtx) return
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {})
+  }
+
+  const startAt = audioCtx.currentTime + whenSeconds
+  const oscillator = audioCtx.createOscillator()
+  const gainNode = audioCtx.createGain()
+
+  oscillator.type = 'sine'
+  oscillator.frequency.setValueAtTime(freq, startAt)
+
+  // Envelope douce (attack + decay) pour éviter clicks
+  gainNode.gain.setValueAtTime(0, startAt)
+  gainNode.gain.linearRampToValueAtTime(volume, startAt + 0.005)
+  gainNode.gain.linearRampToValueAtTime(0, startAt + durationMs / 1000)
+
+  oscillator.connect(gainNode)
+  gainNode.connect(audioCtx.destination)
+
+  oscillator.start(startAt)
+  oscillator.stop(startAt + durationMs / 1000 + 0.01)
+}
+
+/**
+ * Schedule the full sequence of rest period sounds at once.
+ * Call this when the rest period STARTS — all sounds are queued
+ * upfront and will fire at their scheduled times even if iOS
+ * suspends the JS event loop.
+ */
+export function scheduleRestPeriodSounds(restDurationSeconds: number): void {
+  if (!audioCtx) return
+
+  // Warning tick à T-5s (440Hz, volume 0.2)
+  if (restDurationSeconds > 5) {
+    scheduleBeep(restDurationSeconds - 5, 440, 0.2, 60)
+  }
+
+  // Beep final : 3 ticks rapides à T=0 (880Hz, volume 0.4)
+  scheduleBeep(restDurationSeconds, 880, 0.4, 80)
+  scheduleBeep(restDurationSeconds + 0.15, 880, 0.4, 80)
+  scheduleBeep(restDurationSeconds + 0.30, 880, 0.4, 80)
+}
+
 export const MOTIVATIONAL_MESSAGES = [
   "C'EST REPARTI !",
   "ATTAQUE LA SÉRIE !",
