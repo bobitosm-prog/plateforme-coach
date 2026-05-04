@@ -161,11 +161,39 @@ Si > 0 -> fix avec Node script.
 - 5 scénarios test live validés (Accept, Decline, Heuristiques x3,
   Gate invited, Résilience IA 503)
 
-## ✅ Sprint 6.5 — Cleanup technique (4 mai 2026)
-- A : Fix audio iOS lock screen (scheduleBeep via Web Audio API)
-- B : Migration FK coach_clients → profiles(id) + refacto join Supabase
-- D : Unification source de vérité 'invited' (profiles.subscription_type)
-- Fix header AI icon caché pour clients invités
+## ⚠️ Sprint 6.5 — Cleanup technique (4 mai 2026) — PARTIAL DONE
+- ✅ A : Fix audio iOS lock screen (scheduleBeep via Web Audio API)
+- ✅ B : Migration FK coach_clients → profiles(id) + refacto join Supabase
+- ❌ C : Unification format meal plans → reporté Sprint 6.6
+- ✅ D : Unification source de vérité 'invited' (profiles.subscription_type)
+- ✅ Fix header AI icon caché pour clients invités
+
+### Sprint 6.6 — Unification format meal plans (à planifier)
+Objectif : unifier la convention JSONB entre client_meal_plans.plan
+(coach manuel) et meal_plans.plan_data (IA générée) pour réduire
+la duplication de code et faciliter les futures features nutrition.
+
+Audit fait le 4 mai 2026. Conclusions :
+- 2 conventions JSONB en parallèle (meals[].foods[] vs repas{}.foods[])
+- Champs nommés différemment (name/aliment, qty/quantite_g, prot/proteines...)
+- 7 fichiers à modifier (4 readers, 3 writers)
+- 6 plans existants en prod à migrer via SQL jsonb_build_object
+- 1 prompt Claude (generate-meal-plan/route.ts) à ajuster avec risque
+  de régression sur la qualité des plans générés
+
+Reco : unifier vers le format Coach (plus court, anglais, structure
+meals[]).
+
+Estimation : 3-4h. Sprint dédié.
+
+Risques :
+- Régression sur la qualité des plans IA si prompt Claude mal ajusté
+- Migration data incomplète → plans IA existants illisibles
+- Le converter importMealFromPlan() dans NutritionTab à adapter
+
+Question architecturale ouverte :
+- Garder les 2 tables avec format unifié ?
+- OU fusionner en une seule table avec champ source ('coach'/'ai') ?
 
 ## Patterns techniques valides
 - useIsMobile (app/hooks/useIsMobile.ts) : matchMedia 640px breakpoint
