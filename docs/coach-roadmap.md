@@ -128,6 +128,14 @@
 - [ ] Bottom nav mobile à 6 onglets : peut être serré sur < 360px.
   Alternative : 4 onglets fixes + menu "Plus" pour les autres
 
+### Tech debt — FK manquantes globalement
+- [ ] L'audit Sprint 6.5-B a révélé que la DB n'a aucune FK déclarée
+  vers profiles en dehors de coach_clients (qu'on vient de fixer).
+  Conséquence : tous les autres tables (workout_sessions, weight_logs,
+  meal_plans, completed_sessions, etc.) ne supportent pas les joins
+  Supabase !inner. À planifier : sprint dédié pour ajouter les FK
+  manquantes sur les ~10-15 tables métier importantes.
+
 ## Methodologie validee
 - 1 sprint = 1 session 2-4h
 - 1 branche par feature
@@ -153,6 +161,12 @@ Si > 0 -> fix avec Node script.
 - 5 scénarios test live validés (Accept, Decline, Heuristiques x3,
   Gate invited, Résilience IA 503)
 
+## ✅ Sprint 6.5 — Cleanup technique (4 mai 2026)
+- A : Fix audio iOS lock screen (scheduleBeep via Web Audio API)
+- B : Migration FK coach_clients → profiles(id) + refacto join Supabase
+- D : Unification source de vérité 'invited' (profiles.subscription_type)
+- Fix header AI icon caché pour clients invités
+
 ## Patterns techniques valides
 - useIsMobile (app/hooks/useIsMobile.ts) : matchMedia 640px breakpoint
 - Inline edit (Pencil + Check + X) > Modal pour champs simples
@@ -161,3 +175,23 @@ Si > 0 -> fix avec Node script.
 - safe-area-inset-bottom pour iPhones avec encoche
 - touchAction: 'none' pour drag-drop tactile
 - Selecteur jour mobile (mini-buttons + ChevronLeft/Right) pour grilles 7+ cols
+
+## Glossaire — sémantique de l'abonnement
+
+**profiles.subscription_type** (source de vérité côté CLIENT)
+- 'invited' : client gratuit invité par un coach humain (pas d'IA)
+- 'lifetime' : compte permanent à accès illimité (admin, coach par
+  défaut, comptes test)
+- 'active' / autres : abonnement Stripe payant
+- NULL : essai gratuit ou nouveau
+
+**coach_clients.invited_by_coach** (attribut de la RELATION
+coach↔client)
+- true : cette relation a été créée par invitation du coach
+- false : le client a souscrit lui-même (auto-assigné au coach par
+  défaut pour les paiements)
+
+Les 2 colonnes sont INDÉPENDANTES sémantiquement. La colonne
+pertinente dépend du contexte :
+- "Ce CLIENT a-t-il accès à l'IA ?" → profiles.subscription_type
+- "Ce COACH a-t-il invité ce client ?" → coach_clients.invited_by_coach
