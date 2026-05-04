@@ -93,10 +93,10 @@
   (les ALTER TABLE manuels ne sont pas dans Git, risque si DB regen)
 
 ### Tech debt Sprint 4 (Meal Plan Coach)
-- [ ] Calorie targets templates ≠ somme réelle des aliments
-  (Sèche : target 1800 kcal, somme aliments = 1555 kcal.
-  Maintien et Bulk à vérifier. Fix : ajuster quantités dans
-  lib/meal-plan-templates.ts ou recalculer targets dynamiquement)
+- [x] ✅ Calorie targets templates calibrés (4 mai 2026)
+  Cut 1806/1800, Maintain 2198/2200, Bulk 2802/2800.
+  Écart résiduel : fat -12g/-13g sur Maintain/Bulk (acceptable,
+  coach personnalise après application)
 - [ ] Mismatch format JSONB entre client_meal_plans et meal_plans
   (coach : meals[{type, foods[{name, qty, kcal, prot, carb, fat}]}]
   vs IA : repas{petit_dejeuner[{aliment, quantite_g, proteines}]}.
