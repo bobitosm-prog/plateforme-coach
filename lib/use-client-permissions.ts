@@ -22,22 +22,21 @@ export function useClientPermissions(userId: string | undefined, supabase: any):
 
   useEffect(() => {
     if (!userId) return
-    supabase
-      .from('coach_clients')
-      .select('invited_by_coach, coach_id')
-      .eq('client_id', userId)
-      .maybeSingle()
-      .then(({ data }: any) => {
-        const isInvited = data?.invited_by_coach === true
-        setPermissions({
-          canCreatePrograms: !isInvited,
-          canUseAI: !isInvited,
-          canModifyNutrition: !isInvited,
-          isInvited,
-          coachId: data?.coach_id || null,
-          loading: false,
-        })
+    // Source de vérité : profiles.subscription_type (pas coach_clients.invited_by_coach)
+    Promise.all([
+      supabase.from('profiles').select('subscription_type').eq('id', userId).maybeSingle(),
+      supabase.from('coach_clients').select('coach_id').eq('client_id', userId).maybeSingle(),
+    ]).then(([profileRes, coachRes]: any[]) => {
+      const isInvited = profileRes.data?.subscription_type === 'invited'
+      setPermissions({
+        canCreatePrograms: !isInvited,
+        canUseAI: !isInvited,
+        canModifyNutrition: !isInvited,
+        isInvited,
+        coachId: coachRes.data?.coach_id || null,
+        loading: false,
       })
+    })
   }, [userId])
 
   return permissions
