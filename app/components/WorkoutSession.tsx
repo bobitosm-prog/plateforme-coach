@@ -716,54 +716,60 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             return Math.round(((curVol - prevVol) / prevVol) * 100)
           })()
           return (
-            <div key={exo.id} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, marginBottom: 12 }}>
-              {/* ── Exercise Header ── */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 12, borderBottom: `1px solid rgba(201,168,76,0.08)` }}>
-                {/* Reorder arrows */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
-                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, -1) }} disabled={idx === 0} style={{ width: 20, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', padding: 0 }}>
-                    <ChevronUp size={14} color={idx === 0 ? TEXT_DIM : GOLD} strokeWidth={2} style={{ opacity: idx === 0 ? 0.25 : 0.6 }} />
+            <div key={exo.id} style={{ marginBottom: 12 }}>
+              {/* ── Exercise Hero Banner ── */}
+              <div
+                onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))}
+                style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: exo.open ? 14 : 0, cursor: 'pointer', background: '#1a1410' }}
+              >
+                {/* Background image */}
+                {exo.imageUrl && (
+                  <img src={exo.imageUrl} alt={exo.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                )}
+                {/* Gradient overlay */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(13,11,8,0.85) 100%)', pointerEvents: 'none' }} />
+                {/* Done overlay */}
+                {isDone && <div style={{ position: 'absolute', inset: 0, background: 'rgba(201,168,76,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Check size={32} color={GOLD} strokeWidth={3} /></div>}
+
+                {/* Reorder arrows — top left */}
+                <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 4, zIndex: 2 }}>
+                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, -1) }} disabled={idx === 0} style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: idx === 0 ? 'default' : 'pointer', padding: 0, opacity: idx === 0 ? 0.3 : 1 }}>
+                    <ChevronUp size={13} color="#C9A84C" strokeWidth={2.5} />
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, 1) }} disabled={idx === exos.length - 1} style={{ width: 20, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: idx === exos.length - 1 ? 'default' : 'pointer', padding: 0 }}>
-                    <ChevronDown size={14} color={idx === exos.length - 1 ? TEXT_DIM : GOLD} strokeWidth={2} style={{ opacity: idx === exos.length - 1 ? 0.25 : 0.6 }} />
+                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, 1) }} disabled={idx === exos.length - 1} style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: idx === exos.length - 1 ? 'default' : 'pointer', padding: 0, opacity: idx === exos.length - 1 ? 0.3 : 1 }}>
+                    <ChevronDown size={13} color="#C9A84C" strokeWidth={2.5} />
                   </button>
                 </div>
-                {/* Photo */}
-                <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} style={{ position: 'relative', flexShrink: 0, borderRadius: 8, overflow: 'hidden', width: 40, height: 40, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
-                  <ExercisePreview name={exo.name} size={40} animate={false} imageUrl={exo.imageUrl} />
-                  {isDone && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.goldRule, borderRadius: 8 }}><Check size={14} color="#0D0B08" strokeWidth={3} /></div>}
-                </button>
-                {/* Name + muscle + progression */}
-                <button onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))} style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GOLD, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{exo.name}</span>
+
+                {/* Actions — top right */}
+                <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 2 }}>
+                  <button onClick={(e) => { e.stopPropagation(); openExerciseInfo(exo) }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: 'pointer', padding: 0 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setExerciseMenu(exerciseMenu === idx ? null : idx) }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: 'pointer', padding: 0, color: '#C9A84C', fontSize: 13, fontWeight: 700 }}>⋯</button>
+                </div>
+
+                {/* Text — bottom left */}
+                <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14, zIndex: 1 }}>
+                  {exo.muscle && <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: '#C9A84C', opacity: 0.85, textTransform: 'uppercase' as const, marginBottom: 4, fontFamily: FONT_ALT }}>{exo.muscle}</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 24, fontWeight: 800, color: '#F5F1E8', letterSpacing: '-0.01em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_DISPLAY }}>{exo.name}</span>
                     {progressBadge !== null && (
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 6, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.12)' : progressBadge < 0 ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.08)', color: progressBadge > 0 ? '#22c55e' : progressBadge < 0 ? '#ef4444' : 'rgba(255,255,255,0.5)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.20)' : progressBadge < 0 ? 'rgba(239,68,68,0.20)' : 'rgba(255,255,255,0.12)', color: progressBadge > 0 ? '#22c55e' : progressBadge < 0 ? '#ef4444' : 'rgba(255,255,255,0.5)' }}>
                         {progressBadge > 0 ? '+' : ''}{progressBadge}%
                       </span>
                     )}
                   </div>
-                  {exo.muscle && <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_DIM, fontStyle: 'italic', marginTop: 2 }}>{exo.muscle}</div>}
-                </button>
-                {/* Right side: badges + actions */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  {(exo.tempo || exo.rir != null || exo.technique) && (
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {exo.tempo && <span style={{ fontSize: 8, padding: '2px 5px', background: 'rgba(255,255,255,0.04)', color: TEXT_DIM, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.tempo}</span>}
-                      {exo.rir != null && <span style={{ fontSize: 8, padding: '2px 5px', background: 'rgba(255,255,255,0.04)', color: TEXT_DIM, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>R{exo.rir}</span>}
-                      {exo.technique && TECHNIQUE_LABELS[exo.technique] && (
-                        <span style={{ fontSize: 8, padding: '2px 6px', background: `${GOLD}15`, border: `0.5px solid ${GOLD}25`, color: GOLD, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.04em' }}>
-                          {TECHNIQUE_LABELS[exo.technique].emoji} {TECHNIQUE_LABELS[exo.technique].label}{exo.techniqueDetails ? ` ×${exo.techniqueDetails.split(',')[0]}` : ''}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <span style={{ fontSize: 9, padding: '3px 8px', background: GOLD_DIM, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, borderRadius: 6, whiteSpace: 'nowrap' }}>{exo.targetSets}×{exo.targetReps}</span>
-                  <button onClick={() => openExerciseInfo(exo)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 2, fontSize: 18, lineHeight: 1, display: 'flex' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                  </button>
-                  <button onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 2, fontSize: 18, lineHeight: 1 }}>⋯</button>
-                  {exo.open ? <ChevronUp size={14} color={TEXT_DIM} /> : <ChevronDown size={14} color={TEXT_DIM} />}
+                  <div style={{ fontSize: 12, color: 'rgba(245,241,232,0.7)', marginTop: 6, fontFamily: FONT_BODY }}>
+                    {exo.targetSets} séries × {exo.targetReps} reps
+                    {exo.tempo && <span style={{ marginLeft: 8, fontSize: 10, padding: '2px 5px', background: 'rgba(0,0,0,0.35)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.tempo}</span>}
+                    {exo.rir != null && <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 5px', background: 'rgba(0,0,0,0.35)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>R{exo.rir}</span>}
+                    {exo.technique && TECHNIQUE_LABELS[exo.technique] && (
+                      <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 6px', background: 'rgba(201,168,76,0.15)', border: '0.5px solid rgba(201,168,76,0.25)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, color: '#C9A84C' }}>
+                        {TECHNIQUE_LABELS[exo.technique].emoji} {TECHNIQUE_LABELS[exo.technique].label}{exo.techniqueDetails ? ` ×${exo.techniqueDetails.split(',')[0]}` : ''}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
