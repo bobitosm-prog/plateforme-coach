@@ -603,7 +603,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         .ws-input:focus { background: rgba(201,168,76,0.08) !important; border-radius: 6px !important; }
         .ws-input::placeholder { color: rgba(255,255,255,0.15); }
         @media(max-width:420px){
-          .ws-grid { grid-template-columns: 36px 1fr 56px 48px 36px !important; }
+          .ws-big-input { font-size: 32px !important; }
         }
         @keyframes wsPopIn {
           0% { opacity: 0; transform: scale(0.8); }
@@ -777,63 +777,69 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 </div>
               )}
 
-              {/* ── Sets Table ── */}
+              {/* ── Sets Big Stack ── */}
               {exo.open && (
-                <div style={{ paddingTop: 8 }}>
-                  {/* Column headers */}
-                  <div className="ws-grid" style={{ display: 'grid', gridTemplateColumns: '40px 1fr 64px 56px 40px', gap: 0, padding: '4px 0 6px', alignItems: 'center' }}>
-                    {['SERIE', 'PREC.', isDumbbell(exo.name) ? 'KG ×2' : 'KG', 'REPS', ''].map(h => (
-                      <span key={h} style={{ fontSize: 8, textAlign: h === 'PREC.' ? 'left' : 'center', paddingLeft: h === 'PREC.' ? 4 : 0, color: 'rgba(255,255,255,0.3)', fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>{h}</span>
-                    ))}
-                  </div>
+                <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-                  {/* Set rows */}
+                  {/* Set cards */}
                   {exo.sets.map((set: ExSet, si: number) => {
                     const ok = !set.done && (set.weight !== '' || set.reps !== '')
                     const prevSet = previousData[exo.name]?.[set.num - 1]
+                    const isActive = ok && !set.done
                     return (
                       <Fragment key={set.id}>
-                      <div className="ws-grid" style={{
-                        display: 'grid', gridTemplateColumns: '40px 1fr 64px 56px 40px', gap: 0,
-                        alignItems: 'center', height: 40,
-                        borderTop: si > 0 ? '0.5px solid rgba(201,168,76,0.05)' : 'none',
-                        background: set.done ? 'rgba(230,195,100,0.04)' : 'transparent',
-                        transition: 'background 0.2s',
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '14px 12px', borderRadius: 12,
+                        background: (isActive || set.done) ? 'rgba(201,168,76,0.10)' : 'rgba(201,168,76,0.05)',
+                        border: set.done ? '2px solid #4ade80' : isActive ? `2px solid #C9A84C` : '1px solid rgba(201,168,76,0.20)',
+                        transition: 'all 0.2s',
                       }}>
-                        {/* Set number — just the digit */}
-                        <span style={{ textAlign: 'center', fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: set.done ? GOLD : TEXT_PRIMARY }}>{set.num}</span>
+                        {/* a) Set number */}
+                        <div style={{ width: 42, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                          <span style={{ fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(245,241,232,0.4)', textTransform: 'uppercase' as const }}>SERIE</span>
+                          <span style={{ fontSize: 22, fontFamily: FONT_DISPLAY, fontWeight: 700, color: set.done ? GOLD : isActive ? GOLD : 'rgba(245,241,232,0.5)', lineHeight: 1 }}>{set.num}</span>
+                        </div>
 
-                        {/* Previous — wider column */}
-                        <span style={{ textAlign: 'left', paddingLeft: 4, fontSize: 12, color: prevSet ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', fontFamily: FONT_BODY, fontWeight: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {prevSet ? `${prevSet.weight} kg × ${prevSet.reps}` : '—'}
-                        </span>
+                        {/* b) Previous data */}
+                        <div style={{ width: 60, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <span style={{ fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase' as const }}>PREC.</span>
+                          <span style={{ fontSize: 13, fontFamily: FONT_BODY, fontWeight: 600, color: prevSet ? GOLD : 'rgba(245,241,232,0.25)', whiteSpace: 'nowrap' }}>
+                            {prevSet ? `${prevSet.weight} × ${prevSet.reps}` : '—'}
+                          </span>
+                        </div>
 
-                        {/* KG input — transparent, no border */}
-                        <input type="number" inputMode="decimal" step="0.5" className="ws-input"
-                          value={set.weight} onChange={e => setField(exo.id, set.id, 'weight', e.target.value)}
-                          disabled={set.done} placeholder={last?.weight ? String(last.weight) : '0'}
-                          style={{ width: '100%', height: 32, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: 14, fontFamily: FONT_BODY, fontWeight: 700, color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none', opacity: set.done ? 0.6 : 1 }} />
+                        {/* c) KG x REPS inputs */}
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: 6, justifyContent: 'center' }}>
+                          <input type="number" inputMode="decimal" step="0.5" className="ws-input ws-big-input"
+                            value={set.weight} onChange={e => setField(exo.id, set.id, 'weight', e.target.value)}
+                            disabled={set.done} placeholder={last?.weight ? String(last.weight) : '0'}
+                            style={{ width: 64, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: isActive ? 40 : 36, fontFamily: FONT_BODY, fontWeight: 800, color: (set.weight !== '') ? GOLD : 'rgba(201,168,76,0.4)', caretColor: GOLD, outline: 'none', lineHeight: 1, opacity: set.done ? 0.6 : 1 }} />
+                          <span style={{ fontSize: 17, fontWeight: 600, color: 'rgba(245,241,232,0.3)', lineHeight: 1 }}>×</span>
+                          <input type="number" inputMode="numeric" className="ws-input ws-big-input"
+                            value={set.reps} onChange={e => setField(exo.id, set.id, 'reps', e.target.value)}
+                            disabled={set.done} placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
+                            style={{ width: 52, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: isActive ? 40 : 36, fontFamily: FONT_BODY, fontWeight: 800, color: (set.reps !== '') ? GOLD : 'rgba(201,168,76,0.4)', caretColor: GOLD, outline: 'none', lineHeight: 1, opacity: set.done ? 0.6 : 1 }} />
+                        </div>
 
-                        {/* Reps input — transparent, no border */}
-                        <input type="number" inputMode="numeric" className="ws-input"
-                          value={set.reps} onChange={e => setField(exo.id, set.id, 'reps', e.target.value)}
-                          disabled={set.done} placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
-                          style={{ width: '100%', height: 32, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: 14, fontFamily: FONT_BODY, fontWeight: 700, color: set.done ? GOLD : TEXT_PRIMARY, caretColor: GOLD, outline: 'none', opacity: set.done ? 0.6 : 1 }} />
-
-                        {/* Checkmark — circular 28px */}
-                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        {/* d) Validate button */}
+                        <div style={{ flexShrink: 0 }}>
                           {set.done ? (
-                            <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GREEN, border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
+                            <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#4ade80', border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
                               onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.9)' }}
                               onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
-                              <Check size={13} strokeWidth={3} color="#fff" />
+                              <Check size={18} strokeWidth={3} color="#fff" />
+                            </button>
+                          ) : ok ? (
+                            <button onClick={() => validate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#C9A84C', border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
+                              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.9)' }}
+                              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
+                              <Check size={18} strokeWidth={3} color="#0D0B08" />
                             </button>
                           ) : (
-                            <button onClick={() => ok ? validate(exo.id, set.id) : undefined} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ok ? GOLD : 'transparent', border: ok ? 'none' : '1.5px solid rgba(255,255,255,0.15)', borderRadius: '50%', cursor: ok ? 'pointer' : 'default', transition: 'all 0.15s' }}
-                              onMouseDown={e => { if (ok) e.currentTarget.style.transform = 'scale(0.9)' }}
-                              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
-                              <Check size={13} strokeWidth={3} color={ok ? '#0D0B08' : 'rgba(255,255,255,0.2)'} />
-                            </button>
+                            <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(201,168,76,0.3)', borderRadius: '50%' }}>
+                              <Check size={14} strokeWidth={2.5} color="rgba(201,168,76,0.3)" />
+                            </div>
                           )}
                         </div>
                       </div>
