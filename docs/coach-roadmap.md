@@ -140,8 +140,8 @@
 ### Tech debt Sprint 5 (Coach Analytics)
 - [ ] Typage Supabase non strict : 2 eslint-disable no-explicit-any
   dans useCoachAnalytics.ts. Fix : créer types custom pour les rows
-- [ ] Bottom nav mobile à 6 onglets : peut être serré sur < 360px.
-  Alternative : 4 onglets fixes + menu "Plus" pour les autres
+- [x] ✅ Bottom nav 6 tabs débordement <420px (5 mai 2026)
+  Résolu par 15a911d + 5850f81 (media queries ≤419px compact, ≤359px icon-only)
 
 ### Tech debt — FK manquantes globalement
 - [ ] L'audit Sprint 6.5-B a révélé que la DB n'a aucune FK déclarée
