@@ -8,22 +8,22 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-05 17:30
+**Date derniere mise a jour** : 2026-05-05 17:45
 **Branche** : main
-**HEAD** : `1097c34` refactor(workout-session): exo header en Hero Banner full-width
+**HEAD** : `6543ac3` feat(workout-session): mode réorganiser exos style Strong
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Aucune (Hero Banner DONE)
+Aucune (reorder mode DONE, input fix DONE)
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue
-Tester Hero Banner + Big Stack live (Marco)
+Tester reorder mode + Hero Banner + Big Stack live (Marco)
 
 ### Backlog priorisee
-1. Tester Hero Banner + Big Stack live
+1. Tester reorder mode + Hero Banner + Big Stack live
 2. ChatAI polish UX (persistance historique en DB) — Sprint 4B residuel — 2-3h
 3. Layout desktop client incomplet (Messages sidebar + vue 2 colonnes) — 2-3h
 4. Scroll desktop conversation chat — 1-2h (lie au layout desktop)
@@ -40,6 +40,7 @@ Tester Hero Banner + Big Stack live (Marco)
 
 ### 2026-05-05
 
+- 17:45 `6543ac3` feat mode reorganiser exos style Strong + fix input warning 8-12
 - 17:30 `1097c34` refactor exo header en Hero Banner full-width
 - 17:15 `fcb4f07` chore unwire OverloadBanner + OverloadModal de home
 - 17:15 `30d9d2a` refactor set row Big Stack pour lisibilite gym
