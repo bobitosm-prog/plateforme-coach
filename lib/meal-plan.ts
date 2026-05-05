@@ -8,12 +8,21 @@ export type Day = 'lundi' | 'mardi' | 'mercredi' | 'jeudi' | 'vendredi' | 'samed
 export const DAYS: readonly Day[] = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const
 export const MEAL_TYPES: readonly MealType[] = ['Petit-déjeuner', 'Déjeuner', 'Collation', 'Dîner'] as const
 
-// AI legacy keys → canonical MealType
-const AI_MEAL_KEY_TO_TYPE: Record<string, MealType> = {
+export type MealKey = 'petit_dejeuner' | 'dejeuner' | 'collation' | 'diner'
+export const MEAL_KEYS: readonly MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner'] as const
+
+export const MEAL_KEY_TO_TYPE: Record<MealKey, MealType> = {
   petit_dejeuner: 'Petit-déjeuner',
   dejeuner: 'Déjeuner',
   collation: 'Collation',
   diner: 'Dîner',
+}
+
+export const MEAL_TYPE_TO_KEY: Record<MealType, MealKey> = {
+  'Petit-déjeuner': 'petit_dejeuner',
+  'Déjeuner': 'dejeuner',
+  'Collation': 'collation',
+  'Dîner': 'diner',
 }
 
 export interface Food {
@@ -88,7 +97,7 @@ function parseMeals(raw: any): Meal[] {
 
   // AI shape: { repas: { petit_dejeuner: [...], dejeuner: [...], ... } }
   if (raw.repas && typeof raw.repas === 'object') {
-    return Object.entries(AI_MEAL_KEY_TO_TYPE).map(([aiKey, type]) => ({
+    return Object.entries(MEAL_KEY_TO_TYPE).map(([aiKey, type]) => ({
       type,
       foods: Array.isArray(raw.repas[aiKey]) ? raw.repas[aiKey].map(parseFood) : [],
     }))
@@ -152,4 +161,9 @@ export function parseMealPlan(raw: any): MealPlan {
 /** Get meals for a specific meal type from a parsed day plan. */
 export function getMeal(day: DayPlan | undefined, type: MealType): Meal | undefined {
   return day?.meals.find(m => m.type === type)
+}
+
+/** Get foods for a meal by its DB snake_case key (e.g. 'petit_dejeuner'). */
+export function getMealByKey(day: DayPlan | undefined, key: MealKey): Food[] {
+  return getMeal(day, MEAL_KEY_TO_TYPE[key])?.foods ?? []
 }
