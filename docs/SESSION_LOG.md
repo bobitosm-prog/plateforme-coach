@@ -8,22 +8,23 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-05 17:45
+**Date derniere mise a jour** : 2026-05-05 18:00
 **Branche** : main
-**HEAD** : `6543ac3` feat(workout-session): mode réorganiser exos style Strong
+**HEAD** : `8eb3483` docs(log): mode reorganiser + fix input warning
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Aucune (reorder mode DONE, input fix DONE)
+Aucune — fin de session.
 
 ### Blockers
 Aucun
 
-### Prochaine tache prevue
-Tester reorder mode + Hero Banner + Big Stack live (Marco)
+### Prochaine tache prevue (DEMAIN)
+1. Test live : Big Stack + Hero Banner + Reorder mode (Front Squat ou autre)
+2. Ajustements visuels post-test si necessaire
 
 ### Backlog priorisee
-1. Tester reorder mode + Hero Banner + Big Stack live
+1. Test live Big Stack + Hero Banner + Reorder mode
 2. ChatAI polish UX (persistance historique en DB) — Sprint 4B residuel — 2-3h
 3. Layout desktop client incomplet (Messages sidebar + vue 2 colonnes) — 2-3h
 4. Scroll desktop conversation chat — 1-2h (lie au layout desktop)
