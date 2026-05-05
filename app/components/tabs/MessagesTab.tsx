@@ -1,20 +1,24 @@
 'use client'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { format, isToday, isYesterday } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { MessageCircle, Send, Check, CheckCheck } from 'lucide-react'
+import { MessageCircle, Send, Check, CheckCheck, ImageIcon, X } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
 } from '../../../lib/design-tokens'
+import { useMessageImageUpload } from '../../hooks/useMessageImageUpload'
+import MessageImage from '../MessageImage'
 
 interface MessagesTabProps {
   session: any
   coachId: string | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any
   messages: any[]
   msgInput: string
   setMsgInput: (v: string) => void
-  sendMessage: () => Promise<void>
+  sendMessage: (imageUrl?: string | null) => Promise<void>
   msgEndRef: React.RefObject<HTMLDivElement | null>
   isInvited?: boolean
 }
@@ -27,9 +31,33 @@ function dateLabel(dateStr: string): string {
 }
 
 export default function MessagesTab({
-  session, coachId, messages, msgInput, setMsgInput, sendMessage, msgEndRef, isInvited = true,
+  session, coachId, supabase, messages, msgInput, setMsgInput, sendMessage, msgEndRef, isInvited = true,
 }: MessagesTabProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const { uploadImage, uploading } = useMessageImageUpload(supabase)
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setSelectedFile(file)
+    setPreviewUrl(URL.createObjectURL(file))
+    e.target.value = ''
+  }
+  const clearFile = () => { if (previewUrl) URL.revokeObjectURL(previewUrl); setSelectedFile(null); setPreviewUrl(null) }
+
+  const handleSend = async () => {
+    if (uploading) return
+    let imageUrl: string | null = null
+    if (selectedFile) {
+      imageUrl = await uploadImage(selectedFile)
+      clearFile()
+    }
+    if (!msgInput.trim() && !imageUrl) return
+    await sendMessage(imageUrl)
+  }
   const bottomRef = useRef<HTMLDivElement>(null)
   const prevLengthRef = useRef(0)
 
@@ -105,11 +133,13 @@ export default function MessagesTab({
                       background: isMine ? 'linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, #C9A84C 70%, #8B6914 100%)' : BG_CARD_2,
                       color: isMine ? '#0D0B08' : TEXT_PRIMARY,
                       borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                      padding: '10px 14px',
+                      padding: msg.image_url ? 4 : '10px 14px',
                       border: isMine ? 'none' : `1px solid ${BORDER}`,
+                      overflow: 'hidden',
                     }}>
-                      <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.45, whiteSpace: 'pre-wrap', fontFamily: FONT_BODY, fontWeight: 400 }}>{msg.content}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 3 }}>
+                      {msg.image_url && <MessageImage supabase={supabase} path={msg.image_url} />}
+                      {msg.content && <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.45, whiteSpace: 'pre-wrap', fontFamily: FONT_BODY, fontWeight: 400, padding: msg.image_url ? '4px 10px 0' : 0 }}>{msg.content}</p>}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 3, padding: msg.image_url ? '0 10px 4px' : 0 }}>
                         <span style={{ fontSize: '0.58rem', opacity: 0.5, fontFamily: FONT_BODY }}>{format(new Date(msg.created_at), 'HH:mm')}</span>
                         {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.6, color: GOLD }} /> : <Check size={12} style={{ opacity: 0.4 }} />)}
                       </div>
@@ -122,23 +152,35 @@ export default function MessagesTab({
             <div ref={msgEndRef} />
           </div>
 
+          {/* Image preview */}
+          {previewUrl && (
+            <div style={{ padding: '8px 14px 0', background: BG_BASE, borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img src={previewUrl} alt="Preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: `1px solid ${BORDER}` }} />
+              <button onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: 4 }}><X size={16} /></button>
+            </div>
+          )}
+
           {/* Input */}
-          <div style={{ flexShrink: 0, padding: '12px 14px', background: BG_BASE, borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <div style={{ flexShrink: 0, padding: '12px 14px', background: BG_BASE, borderTop: previewUrl ? 'none' : `1px solid ${BORDER}`, display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+            <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileSelected} />
+            <button onClick={() => fileInputRef.current?.click()} style={{ width: 40, height: 40, borderRadius: '50%', background: 'transparent', border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <ImageIcon size={16} color={TEXT_MUTED} />
+            </button>
             <textarea
               ref={inputRef}
               value={msgInput}
               onChange={e => setMsgInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
               placeholder="Écrire un message..."
               rows={1}
               style={{ flex: 1, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 24, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: FONT_BODY, fontWeight: 400 }}
             />
             <button
-              onClick={sendMessage}
-              disabled={!msgInput.trim()}
-              style={{ width: 40, height: 40, borderRadius: '50%', background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: msgInput.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              onClick={handleSend}
+              disabled={!msgInput.trim() && !selectedFile}
+              style={{ width: 40, height: 40, borderRadius: '50%', background: (msgInput.trim() || selectedFile) ? GOLD : BORDER, border: 'none', cursor: (msgInput.trim() || selectedFile) ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
-              <Send size={16} color={msgInput.trim() ? '#0D0B08' : TEXT_MUTED} />
+              {uploading ? <div style={{ width: 16, height: 16, border: '2px solid #0D0B08', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : <Send size={16} color={(msgInput.trim() || selectedFile) ? '#0D0B08' : TEXT_MUTED} />}
             </button>
           </div>
         </>

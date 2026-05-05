@@ -66,13 +66,15 @@ export default function useMessages({ supabase, userId, coachId, activeTab }: Us
     setUnreadCount((data || []).filter((m: any) => m.sender_id === cId && !m.read).length)
   }
 
-  async function sendMessage() {
-    if (!msgInput.trim() || !coachId || !userId) return
+  async function sendMessage(imageUrl?: string | null) {
+    if ((!msgInput.trim() && !imageUrl) || !coachId || !userId) return
     const content = msgInput.trim(); setMsgInput('')
-    const optimistic = { id: `opt-${Date.now()}`, sender_id: userId, receiver_id: coachId, content, read: false, created_at: new Date().toISOString() }
+    const optimistic = { id: `opt-${Date.now()}`, sender_id: userId, receiver_id: coachId, content, image_url: imageUrl || null, read: false, created_at: new Date().toISOString() }
     setMessages(prev => [...prev, optimistic])
-    await supabase.from('messages').insert({ sender_id: userId, receiver_id: coachId, content })
-    fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: coachId, title: 'Nouveau message client', body: content.slice(0, 80), url: '/coach' }) }).catch(() => {})
+    const row: Record<string, unknown> = { sender_id: userId, receiver_id: coachId, content }
+    if (imageUrl) row.image_url = imageUrl
+    await supabase.from('messages').insert(row)
+    fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: coachId, title: 'Nouveau message client', body: imageUrl ? '📷 Photo' : content.slice(0, 80), url: '/coach' }) }).catch(() => {})
     loadMessages(coachId)
   }
 

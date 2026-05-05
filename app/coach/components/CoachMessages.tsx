@@ -1,6 +1,7 @@
 'use client'
 
-import { ChevronRight, ArrowLeft, Send, Check, CheckCheck } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { ChevronRight, ArrowLeft, Send, Check, CheckCheck, ImageIcon, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import {
@@ -9,6 +10,8 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
 
+import { useMessageImageUpload } from '../../hooks/useMessageImageUpload'
+import MessageImage from '../../components/MessageImage'
 import { initials } from '../hooks/useCoachDashboard'
 import type { ClientRow } from '../hooks/useCoachDashboard'
 
@@ -20,8 +23,10 @@ interface CoachMessagesProps {
   chatMessages: any[]
   msgInput: string
   setMsgInput: (v: string) => void
-  sendMessage: () => void
+  sendMessage: (imageUrl?: string | null) => void
   unreadCounts: Record<string, number>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any
   session: any
   msgEndRef: React.RefObject<HTMLDivElement | null>
 }
@@ -29,9 +34,23 @@ interface CoachMessagesProps {
 export default function CoachMessages({
   clients, selectedClient, setSelectedClient, openChat,
   chatMessages, msgInput, setMsgInput, sendMessage,
-  unreadCounts, session,
+  unreadCounts, supabase, session,
   msgEndRef,
 }: CoachMessagesProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const { uploadImage, uploading } = useMessageImageUpload(supabase)
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) { setSelectedFile(f); setPreviewUrl(URL.createObjectURL(f)) }; e.target.value = '' }
+  const clearFile = () => { if (previewUrl) URL.revokeObjectURL(previewUrl); setSelectedFile(null); setPreviewUrl(null) }
+  const handleSend = async () => {
+    if (uploading) return
+    let imageUrl: string | null = null
+    if (selectedFile) { imageUrl = await uploadImage(selectedFile); clearFile() }
+    if (!msgInput.trim() && !imageUrl) return
+    sendMessage(imageUrl)
+  }
+
   return (
     <>
       {/* ── MESSAGES SECTION: client list (no chat open) ── */}
@@ -113,11 +132,13 @@ export default function CoachMessages({
                     background: isMine ? GOLD_DIM : BG_CARD_2,
                     color: TEXT_PRIMARY,
                     borderRadius: RADIUS_CARD,
-                    padding: '10px 14px',
+                    padding: msg.image_url ? 4 : '10px 14px',
                     border: isMine ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
+                    overflow: 'hidden',
                   }}>
-                    <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45, fontFamily: FONT_BODY }}>{msg.content}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 4 }}>
+                    {msg.image_url && <MessageImage supabase={supabase} path={msg.image_url} />}
+                    {msg.content && <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45, fontFamily: FONT_BODY, padding: msg.image_url ? '4px 10px 0' : 0 }}>{msg.content}</p>}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 4, padding: msg.image_url ? '0 10px 4px' : 0 }}>
                       <span style={{ fontSize: '0.62rem', opacity: 0.5, fontFamily: FONT_BODY }}>{format(new Date(msg.created_at), 'HH:mm', { locale: fr })}</span>
                       {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.6, color: GOLD }} /> : <Check size={12} style={{ opacity: 0.4, color: TEXT_DIM }} />)}
                     </div>
@@ -129,19 +150,30 @@ export default function CoachMessages({
           </div>
 
           {/* Fixed input bar — sits above bottom nav */}
+          {previewUrl && (
+            <div style={{ position: 'fixed', bottom: 120, left: 16, right: 16, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 8, display: 'flex', alignItems: 'center', gap: 8, zIndex: 202 }}>
+              <img src={previewUrl} alt="Preview" style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 8 }} />
+              <button onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: 4 }}><X size={16} /></button>
+            </div>
+          )}
           <div style={{ position: 'fixed', bottom: 60, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', display: 'flex', gap: 12, alignItems: 'center', zIndex: 201 }}>
+            <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileSelected} />
+            <button onClick={() => fileInputRef.current?.click()} style={{ width: 44, height: 44, borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <ImageIcon size={17} color={TEXT_MUTED} />
+            </button>
             <input
               className="msg-input"
               value={msgInput}
               onChange={e => setMsgInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
               placeholder={`Message à ${selectedClient.profiles?.full_name?.split(' ')[0] ?? 'client'}…`}
             />
             <button
-              onClick={sendMessage}
-              style={{ width: 44, height: 44, borderRadius: 12, background: msgInput.trim() ? GOLD : BORDER, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              onClick={handleSend}
+              disabled={uploading}
+              style={{ width: 44, height: 44, borderRadius: 12, background: (msgInput.trim() || selectedFile) ? GOLD : BORDER, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
-              <Send size={17} color={msgInput.trim() ? BG_BASE : TEXT_MUTED} />
+              {uploading ? <div style={{ width: 16, height: 16, border: '2px solid #0D0B08', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : <Send size={17} color={(msgInput.trim() || selectedFile) ? BG_BASE : TEXT_MUTED} />}
             </button>
           </div>
         </div>

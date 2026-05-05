@@ -538,13 +538,15 @@ export default function useClientDetail() {
     return () => { supabase.removeChannel(channel) }
   }, [coachId, id])
 
-  async function sendCoachMessage() {
-    if (!coachMsgInput.trim() || !coachId || !id) return
+  async function sendCoachMessage(imageUrl?: string | null) {
+    if ((!coachMsgInput.trim() && !imageUrl) || !coachId || !id) return
     const content = coachMsgInput.trim(); setCoachMsgInput('')
-    const optimistic = { id: `opt-${Date.now()}`, sender_id: coachId, receiver_id: id, content, read: false, created_at: new Date().toISOString() }
+    const optimistic = { id: `opt-${Date.now()}`, sender_id: coachId, receiver_id: id, content, image_url: imageUrl || null, read: false, created_at: new Date().toISOString() }
     setCoachMessages(prev => [...prev, optimistic])
-    await supabase.from('messages').insert({ sender_id: coachId, receiver_id: id, content })
-    fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, title: 'Nouveau message', body: content.slice(0, 80), url: '/' }) }).catch(() => {})
+    const row: Record<string, unknown> = { sender_id: coachId, receiver_id: id, content }
+    if (imageUrl) row.image_url = imageUrl
+    await supabase.from('messages').insert(row)
+    fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, title: 'Nouveau message', body: imageUrl ? '📷 Photo' : content.slice(0, 80), url: '/' }) }).catch(() => {})
     loadCoachMessages()
   }
 
@@ -785,7 +787,7 @@ export default function useClientDetail() {
 
   return {
     // Router
-    id, router,
+    id, router, supabase,
     // Core state
     profile, loading, error, toast, showToast,
     activeTab, setActiveTab,

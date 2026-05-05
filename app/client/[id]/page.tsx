@@ -327,6 +327,7 @@ export default function ClientProfilePage() {
             setCoachMsgInput={h.setCoachMsgInput}
             sendCoachMessage={h.sendCoachMessage}
             coachId={h.coachId}
+            supabase={h.supabase}
           />
         )}
 

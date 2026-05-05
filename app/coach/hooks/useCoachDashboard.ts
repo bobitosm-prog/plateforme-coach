@@ -505,29 +505,27 @@ export default function useCoachDashboard(initialSession?: any) {
     setUnreadCounts(prev => ({ ...prev, [client.client_id]: 0 }))
   }
 
-  async function sendMessage() {
-    if (!msgInput.trim() || !selectedClient || !session) return
+  async function sendMessage(imageUrl?: string | null) {
+    if ((!msgInput.trim() && !imageUrl) || !selectedClient || !session) return
     const content = msgInput.trim()
     setMsgInput('')
-    // Optimistic update — show immediately
     const optimistic = {
       id: `opt-${Date.now()}`,
       sender_id: session.user.id,
       receiver_id: selectedClient.client_id,
       content,
+      image_url: imageUrl || null,
       read: false,
       created_at: new Date().toISOString(),
     }
     setChatMessages(prev => [...prev, optimistic])
-    await supabase.from('messages').insert({
-      sender_id: session.user.id,
-      receiver_id: selectedClient.client_id,
-      content,
-    })
+    const row: Record<string, unknown> = { sender_id: session.user.id, receiver_id: selectedClient.client_id, content }
+    if (imageUrl) row.image_url = imageUrl
+    await supabase.from('messages').insert(row)
     fetch('/api/send-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: selectedClient.client_id, title: 'Nouveau message', body: content.slice(0, 80), url: '/' }),
+      body: JSON.stringify({ userId: selectedClient.client_id, title: 'Nouveau message', body: imageUrl ? '📷 Photo' : content.slice(0, 80), url: '/' }),
     }).catch(() => {})
     // Replace optimistic with real server row
     loadChat(selectedClient.client_id, session.user.id)
