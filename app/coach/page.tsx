@@ -509,22 +509,22 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         .form-input { width: 100%; background: ${BG_BASE}; border: 1px solid ${BORDER}; border-radius: 12px; padding: 10px 14px; font-family: ${FONT_BODY}; font-size: 0.9rem; color: ${TEXT_PRIMARY}; outline: none; transition: border-color 200ms; }
         .form-input:focus { border-color: ${GOLD}; }
         .type-chip { border-radius: 12px; padding: 7px 14px; font-family: ${FONT_ALT}; font-size: 0.82rem; font-weight: 700; letter-spacing: 1px; cursor: pointer; border: 2px solid transparent; transition: all 150ms; }
-        /* Bottom nav 6 tabs — responsive sub-380px */
-        @media (max-width: 379px) {
-          .bottom-nav { padding-left: 8px !important; padding-right: 8px !important; }
-          .bottom-nav-inner { padding: 8px 6px !important; }
-          .bottom-nav-btn { padding: 4px 2px !important; min-width: 0; }
+        /* Bottom nav 6 tabs — responsive */
+        @media (max-width: 419px) {
+          .bottom-nav { padding-left: 6px !important; padding-right: 6px !important; }
+          .bottom-nav-inner { padding: 8px 4px !important; }
+          .bottom-nav-btn { padding: 4px 1px !important; min-width: 0; gap: 2px !important; }
           .bottom-nav-label {
-            font-size: 0.56rem !important;
-            letter-spacing: 0.3px !important;
+            font-size: 0.5rem !important;
+            letter-spacing: 0.2px !important;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
           }
         }
-        /* <340px — icons only, label only for active tab */
-        @media (max-width: 339px) {
+        /* <360px — icons only, label only for active tab */
+        @media (max-width: 359px) {
           .bottom-nav-label { display: none; }
           .bottom-nav-btn.active .bottom-nav-label { display: block; }
         }
