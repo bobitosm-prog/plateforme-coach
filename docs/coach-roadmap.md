@@ -162,6 +162,17 @@
   créer vue Messages desktop 2 colonnes (liste + chat actif).
   Effort estimé : 2-3h.
 
+### Tech debt — Scroll desktop conversation chat
+- [ ] Container chat contraint à ~302px par un wrapper parent non
+  identifié sur desktop maximisé. scrollIntoView ne positionne pas
+  en bas, input sticky compressé.
+  Tentatives appliquées (non concluantes) : minHeight:0, height
+  calc(100vh-64px), useEffect img.onload re-scroll.
+  Hypothèses : wrapper <main> de page.tsx, ResizeObserver, ou
+  forcer scrollTop = scrollHeight directement.
+  Probable lié à 'Layout desktop client incomplet' — à fix
+  ensemble dans un Sprint Layout Desktop dédié. Effort : 1-2h.
+
 ## Methodologie validee
 - 1 sprint = 1 session 2-4h
 - 1 branche par feature
