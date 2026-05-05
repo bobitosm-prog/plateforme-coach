@@ -206,6 +206,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   }
 
   async function importMealFromPlan(mealType: MealKey) {
+    if (nutritionDay !== todayKey) return
     const todayPlan = getTodayPlanData()
     if (!todayPlan) return
     const foods = getMealByKey(todayPlan.day, mealType)
@@ -805,11 +806,19 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
                     {/* Action buttons */}
                     <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px' }}>
-                      {hasPlanFoods && logs.length === 0 && (
-                        <button onClick={() => setImportingMeal(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: 'pointer', fontFamily: fonts.body, fontSize: 11, color: colors.gold }}>
-                          {isInvited ? '📋 Importer du plan' : '🤖 Importer le plan IA'}
-                        </button>
-                      )}
+                      {hasPlanFoods && logs.length === 0 && (() => {
+                        const isViewingToday = nutritionDay === todayKey
+                        return (
+                          <button
+                            onClick={() => isViewingToday && setImportingMeal(mealType)}
+                            disabled={!isViewingToday}
+                            title={!isViewingToday ? 'Disponible uniquement pour aujourd\'hui' : undefined}
+                            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, fontFamily: fonts.body, fontSize: 11, color: colors.gold }}
+                          >
+                            {isInvited ? '📋 Importer du plan' : '🤖 Importer le plan IA'}
+                          </button>
+                        )
+                      })()}
                       <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${colors.goldBorder}`, background: 'transparent', cursor: 'pointer', fontFamily: fonts.body, color: colors.textMuted, fontSize: 11 }}>
                         <Plus size={12} strokeWidth={2.5} /> Ajouter
                       </button>
