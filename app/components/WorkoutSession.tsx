@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
+import { Reorder } from 'framer-motion'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
@@ -297,6 +298,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [templateName, setTemplateName] = useState(sessionName || 'Séance libre')
   const [variantPopup, setVariantPopup] = useState<{exIdx: number, variants: any[], originalName: string} | null>(null)
   const [exerciseInfo, setExerciseInfo] = useState<any>(null)
+  const [reorderMode, setReorderMode] = useState(false)
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
@@ -681,18 +683,20 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
       {/* EXERCICES */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
-        {/* Add exercise button */}
-        <div style={{ margin: '0 4px 16px', width: 'calc(100% - 8px)' }}>
-          <button onClick={() => setMode('custom')} style={{
-            width: '100%', padding: 10, borderRadius: 12,
-            background: BG_CARD, border: `1px solid ${BORDER}`,
-            color: GOLD,
-            fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
-            letterSpacing: 2, cursor: 'pointer',
-          }}>+ AJOUTER UN EXERCICE</button>
-        </div>
+        {/* Add exercise button — hidden in reorder mode */}
+        {!reorderMode && (
+          <div style={{ margin: '0 4px 16px', width: 'calc(100% - 8px)' }}>
+            <button onClick={() => setMode('custom')} style={{
+              width: '100%', padding: 10, borderRadius: 12,
+              background: BG_CARD, border: `1px solid ${BORDER}`,
+              color: GOLD,
+              fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
+              letterSpacing: 2, cursor: 'pointer',
+            }}>+ AJOUTER UN EXERCICE</button>
+          </div>
+        )}
 
-        {exos.length === 0 && (
+        {!reorderMode && exos.length === 0 && (
           <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${BORDER}`, borderRadius: 14, background: BG_CARD }}>
             <Dumbbell size={32} color={TEXT_DIM} style={{ marginBottom: 12 }} />
             <p style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1, margin: '0 0 4px' }}>Ajoute ton premier exercice</p>
@@ -700,7 +704,53 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           </div>
         )}
 
-        {exos.map((exo, idx) => {
+        {/* ── Reorder mode ── */}
+        {reorderMode && (
+          <div>
+            <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid rgba(201,168,76,0.10)' }}>
+              <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: '#C9A84C', fontFamily: FONT_ALT }}>RÉORGANISER</div>
+              <div style={{ fontSize: 10, color: 'rgba(245,241,232,0.4)', marginTop: 4, fontFamily: FONT_BODY }}>Maintiens et glisse pour changer l&apos;ordre</div>
+            </div>
+            <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => setExos(newOrder)} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {exos.map((exo, idx) => (
+                <Reorder.Item
+                  key={exo.id}
+                  value={exo}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '14px 12px',
+                    background: 'rgba(201,168,76,0.05)',
+                    border: '1px solid rgba(201,168,76,0.20)',
+                    borderRadius: 12, marginBottom: 8,
+                    cursor: 'grab', userSelect: 'none',
+                  }}
+                  whileDrag={{
+                    scale: 1.02,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                    borderColor: '#C9A84C',
+                    background: 'rgba(201,168,76,0.12)',
+                    cursor: 'grabbing',
+                  }}
+                >
+                  <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.15em', flexShrink: 0, minWidth: 16, fontFamily: FONT_ALT, fontWeight: 700 }}>{idx + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15, color: '#F5F1E8', fontWeight: 600, lineHeight: 1.2, fontFamily: FONT_BODY }}>{exo.name}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: FONT_BODY }}>{exo.muscle ? `${exo.muscle} · ` : ''}{exo.targetSets} séries</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: 4, flexShrink: 0 }}>
+                    <div style={{ width: 18, height: 2, background: '#C9A84C', borderRadius: 1 }} />
+                    <div style={{ width: 18, height: 2, background: '#C9A84C', borderRadius: 1 }} />
+                    <div style={{ width: 18, height: 2, background: '#C9A84C', borderRadius: 1 }} />
+                  </div>
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+            <button onClick={() => setReorderMode(false)} style={{ width: '100%', background: '#C9A84C', padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: '#0D0B08', letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>✓ TERMINÉ</button>
+          </div>
+        )}
+
+        {/* ── Normal exercise list ── */}
+        {!reorderMode && exos.map((exo, idx) => {
           const cnt = exo.sets.filter(s => s.done).length
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
@@ -730,16 +780,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(13,11,8,0.85) 100%)', pointerEvents: 'none' }} />
                 {/* Done overlay */}
                 {isDone && <div style={{ position: 'absolute', inset: 0, background: 'rgba(201,168,76,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Check size={32} color={GOLD} strokeWidth={3} /></div>}
-
-                {/* Reorder arrows — top left */}
-                <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 4, zIndex: 2 }}>
-                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, -1) }} disabled={idx === 0} style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: idx === 0 ? 'default' : 'pointer', padding: 0, opacity: idx === 0 ? 0.3 : 1 }}>
-                    <ChevronUp size={13} color="#C9A84C" strokeWidth={2.5} />
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); moveExercise(idx, 1) }} disabled={idx === exos.length - 1} style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: idx === exos.length - 1 ? 'default' : 'pointer', padding: 0, opacity: idx === exos.length - 1 ? 0.3 : 1 }}>
-                    <ChevronDown size={13} color="#C9A84C" strokeWidth={2.5} />
-                  </button>
-                </div>
 
                 {/* Actions — top right */}
                 <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 2 }}>
@@ -817,13 +857,13 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
                         {/* c) KG x REPS inputs */}
                         <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: 6, justifyContent: 'center' }}>
-                          <input type="number" inputMode="decimal" step="0.5" className="ws-input ws-big-input"
-                            value={set.weight} onChange={e => setField(exo.id, set.id, 'weight', e.target.value)}
+                          <input type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" className="ws-input ws-big-input"
+                            value={set.weight === '' ? '' : set.weight} onChange={e => setField(exo.id, set.id, 'weight', e.target.value)}
                             disabled={set.done} placeholder={last?.weight ? String(last.weight) : '0'}
                             style={{ width: 64, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: isActive ? 40 : 36, fontFamily: FONT_BODY, fontWeight: 800, color: (set.weight !== '') ? GOLD : 'rgba(201,168,76,0.4)', caretColor: GOLD, outline: 'none', lineHeight: 1, opacity: set.done ? 0.6 : 1 }} />
                           <span style={{ fontSize: 17, fontWeight: 600, color: 'rgba(245,241,232,0.3)', lineHeight: 1 }}>×</span>
-                          <input type="number" inputMode="numeric" className="ws-input ws-big-input"
-                            value={set.reps} onChange={e => setField(exo.id, set.id, 'reps', e.target.value)}
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" className="ws-input ws-big-input"
+                            value={set.reps === '' ? '' : set.reps} onChange={e => setField(exo.id, set.id, 'reps', e.target.value)}
                             disabled={set.done} placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
                             style={{ width: 52, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: isActive ? 40 : 36, fontFamily: FONT_BODY, fontWeight: 800, color: (set.reps !== '') ? GOLD : 'rgba(201,168,76,0.4)', caretColor: GOLD, outline: 'none', lineHeight: 1, opacity: set.done ? 0.6 : 1 }} />
                         </div>
@@ -911,12 +951,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           )
         })}
 
+        {/* Reorder link — visible only in normal mode with 2+ exos */}
+        {exos.length >= 2 && !reorderMode && (
+          <div style={{ textAlign: 'center', padding: '6px 0', marginBottom: 14 }}>
+            <button onClick={() => setReorderMode(true)} style={{ background: 'transparent', border: 'none', fontSize: 12, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.05em', textDecoration: 'underline', textDecorationColor: 'rgba(201,168,76,0.3)', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: FONT_BODY }}>↕ Réorganiser les exercices</button>
+          </div>
+        )}
+
         {/* Spacer to keep scroll above bottom bar */}
         <div style={{ height: 8 }} />
       </div>
 
-      {/* BARRE BAS — centered TERMINER */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
+      {/* BARRE BAS — centered TERMINER — hidden in reorder mode */}
+      {!reorderMode && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>TEMPS</span>
@@ -924,7 +971,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           </div>
           <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>TERMINER</button>
         </div>
-      </div>
+      </div>}
 
       {/* END SESSION MODAL — slide up sheet */}
       {showEndModal && !showDeleteConfirm && (
