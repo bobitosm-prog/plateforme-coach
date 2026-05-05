@@ -116,6 +116,19 @@
   + 1 éditeur, pas 2 sources parallèles visibles)
 - [ ] Convention debug logs : préfixer par [feature-debug] pour
   retrouver facilement avec grep avant chaque commit
+- [ ] Bug import meal plan multi-date : la page Nutrition client a 2 selecteurs
+  (calendrier date du log en haut + selecteur jour de plan dans le tab).
+  Fix 0c229ae bloque le cas "naviguer le selecteur de jour de plan hors
+  du jour courant". Mais cliquer sur une date future dans le calendrier
+  (ex: MER 6) modifie today et nutritionDay simultanement, ce qui
+  permet l'import dans cette date future sans alerte.
+  Decision UX produit a prendre :
+  - Variant A : 1 seul selecteur unifie (date = jour de plan = jour de log)
+  - Variant B : 2 selecteurs garde mais empeche navigation calendrier
+    > today reel (clamp today <= new Date())
+  - Variant C : autoriser logs futurs (planification anticipee)
+  Decouvert le 5 mai 2026 pendant Sprint 6.6 Phase 3b.3.
+  Effort : 30min (B clamp simple) a 2-3h (A refacto produit).
 
 ### Tech debt — Timer audio session iOS
 - [ ] Bug : son du timer disparaît quand l'écran iPhone se verrouille
