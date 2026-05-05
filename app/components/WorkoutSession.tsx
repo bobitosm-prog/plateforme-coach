@@ -440,14 +440,18 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     const targetExo = exos.find(e => e.id === eid)
     const r = targetExo ? getRestSeconds(targetExo) : 90
     const exoName = targetExo?.name || ''
-    let nextSetNum = 0
-    setExos(p => p.map(e => {
-      if (e.id !== eid) return e
-      const updated = { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) }
-      const nextUndone = updated.sets.find(s => !s.done)
-      nextSetNum = nextUndone?.num || 0
-      return updated
-    }))
+
+    // Projection synchrone : calculer nextSetNum AVANT setExos (updater async)
+    const projectedSets = targetExo?.sets.map(s =>
+      s.id !== sid ? s : { ...s, done: true }
+    ) ?? []
+    const nextUndone = projectedSets.find(s => !s.done)
+    const nextSetNum = nextUndone?.num ?? 0
+
+    setExos(p => p.map(e =>
+      e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: true }) }
+    ))
+
     const prev = previousData[exoName]
     const prevInfo = prev?.[nextSetNum - 1]
     const nextInfo = nextSetNum > 0
@@ -456,7 +460,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     startRest(r, eid, nextInfo, sid)
 
     // Sprint 6 progressive overload : suggest weight increase if user hit top of rep range
-    if (targetExo && nextSetNum > 0) {
+    if (targetExo) {
       const validatedSet = targetExo.sets.find(s => s.id === sid)
       const repsDone = Number(validatedSet?.reps) || 0
       const weightDone = Number(validatedSet?.weight) || 0
