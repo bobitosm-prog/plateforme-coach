@@ -106,10 +106,9 @@
   Cut 1806/1800, Maintain 2198/2200, Bulk 2802/2800.
   Écart résiduel : fat -12g/-13g sur Maintain/Bulk (acceptable,
   coach personnalise après application)
-- [ ] Mismatch format JSONB entre client_meal_plans et meal_plans
-  (coach : meals[{type, foods[{name, qty, kcal, prot, carb, fat}]}]
-  vs IA : repas{petit_dejeuner[{aliment, quantite_g, proteines}]}.
-  Code dupliqué dans viewers. Fix : unifier + migration data)
+- [x] ✅ Mismatch format JSONB entre client_meal_plans et meal_plans
+  (résolu Sprint 6.6, 5 mai 2026 — format canonique meals[].foods[]
+  unifié, parser tolérant, writer IA converti, migration SQL faite)
 - [ ] Hiérarchie écran Nutrition coach pas claire
   (sections empilées : TDEE, Plan IA, Plan actif, Tracking, Éditeur.
   Confusion si plan IA et manuel coexistent. Fix : 1 plan actif
@@ -214,36 +213,26 @@ Si > 0 -> fix avec Node script.
 ## ⚠️ Sprint 6.5 — Cleanup technique (4 mai 2026) — PARTIAL DONE
 - ✅ A : Fix audio iOS lock screen (scheduleBeep via Web Audio API)
 - ✅ B : Migration FK coach_clients → profiles(id) + refacto join Supabase
-- ❌ C : Unification format meal plans → reporté Sprint 6.6
+- ✅ C : Unification format meal plans → livré Sprint 6.6
 - ✅ D : Unification source de vérité 'invited' (profiles.subscription_type)
 - ✅ Fix header AI icon caché pour clients invités
 
-### Sprint 6.6 — Unification format meal plans (à planifier)
-Objectif : unifier la convention JSONB entre client_meal_plans.plan
-(coach manuel) et meal_plans.plan_data (IA générée) pour réduire
-la duplication de code et faciliter les futures features nutrition.
-
-Audit fait le 4 mai 2026. Conclusions :
-- 2 conventions JSONB en parallèle (meals[].foods[] vs repas{}.foods[])
-- Champs nommés différemment (name/aliment, qty/quantite_g, prot/proteines...)
-- 7 fichiers à modifier (4 readers, 3 writers)
-- 6 plans existants en prod à migrer via SQL jsonb_build_object
-- 1 prompt Claude (generate-meal-plan/route.ts) à ajuster avec risque
-  de régression sur la qualité des plans générés
-
-Reco : unifier vers le format Coach (plus court, anglais, structure
-meals[]).
-
-Estimation : 3-4h. Sprint dédié.
-
-Risques :
-- Régression sur la qualité des plans IA si prompt Claude mal ajusté
-- Migration data incomplète → plans IA existants illisibles
-- Le converter importMealFromPlan() dans NutritionTab à adapter
-
-Question architecturale ouverte :
-- Garder les 2 tables avec format unifié ?
-- OU fusionner en une seule table avec champ source ('coach'/'ai') ?
+## ✅ Sprint 6.6 — Unification format meal plans (5 mai 2026)
+- Phase 1 : type canonique + parser tolérant lib/meal-plan.ts (0813b2a)
+- Phase 2 : writer IA produit format canonique en sortie (274f5d7)
+- Phase 3 : 3 readers refacto + suppression findDayData
+  * 3a exports MealKey (822bad0)
+  * 3b.1 NutritionTab (2a2fa4a)
+  * 3b.2 ClientNutrition (bc2b4f7)
+  * 3b.3 renderCoachPlan + getTodayPlanData fallback (aa0f22d)
+- Phase 4 : migration SQL des 6 plans legacy en prod (5 mai 2026)
+- Bonus :
+  * fix UX label invité sans mention IA (535f4d1)
+  * fix import meal jour courant uniquement (0c229ae)
+  * fix handler stream 'done' (planData persisted properly)
+- Backup DB : meal_plans_backup_20260505 (à supprimer le 5 juin 2026)
+- Tech debt résiduel : getShoppingList() lit encore activeMealPlan.plan_data
+  brut (non bloquant, à migrer si refacto liste de courses)
 
 ### Sprint Native — Capacitor + App Store / Play Store (long terme)
 Objectif : packager l'app web Next.js en application native iOS +
