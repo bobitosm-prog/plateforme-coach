@@ -8,22 +8,22 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-05 17:15
+**Date derniere mise a jour** : 2026-05-05 17:30
 **Branche** : main
-**HEAD** : `fcb4f07` chore(home): unwire OverloadBanner + OverloadModal
+**HEAD** : `1097c34` refactor(workout-session): exo header en Hero Banner full-width
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Aucune (refacto Big Stack DONE, cleanup banners DONE)
+Aucune (Hero Banner DONE)
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue
-Tester refacto Big Stack live (Marco)
+Tester Hero Banner + Big Stack live (Marco)
 
 ### Backlog priorisee
-1. Tester refacto Big Stack live
+1. Tester Hero Banner + Big Stack live
 2. ChatAI polish UX (persistance historique en DB) — Sprint 4B residuel — 2-3h
 3. Layout desktop client incomplet (Messages sidebar + vue 2 colonnes) — 2-3h
 4. Scroll desktop conversation chat — 1-2h (lie au layout desktop)
@@ -40,6 +40,7 @@ Tester refacto Big Stack live (Marco)
 
 ### 2026-05-05
 
+- 17:30 `1097c34` refactor exo header en Hero Banner full-width
 - 17:15 `fcb4f07` chore unwire OverloadBanner + OverloadModal de home
 - 17:15 `30d9d2a` refactor set row Big Stack pour lisibilite gym
 - 17:00 `c072521` docs add SESSION_LOG.md + session rules in CLAUDE.md
