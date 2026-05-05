@@ -8,23 +8,23 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-05 16:52
+**Date derniere mise a jour** : 2026-05-05 17:15
 **Branche** : main
-**HEAD** : `d81bbac` fix(workout-session): overload hint ne se declenche plus jamais
+**HEAD** : `fcb4f07` chore(home): unwire OverloadBanner + OverloadModal
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Aucune — session precedente terminee (cleanup logs debug overload)
+Aucune (refacto Big Stack DONE, cleanup banners DONE)
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue
-A definir avec Marco (candidats : ChatAI polish, Sprint 7 Polish, layout desktop)
+Tester refacto Big Stack live (Marco)
 
 ### Backlog priorisee
-1. ChatAI polish UX (persistance historique en DB) — Sprint 4B residuel — 2-3h
-2. Auto-open OverloadModal au debut de seance suivante — Sprint 6 tech debt — 40min
+1. Tester refacto Big Stack live
+2. ChatAI polish UX (persistance historique en DB) — Sprint 4B residuel — 2-3h
 3. Layout desktop client incomplet (Messages sidebar + vue 2 colonnes) — 2-3h
 4. Scroll desktop conversation chat — 1-2h (lie au layout desktop)
 5. Hierarchie ecran Nutrition coach (plan IA vs manuel) — decision UX a prendre
@@ -40,6 +40,9 @@ A definir avec Marco (candidats : ChatAI polish, Sprint 7 Polish, layout desktop
 
 ### 2026-05-05
 
+- 17:15 `fcb4f07` chore unwire OverloadBanner + OverloadModal de home
+- 17:15 `30d9d2a` refactor set row Big Stack pour lisibilite gym
+- 17:00 `c072521` docs add SESSION_LOG.md + session rules in CLAUDE.md
 - 16:52 `d81bbac` fix overload hint closure async + gate erronee
 - 16:25 `b576e78` feat hint overload progressif pendant chrono repos
 - 16:08 `670407c` fix heuristique overload (faux positifs sets oublies)
