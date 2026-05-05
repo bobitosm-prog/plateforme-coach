@@ -132,8 +132,8 @@
   À corriger avant Sprint 7 Polish.
 
 ### Tech debt Sprint 4B (Messagerie)
-- [ ] Liste conversations coach : avatars/alignement à polir
-  (vu en test live sur la liste des clients dans CoachMessages)
+- [x] ✅ Liste conversations coach : avatars/alignement refacto (5 mai 2026)
+  Résolu par commit 979f78c (pattern WhatsApp, avatar 44px gold)
 - [x] console.error dans useSignedUrl.ts ajouté pour ne pas avaler
   silencieusement les erreurs Storage (fait le 5 mai 2026)
 
