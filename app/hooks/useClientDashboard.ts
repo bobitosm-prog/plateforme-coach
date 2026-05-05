@@ -286,6 +286,11 @@ export default function useClientDashboard() {
       // L'API fait elle-meme la gate canUseAI (refuse les invites).
       for (const exo of data.exercises) {
         if (!exo.sets || exo.sets.length === 0) continue
+        // Sprint 6 tech debt fix : ne pas suggerer un overload si le user
+        // a oublie un ou plusieurs sets (n'a pas fait tous les sets prevus).
+        // WorkoutSession filtre les sets non-done avant l'envoi, donc exo.sets.length
+        // = sets reellement faits. setsTarget = sets prevus par le programme.
+        if (exo.setsTarget && exo.sets.length < exo.setsTarget) continue
 
         const reps = Number(exo.sets[0].reps) || 0
         const weight = Number(exo.sets[0].weight) || 0
@@ -304,7 +309,7 @@ export default function useClientDashboard() {
             currentWeight: weight,
             currentReps: reps,
             setsCompleted: exo.sets.length,
-            setsTarget: exo.sets.length,
+            setsTarget: exo.setsTarget || exo.sets.length,
             sessionId: sess.id,
           }),
         }).catch(err => {
