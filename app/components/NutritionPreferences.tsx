@@ -340,6 +340,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             const parsed = JSON.parse(line.slice(6))
             if (parsed.type === 'progress') setToastMsg(`Generation ${parsed.day}... (${parsed.index}/7)`)
             if (parsed.type === 'error') { console.error('SSE error:', parsed.error); throw new Error(parsed.error) }
+            if (parsed.type === 'done') planData = parsed.plan
           } catch (e) { if (e instanceof Error && e.message !== 'Unexpected end of JSON input') throw e }
         }
       }
