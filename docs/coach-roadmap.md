@@ -58,13 +58,22 @@
 - setMealPlan exposé dans useClientDetail.ts
 - Validé end-to-end : coach assigne → client invité voit le plan
 
-## ⏳ Sprint 4B - Communication polish (à planifier)
-### Messages chat in-app
-- [ ] Notifications nouveau message (push)
-- [ ] Badge non-lus dans bottom nav mobile header
-- [ ] Status read receipts améliorés (read_at timestamp)
+## ✅ Sprint 4B - Communication polish (5 mai 2026)
+### Phase 1 — Read receipts + badges
+- Check/CheckCheck sur les messages envoyés côté coach
+- Badge unread compteur rouge + animation pulse (bottom nav mobile)
+- Icône Messages cachée du header mobile (redondante avec bottom nav)
+- Badge unread desktop header (icône MessageCircle)
+- Sparkles AI gaté par aiAllowed dans le header desktop
 
-### ChatAI cote client solo
+### Phase 2 — Photo dans message
+- Compression image client-side (Canvas 1080px + JPEG q=80)
+- Upload vers bucket privé message-media (Supabase Storage)
+- Signed URLs avec cache + renouvellement auto (useSignedUrl)
+- Bouton joindre photo (3 composants chat) + preview + zoom modal
+- Style WhatsApp : image dans la bulle, padding adapté, caption
+
+### ChatAI cote client solo (non fait, sprint séparé)
 - [ ] Polish UX ChatAI (persistance historique en DB)
 
 ## ✅ Sprint 5 - Dashboard Analytics Coach (3 mai 2026)
@@ -121,6 +130,12 @@
   Fichiers : app/components/WorkoutSession.tsx (grep "new Audio|playSound")
   Priorité : haute pour V1 publique (frustration pendant entraînement).
   À corriger avant Sprint 7 Polish.
+
+### Tech debt Sprint 4B (Messagerie)
+- [ ] Liste conversations coach : avatars/alignement à polir
+  (vu en test live sur la liste des clients dans CoachMessages)
+- [x] console.error dans useSignedUrl.ts ajouté pour ne pas avaler
+  silencieusement les erreurs Storage (fait le 5 mai 2026)
 
 ### Tech debt Sprint 5 (Coach Analytics)
 - [ ] Typage Supabase non strict : 2 eslint-disable no-explicit-any
