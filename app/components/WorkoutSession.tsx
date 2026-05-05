@@ -18,6 +18,35 @@ interface ExSet { id: string; num: number; weight: number | ''; reps: number | '
 interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; sets: ExSet[]; open: boolean }
 interface WorkoutSessionProps { sessionName: string; exercises: any[]; startedAt?: string; onFinish: (data: any) => void; onClose: () => void }
 
+// Sprint 6 progressive overload — increment intelligent par groupe musculaire
+function getIncrementForExercise(name: string): number {
+  const n = name.toLowerCase()
+  // Lower compound lourd
+  if (/squat|deadlift|souleve de terre|hip thrust|good morning/i.test(n)) return 5
+  // Upper push compound
+  if (/bench|developpe couche|developpe militaire|overhead press|push press|incline press/i.test(n)) return 2.5
+  // Upper pull compound
+  if (/\brow\b|tirage|pull-?up|traction|chin-?up/i.test(n)) return 2.5
+  // Isolation (curl, lateral, kickback, fly, etc.)
+  if (/curl|extension|lateral|kickback|fly|ecarte|front raise|rear delt|reverse fly/i.test(n)) return 1.25
+  // Default
+  return 2.5
+}
+
+// Parse top of rep range from a target string like "10-12" -> 12, "10" -> 10, "AMRAP" -> null
+function parseTopOfRange(targetReps: string): number | null {
+  const trimmed = String(targetReps || '').trim()
+  if (!trimmed) return null
+  // Match "X-Y" range
+  const rangeMatch = trimmed.match(/^(\d+)\s*[-–]\s*(\d+)$/)
+  if (rangeMatch) return parseInt(rangeMatch[2], 10)
+  // Match single number
+  const singleMatch = trimmed.match(/^(\d+)$/)
+  if (singleMatch) return parseInt(singleMatch[1], 10)
+  // AMRAP, "max", non-numeric -> no top
+  return null
+}
+
 const uid = () => Math.random().toString(36).slice(2)
 const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', reps: '', done: false }))
 const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt(s) || 0 : s; return n >= 60 ? `${Math.floor(n / 60)}:${(n % 60).toString().padStart(2, '0')}` : `${n}s` }
@@ -253,6 +282,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [restSetId, setRestSetId] = useState<string | null>(null)
   const [restDone, setRestDone] = useState(false)
   const [restNextInfo, setRestNextInfo] = useState('')
+  const [overloadHint, setOverloadHint] = useState<{ exoId: string; setId: string; newWeight: number } | null>(null)
   const restT = useRef<NodeJS.Timeout | null>(null)
   const restEndsAtRef = useRef(0)
   const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
@@ -399,9 +429,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     if (setId) setRestSetId(setId)
     if (nextInfo) setRestNextInfo(nextInfo)
   }
-  const skipRest = () => { setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null) }
+  const skipRest = () => { setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null); setOverloadHint(null) }
   const addRestTime = () => { restEndsAtRef.current += 30000; setRestMax(m => m + 30) }
-  const dismissRestDone = () => { setRestDone(false); setRestExoId(null); setRestSetId(null) }
+  const dismissRestDone = () => { setRestDone(false); setRestExoId(null); setRestSetId(null); setOverloadHint(null) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) =>
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
   const doValidate = (eid: string, sid: string) => {
@@ -424,6 +454,22 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       ? `Set ${nextSetNum}${prevInfo ? ` — ${prevInfo.weight} kg × ${prevInfo.reps}` : ''}`
       : 'Exercice termine'
     startRest(r, eid, nextInfo, sid)
+
+    // Sprint 6 progressive overload : suggest weight increase if user hit top of rep range
+    if (targetExo && nextSetNum > 0) {
+      const validatedSet = targetExo.sets.find(s => s.id === sid)
+      const repsDone = Number(validatedSet?.reps) || 0
+      const weightDone = Number(validatedSet?.weight) || 0
+      const top = parseTopOfRange(targetExo.targetReps)
+      if (top !== null && repsDone >= top && weightDone > 0) {
+        const inc = getIncrementForExercise(targetExo.name)
+        setOverloadHint({ exoId: eid, setId: sid, newWeight: weightDone + inc })
+      } else {
+        setOverloadHint(null)
+      }
+    } else {
+      setOverloadHint(null)
+    }
   }
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
@@ -810,6 +856,20 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                             </div>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                            {overloadHint && overloadHint.exoId === exo.id && overloadHint.setId === set.id && (
+                              <div style={{
+                                padding: '8px 12px',
+                                background: 'rgba(74,222,128,0.10)',
+                                border: '1px solid rgba(74,222,128,0.35)',
+                                borderRadius: 10,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 2,
+                              }}>
+                                <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(74,222,128,0.9)', textTransform: 'uppercase' as const }}>🔥 Top atteint</span>
+                                <span style={{ fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, color: TEXT_PRIMARY }}>Essaie {overloadHint.newWeight} kg au prochain set</span>
+                              </div>
+                            )}
                             <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
                             <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Passer →</button>
                           </div>
