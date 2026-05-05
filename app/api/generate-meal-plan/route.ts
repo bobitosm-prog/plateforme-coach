@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
+import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-plan'
 
 export const maxDuration = 300
 
@@ -166,6 +167,39 @@ function extractProteins(dayPlan: any): string[] {
   return proteins
 }
 
+/**
+ * Convert legacy LLM day output (repas{} + French fields) to canonical DayPlan.
+ * The LLM prompt stays in legacy format (reliable); conversion happens after.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function convertLegacyDayToCanonical(legacyDay: any): DayPlan {
+  const repas = legacyDay?.repas ?? {}
+  const meals = (Object.keys(MEAL_KEY_TO_TYPE) as MealKey[]).map(key => {
+    const rawFoods = Array.isArray(repas[key]) ? repas[key] : []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return {
+      type: MEAL_KEY_TO_TYPE[key],
+      foods: rawFoods.map((f: any) => ({
+        name: String(f?.aliment ?? '').trim(),
+        qty:  Number(f?.quantite_g ?? 0) || 0,
+        kcal: Number(f?.kcal ?? 0) || 0,
+        prot: Number(f?.proteines ?? 0) || 0,
+        carb: Number(f?.glucides ?? 0) || 0,
+        fat:  Number(f?.lipides ?? 0) || 0,
+      })),
+    }
+  })
+  return {
+    meals,
+    totals: {
+      kcal: Number(legacyDay?.total_kcal ?? 0) || 0,
+      prot: Number(legacyDay?.total_protein ?? 0) || 0,
+      carb: Number(legacyDay?.total_carbs ?? 0) || 0,
+      fat:  Number(legacyDay?.total_fat ?? 0) || 0,
+    },
+  }
+}
+
 function verifyDayPlan(day: any, targetKcal: number): any {
   let totalKcal = 0, totalP = 0, totalG = 0, totalL = 0
   for (const foods of Object.values(day.repas || {}) as any[]) {
@@ -307,16 +341,17 @@ export async function POST(req: NextRequest) {
 
         for (let i = 0; i < DAYS.length; i++) {
           const day = DAYS[i]
-          const dayStart = Date.now()
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: i + 1, total: 7 })}\n\n`))
 
           try {
-            const dayPlan = await generateOneDay(apiKey, day, params, proteinsUsed)
-            plan[day] = dayPlan
-            proteinsUsed.push(...extractProteins(dayPlan))
+            const legacyDay = await generateOneDay(apiKey, day, params, proteinsUsed)
+            // extractProteins reads legacy structure (repas{} + aliment), call BEFORE conversion
+            proteinsUsed.push(...extractProteins(legacyDay))
+            // Convert to canonical for storage + streaming to client
+            plan[day] = convertLegacyDayToCanonical(legacyDay)
           } catch (e) {
             console.error(`[meal-plan] Error generating ${day}:`, e)
-            plan[day] = { total_kcal: 0, total_protein: 0, total_carbs: 0, total_fat: 0, repas: {} }
+            plan[day] = { meals: [], totals: { kcal: 0, prot: 0, carb: 0, fat: 0 } }
           }
         }
 
