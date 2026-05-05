@@ -10,9 +10,24 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
 
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { useMessageImageUpload } from '../../hooks/useMessageImageUpload'
 import MessageImage from '../../components/MessageImage'
 import { initials } from '../hooks/useCoachDashboard'
+
+function formatLastTime(iso: string): string {
+  const d = new Date(iso), now = new Date()
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  const y = new Date(now); y.setDate(now.getDate() - 1)
+  if (d.toDateString() === y.toDateString()) return 'Hier'
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+}
+
+function lastMsgPreview(msg: { content: string; image_url: string | null } | undefined): string {
+  if (!msg) return 'Démarrer la conversation'
+  if (msg.image_url) return msg.content || '📷 Photo'
+  return msg.content || ''
+}
 import type { ClientRow } from '../hooks/useCoachDashboard'
 
 interface CoachMessagesProps {
@@ -25,6 +40,7 @@ interface CoachMessagesProps {
   setMsgInput: (v: string) => void
   sendMessage: (imageUrl?: string | null) => void
   unreadCounts: Record<string, number>
+  lastMessages: Map<string, { content: string; image_url: string | null; created_at: string }>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any
   session: any
@@ -34,9 +50,10 @@ interface CoachMessagesProps {
 export default function CoachMessages({
   clients, selectedClient, setSelectedClient, openChat,
   chatMessages, msgInput, setMsgInput, sendMessage,
-  unreadCounts, supabase, session,
+  unreadCounts, lastMessages, supabase, session,
   msgEndRef,
 }: CoachMessagesProps) {
+  const isMobile = useIsMobile(1024)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -67,22 +84,25 @@ export default function CoachMessages({
               const name = c.profiles?.full_name ?? 'Sans nom'
               const ini = initials(c.profiles?.full_name)
               const unread = unreadCounts[c.client_id] || 0
+              const last = lastMessages.get(c.client_id)
+              const preview = lastMsgPreview(last)
+              const time = last ? formatLastTime(last.created_at) : ''
               return (
-                <div key={c.id} className="client-chat-row" onClick={() => openChat(c)}>
+                <div key={c.id} onClick={() => openChat(c)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer', borderBottom: `1px solid ${BORDER}`, transition: 'background 150ms' }} onMouseEnter={e => { e.currentTarget.style.background = BG_CARD_2 }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                   {c.profiles?.avatar_url
-                    ? <img src={c.profiles.avatar_url} alt="" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                    : <div className="avatar-circle" style={{ width: 38, height: 38, fontSize: '0.9rem' }}>{ini}</div>
+                    ? <img src={c.profiles.avatar_url} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                    : <div style={{ width: 44, height: 44, borderRadius: '50%', background: GOLD, color: '#0D0B08', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '1rem', flexShrink: 0 }}>{ini}</div>
                   }
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: '0.9rem', color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-                    <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, marginTop: 2 }}>Appuyer pour ouvrir</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <span style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: '0.95rem', color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+                      {time && <span style={{ fontSize: '0.7rem', color: unread > 0 ? GOLD : TEXT_DIM, flexShrink: 0 }}>{time}</span>}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: '0.8rem', color: unread > 0 ? TEXT_PRIMARY : TEXT_MUTED, fontWeight: unread > 0 ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontFamily: FONT_BODY }}>{preview}</span>
+                      {unread > 0 && <span style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: RED, color: '#fff', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{unread > 9 ? '9+' : unread}</span>}
+                    </div>
                   </div>
-                  {unread > 0 && (
-                    <span style={{ minWidth: 20, height: 20, background: RED, borderRadius: 10, fontSize: '0.65rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', flexShrink: 0 }}>
-                      {unread > 9 ? '9+' : unread}
-                    </span>
-                  )}
-                  <ChevronRight size={16} color={TEXT_DIM} style={{ flexShrink: 0 }} />
                 </div>
               )
             })}
@@ -92,7 +112,7 @@ export default function CoachMessages({
 
       {/* ── CHAT FULL-SCREEN OVERLAY (any section, when client selected) ── */}
       {selectedClient && (
-        <div className="chat-fullscreen">
+        <div className={isMobile ? 'chat-fullscreen' : undefined} style={isMobile ? undefined : { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)', background: BG_BASE }}>
 
           {/* Header */}
           <div style={{ padding: '14px 16px', paddingTop: 'max(14px, env(safe-area-inset-top, 14px))', background: BG_CARD, borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
@@ -116,7 +136,7 @@ export default function CoachMessages({
           </div>
 
           {/* Messages scroll area — paddingBottom leaves room for fixed input */}
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {chatMessages.length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <p style={{ color: TEXT_MUTED, fontSize: '0.85rem', fontFamily: FONT_BODY }}>Aucun message. Commencez la conversation !</p>
@@ -151,12 +171,12 @@ export default function CoachMessages({
 
           {/* Fixed input bar — sits above bottom nav */}
           {previewUrl && (
-            <div style={{ position: 'fixed', bottom: 120, left: 16, right: 16, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 8, display: 'flex', alignItems: 'center', gap: 8, zIndex: 202 }}>
+            <div style={{ position: isMobile ? 'fixed' : 'sticky', bottom: isMobile ? 120 : 60, left: 16, right: 16, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 8, display: 'flex', alignItems: 'center', gap: 8, zIndex: 202 }}>
               <img src={previewUrl} alt="Preview" style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 8 }} />
               <button onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: 4 }}><X size={16} /></button>
             </div>
           )}
-          <div style={{ position: 'fixed', bottom: 60, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', display: 'flex', gap: 12, alignItems: 'center', zIndex: 201 }}>
+          <div style={{ position: isMobile ? 'fixed' : 'sticky', bottom: isMobile ? 60 : 0, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, padding: '12px 16px', paddingBottom: isMobile ? 'max(12px, env(safe-area-inset-bottom, 12px))' : '12px', display: 'flex', gap: 12, alignItems: 'center', zIndex: 201, flexShrink: 0 }}>
             <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileSelected} />
             <button onClick={() => fileInputRef.current?.click()} style={{ width: 44, height: 44, borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <ImageIcon size={17} color={TEXT_MUTED} />

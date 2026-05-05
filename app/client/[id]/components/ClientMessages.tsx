@@ -51,15 +51,30 @@ export default function ClientMessages({ coachMessages, coachMsgInput, setCoachM
     if (coachMessages.length === 0) return
     const isInitial = coachMsgPrevLen.current === 0
     coachMsgPrevLen.current = coachMessages.length
-    const timer = setTimeout(() => {
+    const scrollToBottom = () => {
       coachMsgEndRef.current?.scrollIntoView({ behavior: isInitial ? 'instant' as ScrollBehavior : 'smooth' })
-    }, 0)
-    return () => clearTimeout(timer)
+    }
+    const t1 = setTimeout(scrollToBottom, 0)
+    const t2 = setTimeout(() => {
+      const container = coachMsgEndRef.current?.parentElement
+      if (!container) return
+      const images = container.querySelectorAll('img')
+      let loaded = 0
+      const total = images.length
+      if (total === 0) return
+      const onLoad = () => { loaded++; if (loaded === total) scrollToBottom() }
+      images.forEach(img => {
+        if (img.complete) loaded++
+        else { img.addEventListener('load', onLoad, { once: true }); img.addEventListener('error', onLoad, { once: true }) }
+      })
+      if (loaded === total) scrollToBottom()
+    }, 100)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [coachMessages.length])
 
   return (
     <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 120px)'}}>
-      <div style={{flex:1,overflowY:'auto',overflowX:'hidden',padding:'12px 16px',display:'flex',flexDirection:'column',gap:4}}>
+      <div style={{flex:1,minHeight:0,overflowY:'auto',overflowX:'hidden',padding:'12px 16px',display:'flex',flexDirection:'column',gap:4}}>
         {coachMessages.length === 0 && (
           <div style={{textAlign:'center',padding:'40px 0'}}>
             <MessageCircle size={32} color={TEXT_MUTED} style={{marginBottom:8}}/>

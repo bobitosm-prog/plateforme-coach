@@ -145,6 +145,7 @@ export default function useCoachDashboard(initialSession?: any) {
   const [chatMessages, setChatMessages]     = useState<any[]>([])
   const [msgInput, setMsgInput]             = useState('')
   const [unreadCounts, setUnreadCounts]     = useState<Record<string, number>>({})
+  const [lastMessages, setLastMessages]   = useState<Map<string, { content: string; image_url: string | null; created_at: string }>>(new Map())
   const msgEndRef = useRef<HTMLDivElement>(null)
 
   // Internal refs for polling — avoids stale closures inside setInterval
@@ -296,7 +297,7 @@ export default function useCoachDashboard(initialSession?: any) {
     const id = setInterval(async () => {
       // Always refresh unread counts
       const clientIds = clientsRef.current.map(c => c.client_id)
-      if (clientIds.length) fetchUnreadCounts(coachId, clientIds)
+      if (clientIds.length) { fetchUnreadCounts(coachId, clientIds); fetchLastMessages(coachId) }
 
       // Fetch new chat messages for the open conversation
       const client = selectedClientRef.current
@@ -317,10 +318,37 @@ export default function useCoachDashboard(initialSession?: any) {
     return () => clearInterval(id)
   }, [session?.user?.id])
 
-  // Scroll to bottom when chat messages update
+  // Scroll to bottom when chat messages update (with image load awareness)
+  const chatScrollInitial = useRef(true)
   useEffect(() => {
-    setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    if (chatMessages.length === 0) return
+    const scrollToBottom = () => {
+      msgEndRef.current?.scrollIntoView({
+        behavior: chatScrollInitial.current ? 'instant' as ScrollBehavior : 'smooth',
+        block: 'end',
+      })
+      chatScrollInitial.current = false
+    }
+    const t1 = setTimeout(scrollToBottom, 50)
+    // Re-scroll after images load (signed URLs resolve async)
+    const t2 = setTimeout(() => {
+      const container = msgEndRef.current?.parentElement
+      if (!container) return
+      const images = container.querySelectorAll('img')
+      let loaded = 0
+      const total = images.length
+      if (total === 0) return
+      const onLoad = () => { loaded++; if (loaded === total) scrollToBottom() }
+      images.forEach(img => {
+        if (img.complete) loaded++
+        else { img.addEventListener('load', onLoad, { once: true }); img.addEventListener('error', onLoad, { once: true }) }
+      })
+      if (loaded === total) scrollToBottom()
+    }, 100)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [chatMessages])
+  // Reset to instant when conversation changes
+  useEffect(() => { chatScrollInitial.current = true }, [selectedClient])
 
   // Fetch scheduled sessions when in calendar section or week offset changes
   useEffect(() => {
@@ -357,6 +385,7 @@ export default function useCoachDashboard(initialSession?: any) {
     setClients(rows)
     setLoading(false)
     fetchUnreadCounts(coachId, clientIds)
+    fetchLastMessages(coachId)
     fetchAtRiskClients(rows)
 
     // Fetch completed sessions for all clients of this coach
@@ -425,6 +454,22 @@ export default function useCoachDashboard(initialSession?: any) {
       counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1
     }
     setUnreadCounts(counts)
+  }
+
+  async function fetchLastMessages(coachId: string) {
+    const { data } = await supabase
+      .from('messages')
+      .select('sender_id, receiver_id, content, image_url, created_at')
+      .or(`sender_id.eq.${coachId},receiver_id.eq.${coachId}`)
+      .order('created_at', { ascending: false })
+      .limit(200)
+    const map = new Map<string, { content: string; image_url: string | null; created_at: string }>()
+    for (const msg of (data || [])) {
+      const other = msg.sender_id === coachId ? msg.receiver_id : msg.sender_id
+      if (!other || map.has(other)) continue
+      map.set(other, { content: msg.content || '', image_url: msg.image_url || null, created_at: msg.created_at })
+    }
+    setLastMessages(map)
   }
 
   async function fetchScheduledSessions(coachId: string, weekOffset = 0) {
@@ -658,6 +703,7 @@ export default function useCoachDashboard(initialSession?: any) {
     chatMessages,
     msgInput, setMsgInput,
     unreadCounts,
+    lastMessages,
     totalUnread,
     msgEndRef,
     openChat,
