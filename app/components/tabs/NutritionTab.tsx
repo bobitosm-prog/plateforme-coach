@@ -12,7 +12,7 @@ import ShoppingList from '../ShoppingList'
 import {
   fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
 } from '../../../lib/design-tokens'
-import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type DayPlan, type MealKey } from '../../../lib/meal-plan'
+import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
 const MEAL_LABELS: Record<string, string> = {
   petit_dejeuner: 'Petit-déjeuner',
   dejeuner: 'Déjeuner',
@@ -288,15 +288,21 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     }, { onConflict: 'user_id,date,meal_type' })
   }
 
-  // Get today's plan data normalized to canonical DayPlan format
+  // Get today's plan data normalized to canonical DayPlan format.
+  // Prefers activeMealPlan (AI), falls back to coachMealPlan.
   function getTodayPlanData(): { day: DayPlan; planId: string | null } | null {
-    if (!activeMealPlan?.plan_data) return null
-    const parsed = parseMealPlan(activeMealPlan.plan_data)
-    const dayKey = todayNutritionKey()
-    // Case-insensitive lookup (parseMealPlan normalizes to lowercase DAYS)
-    const day = parsed[dayKey.toLowerCase() as keyof typeof parsed]
-    if (!day) return null
-    return { day, planId: activeMealPlan.id }
+    const dayKey = todayNutritionKey().toLowerCase() as Day
+    if (activeMealPlan?.plan_data) {
+      const parsed = parseMealPlan(activeMealPlan.plan_data)
+      const day = parsed[dayKey]
+      if (day) return { day, planId: activeMealPlan.id }
+    }
+    if (coachMealPlan) {
+      const parsed = parseMealPlan(coachMealPlan)
+      const day = parsed[dayKey]
+      if (day) return { day, planId: coachMealPlan.id ?? null }
+    }
+    return null
   }
 
   // Calculate consumed macros from completed meals (canonical DayPlan)
@@ -363,44 +369,29 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
   }
 
-  // Case-insensitive day lookup in plan_data
-  function findDayData(planData: any, dayKey: string) {
-    if (!planData) return null
-    if (planData[dayKey]) return planData[dayKey]
-    const lower = dayKey.toLowerCase()
-    if (planData[lower]) return planData[lower]
-    // Try matching any key case-insensitively
-    const match = Object.keys(planData).find(k => k.toLowerCase() === lower)
-    if (match) return planData[match]
-    return null
-  }
-
   // Render the AI-generated meal plan (from meal_plans table)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function renderAiPlan(plan: any) {
-    const planData = plan.plan_data
-    if (!planData) return null
-
-    const dayData = findDayData(planData, nutritionDay)
+    if (!plan.plan_data) return null
+    const parsed = parseMealPlan(plan.plan_data)
+    const dayData = parsed[nutritionDay as Day]
     if (!dayData) {
-      // Show available days for debugging + prompt to pick one
-      const availableDays = Object.keys(planData)
       return (
         <div style={{ padding: 20, textAlign: 'center' }}>
           <p style={{ ...bodyStyle, fontSize: '0.85rem', marginBottom: 12 }}>Pas de plan pour {nutritionDay}.</p>
-          <p style={{ ...mutedStyle, fontSize: '0.75rem' }}>Jours disponibles : {availableDays.join(', ')}</p>
         </div>
       )
     }
+    const totals = dayData.totals ?? computeDayTotals(dayData)
 
     return (
       <>
-        {/* Macro targets */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: colors.goldBorder, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
           {[
-            { label: 'Kcal', value: String(dayData.total_kcal || plan.total_calories || '—') },
-            { label: 'Prot', value: `${dayData.total_protein || plan.protein_g || '—'}g` },
-            { label: 'Gluc', value: `${dayData.total_carbs || plan.carbs_g || '—'}g` },
-            { label: 'Lip', value: `${dayData.total_fat || plan.fat_g || '—'}g` },
+            { label: 'Kcal', value: String(totals.kcal || plan.total_calories || '—') },
+            { label: 'Prot', value: `${totals.prot || plan.protein_g || '—'}g` },
+            { label: 'Gluc', value: `${totals.carb || plan.carbs_g || '—'}g` },
+            { label: 'Lip', value: `${totals.fat || plan.fat_g || '—'}g` },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: colors.surface, borderRadius: 16, padding: 20, textAlign: 'center' }}>
               <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
@@ -409,12 +400,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           ))}
         </div>
 
-        {/* Day tabs */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16 }}>
           {NUTRITION_DAYS.map(({ key, label }) => {
             const isActive = nutritionDay === key
             const isToday = key === todayKey
-            const dayKcal = findDayData(planData, key)?.total_kcal || 0
+            const dp = parsed[key as Day]
+            const dayKcal = dp ? (dp.totals?.kcal ?? computeDayTotals(dp).kcal) : 0
             return (
               <button key={key} onClick={() => setNutritionDay(key)} style={{
                 flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -430,37 +421,32 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           })}
         </div>
 
-        {/* Shopping list button */}
         <button onClick={() => setShowShoppingModal(true)} style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
           padding: '12px 16px', borderRadius: 16, border: `1.5px solid ${colors.goldRule}`, cursor: 'pointer',
-          background: colors.goldDim,
-          fontFamily: fonts.body, fontSize: '0.82rem', fontWeight: 700,
+          background: colors.goldDim, fontFamily: fonts.body, fontSize: '0.82rem', fontWeight: 700,
           color: colors.gold, marginBottom: 12, transition: 'all 150ms',
         }}>
           <ShoppingCart size={15} strokeWidth={2.5} />
           Liste de courses
         </button>
 
-        {/* Meals */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {MEAL_ORDER.map(mealType => {
-            const foodList = Array.isArray(dayData.repas?.[mealType]) ? dayData.repas[mealType] : []
+          {MEAL_KEYS.map(mealKey => {
+            const foodList = getMealByKey(dayData, mealKey)
             if (foodList.length === 0) return null
-            const mealKcal = foodList.reduce((s: number, f: any) => s + (f.kcal || 0), 0)
+            const mealKcal = foodList.reduce((s, f) => s + f.kcal, 0)
             return (
-              <div key={mealType} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+              <div key={mealKey} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ ...statSmallStyle, fontWeight: 400, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase' }}>
-                    {MEAL_LABELS[mealType]}
-                  </span>
+                  <span style={{ ...statSmallStyle, fontWeight: 400, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase' }}>{MEAL_KEY_TO_TYPE[mealKey]}</span>
                   <span style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{mealKcal} kcal</span>
                 </div>
                 <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
                   {[
-                    { l: 'P', v: foodList.reduce((s: number, f: any) => s + (f.proteines || 0), 0), color: colors.gold },
-                    { l: 'G', v: foodList.reduce((s: number, f: any) => s + (f.glucides || 0), 0), color: '#60A5FA' },
-                    { l: 'L', v: foodList.reduce((s: number, f: any) => s + (f.lipides || 0), 0), color: '#F97316' },
+                    { l: 'P', v: foodList.reduce((s, f) => s + f.prot, 0), color: colors.gold },
+                    { l: 'G', v: foodList.reduce((s, f) => s + f.carb, 0), color: '#60A5FA' },
+                    { l: 'L', v: foodList.reduce((s, f) => s + f.fat, 0), color: '#F97316' },
                   ].map(({ l, v, color }) => (
                     <span key={l} style={{ fontFamily: fonts.body, fontSize: '0.72rem', fontWeight: 700, color: colors.textMuted }}>
                       <span style={{ color }}>{l}</span> {Math.round(v)}g
@@ -468,15 +454,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   ))}
                 </div>
                 <div>
-                  {foodList.map((food: any, fi: number) => (
+                  {foodList.map((food, fi) => (
                     <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? `1px solid ${colors.goldBorder}` : 'none' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 400, color: colors.text }}>{food.aliment}</div>
-                        <div style={{ fontFamily: fonts.body, fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>{food.quantite_g}g</div>
+                        <div style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 400, color: colors.text }}>{food.name}</div>
+                        {food.qty > 0 && <div style={{ fontFamily: fonts.body, fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>{food.qty}g</div>}
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{food.kcal || 0} kcal</div>
-                        <div style={{ fontFamily: fonts.body, fontSize: '0.6rem', color: colors.textMuted }}>P{food.proteines || 0} G{food.glucides || 0} L{food.lipides || 0}</div>
+                        <div style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{food.kcal} kcal</div>
+                        <div style={{ fontFamily: fonts.body, fontSize: '0.6rem', color: colors.textMuted }}>P{food.prot} G{food.carb} L{food.fat}</div>
                       </div>
                     </div>
                   ))}
@@ -489,16 +475,20 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     )
   }
 
-  // Render the old-style coachMealPlan (from client_meal_plans)
+  // Render the coach meal plan (from client_meal_plans)
   function renderCoachPlan() {
+    const parsed = parseMealPlan(coachMealPlan)
+    const dayPlanData = parsed[nutritionDay as Day]
+    const dayTotals = dayPlanData ? computeDayTotals(dayPlanData) : { kcal: 0, prot: 0, carb: 0, fat: 0 }
+
     return (
       <>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: colors.goldBorder, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
           {[
-            { label: 'Kcal', value: String(coachMealPlan.calorie_target || '—') },
-            { label: 'Prot', value: coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—' },
-            { label: 'Gluc', value: coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—' },
-            { label: 'Lip', value: coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—' },
+            { label: 'Kcal', value: String(dayTotals.kcal || coachMealPlan.calorie_target || '—') },
+            { label: 'Prot', value: dayTotals.prot > 0 ? `${dayTotals.prot}g` : (coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—') },
+            { label: 'Gluc', value: dayTotals.carb > 0 ? `${dayTotals.carb}g` : (coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—') },
+            { label: 'Lip', value: dayTotals.fat > 0 ? `${dayTotals.fat}g` : (coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—') },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: colors.surface, borderRadius: 16, padding: 20, textAlign: 'center' }}>
               <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
@@ -511,8 +501,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           {NUTRITION_DAYS.map(({ key, label }) => {
             const isActive = nutritionDay === key
             const isToday = key === todayKey
-            const dayMeals: any[] = coachMealPlan[key]?.meals ?? []
-            const dayKcal = dayMeals.reduce((s: number, m: any) => s + (m.foods || []).reduce((fs: number, f: any) => fs + (f.kcal || 0), 0), 0)
+            const dp = parsed[key as Day]
+            const dayKcal = dp ? computeDayTotals(dp).kcal : 0
             return (
               <button key={key} onClick={() => setNutritionDay(key)} style={{
                 flexShrink: 0, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -529,9 +519,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         </div>
 
         {(() => {
-          const dayPlan = coachMealPlan[nutritionDay]
-          const meals: any[] = dayPlan?.meals ?? []
-          if (!meals.length) return (
+          if (!dayPlanData || dayPlanData.meals.length === 0) return (
             <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '40px 20px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
               <UtensilsCrossed size={28} color={colors.textMuted} style={{ marginBottom: 8 }} />
               <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>Aucun repas pour ce jour.</p>
@@ -539,15 +527,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           )
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {meals.map((meal: any, mi: number) => {
-                const mealKcal = (meal.foods || []).reduce((s: number, f: any) => s + (f.kcal || 0), 0)
-                const mealProt = (meal.foods || []).reduce((s: number, f: any) => s + (f.prot || 0), 0)
-                const mealCarb = (meal.foods || []).reduce((s: number, f: any) => s + (f.carb || 0), 0)
-                const mealFat = (meal.foods || []).reduce((s: number, f: any) => s + (f.fat || 0), 0)
+              {dayPlanData.meals.map((meal, mi) => {
+                const mealKcal = meal.foods.reduce((s, f) => s + f.kcal, 0)
+                const mealProt = meal.foods.reduce((s, f) => s + f.prot, 0)
+                const mealCarb = meal.foods.reduce((s, f) => s + f.carb, 0)
+                const mealFat = meal.foods.reduce((s, f) => s + f.fat, 0)
                 return (
                   <div key={mi} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                     <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ ...statSmallStyle, fontWeight: 400, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase' }}>{meal.name}</span>
+                      <span style={{ ...statSmallStyle, fontWeight: 400, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase' }}>{meal.type}</span>
                       <span style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{mealKcal} kcal</span>
                     </div>
                     <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
@@ -562,16 +550,16 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       ))}
                     </div>
                     <div>
-                      {(meal.foods || []).map((food: any, fi: number) => (
+                      {meal.foods.map((food, fi) => (
                         <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? `1px solid ${colors.goldBorder}` : 'none' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 400, color: colors.text }}>{food.name}</div>
-                            {food.qty && <div style={{ fontFamily: fonts.body, fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>{food.qty}</div>}
+                            {food.qty > 0 && <div style={{ fontFamily: fonts.body, fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>{food.qty}g</div>}
                           </div>
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{food.kcal || 0} kcal</div>
+                            <div style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{food.kcal} kcal</div>
                             {(food.prot || food.carb || food.fat) ? (
-                              <div style={{ fontFamily: fonts.body, fontSize: '0.6rem', color: colors.textMuted }}>P{food.prot || 0} G{food.carb || 0} L{food.fat || 0}</div>
+                              <div style={{ fontFamily: fonts.body, fontSize: '0.6rem', color: colors.textMuted }}>P{food.prot} G{food.carb} L{food.fat}</div>
                             ) : null}
                           </div>
                         </div>
