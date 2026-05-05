@@ -12,6 +12,7 @@ import ShoppingList from '../ShoppingList'
 import {
   fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
 } from '../../../lib/design-tokens'
+import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type DayPlan, type MealKey } from '../../../lib/meal-plan'
 const MEAL_LABELS: Record<string, string> = {
   petit_dejeuner: 'Petit-déjeuner',
   dejeuner: 'Déjeuner',
@@ -24,7 +25,7 @@ const MEAL_TIMES: Record<string, string> = {
   collation: '16h00',
   diner: '19h30',
 }
-const MEAL_ORDER = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
+const MEAL_ORDER: MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
 
 type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes' | 'meals'
 
@@ -50,7 +51,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [showFridgeScanner, setShowFridgeScanner] = useState(false)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [dailyLogs, setDailyLogs] = useState<any[]>([])
-  const [importingMeal, setImportingMeal] = useState<string | null>(null)
+  const [importingMeal, setImportingMeal] = useState<MealKey | null>(null)
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
   const [editQty, setEditQty] = useState('')
   const [swappingFoodId, setSwappingFoodId] = useState<string | null>(null)
@@ -204,16 +205,16 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     }
   }
 
-  async function importMealFromPlan(mealType: string) {
+  async function importMealFromPlan(mealType: MealKey) {
     const todayPlan = getTodayPlanData()
     if (!todayPlan) return
-    const foods = Array.isArray(todayPlan.planData.repas?.[mealType]) ? todayPlan.planData.repas[mealType] : []
+    const foods = getMealByKey(todayPlan.day, mealType)
     if (!foods.length) return
     setImportingMeal(null)
-    const inserts = foods.map((f: any) => ({
+    const inserts = foods.map(f => ({
       user_id: userId, date: today, meal_type: mealType,
-      custom_name: f.aliment || 'Aliment', quantity_g: f.quantite_g || 100,
-      calories: f.kcal || 0, protein: f.proteines || 0, carbs: f.glucides || 0, fat: f.lipides || 0,
+      custom_name: f.name || 'Aliment', quantity_g: f.qty || 100,
+      calories: f.kcal, protein: f.prot, carbs: f.carb, fat: f.fat,
     }))
     await supabase.from('daily_food_logs').insert(inserts)
     fetchDailyLogs()
@@ -225,12 +226,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     return r
   }
 
-  function getMealRecommendation(mealType: string) {
+  function getMealRecommendation(mealType: MealKey) {
     const todayPlan = getTodayPlanData()
     if (!todayPlan) return null
-    const foods = Array.isArray(todayPlan.planData.repas?.[mealType]) ? todayPlan.planData.repas[mealType] : []
+    const foods = getMealByKey(todayPlan.day, mealType)
     if (!foods.length) return null
-    return foods.reduce((acc: any, f: any) => ({ kcal: acc.kcal + (f.kcal || 0), protein: acc.protein + (f.proteines || 0), carbs: acc.carbs + (f.glucides || 0), fat: acc.fat + (f.lipides || 0) }), { kcal: 0, protein: 0, carbs: 0, fat: 0 })
+    return foods.reduce(
+      (acc, f) => ({ kcal: acc.kcal + f.kcal, protein: acc.protein + f.prot, carbs: acc.carbs + f.carb, fat: acc.fat + f.fat }),
+      { kcal: 0, protein: 0, carbs: 0, fat: 0 }
+    )
   }
 
   function getMealConsumed(mealType: string) {
@@ -284,27 +288,28 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     }, { onConflict: 'user_id,date,meal_type' })
   }
 
-  // Get today's plan data from either source
-  function getTodayPlanData(): { planData: any; planId: string | null } | null {
-    if (activeMealPlan?.plan_data) {
-      const dayKey = todayNutritionKey()
-      const dayData = findDayData(activeMealPlan.plan_data, dayKey)
-      if (dayData) return { planData: dayData, planId: activeMealPlan.id }
-    }
-    return null
+  // Get today's plan data normalized to canonical DayPlan format
+  function getTodayPlanData(): { day: DayPlan; planId: string | null } | null {
+    if (!activeMealPlan?.plan_data) return null
+    const parsed = parseMealPlan(activeMealPlan.plan_data)
+    const dayKey = todayNutritionKey()
+    // Case-insensitive lookup (parseMealPlan normalizes to lowercase DAYS)
+    const day = parsed[dayKey.toLowerCase() as keyof typeof parsed]
+    if (!day) return null
+    return { day, planId: activeMealPlan.id }
   }
 
-  // Calculate consumed macros from completed meals
-  function getConsumedMacros(dayData: any): { kcal: number; protein: number; carbs: number; fat: number } {
+  // Calculate consumed macros from completed meals (canonical DayPlan)
+  function getConsumedMacros(day: DayPlan): { kcal: number; protein: number; carbs: number; fat: number } {
     const result = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    if (!dayData?.repas) return result
-    for (const [mealType, foods] of Object.entries(dayData.repas)) {
-      if (!completedMeals.has(mealType) || !Array.isArray(foods)) continue
-      for (const f of foods as any[]) {
-        result.kcal += f.kcal || 0
-        result.protein += f.proteines || 0
-        result.carbs += f.glucides || 0
-        result.fat += f.lipides || 0
+    for (const key of MEAL_KEYS) {
+      if (!completedMeals.has(key)) continue
+      const foods = getMealByKey(day, key)
+      for (const f of foods) {
+        result.kcal += f.kcal
+        result.protein += f.prot
+        result.carbs += f.carb
+        result.fat += f.fat
       }
     }
     return result
@@ -831,7 +836,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {/* Import confirmation modal */}
             {importingMeal && (() => {
               const todayPlan = getTodayPlanData()
-              const foods = todayPlan ? (Array.isArray(todayPlan.planData.repas?.[importingMeal]) ? todayPlan.planData.repas[importingMeal] : []) : []
+              const foods = todayPlan ? getMealByKey(todayPlan.day, importingMeal) : []
               return (
                 <ImportPlanSheet mealLabel={MEAL_LABELS[importingMeal]} foods={foods} onImport={() => importMealFromPlan(importingMeal)} onClose={() => setImportingMeal(null)} />
               )
