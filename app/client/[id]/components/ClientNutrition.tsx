@@ -11,6 +11,7 @@ import {
 } from '@/lib/design-tokens'
 import { useIsMobile } from '@/app/hooks/useIsMobile'
 import { MEAL_PLAN_TEMPLATES, type MealPlanTemplate } from '@/lib/meal-plan-templates'
+import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, DAYS as MP_DAYS, type Day, type DayPlan } from '@/lib/meal-plan'
 
 type FoodItem = { name: string; qty: string; kcal: number; prot: number; carb: number; fat: number }
 type Meal      = { type: string; foods: FoodItem[] }
@@ -20,8 +21,6 @@ type WeekMealPlan = Record<string, DayMealData>
 const DAYS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
 const DAY_LABELS: Record<string,string> = { lundi:'Lun', mardi:'Mar', mercredi:'Mer', jeudi:'Jeu', vendredi:'Ven', samedi:'Sam', dimanche:'Dim' }
 const MACRO_COLORS = { kcal:GOLD, prot:'#E8C97A', carb:TEXT_MUTED, fat:TEXT_PRIMARY }
-const AI_MEAL_ORDER = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
-const AI_MEAL_LABELS: Record<string, string> = { petit_dejeuner: 'Petit-déjeuner', dejeuner: 'Déjeuner', collation: 'Collation', diner: 'Dîner' }
 
 function dayMacros(day: DayMealData) {
   let kcal=0, prot=0, carb=0, fat=0
@@ -159,14 +158,16 @@ export default function ClientNutrition({
             ))}
           </div>
           {(() => {
-            const day = aiMealPreview[aiMealPreviewDay]
+            const parsed = parseMealPlan(aiMealPreview)
+            const day = parsed[aiMealPreviewDay as Day]
             if (!day) return null
+            const totals = day.totals ?? computeDayTotals(day)
             return (
               <div style={{padding:'8px 12px 12px'}}>
                 <div style={{display:'flex',gap:8,marginBottom:10}}>
                   {[
-                    {l:'Kcal',v:day.total_kcal,c:'#D4A843'},{l:'P',v:`${day.total_protein}g`,c:'#E8C97A'},
-                    {l:'G',v:`${day.total_carbs}g`,c:'#8A8070'},{l:'L',v:`${day.total_fat}g`,c:'#F5EDD8'},
+                    {l:'Kcal',v:totals.kcal,c:'#D4A843'},{l:'P',v:`${totals.prot}g`,c:'#E8C97A'},
+                    {l:'G',v:`${totals.carb}g`,c:'#8A8070'},{l:'L',v:`${totals.fat}g`,c:'#F5EDD8'},
                   ].map(m=>(
                     <div key={m.l} style={{flex:1,background:BG_BASE,borderRadius:RADIUS_CARD,padding:'6px 4px',textAlign:'center'}}>
                       <div style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,color:m.c}}>{m.v}</div>
@@ -174,18 +175,18 @@ export default function ClientNutrition({
                     </div>
                   ))}
                 </div>
-                {AI_MEAL_ORDER.map(mealType => {
-                  const foods = Array.isArray(day.repas?.[mealType]) ? day.repas[mealType] : []
+                {MEAL_KEYS.map(mealKey => {
+                  const foods = getMealByKey(day, mealKey)
                   if (foods.length === 0) return null
                   return (
-                    <div key={mealType} style={{marginBottom:8}}>
+                    <div key={mealKey} style={{marginBottom:8}}>
                       <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:'2px',marginBottom:4}}>
-                        {AI_MEAL_LABELS[mealType]}
+                        {MEAL_KEY_TO_TYPE[mealKey]}
                       </div>
-                      {foods.map((f: any, i: number) => (
+                      {foods.map((f, i) => (
                         <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:`1px solid ${BORDER}`}}>
-                          <span style={{fontSize:'0.78rem',fontFamily:FONT_BODY,color:TEXT_PRIMARY}}>{f.aliment}</span>
-                          <span style={{fontSize:'0.7rem',fontFamily:FONT_BODY,color:TEXT_MUTED,flexShrink:0,marginLeft:8}}>{f.quantite_g}g · {f.kcal}kcal</span>
+                          <span style={{fontSize:'0.78rem',fontFamily:FONT_BODY,color:TEXT_PRIMARY}}>{f.name}</span>
+                          <span style={{fontSize:'0.7rem',fontFamily:FONT_BODY,color:TEXT_MUTED,flexShrink:0,marginLeft:8}}>{f.qty}g · {f.kcal}kcal</span>
                         </div>
                       ))}
                     </div>
@@ -213,56 +214,65 @@ export default function ClientNutrition({
             <span style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,flex:1,letterSpacing:'2px',textTransform:'uppercase'}}>Plan actif</span>
             <span style={{fontSize:'0.65rem',fontFamily:FONT_BODY,color:TEXT_MUTED}}>{new Date(clientActivePlan.created_at).toLocaleDateString('fr-FR')}</span>
           </div>
-          <div style={{display:'flex',gap:4,padding:'8px 12px',overflowX:'auto'}}>
-            {DAYS.map(d => {
-              const dayData = clientActivePlan.plan_data[d]
-              return (
-                <button key={d} onClick={()=>setClientActivePlanDay(d)} style={{
-                  padding:'6px 10px',borderRadius:0,border:'none',cursor:'pointer',
-                  fontFamily:FONT_ALT,fontSize:'0.72rem',fontWeight:700,
-                  background:clientActivePlanDay===d?GOLD:BG_CARD_2,
-                  color:clientActivePlanDay===d?'#0D0B08':TEXT_MUTED,flexShrink:0,
-                }}>
-                  {DAY_LABELS[d]}
-                  {dayData?.total_kcal && <span style={{display:'block',fontSize:'0.55rem',opacity:0.8}}>{dayData.total_kcal}</span>}
-                </button>
-              )
-            })}
-          </div>
           {(() => {
-            const day = clientActivePlan.plan_data[clientActivePlanDay]
-            if (!day) return null
+            const parsed = parseMealPlan(clientActivePlan.plan_data)
             return (
-              <div style={{padding:'8px 12px 12px'}}>
-                <div style={{display:'flex',gap:8,marginBottom:10}}>
-                  {[
-                    {l:'Kcal',v:day.total_kcal,c:'#D4A843'},{l:'P',v:`${day.total_protein}g`,c:'#E8C97A'},
-                    {l:'G',v:`${day.total_carbs}g`,c:'#8A8070'},{l:'L',v:`${day.total_fat}g`,c:'#F5EDD8'},
-                  ].map(m=>(
-                    <div key={m.l} style={{flex:1,background:BG_BASE,borderRadius:RADIUS_CARD,padding:'6px 4px',textAlign:'center'}}>
-                      <div style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,color:m.c}}>{m.v}</div>
-                      <div style={{fontFamily:FONT_ALT,fontSize:'0.55rem',color:TEXT_MUTED,fontWeight:700,letterSpacing:'2px',textTransform:'uppercase'}}>{m.l}</div>
-                    </div>
-                  ))}
+              <>
+                <div style={{display:'flex',gap:4,padding:'8px 12px',overflowX:'auto'}}>
+                  {DAYS.map(d => {
+                    const dayData = parsed[d as Day]
+                    const kcal = dayData ? (dayData.totals?.kcal ?? computeDayTotals(dayData).kcal) : 0
+                    return (
+                      <button key={d} onClick={()=>setClientActivePlanDay(d)} style={{
+                        padding:'6px 10px',borderRadius:0,border:'none',cursor:'pointer',
+                        fontFamily:FONT_ALT,fontSize:'0.72rem',fontWeight:700,
+                        background:clientActivePlanDay===d?GOLD:BG_CARD_2,
+                        color:clientActivePlanDay===d?'#0D0B08':TEXT_MUTED,flexShrink:0,
+                      }}>
+                        {DAY_LABELS[d]}
+                        {kcal > 0 && <span style={{display:'block',fontSize:'0.55rem',opacity:0.8}}>{kcal}</span>}
+                      </button>
+                    )
+                  })}
                 </div>
-                {AI_MEAL_ORDER.map(mealType => {
-                  const foods = Array.isArray(day.repas?.[mealType]) ? day.repas[mealType] : []
-                  if (foods.length === 0) return null
+                {(() => {
+                  const day = parsed[clientActivePlanDay as Day]
+                  if (!day) return null
+                  const totals = day.totals ?? computeDayTotals(day)
                   return (
-                    <div key={mealType} style={{marginBottom:8}}>
-                      <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:'2px',marginBottom:4}}>
-                        {AI_MEAL_LABELS[mealType]}
+                    <div style={{padding:'8px 12px 12px'}}>
+                      <div style={{display:'flex',gap:8,marginBottom:10}}>
+                        {[
+                          {l:'Kcal',v:totals.kcal,c:'#D4A843'},{l:'P',v:`${totals.prot}g`,c:'#E8C97A'},
+                          {l:'G',v:`${totals.carb}g`,c:'#8A8070'},{l:'L',v:`${totals.fat}g`,c:'#F5EDD8'},
+                        ].map(m=>(
+                          <div key={m.l} style={{flex:1,background:BG_BASE,borderRadius:RADIUS_CARD,padding:'6px 4px',textAlign:'center'}}>
+                            <div style={{fontFamily:FONT_DISPLAY,fontSize:'1.1rem',fontWeight:400,color:m.c}}>{m.v}</div>
+                            <div style={{fontFamily:FONT_ALT,fontSize:'0.55rem',color:TEXT_MUTED,fontWeight:700,letterSpacing:'2px',textTransform:'uppercase'}}>{m.l}</div>
+                          </div>
+                        ))}
                       </div>
-                      {foods.map((f: any, i: number) => (
-                        <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:`1px solid ${BORDER}`}}>
-                          <span style={{fontSize:'0.78rem',fontFamily:FONT_BODY,color:TEXT_PRIMARY}}>{f.aliment}</span>
-                          <span style={{fontSize:'0.7rem',fontFamily:FONT_BODY,color:TEXT_MUTED,flexShrink:0,marginLeft:8}}>{f.quantite_g}g · {f.kcal}kcal</span>
-                        </div>
-                      ))}
+                      {MEAL_KEYS.map(mealKey => {
+                        const foods = getMealByKey(day, mealKey)
+                        if (foods.length === 0) return null
+                        return (
+                          <div key={mealKey} style={{marginBottom:8}}>
+                            <div style={{fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:'2px',marginBottom:4}}>
+                              {MEAL_KEY_TO_TYPE[mealKey]}
+                            </div>
+                            {foods.map((f, i) => (
+                              <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'4px 0',borderBottom:`1px solid ${BORDER}`}}>
+                                <span style={{fontSize:'0.78rem',fontFamily:FONT_BODY,color:TEXT_PRIMARY}}>{f.name}</span>
+                                <span style={{fontSize:'0.7rem',fontFamily:FONT_BODY,color:TEXT_MUTED,flexShrink:0,marginLeft:8}}>{f.qty}g · {f.kcal}kcal</span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      })}
                     </div>
                   )
-                })}
-              </div>
+                })()}
+              </>
             )
           })()}
         </div>
