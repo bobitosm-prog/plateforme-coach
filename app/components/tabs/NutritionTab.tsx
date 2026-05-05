@@ -807,7 +807,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px' }}>
                       {hasPlanFoods && logs.length === 0 && (
                         <button onClick={() => setImportingMeal(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: 'pointer', fontFamily: fonts.body, fontSize: 11, color: colors.gold }}>
-                          🤖 Importer le plan IA
+                          {isInvited ? '📋 Importer du plan' : '🤖 Importer le plan IA'}
                         </button>
                       )}
                       <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${colors.goldBorder}`, background: 'transparent', cursor: 'pointer', fontFamily: fonts.body, color: colors.textMuted, fontSize: 11 }}>
@@ -826,7 +826,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               const todayPlan = getTodayPlanData()
               const foods = todayPlan ? getMealByKey(todayPlan.day, importingMeal) : []
               return (
-                <ImportPlanSheet mealLabel={MEAL_LABELS[importingMeal]} foods={foods} onImport={() => importMealFromPlan(importingMeal)} onClose={() => setImportingMeal(null)} />
+                <ImportPlanSheet mealLabel={MEAL_LABELS[importingMeal]} foods={foods} isInvited={isInvited} onImport={() => importMealFromPlan(importingMeal)} onClose={() => setImportingMeal(null)} />
               )
             })()}
 

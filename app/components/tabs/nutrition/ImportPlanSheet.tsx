@@ -5,11 +5,12 @@ import type { Food } from '../../../../lib/meal-plan'
 interface Props {
   mealLabel: string
   foods: Food[]
+  isInvited?: boolean
   onImport: () => void
   onClose: () => void
 }
 
-export default function ImportPlanSheet({ mealLabel, foods, onImport, onClose }: Props) {
+export default function ImportPlanSheet({ mealLabel, foods, isInvited, onImport, onClose }: Props) {
   return (
     <>
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1100 }} onClick={onClose} />
@@ -18,7 +19,7 @@ export default function ImportPlanSheet({ mealLabel, foods, onImport, onClose }:
           <div style={{ width: 40, height: 4, borderRadius: 2, background: GOLD_RULE }} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
-          <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 4px' }}>IMPORTER LE PLAN IA</h3>
+          <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 4px' }}>{isInvited ? 'IMPORTER DU PLAN' : 'IMPORTER LE PLAN IA'}</h3>
           <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: '0 0 16px' }}>Ajouter les aliments recommandes pour {mealLabel} ?</p>
           {foods.map((f, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < foods.length - 1 ? `1px solid ${GOLD_DIM}` : 'none' }}>
