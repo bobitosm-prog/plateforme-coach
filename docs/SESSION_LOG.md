@@ -8,26 +8,26 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-06 20:50
+**Date derniere mise a jour** : 2026-05-06 21:00
 **Branche** : main
-**HEAD** : `ce7474a` feat(chat-ai): persistance cote serveur + hook useChatAI
+**HEAD** : `0d2400a` feat(chat-ai): cablage useChatAI + bouton effacer + UX polish
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Phase 2/3 ChatAI persistance DONE. Phase 3 a faire (cablage ChatAI.tsx).
+Aucune — Sprint ChatAI persistance DONE (3/3 phases).
 
 ### Blockers
 Aucun
 
-### Prochaine tache prevue (DEMAIN)
-1. Test live integral : Big Stack + Hero Banner + Reorder mode style Strong
+### Prochaine tache prevue
+A definir avec Marco. Candidats :
+1. Test live Big Stack + Hero Banner + Reorder mode
 2. Verifier Gainage Lateral affiche image + video dans la liste exos
 3. Sync les autres exos sans media (utiliser sync-exercise-media.js)
 
 ### Backlog priorisee
 1. Test live Big Stack + Hero Banner + Reorder mode
-2. ChatAI polish UX (persistance historique en DB) — Sprint 4B residuel — 2-3h
-3. Layout desktop client incomplet (Messages sidebar + vue 2 colonnes) — 2-3h
+2. Layout desktop client incomplet (Messages sidebar + vue 2 colonnes) — 2-3h
 4. Scroll desktop conversation chat — 1-2h (lie au layout desktop)
 5. Hierarchie ecran Nutrition coach (plan IA vs manuel) — decision UX a prendre
 6. Bug import meal plan multi-date (decision UX : variant A/B/C) — 30min-2h
@@ -41,6 +41,11 @@ Aucun
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
 
 ### 2026-05-06
+
+- 21:00 `0d2400a` feat chat-ai cablage UI + bouton effacer + UX polish (Phase 3/3 DONE)
+
+Sprint ChatAI persistance DONE — 1 conversation continue par client,
+retention 30j auto-purge, persistance multi-device, hook reutilisable.
 
 - 20:50 `ce7474a` feat chat-ai persistance serveur + hook useChatAI (Phase 2/3)
 - 20:35 `7a4fe2a` feat chat-ai table chat_ai_messages + RLS + auto-purge 30j (Phase 1/3)
