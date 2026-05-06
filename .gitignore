@@ -59,3 +59,9 @@ higgsfield-*.png
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# Exercise media (synced to Supabase Storage, not Git)
+exercise-media/
+
+# Claude Code local settings
+.claude/settings.local.json
