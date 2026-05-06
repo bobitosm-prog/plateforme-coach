@@ -8,33 +8,32 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-06 21:00
+**Date derniere mise a jour** : 2026-05-06 21:10
 **Branche** : main
-**HEAD** : `0d2400a` feat(chat-ai): cablage useChatAI + bouton effacer + UX polish
+**HEAD** : `f25d724` docs(log): sprint ChatAI persistance DONE - 3/3 phases
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Aucune — Sprint ChatAI persistance DONE (3/3 phases).
+Aucune — fin de session.
 
 ### Blockers
 Aucun
 
-### Prochaine tache prevue
-A definir avec Marco. Candidats :
-1. Test live Big Stack + Hero Banner + Reorder mode
-2. Verifier Gainage Lateral affiche image + video dans la liste exos
-3. Sync les autres exos sans media (utiliser sync-exercise-media.js)
+### Prochaine tache prevue (PROCHAINE SESSION)
+1. Test live integral : Big Stack + Hero Banner + Reorder mode (commits 30d9d2a, 1097c34, 6543ac3)
+2. Layout desktop client incomplet (Messages sidebar + 2 colonnes) — 2-3h
+3. Sync media autres exos (utiliser sync-exercise-media.js)
 
 ### Backlog priorisee
 1. Test live Big Stack + Hero Banner + Reorder mode
 2. Layout desktop client incomplet (Messages sidebar + vue 2 colonnes) — 2-3h
-4. Scroll desktop conversation chat — 1-2h (lie au layout desktop)
-5. Hierarchie ecran Nutrition coach (plan IA vs manuel) — decision UX a prendre
-6. Bug import meal plan multi-date (decision UX : variant A/B/C) — 30min-2h
-7. FK manquantes globalement (~10-15 tables) — sprint dedie
-8. Sets array refactor (sets: number -> SetItem[]) — tech debt
-9. Typage Supabase strict useCoachAnalytics — 30min
-10. Sprint Native Capacitor (App Store + Play Store) — long terme 15-20h
+3. Scroll desktop conversation chat — 1-2h (lie au layout desktop)
+4. Hierarchie ecran Nutrition coach (plan IA vs manuel) — decision UX a prendre
+5. Bug import meal plan multi-date (decision UX : variant A/B/C) — 30min-2h
+6. FK manquantes globalement (~10-15 tables) — sprint dedie
+7. Sets array refactor (sets: number -> SetItem[]) — tech debt
+8. Typage Supabase strict useCoachAnalytics — 30min
+9. Sprint Native Capacitor (App Store + Play Store) — long terme 15-20h
 
 ---
 
@@ -44,11 +43,19 @@ A definir avec Marco. Candidats :
 
 - 21:00 `0d2400a` feat chat-ai cablage UI + bouton effacer + UX polish (Phase 3/3 DONE)
 
-Sprint ChatAI persistance DONE — 1 conversation continue par client,
-retention 30j auto-purge, persistance multi-device, hook reutilisable.
-
 - 20:50 `ce7474a` feat chat-ai persistance serveur + hook useChatAI (Phase 2/3)
 - 20:35 `7a4fe2a` feat chat-ai table chat_ai_messages + RLS + auto-purge 30j (Phase 1/3)
+
+FIN SESSION 6 mai 2026 — Sprint ChatAI persistance complet livre
+en 3 phases (~2h) :
+- Phase 1 : table + RLS + cron purge 30j
+- Phase 2 : route serveur + hook useChatAI
+- Phase 3 : cablage UI + bouton trash + UX polish
+Tests live valides : auth, profile fetch, contexte multi-tour
+(IA reconnait explicitement le contexte precedent), persistance
+multi-device, DELETE persiste apres reload. Architecture
+serveur-side scalable pour evolutions futures (multi-conv,
+streaming, resumes contextuels).
 
 ### 2026-05-05
 
