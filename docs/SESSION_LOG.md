@@ -8,13 +8,13 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-06 20:20
+**Date derniere mise a jour** : 2026-05-06 20:35
 **Branche** : main
-**HEAD** : `d9d2fdc` feat(scripts): sync-exercise-media outil de sync local→Supabase
+**HEAD** : `7a4fe2a` feat(chat-ai): table chat_ai_messages avec RLS + auto-purge 30j
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Aucune — fin de session.
+Phase 1/3 ChatAI persistance DONE. Phase 2 a faire (hook useChatAI + persistance serveur).
 
 ### Blockers
 Aucun
@@ -39,6 +39,10 @@ Aucun
 ---
 
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
+
+### 2026-05-06
+
+- 20:35 `7a4fe2a` feat chat-ai table chat_ai_messages + RLS + auto-purge 30j (Phase 1/3)
 
 ### 2026-05-05
 
