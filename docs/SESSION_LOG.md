@@ -8,13 +8,13 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-06 20:35
+**Date derniere mise a jour** : 2026-05-06 20:50
 **Branche** : main
-**HEAD** : `7a4fe2a` feat(chat-ai): table chat_ai_messages avec RLS + auto-purge 30j
+**HEAD** : `ce7474a` feat(chat-ai): persistance cote serveur + hook useChatAI
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Phase 1/3 ChatAI persistance DONE. Phase 2 a faire (hook useChatAI + persistance serveur).
+Phase 2/3 ChatAI persistance DONE. Phase 3 a faire (cablage ChatAI.tsx).
 
 ### Blockers
 Aucun
@@ -42,6 +42,7 @@ Aucun
 
 ### 2026-05-06
 
+- 20:50 `ce7474a` feat chat-ai persistance serveur + hook useChatAI (Phase 2/3)
 - 20:35 `7a4fe2a` feat chat-ai table chat_ai_messages + RLS + auto-purge 30j (Phase 1/3)
 
 ### 2026-05-05
