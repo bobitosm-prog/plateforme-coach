@@ -8,9 +8,9 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-05 18:00
+**Date derniere mise a jour** : 2026-05-06 20:20
 **Branche** : main
-**HEAD** : `8eb3483` docs(log): mode reorganiser + fix input warning
+**HEAD** : `d9d2fdc` feat(scripts): sync-exercise-media outil de sync local→Supabase
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
@@ -20,8 +20,9 @@ Aucune — fin de session.
 Aucun
 
 ### Prochaine tache prevue (DEMAIN)
-1. Test live : Big Stack + Hero Banner + Reorder mode (Front Squat ou autre)
-2. Ajustements visuels post-test si necessaire
+1. Test live integral : Big Stack + Hero Banner + Reorder mode style Strong
+2. Verifier Gainage Lateral affiche image + video dans la liste exos
+3. Sync les autres exos sans media (utiliser sync-exercise-media.js)
 
 ### Backlog priorisee
 1. Test live Big Stack + Hero Banner + Reorder mode
@@ -40,6 +41,13 @@ Aucun
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
 
 ### 2026-05-05
+
+- 20:15 `d9d2fdc` feat scripts sync-exercise-media outil sync local→Supabase (match par slug + update par id)
+
+FIN SESSION 5 mai 2026 — Bug exercise media sync resolu : fichiers
+locaux sans accents ne matchaient pas DB avec accents (.eq strict).
+Fix par slug match + update par id. Gainage Lateral OK en DB.
+sync-exercise-media.js commit en outillage.
 
 - 17:45 `6543ac3` feat mode reorganiser exos style Strong + fix input warning 8-12
 - 17:30 `1097c34` refactor exo header en Hero Banner full-width
