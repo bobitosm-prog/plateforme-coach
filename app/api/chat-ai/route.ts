@@ -25,15 +25,22 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { message, history, profile } = await req.json()
+    const { message } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: 'Message vide' }, { status: 400 })
+
+    // Fetch profile from DB (no longer sent by client)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, current_weight, target_weight, height, gender, tdee, calorie_goal, protein_goal, carbs_goal, fat_goal, fitness_level, fitness_score, objective, activity_level, dietary_type, onboarding_answers, subscription_type')
+      .eq('id', user.id)
+      .single()
 
     // Guard: invited clients cannot use AI coach
     if (profile?.subscription_type === 'invited') {
       return NextResponse.json({ error: 'Cette fonctionnalité est gérée par ton coach. Contacte-le directement.' }, { status: 403 })
     }
 
-    const p = profile || {}
+    const p = profile || {} as any
     const onboarding = p.onboarding_answers || {}
     const systemPrompt = `${COACH_SYSTEM_PROMPT}
 
@@ -56,13 +63,34 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
 15. Si le client demande à modifier son programme → dis-lui d'utiliser le bouton "Adapter la séance" dans l'onglet Entraînement
 16. Termine chaque réponse par une question de suivi pour maintenir l'engagement`
 
-    // Build messages with last 5 from history
+    // Fetch last 10 messages from DB for Anthropic context
+    const { data: dbHistory } = await supabase
+      .from('chat_ai_messages')
+      .select('role, content')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    const historyMessages = (dbHistory || []).reverse().map((m: any) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }))
+
+    // INSERT user message BEFORE calling Anthropic
+    const trimmedMessage = message.trim().slice(0, 500)
+    const { error: insertUserErr } = await supabase
+      .from('chat_ai_messages')
+      .insert({ user_id: user.id, role: 'user', content: trimmedMessage })
+
+    if (insertUserErr) {
+      console.error('[chat-ai] insert user message failed:', insertUserErr)
+      return NextResponse.json({ error: 'Erreur sauvegarde message' }, { status: 500 })
+    }
+
+    // Build messages for Anthropic
     const messages = [
-      ...(Array.isArray(history) ? history.slice(-5) : []).map((m: any) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      })),
-      { role: 'user' as const, content: message.trim().slice(0, 500) },
+      ...historyMessages,
+      { role: 'user' as const, content: trimmedMessage },
     ]
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -82,14 +110,26 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
 
     if (!res.ok) {
       const err = await res.text()
+      console.error('[chat-ai] Anthropic error:', res.status, err)
       return NextResponse.json({ error: `Erreur serveur (${res.status})` }, { status: res.status })
     }
 
     const data = await res.json()
     const aiMessage = data.content?.[0]?.text || 'Désolé, je n\'ai pas pu répondre.'
 
+    // INSERT assistant response AFTER reception (best effort)
+    const { error: insertAiErr } = await supabase
+      .from('chat_ai_messages')
+      .insert({ user_id: user.id, role: 'assistant', content: aiMessage })
+
+    if (insertAiErr) {
+      console.error('[chat-ai] insert assistant message failed:', insertAiErr)
+      // Don't fail the request — user still gets the response
+    }
+
     return NextResponse.json({ message: aiMessage })
   } catch (e: unknown) {
+    console.error('[chat-ai] unexpected error:', e)
     return NextResponse.json({ error: 'Erreur inattendue' }, { status: 500 })
   }
 }
