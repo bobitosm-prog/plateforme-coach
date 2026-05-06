@@ -38,26 +38,19 @@ USING (user_id = auth.uid());
 -- ============================================================
 -- Auto-purge : retention 30 jours via pg_cron
 -- ============================================================
--- pg_cron doit etre active dans le projet Supabase
--- (Database > Extensions > pg_cron). Si pas active, cette commande
--- echouera mais la migration des autres parties reussira.
 
-DO $
+DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
-    -- Daily at 3am UTC
     PERFORM cron.schedule(
       'purge-chat-ai-messages',
       '0 3 * * *',
-      $job$
-        DELETE FROM chat_ai_messages
-        WHERE created_at < now() - interval '30 days'
-      $job$
+      'DELETE FROM chat_ai_messages WHERE created_at < now() - interval ''30 days'''
     );
   ELSE
-    RAISE NOTICE 'pg_cron extension non installee. Skip cron job creation. Active pg_cron dans Supabase Dashboard > Database > Extensions, puis relance manuellement le bloc cron.schedule.';
+    RAISE NOTICE 'pg_cron extension non installee. Skip cron job creation.';
   END IF;
-END $;
+END $$;
 
 -- ============================================================
 -- COMMENT pour documenter intent
