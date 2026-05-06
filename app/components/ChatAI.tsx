@@ -1,8 +1,9 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, Heart, Dumbbell, BarChart3, UtensilsCrossed } from 'lucide-react'
+import { Send, Bot, Heart, Dumbbell, BarChart3, UtensilsCrossed, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { colors, fonts, titleStyle, bodyStyle, mutedStyle, subtitleStyle, cardStyle } from '../../lib/design-tokens'
+import { useChatAI } from '../hooks/useChatAI'
 
 const SUGGESTION_CARDS = [
   { label: 'Que manger ce soir ?', sub: 'Basé sur tes macros', icon: UtensilsCrossed, msg: 'Que manger ce soir en fonction de mes macros restantes ?' },
@@ -26,15 +27,6 @@ function renderMarkdown(text: string) {
     .replace(/^### (.*$)/gm, `<div style="font-family:${fonts.body};font-size:14px;font-weight:700;color:${colors.gold};letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase">$1</div>`)
     .replace(/^- (.*$)/gm, '<div style="padding-left:12px;margin:2px 0">• $1</div>')
     .replace(/\n/g, '<br/>')
-}
-
-const STORAGE_KEY = 'moovx_chat_history'
-const RATE_KEY = 'moovx_chat_rate'
-
-interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: string
 }
 
 interface ChatAIProps {
@@ -67,102 +59,38 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     )
   }
 
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const {
+    messages,
+    loading: historyLoading,
+    sending,
+    error: hookError,
+    sendMessage: persistedSend,
+    clearHistory,
+  } = useChatAI()
+
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const endRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const firstName = profile?.full_name?.split(' ')[0] || ''
   const hasConversation = messages.length > 0
 
-  // Load history from sessionStorage
+  // Scroll to bottom on new messages or sending state change
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(STORAGE_KEY)
-      if (saved) setMessages(JSON.parse(saved).slice(-30))
-    } catch {}
-  }, [])
-
-  // Save history
-  useEffect(() => {
-    if (messages.length > 0) {
-      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-30))) } catch {}
+    if (open) {
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+      }, 100)
     }
-  }, [messages])
+  }, [messages.length, sending, open])
 
-  // Scroll to bottom
-  useEffect(() => {
-    if (open) setTimeout(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-  }, [messages, open])
-
-  // Rate limiting
-  function checkRate(): boolean {
-    try {
-      const raw = sessionStorage.getItem(RATE_KEY)
-      const data = raw ? JSON.parse(raw) : { count: 0, hour: 0 }
-      const currentHour = Math.floor(Date.now() / 3600000)
-      if (data.hour !== currentHour) return true
-      return data.count < 40
-    } catch { return true }
-  }
-
-  function incrementRate() {
-    try {
-      const currentHour = Math.floor(Date.now() / 3600000)
-      const raw = sessionStorage.getItem(RATE_KEY)
-      const data = raw ? JSON.parse(raw) : { count: 0, hour: 0 }
-      if (data.hour !== currentHour) {
-        sessionStorage.setItem(RATE_KEY, JSON.stringify({ count: 1, hour: currentHour }))
-      } else {
-        sessionStorage.setItem(RATE_KEY, JSON.stringify({ count: data.count + 1, hour: currentHour }))
-      }
-    } catch {}
-  }
-
-  async function sendMessage(text?: string) {
+  async function handleSend(text?: string) {
     const msg = (text || input).trim()
-    if (!msg || loading) return
-    if (!checkRate()) { setError('Limite atteinte (40/h). Réessaie dans quelques minutes.'); return }
-
+    if (!msg || sending) return
     setInput('')
-    setError('')
-    const userMsg: ChatMessage = { role: 'user', content: msg, timestamp: new Date().toISOString() }
-    setMessages(prev => [...prev, userMsg])
-    setLoading(true)
-
     try {
-      const res = await fetch('/api/chat-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: msg,
-          history: messages.slice(-5),
-          profile: profile ? {
-            full_name: profile.full_name, current_weight: profile.current_weight,
-            target_weight: profile.target_weight, height: profile.height,
-            calorie_goal: profile.calorie_goal, protein_goal: profile.protein_goal,
-            carbs_goal: profile.carbs_goal, fat_goal: profile.fat_goal,
-            objective: profile.objective, activity_level: profile.activity_level,
-            dietary_type: profile.dietary_type, gender: profile.gender, tdee: profile.tdee,
-            fitness_score: profile.fitness_score, fitness_level: profile.fitness_level,
-            sessions_per_week: profile.sessions_per_week,
-            onboarding_answers: profile.onboarding_answers,
-            fitness_objectives: profile.fitness_objectives,
-          } : {},
-        }),
-      })
-
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-
-      const aiMsg: ChatMessage = { role: 'assistant', content: data.message, timestamp: new Date().toISOString() }
-      setMessages(prev => [...prev, aiMsg])
-      incrementRate()
-    } catch (e: any) {
-      setError(e.message || 'Erreur de connexion')
-    } finally {
-      setLoading(false)
+      await persistedSend(msg)
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -194,13 +122,32 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: colors.background, zIndex: 1001, display: 'flex', flexDirection: 'column' }}
       >
         {/* ═══ SCROLLABLE CONTENT ═══ */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
+        <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
 
           {/* ═══ SECTION 1 — HEADER COACH ═══ */}
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'max(24px, env(safe-area-inset-top, 24px))', marginBottom: 20 }}>
-            <button onClick={handleClose} style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 0, width: 36, height: 36, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 16, color: colors.textMuted, lineHeight: 1 }}>&times;</span>
-            </button>
+            {/* Close + Trash buttons */}
+            <div style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+              {messages.length > 0 && (
+                <button
+                  onClick={async () => {
+                    if (confirm('Effacer toute la conversation ? Cette action est irréversible.')) {
+                      await clearHistory()
+                    }
+                  }}
+                  aria-label="Effacer la conversation"
+                  title="Effacer la conversation"
+                  style={{ width: 36, height: 36, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, transition: 'opacity 200ms' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5' }}
+                >
+                  <Trash2 size={14} color={colors.textMuted} />
+                </button>
+              )}
+              <button onClick={handleClose} style={{ width: 36, height: 36, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 16, color: colors.textMuted, lineHeight: 1 }}>&times;</span>
+              </button>
+            </div>
             <div style={{ width: 56, height: 56, borderRadius: 16, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
               <Bot size={28} color={colors.gold} strokeWidth={2} />
             </div>
@@ -227,13 +174,20 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             </div>
           </div>
 
-          {/* ═══ SECTION 3 — SUGGESTIONS RAPIDES (hidden when conversation started) ═══ */}
-          {!hasConversation && (
+          {/* ═══ HISTORY LOADING STATE ═══ */}
+          {historyLoading && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 32, color: colors.textMuted, fontSize: 13, fontFamily: fonts.body }}>
+              Chargement de la conversation...
+            </div>
+          )}
+
+          {/* ═══ SECTION 3 — SUGGESTIONS RAPIDES (hidden when conversation started or loading) ═══ */}
+          {!historyLoading && !hasConversation && (
             <>
               <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', textAlign: 'center', marginBottom: 10 }}>SUGGESTIONS RAPIDES</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
                 {SUGGESTION_CARDS.map(({ label, sub, icon: Icon, msg }) => (
-                  <button key={label} onClick={() => sendMessage(msg)} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 14, padding: 12, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <button key={label} onClick={() => handleSend(msg)} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 14, padding: 12, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Icon size={16} color={colors.gold} strokeWidth={2} />
                     <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.text, lineHeight: 1.3 }}>{label}</div>
                     <div style={{ fontSize: 9, color: colors.textMuted }}>{sub}</div>
@@ -244,7 +198,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               {/* ═══ SECTION 4 — PILLS RAPIDES ═══ */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
                 {QUICK_PILLS.map(pill => (
-                  <button key={pill} onClick={() => sendMessage(pill)} style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, borderRadius: 999, padding: '6px 12px', cursor: 'pointer' }}>
+                  <button key={pill} onClick={() => handleSend(pill)} style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, borderRadius: 999, padding: '6px 12px', cursor: 'pointer' }}>
                     {pill}
                   </button>
                 ))}
@@ -252,8 +206,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             </>
           )}
 
-          {/* ═══ SECTION 5 — WELCOME MESSAGE (no conversation) ═══ */}
-          {!hasConversation && (
+          {/* ═══ SECTION 5 — WELCOME MESSAGE (no conversation, not loading) ═══ */}
+          {!historyLoading && !hasConversation && (
             <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Bot size={14} color={colors.gold} />
@@ -267,8 +221,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           )}
 
           {/* ═══ SECTION 6 — CONVERSATION ═══ */}
-          {messages.map((msg, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', gap: 8, marginBottom: 12 }}>
+          {messages.map((msg) => (
+            <div key={msg.id} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', gap: 8, marginBottom: 12 }}>
               {msg.role === 'assistant' && (
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
                   <Bot size={14} color={colors.gold} />
@@ -286,13 +240,14 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
                   </div>
                 )}
                 <div style={{ fontSize: 9, color: colors.textDim, marginTop: 4, textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                  {new Date(msg.timestamp).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.created_at).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             </div>
           ))}
 
-          {loading && (
+          {/* ═══ SENDING INDICATOR ═══ */}
+          {sending && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Bot size={14} color={colors.gold} />
@@ -307,8 +262,14 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             </div>
           )}
 
-          {error && <p style={{ fontSize: 12, color: colors.error, textAlign: 'center', marginBottom: 12 }}>{error}</p>}
-          <div ref={endRef} />
+          {/* ═══ ERROR BANNER ═══ */}
+          {hookError && (
+            <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 12, marginBottom: 12, fontFamily: fonts.body }}>
+              {hookError}
+            </div>
+          )}
+
+          <div style={{ height: 1 }} />
         </div>
 
         {/* ═══ INPUT BAR (fixed bottom) ═══ */}
@@ -321,7 +282,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           flexShrink: 0,
         }}>
           <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
             placeholder="Pose ta question..."
             rows={1}
             style={{
@@ -334,15 +295,15 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               resize: 'none', maxHeight: 80,
             }}
           />
-          <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
+          <button onClick={() => handleSend()} disabled={!input.trim() || sending}
             style={{
               width: 44, height: 44, borderRadius: 14,
-              background: input.trim() ? `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})` : `${colors.gold}1a`,
-              border: 'none', cursor: input.trim() ? 'pointer' : 'default',
+              background: input.trim() && !sending ? `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})` : `${colors.gold}1a`,
+              border: 'none', cursor: input.trim() && !sending ? 'pointer' : 'default',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, opacity: input.trim() ? 1 : 0.3,
+              flexShrink: 0, opacity: input.trim() && !sending ? 1 : 0.3,
             }}>
-            <Send size={18} color={input.trim() ? '#0D0B08' : colors.textMuted} strokeWidth={2.5} />
+            <Send size={18} color={input.trim() && !sending ? '#0D0B08' : colors.textMuted} strokeWidth={2.5} />
           </button>
         </div>
 
