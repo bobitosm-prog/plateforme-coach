@@ -34,9 +34,14 @@ export async function POST(req: NextRequest) {
   const { userId, title, body, url, tag } = await req.json()
   console.log('[Push] Target userId:', userId, '| title:', title)
 
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) {
+    console.error('[send-notification] SUPABASE_SERVICE_ROLE_KEY missing')
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+  }
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    serviceKey,
   )
 
   const { data: rows, error: dbError } = await supabase

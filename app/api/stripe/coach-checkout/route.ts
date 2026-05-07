@@ -9,9 +9,14 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY.trim())
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) {
+      console.error('[coach-checkout] SUPABASE_SERVICE_ROLE_KEY missing')
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+    }
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
-      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!).trim()
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceKey
     )
 
     const { clientId, coachId } = await req.json()
