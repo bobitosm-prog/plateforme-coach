@@ -1,9 +1,25 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
 
 export async function POST() {
+  // Auth check — admin only
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Only lifetime (admin) users can create Stripe products
+  const { data: profile } = await supabase.from('profiles').select('subscription_type').eq('id', user.id).single()
+  if (profile?.subscription_type !== 'lifetime') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   try {
     const stripe = getStripe()
 
