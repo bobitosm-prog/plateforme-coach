@@ -4,8 +4,8 @@
 > Pour l'etat instantane (HEAD, branche, tache en cours), voir `SESSION_LOG.md`.
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
-**Derniere mise a jour** : 2026-05-07 (post-merge sprint-securite)
-**HEAD synchro** : `9f67fdf` (Merge sprint-securite sur main)
+**Derniere mise a jour** : 2026-05-07 21:00 (post-fix BUG 1 FR comma)
+**HEAD synchro** : `d594e7d` (branche fix/training-weight-input-and-suggestion, pre-merge)
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---
@@ -219,6 +219,10 @@
 - [x] ✅ ~~Auto-open OverloadModal~~ — **Abandonne** (`fcb4f07` unwire banner+modal, hint chrono suffit)
 - [x] ✅ Heuristique faux positif sets oublies (`670407c` setsTarget guard)
 - [x] ✅ Source de verite "invited" unifiee (Sprint 6.5-D `profiles.subscription_type`)
+
+### Fix training inputs 7 mai 2026
+- [x] ✅ Bug input kg refusait virgule FR (TrainingExerciseCard `6225d09` + WorkoutSession `d594e7d`)
+- [ ] Reps input dans WorkoutSession sanitize digits-only — UX edge case "8,5" devient "85" silencieusement (a ameliorer si feedback users)
 
 ### Decouvertes audit 7 mai 2026
 - [ ] **497 `: any` explicites** dans 86 fichiers (page-desktop 51, TrainingTab 57, HomeTab 31, ProgressTab 30) — XL
