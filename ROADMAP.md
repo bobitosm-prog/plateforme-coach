@@ -4,8 +4,8 @@
 > Pour l'etat instantane (HEAD, branche, tache en cours), voir `SESSION_LOG.md`.
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
-**Derniere mise a jour** : 2026-05-07 (post-Sprint Securite)
-**HEAD synchro** : `21a5850` (branche sprint-securite)
+**Derniere mise a jour** : 2026-05-07 (post-merge sprint-securite)
+**HEAD synchro** : `9f67fdf` (Merge sprint-securite sur main)
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---

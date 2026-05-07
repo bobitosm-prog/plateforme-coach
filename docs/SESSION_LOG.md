@@ -8,13 +8,13 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-07 06:15
-**Branche** : sprint-securite
-**HEAD** : `21a5850` security: harden /api/debug-auth (whitelist dev only)
-**Working tree** : docs modifies (ROADMAP + SESSION_LOG)
+**Date derniere mise a jour** : 2026-05-07 06:30
+**Branche** : main
+**HEAD** : `9f67fdf` Merge sprint-securite sur main
+**Working tree** : clean
 
 ### Tache en cours
-Sprint Securite DONE — 3 commits, 8 routes corrigees.
+Aucune — Sprint Securite merge et push fait.
 
 ### Blockers
 Aucun
@@ -41,6 +41,7 @@ Aucun
 
 ### 2026-05-07
 
+- 06:30 `9f67fdf` Merge sprint-securite sur main (push origin main fait)
 - 06:15 `21a5850` security harden /api/debug-auth whitelist dev only
 - 06:10 `b539abe` security auth gate 3 routes Stripe (setup-products, check-account, coach-checkout)
 - 06:00 `eb412f2` security throw if SERVICE_ROLE_KEY missing on 4 admin routes
