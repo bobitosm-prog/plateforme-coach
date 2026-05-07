@@ -20,9 +20,14 @@ export async function POST(req: NextRequest) {
     const { coachId, autoAssign } = await req.json()
     const clientId = user.id
 
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) {
+      console.error('[assign-coach] SUPABASE_SERVICE_ROLE_KEY missing')
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+    }
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
-      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!).trim()
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceKey
     )
 
     // Resolve coach ID

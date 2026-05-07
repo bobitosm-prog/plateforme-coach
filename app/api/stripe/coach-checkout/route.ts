@@ -1,17 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function POST(req: NextRequest) {
+  // Auth check
+  const cookieStore = await cookies()
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY.trim())
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) {
+      console.error('[coach-checkout] SUPABASE_SERVICE_ROLE_KEY missing')
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+    }
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
-      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!).trim()
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceKey
     )
 
     const { clientId, coachId } = await req.json()

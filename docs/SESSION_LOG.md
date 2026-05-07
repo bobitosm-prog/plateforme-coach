@@ -8,24 +8,24 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-07 05:40
-**Branche** : main
-**HEAD** : `ec96fbf` docs(roadmap) consolidation 3 fichiers + audit complet
-**Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
+**Date derniere mise a jour** : 2026-05-07 06:15
+**Branche** : sprint-securite
+**HEAD** : `21a5850` security: harden /api/debug-auth (whitelist dev only)
+**Working tree** : docs modifies (ROADMAP + SESSION_LOG)
 
 ### Tache en cours
-Aucune — fin de session consolidation roadmap.
+Sprint Securite DONE — 3 commits, 8 routes corrigees.
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
-1. Sprint Securite (3 P0 audit) : SERVICE_ROLE fallback, auth Stripe, log-error — 2h
+1. Merge sprint-securite → main + push
 2. Test live Big Stack + Hero Banner + Reorder mode (commits 30d9d2a, 1097c34, 6543ac3)
 3. Sprint Layout Desktop (Messages sidebar + 2 colonnes) — 3-4h
 
 ### Backlog priorisee
-1. Sprint Securite — 3 P0 bloquant V1 (audit 7 mai 2026)
+1. ~~Sprint Securite~~ ✅ DONE
 2. Sprint Layout Desktop — 3-4h
 3. Sprint Images (54 img → next/image) — 3h
 4. Sprint Refacto composants > 500 lignes — L
@@ -41,11 +41,19 @@ Aucun
 
 ### 2026-05-07
 
+- 06:15 `21a5850` security harden /api/debug-auth whitelist dev only
+- 06:10 `b539abe` security auth gate 3 routes Stripe (setup-products, check-account, coach-checkout)
+- 06:00 `eb412f2` security throw if SERVICE_ROLE_KEY missing on 4 admin routes
 - 05:40 `ec96fbf` docs(roadmap) consolidation 3 fichiers + integration audit complet 7 mai
 
-Audit complet (Claude Code) revele 3 P0 securite non documentes :
-SERVICE_ROLE fallback (4 routes), Stripe sans auth (3 routes),
-log-error sans auth. Sprint Securite ajoute en tete de backlog.
+FIN SPRINT SECURITE 7 mai 2026 — 3 P0 audit corriges :
+- 4 routes fallback SERVICE_ROLE → throw 500 (assign-coach, log-error, send-notification, coach-checkout)
+- 3 routes Stripe auth-gated (setup-products admin-only, check-account, coach-checkout)
+- log-error : rate limit 10 req/min/IP + service_role strict
+- debug-auth : whitelist dev only (!=development → 404)
+8 fichiers routes modifies, 0 regression (build OK).
+
+Audit complet (Claude Code) revele 3 P0 securite non documentes.
 ROADMAP unique consolidee a partir de 3 fichiers separes.
 Anciennes roadmaps archivees dans docs/archive/.
 

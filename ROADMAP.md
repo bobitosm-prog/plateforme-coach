@@ -4,8 +4,8 @@
 > Pour l'etat instantane (HEAD, branche, tache en cours), voir `SESSION_LOG.md`.
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
-**Derniere mise a jour** : 2026-05-07 (post-audit complet)
-**HEAD synchro** : `af92826`
+**Derniere mise a jour** : 2026-05-07 (post-Sprint Securite)
+**HEAD synchro** : `21a5850` (branche sprint-securite)
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---
@@ -13,7 +13,7 @@
 ## ⚠️ Etat global — alertes critiques
 
 **🔴 BLOQUANT V1 PUBLIQUE** (audit 7 mai 2026)
-1. **Sprint Securite non fait** — 3 P0 detectes : fallback SERVICE_ROLE → ANON_KEY (4 routes), Stripe sans auth (3 routes), log-error sans auth → **a traiter avant tout**
+1. ~~**Sprint Securite**~~ ✅ DONE (7 mai 2026, branche `sprint-securite`) — 4 fallbacks SERVICE_ROLE fixes, 3 routes Stripe auth-gated, log-error rate-limited, debug-auth whitelisted
 2. **Layout desktop client incomplet** — Messages sidebar absent, scroll chat 302px
 3. **Audio iOS lock screen** ✅ resolu Sprint 6.5-A
 
@@ -137,17 +137,10 @@
 ### 🔴 P0 — Cette session OBLIGATOIRE
 
 #### Sprint Securite (~2h, items #1 #2 #3 audit)
-- [ ] Fix 4 fallbacks `SERVICE_ROLE_KEY || ANON_KEY` → `throw new Error()` si env manquante (pattern `webhook/route.ts`)
-  - `assign-coach/route.ts:25`
-  - `log-error/route.ts:6`
-  - `send-notification/route.ts:39`
-  - `stripe/coach-checkout/route.ts:14`
-- [ ] Auth check sur 3 routes Stripe :
-  - `stripe/setup-products/route.ts`
-  - `stripe/check-account/route.ts`
-  - `stripe/coach-checkout/route.ts`
-- [ ] Rate limit ou auth sur `/api/log-error` (`route.ts:9`)
-- [ ] (Optionnel) supprimer `/api/debug-auth` ou ajouter assertion de dev
+- [x] ✅ Fix 4 fallbacks `SERVICE_ROLE_KEY || ANON_KEY` → throw 500 (eb412f2)
+- [x] ✅ Auth check sur 3 routes Stripe (b539abe)
+- [x] ✅ Rate limit + service_role fix `/api/log-error` (eb412f2)
+- [x] ✅ `/api/debug-auth` durci whitelist dev only (21a5850)
 
 ### 🟠 P1 — Court terme (1-3 sessions)
 
@@ -262,7 +255,7 @@
 
 **Prerequis** (a valider avant lancement)
 - ✅ Audio iOS lock screen (Sprint 6.5-A)
-- ❌ Sprint Securite (3 P0 a fixer)
+- ✅ Sprint Securite (7 mai 2026)
 - ❌ Sprint Layout Desktop
 - ❌ Sprint FK manquantes
 - ❌ Sprint Accessibilite (avant V1 publique)
