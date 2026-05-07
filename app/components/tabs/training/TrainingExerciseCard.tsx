@@ -57,7 +57,7 @@ export default function TrainingExerciseCard({
     fetchedRef.current = true
     supabase
       .from('workout_sets')
-      .select('weight, reps, created_at')
+      .select('weight, reps, set_number, created_at')
       .eq('user_id', userId)
       .eq('exercise_name', ex.name)
       .order('created_at', { ascending: false })
@@ -66,7 +66,9 @@ export default function TrainingExerciseCard({
         if (!data || data.length === 0) return
         // Group by session (same created_at within 2 hours)
         const first = new Date(data[0].created_at).getTime()
-        const sessionSets = data.filter((d: any) => Math.abs(new Date(d.created_at).getTime() - first) < 7200000)
+        const sessionSets = data
+          .filter((d: any) => Math.abs(new Date(d.created_at).getTime() - first) < 7200000)
+          .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
         setPreviousSets(sessionSets.map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 })))
       })
   }, [supabase, userId, ex.name])
@@ -86,7 +88,7 @@ export default function TrainingExerciseCard({
 
   function fmtPrev(set: PreviousSet | undefined) {
     if (!set || (set.weight === 0 && set.reps === 0)) return '—'
-    return `${set.weight}×${set.reps}`
+    return `${set.weight.toLocaleString('fr-FR')}×${set.reps}`
   }
 
   return (
@@ -317,11 +319,24 @@ export default function TrainingExerciseCard({
 
                 {/* KG input */}
                 <input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
+                  pattern="[0-9]*[.,]?[0-9]*"
                   className="set-input"
                   value={inp.kg}
-                  onChange={e => onUpdateInput(ex.name, si, 'kg', e.target.value)}
+                  onChange={e => {
+                    const v = e.target.value.replace(',', '.')
+                    if (v === '' || /^\d{0,4}(\.\d{0,2})?$/.test(v)) {
+                      onUpdateInput(ex.name, si, 'kg', e.target.value)
+                    }
+                  }}
+                  onBlur={() => {
+                    if (inp.kg === '' || inp.kg === '.' || inp.kg === ',') return
+                    const n = parseFloat(inp.kg.replace(',', '.'))
+                    if (!Number.isNaN(n)) {
+                      onUpdateInput(ex.name, si, 'kg', n.toString().replace('.', ','))
+                    }
+                  }}
                   placeholder="0"
                   disabled={!trainingIsToday}
                   style={{

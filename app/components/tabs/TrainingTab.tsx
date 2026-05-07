@@ -713,12 +713,12 @@ export default function TrainingTab({
     for (const ex of exs) {
       const inputs = setInputs[ex.name] || []
       for (const input of inputs) {
-        const weight = parseFloat(input.kg)
+        const weight = parseFloat(input.kg.replace(',', '.'))
         const reps = parseInt(input.reps)
         if (weight > 0 && reps > 0) {
           const result = await checkForPR(ex.name, weight, reps)
           if (result.newPR) {
-            toast.success(`🏆 NOUVEAU RECORD ! ${result.exercise} — ${result.value} kg (1RM)`, { duration: 5000 })
+            toast.success(`🏆 NOUVEAU RECORD ! ${result.exercise} — ${result.value?.toLocaleString('fr-FR')} kg (1RM)`, { duration: 5000 })
           }
         }
       }
@@ -1757,9 +1757,9 @@ export default function TrainingTab({
                     {ex.sets.map((set:any,si:number)=>(
                       <div key={si} style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'6px 0',borderBottom:`1px solid ${colors.goldBorder}`}}>
                         <span style={{fontFamily:fonts.headline,fontSize:16,color:colors.gold,width:28,height:28,borderRadius:8,background:colors.goldDim,display:'flex',alignItems:'center',justifyContent:'center'}}>{si+1}</span>
-                        <span style={{fontFamily:fonts.headline,fontSize:18,color:colors.text}}>{set.weight||0}</span>
+                        <span style={{fontFamily:fonts.headline,fontSize:18,color:colors.text}}>{(set.weight||0).toLocaleString('fr-FR')}</span>
                         <span style={{fontFamily:fonts.headline,fontSize:18,color:colors.text}}>{set.reps||0}</span>
-                        <span style={{fontFamily:fonts.body,fontSize:13,color:colors.textMuted}}>{((set.weight||0)*(set.reps||0))} kg</span>
+                        <span style={{fontFamily:fonts.body,fontSize:13,color:colors.textMuted}}>{((set.weight||0)*(set.reps||0)).toLocaleString('fr-FR')} kg</span>
                       </div>
                     ))}
                   </div>
