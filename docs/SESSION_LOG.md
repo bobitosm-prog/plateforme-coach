@@ -8,36 +8,46 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-06 21:10
+**Date derniere mise a jour** : 2026-05-07 05:40
 **Branche** : main
-**HEAD** : `f25d724` docs(log): sprint ChatAI persistance DONE - 3/3 phases
+**HEAD** : `ec96fbf` docs(roadmap) consolidation 3 fichiers + audit complet
 **Working tree** : clean (seul .claude/settings.local.json modifie, non suivi)
 
 ### Tache en cours
-Aucune — fin de session.
+Aucune — fin de session consolidation roadmap.
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
-1. Test live integral : Big Stack + Hero Banner + Reorder mode (commits 30d9d2a, 1097c34, 6543ac3)
-2. Layout desktop client incomplet (Messages sidebar + 2 colonnes) — 2-3h
-3. Sync media autres exos (utiliser sync-exercise-media.js)
+1. Sprint Securite (3 P0 audit) : SERVICE_ROLE fallback, auth Stripe, log-error — 2h
+2. Test live Big Stack + Hero Banner + Reorder mode (commits 30d9d2a, 1097c34, 6543ac3)
+3. Sprint Layout Desktop (Messages sidebar + 2 colonnes) — 3-4h
 
 ### Backlog priorisee
-1. Test live Big Stack + Hero Banner + Reorder mode
-2. Layout desktop client incomplet (Messages sidebar + vue 2 colonnes) — 2-3h
-3. Scroll desktop conversation chat — 1-2h (lie au layout desktop)
-4. Hierarchie ecran Nutrition coach (plan IA vs manuel) — decision UX a prendre
-5. Bug import meal plan multi-date (decision UX : variant A/B/C) — 30min-2h
-6. FK manquantes globalement (~10-15 tables) — sprint dedie
-7. Sets array refactor (sets: number -> SetItem[]) — tech debt
-8. Typage Supabase strict useCoachAnalytics — 30min
-9. Sprint Native Capacitor (App Store + Play Store) — long terme 15-20h
+1. Sprint Securite — 3 P0 bloquant V1 (audit 7 mai 2026)
+2. Sprint Layout Desktop — 3-4h
+3. Sprint Images (54 img → next/image) — 3h
+4. Sprint Refacto composants > 500 lignes — L
+5. Sprint Qualite Code (console.log, eslint-disable, deps) — 2-3h
+6. Sprint FK manquantes globalement — M
+7. Sprint Accessibilite (~620 boutons sans aria-label) — M-L
+8. Sprint typage strict (497 any) — XL
+9. Sprint Native Capacitor — long terme 15-20h
 
 ---
 
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
+
+### 2026-05-07
+
+- 05:40 `ec96fbf` docs(roadmap) consolidation 3 fichiers + integration audit complet 7 mai
+
+Audit complet (Claude Code) revele 3 P0 securite non documentes :
+SERVICE_ROLE fallback (4 routes), Stripe sans auth (3 routes),
+log-error sans auth. Sprint Securite ajoute en tete de backlog.
+ROADMAP unique consolidee a partir de 3 fichiers separes.
+Anciennes roadmaps archivees dans docs/archive/.
 
 ### 2026-05-06
 
