@@ -8,9 +8,9 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-07 21:00
-**Branche** : fix/training-weight-input-and-suggestion (a merger sur main)
-**HEAD** : `d594e7d` fix(workout-session) handle FR comma weight + reps NaN guard
+**Date derniere mise a jour** : 2026-05-07 21:10
+**Branche** : fix/training-suggestion-per-set (a merger)
+**HEAD** : `b3dc4f4` feat(training) per-set weight suggestion
 **Working tree** : clean
 
 ### Tache en cours
@@ -20,9 +20,10 @@ Aucune — fin de session
 Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
-1. BUG 2 — Per-set weight suggestion (lib/training/suggest-set-weight.ts + wire dans TrainingExerciseCard) — 1-1h30
-2. Merge fix/training-weight-input-and-suggestion sur main et push (si pas deja fait)
-3. Test live integral des 2 fix BUG 1 sur Mac mode iPhone
+1. Test gym reelle BUG 2 tap-to-autofill (mobile iPhone natif, pas DevTools)
+2. Sprint Layout Desktop (Messages sidebar + 2 colonnes) — 3-4h
+3. Sprint Images (54 img → next/image) — 3h
+4. Cleanup seed test BUG 2 (workout_sessions + custom_programs Test BUG 2)
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -41,15 +42,19 @@ Aucun
 
 ### 2026-05-07
 
-- 20:54 `d594e7d` fix(workout-session) handle FR comma weight (weightRaw state) + reps NaN guard + digits-only sanitize
-- 19:30 `6225d09` fix(training) accept FR comma in weight input + locale-aware display + ordered prev sets
+- 21:07 `b3dc4f4` feat(training) per-set weight suggestion from previous session
+- 20:54 `d594e7d` fix(workout-session) FR comma weightRaw refacto + reps NaN guard
+- 19:30 `6225d09` fix(training) FR comma in weight input + locale-aware display + ordered prev sets
 
-FIN SESSION 7 mai 2026 — BUG 1 (FR comma) corrige sur les 2 parcours :
-- TrainingExerciseCard : input type=text + regex FR + onBlur reformat FR + displays toLocaleString
-- WorkoutSession : refacto state weightRaw (string) decouple de weight (number), commitWeight inline dans doValidate, reps NaN guard + sanitize digits
-- 5 inputs kg audites au total (TrainingExerciseCard, WorkoutSession, TechniquePopup, ProgressTab x2 — derniers 3 en type=number proteges naturellement)
-- Test live valide : zero erreur React, persistance DB OK, edge cases (NaN, vide, virgule volontaire) handled
-BUG 2 (per-set suggestion) reporte a prochaine session — estime 1-1h30.
+FIN SESSION 7 mai 2026 — Sprint BUG 1 + BUG 2 livre :
+- BUG 1 corrige sur 2 parcours (TrainingExerciseCard + WorkoutSession)
+  avec 5 inputs kg audites au total
+- BUG 2 livre dans TrainingExerciseCard avec lib pure + wire complet
+- 3 commits propres + 1 merge + 1 commit docs
+- Test live integral valide : virgule FR, 3 cas suggestion (progress/hold/missed),
+  persistance DB, console clean
+- Tap-to-autofill a valider en gym mobile reelle (desktop browser ne dispatch pas correctement)
+- WorkoutSession (Seance libre) reste sans BUG 2 — note tech debt
 
 - 06:30 `9f67fdf` Merge sprint-securite sur main (push origin main fait)
 - 06:15 `21a5850` security harden /api/debug-auth whitelist dev only
