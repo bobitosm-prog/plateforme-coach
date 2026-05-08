@@ -239,6 +239,7 @@
 - [ ] **Tap-to-autofill BUG 2** : a valider en gym mobile reelle (desktop browser ne dispatch pas le click sur span correctement)
 - [ ] **WorkoutSession (Seance libre) sans BUG 2** : per-set suggestion + autofill present uniquement dans TrainingExerciseCard. Sprint future pour porter les memes features dans WorkoutSession (~1h-1h30, layout Big Stack different)
 - [ ] **Badge "Garder" strikethrough** : le badge SERIE 3 missed est aussi en strikethrough par heritage du span parent. Detail UX a fixer plus tard
+- [ ] **Bug navigation : annuler edition programme → retour onboarding** — Reproduire : ouvrir un programme en edition, click "Annuler", l'app navigue vers onboarding au lieu de revenir a la vue precedente. Decouvert 7 mai 2026 pendant test live BUG 2. Effort : 30min-1h (router.push() au mauvais endroit dans handler annuler). Priorite : 🟡 P2
 
 ### Decouvertes audit 7 mai 2026
 - [ ] **497 `: any` explicites** dans 86 fichiers (page-desktop 51, TrainingTab 57, HomeTab 31, ProgressTab 30) — XL
