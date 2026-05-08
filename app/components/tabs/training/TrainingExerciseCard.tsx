@@ -9,6 +9,7 @@ import {
 import ExercisePreview from '../../ExercisePreview'
 import { getRestSeconds } from '../../../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../../../lib/technique-labels'
+import { suggestSetWeight } from '../../../../lib/training/suggest-set-weight'
 
 interface PreviousSet {
   weight: number
@@ -280,6 +281,17 @@ export default function TrainingExerciseCard({
           const inp = inputs[si] || { kg: '', reps: String(ex.reps || '') }
           const isRestingThisSet = isRestingHere && restingSet?.setIdx === si
           const prev = previousSets[si]
+          const prevWithFallback = prev || previousSets[previousSets.length - 1]
+          const isFallback = !prev && !!prevWithFallback
+
+          const isBodyweight =
+            (prevWithFallback && prevWithFallback.weight === 0) ||
+            /gainage|planche|pompe|traction|dips|burpee|abdo|crunch/i.test(ex.name)
+
+          const targetReps = typeof ex.reps === 'number' ? ex.reps : parseInt(String(ex.reps).split('-')[0]) || 10
+          const target = { repsMin: Math.max(1, targetReps - 2), repsMax: targetReps }
+          const suggestion = isBodyweight ? null : suggestSetWeight(prevWithFallback ?? null, target)
+          const prevMissed = prevWithFallback && prevWithFallback.reps < target.repsMin
 
           return (
             <div key={si}>
@@ -307,15 +319,40 @@ export default function TrainingExerciseCard({
                   </div>
                 </div>
 
-                {/* Previous performance */}
-                <span className="prev-col" style={{
-                  fontSize: 13, color: TEXT_MUTED,
-                  fontFamily: FONT_BODY, fontWeight: 400,
-                  paddingLeft: 4,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  textDecoration: done ? 'line-through' : 'none',
-                  opacity: done ? 0.5 : 1,
-                }}>{fmtPrev(prev)}</span>
+                {/* Previous performance — tap to autofill */}
+                <span
+                  className="prev-col"
+                  onClick={() => {
+                    if (!prevWithFallback || !trainingIsToday || done) return
+                    onUpdateInput(ex.name, si, 'kg', String(prevWithFallback.weight).replace('.', ','))
+                    onUpdateInput(ex.name, si, 'reps', String(prevWithFallback.reps))
+                  }}
+                  style={{
+                    fontSize: 13, color: TEXT_MUTED,
+                    fontFamily: FONT_BODY, fontWeight: 400,
+                    paddingLeft: 4,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    textDecoration: (done || prevMissed) ? 'line-through' : 'none',
+                    opacity: (done || prevMissed) ? 0.5 : 1,
+                    cursor: (prevWithFallback && trainingIsToday && !done) ? 'pointer' : 'default',
+                  }}
+                >
+                  {isFallback && <span style={{ opacity: 0.5 }}>↓ </span>}
+                  {fmtPrev(prevWithFallback)}
+                  {suggestion && (
+                    <span style={{
+                      marginLeft: 4, fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700,
+                      padding: '1px 4px', borderRadius: 4, verticalAlign: 'middle',
+                      ...(suggestion.reason === 'progress'
+                        ? { color: GREEN, background: `${GREEN}20` }
+                        : suggestion.reason === 'missed'
+                          ? { color: TEXT_DIM, background: `${TEXT_DIM}20` }
+                          : {}),
+                    }}>
+                      {suggestion.reason === 'progress' ? `+${(suggestion.weight - (prevWithFallback?.weight || 0)).toFixed(1).replace('.0', '').replace('.', ',')}` : suggestion.reason === 'missed' ? 'Garder' : ''}
+                    </span>
+                  )}
+                </span>
 
                 {/* KG input */}
                 <input
@@ -337,7 +374,7 @@ export default function TrainingExerciseCard({
                       onUpdateInput(ex.name, si, 'kg', n.toString().replace('.', ','))
                     }
                   }}
-                  placeholder="0"
+                  placeholder={suggestion ? String(suggestion.weight).replace('.', ',') : '0'}
                   disabled={!trainingIsToday}
                   style={{
                     background: done ? 'rgba(74,222,128,0.08)' : BG_BASE,

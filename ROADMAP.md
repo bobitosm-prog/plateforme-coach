@@ -4,8 +4,8 @@
 > Pour l'etat instantane (HEAD, branche, tache en cours), voir `SESSION_LOG.md`.
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
-**Derniere mise a jour** : 2026-05-07 21:00 (post-fix BUG 1 FR comma)
-**HEAD synchro** : `d594e7d` (branche fix/training-weight-input-and-suggestion, pre-merge)
+**Derniere mise a jour** : 2026-05-07 21:10 (post-BUG 2 per-set suggestion)
+**HEAD synchro** : `PENDING_MERGE`
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---
@@ -40,6 +40,18 @@
 ---
 
 ## Sprints livres — App produit
+
+### ✅ Sprint BUG 1 + BUG 2 Training (7 mai 2026)
+- **BUG 1** Weight input accepte virgule FR (TrainingExerciseCard + WorkoutSession)
+  - TrainingExerciseCard input + 4 displays toLocaleString FR (`6225d09`)
+  - WorkoutSession refacto state weightRaw decouple de weight (`d594e7d`)
+  - Reps NaN guard + sanitize digits-only
+- **BUG 2** Per-set weight suggestion from previous session (`b3dc4f4`)
+  - lib/training/suggest-set-weight.ts pure function (progress/hold/missed)
+  - Wire dans TrainingExerciseCard : badge vert "+step", badge gris "Garder"
+  - Strikethrough sur cell PREC quand prev reps < target repsMin
+  - Tap-to-autofill kg + reps avec valeurs precedentes
+  - Bodyweight detection (regex sur name)
 
 ### ✅ Sprint 0 — GSAP Landing (29 avril 2026)
 - Hero slot-machine reveal + Gold glow effect
@@ -221,8 +233,12 @@
 - [x] ✅ Source de verite "invited" unifiee (Sprint 6.5-D `profiles.subscription_type`)
 
 ### Fix training inputs 7 mai 2026
-- [x] ✅ Bug input kg refusait virgule FR (TrainingExerciseCard `6225d09` + WorkoutSession `d594e7d`)
+- [x] ✅ Bug input kg refusait virgule FR (commits `6225d09` + `d594e7d`, merge `7ca33f2`)
+- [x] ✅ Per-set weight suggestion from previous session (`b3dc4f4`)
 - [ ] Reps input dans WorkoutSession sanitize digits-only — UX edge case "8,5" devient "85" silencieusement (a ameliorer si feedback users)
+- [ ] **Tap-to-autofill BUG 2** : a valider en gym mobile reelle (desktop browser ne dispatch pas le click sur span correctement)
+- [ ] **WorkoutSession (Seance libre) sans BUG 2** : per-set suggestion + autofill present uniquement dans TrainingExerciseCard. Sprint future pour porter les memes features dans WorkoutSession (~1h-1h30, layout Big Stack different)
+- [ ] **Badge "Garder" strikethrough** : le badge SERIE 3 missed est aussi en strikethrough par heritage du span parent. Detail UX a fixer plus tard
 
 ### Decouvertes audit 7 mai 2026
 - [ ] **497 `: any` explicites** dans 86 fichiers (page-desktop 51, TrainingTab 57, HomeTab 31, ProgressTab 30) — XL
