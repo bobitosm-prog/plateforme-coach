@@ -5,7 +5,7 @@
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
 **Derniere mise a jour** : 2026-05-07 21:10 (post-BUG 2 per-set suggestion)
-**HEAD synchro** : `PENDING_MERGE`
+**HEAD synchro** : `9283fd2` (Merge fix/training-suggestion-per-set sur main)
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---

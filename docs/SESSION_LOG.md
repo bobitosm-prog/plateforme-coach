@@ -9,8 +9,8 @@
 ## ETAT ACTUEL (mis a jour en continu)
 
 **Date derniere mise a jour** : 2026-05-07 21:10
-**Branche** : fix/training-suggestion-per-set (a merger)
-**HEAD** : `b3dc4f4` feat(training) per-set weight suggestion
+**Branche** : main
+**HEAD** : `9283fd2` Merge fix/training-suggestion-per-set sur main
 **Working tree** : clean
 
 ### Tache en cours
