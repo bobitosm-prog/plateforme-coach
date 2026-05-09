@@ -4,8 +4,8 @@
 > Pour l'etat instantane (HEAD, branche, tache en cours), voir `SESSION_LOG.md`.
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
-**Derniere mise a jour** : 2026-05-09 22:30 (post-Sprint Layout Desktop Messages)
-**HEAD synchro** : `5003eea` (feat coach-messages layout 2 colonnes)
+**Derniere mise a jour** : 2026-05-09 23:45 (post-Sprint Realtime Messages)
+**HEAD synchro** : `e67527b` (feat coach-messages realtime Phase 1+2)
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---
@@ -40,6 +40,16 @@
 ---
 
 ## Sprints livres — App produit
+
+### ✅ Sprint Realtime Messages (9 mai 2026)
+- Phase 1 : chat messages live via Supabase Realtime (`8733e5f`)
+  - 2 channels filtres serveur (coach-chat-in + coach-chat-out)
+  - INSERT + UPDATE (read receipts), dedup + filtrage JS par conv
+  - Polling 3s → 30s (Phase 1) → 120s (Phase 2)
+- Phase 2 : unread counts + last messages live (`e67527b`)
+  - Channel global independant de selectedClient
+  - Derivation locale unreadCounts + lastMessages depuis payload
+- Latence <500ms (vs 0-3s), charge DB ~60x reduction
 
 ### ✅ Sprint Layout Desktop Messages (9 mai 2026)
 - Layout 2 colonnes desktop : sidebar 320px fixe + panel flex-1 (`5003eea`)
@@ -251,7 +261,8 @@
 - [ ] **Badge "Garder" strikethrough** : le badge SERIE 3 missed est aussi en strikethrough par heritage du span parent. Detail UX a fixer plus tard
 - [ ] **Bug navigation : annuler edition programme → retour onboarding** — Reproduire : ouvrir un programme en edition, click "Annuler", l'app navigue vers onboarding au lieu de revenir a la vue precedente. Decouvert 7 mai 2026 pendant test live BUG 2. Effort : 30min-1h (router.push() au mauvais endroit dans handler annuler). Priorite : 🟡 P2
 - [x] ~~BUG MessageImage refetch signed URLs en boucle~~ FAUX POSITIF — log dans render body (pas useEffect) loggait chaque re-render React, pas de refetch reel. Cache useSignedUrl fonctionne correctement.
-- [ ] **Sprint Realtime Messages** — remplacer polling 3s (setInterval useCoachDashboard L297) par Supabase Realtime sur le coach dashboard. Priorite M-L, 3-4h, a faire avant 50+ coachs actifs simultanes
+- [x] ✅ ~~Sprint Realtime Messages~~ DONE (`8733e5f` + `e67527b`) — polling 3s remplace par Supabase Realtime, fallback 120s
+- [ ] **Sprint Refonte page Mes Clients coach** — table actuelle moche (headers colles, pas de hierarchie, hover absent, avatars incoherents). Effort M (3-4h)
 
 ### Decouvertes audit 7 mai 2026
 - [ ] **497 `: any` explicites** dans 86 fichiers (page-desktop 51, TrainingTab 57, HomeTab 31, ProgressTab 30) — XL

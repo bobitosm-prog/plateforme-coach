@@ -8,9 +8,9 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-09 22:30
+**Date derniere mise a jour** : 2026-05-09 23:45
 **Branche** : main
-**HEAD** : `5003eea` feat(coach-messages) layout 2 colonnes desktop
+**HEAD** : `e67527b` feat(coach-messages) realtime unread + last messages
 **Working tree** : clean
 
 ### Tache en cours
@@ -21,20 +21,24 @@ Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
 1. Test gym reelle BUG 2 tap-to-autofill (mobile iPhone natif, pas DevTools)
-2. Sprint Images (54 img → next/image) — 3h
-3. Cleanup seed test BUG 2 (workout_sessions + custom_programs Test BUG 2)
-4. Sprint Realtime Messages (remplacer polling 3s par Supabase Realtime) — M-L, 3-4h
+2. Sprint Layout Desktop autres sections (Clients, Suivi, etc.)
+3. Sprint Images (54 img → next/image) — 3h
+4. Sprint Refonte page Mes Clients coach — M (3-4h)
+5. Cleanup seed test BUG 2 (workout_sessions + custom_programs Test BUG 2)
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
 2. ~~Sprint Layout Desktop~~ ✅ DONE (9 mai 2026)
-3. Sprint Images (54 img → next/image) — 3h
-4. Sprint Refacto composants > 500 lignes — L
-5. Sprint Qualite Code (console.log, eslint-disable, deps) — 2-3h
-6. Sprint FK manquantes globalement — M
-7. Sprint Accessibilite (~620 boutons sans aria-label) — M-L
-8. Sprint typage strict (497 any) — XL
-9. Sprint Native Capacitor — long terme 15-20h
+3. ~~Sprint Realtime Messages~~ ✅ DONE (9 mai 2026)
+4. Sprint Layout Desktop autres sections — M-L
+5. Sprint Images (54 img → next/image) — 3h
+6. Sprint Refonte page Mes Clients coach — M (3-4h)
+7. Sprint Refacto composants > 500 lignes — L
+8. Sprint Qualite Code (console.log, eslint-disable, deps) — 2-3h
+9. Sprint FK manquantes globalement — M
+10. Sprint Accessibilite (~620 boutons sans aria-label) — M-L
+11. Sprint typage strict (497 any) — XL
+12. Sprint Native Capacitor — long terme 15-20h
 
 ---
 
@@ -42,7 +46,36 @@ Aucun
 
 ### 2026-05-09
 
+- 23:45 `e67527b` feat(coach-messages) realtime unread + last messages, polling 30s→120s
+- 23:15 `8733e5f` feat(coach-messages) realtime chat messages, polling 3s→30s
 - 22:30 `5003eea` feat(coach-messages) layout 2 colonnes desktop + extraction composants
+
+FIN SPRINT REALTIME MESSAGES (9 mai 2026, ~5h) :
+- Phase 1 : chat messages live (INSERT + UPDATE filtres serveur)
+  - 2 channels : coach-chat-in + coach-chat-out
+  - Polling 3s → 30s (Phase 1) puis 120s (Phase 2)
+- Phase 2 : unread counts + last messages live
+  - 1 channel global independant de selectedClient
+  - Derivation locale des states depuis payload Realtime
+- Latence : <500ms (vs 0-3s)
+- Charge DB : ~60x reduction (60 queries/min → ~1 query/min/coach)
+- Pattern aligne avec useMessages.ts et useClientDetail.ts
+
+LECONS du sprint :
+- FAUX POSITIF debug : log dans render body donne illusion de
+  refetch en boucle (cf MessageImage). Toujours logger dans
+  useEffect, jamais dans le body.
+- Realtime + RLS : filter serveur OBLIGATOIRE sinon Supabase
+  ne propage pas les events. Pas un bug : c'est securite.
+- min-height vs height : flex enfant ne peut pas calculer
+  sa taille depuis un parent en min-height seul.
+- vh vs dvh : toujours dvh pour UI reelle (gere barres
+  d'outils mobiles + zoom navigateur).
+
+NOUVEAU TICKET BACKLOG (UI) :
+- Refonte page "Mes Clients" coach (table actuelle moche :
+  headers colles, pas de hierarchie, hover absent, avatars
+  incoherents). Effort : M (3-4h).
 
 FIN SESSION 9 mai 2026 — Sprint Layout Desktop Messages livre :
 - Layout 2-col desktop : sidebar 320px + panel flex-1 (breakpoint 1024px)
