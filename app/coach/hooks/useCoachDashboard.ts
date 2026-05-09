@@ -343,14 +343,61 @@ export default function useCoachDashboard(initialSession?: any) {
     }
   }, [session?.user?.id, selectedClient?.client_id])
 
-  // Poll every 30s — unread counts + last messages (fallback, Phase 2 will replace)
+  // Channel global : unread counts + last messages live (toujours actif, indépendant de selectedClient)
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const coachId = session.user.id
+
+    const channel = supabase
+      .channel(`coach-global-${coachId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${coachId}`,
+      }, (payload: any) => {
+        const m = payload.new
+        setLastMessages(prev => {
+          const next = new Map(prev)
+          next.set(m.sender_id, {
+            content: m.content,
+            image_url: m.image_url,
+            created_at: m.created_at,
+          })
+          return next
+        })
+        const isOpenConv = selectedClientRef.current?.client_id === m.sender_id
+        if (!isOpenConv) {
+          setUnreadCounts(prev => ({
+            ...prev,
+            [m.sender_id]: (prev[m.sender_id] || 0) + 1,
+          }))
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${coachId}`,
+      }, (payload: any) => {
+        const m = payload.new
+        if (m.read === true) {
+          setUnreadCounts(prev => {
+            const cur = prev[m.sender_id] || 0
+            if (cur === 0) return prev
+            return { ...prev, [m.sender_id]: Math.max(0, cur - 1) }
+          })
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [session?.user?.id])
+
+  // Poll every 2min — fallback resync for unread counts + last messages
   useEffect(() => {
     if (!session?.user?.id) return
     const coachId = session.user.id
     const id = setInterval(async () => {
       const clientIds = clientsRef.current.map(c => c.client_id)
       if (clientIds.length) { fetchUnreadCounts(coachId, clientIds); fetchLastMessages(coachId) }
-    }, 30000)
+    }, 120000)
     return () => clearInterval(id)
   }, [session?.user?.id])
 
