@@ -1,33 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { ChevronRight, ArrowLeft, Send, Check, CheckCheck, ImageIcon, X } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
-  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  BG_BASE, BORDER,
 } from '../../../lib/design-tokens'
-
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useMessageImageUpload } from '../../hooks/useMessageImageUpload'
-import MessageImage from '../../components/MessageImage'
-import { initials } from '../hooks/useCoachDashboard'
-
-function formatLastTime(iso: string): string {
-  const d = new Date(iso), now = new Date()
-  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  const y = new Date(now); y.setDate(now.getDate() - 1)
-  if (d.toDateString() === y.toDateString()) return 'Hier'
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-}
-
-function lastMsgPreview(msg: { content: string; image_url: string | null } | undefined): string {
-  if (!msg) return 'Démarrer la conversation'
-  if (msg.image_url) return msg.content || '📷 Photo'
-  return msg.content || ''
-}
+import ConversationList from './ConversationList'
+import ConversationPanel from './ConversationPanel'
 import type { ClientRow } from '../hooks/useCoachDashboard'
 
 interface CoachMessagesProps {
@@ -54,150 +32,78 @@ export default function CoachMessages({
   msgEndRef,
 }: CoachMessagesProps) {
   const isMobile = useIsMobile(1024)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const { uploadImage, uploading } = useMessageImageUpload(supabase)
-  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) { setSelectedFile(f); setPreviewUrl(URL.createObjectURL(f)) }; e.target.value = '' }
-  const clearFile = () => { if (previewUrl) URL.revokeObjectURL(previewUrl); setSelectedFile(null); setPreviewUrl(null) }
-  const handleSend = async () => {
-    if (uploading) return
-    let imageUrl: string | null = null
-    if (selectedFile) { imageUrl = await uploadImage(selectedFile); clearFile() }
-    if (!msgInput.trim() && !imageUrl) return
-    sendMessage(imageUrl)
+
+  // ── Mobile: original behavior (list OR overlay, never both) ──
+  if (isMobile) {
+    return (
+      <>
+        {!selectedClient && (
+          <div className="section-pad" style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <ConversationList
+              clients={clients}
+              openChat={openChat}
+              unreadCounts={unreadCounts}
+              lastMessages={lastMessages}
+            />
+          </div>
+        )}
+        {selectedClient && (
+          <ConversationPanel
+            selectedClient={selectedClient}
+            setSelectedClient={setSelectedClient}
+            chatMessages={chatMessages}
+            msgInput={msgInput}
+            setMsgInput={setMsgInput}
+            sendMessage={sendMessage}
+            supabase={supabase}
+            session={session}
+            msgEndRef={msgEndRef}
+            isMobile
+          />
+        )}
+      </>
+    )
   }
 
+  // ── Desktop: 2-column layout (sidebar + panel side by side) ──
   return (
-    <>
-      {/* ── MESSAGES SECTION: client list (no chat open) ── */}
-      {!selectedClient && (
-        <div className="section-pad" style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '16px', borderBottom: `1px solid ${BORDER}`, background: BG_CARD, flexShrink: 0 }}>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_PRIMARY, margin: 0 }}>Messages</h2>
-          </div>
-          <div style={{ overflowY: 'auto', flex: 1, background: BG_BASE }}>
-            {clients.length === 0 && (
-              <p style={{ padding: '24px 16px', color: TEXT_MUTED, fontSize: '0.85rem', textAlign: 'center', fontFamily: FONT_BODY }}>Aucun client.</p>
-            )}
-            {clients.map(c => {
-              const name = c.profiles?.full_name ?? 'Sans nom'
-              const ini = initials(c.profiles?.full_name)
-              const unread = unreadCounts[c.client_id] || 0
-              const last = lastMessages.get(c.client_id)
-              const preview = lastMsgPreview(last)
-              const time = last ? formatLastTime(last.created_at) : ''
-              return (
-                <div key={c.id} onClick={() => openChat(c)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer', borderBottom: `1px solid ${BORDER}`, transition: 'background 150ms' }} onMouseEnter={e => { e.currentTarget.style.background = BG_CARD_2 }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
-                  {c.profiles?.avatar_url
-                    ? <img src={c.profiles.avatar_url} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                    : <div style={{ width: 44, height: 44, borderRadius: '50%', background: GOLD, color: '#0D0B08', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '1rem', flexShrink: 0 }}>{ini}</div>
-                  }
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                      <span style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: '0.95rem', color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
-                      {time && <span style={{ fontSize: '0.7rem', color: unread > 0 ? GOLD : TEXT_DIM, flexShrink: 0 }}>{time}</span>}
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: '0.8rem', color: unread > 0 ? TEXT_PRIMARY : TEXT_MUTED, fontWeight: unread > 0 ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontFamily: FONT_BODY }}>{preview}</span>
-                      {unread > 0 && <span style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: RED, color: '#fff', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{unread > 9 ? '9+' : unread}</span>}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+    <div style={{
+      display: 'flex',
+      height: 'calc(100dvh - 64px)',
+      maxHeight: 'calc(100dvh - 64px)',
+      background: BG_BASE,
+      overflow: 'hidden',
+    }}>
+      {/* Sidebar — conversation list */}
+      <div style={{
+        width: 320, flexShrink: 0, minHeight: 0,
+        borderRight: `1px solid ${BORDER}`,
+        overflow: 'hidden',
+      }}>
+        <ConversationList
+          clients={clients}
+          openChat={openChat}
+          unreadCounts={unreadCounts}
+          lastMessages={lastMessages}
+          selectedClientId={selectedClient?.client_id}
+        />
+      </div>
 
-      {/* ── CHAT FULL-SCREEN OVERLAY (any section, when client selected) ── */}
-      {selectedClient && (
-        <div className={isMobile ? 'chat-fullscreen' : undefined} style={isMobile ? undefined : { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)', background: BG_BASE }}>
-
-          {/* Header */}
-          <div style={{ padding: '14px 16px', paddingTop: 'max(14px, env(safe-area-inset-top, 14px))', background: BG_CARD, borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <button
-              onClick={() => setSelectedClient(null)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: '6px', minWidth: 44, minHeight: 44 }}
-              aria-label="Retour"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            {selectedClient.profiles?.avatar_url
-              ? <img src={selectedClient.profiles.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-              : <div className="avatar-circle" style={{ flexShrink: 0 }}>{initials(selectedClient.profiles?.full_name)}</div>
-            }
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '1rem', color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
-                {selectedClient.profiles?.full_name ?? 'Sans nom'}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>Client</div>
-            </div>
-          </div>
-
-          {/* Messages scroll area — paddingBottom leaves room for fixed input */}
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {chatMessages.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <p style={{ color: TEXT_MUTED, fontSize: '0.85rem', fontFamily: FONT_BODY }}>Aucun message. Commencez la conversation !</p>
-              </div>
-            )}
-            {chatMessages.map(msg => {
-              const isMine = msg.sender_id === session.user.id
-              return (
-                <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
-                  <div style={{
-                    maxWidth: '75%',
-                    wordBreak: 'break-word',
-                    background: isMine ? GOLD_DIM : BG_CARD_2,
-                    color: TEXT_PRIMARY,
-                    borderRadius: RADIUS_CARD,
-                    padding: msg.image_url ? 4 : '10px 14px',
-                    border: isMine ? `1px solid ${GOLD_RULE}` : `1px solid ${BORDER}`,
-                    overflow: 'hidden',
-                  }}>
-                    {msg.image_url && <MessageImage supabase={supabase} path={msg.image_url} />}
-                    {msg.content && <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.45, fontFamily: FONT_BODY, padding: msg.image_url ? '4px 10px 0' : 0 }}>{msg.content}</p>}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 4, padding: msg.image_url ? '0 10px 4px' : 0 }}>
-                      <span style={{ fontSize: '0.62rem', opacity: 0.5, fontFamily: FONT_BODY }}>{format(new Date(msg.created_at), 'HH:mm', { locale: fr })}</span>
-                      {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.6, color: GOLD }} /> : <Check size={12} style={{ opacity: 0.4, color: TEXT_DIM }} />)}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-            <div ref={msgEndRef} />
-          </div>
-
-          {/* Fixed input bar — sits above bottom nav */}
-          {previewUrl && (
-            <div style={{ position: isMobile ? 'fixed' : 'sticky', bottom: isMobile ? 120 : 60, left: 16, right: 16, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 8, display: 'flex', alignItems: 'center', gap: 8, zIndex: 202 }}>
-              <img src={previewUrl} alt="Preview" style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 8 }} />
-              <button onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: 4 }}><X size={16} /></button>
-            </div>
-          )}
-          <div style={{ position: isMobile ? 'fixed' : 'sticky', bottom: isMobile ? 60 : 0, left: 0, right: 0, background: BG_CARD, borderTop: `1px solid ${BORDER}`, padding: '12px 16px', paddingBottom: isMobile ? 'max(12px, env(safe-area-inset-bottom, 12px))' : '12px', display: 'flex', gap: 12, alignItems: 'center', zIndex: 201, flexShrink: 0 }}>
-            <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileSelected} />
-            <button onClick={() => fileInputRef.current?.click()} style={{ width: 44, height: 44, borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <ImageIcon size={17} color={TEXT_MUTED} />
-            </button>
-            <input
-              className="msg-input"
-              value={msgInput}
-              onChange={e => setMsgInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-              placeholder={`Message à ${selectedClient.profiles?.full_name?.split(' ')[0] ?? 'client'}…`}
-            />
-            <button
-              onClick={handleSend}
-              disabled={uploading}
-              style={{ width: 44, height: 44, borderRadius: 12, background: (msgInput.trim() || selectedFile) ? GOLD : BORDER, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
-            >
-              {uploading ? <div style={{ width: 16, height: 16, border: '2px solid #0D0B08', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : <Send size={17} color={(msgInput.trim() || selectedFile) ? BG_BASE : TEXT_MUTED} />}
-            </button>
-          </div>
-        </div>
-      )}
-    </>
+      {/* Main panel — conversation or empty state */}
+      <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
+        <ConversationPanel
+          selectedClient={selectedClient}
+          setSelectedClient={setSelectedClient}
+          chatMessages={chatMessages}
+          msgInput={msgInput}
+          setMsgInput={setMsgInput}
+          sendMessage={sendMessage}
+          supabase={supabase}
+          session={session}
+          msgEndRef={msgEndRef}
+          isMobile={false}
+        />
+      </div>
+    </div>
   )
 }

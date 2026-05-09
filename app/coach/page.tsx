@@ -225,7 +225,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
         </aside>
 
         {/* MAIN */}
-        <div style={{ marginLeft: SIDEBAR_W, flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
+        <div style={{ marginLeft: SIDEBAR_W, flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100dvh', ...(h.section === 'messages' ? { height: '100dvh' } : {}) }}>
           {/* Header */}
           <header style={{ position: 'sticky', top: 0, zIndex: 40, height: 64, background: 'rgba(19,19,19,0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 36px' }}>
             <div>
@@ -238,7 +238,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           </header>
 
           {/* Content */}
-          <main style={{ flex: 1, padding: '28px 36px 40px', overflowY: 'auto' }}>
+          <main style={{ flex: 1, padding: h.section === 'messages' ? 0 : '28px 36px 40px', overflowY: h.section === 'messages' ? 'hidden' : 'auto' }}>
             {/* ACCUEIL — Dashboard grid */}
             {h.section === 'accueil' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>

@@ -322,31 +322,35 @@ export default function useCoachDashboard(initialSession?: any) {
   const chatScrollInitial = useRef(true)
   useEffect(() => {
     if (chatMessages.length === 0) return
-    const scrollToBottom = () => {
-      msgEndRef.current?.scrollIntoView({
-        behavior: chatScrollInitial.current ? 'instant' as ScrollBehavior : 'smooth',
-        block: 'end',
-      })
-      chatScrollInitial.current = false
+    const behavior: ScrollBehavior = chatScrollInitial.current ? 'instant' : 'smooth'
+
+    const scrollToBottom = (b: ScrollBehavior = behavior) => {
+      msgEndRef.current?.scrollIntoView({ behavior: b, block: 'end' })
     }
-    const t1 = setTimeout(scrollToBottom, 50)
-    // Re-scroll after images load (signed URLs resolve async)
-    const t2 = setTimeout(() => {
-      const container = msgEndRef.current?.parentElement
-      if (!container) return
-      const images = container.querySelectorAll('img')
-      let loaded = 0
-      const total = images.length
-      if (total === 0) return
-      const onLoad = () => { loaded++; if (loaded === total) scrollToBottom() }
-      images.forEach(img => {
-        if (img.complete) loaded++
-        else { img.addEventListener('load', onLoad, { once: true }); img.addEventListener('error', onLoad, { once: true }) }
+
+    // Scroll initial après paint
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      scrollToBottom()
+      chatScrollInitial.current = false
+    }))
+
+    // Re-scroll après chargement images
+    const container = msgEndRef.current?.parentElement
+    const images = container?.querySelectorAll('img') ?? []
+    const handlers: Array<() => void> = []
+    images.forEach(img => {
+      if (img.complete) return
+      const onLoad = () => scrollToBottom('instant')
+      img.addEventListener('load', onLoad, { once: true })
+      img.addEventListener('error', onLoad, { once: true })
+      handlers.push(() => {
+        img.removeEventListener('load', onLoad)
+        img.removeEventListener('error', onLoad)
       })
-      if (loaded === total) scrollToBottom()
-    }, 100)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [chatMessages])
+    })
+
+    return () => handlers.forEach(fn => fn())
+  }, [chatMessages.length, selectedClient?.client_id])
   // Reset to instant when conversation changes
   useEffect(() => { chatScrollInitial.current = true }, [selectedClient])
 
