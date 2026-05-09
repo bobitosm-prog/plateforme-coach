@@ -8,9 +8,9 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-09 01:30
+**Date derniere mise a jour** : 2026-05-09 22:30
 **Branche** : main
-**HEAD** : `aedc9a8` chore: remove obsolete suggest-set-weight
+**HEAD** : `1f2be0b` fix(workout-session) seance libre history fetch
 **Working tree** : clean
 
 ### Tache en cours
@@ -21,7 +21,7 @@ Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
 1. Test gym BUG 2 tap-to-autofill + validation etape 3 sprint progression
-2. BUG Seance Libre historique exo (S-M, 1-2h)
+2. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
 3. Sprint Layout Desktop autres sections
 4. Sprint Images (54 img → next/image) — 3h
 5. Sprint Refonte page Mes Clients coach — M (3-4h)
@@ -47,6 +47,21 @@ Aucun
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
 
 ### 2026-05-09
+
+- 22:30 `1f2be0b` fix(workout-session) seance libre history fetch
+
+Bug : en seance libre, l'historique des poids ne s'affichait pas
+pour les exos ajoutes via CustomBuilder.
+Cause : useEffect dep stale ([raw] = props initiales = [] en seance
+libre). Fix : dep stable [exoNamesKey] derivee des noms d'exos
+courants. Fetch incremental (skip noms deja en cache). Merge states.
+Cause 2 (NON RESOLUE) : mismatch noms entre exercises_db.name et
+workout_sets.exercise_name (noms custom coach). Fix futur via
+exercise_id FK.
+
+LECON : toujours requeter la DB pour valider les hypotheses, pas
+se fier a l'audit code seul. L'hypothese "pas de mismatch" avait
+ete eliminee trop vite sans regarder les donnees reelles.
 
 - 01:30 `aedc9a8` chore remove obsolete suggest-set-weight lib
 - 01:20 `6f0ef2b` feat(workout-session) wire compute-progression + retire overloadHint

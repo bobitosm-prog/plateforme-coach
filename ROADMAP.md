@@ -4,8 +4,8 @@
 > Pour l'etat instantane (HEAD, branche, tache en cours), voir `SESSION_LOG.md`.
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
-**Derniere mise a jour** : 2026-05-09 01:30 (post-Sprint Refonte Progression)
-**HEAD synchro** : `aedc9a8` (chore remove suggest-set-weight)
+**Derniere mise a jour** : 2026-05-09 22:30 (post-fix seance libre + ticket exercise_id)
+**HEAD synchro** : `1f2be0b` (fix workout-session seance libre history fetch)
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---
@@ -267,6 +267,8 @@
 - [ ] **WorkoutSession (Seance libre) sans BUG 2** : per-set suggestion + autofill present uniquement dans TrainingExerciseCard. Sprint future pour porter les memes features dans WorkoutSession (~1h-1h30, layout Big Stack different)
 - [ ] **Badge "Garder" strikethrough** : le badge SERIE 3 missed est aussi en strikethrough par heritage du span parent. Detail UX a fixer plus tard
 - [ ] **Bug navigation : annuler edition programme → retour onboarding** — Reproduire : ouvrir un programme en edition, click "Annuler", l'app navigue vers onboarding au lieu de revenir a la vue precedente. Decouvert 7 mai 2026 pendant test live BUG 2. Effort : 30min-1h (router.push() au mauvais endroit dans handler annuler). Priorite : 🟡 P2
+- [x] ✅ BUG Seance Libre historique exo (`1f2be0b`) — fix partiel : dep [raw] → [exoNamesKey] + fetch incremental. Mismatch noms custom NON resolu.
+- [ ] **Sprint Refonte modele exercices (exercise_id FK)** — Ajouter exercise_id UUID NULL a workout_sets (FK vers exercises_db.id). Au save stocker exercise_id, au fetch prioriser match par ID, fallback nom. Migration backfill par ILIKE. Effort M (3-4h). Priorite : 🔴 P1
 - [x] ~~BUG MessageImage refetch signed URLs en boucle~~ FAUX POSITIF — log dans render body (pas useEffect) loggait chaque re-render React, pas de refetch reel. Cache useSignedUrl fonctionne correctement.
 - [x] ✅ ~~Sprint Realtime Messages~~ DONE (`8733e5f` + `e67527b`) — polling 3s remplace par Supabase Realtime, fallback 120s
 - [ ] **Sprint Refonte page Mes Clients coach** — table actuelle moche (headers colles, pas de hierarchie, hover absent, avatars incoherents). Effort M (3-4h)
