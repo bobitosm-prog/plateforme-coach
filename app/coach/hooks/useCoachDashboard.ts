@@ -290,31 +290,67 @@ export default function useCoachDashboard(initialSession?: any) {
     if (real.length > 0) lastChatTimestampRef.current = real[real.length - 1].created_at
   }, [chatMessages])
 
-  // Poll every 3s — unread counts + new chat messages (replaces WebSocket)
+  // Realtime subscription for chat messages (INSERT + UPDATE, filtered server-side)
+  useEffect(() => {
+    if (!session?.user?.id || !selectedClient) return
+    const coachId = session.user.id
+    const clientId = selectedClient.client_id
+
+    const handleMessage = (payload: any, type: 'INSERT' | 'UPDATE') => {
+      const m = payload.new
+      const isThisConv =
+        (m.sender_id === coachId && m.receiver_id === clientId) ||
+        (m.sender_id === clientId && m.receiver_id === coachId)
+      if (!isThisConv) return
+
+      if (type === 'INSERT') {
+        setChatMessages(prev => {
+          if (prev.some((x: any) => x.id === m.id)) return prev
+          return [...prev.filter((x: any) => !String(x.id).startsWith('opt-')), m]
+        })
+      } else {
+        setChatMessages(prev =>
+          prev.map((x: any) => x.id === m.id ? { ...x, ...m } : x)
+        )
+      }
+    }
+
+    // Channel A : messages reçus par le coach (INSERT du client + UPDATE)
+    const channelIn = supabase
+      .channel(`coach-chat-in-${coachId}-${clientId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${coachId}`,
+      }, (p: any) => handleMessage(p, 'INSERT'))
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${coachId}`,
+      }, (p: any) => handleMessage(p, 'UPDATE'))
+      .subscribe()
+
+    // Channel B : read receipts sur les messages envoyés par le coach
+    const channelOut = supabase
+      .channel(`coach-chat-out-${coachId}-${clientId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `sender_id=eq.${coachId}`,
+      }, (p: any) => handleMessage(p, 'UPDATE'))
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channelIn)
+      supabase.removeChannel(channelOut)
+    }
+  }, [session?.user?.id, selectedClient?.client_id])
+
+  // Poll every 30s — unread counts + last messages (fallback, Phase 2 will replace)
   useEffect(() => {
     if (!session?.user?.id) return
     const coachId = session.user.id
     const id = setInterval(async () => {
-      // Always refresh unread counts
       const clientIds = clientsRef.current.map(c => c.client_id)
       if (clientIds.length) { fetchUnreadCounts(coachId, clientIds); fetchLastMessages(coachId) }
-
-      // Fetch new chat messages for the open conversation
-      const client = selectedClientRef.current
-      const since  = lastChatTimestampRef.current
-      if (!client || !since) return
-      const { data } = await supabase
-        .from('messages')
-        .select('*')
-        .or(`sender_id.eq.${coachId},receiver_id.eq.${coachId}`)
-        .or(`sender_id.eq.${client.client_id},receiver_id.eq.${client.client_id}`)
-        .gt('created_at', since)
-        .order('created_at', { ascending: true })
-        .limit(100)
-      if (data?.length) {
-        setChatMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
-      }
-    }, 3000)
+    }, 30000)
     return () => clearInterval(id)
   }, [session?.user?.id])
 
