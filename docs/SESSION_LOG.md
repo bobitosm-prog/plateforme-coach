@@ -8,9 +8,9 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-09 23:45
+**Date derniere mise a jour** : 2026-05-09 01:30
 **Branche** : main
-**HEAD** : `e67527b` feat(coach-messages) realtime unread + last messages
+**HEAD** : `aedc9a8` chore: remove obsolete suggest-set-weight
 **Working tree** : clean
 
 ### Tache en cours
@@ -20,31 +20,68 @@ Aucune — fin de session
 Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
-1. Test gym reelle BUG 2 tap-to-autofill (mobile iPhone natif, pas DevTools)
-2. Sprint Layout Desktop autres sections (Clients, Suivi, etc.)
-3. Sprint Images (54 img → next/image) — 3h
-4. Sprint Refonte page Mes Clients coach — M (3-4h)
-5. Cleanup seed test BUG 2 (workout_sessions + custom_programs Test BUG 2)
+1. Test gym BUG 2 tap-to-autofill + validation etape 3 sprint progression
+2. BUG Seance Libre historique exo (S-M, 1-2h)
+3. Sprint Layout Desktop autres sections
+4. Sprint Images (54 img → next/image) — 3h
+5. Sprint Refonte page Mes Clients coach — M (3-4h)
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
 2. ~~Sprint Layout Desktop~~ ✅ DONE (9 mai 2026)
 3. ~~Sprint Realtime Messages~~ ✅ DONE (9 mai 2026)
-4. Sprint Layout Desktop autres sections — M-L
-5. Sprint Images (54 img → next/image) — 3h
-6. Sprint Refonte page Mes Clients coach — M (3-4h)
-7. Sprint Refacto composants > 500 lignes — L
-8. Sprint Qualite Code (console.log, eslint-disable, deps) — 2-3h
-9. Sprint FK manquantes globalement — M
-10. Sprint Accessibilite (~620 boutons sans aria-label) — M-L
-11. Sprint typage strict (497 any) — XL
-12. Sprint Native Capacitor — long terme 15-20h
+4. ~~Sprint Refonte Progression~~ ✅ DONE (9 mai 2026)
+5. BUG Seance Libre historique exo — S-M (1-2h)
+6. Sprint Layout Desktop autres sections — M-L
+7. Sprint Images (54 img → next/image) — 3h
+8. Sprint Refonte page Mes Clients coach — M (3-4h)
+9. Sprint Refacto composants > 500 lignes — L
+10. Sprint Qualite Code (console.log, eslint-disable, deps) — 2-3h
+11. Sprint FK manquantes globalement — M
+12. Sprint Accessibilite (~620 boutons sans aria-label) — M-L
+13. Sprint typage strict (497 any) — XL
+14. Sprint Native Capacitor — long terme 15-20h
 
 ---
 
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
 
 ### 2026-05-09
+
+- 01:30 `aedc9a8` chore remove obsolete suggest-set-weight lib
+- 01:20 `6f0ef2b` feat(workout-session) wire compute-progression + retire overloadHint
+- 01:10 `5cfb3f5` feat(training-card) wire compute-progression dans preview
+- 01:00 `0bf9628` feat(training) compute-progression lib pure + 33 tests
+
+FIN SPRINT REFONTE PROGRESSION DE CHARGE (9 mai 2026, ~3h) :
+
+AVANT :
+- 3 systemes independants : suggestSetWeight (per-set inline),
+  overloadHint (intra-seance dans timer repos), API IA Claude Haiku
+- Step fixe 2.5kg, pas de filtrage completed, heuristique ±2h
+- Suggestion intra-seance contraire aux standards musculation
+
+APRES :
+- 1 lib pure unifiee lib/training/compute-progression.ts (33 tests)
+- 3 statuses : progress (tous >= cible) / hold (>=5 reps mais sous
+  cible) / deload (1 set <5 reps OU 2 sessions bloquees)
+- refWeight = max des sets valides (gere sets progressifs)
+- step adapte par groupe musculaire (5kg/2.5kg/1.25kg)
+- Badge sur 1er set en preview ET en seance, coherent
+- Groupement par session_id, filtrage completed=true
+- Suppression hint intra-seance timer
+
+LECONS :
+- Ne JAMAIS fixer un test pour le faire passer sans comprendre
+  pourquoi il echoue. Le test est la spec.
+- Bug refWeight subtil : prendre weight[0] regresse les users
+  avec sets progressifs (echauffement). Fix: max des sets a cible.
+- Lib pure + useMemo unique > IIFE repetes dans le render.
+
+TICKETS BACKLOG :
+- BUG Seance Libre : exos ajoutes manuellement ne chargent pas
+  l'historique precedent (mismatch exercise_name probable). S-M.
+- BUG test design-tokens (2 fails pre-existants). Sprint Qualite.
 
 - 23:45 `e67527b` feat(coach-messages) realtime unread + last messages, polling 30s→120s
 - 23:15 `8733e5f` feat(coach-messages) realtime chat messages, polling 3s→30s

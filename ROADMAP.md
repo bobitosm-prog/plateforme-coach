@@ -4,8 +4,8 @@
 > Pour l'etat instantane (HEAD, branche, tache en cours), voir `SESSION_LOG.md`.
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
-**Derniere mise a jour** : 2026-05-09 23:45 (post-Sprint Realtime Messages)
-**HEAD synchro** : `e67527b` (feat coach-messages realtime Phase 1+2)
+**Derniere mise a jour** : 2026-05-09 01:30 (post-Sprint Refonte Progression)
+**HEAD synchro** : `aedc9a8` (chore remove suggest-set-weight)
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---
@@ -40,6 +40,13 @@
 ---
 
 ## Sprints livres — App produit
+
+### ✅ Sprint Refonte Progression de Charge (9 mai 2026)
+- Lib pure unifiee lib/training/compute-progression.ts + 33 tests (`0bf9628`)
+- Wire TrainingExerciseCard preview (`5cfb3f5`) + WorkoutSession seance (`6f0ef2b`)
+- Suppression overloadHint intra-seance + getIncrementForExercise/parseTopOfRange locaux
+- Suppression ancienne lib suggest-set-weight.ts (`aedc9a8`)
+- 3 statuses : progress/hold/deload, step adaptatif, refWeight=max sets valides
 
 ### ✅ Sprint Realtime Messages (9 mai 2026)
 - Phase 1 : chat messages live via Supabase Realtime (`8733e5f`)
