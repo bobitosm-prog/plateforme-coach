@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Plus, MoreHorizontal, Timer, Video, RefreshCw, Info, BarChart2 } from 'lucide-react'
 import {
@@ -9,11 +9,12 @@ import {
 import ExercisePreview from '../../ExercisePreview'
 import { getRestSeconds } from '../../../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../../../lib/technique-labels'
-import { suggestSetWeight } from '../../../../lib/training/suggest-set-weight'
+import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../../../lib/training/compute-progression'
 
 interface PreviousSet {
   weight: number
   reps: number
+  completed: boolean
 }
 
 interface TrainingExerciseCardProps {
@@ -49,7 +50,8 @@ export default function TrainingExerciseCard({
   const allDone    = doneCount === numSets && numSets > 0
   const isRestingHere = restRunning && restingSet?.exName === ex.name
 
-  // ── Previous performance data ──
+  // ── Previous performance data (last 2 sessions) ──
+  const [prevSessions, setPrevSessions] = useState<PrevSessionSet[][]>([])
   const [previousSets, setPreviousSets] = useState<PreviousSet[]>([])
   const fetchedRef = useRef(false)
 
@@ -58,19 +60,33 @@ export default function TrainingExerciseCard({
     fetchedRef.current = true
     supabase
       .from('workout_sets')
-      .select('weight, reps, set_number, created_at')
+      .select('weight, reps, set_number, session_id, completed, created_at')
       .eq('user_id', userId)
       .eq('exercise_name', ex.name)
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(30)
       .then(({ data }: any) => {
         if (!data || data.length === 0) return
-        // Group by session (same created_at within 2 hours)
-        const first = new Date(data[0].created_at).getTime()
-        const sessionSets = data
-          .filter((d: any) => Math.abs(new Date(d.created_at).getTime() - first) < 7200000)
-          .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
-        setPreviousSets(sessionSets.map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 })))
+        // Identify the 2 most recent distinct session_ids
+        const sessionIds: string[] = []
+        for (const row of data) {
+          if (row.session_id && !sessionIds.includes(row.session_id)) {
+            sessionIds.push(row.session_id)
+            if (sessionIds.length >= 2) break
+          }
+        }
+        // Build prevSessions grouped by session_id, sorted by set_number
+        const sessions: PrevSessionSet[][] = sessionIds.map(sid =>
+          data
+            .filter((d: any) => d.session_id === sid)
+            .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
+            .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0, completed: s.completed !== false }))
+        )
+        setPrevSessions(sessions)
+        // Keep previousSets (display "Précédent" column) from most recent session
+        if (sessions[0]) {
+          setPreviousSets(sessions[0].map(s => ({ weight: s.weight, reps: s.reps, completed: s.completed })))
+        }
       })
   }, [supabase, userId, ex.name])
 
@@ -91,6 +107,16 @@ export default function TrainingExerciseCard({
     if (!set || (set.weight === 0 && set.reps === 0)) return '—'
     return `${set.weight.toLocaleString('fr-FR')}×${set.reps}`
   }
+
+  function fmtStep(n: number): string {
+    return n.toString().replace('.', ',')
+  }
+
+  const progression = useMemo(
+    () => computeProgression(prevSessions, parseRepsTarget(ex.reps), ex.name),
+    [prevSessions, ex.reps, ex.name]
+  )
+  const targetRepsVal = parseRepsTarget(ex.reps)
 
   return (
     <div
@@ -284,14 +310,7 @@ export default function TrainingExerciseCard({
           const prevWithFallback = prev || previousSets[previousSets.length - 1]
           const isFallback = !prev && !!prevWithFallback
 
-          const isBodyweight =
-            (prevWithFallback && prevWithFallback.weight === 0) ||
-            /gainage|planche|pompe|traction|dips|burpee|abdo|crunch/i.test(ex.name)
-
-          const targetReps = typeof ex.reps === 'number' ? ex.reps : parseInt(String(ex.reps).split('-')[0]) || 10
-          const target = { repsMin: Math.max(1, targetReps - 2), repsMax: targetReps }
-          const suggestion = isBodyweight ? null : suggestSetWeight(prevWithFallback ?? null, target)
-          const prevMissed = prevWithFallback && prevWithFallback.reps < target.repsMin
+          const prevMissed = prevWithFallback && targetRepsVal != null && prevWithFallback.reps < targetRepsVal
 
           return (
             <div key={si}>
@@ -339,17 +358,17 @@ export default function TrainingExerciseCard({
                 >
                   {isFallback && <span style={{ opacity: 0.5 }}>↓ </span>}
                   {fmtPrev(prevWithFallback)}
-                  {suggestion && (
+                  {si === 0 && progression && (
                     <span style={{
                       marginLeft: 4, fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700,
                       padding: '1px 4px', borderRadius: 4, verticalAlign: 'middle',
-                      ...(suggestion.reason === 'progress'
+                      ...(progression.status === 'progress'
                         ? { color: GREEN, background: `${GREEN}20` }
-                        : suggestion.reason === 'missed'
-                          ? { color: TEXT_DIM, background: `${TEXT_DIM}20` }
-                          : {}),
+                        : progression.status === 'deload'
+                          ? { color: '#fb923c', background: 'rgba(251,146,60,0.15)' }
+                          : { color: TEXT_DIM, background: `${TEXT_DIM}20` }),
                     }}>
-                      {suggestion.reason === 'progress' ? `+${(suggestion.weight - (prevWithFallback?.weight || 0)).toFixed(1).replace('.0', '').replace('.', ',')}` : suggestion.reason === 'missed' ? 'Garder' : ''}
+                      {progression.status === 'progress' ? `+${fmtStep(progression.step)}` : progression.status === 'deload' ? `-${fmtStep(progression.step)}` : 'Garder'}
                     </span>
                   )}
                 </span>
@@ -374,7 +393,7 @@ export default function TrainingExerciseCard({
                       onUpdateInput(ex.name, si, 'kg', n.toString().replace('.', ','))
                     }
                   }}
-                  placeholder={suggestion ? String(suggestion.weight).replace('.', ',') : '0'}
+                  placeholder={progression ? String(progression.weight).replace('.', ',') : '0'}
                   disabled={!trainingIsToday}
                   style={{
                     background: done ? 'rgba(74,222,128,0.08)' : BG_BASE,
