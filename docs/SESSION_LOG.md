@@ -8,9 +8,9 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-07 21:10
+**Date derniere mise a jour** : 2026-05-09 22:30
 **Branche** : main
-**HEAD** : `9283fd2` Merge fix/training-suggestion-per-set sur main
+**HEAD** : `5003eea` feat(coach-messages) layout 2 colonnes desktop
 **Working tree** : clean
 
 ### Tache en cours
@@ -20,14 +20,14 @@ Aucune — fin de session
 Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
-1. Test gym reelle BUG 2 tap-to-autofill (mobile iPhone natif, pas DevTools)
-2. Sprint Layout Desktop (Messages sidebar + 2 colonnes) — 3-4h
+1. 🔴 BUG MessageImage refetch signed URLs en boucle (~2.6 req/s) — P1 perf
+2. Test gym reelle BUG 2 tap-to-autofill (mobile iPhone natif, pas DevTools)
 3. Sprint Images (54 img → next/image) — 3h
 4. Cleanup seed test BUG 2 (workout_sessions + custom_programs Test BUG 2)
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
-2. Sprint Layout Desktop — 3-4h
+2. ~~Sprint Layout Desktop~~ ✅ DONE (9 mai 2026)
 3. Sprint Images (54 img → next/image) — 3h
 4. Sprint Refacto composants > 500 lignes — L
 5. Sprint Qualite Code (console.log, eslint-disable, deps) — 2-3h
@@ -39,6 +39,19 @@ Aucun
 ---
 
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
+
+### 2026-05-09
+
+- 22:30 `5003eea` feat(coach-messages) layout 2 colonnes desktop + extraction composants
+
+FIN SESSION 9 mai 2026 — Sprint Layout Desktop Messages livre :
+- Layout 2-col desktop : sidebar 320px + panel flex-1 (breakpoint 1024px)
+- Extraction ConversationList + ConversationPanel depuis CoachMessages
+- Fix layout root : height:100dvh conditionnel section messages + padding/overflow
+- Auto-scroll refacto : setTimeout → rAF×2 + handlers load images
+- Mobile pixel-perfect inchange (liste → overlay fullscreen)
+- DECOUVERTE BUG PRE-EXISTANT : MessageImage refetch signed URLs en boucle
+  toutes les 3s (~2.6 req/s avec 4 images). Ticket P1 perf cree.
 
 ### 2026-05-07
 

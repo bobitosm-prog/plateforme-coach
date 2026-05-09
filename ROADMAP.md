@@ -4,8 +4,8 @@
 > Pour l'etat instantane (HEAD, branche, tache en cours), voir `SESSION_LOG.md`.
 > **MAJ obligatoire a chaque modif** (sprint clos, tech debt resolue, decouverte).
 
-**Derniere mise a jour** : 2026-05-07 21:10 (post-BUG 2 per-set suggestion)
-**HEAD synchro** : `9283fd2` (Merge fix/training-suggestion-per-set sur main)
+**Derniere mise a jour** : 2026-05-09 22:30 (post-Sprint Layout Desktop Messages)
+**HEAD synchro** : `5003eea` (feat coach-messages layout 2 colonnes)
 **Stack** : Next.js 16.1.6 · React 19.2.3 · Supabase 2.105 · TypeScript 5 · Tailwind 4
 
 ---
@@ -40,6 +40,16 @@
 ---
 
 ## Sprints livres — App produit
+
+### ✅ Sprint Layout Desktop Messages (9 mai 2026)
+- Layout 2 colonnes desktop : sidebar 320px fixe + panel flex-1 (`5003eea`)
+  - Extraction ConversationList.tsx + ConversationPanel.tsx depuis CoachMessages
+  - CoachMessages refacto en orchestrateur leger mobile/desktop
+  - Empty state desktop (MessageSquare + "Selectionnez une conversation")
+  - Highlight conv selectionnee, back button masque en desktop
+  - Layout root coach : height:100dvh conditionnel sur section messages
+  - Auto-scroll rAF×2 + re-scroll apres load images
+- Mobile inchange (liste → overlay fullscreen)
 
 ### ✅ Sprint BUG 1 + BUG 2 Training (7 mai 2026)
 - **BUG 1** Weight input accepte virgule FR (TrainingExerciseCard + WorkoutSession)
@@ -240,6 +250,7 @@
 - [ ] **WorkoutSession (Seance libre) sans BUG 2** : per-set suggestion + autofill present uniquement dans TrainingExerciseCard. Sprint future pour porter les memes features dans WorkoutSession (~1h-1h30, layout Big Stack different)
 - [ ] **Badge "Garder" strikethrough** : le badge SERIE 3 missed est aussi en strikethrough par heritage du span parent. Detail UX a fixer plus tard
 - [ ] **Bug navigation : annuler edition programme → retour onboarding** — Reproduire : ouvrir un programme en edition, click "Annuler", l'app navigue vers onboarding au lieu de revenir a la vue precedente. Decouvert 7 mai 2026 pendant test live BUG 2. Effort : 30min-1h (router.push() au mauvais endroit dans handler annuler). Priorite : 🟡 P2
+- [ ] **BUG MessageImage refetch signed URLs en boucle** — useSignedUrl ou MessageImage re-render toutes les ~3s, multiplie les fetches Supabase Storage (2.6 req/s sur conv ouverte avec 4 images). Cause probable : dependency instable dans useEffect ou re-render parent. Decouvert 9 mai 2026 pendant debug auto-scroll. Priorite : 🔴 P1 perf
 
 ### Decouvertes audit 7 mai 2026
 - [ ] **497 `: any` explicites** dans 86 fichiers (page-desktop 51, TrainingTab 57, HomeTab 31, ProgressTab 30) — XL
