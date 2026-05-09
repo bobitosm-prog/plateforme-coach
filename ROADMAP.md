@@ -250,7 +250,8 @@
 - [ ] **WorkoutSession (Seance libre) sans BUG 2** : per-set suggestion + autofill present uniquement dans TrainingExerciseCard. Sprint future pour porter les memes features dans WorkoutSession (~1h-1h30, layout Big Stack different)
 - [ ] **Badge "Garder" strikethrough** : le badge SERIE 3 missed est aussi en strikethrough par heritage du span parent. Detail UX a fixer plus tard
 - [ ] **Bug navigation : annuler edition programme → retour onboarding** — Reproduire : ouvrir un programme en edition, click "Annuler", l'app navigue vers onboarding au lieu de revenir a la vue precedente. Decouvert 7 mai 2026 pendant test live BUG 2. Effort : 30min-1h (router.push() au mauvais endroit dans handler annuler). Priorite : 🟡 P2
-- [ ] **BUG MessageImage refetch signed URLs en boucle** — useSignedUrl ou MessageImage re-render toutes les ~3s, multiplie les fetches Supabase Storage (2.6 req/s sur conv ouverte avec 4 images). Cause probable : dependency instable dans useEffect ou re-render parent. Decouvert 9 mai 2026 pendant debug auto-scroll. Priorite : 🔴 P1 perf
+- [x] ~~BUG MessageImage refetch signed URLs en boucle~~ FAUX POSITIF — log dans render body (pas useEffect) loggait chaque re-render React, pas de refetch reel. Cache useSignedUrl fonctionne correctement.
+- [ ] **Sprint Realtime Messages** — remplacer polling 3s (setInterval useCoachDashboard L297) par Supabase Realtime sur le coach dashboard. Priorite M-L, 3-4h, a faire avant 50+ coachs actifs simultanes
 
 ### Decouvertes audit 7 mai 2026
 - [ ] **497 `: any` explicites** dans 86 fichiers (page-desktop 51, TrainingTab 57, HomeTab 31, ProgressTab 30) — XL

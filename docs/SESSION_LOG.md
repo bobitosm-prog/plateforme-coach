@@ -20,10 +20,10 @@ Aucune — fin de session
 Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
-1. 🔴 BUG MessageImage refetch signed URLs en boucle (~2.6 req/s) — P1 perf
-2. Test gym reelle BUG 2 tap-to-autofill (mobile iPhone natif, pas DevTools)
-3. Sprint Images (54 img → next/image) — 3h
-4. Cleanup seed test BUG 2 (workout_sessions + custom_programs Test BUG 2)
+1. Test gym reelle BUG 2 tap-to-autofill (mobile iPhone natif, pas DevTools)
+2. Sprint Images (54 img → next/image) — 3h
+3. Cleanup seed test BUG 2 (workout_sessions + custom_programs Test BUG 2)
+4. Sprint Realtime Messages (remplacer polling 3s par Supabase Realtime) — M-L, 3-4h
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -50,8 +50,13 @@ FIN SESSION 9 mai 2026 — Sprint Layout Desktop Messages livre :
 - Fix layout root : height:100dvh conditionnel section messages + padding/overflow
 - Auto-scroll refacto : setTimeout → rAF×2 + handlers load images
 - Mobile pixel-perfect inchange (liste → overlay fullscreen)
-- DECOUVERTE BUG PRE-EXISTANT : MessageImage refetch signed URLs en boucle
-  toutes les 3s (~2.6 req/s avec 4 images). Ticket P1 perf cree.
+- ~~DECOUVERTE BUG PRE-EXISTANT : MessageImage refetch~~ → FAUX POSITIF
+  (log dans render body, pas dans useEffect — loggait chaque re-render
+  React cause par le polling 3s, pas un vrai refetch. Cache useSignedUrl OK.)
+
+LECON DEBUG : pour tracer un fetch, toujours logger dans le useEffect
+qui fetch, jamais dans le render body. Un console.log dans le render
+body logge a chaque re-render React, donnant l'illusion d'un refetch.
 
 ### 2026-05-07
 
