@@ -297,17 +297,24 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     return map
   }, [exos, prevSessionsByExo])
 
-  // Fetch previous performance for all exercises (last 2 sessions per exercise)
+  // Stable key derived from current exercise names — re-fires when exos are added/removed
+  const exoNamesKey = useMemo(() => exos.map(e => e.name).filter(Boolean).join('|'), [exos])
+
+  // Fetch previous performance (incremental: only missing names)
   useEffect(() => {
-    const names = raw.map(e => e.exercise_name || e.name).filter(Boolean)
+    const names = exos.map(e => e.name).filter(Boolean)
     if (!names.length) return
     const fetchPrev = async () => {
+      // Skip names already cached
+      const missing = names.filter(n => !(n in prevSessionsByExo))
+      if (!missing.length) return
+
       const { data: userData } = await supabase.auth.getUser()
       const userId = userData?.user?.id
       if (!userId) return
-      const prev: Record<string, { weight: number; reps: number }[]> = {}
-      const prevSessions: Record<string, PrevSessionSet[][]> = {}
-      for (const name of names) {
+      const newPrev: Record<string, { weight: number; reps: number }[]> = {}
+      const newPrevSessions: Record<string, PrevSessionSet[][]> = {}
+      for (const name of missing) {
         const { data } = await supabase
           .from('workout_sets')
           .select('weight, reps, set_number, session_id, completed, created_at')
@@ -316,7 +323,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           .order('created_at', { ascending: false })
           .limit(30)
         if (data?.length) {
-          // Identify the 2 most recent distinct session_ids
           const sessionIds: string[] = []
           for (const row of data) {
             if (row.session_id && !sessionIds.includes(row.session_id)) {
@@ -324,24 +330,26 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               if (sessionIds.length >= 2) break
             }
           }
-          // Build sessions grouped by session_id, sorted by set_number
           const sessions: PrevSessionSet[][] = sessionIds.map(sid =>
             data
               .filter((d: any) => d.session_id === sid)
               .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
               .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0, completed: s.completed !== false }))
           )
-          prevSessions[name] = sessions
-          // Keep display data from most recent session (completed sets only)
+          newPrevSessions[name] = sessions
           const latestCompleted = sessions[0]?.filter(s => s.completed) ?? []
-          if (latestCompleted.length > 0) prev[name] = latestCompleted.map(s => ({ weight: s.weight, reps: s.reps }))
+          if (latestCompleted.length > 0) newPrev[name] = latestCompleted.map(s => ({ weight: s.weight, reps: s.reps }))
+        } else {
+          // Mark as fetched (empty) to avoid re-fetching
+          newPrevSessions[name] = []
         }
       }
-      setPreviousData(prev)
-      setPrevSessionsByExo(prevSessions)
+      // Merge with existing, don't overwrite
+      setPreviousData(prev => ({ ...prev, ...newPrev }))
+      setPrevSessionsByExo(prev => ({ ...prev, ...newPrevSessions }))
     }
     fetchPrev()
-  }, [raw])
+  }, [exoNamesKey])
 
   useEffect(() => { elT.current = setInterval(() => setElapsed(Date.now() - t0), 1000); return () => { if (elT.current) clearInterval(elT.current) } }, [])
   const prevRemaining = useRef(Infinity)
