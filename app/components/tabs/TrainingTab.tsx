@@ -34,6 +34,7 @@ import { TechniqueTooltip } from './training/TechniquePopup'
 import StartProgramModal from './training/StartProgramModal'
 import { getRestSeconds } from '../../../lib/utils/exercise'
 import HeroSessionCard, { type HeroState } from '../home/HeroSessionCard'
+import SessionDetailModal from '../training/SessionDetailModal'
 import { formatRelativeTime } from '../../../lib/formatRelativeTime'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
@@ -1126,23 +1127,16 @@ export default function TrainingTab({
                 + SÉANCE LIBRE
               </button>
             </div>
+            <SessionDetailModal
+              isOpen={showSessionModal}
+              onClose={() => setShowSessionModal(false)}
+              sessionTitle={sessionName}
+              dayStatus={dayStatus}
+              dayBadge={dayBadge}
+            />
           </>
         )
       })()}
-
-      {/* Session detail modal placeholder (T4.2) */}
-      {showSessionModal && (
-        <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-          <div style={{ textAlign: 'center', color: colors.text }}>
-            <h2 style={{ fontFamily: fonts.headline, color: colors.gold, fontSize: 28 }}>SESSION DETAIL</h2>
-            <p style={{ fontFamily: fonts.body, color: colors.textDim, marginTop: 8 }}>Modal detaille — sera implemente en T4.2</p>
-            <button onClick={() => setShowSessionModal(false)}
-              style={{ marginTop: 24, padding: '12px 24px', background: colors.gold, color: '#0e0e0e', border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, letterSpacing: '0.15em', fontWeight: 700 }}>
-              FERMER
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ═══ SECTION 4 — ACTIVE SESSION BAR ═══ */}
       <TrainingActiveBar

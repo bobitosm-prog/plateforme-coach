@@ -30,7 +30,7 @@ interface HeroSessionCardProps {
   hideStartButton?: boolean
 }
 
-function shortenSessionTitle(title: string | null | undefined): string {
+export function shortenSessionTitle(title: string | null | undefined): string {
   return (title || '').split('(')[0].trim().toUpperCase()
 }
 
