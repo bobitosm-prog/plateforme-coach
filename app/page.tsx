@@ -26,6 +26,7 @@ import NutritionTab from './components/tabs/NutritionTab'
 import ProgressTab from './components/tabs/ProgressTab'
 import ProfileTab from './components/tabs/ProfileTab'
 import MessagesTab from './components/tabs/MessagesTab'
+import AccountTab from './components/tabs/AccountTab'
 import DesktopDashboard from './(dashboard)/page-desktop'
 
 import {
@@ -143,12 +144,11 @@ export default function CoachApp() {
             { id: 'home', icon: Home, label: 'Home' },
             { id: 'training', icon: Dumbbell, label: 'Training' },
             { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
-            { id: 'progress', icon: TrendingUp, label: 'Progress' },
-            { id: 'messages', icon: MessageCircle, label: 'Messages' },
-            { id: 'profil', icon: User, label: 'Profil' },
+            { id: 'progress', icon: TrendingUp, label: 'Analytics' },
+            { id: 'compte', icon: User, label: 'Compte' },
           ] as const).map(({ id, icon: Icon, label }) => {
             const active = h.activeTab === id
-            const badge = id === 'messages' && h.unreadCount > 0
+            const badge = id === 'compte' && h.unreadCount > 0
             return (
               <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms' }}>
                 <div style={{ position: 'relative' }}>
@@ -375,6 +375,7 @@ export default function CoachApp() {
           {h.activeTab === 'progress' && <ProgressTab supabase={h.supabase} session={h.session} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} deletePhoto={h.deletePhoto} setModal={h.setModal} chartMin={h.chartMin} chartMax={h.chartMax} onRefresh={h.fetchAll} profile={h.profile} coachId={h.coachId} personalRecords={h.personalRecords} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weeklyVolume={h.weeklyVolume} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} calorieGoal={h.calorieGoal} goalWeight={h.goalWeight} waterGoal={h.profile?.water_goal || 3000} streak={h.streak} currentWeight={h.currentWeight} />}
           {h.activeTab === 'profil' && <ProfileTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} fullName={h.fullName} firstName={h.firstName} avatarRef={h.avatarRef} uploadAvatar={h.uploadAvatar} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} coachProgram={h.coachProgram} coachId={h.coachId} setModal={h.setModal} fetchAll={h.fetchAll} updateReminderSettings={h.updateReminderSettings} regenerateWeekSchedule={h.regenerateWeekSchedule} />}
           {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isInvited={perms.isInvited} />}
+          {h.activeTab === 'compte' && <AccountTab unreadCount={h.unreadCount} onNavigate={(tab) => h.setActiveTab(tab as any)} />}
         </motion.div>
       </AnimatePresence>
       </main>
@@ -400,16 +401,14 @@ export default function CoachApp() {
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
           { id: 'nutrition' as Tab, Icon: UtensilsCrossed, label: 'Nutrition' },
           { id: 'progress' as Tab, Icon: TrendingUp, label: 'Analytics' },
-          perms.isInvited
-            ? { id: 'messages' as Tab, Icon: MessageCircle, label: 'Messages' }
-            : { id: 'coachIA' as Tab, Icon: Sparkles, label: 'Coach IA' },
+          { id: 'compte' as Tab, Icon: User, label: 'Compte' },
         ]).map(({ id, Icon, label }) => {
           const active = h.activeTab === id
           return (
             <button key={id} onClick={() => h.setActiveTab(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon size={20} color={active ? GOLD : TEXT_DIM} strokeWidth={active ? 2.5 : 1.5} style={{ transition: 'all 0.3s ease' }} />
-                {id === 'messages' && h.unreadCount > 0 && (
+                {id === 'compte' && h.unreadCount > 0 && (
                   <span style={{ position: 'absolute', top: -6, right: -8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: 999, background: RED, opacity: 0.5, animation: 'badge-pulse 1.5s ease-in-out infinite', pointerEvents: 'none' }} />
                     <span style={{ position: 'relative', background: RED, color: '#fff', fontSize: '0.6rem', fontFamily: FONT_DISPLAY, fontWeight: 700, borderRadius: 999, minWidth: 16, height: 16, padding: '0 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
