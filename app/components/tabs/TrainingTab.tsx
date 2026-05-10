@@ -1133,7 +1133,105 @@ export default function TrainingTab({
               sessionTitle={sessionName}
               dayStatus={dayStatus}
               dayBadge={dayBadge}
-            />
+            >
+              {/* ── Modal content: read-only exercise detail ── */}
+              {(() => {
+                if (trainingDayData?.repos) return <TrainingRestDay />
+                if (todaySessionDone && trainingIsToday) return <TrainingSessionDone todayKey={todayKey} coachProgram={coachProgram} />
+                if (!activeCustomProgram && !coachProgram) return (
+                  <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textDim }}>
+                    <Dumbbell size={48} color={colors.textDim} style={{ marginBottom: 16 }} />
+                    <p style={{ fontFamily: fonts.body, fontSize: 14, margin: 0 }}>Aucun programme actif.</p>
+                  </div>
+                )
+                if (trainingExercises.length === 0) return (
+                  <p style={{ textAlign: 'center', padding: 40, color: colors.textDim, fontFamily: fonts.body }}>Aucun exercice prevu pour {trainingDay}.</p>
+                )
+
+                const totalSets = trainingExercises.reduce((s: number, e: any) => s + (Number(e.sets) || 3), 0)
+                const totalRest = Math.round(trainingExercises.reduce((s: number, e: any) => s + getRestSeconds(e), 0) / 60)
+
+                return (
+                  <>
+                    {activeCustomProgram?.phases && activeCustomProgram?.total_weeks && trainingIsToday && (
+                      <div style={{ marginBottom: 20 }}>
+                        <PhaseProgressBanner program={activeCustomProgram} onAdvanceWeek={advanceWeek} />
+                      </div>
+                    )}
+
+                    {/* Mini-stats grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
+                      {[
+                        { label: 'SETS', value: totalSets },
+                        { label: 'EXERCICES', value: trainingExercises.length },
+                        { label: 'REPOS', value: `${totalRest}min` },
+                      ].map(stat => (
+                        <div key={stat.label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 14, textAlign: 'center' }}>
+                          <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 400, color: colors.gold, lineHeight: 1 }}>{stat.value}</div>
+                          <div style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Exercise cards */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {trainingExercises.map((ex: any, exIdx: number) => {
+                        const storageKey = `moovx-sets-${todayStr}-${ex.name}`
+                        const n = Number(ex.sets) || 3
+                        const stored = completedSets[storageKey]
+                        const setsArr: boolean[] = stored ? stored.slice(0, n).concat(Array.from({ length: Math.max(0, n - stored.length) }, () => false)) : Array.from({ length: n }, () => false)
+                        const numSets = n
+                        const inputs = setInputs[ex.name] || Array.from({ length: numSets }, () => ({ kg: '', reps: String(ex.reps || '') }))
+                        const nextEx = trainingExercises[exIdx + 1]
+                        const isSupersetStart = ex.technique === 'superset' && ex.technique_details && nextEx
+                        const prevEx = exIdx > 0 ? trainingExercises[exIdx - 1] : null
+                        const isSupersetEnd = prevEx?.technique === 'superset' && prevEx?.technique_details?.toLowerCase() === ex.name?.toLowerCase()
+
+                        return (
+                          <div key={ex.name}>
+                            {isSupersetStart && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+                                <div style={{ width: 3, height: 20, background: colors.gold, borderRadius: 2 }} />
+                                <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: colors.gold }}>SUPERSET</span>
+                                <div style={{ flex: 1, height: 1, background: `${colors.gold}30` }} />
+                              </div>
+                            )}
+                            <div style={isSupersetStart || isSupersetEnd ? { borderLeft: `3px solid ${colors.gold}`, paddingLeft: 8 } : {}}>
+                              <TrainingExerciseCard
+                                ex={ex}
+                                exIdx={exIdx}
+                                setsArr={setsArr}
+                                inputs={inputs}
+                                trainingIsToday={trainingIsToday}
+                                restRunning={restRunning}
+                                restingSet={restingSet}
+                                restTimer={restTimer}
+                                onToggleSet={toggleSet}
+                                onAddSet={addSet}
+                                onUpdateInput={updateInput}
+                                onExerciseInfo={handleExerciseInfo}
+                                fmtRest={fmtRest}
+                                onCancelRest={cancelRest}
+                                onVideoFeedback={(name: string) => setVideoExercise(name)}
+                                onTechniqueInfo={(t: string) => setTechniqueTooltip(t)}
+                                supabase={supabase}
+                                userId={session?.user?.id}
+                              />
+                            </div>
+                            {isSupersetEnd && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+                                <div style={{ width: 3, height: 10, background: colors.gold, borderRadius: 2 }} />
+                                <div style={{ flex: 1, height: 1, background: `${colors.gold}30` }} />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </>
+                )
+              })()}
+            </SessionDetailModal>
           </>
         )
       })()}
