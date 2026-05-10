@@ -8,7 +8,6 @@ import {
 } from 'lucide-react'
 
 import useClientDashboard, { type Tab } from './hooks/useClientDashboard'
-import Header from './components/Header'
 import Paywall from './components/Paywall'
 import BugReport from './components/BugReport'
 import ChatAI from './components/ChatAI'
@@ -337,21 +336,6 @@ export default function CoachApp() {
         </div>
       )}
 
-      {/* ── HEADER (hidden on home tab — HomeHeader replaces it) ── */}
-      {h.activeTab !== 'home' && <Header
-        firstName={h.firstName}
-        displayAvatar={h.displayAvatar}
-        objective={h.profile?.objective}
-        unreadCount={h.unreadCount}
-        onAvatar={() => h.setActiveTab('profil')}
-        onObjectiveChange={() => h.setModal('objective')}
-        onCoachIA={() => h.setActiveTab('coachIA')}
-        aiAllowed={h.aiAllowed}
-        onCalendar={() => h.setActiveTab('training')}
-        onMessages={() => h.setActiveTab('messages')}
-        scrollContainerRef={h.mainRef}
-      />}
-
       {/* ── TRIAL BANNER ── */}
       {h.isInTrial && (
         <div style={{ flexShrink: 0, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: h.trialDaysLeft <= 3 ? 'rgba(239,68,68,0.05)' : GOLD_DIM, border: `1px solid ${h.trialDaysLeft <= 3 ? 'rgba(239,68,68,0.15)' : GOLD_RULE}`, borderLeft: 'none', borderRight: 'none' }}>
@@ -365,7 +349,7 @@ export default function CoachApp() {
       )}
 
       {/* ── TAB CONTENT ── */}
-      <main ref={h.mainRef} className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: h.activeTab === 'home' ? 0 : 64 }}>
+      <main ref={h.mainRef} className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
 
       <AnimatePresence mode="wait">
         <motion.div key={h.activeTab} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}>
