@@ -8,7 +8,7 @@ import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
 import { useBeforeUnload } from '../../hooks/useBeforeUnload'
 import {
-  Dumbbell, Search, Award, Moon, ChevronRight, ArrowRightLeft, X, Play, BookOpen,
+  Dumbbell, Search, Award, Moon, ChevronRight, ChevronLeft, ArrowRightLeft, X, Play, BookOpen,
 } from 'lucide-react'
 import {
   fonts, colors, JS_DAYS_FR, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, btnPrimary, btnSecondary,
@@ -844,7 +844,6 @@ export default function TrainingTab({
 
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
       {(() => {
-        // Compute the displayed week based on weekOffset
         const today = new Date()
         const dow = today.getDay()
         const baseMonday = new Date(today)
@@ -856,7 +855,6 @@ export default function TrainingTab({
           d.setDate(baseMonday.getDate() + i)
           const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
           const ws = weekSessions.find((s: any) => s.scheduled_date === dateStr)
-          // Also check if this day is rest in the active program
           const progSession = activeCustomProgram?.days?.length ? getSessionForDay(activeCustomProgram.days, i) : null
           const isProgRest = progSession?.type === 'rest'
           return { date: d, dateStr, ws, isProgRest }
@@ -864,17 +862,17 @@ export default function TrainingTab({
 
         const monthLabel = displayDays[3].date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()
 
-        const arrowBtn: React.CSSProperties = {
+        const glassBtn: React.CSSProperties = {
           width: 32, height: 32, borderRadius: 10,
-          background: colors.goldDim,
-          border: `0.5px solid ${colors.goldBorder}`,
+          background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', transition: 'background 0.2s',
+          cursor: 'pointer',
         }
 
         return (
           <div
-            style={{ margin: '8px 24px 0', ...cardStyle, padding: '20px 16px 16px' }}
+            style={{ margin: '0 20px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 24 }}
             onTouchStart={e => { calTouchStart.current = e.touches[0].clientX }}
             onTouchEnd={e => {
               if (calTouchStart.current === null) return
@@ -884,26 +882,27 @@ export default function TrainingTab({
               calTouchStart.current = null
             }}
           >
-            {/* Month label + styled nav arrows */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={mutedStyle}>{monthLabel}</span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => setWeekOffset(o => o - 1)} style={arrowBtn}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                </button>
-                <button onClick={() => setWeekOffset(o => o + 1)} style={arrowBtn}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                </button>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{monthLabel}</span>
+              <div style={{ display: 'flex', gap: 8 }}>
                 {weekOffset !== 0 && (
-                  <button onClick={() => setWeekOffset(0)} style={{ ...arrowBtn, fontSize: 10, color: colors.gold, fontWeight: 700 }}>
-                    ●
+                  <button onClick={() => setWeekOffset(0)} aria-label="Revenir a cette semaine"
+                    style={{ ...glassBtn, width: 'auto', padding: '6px 12px', fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' as const }}>
+                    AUJOURD&apos;HUI
                   </button>
                 )}
+                <button onClick={() => setWeekOffset(o => o - 1)} aria-label="Semaine precedente" style={glassBtn}>
+                  <ChevronLeft size={16} color={colors.gold} />
+                </button>
+                <button onClick={() => setWeekOffset(o => o + 1)} aria-label="Semaine suivante" style={glassBtn}>
+                  <ChevronRight size={16} color={colors.gold} />
+                </button>
               </div>
             </div>
 
             {/* 7-day grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, transition: 'opacity 0.2s' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
               {displayDays.map(({ date, dateStr, ws, isProgRest }, i) => {
                 const dayNum = date.getDate()
                 const dayName = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'][i]
@@ -911,7 +910,7 @@ export default function TrainingTab({
                 const isRest = isProgRest || ws?.session_type === 'rest' || ws?.title === 'Repos'
                 const isDone = ws?.completed && !isRest
                 const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
-                const dotColor = isRest ? 'rgba(255,255,255,0.1)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : `${colors.goldContainer}4d`
+                const dotColor = isRest ? 'rgba(255,255,255,0.2)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : `${colors.goldContainer}4d`
 
                 return (
                   <button
@@ -923,32 +922,31 @@ export default function TrainingTab({
                       setCalendarSelectedDate(date)
                     }}
                     style={{
-                      background: isToday ? `${colors.goldContainer}33` : `${colors.goldContainer}0d`,
-                      border: isToday ? `1.5px solid ${colors.gold}80` : `0.5px solid ${colors.goldContainer}14`,
-                      borderRadius: 10, padding: '8px 2px', cursor: 'pointer',
-                      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
-                      transition: 'all 0.2s',
+                      background: isToday ? `${colors.gold}12` : 'transparent',
+                      border: isToday ? `2px solid ${colors.gold}` : `1px solid ${colors.divider}`,
+                      borderRadius: 12, padding: '10px 6px', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
+                      transition: 'all 0.15s ease',
                     }}
                   >
-                    <span style={{ fontSize: 9, fontWeight: 700, color: isToday ? colors.gold : colors.textDim, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{dayName}</span>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, boxShadow: isToday ? `0 0 8px ${colors.gold}80` : 'none' }} />
+                    <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: isToday ? colors.gold : colors.textDim, textTransform: 'uppercase' as const }}>{dayName}</span>
+                    <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, marginTop: 2 }} />
                   </button>
                 )
               })}
             </div>
 
-            {/* Legend */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 10 }}>
+            {/* Legend compact */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 16 }}>
               {[
                 { color: colors.success, label: 'Fait' },
-                { color: colors.error, label: 'Manqué' },
-                { color: colors.gold, label: "Aujourd'hui" },
-                { color: 'rgba(255,255,255,0.1)', label: 'Repos' },
+                { color: colors.error, label: 'Manque' },
+                { color: 'rgba(255,255,255,0.2)', label: 'Repos' },
               ].map(l => (
-                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: l.color }} />
-                  <span style={{ fontSize: 9, color: colors.textDim }}>{l.label}</span>
+                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: l.color }} />
+                  <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim }}>{l.label}</span>
                 </div>
               ))}
             </div>
