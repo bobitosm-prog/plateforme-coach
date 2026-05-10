@@ -1061,13 +1061,40 @@ export default function TrainingTab({
       )}
 
       {/* ═══ SECTION 3 — SÉANCE DU JOUR ═══ */}
+      {(() => {
+        const dayStatus = (() => {
+          if (trainingIsToday) return 'today' as const
+          const target = calendarSelectedDate ? new Date(calendarSelectedDate) : new Date()
+          target.setHours(0, 0, 0, 0)
+          const now = new Date(); now.setHours(0, 0, 0, 0)
+          if (target > now) return 'future' as const
+          const dateStr = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`
+          const ws = weekSessions.find((s: any) => s.scheduled_date === dateStr)
+          return ws?.completed ? 'done' as const : 'missed' as const
+        })()
+        const displayDate = (trainingIsToday ? new Date() : calendarSelectedDate || new Date()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+
+        return (
       <div style={{ margin: '16px 24px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <span style={T}>SEANCE DU JOUR</span>
+          <span style={T}>{trainingIsToday ? 'SEANCE DU JOUR' : `SEANCE — ${trainingDay.toUpperCase()}`}</span>
           <div style={titleLineStyle} />
-          <span style={{ ...mutedStyle, flexShrink: 0 }}>{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+          <span style={{ ...mutedStyle, flexShrink: 0 }}>{displayDate}</span>
         </div>
-        <div style={{ ...cardStyle, padding: 20 }}>
+        {dayStatus !== 'today' && (
+          <div style={{ marginBottom: 8 }}>
+            <span style={{
+              fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: dayStatus === 'done' ? colors.success : dayStatus === 'missed' ? colors.error : colors.textDim,
+            }}>
+              {dayStatus === 'future' && '📅 A VENIR'}
+              {dayStatus === 'done' && '✓ TERMINEE'}
+              {dayStatus === 'missed' && 'MANQUEE'}
+            </span>
+          </div>
+        )}
+        <div style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 20 }}>
 
           {/* Phase banner for periodized programs */}
           {activeCustomProgram?.phases && activeCustomProgram?.total_weeks && (
@@ -1355,6 +1382,8 @@ export default function TrainingTab({
           + SÉANCE LIBRE
         </button>
       </div>
+        )
+      })()}
 
       {/* ═══ SECTION 4 — ACTIVE SESSION BAR ═══ */}
       <TrainingActiveBar
