@@ -22,6 +22,10 @@ import MuscleHeatMap, { calculateMuscleStatus } from '../ui/MuscleHeatMap'
 import { getLevelFromXP, getLevelTitle, addXP } from '../../../lib/gamification'
 import HomeHeader from '../home/HomeHeader'
 import HeroSessionCard, { type HeroState } from '../home/HeroSessionCard'
+import EnergyCard from '../home/cards/EnergyCard'
+import RecoveryCard from '../home/cards/RecoveryCard'
+import NutritionCard from '../home/cards/NutritionCard'
+import RecoveryModal from '../home/modals/RecoveryModal'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 
 const QUOTES: Record<string, string[]> = {
@@ -123,6 +127,7 @@ export default function HomeTab({
   completedThisWeek, aiAllowed, nextSession,
 }: HomeTabProps) {
   const [showLevelModal, setShowLevelModal] = useState(false)
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false)
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [consumedKcal, setConsumedKcal] = useState(0)
   const calorieGoal = profile?.calorie_goal || 2000
@@ -607,46 +612,20 @@ export default function HomeTab({
           </div>
         )}
 
-        {/* ═══ SECTION 3 — CALORIES + ENERGIE + HYDRATATION ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-          <span style={T}>Energie</span>
-          <div style={titleLineStyle} />
+        {/* ═══ APERÇU DU JOUR — 3 cards grid ═══ */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase', margin: 0 }}>
+            Apercu du jour
+          </h2>
+          <button onClick={() => setActiveTab('progress')} aria-label="Voir tous les details"
+            style={{ background: 'transparent', border: 'none', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            &rsaquo;
+          </button>
         </div>
-        <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            {/* Calorie ring */}
-            <div style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
-              <svg viewBox="0 0 120 120" width={100} height={100} style={{ transform: 'rotate(-90deg)' }}>
-                <defs><linearGradient id="heroGold2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={colors.gold} /><stop offset="100%" stopColor={colors.goldContainer} /></linearGradient></defs>
-                <circle cx="60" cy="60" r="50" fill="none" stroke="#2a2a2a" strokeWidth="5" />
-                <circle cx="60" cy="60" r="50" fill="none" stroke="url(#heroGold2)" strokeWidth="5" strokeLinecap="round" strokeDasharray="314.16" strokeDashoffset={314.16 * (1 - calPct / 100)} style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
-              </svg>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ ...statStyle, fontSize: 22 }}>{consumedKcal}</span>
-                <span style={{ fontSize: 8, color: TEXT_MUTED, letterSpacing: 1 }}>/ {calorieGoal}</span>
-              </div>
-            </div>
-            {/* Mini stats */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={GOLD} /><span style={{ fontFamily: fonts.body, fontSize: 11, color: TEXT_MUTED }}>Energie</span></div>
-                <span style={{ ...statSmallStyle, fontSize: 16 }}>{calPct}%</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Droplets size={14} color={colors.blue} /><span style={{ fontFamily: fonts.body, fontSize: 11, color: TEXT_MUTED }}>Hydratation</span></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ ...statSmallStyle, fontSize: 16 }}>{(waterToday / 1000).toFixed(1)}L</span>
-                  <button onClick={() => addWater(250)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
-                    <span style={{ fontSize: 16, color: colors.gold, lineHeight: 1 }}>+</span>
-                  </button>
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Dumbbell size={14} color={GOLD} /><span style={{ fontFamily: fonts.body, fontSize: 11, color: TEXT_MUTED }}>Seances</span></div>
-                <span style={{ ...statSmallStyle, fontSize: 16 }}>{weekSessions}x</span>
-              </div>
-            </div>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          <EnergyCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} weekData={caloriesWeekData} />
+          <RecoveryCard muscleStatus={muscleStatus} onCardClick={() => setShowRecoveryModal(true)} />
+          <NutritionCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal} carbsGoal={profile?.carbs_goal} fatGoal={profile?.fat_goal} />
         </div>
 
         {/* ═══ SECTION 4 — PROGRESSION (streak + weight + XP) ═══ */}
@@ -702,34 +681,6 @@ export default function HomeTab({
           </div>
         </div>
 
-        {/* ═══ SECTION 5 — RÉCUPÉRATION MUSCULAIRE ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-          <span style={T}>RECUPERATION</span>
-          <div style={titleLineStyle} />
-        </div>
-        <MuscleHeatMap muscleStatus={muscleStatus} hideTitle />
-
-        {/* ═══ SECTION 6 — NUTRITION MACROS ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-          <span style={T}>NUTRITION</span>
-          <div style={titleLineStyle} />
-          <button onClick={() => setActiveTab('nutrition')} style={{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em', flexShrink: 0 }}>Voir plan</button>
-        </div>
-        <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-            {[
-              { label: 'Cible', value: calorieGoal },
-              { label: 'Prot', value: profile?.protein_goal ? `${profile.protein_goal}g` : '—' },
-              { label: 'Gluc', value: profile?.carbs_goal ? `${profile.carbs_goal}g` : '—' },
-              { label: 'Lip', value: profile?.fat_goal ? `${profile.fat_goal}g` : '—' },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ background: colors.surfaceHigh, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '10px 4px', textAlign: 'center' }}>
-                <div style={{ ...statSmallStyle, fontSize: 22 }}>{value}</div>
-                <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: '0.1em' }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         <div style={{ height: 20 }} />
       </div>
@@ -747,6 +698,14 @@ export default function HomeTab({
             </button>
           </div>
         </div>
+      )}
+
+      {/* ═══ RECOVERY MODAL ═══ */}
+      {showRecoveryModal && (
+        <RecoveryModal
+          muscleStatus={muscleStatus}
+          onClose={() => setShowRecoveryModal(false)}
+        />
       )}
     </div>
   )

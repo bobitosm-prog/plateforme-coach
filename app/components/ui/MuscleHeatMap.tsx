@@ -102,12 +102,15 @@ const SC = {
   2: { fill: '#EF4444', opacity: 0.7, label: 'Fatigue' },
 } as const
 
-export default function MuscleHeatMap({ muscleStatus, hideTitle }: { muscleStatus: Record<string, number>; hideTitle?: boolean }) {
+export default function MuscleHeatMap({ muscleStatus, hideTitle, compact }: { muscleStatus: Record<string, number>; hideTitle?: boolean; compact?: boolean }) {
   const g = (m: string) => SC[(muscleStatus[m] ?? 0) as keyof typeof SC]
 
   return (
-    <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-      {!hideTitle && (
+    <div style={compact
+      ? { background: 'transparent', border: 'none', padding: 0, boxShadow: 'none' }
+      : { background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
+    }>
+      {!hideTitle && !compact && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: colors.gold }}>RECUPERATION MUSCULAIRE</span>
           <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${colors.goldRule}, transparent)` }} />
@@ -116,7 +119,7 @@ export default function MuscleHeatMap({ muscleStatus, hideTitle }: { muscleStatu
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
         {/* FRONT */}
         <div style={{ textAlign: 'center' }}>
-          <svg viewBox="0 0 200 420" width="140" height="294" style={{ filter: `drop-shadow(0 0 8px ${colors.goldDim})` }}>
+          <svg viewBox="0 0 200 420" width={compact ? 100 : 140} height={compact ? 210 : 294} style={{ filter: `drop-shadow(0 0 8px ${colors.goldDim})` }}>
             <g stroke={colors.goldBorder} strokeWidth="1" fill="none">
               <ellipse cx="100" cy="30" rx="22" ry="26"/>
               <rect x="90" y="56" width="20" height="14" rx="4"/>
@@ -137,15 +140,15 @@ export default function MuscleHeatMap({ muscleStatus, hideTitle }: { muscleStatu
             <ellipse cx="120" cy="230" rx="14" ry="35" fill={g('quads').fill} opacity={g('quads').opacity}/>
             <ellipse cx="72" cy="340" rx="8" ry="25" fill={g('calves').fill} opacity={g('calves').opacity}/>
             <ellipse cx="128" cy="340" rx="8" ry="25" fill={g('calves').fill} opacity={g('calves').opacity}/>
-            <text x="100" y="104" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="8" fontFamily="Barlow Condensed" fontWeight="600">PECS</text>
-            <text x="100" y="146" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="8" fontFamily="Barlow Condensed" fontWeight="600">ABS</text>
-            <text x="80" y="234" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">QUAD</text>
-            <text x="120" y="234" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">QUAD</text>
+            {!compact && <text x="100" y="104" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="8" fontFamily="Barlow Condensed" fontWeight="600">PECS</text>}
+            {!compact && <text x="100" y="146" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="8" fontFamily="Barlow Condensed" fontWeight="600">ABS</text>}
+            {!compact && <text x="80" y="234" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">QUAD</text>}
+            {!compact && <text x="120" y="234" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">QUAD</text>}
           </svg>
-          <div style={{ fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: 3, color: colors.textMuted, marginTop: 4 }}>FACE</div>
+          {!compact && <div style={{ fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: 3, color: colors.textMuted, marginTop: 4 }}>FACE</div>}
         </div>
         {/* BACK */}
-        <div style={{ textAlign: 'center' }}>
+        {!compact && <div style={{ textAlign: 'center' }}>
           <svg viewBox="0 0 200 420" width="140" height="294" style={{ filter: `drop-shadow(0 0 8px ${colors.goldDim})` }}>
             <g stroke={colors.goldBorder} strokeWidth="1" fill="none">
               <ellipse cx="100" cy="30" rx="22" ry="26"/>
@@ -179,16 +182,16 @@ export default function MuscleHeatMap({ muscleStatus, hideTitle }: { muscleStatu
             <text x="120" y="244" textAnchor="middle" fill="rgba(245,237,216,0.7)" fontSize="7" fontFamily="Barlow Condensed" fontWeight="600">ISCH</text>
           </svg>
           <div style={{ fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: 3, color: colors.textMuted, marginTop: 4 }}>DOS</div>
-        </div>
+        </div>}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 14 }}>
+      {!compact && <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 14 }}>
         {Object.values(SC).map(v => (
           <div key={v.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: v.fill, opacity: v.opacity }} />
             <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{v.label}</span>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   )
 }
