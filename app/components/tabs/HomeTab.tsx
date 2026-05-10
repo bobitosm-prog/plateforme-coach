@@ -21,6 +21,7 @@ import SwissBadge from '../ui/SwissBadge'
 import MuscleHeatMap, { calculateMuscleStatus } from '../ui/MuscleHeatMap'
 import { getLevelFromXP, getLevelTitle, addXP } from '../../../lib/gamification'
 import HomeHeader from '../home/HomeHeader'
+import HeroSessionCard, { type HeroState } from '../home/HeroSessionCard'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 
 const QUOTES: Record<string, string[]> = {
@@ -376,6 +377,14 @@ export default function HomeTab({
   // Has workout today: custom program says rest → no. Otherwise check exercises exist.
   const hasWorkoutToday = !customIsRest && (!!todayScheduledSession || (customProgramExercises && customProgramExercises.length > 0))
 
+  const heroState: HeroState = (() => {
+    if (!coachProgram && !customProgramExercises && !todayScheduledSession) return 'no-program'
+    if (!hasWorkoutToday && (customIsRest || customDayName === 'Repos' || todayCoachDay?.repos)) return 'rest'
+    if (!todayExercises.length) return 'no-exercises'
+    if (todaySession) return 'done'
+    return 'active'
+  })()
+
   // Weekly bar chart data
   const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
   const todayDow = new Date().getDay() // 0=Sun
@@ -403,6 +412,21 @@ export default function HomeTab({
         level={getLevelFromXP(xpData?.total_xp ?? 0).level}
         streak={streak}
         onLevelClick={() => setShowLevelModal(true)}
+      />
+
+      {/* ═══ HERO CARD — SÉANCE DU JOUR ═══ */}
+      <HeroSessionCard
+        state={heroState}
+        sessionTitle={sessionTitle}
+        todayExercises={todayExercises}
+        todaySession={todaySession}
+        onStart={
+          heroState === 'no-program' || heroState === 'no-exercises'
+            ? () => startProgramWorkout({ day_name: 'Séance libre' }, [])
+            : () => startProgramWorkout({ day_name: sessionTitle || todayKey, name: sessionTitle || todayKey }, todayExercises)
+        }
+        onCalendar={() => setActiveTab('training')}
+        onViewDetail={() => setActiveTab('progress')}
       />
 
       {/* ═══ PHRASE MOTIVANTE ═══ */}
@@ -545,53 +569,6 @@ export default function HomeTab({
             </div>
           </div>
         )}
-
-        {/* ═══ PROGRAMME — SÉANCE DU JOUR ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-          <span style={T}>PROGRAMME</span>
-          <div style={titleLineStyle} />
-          <button onClick={() => setActiveTab('training')} style={{ ...labelStyle, fontSize: 10, letterSpacing: 1, flexShrink: 0 }}>Voir tout</button>
-        </div>
-        <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-          <div style={{ padding: 20 }}>
-            {!coachProgram && !customProgramExercises && !todayScheduledSession ? (
-              <p style={{ ...bodyStyle, margin: 0, fontStyle: 'italic' }}>Cree ton programme dans l&apos;onglet Entrainement.</p>
-            ) : !hasWorkoutToday && (customIsRest || customDayName === 'Repos' || todayCoachDay?.repos) ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Moon size={24} color={colors.textMuted} />
-                <div>
-                  <div style={T}>JOUR DE REPOS</div>
-                  <div style={mutedStyle}>Recupere bien, etirements bienvenus</div>
-                  {nextSessionLabel && <div style={{ ...mutedStyle, marginTop: 6, color: colors.gold, fontSize: 11 }}>Prochaine seance : {nextSessionLabel}</div>}
-                </div>
-              </div>
-            ) : !todayExercises.length ? (
-              <p style={{ ...bodyStyle, margin: 0 }}>Aucun exercice prevu.</p>
-            ) : todaySession ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <CheckCircle size={32} color={colors.success} style={{ flexShrink: 0 }} />
-                <div>
-                  <div style={{ ...T, color: colors.success }}>SEANCE TERMINEE</div>
-                  <div style={{ ...mutedStyle, marginTop: 2 }}>{format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}</div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <div style={{ background: colors.gold, padding: '3px 10px', borderRadius: 4 }}>
-                    <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: '#0D0B08', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Seance du jour</span>
-                  </div>
-                </div>
-                <h3 style={{ ...statStyle, letterSpacing: '1px', lineHeight: 1, margin: '0 0 8px' }}>{sessionTitle.toUpperCase()}</h3>
-                <div style={{ display: 'flex', gap: 16, ...subtitleStyle, fontSize: 11, letterSpacing: '0.12em', marginBottom: 20 }}>
-                  <span>{todayExercises.length} exercices</span><span>·</span><span>~45 min</span>
-                </div>
-                <button onClick={() => startProgramWorkout({ day_name: sessionTitle || todayKey, name: sessionTitle || todayKey }, todayExercises)}
-                  style={{ width: '100%', background: colors.gold, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 18, letterSpacing: '0.15em', padding: '16px', border: 'none', borderRadius: 12, cursor: 'pointer' }}>COMMENCER</button>
-              </>
-            )}
-          </div>
-        </div>
 
         {/* ═══ TA SEMAINE — invited clients only ═══ */}
         {!aiAllowed && coachProgram && (
