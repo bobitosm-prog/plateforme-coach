@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { Play, Pause, Square, SkipForward, ChevronDown, ChevronUp } from 'lucide-react'
+import { Play, Pause, Square, SkipForward, ChevronDown } from 'lucide-react'
 import { HIIT_WORKOUTS, LISS_WORKOUTS, estimateCalories, type CardioWorkout, type HiitExercise } from '../../lib/cardio-data'
 import { toast } from 'sonner'
 import {
@@ -41,11 +41,11 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
       <button onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: '1.1rem' }}>🏃</span>
-          <span style={{ fontFamily: FONT_ALT, fontSize: '0.92rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>Cardio</span>
-          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '2px 7px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>HIIT</span>
-          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '2px 7px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>LISS</span>
+          <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Cardio</span>
+          <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>HIIT</span>
+          <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>LISS</span>
         </div>
-        {expanded ? <ChevronUp size={16} color={TEXT_MUTED} /> : <ChevronDown size={16} color={TEXT_MUTED} />}
+        <ChevronDown size={16} color={TEXT_MUTED} style={{ transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
       </button>
 
       {expanded && (
@@ -57,17 +57,20 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
           </div>
 
           {/* Library toggle */}
-          <button onClick={() => setShowLibrary(!showLibrary)} style={{ fontSize: '0.72rem', fontWeight: 600, color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: FONT_BODY }}>
-            {showLibrary ? 'Masquer la bibliothèque' : `Voir les ${allWorkouts.length} séances`}
+          <button onClick={() => setShowLibrary(!showLibrary)} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: GOLD, textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
+            {showLibrary ? 'Masquer' : `${allWorkouts.length} seances`}
           </button>
 
           {/* Library */}
           {showLibrary && (
             <>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {[['all', 'Tout'], ['hiit', 'HIIT'], ['liss', 'LISS']].map(([k, l]) => (
-                  <button key={k} onClick={() => setFilter(k as any)} style={{ padding: '6px 12px', borderRadius: 12, border: `1px solid ${filter === k ? GOLD_RULE : BORDER}`, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700, background: filter === k ? GOLD_DIM : BG_BASE, color: filter === k ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>{l}</button>
-                ))}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[['all', 'Tout'], ['hiit', 'HIIT'], ['liss', 'LISS']].map(([k, l]) => {
+                  const active = filter === k
+                  return (
+                    <button key={k} onClick={() => setFilter(k as any)} style={{ padding: '8px 14px', borderRadius: 10, background: active ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: `1px solid ${active ? GOLD : 'rgba(255,255,255,0.1)'}`, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: active ? GOLD : TEXT_MUTED, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.15s' }}>{l}</button>
+                  )
+                })}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {filtered.map(w => <WorkoutCard key={w.name} workout={w} weight={weight} onStart={() => setActiveWorkout(w)} />)}
@@ -82,14 +85,15 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
 
 function WorkoutCard({ workout, weight, onStart }: { workout: CardioWorkout; weight: number; onStart: () => void }) {
   const cal = estimateCalories(workout, weight)
+  const isHiit = workout.type === 'hiit'
   return (
-    <button onClick={onStart} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '12px 10px', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms', display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: '0.55rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '1px 5px', textTransform: 'uppercase', fontFamily: FONT_ALT, letterSpacing: '1px' }}>{workout.type}</span>
-        <span style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>🕐 {workout.duration_min} min</span>
+    <button onClick={onStart} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 6, background: isHiit ? 'rgba(239,68,68,0.15)' : 'rgba(96,165,250,0.15)', border: `1px solid ${isHiit ? RED : 'rgba(96,165,250,0.5)'}`, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: isHiit ? RED : 'rgba(96,165,250,1)', textTransform: 'uppercase' }}>{workout.type}</span>
+        <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>🕐 {workout.duration_min} min</span>
       </div>
-      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1.2, fontFamily: FONT_ALT }}>{workout.name}</div>
-      <div style={{ fontSize: '0.62rem', color: GOLD, fontFamily: FONT_DISPLAY }}>~{cal} kcal</div>
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 400, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.2 }}>{workout.name}</div>
+      <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: GOLD, textTransform: 'uppercase' }}>~{cal} kcal</div>
     </button>
   )
 }
