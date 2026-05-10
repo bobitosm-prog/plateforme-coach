@@ -337,8 +337,8 @@ export default function CoachApp() {
         </div>
       )}
 
-      {/* ── HEADER ── */}
-      <Header
+      {/* ── HEADER (hidden on home tab — HomeHeader replaces it) ── */}
+      {h.activeTab !== 'home' && <Header
         firstName={h.firstName}
         displayAvatar={h.displayAvatar}
         objective={h.profile?.objective}
@@ -350,7 +350,7 @@ export default function CoachApp() {
         onCalendar={() => h.setActiveTab('training')}
         onMessages={() => h.setActiveTab('messages')}
         scrollContainerRef={h.mainRef}
-      />
+      />}
 
       {/* ── TRIAL BANNER ── */}
       {h.isInTrial && (

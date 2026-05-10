@@ -20,6 +20,8 @@ const TEXT_MUTED = colors.textMuted
 import SwissBadge from '../ui/SwissBadge'
 import MuscleHeatMap, { calculateMuscleStatus } from '../ui/MuscleHeatMap'
 import { getLevelFromXP, getLevelTitle, addXP } from '../../../lib/gamification'
+import HomeHeader from '../home/HomeHeader'
+import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 
 const QUOTES: Record<string, string[]> = {
   bulk: [
@@ -119,6 +121,7 @@ export default function HomeTab({
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
 }: HomeTabProps) {
+  const [showLevelModal, setShowLevelModal] = useState(false)
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [consumedKcal, setConsumedKcal] = useState(0)
   const calorieGoal = profile?.calorie_goal || 2000
@@ -392,6 +395,15 @@ export default function HomeTab({
   return (
     <div style={{ background: colors.background, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
+
+      {/* ═══ HOME HEADER ═══ */}
+      <HomeHeader
+        firstName={firstName}
+        displayAvatar={displayAvatar}
+        level={getLevelFromXP(xpData?.total_xp ?? 0).level}
+        streak={streak}
+        onLevelClick={() => setShowLevelModal(true)}
+      />
 
       {/* ═══ PHRASE MOTIVANTE ═══ */}
       <div style={{ padding: '24px 20px 20px', textAlign: 'center' }}>
@@ -744,6 +756,21 @@ export default function HomeTab({
 
         <div style={{ height: 20 }} />
       </div>
+
+      {/* ═══ LEVEL MODAL PLACEHOLDER ═══ */}
+      {showLevelModal && (
+        <div style={modalOverlay} onClick={() => setShowLevelModal(false)}>
+          <div style={{ ...modalContainer, padding: 24, maxWidth: 340, margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ ...titleStyle, fontSize: 14 }}>Mon niveau</h2>
+            <p style={{ color: colors.textDim, fontSize: 13, textAlign: 'center', margin: 0, fontFamily: fonts.body }}>
+              Details XP, prochains paliers et achievements arrivent bientot.
+            </p>
+            <button onClick={() => setShowLevelModal(false)} style={{ ...btnPrimaryStyle, padding: '12px 32px', fontSize: 13 }}>
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

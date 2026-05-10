@@ -199,6 +199,13 @@ input:focus, textarea:focus, select:focus {
 ::-webkit-scrollbar-thumb { background: var(--gold-rule, rgba(201,168,76,0.25)); border-radius: 0; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold, #C9A84C); }
 
+/* ── HomeHeader flame pulse ── */
+@keyframes flamePulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(230,195,100,0.3)); }
+  50%      { transform: scale(1.06); filter: drop-shadow(0 0 10px rgba(230,195,100,0.55)); }
+}
+.flame-pulse { animation: flamePulse 1.6s ease-in-out infinite; }
+
 /* ── Mobile responsive fixes ── */
 @media (max-width: 768px) {
   input, select, textarea { font-size: 16px !important; }
