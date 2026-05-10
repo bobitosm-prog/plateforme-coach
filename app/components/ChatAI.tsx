@@ -119,7 +119,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         exit={{ opacity: 0, y: 40 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className="chat-ai-panel"
-        style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: colors.background, zIndex: 1001, display: 'flex', flexDirection: 'column' }}
+        style={{ position: 'fixed', inset: 0, width: '100%', height: '100dvh', background: colors.background, zIndex: 1001, display: 'flex', flexDirection: 'column' }}
       >
         {/* ═══ SCROLLABLE CONTENT ═══ */}
         <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>

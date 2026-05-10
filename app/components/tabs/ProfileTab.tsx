@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, X, Clock, Calendar, Volume2, User, Cake, Ruler, Target, Activity } from 'lucide-react'
+import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, X, Clock, Calendar, Volume2, User, Cake, Ruler, Target, Activity, ArrowLeft } from 'lucide-react'
 import Paywall from '../Paywall'
 import { cache } from '../../../lib/cache'
 import { colors, fonts, titleStyle, titleLineStyle, subtitleStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, radii } from '../../../lib/design-tokens'
@@ -38,12 +38,13 @@ interface ProfileTabProps {
   fetchAll: () => Promise<void>
   updateReminderSettings: (settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) => Promise<void>
   regenerateWeekSchedule: () => Promise<void>
+  onBack?: () => void
 }
 
 export default function ProfileTab({
   supabase, session, profile, displayAvatar, fullName, firstName, avatarRef, uploadAvatar,
   currentWeight, goalWeight, calorieGoal, coachProgram, coachId, setModal, fetchAll,
-  updateReminderSettings, regenerateWeekSchedule,
+  updateReminderSettings, regenerateWeekSchedule, onBack,
 }: ProfileTabProps) {
   const [phoneForm, setPhoneForm] = useState<string>(profile?.phone || '')
   const [phoneEditing, setPhoneEditing] = useState(false)
@@ -159,6 +160,14 @@ export default function ProfileTab({
 
   return (
     <div style={{ padding: '20px 20px 120px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
+
+      {/* Back button */}
+      {onBack && (
+        <button onClick={onBack} aria-label="Retour a Compte" style={{ padding: '8px 0', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: colors.gold }}>
+          <ArrowLeft size={18} />
+          <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Compte</span>
+        </button>
+      )}
 
       {/* ═══ SECTION 1 — PROFIL HEADER ═══ */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>

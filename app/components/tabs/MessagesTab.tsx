@@ -2,7 +2,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { format, isToday, isYesterday } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { MessageCircle, Send, Check, CheckCheck, ImageIcon, X } from 'lucide-react'
+import { MessageCircle, Send, Check, CheckCheck, ImageIcon, X, ArrowLeft } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
@@ -21,6 +21,7 @@ interface MessagesTabProps {
   sendMessage: (imageUrl?: string | null) => Promise<void>
   msgEndRef: React.RefObject<HTMLDivElement | null>
   isInvited?: boolean
+  onBack?: () => void
 }
 
 function dateLabel(dateStr: string): string {
@@ -31,7 +32,7 @@ function dateLabel(dateStr: string): string {
 }
 
 export default function MessagesTab({
-  session, coachId, supabase, messages, msgInput, setMsgInput, sendMessage, msgEndRef, isInvited = true,
+  session, coachId, supabase, messages, msgInput, setMsgInput, sendMessage, msgEndRef, isInvited = true, onBack,
 }: MessagesTabProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -97,6 +98,13 @@ export default function MessagesTab({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Back button */}
+      {onBack && (
+        <button onClick={onBack} aria-label="Retour a Compte" style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: GOLD, flexShrink: 0 }}>
+          <ArrowLeft size={18} />
+          <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Compte</span>
+        </button>
+      )}
       {/* Header */}
       <div style={{ background: BG_CARD, padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: '#0D0B08' }}>C</div>
