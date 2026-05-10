@@ -4,7 +4,7 @@ import { CheckCircle2 } from 'lucide-react'
 import {
   BG_CARD, BG_BASE, BORDER, RADIUS_CARD, GOLD, GOLD_DIM,
   GREEN, TEXT_PRIMARY, TEXT_MUTED, WEEK_DAYS,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../../../lib/design-tokens'
 
 interface TrainingSessionDoneProps {
@@ -18,7 +18,7 @@ export default function TrainingSessionDone({ todayKey, coachProgram }: Training
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '40px 24px', textAlign: 'center' }}
+        style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: RADIUS_CARD, padding: '40px 24px', textAlign: 'center' }}
       >
         <motion.div
           initial={{ scale: 0 }}

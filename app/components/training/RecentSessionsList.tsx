@@ -38,7 +38,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
               const d = new Date(s.created_at)
               const typeInfo = resolveSessionType(s.name)
               return (
-                <div key={s.id} onClick={() => onOpenDetail(s)} style={{ background: colors.surface, border: `1px solid ${colors.goldDim}`, borderRadius: 16, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+                <div key={s.id} onClick={() => onOpenDetail(s)} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{typeInfo.emoji}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ ...statSmallStyle, fontSize: 17, color: colors.text, letterSpacing: 1 }}>{typeInfo.label.toUpperCase()}</div>

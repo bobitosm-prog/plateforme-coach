@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../lib/design-tokens'
 
 interface CardioProps {
@@ -36,7 +36,7 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
   }
 
   return (
-    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
+    <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
       {/* Header */}
       <button onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

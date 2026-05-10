@@ -790,7 +790,7 @@ export default function TrainingTab({
           zIndex: 9999, padding: 24,
         }}>
           <div style={{
-            background: colors.surface, border: `2px solid ${colors.gold}`,
+            background: colors.surface2, border: `2px solid ${colors.gold}`,
             borderRadius: 16, padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
             animation: 'ttPopIn 0.3s ease-out', boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
           }}>
@@ -982,7 +982,7 @@ export default function TrainingTab({
             <div style={titleLineStyle} />
             <span style={{ ...mutedStyle, flexShrink: 0 }}>{customPrograms.length}</span>
           </div>
-          <button onClick={() => setShowProgramManager(true)} style={{ width: '100%', padding: '12px 16px', background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <button onClick={() => setShowProgramManager(true)} style={{ width: '100%', padding: '12px 16px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Dumbbell size={16} color={colors.gold} />
@@ -1172,7 +1172,7 @@ export default function TrainingTab({
                 const day = editedDays[dayIdx]
                 if (!day?.exercises) return null
                 return (
-                  <div style={{ background: colors.surface, border: `1px solid ${colors.goldRule}`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+                  <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                     <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>MODE EDITION</div>
                     {day.exercises.map((ex: any, i: number) => (
                       <div key={i} style={{ padding: '12px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
@@ -1302,7 +1302,7 @@ export default function TrainingTab({
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setShowExDbModal(true)}
-                style={{ width: '100%', background: colors.surface, border: `2px dashed ${colors.goldBorder}`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}
+                style={{ width: '100%', background: colors.surface2, border: `2px dashed ${colors.goldBorder}`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}
               >
                 <Search size={16} color={colors.gold} />
                 <span style={{ ...labelStyle, fontSize: 13, fontWeight: 800, letterSpacing: '2px' }}>Découvrir les exercices</span>
@@ -1384,7 +1384,7 @@ export default function TrainingTab({
           {/* Header */}
           <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0 }}>
             <span style={pageTitleStyle}>MES PROGRAMMES</span>
-            <button onClick={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} style={{ width: 36, height: 36, borderRadius: 12, background: colors.surface, border: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.textMuted, fontSize: 16 }}>✕</button>
+            <button onClick={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} style={{ width: 36, height: 36, borderRadius: 12, background: colors.surface2, border: `1px solid ${colors.divider}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.textMuted, fontSize: 16 }}>✕</button>
           </div>
 
           {/* Hidden file input for import */}

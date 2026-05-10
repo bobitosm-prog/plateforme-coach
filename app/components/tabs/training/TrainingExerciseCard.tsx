@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Plus, MoreHorizontal, Timer, Video, RefreshCw, Info, BarChart2 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS, colors,
 } from '../../../../lib/design-tokens'
 import ExercisePreview from '../../ExercisePreview'
 import { getRestSeconds } from '../../../../lib/utils/exercise'
@@ -121,8 +121,8 @@ export default function TrainingExerciseCard({
   return (
     <div
       style={{
-        background: BG_CARD,
-        border: `1px solid ${allDone ? GREEN + '50' : BORDER}`,
+        background: colors.surface2,
+        border: `1px solid ${allDone ? GREEN + '50' : colors.divider}`,
         borderRadius: RADIUS_CARD,
         padding: 0,
         overflow: 'hidden',
@@ -230,7 +230,7 @@ export default function TrainingExerciseCard({
                   transition={{ duration: 0.15 }}
                   style={{
                     position: 'absolute', top: '100%', right: 0, zIndex: 100,
-                    background: BG_CARD, border: `1px solid ${BORDER}`,
+                    background: colors.surface2, border: `1px solid ${colors.divider}`,
                     minWidth: 200, overflow: 'hidden',
                   }}
                 >
