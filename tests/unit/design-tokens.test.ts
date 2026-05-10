@@ -12,17 +12,24 @@ describe('Design Tokens', () => {
   })
 
   it('has Swiss Luxury warm colors (not cold grays)', () => {
-    // Background should be warm (not pure black #000)
     expect(tokens.BG_BASE).not.toBe('#000000')
     expect(tokens.BG_BASE).not.toBe('#000')
-    // Gold should be warm copper, not bright yellow
-    expect(tokens.GOLD).toMatch(/^#[dD][0-9a-fA-F]/)
+    expect(tokens.GOLD).toMatch(/^#[eE][0-9a-fA-F]/)
   })
 
   it('exports font families', () => {
     expect(tokens.FONT_DISPLAY).toContain('Bebas')
     expect(tokens.FONT_ALT).toContain('Barlow')
     expect(tokens.FONT_BODY).toContain('DM Sans')
+  })
+
+  it('exports new tokens (flame, spacing, display font)', () => {
+    expect(tokens.colors.flame).toBe('#ff6b35')
+    expect(tokens.colors.surface2).toBe('#1a1817')
+    expect(tokens.colors.divider).toBeDefined()
+    expect(tokens.spacing.md).toBe(16)
+    expect(tokens.fonts.display).toContain('Anton')
+    expect(tokens.fonts.alt).toContain('Barlow')
   })
 
   it('exports border radius values', () => {

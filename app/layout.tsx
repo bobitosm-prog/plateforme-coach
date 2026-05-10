@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Barlow_Condensed, Outfit, DM_Sans } from "next/font/google";
+import { Bebas_Neue, Barlow_Condensed, Outfit, DM_Sans, Anton } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
@@ -33,6 +33,13 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+const anton = Anton({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-impact",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "MoovX",
   description: "Coaching fitness Swiss Made · Swiss Quality",
@@ -44,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${bebasNeue.variable} ${barlowCondensed.variable} ${outfit.variable} ${dmSans.variable}`}>
+    <html lang="fr" className={`${bebasNeue.variable} ${barlowCondensed.variable} ${outfit.variable} ${dmSans.variable} ${anton.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#D4A843" />

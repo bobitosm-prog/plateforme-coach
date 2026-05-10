@@ -23,6 +23,9 @@ export const colors = {
   error: '#ef4444',
   blue: '#60a5fa',
   orange: '#fb923c',
+  flame: '#ff6b35',
+  surface2: '#1a1817',
+  divider: 'rgba(255,255,255,0.05)',
 } as const
 
 // ══════════════════════════════════════════
@@ -30,8 +33,10 @@ export const colors = {
 // ══════════════════════════════════════════
 
 export const fonts = {
-  headline: "'Plus Jakarta Sans', sans-serif",
-  body: "'Inter', sans-serif",
+  headline: "var(--font-display), 'Bebas Neue', sans-serif",
+  body: "var(--font-dm-sans), 'DM Sans', sans-serif",
+  display: "var(--font-impact), 'Anton', sans-serif",
+  alt: "var(--font-alt), 'Barlow Condensed', sans-serif",
 } as const
 
 // ══════════════════════════════════════════
@@ -44,6 +49,20 @@ export const radii = {
   input: 12,
   pill: 8,
   full: 999,
+} as const
+
+// ══════════════════════════════════════════
+// SPACING
+// ══════════════════════════════════════════
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  '2xl': 48,
+  '3xl': 64,
 } as const
 
 // ══════════════════════════════════════════
@@ -286,7 +305,7 @@ export const RADIUS_BTN = radii.button
 export const RADIUS_INPUT = radii.input
 export const RADIUS_PILL = radii.pill
 export const FONT_DISPLAY = fonts.headline
-export const FONT_ALT = fonts.body
+export const FONT_ALT = fonts.alt
 export const FONT_BODY = fonts.body
 
 // ══════════════════════════════════════════
