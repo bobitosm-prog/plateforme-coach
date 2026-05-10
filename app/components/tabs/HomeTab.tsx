@@ -434,19 +434,22 @@ export default function HomeTab({
         onViewDetail={() => setActiveTab('progress')}
       />
 
-      {/* ═══ PHRASE MOTIVANTE ═══ */}
-      <div style={{ padding: '24px 20px 20px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
-          <div style={{ width: 30, height: 1, background: 'rgba(201,168,76,0.4)' }} />
-          <svg width="14" height="14" viewBox="0 0 24 24" fill={colors.gold}><path d="M12 2l2.5 7.5H22l-6 4.5 2.5 7.5-6-4.5-6 4.5 2.5-7.5-6-4.5h7.5z" /></svg>
-          <div style={{ width: 30, height: 1, background: 'rgba(201,168,76,0.4)' }} />
+      {/* ═══ APERÇU DU JOUR — 3 cards grid (moved up from below) ═══ */}
+      <div style={{ padding: '0 20px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase', margin: 0 }}>
+            Apercu du jour
+          </h2>
+          <button onClick={() => setActiveTab('progress')} aria-label="Voir tous les details"
+            style={{ background: 'transparent', border: 'none', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            &rsaquo;
+          </button>
         </div>
-        <p style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 500, fontStyle: 'italic', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, letterSpacing: '0.01em', margin: 0, maxWidth: 320, marginInline: 'auto' }}>
-          &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
-        </p>
-        <p style={{ fontSize: 10, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.15em', marginTop: 10, textTransform: 'uppercase', fontWeight: 700, margin: '10px 0 0' }}>
-          — MOOVX MINDSET
-        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          <EnergyCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} weekData={caloriesWeekData} />
+          <RecoveryCard muscleStatus={muscleStatus} onCardClick={() => setShowRecoveryModal(true)} />
+          <NutritionCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal} carbsGoal={profile?.carbs_goal} fatGoal={profile?.fat_goal} />
+        </div>
       </div>
 
       {/* ═══ CHECK-IN — COMPACT (saved) or FULL (editing) ═══ */}
@@ -459,7 +462,7 @@ export default function HomeTab({
               <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.25)' }} />
               <button onClick={() => setActiveTab('progress')} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', cursor: 'pointer', padding: '4px 0' }}>VOIR TOUT →</button>
             </div>
-            <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 12 }}>
                 {(() => {
                   const moodIcon = (m: string) => ({ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' } as any)[m] || '—'
@@ -488,7 +491,7 @@ export default function HomeTab({
           </>
         ) : (
           /* ── FULL CHECK-IN CARD ── */
-          <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold }}>CHECK-IN DU JOUR</div>
               {checkinSaved && <button onClick={() => setCheckinEditMode(false)} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.textDim, cursor: 'pointer', padding: '2px 6px' }}>FERMER</button>}
@@ -545,96 +548,13 @@ export default function HomeTab({
 
       <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* ═══ PROCHAINE SEANCE — invited clients only ═══ */}
-        {!aiAllowed && coachProgram && nextSession && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={titleStyle}>PROCHAINE SEANCE</span>
-              <div style={titleLineStyle} />
-            </div>
-            <div style={{ ...cardStyle, padding: 20 }}>
-              <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
-                {"SUGGERE POUR TOI"}
-              </div>
-              <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: 1, marginBottom: 4 }}>
-                {(nextSession.day.name || 'Seance').toUpperCase()}
-              </div>
-              <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
-                {nextSession.day.exercises?.length || 0} exercice{(nextSession.day.exercises?.length || 0) > 1 ? 's' : ''}
-              </div>
-              <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim, fontStyle: 'italic', marginBottom: 16 }}>
-                {nextSession.reason}
-              </div>
-              <button
-                onClick={() => startProgramWorkout(nextSession.day, nextSession.day.exercises || [], nextSession.weekday)}
-                style={{ ...btnPrimary, width: '100%', padding: 14, borderRadius: 14 }}
-              >
-                LANCER MAINTENANT
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ TA SEMAINE — invited clients only ═══ */}
-        {!aiAllowed && coachProgram && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={titleStyle}>TA SEMAINE</span>
-              <div style={titleLineStyle} />
-            </div>
-            <div style={{ ...cardStyle, padding: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
-                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((label, idx) => {
-                  const jsDay = new Date().getDay()
-                  const todayIdx = jsDay === 0 ? 6 : jsDay - 1
-                  const isToday = idx === todayIdx
-                  const completed = completedThisWeek?.has(idx)
-                  return (
-                    <div
-                      key={idx}
-                      style={{
-                        padding: '10px 4px',
-                        textAlign: 'center',
-                        borderRadius: 10,
-                        background: completed ? colors.goldDim : 'rgba(255,255,255,0.02)',
-                        border: isToday ? `1.5px solid ${colors.gold}` : '1px solid rgba(255,255,255,0.05)',
-                      }}
-                    >
-                      <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: isToday ? colors.gold : colors.textMuted, letterSpacing: 0.5 }}>{label}</div>
-                      <div style={{ fontSize: 18, marginTop: 4, color: completed ? colors.gold : colors.textDim }}>
-                        {completed ? '✓' : '·'}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ APERÇU DU JOUR — 3 cards grid ═══ */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase', margin: 0 }}>
-            Apercu du jour
-          </h2>
-          <button onClick={() => setActiveTab('progress')} aria-label="Voir tous les details"
-            style={{ background: 'transparent', border: 'none', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-            &rsaquo;
-          </button>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          <EnergyCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} weekData={caloriesWeekData} />
-          <RecoveryCard muscleStatus={muscleStatus} onCardClick={() => setShowRecoveryModal(true)} />
-          <NutritionCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal} carbsGoal={profile?.carbs_goal} fatGoal={profile?.fat_goal} />
-        </div>
-
-        {/* ═══ SECTION 4 — PROGRESSION (streak + weight + XP) ═══ */}
+        {/* ═══ PROGRESSION (streak + weight + XP) ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
           <span style={T}>Progression</span>
           <div style={titleLineStyle} />
           <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 10, flexShrink: 0 }}>Details</button>
         </div>
-        <div style={{ background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden' }}>
           {/* Streak */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -673,7 +593,7 @@ export default function HomeTab({
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 60, gap: 6 }}>
               {barData.map((b, i) => (
                 <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: '100%', height: Math.max(4, (b.value / barMax) * 50), borderRadius: 999, background: b.isToday ? `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})` : '#353534', boxShadow: b.isToday ? `0 0 12px ${colors.goldDim}` : 'none', transition: 'height 0.5s ease' }} />
+                  <div style={{ width: '100%', height: Math.max(4, (b.value / barMax) * 50), borderRadius: 999, background: b.isToday ? `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})` : colors.surfaceHigh, boxShadow: b.isToday ? `0 0 12px ${colors.goldDim}` : 'none', transition: 'height 0.5s ease' }} />
                   <span style={{ fontSize: 8, fontWeight: 700, color: b.isToday ? GOLD : TEXT_MUTED }}>{b.label}</span>
                 </div>
               ))}
@@ -681,6 +601,88 @@ export default function HomeTab({
           </div>
         </div>
 
+
+        {/* ═══ PROCHAINE SEANCE — invited clients only ═══ */}
+        {!aiAllowed && coachProgram && nextSession && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <span style={titleStyle}>PROCHAINE SEANCE</span>
+              <div style={titleLineStyle} />
+            </div>
+            <div style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 20 }}>
+              <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                {"SUGGERE POUR TOI"}
+              </div>
+              <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: 1, marginBottom: 4 }}>
+                {(nextSession.day.name || 'Seance').toUpperCase()}
+              </div>
+              <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
+                {nextSession.day.exercises?.length || 0} exercice{(nextSession.day.exercises?.length || 0) > 1 ? 's' : ''}
+              </div>
+              <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim, fontStyle: 'italic', marginBottom: 16 }}>
+                {nextSession.reason}
+              </div>
+              <button
+                onClick={() => startProgramWorkout(nextSession.day, nextSession.day.exercises || [], nextSession.weekday)}
+                style={{ ...btnPrimary, width: '100%', padding: 14, borderRadius: 14 }}
+              >
+                LANCER MAINTENANT
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ TA SEMAINE — invited clients only ═══ */}
+        {!aiAllowed && coachProgram && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <span style={titleStyle}>TA SEMAINE</span>
+              <div style={titleLineStyle} />
+            </div>
+            <div style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((label, idx) => {
+                  const jsDay = new Date().getDay()
+                  const todayIdx = jsDay === 0 ? 6 : jsDay - 1
+                  const isToday = idx === todayIdx
+                  const completed = completedThisWeek?.has(idx)
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: '10px 4px',
+                        textAlign: 'center',
+                        borderRadius: 10,
+                        background: completed ? colors.goldDim : 'rgba(255,255,255,0.02)',
+                        border: isToday ? `1.5px solid ${colors.gold}` : '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: isToday ? colors.gold : colors.textMuted, letterSpacing: 0.5 }}>{label}</div>
+                      <div style={{ fontSize: 18, marginTop: 4, color: completed ? colors.gold : colors.textDim }}>
+                        {completed ? '✓' : '·'}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ PHRASE MOTIVANTE (closer) ═══ */}
+        <div style={{ textAlign: 'center', padding: '8px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
+            <div style={{ width: 30, height: 1, background: 'rgba(201,168,76,0.4)' }} />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={colors.gold}><path d="M12 2l2.5 7.5H22l-6 4.5 2.5 7.5-6-4.5-6 4.5 2.5-7.5-6-4.5h7.5z" /></svg>
+            <div style={{ width: 30, height: 1, background: 'rgba(201,168,76,0.4)' }} />
+          </div>
+          <p style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 500, fontStyle: 'italic', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, letterSpacing: '0.01em', margin: 0, maxWidth: 320, marginInline: 'auto' }}>
+            &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
+          </p>
+          <p style={{ fontSize: 10, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.15em', marginTop: 10, textTransform: 'uppercase', fontWeight: 700, margin: '10px 0 0' }}>
+            — MOOVX MINDSET
+          </p>
+        </div>
 
         <div style={{ height: 20 }} />
       </div>

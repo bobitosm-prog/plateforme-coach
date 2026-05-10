@@ -25,6 +25,7 @@ export default function HomeHeader({
   return (
     <div style={{
       padding: '16px 20px',
+      paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
