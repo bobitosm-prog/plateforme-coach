@@ -23,6 +23,11 @@ interface HeroSessionCardProps {
   onStart: () => void
   onCalendar: () => void
   onViewDetail?: () => void
+  onClick?: () => void
+  dayLabel?: string
+  dayBadge?: { text: string; color: string } | null
+  hideCalendarButton?: boolean
+  hideStartButton?: boolean
 }
 
 function shortenSessionTitle(title: string | null | undefined): string {
@@ -41,6 +46,7 @@ function getHeroTitle(state: HeroState, sessionTitle: string): string {
 export default function HeroSessionCard({
   state, sessionTitle, todayExercises, todaySession,
   onStart, onCalendar, onViewDetail,
+  onClick, dayLabel, dayBadge, hideCalendarButton, hideStartButton,
 }: HeroSessionCardProps) {
   const heroImage = state === 'rest' || state === 'no-program' || state === 'no-exercises'
     ? '/images/hero/hero-default.webp'
@@ -50,11 +56,19 @@ export default function HeroSessionCard({
     todayExercises.reduce((s: number, e: any) => s + ((e.sets || 3) * 1.5), 0)
   ))
 
+  const isPast = dayBadge?.text === 'TERMINEE' || dayBadge?.text === 'MANQUEE'
+  const shouldDesaturate = state === 'done' || isPast
+  const shouldGreenTint = state === 'done' || dayBadge?.text === 'TERMINEE'
+
   return (
-    <div style={{
-      position: 'relative', height: 260, borderRadius: 20,
-      overflow: 'hidden', marginBottom: 24, marginInline: 20,
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        position: 'relative', height: 260, borderRadius: 20,
+        overflow: 'hidden', marginBottom: 24, marginInline: 20,
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+    >
       {/* Background image */}
       <img
         src={heroImage}
@@ -62,7 +76,7 @@ export default function HeroSessionCard({
         style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%', objectFit: 'cover',
-          filter: state === 'done' ? 'saturate(0.4) brightness(0.5)' : 'none',
+          filter: shouldDesaturate ? 'saturate(0.4) brightness(0.5)' : 'none',
         }}
       />
 
@@ -72,8 +86,8 @@ export default function HeroSessionCard({
         background: 'linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.15) 100%)',
       }} />
 
-      {/* Green tint for done state */}
-      {state === 'done' && (
+      {/* Green tint for done/completed state */}
+      {shouldGreenTint && (
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(74,222,128,0.12)' }} />
       )}
 
@@ -89,22 +103,24 @@ export default function HeroSessionCard({
             fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
             letterSpacing: '0.2em', color: GOLD, textTransform: 'uppercase',
           }}>
-            {state === 'done' ? 'SÉANCE TERMINÉE' : 'SÉANCE DU JOUR'}
+            {dayLabel || (state === 'done' ? 'SÉANCE TERMINÉE' : 'SÉANCE DU JOUR')}
           </span>
-          <button
-            onClick={onCalendar}
-            aria-label="Voir le programme"
-            style={{
-              width: 36, height: 36, borderRadius: 12,
-              background: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', flexShrink: 0,
-            }}
-          >
-            <Calendar size={18} color={GOLD} />
-          </button>
+          {!hideCalendarButton && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onCalendar() }}
+              aria-label="Voir le programme"
+              style={{
+                width: 36, height: 36, borderRadius: 12,
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              <Calendar size={18} color={GOLD} />
+            </button>
+          )}
         </div>
 
         {/* Middle */}
@@ -117,6 +133,18 @@ export default function HeroSessionCard({
           }}>
             {getHeroTitle(state, sessionTitle)}
           </div>
+
+          {/* Day badge */}
+          {dayBadge && (
+            <span style={{
+              fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.18em', color: dayBadge.color,
+              textTransform: 'uppercase', marginBottom: 8,
+              display: 'inline-block',
+            }}>
+              {dayBadge.text}
+            </span>
+          )}
 
           {/* Subtitle */}
           {state === 'active' && (
@@ -163,9 +191,9 @@ export default function HeroSessionCard({
 
         {/* Bottom */}
         <div>
-          {state === 'active' && (
+          {state === 'active' && !hideStartButton && (
             <button
-              onClick={onStart}
+              onClick={(e) => { e.stopPropagation(); onStart() }}
               style={{
                 padding: '14px 28px',
                 background: GOLD, color: '#0e0e0e',
@@ -180,7 +208,7 @@ export default function HeroSessionCard({
           )}
           {state === 'done' && (
             <button
-              onClick={onViewDetail || onCalendar}
+              onClick={(e) => { e.stopPropagation(); (onViewDetail || onCalendar)() }}
               style={{
                 padding: '14px 28px',
                 background: 'transparent',
@@ -204,7 +232,7 @@ export default function HeroSessionCard({
           )}
           {(state === 'no-program' || state === 'no-exercises') && (
             <button
-              onClick={onStart}
+              onClick={(e) => { e.stopPropagation(); onStart() }}
               style={{
                 padding: '14px 28px',
                 background: GOLD, color: '#0e0e0e',
