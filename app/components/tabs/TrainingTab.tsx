@@ -8,7 +8,7 @@ import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
 import { useBeforeUnload } from '../../hooks/useBeforeUnload'
 import {
-  Dumbbell, Search, Award, Moon, ChevronRight, ArrowRightLeft, X, Play,
+  Dumbbell, Search, Award, Moon, ChevronRight, ArrowRightLeft, X, Play, BookOpen,
 } from 'lucide-react'
 import {
   fonts, colors, JS_DAYS_FR, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, btnPrimary, btnSecondary,
@@ -825,19 +825,21 @@ export default function TrainingTab({
       <WorkoutCelebration visible={workoutFinished} />
 
       {/* ═══ SECTION 1 — HEADER ═══ */}
-      <div style={{ padding: '8px 24px 0', marginBottom: 16 }}>
-        <span style={pageTitleStyle}>TRAINING</span>
-        {activeCustomProgram && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-            <div>
-              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>{activeCustomProgram.name}</div>
-              <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim }}>{(activeCustomProgram.days || []).length} jours · Actif</div>
-            </div>
-            <button onClick={() => setShowProgramManager(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-              <span style={{ fontSize: 18, color: colors.gold }}>✏️</span>
-            </button>
+      <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div>
+          <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
+            TRAINING
           </div>
-        )}
+          <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
+            {activeCustomProgram
+              ? `${activeCustomProgram.name}${activeCustomProgram.total_weeks ? ` • SEMAINE ${activeCustomProgram.current_week || 1}/${activeCustomProgram.total_weeks}` : ''}`
+              : 'AUCUN PROGRAMME ACTIF'}
+          </div>
+        </div>
+        <button onClick={() => setShowProgramManager(true)} aria-label="Gerer mes programmes"
+          style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+          <BookOpen size={18} color={colors.gold} />
+        </button>
       </div>
 
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
