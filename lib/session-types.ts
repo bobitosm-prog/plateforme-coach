@@ -117,3 +117,30 @@ export const HISTORY_FILTERS = [
   { key: 'bas', label: 'Bas' },
   { key: 'cardio', label: 'Cardio' },
 ]
+
+// ── Hero image mapping ──
+
+const HERO_MAP: Record<string, 'push' | 'pull' | 'legs' | 'full' | 'cardio' | 'default'> = {
+  pectoraux: 'push',
+  dos: 'pull',
+  epaules: 'push',
+  jambes: 'legs',
+  full_body: 'full',
+  haut: 'push',
+  bas: 'legs',
+  cardio: 'cardio',
+  repos: 'default',
+  libre: 'default',
+}
+
+export function getHeroImage(sessionTitle: string | null | undefined): string {
+  const resolved = resolveSessionType(sessionTitle)
+  const slot = HERO_MAP[resolved.key] ?? 'default'
+  return `/images/hero/hero-${slot}.webp`
+}
+
+export function getHeroSlot(sessionTitle: string | null | undefined):
+  'push' | 'pull' | 'legs' | 'full' | 'cardio' | 'default' {
+  const resolved = resolveSessionType(sessionTitle)
+  return HERO_MAP[resolved.key] ?? 'default'
+}
