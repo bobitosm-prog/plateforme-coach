@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { addXP, updateStreak } from '../../../lib/gamification'
@@ -8,25 +8,22 @@ import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
 import { useBeforeUnload } from '../../hooks/useBeforeUnload'
 import {
-  Dumbbell, Search, Award, Moon, ChevronRight, ChevronLeft, ArrowRightLeft, X, Play, BookOpen,
+  Dumbbell, Search, Award, Moon, ChevronRight, ChevronLeft, X, BookOpen,
 } from 'lucide-react'
 import {
-  fonts, colors, JS_DAYS_FR, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, btnPrimary, btnSecondary,
+  fonts, colors, JS_DAYS_FR, titleStyle, titleLineStyle, subtitleStyle, statStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, btnPrimary, btnSecondary,
 } from '../../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
 import { toast } from 'sonner'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 import CardioSection from '../CardioSection'
-import WeekCalendar from '../WeekCalendar'
-import MonthCalendar from '../MonthCalendar'
-import { ScheduledSession, SESSION_COLORS, SESSION_LABELS, getSessionsForDate, toDateStr } from '../../../lib/schedule-utils'
+import { ScheduledSession } from '../../../lib/schedule-utils'
 
 import WorkoutCelebration from './training/WorkoutCelebration'
 import TrainingActiveBar from './training/TrainingActiveBar'
 import AddExercisePopup from './training/AddExercisePopup'
 import SaveChoicePopup from './training/SaveChoicePopup'
-import TrainingDayChips from './training/TrainingDayChips'
 import TrainingRestDay from './training/TrainingRestDay'
 import TrainingSessionDone from './training/TrainingSessionDone'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
@@ -41,7 +38,6 @@ import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
 import ExerciseInfoPopup from '../ExerciseInfoPopup'
 import { useExerciseInfo } from '../../hooks/useExerciseInfo'
-import { resolveSessionType, HISTORY_FILTERS } from '../../../lib/session-types'
 import RecentSessionsList from '../training/RecentSessionsList'
 import PhaseProgressBanner from '../training/PhaseProgressBanner'
 import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
@@ -74,14 +70,12 @@ export default function TrainingTab({
   const aiAllowed = profile?.subscription_type !== 'invited'
   const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
-  const [dayExpanded, setDayExpanded] = useState(false)
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
   const [setInputs, setSetInputs]       = useState<Record<string, { kg: string; reps: string }[]>>({})
   const [showExDbModal, setShowExDbModal] = useState(false)
   const [exerciseDetail, setExerciseDetail] = useState<any>(null)
   const [exercisesCache, setExercisesCache] = useState<any[]>([])
   const exercisesCacheLoaded = useRef(false)
-  const [showMonthCalendar, setShowMonthCalendar] = useState(false)
   const [showProgramManager, setShowProgramManager] = useState(false)
   const [weekOffset, setWeekOffset] = useState(0)
   const calTouchStart = useRef<number | null>(null)
@@ -111,7 +105,6 @@ export default function TrainingTab({
   const [exerciseSearchResults, setExerciseSearchResults] = useState<any[]>([])
   // Feature: save choice popup
   const [showSaveChoice, setShowSaveChoice] = useState(false)
-  const [swapping, setSwapping] = useState<string | null>(null)
   // Workout detail
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
   const [workoutDetail, setWorkoutDetail] = useState<any[]>([])
@@ -443,17 +436,6 @@ export default function TrainingTab({
       })
   }
 
-  function findExercise(name: string) {
-    if (!name || exercisesCache.length === 0) return null
-    const n = name.trim().toLowerCase()
-    let found = exercisesCache.find((e: any) => e.name?.toLowerCase() === n)
-    if (found) return found
-    found = exercisesCache.find((e: any) => e.name?.toLowerCase().includes(n) || n.includes(e.name?.toLowerCase()))
-    if (found) return found
-    const words = n.split(' ').slice(0, 3).join(' ')
-    return exercisesCache.find((e: any) => e.name?.toLowerCase().includes(words)) || null
-  }
-
   // ── Helpers ──
   function fmtElapsed(s: number) {
     const h   = Math.floor(s / 3600)
@@ -630,24 +612,6 @@ export default function TrainingTab({
       localStorage.setItem(key, JSON.stringify(setsArr))
       localStorage.setItem(inputKey, JSON.stringify(inputsArr))
     }
-  }
-
-  async function handleSwapExercise(ex: any) {
-    setSwapping(ex.name)
-    try {
-      const res = await fetch('/api/suggest-exercise', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exerciseName: ex.name, muscleGroup: ex.muscle_group || '', reason: 'Remplacement rapide', availableEquipment: 'Salle complète' }),
-      })
-      const data = await res.json()
-      if (data.suggestions?.[0]) {
-        const suggestion = data.suggestions[0]
-        // Replace in added exercises if it was added
-        setAddedExercises(prev => prev.map(e => e.name === ex.name ? { ...e, name: suggestion.name } : e))
-        toast.success(`Remplacé par : ${suggestion.name}`)
-      }
-    } catch { toast.error('Erreur de remplacement') }
-    finally { setSwapping(null) }
   }
 
   function handleFinishWithCheck() {
@@ -921,7 +885,6 @@ export default function TrainingTab({
                     onClick={() => {
                       const dayKey = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'][i]
                       setTrainingDay(dayKey)
-                      setDayExpanded(true)
                       setCalendarSelectedDate(date)
                     }}
                     style={{

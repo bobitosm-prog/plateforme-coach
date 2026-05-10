@@ -316,7 +316,7 @@ export default function TrainingExerciseCard({
             <div key={si}>
               {/* Set row */}
               <motion.div
-                animate={{ background: done ? 'rgba(74,222,128,0.06)' : 'transparent' }}
+                animate={{ background: done ? 'rgba(74,222,128,0.06)' : 'rgba(0,0,0,0)' }}
                 transition={{ duration: 0.35 }}
                 className="set-grid"
                 style={{
