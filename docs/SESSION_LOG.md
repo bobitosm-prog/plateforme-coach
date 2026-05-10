@@ -8,9 +8,9 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-09 22:30
+**Date derniere mise a jour** : 2026-05-10 13:00
 **Branche** : main
-**HEAD** : `1f2be0b` fix(workout-session) seance libre history fetch
+**HEAD** : `f909e1b` feat(home) refonte 3 cards Apercu + Recovery Modal
 **Working tree** : clean
 
 ### Tache en cours
@@ -20,11 +20,11 @@ Aucune — fin de session
 Aucun
 
 ### Prochaine tache prevue (PROCHAINE SESSION)
-1. Test gym BUG 2 tap-to-autofill + validation etape 3 sprint progression
-2. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
-3. Sprint Layout Desktop autres sections
-4. Sprint Images (54 img → next/image) — 3h
-5. Sprint Refonte page Mes Clients coach — M (3-4h)
+1. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
+2. Test gym BUG 2 tap-to-autofill + validation sprint progression
+3. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
+4. Sprint Layout Desktop autres sections
+5. Sprint Images (54 img → next/image) — 3h
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -45,6 +45,30 @@ Aucun
 ---
 
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
+
+### 2026-05-10
+
+- 13:00 `f909e1b` feat(home) refonte 3 cards Apercu + Recovery Modal
+- 12:30 `bf75dec` feat(home) refonte Card Seance du jour en hero immersive
+- 12:00 `cf5a051` feat(session-types) add getHeroImage/getHeroSlot + 22 tests
+- 11:30 `1fc63e7` feat(home) refonte HomeHeader avec streak hexagone + niveau
+- 11:00 `90d2a13` feat(assets) add 6 hero images for HomeTab (572K)
+- 10:30 `385a09b` feat(design-tokens) extend for HomeTab redesign
+
+SESSION 10 mai 2026 (matinee) — Refonte Home Client :
+6 commits propres sur 5 sprints, 0 regression.
+- S0.1 : Design tokens etendus (Anton, DM Sans, spacing, flame/surface2/divider)
+- S0.2 : 6 hero images cinematiques palette doree (572K total)
+- S1 : HomeHeader + streak hexagone SVG pulse + niveau cliquable modal
+- S2.1 : getHeroImage lib + 22 tests session-types
+- S2.2 : Hero Card Seance du jour 5 etats (active/done/rest/no-program/no-exercises)
+- S3 : 3 cards Apercu (Energie ring+sparkline, Recup image+modal, Nutrition kcal+macros)
+
+NOUVEAU TICKET P1 :
+Sprint Recovery Modal V2 — overlay SVG zones musculaires precises sur
+images cinematiques body-front/back.webp. Remplace MuscleHeatMap SVG
+dans le modal. 6-10 zones polygones, couleurs dynamiques selon
+muscleStatus, animation staggered. Effort 1h30-2h.
 
 ### 2026-05-09
 
