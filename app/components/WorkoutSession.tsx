@@ -1007,11 +1007,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 20px' }}>Que veux-tu faire de cette seance ?</p>
             {/* Summary stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
-              {[['⏱', dur(elapsed), 'Duree'], ['✅', `${completed}/${total}`, 'Sets'], ['💪', `${Math.round(volume)} kg`, 'Volume']].map(([ico, v, l]) => (
-                <div key={String(l)} style={{ padding: '10px 6px', textAlign: 'center', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12 }}>
-                  <div style={{ fontSize: 18, marginBottom: 2 }}>{ico}</div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, color: GOLD, letterSpacing: 1 }}>{v}</div>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' as const, color: TEXT_DIM, marginTop: 2 }}>{l}</div>
+              {([
+                { icon: <Clock size={24} color={GOLD} />, value: dur(elapsed), label: 'Duree' },
+                { icon: <CheckCircle2 size={24} color={GOLD} />, value: `${completed}/${total}`, label: 'Sets' },
+                { icon: <Dumbbell size={24} color={GOLD} />, value: `${Math.round(volume)} kg`, label: 'Volume' },
+              ]).map(stat => (
+                <div key={stat.label} style={{ padding: '10px 6px', textAlign: 'center', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>{stat.icon}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, color: GOLD, letterSpacing: 1 }}>{stat.value}</div>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' as const, color: TEXT_DIM, marginTop: 2 }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -1037,7 +1041,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             {/* Cancel */}
             <button onClick={() => setShowEndModal(false)} className="active:scale-[0.98]" style={{
               width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
-              border: `1px solid ${BORDER}`, color: TEXT_MUTED,
+              border: `1px solid ${colors.divider}`, color: TEXT_MUTED,
               fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
             }}>CONTINUER LA SEANCE</button>
           </div>
