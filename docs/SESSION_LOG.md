@@ -8,23 +8,23 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-10 13:00
+**Date derniere mise a jour** : 2026-05-11 10:30
 **Branche** : main
-**HEAD** : `f909e1b` feat(home) refonte 3 cards Apercu + Recovery Modal
+**HEAD** : `91fe518` feat(training): Active exercise backgrounds + borders divider
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — fin de session
+Sprint N1.2 — WorkoutSession backgrounds (sous-etape N1.2.2 DONE)
 
 ### Blockers
 Aucun
 
-### Prochaine tache prevue (PROCHAINE SESSION)
-1. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
-2. Test gym BUG 2 tap-to-autofill + validation sprint progression
-3. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
-4. Sprint Layout Desktop autres sections
-5. Sprint Images (54 img → next/image) — 3h
+### Prochaine tache prevue
+1. N1.2.3 : Modals backgrounds (7+ BG_CARD -> surface2 dans modals)
+2. N1.3 : WorkoutSession hardcoded colors (~65 rgba + 8x gold)
+3. N1.5 : Modals backdrop harmonisation (5 rgba -> token unique)
+4. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
+5. Test gym BUG 2 tap-to-autofill + validation sprint progression
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -45,6 +45,15 @@ Aucun
 ---
 
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
+
+### 2026-05-11
+
+- 10:30 `91fe518` feat(training): Active exercise backgrounds + borders divider
+
+Sprint N1.2.2 — 4 BG_CARD -> colors.surface2 + borders divider dans
+controles actifs seance (bouton +30S, close video, ajouter exercice,
+empty state). 2 descriptions audit corrigees (L689 = close video pas
+set card, L719 = ajouter exo pas timer control).
 
 ### 2026-05-10
 
