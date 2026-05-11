@@ -96,7 +96,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       </div>
       <div style={{ flex: 1, padding: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {cfg.map((e, i) => (
-          <div key={e.id} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16 }}>
+          <div key={e.id} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <div style={{ width: 32, height: 32, borderRadius: 10, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 14 }}>{i + 1}</span>
@@ -108,7 +108,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
               {[['SETS', 'targetSets', 'number', ''], ['REPS', 'targetReps', 'text', ''], ['REPOS', 'rest', 'number', 's']].map(([label, key, type, unit]) => (
-                <div key={key} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12 }}>
+                <div key={key} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 12 }}>
                   <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' as const, marginBottom: 6 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
                     <input type={type} value={(e as any)[key]}
@@ -160,7 +160,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
           <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
           <input autoFocus autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} inputMode="search" enterKeyHint="search"
             value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un exercice..."
-            style={{ width: '100%', padding: '14px 44px 14px 36px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16, fontFamily: FONT_BODY, outline: 'none' }} />
+            style={{ width: '100%', padding: '14px 44px 14px 36px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16, fontFamily: FONT_BODY, outline: 'none' }} />
           {search && (
             <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: '50%', background: GOLD_DIM, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <X size={12} color={GOLD} />
@@ -174,7 +174,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
             <button key={f} onClick={() => setFilter(f === 'Tous' ? '' : f)} style={{
               flexShrink: 0, padding: '6px 14px', borderRadius: 10,
               border: `1px solid ${(!filter && f === 'Tous') || filter === f ? GOLD : BORDER}`,
-              background: (!filter && f === 'Tous') || filter === f ? GOLD_DIM : BG_CARD,
+              background: (!filter && f === 'Tous') || filter === f ? GOLD_DIM : colors.surface2,
               color: (!filter && f === 'Tous') || filter === f ? GOLD : TEXT_MUTED,
               fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: 'pointer',
             }}>{f}</button>
