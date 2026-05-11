@@ -737,7 +737,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           <div>
             <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid rgba(201,168,76,0.10)' }}>
               <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, fontFamily: FONT_ALT }}>RÉORGANISER</div>
-              <div style={{ fontSize: 10, color: 'rgba(245,241,232,0.4)', marginTop: 4, fontFamily: FONT_BODY }}>Maintiens et glisse pour changer l&apos;ordre</div>
+              <div style={{ fontSize: 10, color: TEXT_DIM, marginTop: 4, fontFamily: FONT_BODY }}>Maintiens et glisse pour changer l&apos;ordre</div>
             </div>
             <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => setExos(newOrder)} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {exos.map((exo, idx) => (
@@ -762,7 +762,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 >
                   <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.15em', flexShrink: 0, minWidth: 16, fontFamily: FONT_ALT, fontWeight: 700 }}>{idx + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 15, color: '#F5F1E8', fontWeight: 600, lineHeight: 1.2, fontFamily: FONT_BODY }}>{exo.name}</div>
+                    <div style={{ fontSize: 15, color: TEXT_PRIMARY, fontWeight: 600, lineHeight: 1.2, fontFamily: FONT_BODY }}>{exo.name}</div>
                     <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: FONT_BODY }}>{exo.muscle ? `${exo.muscle} · ` : ''}{exo.targetSets} séries</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: 4, flexShrink: 0 }}>
@@ -821,7 +821,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14, zIndex: 1 }}>
                   {exo.muscle && <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, opacity: 0.85, textTransform: 'uppercase' as const, marginBottom: 4, fontFamily: FONT_ALT }}>{exo.muscle}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 24, fontWeight: 800, color: '#F5F1E8', letterSpacing: '-0.01em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_DISPLAY }}>{exo.name}</span>
+                    <span style={{ fontSize: 24, fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '-0.01em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_DISPLAY }}>{exo.name}</span>
                     {progressBadge !== null && (
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.20)' : progressBadge < 0 ? 'rgba(239,68,68,0.20)' : 'rgba(255,255,255,0.12)', color: progressBadge > 0 ? colors.success : progressBadge < 0 ? colors.error : 'rgba(255,255,255,0.5)' }}>
                         {progressBadge > 0 ? '+' : ''}{progressBadge}%
