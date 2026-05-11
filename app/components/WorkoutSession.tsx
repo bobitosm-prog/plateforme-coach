@@ -736,7 +736,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         {reorderMode && (
           <div>
             <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid rgba(201,168,76,0.10)' }}>
-              <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: '#C9A84C', fontFamily: FONT_ALT }}>RÉORGANISER</div>
+              <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, fontFamily: FONT_ALT }}>RÉORGANISER</div>
               <div style={{ fontSize: 10, color: 'rgba(245,241,232,0.4)', marginTop: 4, fontFamily: FONT_BODY }}>Maintiens et glisse pour changer l&apos;ordre</div>
             </div>
             <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => setExos(newOrder)} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -755,7 +755,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   whileDrag={{
                     scale: 1.02,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                    borderColor: '#C9A84C',
+                    borderColor: GOLD,
                     background: 'rgba(201,168,76,0.12)',
                     cursor: 'grabbing',
                   }}
@@ -766,14 +766,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: FONT_BODY }}>{exo.muscle ? `${exo.muscle} · ` : ''}{exo.targetSets} séries</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: 4, flexShrink: 0 }}>
-                    <div style={{ width: 18, height: 2, background: '#C9A84C', borderRadius: 1 }} />
-                    <div style={{ width: 18, height: 2, background: '#C9A84C', borderRadius: 1 }} />
-                    <div style={{ width: 18, height: 2, background: '#C9A84C', borderRadius: 1 }} />
+                    <div style={{ width: 18, height: 2, background: GOLD, borderRadius: 1 }} />
+                    <div style={{ width: 18, height: 2, background: GOLD, borderRadius: 1 }} />
+                    <div style={{ width: 18, height: 2, background: GOLD, borderRadius: 1 }} />
                   </div>
                 </Reorder.Item>
               ))}
             </Reorder.Group>
-            <button onClick={() => setReorderMode(false)} style={{ width: '100%', background: '#C9A84C', padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: '#0D0B08', letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>✓ TERMINÉ</button>
+            <button onClick={() => setReorderMode(false)} style={{ width: '100%', background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: '#0D0B08', letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>✓ TERMINÉ</button>
           </div>
         )}
 
@@ -812,14 +812,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 {/* Actions — top right */}
                 <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 2 }}>
                   <button onClick={(e) => { e.stopPropagation(); openExerciseInfo(exo) }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: 'pointer', padding: 0 }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); setExerciseMenu(exerciseMenu === idx ? null : idx) }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: 'pointer', padding: 0, color: '#C9A84C', fontSize: 13, fontWeight: 700 }}>⋯</button>
+                  <button onClick={(e) => { e.stopPropagation(); setExerciseMenu(exerciseMenu === idx ? null : idx) }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: 'pointer', padding: 0, color: GOLD, fontSize: 13, fontWeight: 700 }}>⋯</button>
                 </div>
 
                 {/* Text — bottom left */}
                 <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14, zIndex: 1 }}>
-                  {exo.muscle && <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: '#C9A84C', opacity: 0.85, textTransform: 'uppercase' as const, marginBottom: 4, fontFamily: FONT_ALT }}>{exo.muscle}</div>}
+                  {exo.muscle && <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, opacity: 0.85, textTransform: 'uppercase' as const, marginBottom: 4, fontFamily: FONT_ALT }}>{exo.muscle}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 24, fontWeight: 800, color: '#F5F1E8', letterSpacing: '-0.01em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_DISPLAY }}>{exo.name}</span>
                     {progressBadge !== null && (
@@ -833,7 +833,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     {exo.tempo && <span style={{ marginLeft: 8, fontSize: 10, padding: '2px 5px', background: 'rgba(0,0,0,0.35)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.tempo}</span>}
                     {exo.rir != null && <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 5px', background: 'rgba(0,0,0,0.35)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>R{exo.rir}</span>}
                     {exo.technique && TECHNIQUE_LABELS[exo.technique] && (
-                      <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 6px', background: 'rgba(201,168,76,0.15)', border: '0.5px solid rgba(201,168,76,0.25)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, color: '#C9A84C' }}>
+                      <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 6px', background: 'rgba(201,168,76,0.15)', border: '0.5px solid rgba(201,168,76,0.25)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, color: GOLD }}>
                         {TECHNIQUE_LABELS[exo.technique].emoji} {TECHNIQUE_LABELS[exo.technique].label}{exo.techniqueDetails ? ` ×${exo.techniqueDetails.split(',')[0]}` : ''}
                       </span>
                     )}
@@ -866,7 +866,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                         display: 'flex', alignItems: 'center', gap: 12,
                         padding: '14px 12px', borderRadius: 12,
                         background: (isActive || set.done) ? 'rgba(201,168,76,0.10)' : 'rgba(201,168,76,0.05)',
-                        border: set.done ? '2px solid #4ade80' : isActive ? `2px solid #C9A84C` : '1px solid rgba(201,168,76,0.20)',
+                        border: set.done ? '2px solid #4ade80' : isActive ? `2px solid ${GOLD}` : '1px solid rgba(201,168,76,0.20)',
                         transition: 'all 0.2s',
                       }}>
                         {/* a) Set number */}
@@ -919,7 +919,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                               <Check size={18} strokeWidth={3} color="#fff" />
                             </button>
                           ) : ok ? (
-                            <button onClick={() => validate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#C9A84C', border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
+                            <button onClick={() => validate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GOLD, border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
                               onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.9)' }}
                               onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
                               <Check size={18} strokeWidth={3} color="#0D0B08" />
