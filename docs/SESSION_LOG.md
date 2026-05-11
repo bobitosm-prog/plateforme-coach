@@ -8,23 +8,23 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-11 11:00
+**Date derniere mise a jour** : 2026-05-11 12:00
 **Branche** : main
-**HEAD** : `4fdd650` feat(training): Modals backgrounds + borders divider
+**HEAD** : `bc79db0` feat(training): Text colors -> tokens TEXT_PRIMARY/TEXT_DIM
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — N1.2 BACKGROUNDS COMPLET (3 sous-etapes, 18 remplacements)
+Aucune — N1.2 + N1.3 COMPLETS (41 remplacements tokens total)
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue
-1. N1.3 : WorkoutSession hardcoded colors (~65 rgba + 8x gold)
-2. N1.5 : Modals backdrop harmonisation (5 rgba -> token unique)
-3. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
-4. Test gym BUG 2 tap-to-autofill + validation sprint progression
-5. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
+1. N1.5 (P2, 1h) : Modals backdrop harmonisation (5 rgba -> token unique)
+2. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
+3. Test gym BUG 2 tap-to-autofill + validation sprint progression
+4. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
+5. Sprint Layout Desktop autres sections
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -48,6 +48,9 @@ Aucun
 
 ### 2026-05-11
 
+- 12:00 `bc79db0` feat(training): Text colors -> tokens (N1.3.3 FINAL)
+- 11:45 `f21b3a9` feat(training): Semantic colors -> tokens (N1.3.2)
+- 11:30 `a53eb52` feat(training): Gold legacy #C9A84C -> GOLD (N1.3.1)
 - 11:00 `4fdd650` feat(training): Modals backgrounds + borders divider (N1.2.3 FINAL)
 - 10:30 `91fe518` feat(training): Active exercise backgrounds + borders divider
 
