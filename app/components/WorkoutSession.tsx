@@ -823,7 +823,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 24, fontWeight: 800, color: '#F5F1E8', letterSpacing: '-0.01em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_DISPLAY }}>{exo.name}</span>
                     {progressBadge !== null && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.20)' : progressBadge < 0 ? 'rgba(239,68,68,0.20)' : 'rgba(255,255,255,0.12)', color: progressBadge > 0 ? '#22c55e' : progressBadge < 0 ? '#ef4444' : 'rgba(255,255,255,0.5)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.20)' : progressBadge < 0 ? 'rgba(239,68,68,0.20)' : 'rgba(255,255,255,0.12)', color: progressBadge > 0 ? colors.success : progressBadge < 0 ? colors.error : 'rgba(255,255,255,0.5)' }}>
                         {progressBadge > 0 ? '+' : ''}{progressBadge}%
                       </span>
                     )}
@@ -866,7 +866,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                         display: 'flex', alignItems: 'center', gap: 12,
                         padding: '14px 12px', borderRadius: 12,
                         background: (isActive || set.done) ? 'rgba(201,168,76,0.10)' : 'rgba(201,168,76,0.05)',
-                        border: set.done ? '2px solid #4ade80' : isActive ? `2px solid ${GOLD}` : '1px solid rgba(201,168,76,0.20)',
+                        border: set.done ? `2px solid ${colors.success}` : isActive ? `2px solid ${GOLD}` : '1px solid rgba(201,168,76,0.20)',
                         transition: 'all 0.2s',
                       }}>
                         {/* a) Set number */}
@@ -888,7 +888,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                               ...(progressionByExo[exo.name]!.status === 'progress'
                                 ? { color: GREEN, background: `${GREEN}20` }
                                 : progressionByExo[exo.name]!.status === 'deload'
-                                  ? { color: '#fb923c', background: 'rgba(251,146,60,0.15)' }
+                                  ? { color: colors.orange, background: 'rgba(251,146,60,0.15)' }
                                   : { color: TEXT_DIM, background: `${TEXT_DIM}20` }),
                             }}>
                               {progressionByExo[exo.name]!.status === 'progress' ? `+${fmtStep(progressionByExo[exo.name]!.step)}` : progressionByExo[exo.name]!.status === 'deload' ? `-${fmtStep(progressionByExo[exo.name]!.step)}` : 'Garder'}
@@ -913,7 +913,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                         {/* d) Validate button */}
                         <div style={{ flexShrink: 0 }}>
                           {set.done ? (
-                            <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#4ade80', border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
+                            <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.success, border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
                               onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.9)' }}
                               onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
                               <Check size={18} strokeWidth={3} color="#fff" />
@@ -936,7 +936,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                         <div style={{
                           marginTop: 8, marginBottom: 4, padding: 16, borderRadius: 12,
                           background: 'rgba(201,168,76,0.08)',
-                          border: `1px solid ${restSecs <= 10 ? '#fb923c' : 'rgba(201,168,76,0.25)'}`,
+                          border: `1px solid ${restSecs <= 10 ? colors.orange : 'rgba(201,168,76,0.25)'}`,
                           display: 'flex', alignItems: 'center', gap: 16,
                           transition: 'border-color 200ms',
                         }}>
@@ -944,12 +944,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                             <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
                               <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
                               <circle cx="40" cy="40" r="32" fill="none"
-                                stroke={restSecs <= 10 ? '#fb923c' : GOLD} strokeWidth="6" strokeLinecap="round"
+                                stroke={restSecs <= 10 ? colors.orange : GOLD} strokeWidth="6" strokeLinecap="round"
                                 strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - (restMax > 0 ? restSecs / restMax : 0))}
                                 style={{ transition: 'stroke-dashoffset 1s linear, stroke 200ms' }} />
                             </svg>
                             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                              <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONT_ALT, color: restSecs <= 10 ? '#fb923c' : GOLD, lineHeight: 1 }}>{restSecs}s</span>
+                              <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONT_ALT, color: restSecs <= 10 ? colors.orange : GOLD, lineHeight: 1 }}>{restSecs}s</span>
                               <span style={{ fontSize: 8, fontFamily: FONT_ALT, color: TEXT_DIM, letterSpacing: '0.1em', marginTop: 2 }}>REPOS</span>
                             </div>
                           </div>
