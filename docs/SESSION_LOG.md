@@ -8,23 +8,23 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-11 10:30
+**Date derniere mise a jour** : 2026-05-11 11:00
 **Branche** : main
-**HEAD** : `91fe518` feat(training): Active exercise backgrounds + borders divider
+**HEAD** : `4fdd650` feat(training): Modals backgrounds + borders divider
 **Working tree** : clean
 
 ### Tache en cours
-Sprint N1.2 — WorkoutSession backgrounds (sous-etape N1.2.2 DONE)
+Aucune — N1.2 BACKGROUNDS COMPLET (3 sous-etapes, 18 remplacements)
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue
-1. N1.2.3 : Modals backgrounds (7+ BG_CARD -> surface2 dans modals)
-2. N1.3 : WorkoutSession hardcoded colors (~65 rgba + 8x gold)
-3. N1.5 : Modals backdrop harmonisation (5 rgba -> token unique)
-4. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
-5. Test gym BUG 2 tap-to-autofill + validation sprint progression
+1. N1.3 : WorkoutSession hardcoded colors (~65 rgba + 8x gold)
+2. N1.5 : Modals backdrop harmonisation (5 rgba -> token unique)
+3. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
+4. Test gym BUG 2 tap-to-autofill + validation sprint progression
+5. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -48,6 +48,7 @@ Aucun
 
 ### 2026-05-11
 
+- 11:00 `4fdd650` feat(training): Modals backgrounds + borders divider (N1.2.3 FINAL)
 - 10:30 `91fe518` feat(training): Active exercise backgrounds + borders divider
 
 Sprint N1.2.2 — 4 BG_CARD -> colors.surface2 + borders divider dans
