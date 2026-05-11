@@ -12,6 +12,7 @@ import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
+import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -591,9 +592,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
 
   if (done) return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center" style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
+    <>
+    <WorkoutCelebration visible={done} />
+    <div className="fixed inset-0 z-50 flex flex-col items-center p-6 text-center" style={{ background: BG_BASE, fontFamily: FONT_BODY, overflowY: 'auto' }}>
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 70%)`, filter: 'blur(40px)' }} />
-      <div className="relative z-10 flex flex-col items-center w-full max-w-xs">
+      <div className="relative z-10 flex flex-col items-center w-full max-w-xs" style={{ margin: 'auto 0' }}>
         <div className="w-20 h-20 flex items-center justify-center mb-5" style={{ background: GOLD, borderRadius: RADIUS_CARD }}>
           <Trophy size={36} className="text-white" />
         </div>
@@ -618,6 +621,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         <button onClick={onClose} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Dashboard</button>
       </div>
     </div>
+    </>
   )
 
   return (
