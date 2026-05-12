@@ -400,15 +400,16 @@ export default function useClientDashboard() {
   const goalWeight = profile?.target_weight ?? null
   const currentWeight = weightHistory30.length > 0 ? weightHistory30[weightHistory30.length - 1].poids : profile?.current_weight
   const completedSessions = wSessions.filter(s => s.completed).length
+  const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   const streak = (() => {
-    const dates = new Set(wSessions.filter(s => s.completed).map(s => new Date(s.created_at).toDateString()))
+    const dates = new Set(wSessions.filter(s => s.completed).map(s => toLocal(new Date(s.created_at))))
     let count = 0; const d = new Date()
-    while (dates.has(d.toDateString())) { count++; d.setDate(d.getDate() - 1) }
+    while (dates.has(toLocal(d))) { count++; d.setDate(d.getDate() - 1) }
     return count
   })()
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
-  const todaySessionDone = wSessions.some(s => s.completed && new Date(s.created_at).toDateString() === new Date().toDateString())
+  const todaySessionDone = wSessions.some(s => s.completed && toLocal(new Date(s.created_at)) === toLocal(new Date()))
   const chartMin = weightHistory30.length > 0 ? Math.min(...weightHistory30.map(p => p.poids)) - 1 : 0
   const chartMax = weightHistory30.length > 0 ? Math.max(...weightHistory30.map(p => p.poids)) + 1 : 1
   const displayAvatar = session ? (profile?.avatar_url || session.user.user_metadata?.avatar_url) : undefined
