@@ -1054,7 +1054,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
       {/* DELETE CONFIRMATION — double check */}
       {showDeleteConfirm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: colors.surface2, border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', textAlign: 'center' }}>
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={28} color={colors.error} strokeWidth={2} />
@@ -1203,7 +1203,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
       {/* Variant popup */}
       {variantPopup && (
-        <div style={{position:'fixed',inset:0,zIndex:300,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end'}} onClick={()=>setVariantPopup(null)}>
+        <div style={{position:'fixed',inset:0,zIndex:300,background:'rgba(0,0,0,0.85)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end'}} onClick={()=>setVariantPopup(null)}>
           <div onClick={e=>e.stopPropagation()} style={{background:colors.surface2,border:`1px solid ${colors.divider}`,borderRadius:'20px 20px 0 0',width:'100%',maxHeight:'60vh',display:'flex',flexDirection:'column'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.divider}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
