@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react'
 import { X, Copy, Check, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
-import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
+import { colors, fonts } from '../../lib/design-tokens'
 
 function getAisle(name: string): { aisle: string; order: number } {
   const n = name.toLowerCase()
@@ -97,19 +97,19 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: BG_BASE, zIndex: 1050, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 1050, display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
         <div>
-          <div style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '2px', textTransform: 'uppercase' }}>LISTE DE COURSES</div>
-          <div style={{ fontSize: '0.65rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{totalItems} articles -- {checkedCount}/{totalItems} coches</div>
+          <div style={{ fontFamily: fonts.alt, fontSize: '1.1rem', fontWeight: 800, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase' }}>LISTE DE COURSES</div>
+          <div style={{ fontSize: '0.65rem', fontFamily: fonts.body, fontWeight: 300, color: colors.textMuted }}>{totalItems} articles -- {checkedCount}/{totalItems} coches</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={copyToClipboard} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+          <button onClick={copyToClipboard} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const }}>
             <Copy size={13} /> Copier
           </button>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color={TEXT_MUTED} />
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color={colors.textMuted} />
           </button>
         </div>
       </div>
@@ -117,23 +117,23 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
       {/* List */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 80px' }}>
         {aisles.length === 0 ? (
-          <p style={{ textAlign: 'center', color: TEXT_MUTED, fontFamily: FONT_BODY, padding: '40px 0' }}>Aucun plan alimentaire pour generer la liste.</p>
+          <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, padding: '40px 0' }}>Aucun plan alimentaire pour generer la liste.</p>
         ) : (
           aisles.map(([aisle, { items }]) => (
             <div key={aisle} style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800, color: GOLD, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8, position: 'sticky', top: 0, background: BG_BASE, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
+              <div style={{ fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: colors.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8, position: 'sticky', top: 0, background: colors.background, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
                 {aisle}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {items.map(item => {
                   const done = !!checked[item.name]
                   return (
-                    <button key={item.name} onClick={() => toggle(item.name)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: 'none', background: done ? 'rgba(74,222,128,0.04)' : BG_CARD, cursor: 'pointer', textAlign: 'left', transition: 'all 150ms', width: '100%' }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 12, border: `2px solid ${done ? GREEN : BORDER}`, background: done ? GREEN : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>
+                    <button key={item.name} onClick={() => toggle(item.name)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: 'none', background: done ? 'rgba(74,222,128,0.04)' : colors.surface2, cursor: 'pointer', textAlign: 'left', transition: 'all 150ms', width: '100%' }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 12, border: `2px solid ${done ? colors.success : colors.divider}`, background: done ? colors.success : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>
                         {done && <Check size={13} color="#0D0B08" strokeWidth={3} />}
                       </div>
-                      <span style={{ flex: 1, fontSize: '0.88rem', fontFamily: FONT_BODY, fontWeight: 400, color: done ? TEXT_MUTED : TEXT_PRIMARY, textDecoration: done ? 'line-through' : 'none', opacity: done ? 0.4 : 1, transition: 'all 150ms' }}>{item.name}</span>
-                      <span style={{ fontSize: '0.78rem', fontFamily: FONT_DISPLAY, color: done ? TEXT_DIM : GOLD, fontWeight: 700, flexShrink: 0 }}>{item.display}</span>
+                      <span style={{ flex: 1, fontSize: '0.88rem', fontFamily: fonts.body, fontWeight: 400, color: done ? colors.textMuted : colors.text, textDecoration: done ? 'line-through' : 'none', opacity: done ? 0.4 : 1, transition: 'all 150ms' }}>{item.name}</span>
+                      <span style={{ fontSize: '0.78rem', fontFamily: fonts.headline, color: done ? colors.textDim : colors.gold, fontWeight: 700, flexShrink: 0 }}>{item.display}</span>
                     </button>
                   )
                 })}
@@ -145,8 +145,8 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
 
       {/* Footer */}
       {checkedCount > 0 && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))', background: 'rgba(5,5,5,0.95)', borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'center' }}>
-          <button onClick={resetAll} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 12, border: `1px solid ${GOLD_RULE}`, background: 'transparent', cursor: 'pointer', color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))', background: 'rgba(5,5,5,0.95)', borderTop: `1px solid ${colors.divider}`, display: 'flex', justifyContent: 'center' }}>
+          <button onClick={resetAll} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const }}>
             <RotateCcw size={14} /> Tout decocher
           </button>
         </div>
