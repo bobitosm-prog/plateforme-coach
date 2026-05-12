@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays, Beef, Wheat, Droplet } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
@@ -712,14 +712,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {/* Macros bar */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'PROT.', current: consumed.protein, target: targetP, color: colors.gold },
-                { label: 'GLUC.', current: consumed.carbs, target: targetG, color: colors.blue },
-                { label: 'LIP.', current: consumed.fat, target: targetL, color: colors.orange },
-              ].map(({ label, current, target, color }) => {
+                { label: 'PROT.', current: consumed.protein, target: targetP, color: colors.gold, icon: Beef },
+                { label: 'GLUC.', current: consumed.carbs, target: targetG, color: colors.blue, icon: Wheat },
+                { label: 'LIP.', current: consumed.fat, target: targetL, color: colors.orange, icon: Droplet },
+              ].map(({ label, current, target, color, icon: Icon }) => {
                 const pct = Math.min(100, Math.round((current / target) * 100))
                 return (
                   <div key={label} style={{ textAlign: 'center' }}>
-                    <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: '0.1em', marginBottom: 4 }}>{label}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 4 }}>
+                      <Icon size={12} color={color} />
+                      <span style={{ ...subtitleStyle, fontSize: 10, letterSpacing: '0.1em' }}>{label}</span>
+                    </div>
                     <div style={{ ...statSmallStyle, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: colors.textMuted }}>/{target}g</span></div>
                     <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, overflow: 'hidden', marginTop: 4 }}>
                       <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 12, transition: 'width 300ms' }} />
