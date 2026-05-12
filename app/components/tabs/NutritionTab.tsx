@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
@@ -658,7 +658,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         const ringRadius = (ringSize - ringStroke) / 2
         const ringCircum = 2 * Math.PI * ringRadius
         const ringOffset = ringCircum - (pctKcal / 100) * ringCircum
-        const EMOJIS: Record<string, string> = { petit_dejeuner: '🥐', dejeuner: '☀️', collation: '🍎', diner: '🌙' }
+        const MEAL_ICONS: Record<string, React.ComponentType<any>> = { petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon }
 
         return (
           <div style={{ padding: '0 20px' }}>
@@ -684,7 +684,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             </div>
             {isViewingPast && (
               <div style={{ background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 12, padding: '10px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 16 }}>📅</span>
+                <CalendarDays size={16} color={colors.orange} />
                 <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               </div>
             )}
@@ -741,7 +741,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   {/* Meal header */}
                   <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 16 }}>{EMOJIS[mealType] || '🍽'}</span>
+                      {React.createElement(MEAL_ICONS[mealType] || UtensilsCrossed, { size: 18, color: colors.gold })}
                       <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: '1px' }}>{MEAL_LABELS[mealType]}</span>
                       <span style={{ ...T, marginLeft: 'auto' }}>{con.kcal} kcal</span>
                       {logs.length > 0 && (
@@ -749,9 +749,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                           <button onClick={() => setMealMenuOpen(mealMenuOpen === mealType ? null : mealType)} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>⋯</button>
                           {mealMenuOpen === mealType && (
                             <div style={{ position: 'absolute', top: 36, right: 0, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 6, zIndex: 50, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>💾</span><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>Sauvegarder le repas</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>📋</span><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>Copier vers un autre jour</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 16 }}>🗑️</span><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.error }}>Vider ce repas</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Save size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>Sauvegarder le repas</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Copy size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>Copier vers un autre jour</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Trash2 size={14} color={colors.error} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.error }}>Vider ce repas</span></button>
                             </div>
                           )}
                         </div>
@@ -785,15 +785,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                           ) : (
                             <div onClick={() => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                               <span>{log.quantity_g}g</span>
-                              <span style={{ fontSize: 10, color: colors.textDim }}>✏️</span>
+                              <Pencil size={10} color={colors.textDim} />
                               <span style={{ fontSize: 10, color: colors.textDim }}>· P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</span>
                             </div>
                           )}
                         </div>
                         <span style={{ ...T, flexShrink: 0 }}>{Math.round(log.calories)}</span>
                         <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 14, cursor: 'pointer', padding: 4 }} title="Remplacer">🔄</button>
-                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 14, cursor: 'pointer', padding: 4 }} title="Supprimer">🗑️</button>
+                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title="Remplacer"><RefreshCw size={14} color={colors.textMuted} /></button>
+                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title="Supprimer"><Trash2 size={14} color={colors.textMuted} /></button>
                         </div>
                       </div>
                     ))}
@@ -815,15 +815,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                             title={!isViewingToday ? 'Disponible uniquement pour aujourd\'hui' : undefined}
                             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, fontFamily: fonts.body, fontSize: 11, color: colors.gold }}
                           >
-                            {isInvited ? '📋 Importer du plan' : '🤖 Importer le plan IA'}
+                            <Download size={14} /> {isInvited ? 'Importer du plan' : 'Importer le plan IA'}
                           </button>
                         )
                       })()}
                       <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${colors.goldBorder}`, background: 'transparent', cursor: 'pointer', fontFamily: fonts.body, color: colors.textMuted, fontSize: 11 }}>
                         <Plus size={12} strokeWidth={2.5} /> Ajouter
                       </button>
-                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 10, cursor: 'pointer', fontFamily: fonts.body, fontSize: 11, color: colors.gold }}>📸</button>
-                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', border: `1px dashed ${colors.goldRule}`, background: 'transparent', borderRadius: 10, cursor: 'pointer', fontFamily: fonts.body, fontSize: 11, color: colors.gold }}>📂</button>
+                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 10, cursor: 'pointer', fontFamily: fonts.body, fontSize: 11, color: colors.gold }}><Camera size={14} /></button>
+                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', border: `1px dashed ${colors.goldRule}`, background: 'transparent', borderRadius: 10, cursor: 'pointer', fontFamily: fonts.body, fontSize: 11, color: colors.gold }}><FolderOpen size={14} /></button>
                     </div>
                   </div>
                 </div>
