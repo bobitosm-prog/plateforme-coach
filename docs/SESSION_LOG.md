@@ -8,13 +8,13 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-12 22:00
+**Date derniere mise a jour** : 2026-05-13 00:00
 **Branche** : main
-**HEAD** : `b96f158` feat(nutrition): Calendrier JOURNAL harmonisation Training T3
+**HEAD** : `ee96e4a` feat(analytics): ProgressTab hex cleanup + fix recharts warnings
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — NUTRITION TAB 100% REFONDU ET COHERENT (11/11 visuels + F4 fix)
+Aucune — Nutrition 100% + Analytics ProgressTab + AnalyticsSection cables + 5 fixes
 
 ### Blockers
 Aucun
@@ -48,6 +48,11 @@ Aucun
 
 ### 2026-05-11
 
+- 00:00 `ee96e4a` feat(analytics): ProgressTab hex cleanup + recharts fix (A4)
+- 23:50 `d59a696` fix(pwa): Service Worker auto-reload silencieux (F5)
+- 23:40 `d228a16` feat(analytics): Cablage AnalyticsSection pill GRAPHIQUES (A0)
+- 23:30 `6580824` feat(analytics): AnalyticsSection refonte v2 + macros fix (A1)
+- 23:15 `ab608cc` feat(nutrition): Fix 4 emojis P3 restants (N2.10)
 - 22:00 `b96f158` feat(nutrition): Calendrier harmonisation T3 (N2.2.3)
 - 21:45 `e687118` fix(nutrition): ShoppingList parseMealPlan fix (F4)
 - 21:30 `6887cfc` feat(nutrition): PLAN harmonisation visuelle (N2.9)
