@@ -78,6 +78,12 @@ export default function RootLayout({
                 });
               });
             });
+            var refreshing=false;
+            navigator.serviceWorker.addEventListener('controllerchange',function(){
+              if(refreshing)return;
+              refreshing=true;
+              window.location.reload();
+            });
             if(window.caches){caches.keys().then(function(n){for(var i=0;i<n.length;i++){caches.delete(n[i])}})}
           }
           try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait').catch(function(){})}catch(e){}
