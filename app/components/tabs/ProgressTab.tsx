@@ -367,7 +367,7 @@ export default function ProgressTab({
     if (curr == null || prev == null) return null
     const d = curr - prev
     if (d === 0) return null
-    return { val: Math.abs(d), icon: d > 0 ? ChevronUp : ChevronDown, color: d > 0 ? '#EF4444' : colors.success }
+    return { val: Math.abs(d), icon: d > 0 ? ChevronUp : ChevronDown, color: d > 0 ? colors.error : colors.success }
   }
 
   // Evolution chart data
@@ -474,7 +474,7 @@ export default function ProgressTab({
             </div>
             {weightDelta !== 0 && (
               <div style={{ padding: '4px 10px', borderRadius: 999, background: deltaPositive ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${deltaPositive ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}` }}>
-                <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: deltaPositive ? '#22c55e' : '#ef4444' }}>
+                <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: deltaPositive ? colors.success : colors.error }}>
                   {weightDelta > 0 ? '+' : ''}{weightDelta} kg
                 </span>
               </div>
@@ -870,7 +870,7 @@ export default function ProgressTab({
               <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
                 <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>HUMEUR</div>
                 <div style={{ height: 160 }}>
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <AreaChart data={chartData}>
                       <defs><linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={colors.gold} stopOpacity={0.25} /><stop offset="100%" stopColor={colors.gold} stopOpacity={0} /></linearGradient></defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -890,7 +890,7 @@ export default function ProgressTab({
                   <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Moy. {sleepAvg}h</span>
                 </div>
                 <div style={{ height: 140 }}>
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <BarChart data={chartData} barSize={checkinPeriod <= 7 ? 20 : checkinPeriod <= 30 ? 8 : 4}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                       <XAxis dataKey="day" tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} />
@@ -1083,7 +1083,7 @@ export default function ProgressTab({
               <label style={{ display: 'block', ...subtitleStyle, marginBottom: 8 }}>Date</label>
               <input type="date" value={weightDate} onChange={e => setWeightDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
             </div>
-            <button onClick={handleSaveWeight} disabled={!weightVal || savingWeight} style={{ width: '100%', background: weightVal && !savingWeight ? colors.gold : '#2A2A2A', color: weightVal && !savingWeight ? '#000' : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: weightVal && !savingWeight ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56 }}>
+            <button onClick={handleSaveWeight} disabled={!weightVal || savingWeight} style={{ width: '100%', background: weightVal && !savingWeight ? colors.gold : colors.surfaceHigh, color: weightVal && !savingWeight ? '#000' : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: weightVal && !savingWeight ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56 }}>
               {savingWeight ? 'Enregistrement...' : 'Sauvegarder'}
             </button>
           </div>
