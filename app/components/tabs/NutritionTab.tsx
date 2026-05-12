@@ -670,20 +670,20 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         return (
           <div style={{ padding: '0 20px' }}>
             {/* ═══ CALENDAR STRIP ═══ */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ ...statSmallStyle, fontSize: 16, color: colors.text, letterSpacing: 2 }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { month: 'long', year: 'numeric' }).toUpperCase()}</span>
-                {selectedDate !== today && <button onClick={() => setSelectedDate(today)} style={{ padding: '4px 12px', borderRadius: 8, background: colors.goldDim, border: `1px solid ${colors.goldRule}`, color: colors.gold, fontFamily: fonts.body, fontSize: 10, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>AUJOURD&apos;HUI</button>}
+            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { month: 'long', year: 'numeric' }).toUpperCase()}</span>
+                {selectedDate !== today && <button onClick={() => setSelectedDate(today)} style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>AUJOURD&apos;HUI</button>}
               </div>
-              <div ref={calScrollRef} style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 8, scrollSnapType: 'x mandatory' }}>
+              <div ref={calScrollRef} style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
                 {calendarDays.map(dt => {
                   const d = new Date(dt + 'T12:00:00')
                   const sel = dt === selectedDate, isTd = dt === today, hasMl = daysWithMeals.has(dt), fut = dt > today
                   return (
-                    <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? 'Date future indisponible' : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 10px', minWidth: 44, borderRadius: 12, border: sel ? `1.5px solid ${colors.gold}` : isTd ? `1px solid ${colors.goldRule}` : '1px solid transparent', background: sel ? colors.goldDim : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.2s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
-                      <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, letterSpacing: 1, color: sel ? colors.gold : colors.textMuted }}>{d.toLocaleDateString('fr-CH', { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
-                      <span style={{ ...statSmallStyle, fontSize: 20, color: sel ? colors.gold : isTd ? colors.text : colors.textMuted }}>{d.getDate()}</span>
-                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: hasMl ? colors.gold : 'transparent' }} />
+                    <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? 'Date future indisponible' : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 8px', minWidth: 44, borderRadius: 12, border: sel ? `2px solid ${colors.gold}` : isTd ? `1px solid ${colors.goldRule}` : `1px solid ${colors.divider}`, background: sel ? `${colors.gold}12` : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
+                      <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: sel ? colors.gold : colors.textDim }}>{d.toLocaleDateString('fr-CH', { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
+                      <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: sel ? colors.gold : isTd ? colors.gold : colors.text }}>{d.getDate()}</span>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: hasMl ? colors.gold : 'transparent' }} />
                     </button>
                   )
                 })}
