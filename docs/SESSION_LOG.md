@@ -8,13 +8,13 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-12 16:00
+**Date derniere mise a jour** : 2026-05-12 18:00
 **Branche** : main
-**HEAD** : `265e35a` feat(nutrition): REPAS emojis Lucide + glass chips/buttons
+**HEAD** : `1b4f7a6` feat(nutrition): BarcodeScanner refonte design system v2
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — Sprint N2 Nutrition refonte 6/8 visuels complets
+Aucune — Sprint N2 Nutrition refonte 8/8 composants visuels complets
 
 ### Blockers
 Aucun
@@ -48,6 +48,8 @@ Aucun
 
 ### 2026-05-11
 
+- 18:00 `1b4f7a6` feat(nutrition): BarcodeScanner refonte v2 (N2.7)
+- 17:30 `790821a` feat(nutrition): FoodSearch refonte v2 (N2.4)
 - 16:00 `265e35a` feat(nutrition): REPAS emojis Lucide + glass (N2.3)
 - 15:45 `5fbc8ea` feat(nutrition): ShoppingList + ImportPlanSheet v2 (N2.8)
 - 14:00 `ca0cfb5` fix(home): Hydratation tracking restaure (F3)
