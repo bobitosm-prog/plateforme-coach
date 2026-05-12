@@ -446,8 +446,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
                   {[
                     { l: 'P', v: foodList.reduce((s, f) => s + f.prot, 0), color: colors.gold },
-                    { l: 'G', v: foodList.reduce((s, f) => s + f.carb, 0), color: '#60A5FA' },
-                    { l: 'L', v: foodList.reduce((s, f) => s + f.fat, 0), color: '#F97316' },
+                    { l: 'G', v: foodList.reduce((s, f) => s + f.carb, 0), color: colors.blue },
+                    { l: 'L', v: foodList.reduce((s, f) => s + f.fat, 0), color: colors.orange },
                   ].map(({ l, v, color }) => (
                     <span key={l} style={{ fontFamily: fonts.body, fontSize: '0.72rem', fontWeight: 700, color: colors.textMuted }}>
                       <span style={{ color }}>{l}</span> {Math.round(v)}g
@@ -542,8 +542,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
                       {[
                         { label: 'P', value: `${Math.round(mealProt)}g`, color: colors.gold },
-                        { label: 'G', value: `${Math.round(mealCarb)}g`, color: '#60A5FA' },
-                        { label: 'L', value: `${Math.round(mealFat)}g`, color: '#F97316' },
+                        { label: 'G', value: `${Math.round(mealCarb)}g`, color: colors.blue },
+                        { label: 'L', value: `${Math.round(mealFat)}g`, color: colors.orange },
                       ].map(({ label, value, color }) => (
                         <span key={label} style={{ fontFamily: fonts.body, fontSize: '0.72rem', fontWeight: 700, color: colors.textMuted }}>
                           <span style={{ color }}>{label}</span> {value}
@@ -713,8 +713,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
               {[
                 { label: 'PROT.', current: consumed.protein, target: targetP, color: colors.gold },
-                { label: 'GLUC.', current: consumed.carbs, target: targetG, color: '#60A5FA' },
-                { label: 'LIP.', current: consumed.fat, target: targetL, color: '#F87171' },
+                { label: 'GLUC.', current: consumed.carbs, target: targetG, color: colors.blue },
+                { label: 'LIP.', current: consumed.fat, target: targetL, color: colors.orange },
               ].map(({ label, current, target, color }) => {
                 const pct = Math.min(100, Math.round((current / target) * 100))
                 return (
@@ -1027,7 +1027,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       setEditAddFoodQuery('')
                       setEditAddFoodResults([])
                     }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body, display: 'flex', alignItems: 'center', gap: 6 }}>{f.nom}{f.source === 'fitness' ? <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldBorder}` }}>FITNESS</span> : <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(96,165,250,0.1)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.2)' }}>CIQUAL</span>}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body, display: 'flex', alignItems: 'center', gap: 6 }}>{f.nom}{f.source === 'fitness' ? <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldBorder}` }}>FITNESS</span> : <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(96,165,250,0.1)', color: colors.blue, border: '1px solid rgba(96,165,250,0.2)' }}>CIQUAL</span>}</div>
                       <div style={{ fontSize: 9, color: colors.textDim }}>{f.calories} kcal · {f.proteines}g P · {f.glucides}g G · {f.lipides}g L</div>
                     </button>
                   ))}
@@ -1073,7 +1073,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ PHOTO MEAL SCAN ═══ */}
       {showPhotoCapture && (
         <>
-          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>SCANNER UN REPAS</span>
@@ -1125,7 +1125,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ SAVE MEAL POPUP ═══ */}
       {showSaveMealPopup && saveMealData && (
         <>
-          <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>SAUVEGARDER LE REPAS</h3>
             <input type="text" placeholder="Nom du repas..." value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none', marginBottom: 12 }} />
@@ -1152,7 +1152,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ COPY MEAL POPUP ═══ */}
       {showCopyMealPopup && copyMealData && (
         <>
-          <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>COPIER LE REPAS</h3>
             <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>DATE</div>
@@ -1178,7 +1178,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ SAVED MEALS POPUP ═══ */}
       {showSavedMeals && (
         <>
-          <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
+          <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>MES REPAS</span>
