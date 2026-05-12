@@ -8,23 +8,23 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-11 12:00
+**Date derniere mise a jour** : 2026-05-12 10:00
 **Branche** : main
-**HEAD** : `bc79db0` feat(training): Text colors -> tokens TEXT_PRIMARY/TEXT_DIM
+**HEAD** : `5860096` feat(training): Modals backdrop scrim harmonise
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — N1.2 + N1.3 COMPLETS (41 remplacements tokens total)
+Aucune — REFONTE WORKOUT SESSION 100% TERMINEE
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue
-1. N1.5 (P2, 1h) : Modals backdrop harmonisation (5 rgba -> token unique)
-2. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
-3. Test gym BUG 2 tap-to-autofill + validation sprint progression
-4. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
-5. Sprint Layout Desktop autres sections
+1. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
+2. Test gym BUG 2 tap-to-autofill + validation sprint progression
+3. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
+4. Sprint Layout Desktop autres sections
+5. Sprint Images (54 img → next/image) — 3h
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -48,6 +48,8 @@ Aucun
 
 ### 2026-05-11
 
+- 10:00 `5860096` feat(training): Modals backdrop scrim harmonise (N1.5 FINAL)
+- 09:50 `c483149` feat(training): Exercise card warm tint -> surface2 (N1.3.4)
 - 12:00 `bc79db0` feat(training): Text colors -> tokens (N1.3.3 FINAL)
 - 11:45 `f21b3a9` feat(training): Semantic colors -> tokens (N1.3.2)
 - 11:30 `a53eb52` feat(training): Gold legacy #C9A84C -> GOLD (N1.3.1)
