@@ -8,7 +8,7 @@ import {
 } from 'recharts'
 import { Trophy, TrendingUp, Flame, Dumbbell, Download, Droplets } from 'lucide-react'
 import { downloadCsv } from '../../lib/exportCsv'
-import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
+import { colors, fonts } from '../../lib/design-tokens'
 
 const LIGHT_BLUE = '#7DD3FC'
 
@@ -32,10 +32,10 @@ type WeightPeriod = '30j' | '60j' | '90j' | 'tout'
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: BG_CARD, border: `1px solid ${GOLD}`, borderRadius: 12, padding: '8px 12px', fontSize: '0.72rem', fontFamily: FONT_BODY }}>
-      <div style={{ color: TEXT_MUTED, marginBottom: 4 }}>{label}</div>
+    <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: '8px 12px', fontSize: '0.72rem', fontFamily: fonts.body }}>
+      <div style={{ color: colors.textMuted, marginBottom: 4 }}>{label}</div>
       {payload.map((p: any, i: number) => (
-        <div key={i} style={{ color: p.color || TEXT_PRIMARY, fontWeight: 600 }}>
+        <div key={i} style={{ color: p.color || colors.text, fontWeight: 600 }}>
           {p.name}: {typeof p.value === 'number' ? p.value.toLocaleString('fr-FR') : p.value} {p.unit || ''}
         </div>
       ))}
@@ -177,8 +177,8 @@ export default function AnalyticsSection({
     )
   }
 
-  const axisStyle = { fontSize: '0.55rem', fill: TEXT_DIM }
-  const gridColor = BORDER
+  const axisStyle = { fontSize: '0.55rem', fill: colors.textDim }
+  const gridColor = colors.divider
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -186,19 +186,19 @@ export default function AnalyticsSection({
       {/* STATS SUMMARY */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
         {[
-          { icon: Flame, label: 'Streak', value: `${streak} jours`, color: streak > 0 ? GOLD : TEXT_MUTED },
-          { icon: TrendingUp, label: 'Poids', value: monthWeightDiff !== null ? `${monthWeightDiff > 0 ? '+' : ''}${monthWeightDiff} kg` : '---', color: monthWeightDiff !== null ? (monthWeightDiff <= 0 ? GREEN : RED) : TEXT_MUTED },
-          { icon: Dumbbell, label: 'Volume', value: volumeChange !== null ? `${volumeChange > 0 ? '+' : ''}${volumeChange}%` : '---', color: volumeChange !== null ? (volumeChange >= 0 ? GREEN : RED) : TEXT_MUTED },
-          { icon: Trophy, label: 'Records', value: `${monthPRs} PR`, color: monthPRs > 0 ? GOLD : TEXT_MUTED },
+          { icon: Flame, label: 'Streak', value: `${streak} jours`, color: streak > 0 ? colors.gold : colors.textMuted },
+          { icon: TrendingUp, label: 'Poids', value: monthWeightDiff !== null ? `${monthWeightDiff > 0 ? '+' : ''}${monthWeightDiff} kg` : '---', color: monthWeightDiff !== null ? (monthWeightDiff <= 0 ? colors.success : colors.error) : colors.textMuted },
+          { icon: Dumbbell, label: 'Volume', value: volumeChange !== null ? `${volumeChange > 0 ? '+' : ''}${volumeChange}%` : '---', color: volumeChange !== null ? (volumeChange >= 0 ? colors.success : colors.error) : colors.textMuted },
+          { icon: Trophy, label: 'Records', value: `${monthPRs} PR`, color: monthPRs > 0 ? colors.gold : colors.textMuted },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} style={{
-            background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
+            background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16,
             padding: '14px 12px', display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <Icon size={18} color={color} />
             <div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-              <div style={{ fontSize: '0.58rem', fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginTop: 2 }}>{label}</div>
+              <div style={{ fontFamily: fonts.headline, fontSize: '1.2rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: '0.58rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginTop: 2 }}>{label}</div>
             </div>
           </div>
         ))}
@@ -206,16 +206,18 @@ export default function AnalyticsSection({
 
       {/* WEIGHT CHART */}
       {weightHistoryFull.length > 1 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Poids</span>
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>Poids</span>
             <div style={{ display: 'flex', gap: 4 }}>
               {(['30j', '60j', '90j', 'tout'] as WeightPeriod[]).map(p => (
                 <button key={p} onClick={() => setWeightPeriod(p)} style={{
-                  padding: '4px 8px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                  fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', fontFamily: FONT_ALT, letterSpacing: '1px',
-                  background: weightPeriod === p ? GOLD : 'transparent',
-                  color: weightPeriod === p ? '#0D0B08' : TEXT_MUTED,
+                  padding: '6px 10px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
+                  fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, fontFamily: fonts.alt, letterSpacing: '0.15em',
+                  background: weightPeriod === p ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
+                  backdropFilter: 'blur(8px)',
+                  border: `1px solid ${weightPeriod === p ? colors.gold : 'rgba(255,255,255,0.1)'}`,
+                  color: weightPeriod === p ? colors.gold : colors.textDim,
                 }}>
                   {p}
                 </button>
@@ -229,9 +231,9 @@ export default function AnalyticsSection({
                 <XAxis dataKey="date" tick={axisStyle} interval="preserveStartEnd" />
                 <YAxis tick={axisStyle} domain={['dataMin - 1', 'dataMax + 1']} />
                 <Tooltip content={<CustomTooltip />} />
-                {goalWeight && <ReferenceLine y={goalWeight} stroke={GREEN} strokeDasharray="6 4" label={{ value: 'Objectif', fill: GREEN, fontSize: 10, position: 'right' }} />}
-                <Line type="monotone" dataKey="tendance" stroke={`${GOLD}50`} strokeDasharray="4 4" strokeWidth={1.5} dot={false} name="Tendance" />
-                <Line type="monotone" dataKey="poids" stroke={GOLD} strokeWidth={2} dot={{ r: 2, fill: GOLD }} activeDot={{ r: 4, fill: GOLD }} name="Poids" />
+                {goalWeight && <ReferenceLine y={goalWeight} stroke={colors.success} strokeDasharray="6 4" label={{ value: 'Objectif', fill: colors.success, fontSize: 10, position: 'right' }} />}
+                <Line type="monotone" dataKey="tendance" stroke={`${colors.gold}50`} strokeDasharray="4 4" strokeWidth={1.5} dot={false} name="Tendance" />
+                <Line type="monotone" dataKey="poids" stroke={colors.gold} strokeWidth={2} dot={{ r: 2, fill: colors.gold }} activeDot={{ r: 4, fill: colors.gold }} name="Poids" />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -240,18 +242,18 @@ export default function AnalyticsSection({
 
       {/* CALORIES CHART */}
       {calData.length > 0 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-          <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Calories (7 jours)</span>
+        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
+          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>Calories (7 jours)</span>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={calData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={calorieGoal} stroke={GREEN} strokeDasharray="6 4" label={{ value: `${calorieGoal}`, fill: GREEN, fontSize: 10, position: 'right' }} />
+              <ReferenceLine y={calorieGoal} stroke={colors.success} strokeDasharray="6 4" label={{ value: `${calorieGoal}`, fill: colors.success, fontSize: 10, position: 'right' }} />
               <Bar dataKey="calories" radius={[2, 2, 0, 0]} name="Calories">
                 {calData.map((entry, i) => (
-                  <Cell key={i} fill={entry.inTarget ? GREEN : RED} fillOpacity={0.7} />
+                  <Cell key={i} fill={entry.inTarget ? colors.success : colors.error} fillOpacity={0.7} />
                 ))}
               </Bar>
             </BarChart>
@@ -261,24 +263,24 @@ export default function AnalyticsSection({
 
       {/* MACROS CHART */}
       {macroData.length > 0 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-          <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Macros (7 jours)</span>
+        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
+          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>Macros (7 jours)</span>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={macroData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="Proteines" stackId="macro" fill={GOLD} radius={[0, 0, 0, 0]} />
-              <Bar dataKey="Glucides" stackId="macro" fill={GREEN} radius={[0, 0, 0, 0]} />
-              <Bar dataKey="Lipides" stackId="macro" fill={GOLD} radius={[2, 2, 0, 0]} />
+              <Bar dataKey="Proteines" stackId="macro" fill={colors.gold} radius={[0, 0, 0, 0]} />
+              <Bar dataKey="Glucides" stackId="macro" fill={colors.blue} radius={[0, 0, 0, 0]} />
+              <Bar dataKey="Lipides" stackId="macro" fill={colors.orange} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8 }}>
-            {[{ label: 'Proteines', color: GOLD }, { label: 'Glucides', color: GREEN }, { label: 'Lipides', color: GOLD }].map(l => (
+            {[{ label: 'Proteines', color: colors.gold }, { label: 'Glucides', color: colors.blue }, { label: 'Lipides', color: colors.orange }].map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <div style={{ width: 8, height: 8, borderRadius: 12, background: l.color }} />
-                <span style={{ fontSize: '0.55rem', fontFamily: FONT_BODY, color: TEXT_MUTED }}>{l.label}</span>
+                <span style={{ fontSize: '0.55rem', fontFamily: fonts.body, color: colors.textMuted }}>{l.label}</span>
               </div>
             ))}
           </div>
@@ -287,15 +289,15 @@ export default function AnalyticsSection({
 
       {/* VOLUME CHART */}
       {volumeData.length > 0 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
-          <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, display: 'block', marginBottom: 12 }}>Volume d&apos;entrainement</span>
+        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
+          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>Volume d&apos;entrainement</span>
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={volumeData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="week" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="volume" stroke={GOLD} strokeWidth={2.5} dot={{ r: 4, fill: GOLD }} name="Volume (kg)" />
+              <Line type="monotone" dataKey="volume" stroke={colors.gold} strokeWidth={2.5} dot={{ r: 4, fill: colors.gold }} name="Volume (kg)" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -303,10 +305,10 @@ export default function AnalyticsSection({
 
       {/* HYDRATION CHART */}
       {waterData.length > 0 && (
-        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 16 }}>
+        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <Droplets size={14} color={LIGHT_BLUE} />
-            <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Hydratation (7 jours)</span>
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>Hydratation (7 jours)</span>
           </div>
           <ResponsiveContainer width="100%" height={120}>
             <BarChart data={waterData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
@@ -325,36 +327,36 @@ export default function AnalyticsSection({
       {prRecords.length > 0 && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <Trophy size={16} color={GOLD} />
-            <span style={{ fontFamily: FONT_ALT, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Mes records</span>
+            <Trophy size={16} color={colors.gold} />
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>Mes records</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
             {prRecords.map(pr => {
               const diff = pr.previous_value ? Math.round((pr.value - pr.previous_value) * 10) / 10 : null
               return (
                 <div key={pr.id} style={{
-                  background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
-                  padding: '14px 12px', borderLeft: `3px solid ${GOLD}`,
+                  background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16,
+                  padding: '14px 12px', borderLeft: `3px solid ${colors.gold}`,
                 }}>
-                  <div style={{ fontSize: '0.65rem', fontFamily: FONT_BODY, color: TEXT_MUTED, fontWeight: 400, marginBottom: 4, lineHeight: 1.3 }}>
+                  <div style={{ fontSize: '0.65rem', fontFamily: fonts.body, color: colors.textMuted, fontWeight: 400, marginBottom: 4, lineHeight: 1.3 }}>
                     {pr.exercise_name}
                   </div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, color: GOLD, lineHeight: 1 }}>
+                  <div style={{ fontFamily: fonts.headline, fontSize: '1.4rem', fontWeight: 700, color: colors.gold, lineHeight: 1 }}>
                     {pr.value} <span style={{ fontSize: '0.7rem', fontWeight: 600 }}>{pr.unit}</span>
                   </div>
-                  <div style={{ fontSize: '0.55rem', fontFamily: FONT_ALT, color: TEXT_MUTED, marginTop: 2 }}>
+                  <div style={{ fontSize: '0.55rem', fontFamily: fonts.alt, color: colors.textMuted, marginTop: 2 }}>
                     1RM estime
                   </div>
                   {diff !== null && diff > 0 ? (
-                    <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: GREEN, fontWeight: 700, marginTop: 4 }}>
+                    <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.success, fontWeight: 700, marginTop: 4 }}>
                       +{diff} {pr.unit} vs precedent
                     </div>
                   ) : diff === null ? (
-                    <div style={{ fontSize: '0.6rem', fontFamily: FONT_ALT, color: GOLD, fontWeight: 700, marginTop: 4 }}>
+                    <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.gold, fontWeight: 700, marginTop: 4 }}>
                       Premier record
                     </div>
                   ) : null}
-                  <div style={{ fontSize: '0.5rem', fontFamily: FONT_BODY, color: TEXT_DIM, marginTop: 4 }}>
+                  <div style={{ fontSize: '0.5rem', fontFamily: fonts.body, color: colors.textDim, marginTop: 4 }}>
                     Atteint le {format(new Date(pr.achieved_at), 'd MMM yyyy', { locale: fr })}
                   </div>
                 </div>
@@ -368,14 +370,14 @@ export default function AnalyticsSection({
       <button
         onClick={exportAnalytics}
         style={{
-          width: '100%', padding: '14px', background: BG_CARD,
-          border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, cursor: 'pointer',
+          width: '100%', padding: '14px', background: colors.surface2,
+          border: `1px solid ${colors.divider}`, borderRadius: 16, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           marginTop: 8,
         }}
       >
-        <Download size={16} color={TEXT_MUTED} />
-        <span style={{ fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '1px', textTransform: 'uppercase' }}>Exporter mes donnees</span>
+        <Download size={16} color={colors.textMuted} />
+        <span style={{ fontSize: '0.85rem', fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, letterSpacing: '1px', textTransform: 'uppercase' }}>Exporter mes donnees</span>
       </button>
     </div>
   )
