@@ -790,7 +790,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                               <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: colors.background, border: `1px solid ${colors.gold}`, borderRadius: 6, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
                               <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted }}>g</span>
                               <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: colors.gold, border: 'none', borderRadius: 6, color: '#0D0B08', padding: '4px 10px', fontFamily: fonts.body, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
-                              <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 14, cursor: 'pointer' }}>✕</button>
+                              <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}><X size={14} color={colors.textMuted} /></button>
                             </div>
                           ) : (
                             <div onClick={() => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -1088,13 +1088,13 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>SCANNER UN REPAS</span>
-              <button onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 22, cursor: 'pointer' }}>✕</button>
+              <button onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
               <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
               {!photoResults && !analyzingPhoto && (
                 <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: colors.goldDim, border: `2px dashed ${colors.goldRule}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 48 }}>📷</span>
+                  <Camera size={48} color={colors.gold} />
                   <span style={{ ...statSmallStyle, letterSpacing: 2 }}>PRENDRE UNE PHOTO</span>
                   <span style={mutedStyle}>ou choisir depuis la galerie</span>
                 </button>
@@ -1193,7 +1193,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>MES REPAS</span>
-              <button onClick={() => setShowSavedMeals(false)} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 22, cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setShowSavedMeals(false)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
               {savedMeals.length === 0 ? (
