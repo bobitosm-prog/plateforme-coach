@@ -808,7 +808,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     )}
 
                     {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px' }}>
+                    <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px', flexWrap: 'wrap' }}>
                       {hasPlanFoods && logs.length === 0 && (() => {
                         const isViewingToday = nutritionDay === todayKey
                         return (
@@ -816,17 +816,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                             onClick={() => isViewingToday && setImportingMeal(mealType)}
                             disabled={!isViewingToday}
                             title={!isViewingToday ? 'Disponible uniquement pour aujourd\'hui' : undefined}
-                            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, fontFamily: fonts.body, fontSize: 11, color: colors.gold }}
+                            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(230,195,100,0.15)', backdropFilter: 'blur(8px)', border: `1px solid ${colors.gold}`, color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, transition: 'all 0.15s' }}
                           >
-                            <Download size={14} /> {isInvited ? 'Importer du plan' : 'Importer le plan IA'}
+                            <Download size={14} /> {isInvited ? 'Importer' : 'Import IA'}
                           </button>
                         )
                       })()}
-                      <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${colors.goldBorder}`, background: 'transparent', cursor: 'pointer', fontFamily: fonts.body, color: colors.textMuted, fontSize: 11 }}>
-                        <Plus size={12} strokeWidth={2.5} /> Ajouter
+                      <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>
+                        <Plus size={14} strokeWidth={2.5} /> Ajouter
                       </button>
-                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 10, cursor: 'pointer', fontFamily: fonts.body, fontSize: 11, color: colors.gold }}><Camera size={14} /></button>
-                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 12px', border: `1px dashed ${colors.goldRule}`, background: 'transparent', borderRadius: 10, cursor: 'pointer', fontFamily: fonts.body, fontSize: 11, color: colors.gold }}><FolderOpen size={14} /></button>
+                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><Camera size={14} /></button>
+                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><FolderOpen size={14} /></button>
                     </div>
                   </div>
                 </div>
