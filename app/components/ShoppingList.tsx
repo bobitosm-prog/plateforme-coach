@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react'
 import { X, Copy, Check, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { colors, fonts } from '../../lib/design-tokens'
+import { parseMealPlan } from '../../lib/meal-plan'
 
 function getAisle(name: string): { aisle: string; order: number } {
   const n = name.toLowerCase()
@@ -43,15 +44,13 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
   const { aisles, totalItems } = useMemo(() => {
     const agg: Record<string, number> = {}
 
-    for (const dayData of Object.values(planData || {})) {
-      if (!dayData?.repas) continue
-      for (const foods of Object.values(dayData.repas) as any[]) {
-        if (!Array.isArray(foods)) continue
-        for (const food of foods) {
-          const name = (food.aliment || food.name || '').trim()
+    const parsed = parseMealPlan(planData)
+    for (const dayPlan of Object.values(parsed)) {
+      for (const meal of dayPlan.meals) {
+        for (const food of meal.foods) {
+          const name = food.name.trim()
           if (!name) continue
-          const qty = parseFloat(food.quantite_g || food.quantity_g || '0') || 0
-          agg[name] = (agg[name] || 0) + qty
+          agg[name] = (agg[name] || 0) + food.qty
         }
       }
     }
