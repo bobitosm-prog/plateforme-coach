@@ -36,7 +36,7 @@ const EVOLUTION_METRICS = [
   { key: 'body_fat', label: '% MG', unit: '%', source: 'measure' },
 ]
 
-type PillSection = 'poids' | 'records' | 'photos' | 'mensurations' | 'bienetre'
+type PillSection = 'poids' | 'records' | 'photos' | 'mensurations' | 'bienetre' | 'graphiques'
 
 interface ProgressTabProps {
   supabase: any
@@ -78,7 +78,7 @@ export default function ProgressTab({
   streak, currentWeight,
 }: ProgressTabProps) {
   const [activePill, setActivePill] = useState<PillSection>('poids')
-  const sectionRefs = { poids: React.useRef<HTMLDivElement>(null), records: React.useRef<HTMLDivElement>(null), photos: React.useRef<HTMLDivElement>(null), mensurations: React.useRef<HTMLDivElement>(null), bienetre: React.useRef<HTMLDivElement>(null) }
+  const sectionRefs = { poids: React.useRef<HTMLDivElement>(null), records: React.useRef<HTMLDivElement>(null), photos: React.useRef<HTMLDivElement>(null), mensurations: React.useRef<HTMLDivElement>(null), bienetre: React.useRef<HTMLDivElement>(null), graphiques: React.useRef<HTMLDivElement>(null) }
   const [weightPeriod, setWeightPeriod] = useState<'7' | '30' | '90' | 'all'>('30')
   const [showAssessment, setShowAssessment] = useState(false)
   const [showCompare, setShowCompare] = useState(false)
@@ -438,6 +438,7 @@ export default function ProgressTab({
           { id: 'photos' as PillSection, label: 'PHOTOS' },
           { id: 'mensurations' as PillSection, label: 'MENSURATIONS' },
           { id: 'bienetre' as PillSection, label: 'BIEN-ETRE' },
+          { id: 'graphiques' as PillSection, label: 'GRAPHIQUES' },
         ]).map(({ id, label }) => {
           const active = activePill === id
           return (
@@ -924,7 +925,29 @@ export default function ProgressTab({
         })()}
       </div>
 
-      {/* ═══ SECTION 8 — EXPORT ═══ */}
+      {/* ═══ SECTION 8 — GRAPHIQUES ═══ */}
+      <div ref={sectionRefs.graphiques} style={{ scrollMarginTop: 20, marginTop: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <span style={cardTitleAbove}>GRAPHIQUES</span>
+          <div style={titleLineStyle} />
+        </div>
+        <AnalyticsSection
+          personalRecords={personalRecords}
+          weeklyCalories={weeklyCalories}
+          weeklyWater={weeklyWater}
+          weeklyVolume={weeklyVolume}
+          weightHistoryFull={weightHistoryFull}
+          weightHistory30={weightHistory30}
+          wSessions={wSessions}
+          calorieGoal={calorieGoal}
+          goalWeight={goalWeight}
+          waterGoal={waterGoal}
+          streak={streak}
+          currentWeight={currentWeight}
+        />
+      </div>
+
+      {/* ═══ SECTION 9 — EXPORT ═══ */}
       {(displayWeights.length > 0 || measurements.length > 0) && (
         <button onClick={() => {
           const wb = XLSX.utils.book_new()
