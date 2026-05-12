@@ -8,13 +8,13 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-12 20:00
+**Date derniere mise a jour** : 2026-05-12 22:00
 **Branche** : main
-**HEAD** : `24d82ad` feat(nutrition): NutritionPreferences refonte design system v2
+**HEAD** : `b96f158` feat(nutrition): Calendrier JOURNAL harmonisation Training T3
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — NUTRITION VISUEL 9/9 COMPOSANTS COMPLETS
+Aucune — NUTRITION TAB 100% REFONDU ET COHERENT (11/11 visuels + F4 fix)
 
 ### Blockers
 Aucun
@@ -48,6 +48,9 @@ Aucun
 
 ### 2026-05-11
 
+- 22:00 `b96f158` feat(nutrition): Calendrier harmonisation T3 (N2.2.3)
+- 21:45 `e687118` fix(nutrition): ShoppingList parseMealPlan fix (F4)
+- 21:30 `6887cfc` feat(nutrition): PLAN harmonisation visuelle (N2.9)
 - 20:00 `24d82ad` feat(nutrition): NutritionPreferences refonte v2 (N2.6, 826 lignes)
 - 19:30 `f5c2d9d` feat(nutrition): RecipesSection refonte v2 (N2.5)
 - 18:00 `1b4f7a6` feat(nutrition): BarcodeScanner refonte v2 (N2.7)
