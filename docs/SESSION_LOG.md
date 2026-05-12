@@ -8,13 +8,13 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-12 14:00
+**Date derniere mise a jour** : 2026-05-12 16:00
 **Branche** : main
-**HEAD** : `ca0cfb5` fix(home): Hydratation tracking restaure
+**HEAD** : `265e35a` feat(nutrition): REPAS emojis Lucide + glass chips/buttons
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — 3 fixes P0/P1 livres (F1 + F2 + F3)
+Aucune — Sprint N2 Nutrition refonte 6/8 visuels complets
 
 ### Blockers
 Aucun
@@ -48,6 +48,8 @@ Aucun
 
 ### 2026-05-11
 
+- 16:00 `265e35a` feat(nutrition): REPAS emojis Lucide + glass (N2.3)
+- 15:45 `5fbc8ea` feat(nutrition): ShoppingList + ImportPlanSheet v2 (N2.8)
 - 14:00 `ca0cfb5` fix(home): Hydratation tracking restaure (F3)
 - 13:45 `0077893` fix(home): Streak + todaySessionDone timezone normalize (F2)
 - 13:30 `9ba1064` fix(training): WorkoutCelebration overlay non-blocking (F1)
