@@ -8,23 +8,23 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-12 10:00
+**Date derniere mise a jour** : 2026-05-12 12:00
 **Branche** : main
-**HEAD** : `5860096` feat(training): Modals backdrop scrim harmonise
+**HEAD** : `2cbf324` feat(nutrition): JOURNAL meal cards boutons harmonises
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — REFONTE WORKOUT SESSION 100% TERMINEE
+Aucune — Sprint N2.2 Nutrition JOURNAL 3/4 complet
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue
-1. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
-2. Test gym BUG 2 tap-to-autofill + validation sprint progression
-3. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
-4. Sprint Layout Desktop autres sections
-5. Sprint Images (54 img → next/image) — 3h
+1. N2.2.3 (M, 1h) : Calendrier harmonise T3 Training (reporte, risque moyen)
+2. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
+3. Test gym BUG 2 tap-to-autofill + validation sprint progression
+4. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
+5. Sprint Layout Desktop autres sections
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -48,6 +48,10 @@ Aucun
 
 ### 2026-05-11
 
+- 12:00 `2cbf324` feat(nutrition): JOURNAL meal cards boutons harmonises (N2.2.4)
+- 11:45 `aa845f9` feat(nutrition): JOURNAL macros bars + icones Lucide (N2.2.2)
+- 11:30 `5de3742` feat(nutrition): JOURNAL emojis -> Lucide icons (N2.2.1)
+- 11:15 `9188c82` feat(nutrition): NutritionTab tokens finalisation (N2.1)
 - 10:00 `5860096` feat(training): Modals backdrop scrim harmonise (N1.5 FINAL)
 - 09:50 `c483149` feat(training): Exercise card warm tint -> surface2 (N1.3.4)
 - 12:00 `bc79db0` feat(training): Text colors -> tokens (N1.3.3 FINAL)
