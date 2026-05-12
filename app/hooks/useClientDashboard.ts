@@ -449,12 +449,21 @@ export default function useClientDashboard() {
   const isSubActive = hasPaidSub || isExempt || isInvited || isInTrial
 
   const handleSubscribe = async (planId?: string) => {
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId: session?.user?.id, planId: planId || 'client_monthly', coachId: coachId || 'platform' }),
-    })
-    const { url } = await res.json()
-    if (url) window.location.href = url
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: session?.user?.id, planId: planId || 'client_monthly', coachId: coachId || 'platform' }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `Erreur serveur (${res.status})`)
+      }
+      const { url } = await res.json()
+      if (url) window.location.href = url
+      else throw new Error('Lien de paiement indisponible')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Impossible de procéder au paiement. Réessaye.')
+    }
   }
 
   // Wrappers for sub-hooks that need extra context

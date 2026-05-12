@@ -34,6 +34,7 @@ import {
   MEAL_TYPES,
 } from '../lib/design-tokens'
 import { useClientPermissions } from '../lib/use-client-permissions'
+import { toast } from 'sonner'
 
 const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
 
@@ -43,6 +44,27 @@ export default function CoachApp() {
   const h = useClientDashboard()
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const [isDesktop, setIsDesktop] = React.useState(false)
+  const paymentHandled = React.useRef(false)
+
+  // Handle Stripe return (?payment=success or ?payment=cancel)
+  React.useEffect(() => {
+    if (paymentHandled.current) return
+    const params = new URLSearchParams(window.location.search)
+    const payment = params.get('payment')
+    if (!payment) return
+    paymentHandled.current = true
+
+    // Clean URL immediately
+    window.history.replaceState({}, '', window.location.pathname)
+
+    if (payment === 'success') {
+      toast.success('Paiement réussi ! Bienvenue sur MoovX Premium', { duration: 4000 })
+      // Give webhook 2s to update DB, then hard reload to re-fetch profile
+      setTimeout(() => window.location.reload(), 2000)
+    } else if (payment === 'cancel' || payment === 'cancelled') {
+      toast.info('Paiement annulé. Tu peux réessayer quand tu veux.', { duration: 4000 })
+    }
+  }, [])
 
   // Detect desktop viewport
   React.useEffect(() => {

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { Check, Crown, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
 
 interface PaywallProps {
@@ -57,10 +58,17 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientId: userId, planId, coachId: coachId || 'platform' }),
       })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `Erreur serveur (${res.status})`)
+      }
       const { url } = await res.json()
       if (url) window.location.href = url
-      else setLoading(null)
-    } catch { setLoading(null) }
+      else throw new Error('Lien de paiement indisponible')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Impossible de lancer le paiement. Réessaye.')
+      setLoading(null)
+    }
   }
 
   async function handleCoachCheckout() {
@@ -72,10 +80,17 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientId: userId, coachId: coachData.id }),
       })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `Erreur serveur (${res.status})`)
+      }
       const data = await res.json()
       if (data.url) window.location.href = data.url
-      else { alert('Erreur: ' + (data.error || 'Impossible de creer le paiement')); setLoading(null) }
-    } catch { setLoading(null) }
+      else throw new Error('Lien de paiement indisponible')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Impossible de lancer le paiement. Réessaye.')
+      setLoading(null)
+    }
   }
 
   return (
