@@ -798,7 +798,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               {/* ── Exercise Hero Banner ── */}
               <div
                 onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))}
-                style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: exo.open ? 14 : 0, cursor: 'pointer', background: '#1a1410' }}
+                style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: exo.open ? 14 : 0, cursor: 'pointer', background: colors.surface2 }}
               >
                 {/* Background image */}
                 {exo.imageUrl && (
