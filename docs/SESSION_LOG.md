@@ -8,13 +8,13 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-12 12:00
+**Date derniere mise a jour** : 2026-05-12 14:00
 **Branche** : main
-**HEAD** : `2cbf324` feat(nutrition): JOURNAL meal cards boutons harmonises
+**HEAD** : `ca0cfb5` fix(home): Hydratation tracking restaure
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — Sprint N2.2 Nutrition JOURNAL 3/4 complet
+Aucune — 3 fixes P0/P1 livres (F1 + F2 + F3)
 
 ### Blockers
 Aucun
@@ -48,6 +48,9 @@ Aucun
 
 ### 2026-05-11
 
+- 14:00 `ca0cfb5` fix(home): Hydratation tracking restaure (F3)
+- 13:45 `0077893` fix(home): Streak + todaySessionDone timezone normalize (F2)
+- 13:30 `9ba1064` fix(training): WorkoutCelebration overlay non-blocking (F1)
 - 12:00 `2cbf324` feat(nutrition): JOURNAL meal cards boutons harmonises (N2.2.4)
 - 11:45 `aa845f9` feat(nutrition): JOURNAL macros bars + icones Lucide (N2.2.2)
 - 11:30 `5de3742` feat(nutrition): JOURNAL emojis -> Lucide icons (N2.2.1)
