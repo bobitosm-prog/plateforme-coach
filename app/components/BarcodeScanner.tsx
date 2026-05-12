@@ -1,13 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { X, Camera, Search, Plus } from 'lucide-react'
-
-const GOLD = '#D4A843'
-const BG = '#0A0A0A'
-const CARD = '#1A1A1A'
-const BORDER = '#2A2A2A'
-const TEXT = '#F8FAFC'
-const MUTED = '#6B7280'
+import { colors, fonts } from '../../lib/design-tokens'
 
 const NUTRI_COLORS: Record<string, string> = { a: '#038141', b: '#85BB2F', c: '#FECB02', d: '#EE8100', e: '#E63E11' }
 
@@ -172,13 +166,13 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
     const lip = Math.round((p.fat / 100) * quantity * 10) / 10
 
     return (
-      <div style={{ position: 'fixed', inset: 0, background: BG, zIndex: 1100, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+      <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 1100, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
           <div>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT }}>PRODUIT TROUVÉ</span>
-            {continuousMode && scanCount > 0 && <span style={{ marginLeft: 8, fontSize: '0.72rem', color: GOLD, fontWeight: 600 }}>{scanCount} scanné{scanCount > 1 ? 's' : ''}</span>}
+            <span style={{ fontFamily: fonts.alt, fontSize: '1.1rem', fontWeight: 700, color: colors.text }}>PRODUIT TROUVÉ</span>
+            {continuousMode && scanCount > 0 && <span style={{ marginLeft: 8, fontSize: '0.72rem', color: colors.gold, fontWeight: 600 }}>{scanCount} scanné{scanCount > 1 ? 's' : ''}</span>}
           </div>
-          <button onClick={() => { stopCamera(); onClose() }} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={MUTED} /></button>
+          <button onClick={() => { stopCamera(); onClose() }} style={{ width: 32, height: 32, borderRadius: '50%', background: colors.surfaceHigh, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
         </div>
 
         <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -186,9 +180,9 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
             {product.image_url && <img src={product.image_url} alt="Photo du produit scanné" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#fff' }} />}
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '1rem', fontWeight: 700, color: TEXT }}>{product.name}</div>
-              {product.brand && <div style={{ fontSize: '0.78rem', color: MUTED }}>{product.brand}</div>}
-              <div style={{ fontSize: '0.65rem', color: MUTED, marginTop: 2 }}>Code : {product.barcode}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: colors.text }}>{product.name}</div>
+              {product.brand && <div style={{ fontSize: '0.78rem', color: colors.textMuted }}>{product.brand}</div>}
+              <div style={{ fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>Code : {product.barcode}</div>
             </div>
             {product.nutriscore && (
               <div style={{ width: 32, height: 32, borderRadius: 8, background: NUTRI_COLORS[product.nutriscore] || '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1rem', textTransform: 'uppercase' }}>{product.nutriscore}</div>
@@ -198,34 +192,34 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
           {/* Macros per 100g */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
-              { l: 'Kcal', v: p.calories, c: GOLD },
-              { l: 'Prot', v: `${p.proteins}g`, c: '#3B82F6' },
-              { l: 'Gluc', v: `${p.carbs}g`, c: '#F59E0B' },
-              { l: 'Lip', v: `${p.fat}g`, c: '#22C55E' },
+              { l: 'Kcal', v: p.calories, c: colors.gold },
+              { l: 'Prot', v: `${p.proteins}g`, c: colors.blue },
+              { l: 'Gluc', v: `${p.carbs}g`, c: colors.orange },
+              { l: 'Lip', v: `${p.fat}g`, c: colors.success },
             ].map(m => (
-              <div key={m.l} style={{ background: CARD, borderRadius: 10, padding: '8px 4px', textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.2rem', fontWeight: 700, color: m.c }}>{m.v}</div>
-                <div style={{ fontSize: '0.55rem', color: MUTED, fontWeight: 700, textTransform: 'uppercase' }}>{m.l}/100g</div>
+              <div key={m.l} style={{ background: colors.surface2, borderRadius: 10, padding: '8px 4px', textAlign: 'center' }}>
+                <div style={{ fontFamily: fonts.alt, fontSize: '1.2rem', fontWeight: 700, color: m.c }}>{m.v}</div>
+                <div style={{ fontSize: '0.55rem', color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>{m.l}/100g</div>
               </div>
             ))}
           </div>
 
           {/* Quantity */}
-          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ color: MUTED, fontSize: '0.9rem', flex: 1 }}>Quantité</span>
+          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ color: colors.textMuted, fontSize: '0.9rem', flex: 1 }}>Quantité</span>
             <input type="number" value={quantity} onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 0))} inputMode="numeric"
-              style={{ background: 'transparent', color: TEXT, fontSize: '1.4rem', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textAlign: 'right', width: 80, outline: 'none', border: 'none' }} />
-            <span style={{ color: GOLD, fontWeight: 700 }}>g</span>
+              style={{ background: 'transparent', color: colors.text, fontSize: '1.4rem', fontFamily: fonts.alt, fontWeight: 700, textAlign: 'right', width: 80, outline: 'none', border: 'none' }} />
+            <span style={{ color: colors.gold, fontWeight: 700 }}>g</span>
           </div>
 
           {/* Calculated macros */}
-          <div style={{ background: `${GOLD}10`, border: `1px solid ${GOLD}20`, borderRadius: 14, padding: '12px 16px' }}>
-            <div style={{ fontSize: '0.65rem', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Pour {quantity}g :</div>
+          <div style={{ background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 14, padding: '12px 16px' }}>
+            <div style={{ fontSize: '0.65rem', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Pour {quantity}g :</div>
             <div style={{ display: 'flex', justifyContent: 'space-around' }}>
               {[['Kcal', cal], ['Prot', `${prot}g`], ['Gluc', `${gluc}g`], ['Lip', `${lip}g`]].map(([n, v]) => (
                 <div key={n as string} style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: GOLD }}>{v}</div>
-                  <div style={{ fontSize: '0.6rem', color: MUTED, textTransform: 'uppercase' }}>{n}</div>
+                  <div style={{ fontFamily: fonts.alt, fontSize: '1.4rem', fontWeight: 700, color: colors.gold }}>{v}</div>
+                  <div style={{ fontSize: '0.6rem', color: colors.textMuted, textTransform: 'uppercase' }}>{n}</div>
                 </div>
               ))}
             </div>
@@ -234,15 +228,23 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
           {/* Meal type */}
           <div style={{ display: 'flex', gap: 6 }}>
             {[['petit_dejeuner', 'Matin'], ['dejeuner', 'Midi'], ['collation', 'Collation'], ['diner', 'Dîner']].map(([id, label]) => (
-              <button key={id} onClick={() => setMealType(id)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.68rem', fontWeight: 700, background: mealType === id ? `${GOLD}20` : BG, color: mealType === id ? GOLD : MUTED }}>{label}</button>
+              <button key={id} onClick={() => setMealType(id)} style={{
+                flex: 1, padding: '8px 4px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
+                fontFamily: fonts.alt, fontSize: '0.68rem', fontWeight: 700,
+                letterSpacing: '0.15em', textTransform: 'uppercase' as const,
+                background: mealType === id ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
+                backdropFilter: 'blur(8px)',
+                border: `1px solid ${mealType === id ? colors.gold : 'rgba(255,255,255,0.1)'}`,
+                color: mealType === id ? colors.gold : colors.textDim,
+              }}>{label}</button>
             ))}
           </div>
 
           {/* Actions */}
-          <button onClick={addToMeal} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: saving ? 0.6 : 1 }}>
+          <button onClick={addToMeal} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${colors.gold}, #D4AF37)`, color: '#000', fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: saving ? 0.6 : 1 }}>
             {saving ? 'Ajout...' : continuousMode ? '✓ Ajouter et scanner suivant' : 'Ajouter au repas'}
           </button>
-          <button onClick={() => { setProduct(null); setError(''); startCamera() }} style={{ width: '100%', padding: '12px', borderRadius: 14, border: `1px solid ${BORDER}`, background: 'transparent', color: MUTED, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+          <button onClick={() => { setProduct(null); setError(''); startCamera() }} style={{ width: '100%', padding: '12px', borderRadius: 14, border: `1px solid ${colors.divider}`, background: 'transparent', color: colors.textMuted, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
             Scanner un autre produit
           </button>
         </div>
@@ -252,10 +254,10 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
 
   // ── Scanner view ──
   return (
-    <div style={{ position: 'fixed', inset: 0, background: BG, zIndex: 1100, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: TEXT }}>{scanning ? 'POINTE VERS LE CODE-BARRES' : 'SCANNER UN ALIMENT'}</span>
-        <button onClick={() => { stopCamera(); onClose() }} style={{ width: 32, height: 32, borderRadius: '50%', background: '#222', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={MUTED} /></button>
+    <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 1100, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
+        <span style={{ fontFamily: fonts.alt, fontSize: '1.1rem', fontWeight: 700, color: colors.text }}>{scanning ? 'POINTE VERS LE CODE-BARRES' : 'SCANNER UN ALIMENT'}</span>
+        <button onClick={() => { stopCamera(); onClose() }} style={{ width: 32, height: 32, borderRadius: '50%', background: colors.surfaceHigh, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', gap: 16, overflowY: 'auto' }}>
@@ -267,21 +269,21 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
         {/* Status messages */}
         {!scanning && !error && !loading && (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ width: 60, height: 60, borderRadius: 16, background: `${GOLD}15`, border: `2px solid ${GOLD}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-              <div style={{ width: 24, height: 24, border: `3px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ width: 60, height: 60, borderRadius: 16, background: colors.goldDim, border: `2px solid ${colors.goldRule}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <div style={{ width: 24, height: 24, border: `3px solid ${colors.gold}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             </div>
-            <p style={{ fontSize: '0.82rem', color: MUTED }}>Activation de la caméra...</p>
+            <p style={{ fontSize: '0.82rem', color: colors.textMuted }}>Activation de la caméra...</p>
           </div>
         )}
 
         {scanning && (
-          <p style={{ fontSize: '0.78rem', color: GOLD, textAlign: 'center', margin: 0, fontWeight: 500 }}>Pointe la caméra vers le code-barres du produit</p>
+          <p style={{ fontSize: '0.78rem', color: colors.gold, textAlign: 'center', margin: 0, fontWeight: 500 }}>Pointe la caméra vers le code-barres du produit</p>
         )}
 
         {error && (
           <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <p style={{ fontSize: '0.82rem', color: '#EF4444', marginBottom: 10 }}>{error}</p>
-            <button onClick={() => { stopCamera(); startCamera() }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${GOLD}, #D4AF37)`, color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '0.85rem', fontWeight: 700 }}>
+            <p style={{ fontSize: '0.82rem', color: colors.error, marginBottom: 10 }}>{error}</p>
+            <button onClick={() => { stopCamera(); startCamera() }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${colors.gold}, #D4AF37)`, color: '#000', fontFamily: fonts.alt, fontSize: '0.85rem', fontWeight: 700 }}>
               Réessayer
             </button>
           </div>
@@ -289,22 +291,22 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
 
         {loading && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0' }}>
-            <div style={{ width: 20, height: 20, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            <span style={{ fontSize: '0.82rem', color: MUTED }}>Recherche du produit...</span>
+            <div style={{ width: 20, height: 20, border: `2px solid ${colors.gold}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <span style={{ fontSize: '0.82rem', color: colors.textMuted }}>Recherche du produit...</span>
           </div>
         )}
 
         {/* Manual input — always visible */}
         <div style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
-          <div style={{ fontSize: '0.75rem', color: TEXT, fontWeight: 600, textAlign: 'center', marginBottom: 8 }}>
+          <div style={{ fontSize: '0.75rem', color: colors.text, fontWeight: 600, textAlign: 'center', marginBottom: 8 }}>
             {scanning ? 'Ou saisir le code manuellement :' : 'Saisis le code-barres (13 chiffres) :'}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input value={manualCode} onChange={e => setManualCode(e.target.value.replace(/\D/g, '').slice(0, 14))} placeholder="3017620422003" inputMode="numeric"
-              style={{ flex: 1, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 14px', color: TEXT, fontSize: '0.9rem', outline: 'none', letterSpacing: '0.1em', textAlign: 'center' }}
+              style={{ flex: 1, background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: '12px 14px', color: colors.text, fontSize: '0.9rem', outline: 'none', letterSpacing: '0.1em', textAlign: 'center' }}
               onKeyDown={e => { if (e.key === 'Enter' && manualCode.length >= 4) { stopCamera(); lookupProduct(manualCode) } }} />
             <button onClick={() => { if (manualCode.length >= 4) { stopCamera(); lookupProduct(manualCode) } }} disabled={manualCode.length < 8 || loading}
-              style={{ padding: '12px 16px', borderRadius: 12, border: 'none', cursor: manualCode.length >= 4 ? 'pointer' : 'default', background: manualCode.length >= 4 ? GOLD : '#222', color: manualCode.length >= 4 ? '#000' : MUTED, fontWeight: 700 }}>
+              style={{ padding: '12px 16px', borderRadius: 12, border: 'none', cursor: manualCode.length >= 4 ? 'pointer' : 'default', background: manualCode.length >= 4 ? colors.gold : colors.surfaceHigh, color: manualCode.length >= 4 ? '#000' : colors.textMuted, fontWeight: 700 }}>
               <Search size={18} />
             </button>
           </div>
@@ -319,7 +321,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
         #barcode-reader__dashboard { background: transparent !important; border: none !important; }
         #barcode-reader__dashboard_section { display: none !important; }
         #barcode-reader__dashboard_section_csr { display: none !important; }
-        #barcode-reader__status_span { color: ${MUTED} !important; font-size: 0.72rem !important; }
+        #barcode-reader__status_span { color: #d0c5b2 !important; font-size: 0.72rem !important; }
       `}</style>
     </div>
   )
