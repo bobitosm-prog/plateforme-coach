@@ -97,8 +97,8 @@ export default function useClientDashboard() {
     getRole(session.user.id, session.access_token).then(role => {
       if (!role) { setRoleChecked(true); return }
       setUserRole(role)
-      if (role === 'super_admin') { router.replace('/admin') }
-      else { setRoleChecked(true) }
+      setRoleChecked(true)
+      if (role === 'super_admin') { router.replace('/admin'); return }
     })
   }, [session])
 
