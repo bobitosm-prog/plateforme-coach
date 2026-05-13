@@ -69,22 +69,8 @@ export default function RootLayout({
         <meta httpEquiv="Expires" content="0" />
         <script dangerouslySetInnerHTML={{ __html: `
           if('serviceWorker' in navigator){
-            navigator.serviceWorker.register('/sw.js').then(function(reg){
-              reg.update();
-              reg.addEventListener('updatefound',function(){
-                var w=reg.installing;
-                if(w)w.addEventListener('statechange',function(){
-                  if(w.state==='activated')window.location.reload();
-                });
-              });
-            });
-            var refreshing=false;
-            navigator.serviceWorker.addEventListener('controllerchange',function(){
-              if(refreshing)return;
-              refreshing=true;
-              window.location.reload();
-            });
-            if(window.caches){caches.keys().then(function(n){for(var i=0;i<n.length;i++){caches.delete(n[i])}})}
+            navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})});
+            if(window.caches){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k)})})}
           }
           try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait').catch(function(){})}catch(e){}
         ` }} />

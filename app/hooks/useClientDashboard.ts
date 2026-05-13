@@ -97,8 +97,7 @@ export default function useClientDashboard() {
     getRole(session.user.id, session.access_token).then(role => {
       if (!role) { setRoleChecked(true); return }
       setUserRole(role)
-      if (role === 'super_admin') { router.replace('/admin') }
-      else { setRoleChecked(true) }
+      setRoleChecked(true)
     })
   }, [session])
 
@@ -150,7 +149,7 @@ export default function useClientDashboard() {
       await updateProfile(uid, { role: metaRole }, supabase)
       profRes.data.role = metaRole
     }
-    if (profRes.data.role === 'super_admin' || profRes.data.role === 'admin') {
+    if (profRes.data.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com')) {
       // Admin users skip all onboarding → proceed to dashboard
     } else if (profRes.data.role === 'coach') {
       if (!profRes.data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }

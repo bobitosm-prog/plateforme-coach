@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PROTECTED: Record<string, string[]> = {
-  '/admin': ['super_admin'],
   '/coach': ['coach', 'super_admin'],
   '/client': ['coach', 'super_admin'],
 }
@@ -82,5 +81,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/admin/:path*', '/coach/:path*', '/client/:path*'],
+  matcher: ['/', '/coach/:path*', '/client/:path*'],
 }

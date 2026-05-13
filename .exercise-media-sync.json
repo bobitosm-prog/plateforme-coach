@@ -1,0 +1,101 @@
+{
+  "ab-roller": {
+    "id": "196f4ce9-98ba-4119-a705-b1ca509bba59",
+    "name": "Ab Roller",
+    "mp4": "1690311-1778000599097.201",
+    "png": "1714291-1777999889157.3591",
+    "videoPath": "ab-roller/ab-roller.mp4",
+    "imagePath": "ab-roller/ab-roller.png",
+    "syncedAt": "2026-05-12T17:17:19.326Z"
+  },
+  "cable-crunch": {
+    "id": "cd519c55-db25-43f8-b548-dcc47905a83f",
+    "name": "Cable Crunch",
+    "mp4": "1543228-1778005154452.5864",
+    "png": "1825842-1778004420985.9434",
+    "videoPath": "cable-crunch/cable-crunch.mp4",
+    "imagePath": "cable-crunch/cable-crunch.png",
+    "syncedAt": "2026-05-12T17:17:20.179Z"
+  },
+  "crunch": {
+    "id": "25235bd5-a710-4d00-b200-d0e3588f7d23",
+    "name": "Crunch",
+    "mp4": "1982733-1778005761139.5493",
+    "png": "1690550-1778005479814.2937",
+    "videoPath": "crunch/crunch.mp4",
+    "imagePath": "crunch/crunch.png",
+    "syncedAt": "2026-05-12T17:17:20.798Z"
+  },
+  "gainage-lateral": {
+    "id": "c4b2ea27-e34a-42a8-8893-76857e83a49f",
+    "name": "Gainage Latéral",
+    "mp4": "1307973-1778006246161.3298",
+    "png": "1666047-1778005977848.6506",
+    "videoPath": "gainage-lateral/gainage-lateral.mp4",
+    "imagePath": "gainage-lateral/gainage-lateral.png",
+    "syncedAt": "2026-05-12T17:17:21.456Z"
+  },
+  "leg-raises-barres": {
+    "id": "c6fda08f-4f3f-4199-b61c-3616dd7d40e4",
+    "name": "Leg Raises Barres",
+    "mp4": "2117237-1778006688809.3113",
+    "png": "1584270-1778006404477.8003",
+    "videoPath": "leg-raises-barres/leg-raises-barres.mp4",
+    "imagePath": "leg-raises-barres/leg-raises-barres.png",
+    "syncedAt": "2026-05-12T17:17:22.064Z"
+  },
+  "mountain-climbers": {
+    "id": "3a000035-1ff0-44d9-a798-6917b6a6faa8",
+    "name": "Mountain Climbers",
+    "mp4": "1809405-1778007149626.399",
+    "png": "1658634-1778006899116.9236",
+    "videoPath": "mountain-climbers/mountain-climbers.mp4",
+    "imagePath": "mountain-climbers/mountain-climbers.png",
+    "syncedAt": "2026-05-12T17:17:22.791Z"
+  },
+  "releve-de-jambes": {
+    "id": "d86b9a39-2efc-4b47-b3de-29d98c8b4151",
+    "name": "Relevé de Jambes",
+    "mp4": "1306799-1778603697380.732",
+    "png": "1570143-1778603616048.9944",
+    "videoPath": "releve-de-jambes/releve-de-jambes.mp4",
+    "imagePath": "releve-de-jambes/releve-de-jambes.png",
+    "syncedAt": "2026-05-12T17:17:23.469Z"
+  },
+  "russian-twist": {
+    "id": "70095b19-72f9-4f47-85cb-b656d5936208",
+    "name": "Russian Twist",
+    "mp4": "1469547-1778604545721.7434",
+    "png": "1742882-1778604189232.7026",
+    "videoPath": "russian-twist/russian-twist.mp4",
+    "imagePath": "russian-twist/russian-twist.png",
+    "syncedAt": "2026-05-12T17:17:24.159Z"
+  },
+  "torsion-russe-lestee": {
+    "id": "22a056ea-6f18-451a-94c3-5a237361a7a3",
+    "name": "Torsion Russe Lestée",
+    "mp4": "1827684-1778605047323.5288",
+    "png": "1704869-1778605113242.052",
+    "videoPath": "torsion-russe-lestee/torsion-russe-lestee.mp4",
+    "imagePath": "torsion-russe-lestee/torsion-russe-lestee.png",
+    "syncedAt": "2026-05-12T17:17:24.897Z"
+  },
+  "vacuum-abdominal": {
+    "id": "57f6d8ec-b736-4d6d-abaf-4251a304e1e8",
+    "name": "Vacuum Abdominal",
+    "mp4": "1512547-1778605856017.1367",
+    "png": "1642703-1778605293410.8452",
+    "videoPath": "vacuum-abdominal/vacuum-abdominal.mp4",
+    "imagePath": "vacuum-abdominal/vacuum-abdominal.png",
+    "syncedAt": "2026-05-12T17:17:25.509Z"
+  },
+  "planche-frontale": {
+    "id": "6a0b7534-9cbc-4094-8ecb-2820cb1878dc",
+    "name": "Planche Frontale",
+    "mp4": "1283944-1778606406702.4238",
+    "png": "1565036-1778606023800.5872",
+    "videoPath": "planche-frontale/planche-frontale.mp4",
+    "imagePath": "planche-frontale/planche-frontale.png",
+    "syncedAt": "2026-05-12T17:20:53.282Z"
+  }
+}

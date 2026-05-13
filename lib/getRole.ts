@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { ADMIN_EMAIL, COACH_EMAIL } from './constants'
+import { COACH_EMAIL } from './constants'
 
 export async function getRole(userId: string, accessToken: string): Promise<string | null> {
   const supabase = createBrowserClient(
@@ -22,13 +22,12 @@ export async function getRole(userId: string, accessToken: string): Promise<stri
       }
 
       // Email-based override (safety net)
-      if (data.email === ADMIN_EMAIL) return 'super_admin'
       if (data.email === COACH_EMAIL) return 'coach'
 
-      // DB role (only trust 'coach' if explicitly set, never trust 'super_admin' from DB for non-admin emails)
+      // DB role
       if (data.role === 'coach') return 'coach'
 
-      // Default: client (null, 'client', or any other value)
+      // Default: client
       return data.role === 'client' || !data.role ? 'client' : data.role
     } catch {
       if (attempt < 2) { await new Promise(r => setTimeout(r, 500)); continue }
