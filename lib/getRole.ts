@@ -22,6 +22,7 @@ export async function getRole(userId: string, accessToken: string): Promise<stri
       }
 
       // Email-based override (safety net)
+      console.log('[getRole]', { email: data.email, ADMIN_EMAIL_const: ADMIN_EMAIL, match: data.email === ADMIN_EMAIL, role_db: data.role })
       if (data.email === ADMIN_EMAIL) return 'super_admin'
       if (data.email === COACH_EMAIL) return 'coach'
 
