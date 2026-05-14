@@ -10,11 +10,11 @@
 
 **Date derniere mise a jour** : 2026-05-14
 **Branche** : main
-**HEAD** : `ac04cfc` feat(admin): users management page with search, filters and inline actions
+**HEAD** : `ef6df1c` feat(admin): revenue dashboard + audit logs pages
 **Working tree** : clean
 
 ### Tache en cours
-Admin console — page Comptes (users) livree
+Admin console — pages Revenue + Logs livrees
 
 ### Blockers
 Aucun
@@ -45,6 +45,7 @@ Test navigateur page admin/users
 ### 2026-05-14
 
 - 14:00 `ac04cfc` feat(admin): users management page with search, filters and inline actions (4b.1)
+- 14:15 `ef6df1c` feat(admin): revenue dashboard + audit logs pages (4b.2)
 
 ### 2026-05-11
 
