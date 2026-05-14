@@ -1,338 +1,304 @@
-'use client';
+'use client'
+import { useEffect, useRef } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Apple, Smartphone, Zap } from 'lucide-react'
 
-import React from 'react';
-import { useReveal } from './shared';
-import { colors } from '../../../lib/design-tokens'
+gsap.registerPlugin(ScrollTrigger)
 
-const badges = [
-  {
-    title: 'Plein écran',
-    desc: 'Comme une app native',
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Notifications',
-    desc: "Rappels d'entraînement",
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 01-3.46 0" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Hors ligne',
-    desc: 'Accès sans internet',
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 2 7 12 12 22 7 12 2" />
-        <polyline points="2 17 12 22 22 17" />
-        <polyline points="2 12 12 17 22 12" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Mises à jour',
-    desc: 'Automatiques toujours',
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
-      </svg>
-    ),
-  },
-];
+const IOS_STEPS = [
+  { n: '01', title: 'Ouvre Safari', detail: 'app.moovx.ch' },
+  { n: '02', title: 'Bouton Partager', detail: 'icône en bas de Safari' },
+  { n: '03', title: 'Sur l\'écran d\'accueil', detail: 'Tap pour confirmer' },
+]
+
+const ANDROID_STEPS = [
+  { n: '01', title: 'Ouvre Chrome', detail: 'app.moovx.ch' },
+  { n: '02', title: 'Menu ⋮', detail: '3 points en haut à droite' },
+  { n: '03', title: 'Installer l\'application', detail: 'Confirme l\'installation' },
+]
+
+function StepCard({ steps, platform, icon: Icon, subtitle }: {
+  steps: typeof IOS_STEPS
+  platform: string
+  icon: typeof Apple
+  subtitle: string
+}) {
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid rgba(212,168,67,0.2)',
+      padding: 'clamp(24px, 4vw, 40px)',
+      position: 'relative',
+      transition: 'border-color 0.3s',
+    }}
+    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
+    onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(212,168,67,0.2)'}
+    >
+      {/* Platform header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 16,
+        marginBottom: 32, paddingBottom: 24,
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+      }}>
+        <div style={{
+          width: 56, height: 56,
+          background: 'rgba(212,168,67,0.08)',
+          border: '1px solid rgba(212,168,67,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Icon size={26} strokeWidth={1.5} style={{ color: 'var(--gold)' }} />
+        </div>
+        <div>
+          <div style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 32, letterSpacing: 1.5,
+            color: '#fff', textTransform: 'uppercase',
+            lineHeight: 1, marginBottom: 6,
+          }}>
+            {platform}
+          </div>
+          <div style={{
+            fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+            fontSize: 10, letterSpacing: 2,
+            color: 'var(--gold)', textTransform: 'uppercase',
+          }}>
+            {subtitle}
+          </div>
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {steps.map((s, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 16,
+            padding: 16,
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            position: 'relative',
+          }}>
+            {/* Number with corners */}
+            <div style={{
+              width: 44, height: 44,
+              position: 'relative',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(212,168,67,0.06)',
+              border: '1px solid rgba(212,168,67,0.3)',
+              flexShrink: 0,
+            }}>
+              <div style={{
+                position: 'absolute', top: 2, left: 2,
+                width: 6, height: 6,
+                borderTop: '1px solid var(--gold)',
+                borderLeft: '1px solid var(--gold)',
+              }} />
+              <div style={{
+                position: 'absolute', bottom: 2, right: 2,
+                width: 6, height: 6,
+                borderBottom: '1px solid var(--gold)',
+                borderRight: '1px solid var(--gold)',
+              }} />
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 18, color: 'var(--gold)',
+                letterSpacing: 1,
+              }}>
+                {s.n}
+              </span>
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 14, letterSpacing: 1,
+                color: '#fff', textTransform: 'uppercase',
+                marginBottom: 2,
+              }}>
+                {s.title}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+                fontSize: 10, letterSpacing: 1,
+                color: 'rgba(255,255,255,0.5)',
+              }}>
+                {s.detail}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function PWASection() {
-  const { ref, visible } = useReveal();
+  const sectionRef = useRef<HTMLElement>(null)
+  const eyebrowRef = useRef<HTMLDivElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const ledeRef = useRef<HTMLParagraphElement>(null)
+  const iosRef = useRef<HTMLDivElement>(null)
+  const androidRef = useRef<HTMLDivElement>(null)
+  const featuresRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!sectionRef.current) return
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo([eyebrowRef.current, headlineRef.current, ledeRef.current],
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 75%', toggleActions: 'play none none reverse' },
+        }
+      )
+
+      gsap.fromTo([iosRef.current, androidRef.current],
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out',
+          scrollTrigger: { trigger: iosRef.current, start: 'top 80%', toggleActions: 'play none none reverse' },
+        }
+      )
+
+      gsap.fromTo(featuresRef.current,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1, y: 0, duration: 0.7, ease: 'power3.out',
+          scrollTrigger: { trigger: featuresRef.current, start: 'top 90%', toggleActions: 'play none none reverse' },
+        }
+      )
+    }, sectionRef)
+
+    return () => ctx.revert()
+  }, [])
 
   return (
-    <section id="pwa" ref={ref}>
+    <section ref={sectionRef} id="install" style={{
+      position: 'relative',
+      background: '#0a0807',
+      color: '#fff',
+      padding: 'clamp(80px, 12vw, 120px) 0',
+      overflow: 'hidden',
+    }}>
       <div style={{
-        maxWidth: 1280,
+        position: 'absolute',
+        bottom: '10%', right: '-10%',
+        width: 600, height: 600,
+        background: 'radial-gradient(circle, rgba(212,168,67,0.05), transparent 60%)',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{
+        maxWidth: 1400,
         margin: '0 auto',
-        padding: '120px 64px',
+        padding: '0 clamp(20px, 5vw, 48px)',
+        position: 'relative',
       }}>
-        {/* Section header */}
-        <div style={{
-          marginBottom: 72,
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(24px)',
-          transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}>
-          <span style={{
-            display: 'inline-flex',
-            fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
-            fontWeight: 700,
-            fontSize: 11,
-            letterSpacing: 2,
-            color: colors.goldContainer,
-            background: colors.goldBorder,
-            border: `1px solid ${colors.goldRule}`,
-            padding: '5px 14px',
+
+        {/* Header */}
+        <div style={{ marginBottom: 80, maxWidth: 800 }}>
+          <div ref={eyebrowRef} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 12,
+            fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+            fontSize: 11, letterSpacing: 3,
+            color: 'var(--gold)',
+            marginBottom: 32,
             textTransform: 'uppercase',
-            marginBottom: 20,
           }}>
-            Application
-          </span>
-          <h2 style={{
-            fontFamily: "var(--font-display, 'Bebas Neue'), sans-serif",
-            fontSize: 'clamp(40px, 5vw, 64px)',
-            letterSpacing: 2,
-            lineHeight: 0.95,
-            color: 'var(--text, #F0EDE8)',
-            margin: '0 0 16px',
+            <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
+            Application · PWA
+          </div>
+
+          <h2 ref={headlineRef} style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(48px, 7vw, 120px)',
+            lineHeight: 0.9,
+            letterSpacing: '-0.01em',
+            textTransform: 'uppercase',
+            margin: '0 0 24px',
+            color: '#fff',
           }}>
-            INSTALLE MOOVX EN 30 SECONDES
+            Installe MoovX<br />
+            <span style={{ color: 'var(--gold)' }}>en 30 secondes.</span>
           </h2>
-          <p style={{
-            fontSize: 16,
-            color: 'var(--text-muted, #8A8580)',
+
+          <p ref={ledeRef} style={{
+            fontSize: 'clamp(14px, 1.5vw, 17px)', lineHeight: 1.6,
+            color: 'rgba(255,255,255,0.7)',
+            maxWidth: 540,
             fontWeight: 300,
-            margin: 0,
           }}>
-            Pas besoin d&apos;App Store. Installe directement depuis ton navigateur.
+            Pas besoin d'App Store. Installation directe depuis ton navigateur,
+            comme une vraie app native.
           </p>
         </div>
 
-        {/* 2-column Bauhaus grid */}
-        <div className="pwa-install-grid" style={{
+        {/* 2 platform cards */}
+        <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 1,
-          background: 'var(--text-dim, #3D3B38)',
-          border: '1px solid var(--text-dim, #3D3B38)',
-          marginBottom: 1,
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(24px)',
-          transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          gap: 32,
+          marginBottom: 48,
         }}>
-          {/* iPhone card */}
-          <div style={{
-            background: 'var(--surface, #0D0C0B)',
-            padding: '48px 40px',
-          }}>
-            <div style={{ marginBottom: 24 }}>
-              <svg width="36" height="44" viewBox="0 0 170 170" fill="#D4A843"><path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.2-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.28 2.13-9.54 3.24-12.8 3.35-4.92.21-9.84-1.96-14.75-6.52-3.13-2.73-7.05-7.41-11.76-14.04-5.05-7.08-9.2-15.29-12.46-24.65-3.5-10.1-5.25-19.9-5.25-29.38 0-10.87 2.35-20.24 7.05-28.09 3.69-6.31 8.6-11.3 14.75-14.95 6.15-3.66 12.8-5.53 19.97-5.71 3.92 0 9.06 1.21 15.43 3.59 6.36 2.39 10.44 3.6 12.24 3.6 1.34 0 5.87-1.42 13.56-4.25 7.27-2.63 13.41-3.72 18.44-3.29 13.62 1.1 23.85 6.47 30.64 16.14-12.18 7.38-18.22 17.73-18.12 31.02.09 10.34 3.86 18.95 11.29 25.79 3.36 3.18 7.11 5.64 11.28 7.39-.91 2.63-1.86 5.14-2.87 7.55z"/></svg>
-            </div>
-            <h3 style={{
-              fontFamily: "var(--font-display, 'Bebas Neue'), sans-serif",
-              fontSize: 32,
-              letterSpacing: 2,
-              color: 'var(--text, #F0EDE8)',
-              margin: '0 0 4px',
-            }}>
-              iPHONE
-            </h3>
-            <p style={{
-              fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
-              fontWeight: 700,
-              fontSize: 13,
-              color: colors.goldContainer,
-              letterSpacing: 1,
-              textTransform: 'uppercase',
-              margin: '0 0 32px',
-            }}>
-              Safari uniquement
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
-              {[
-                { n: '1', title: 'Ouvre Safari', desc: 'app.moovx.ch' },
-                { n: '2', title: 'Bouton Partager', desc: '' },
-                { n: '3', title: "Sur l'écran d'accueil", desc: '' },
-              ].map((s) => (
-                <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{
-                    minWidth: 36,
-                    height: 36,
-                    background: colors.goldBorder,
-                    border: `1px solid ${colors.goldRule}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: "var(--font-display, 'Bebas Neue'), sans-serif",
-                    fontSize: 18,
-                    color: colors.goldContainer,
-                  }}>
-                    {s.n}
-                  </div>
-                  <div>
-                    <span style={{
-                      fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
-                      fontWeight: 700,
-                      fontSize: 15,
-                      textTransform: 'uppercase',
-                      color: 'var(--text, #F0EDE8)',
-                    }}>
-                      {s.title}
-                    </span>
-                    {s.desc && (
-                      <span style={{
-                        marginLeft: 8,
-                        fontSize: 13,
-                        color: 'var(--text-muted, #8A8580)',
-                      }}>
-                        ({s.desc})
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p style={{
-              fontSize: 11,
-              color: 'var(--text-dim, #3D3B38)',
-              margin: 0,
-            }}>
-              Fonctionne uniquement avec Safari, pas Chrome
-            </p>
+          <div ref={iosRef} style={{ opacity: 0 }}>
+            <StepCard
+              steps={IOS_STEPS}
+              platform="iPhone"
+              icon={Apple}
+              subtitle="Safari uniquement"
+            />
           </div>
-
-          {/* Android card */}
-          <div style={{
-            background: 'var(--surface, #0D0C0B)',
-            padding: '48px 40px',
-          }}>
-            <div style={{ marginBottom: 24 }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="#D4A843"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5S11 23.33 11 22.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></svg>
-            </div>
-            <h3 style={{
-              fontFamily: "var(--font-display, 'Bebas Neue'), sans-serif",
-              fontSize: 32,
-              letterSpacing: 2,
-              color: 'var(--text, #F0EDE8)',
-              margin: '0 0 4px',
-            }}>
-              ANDROID
-            </h3>
-            <p style={{
-              fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
-              fontWeight: 700,
-              fontSize: 13,
-              color: colors.goldContainer,
-              letterSpacing: 1,
-              textTransform: 'uppercase',
-              margin: '0 0 32px',
-            }}>
-              Chrome ou Edge
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
-              {[
-                { n: '1', title: 'Ouvre Chrome', desc: 'app.moovx.ch' },
-                { n: '2', title: 'Menu \u22EE', desc: '3 points' },
-                { n: '3', title: "Installer l'application", desc: '' },
-              ].map((s) => (
-                <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{
-                    minWidth: 36,
-                    height: 36,
-                    background: colors.goldBorder,
-                    border: `1px solid ${colors.goldRule}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: "var(--font-display, 'Bebas Neue'), sans-serif",
-                    fontSize: 18,
-                    color: colors.goldContainer,
-                  }}>
-                    {s.n}
-                  </div>
-                  <div>
-                    <span style={{
-                      fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
-                      fontWeight: 700,
-                      fontSize: 15,
-                      textTransform: 'uppercase',
-                      color: 'var(--text, #F0EDE8)',
-                    }}>
-                      {s.title}
-                    </span>
-                    {s.desc && (
-                      <span style={{
-                        marginLeft: 8,
-                        fontSize: 13,
-                        color: 'var(--text-muted, #8A8580)',
-                      }}>
-                        ({s.desc})
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p style={{
-              fontSize: 11,
-              color: 'var(--text-dim, #3D3B38)',
-              margin: 0,
-            }}>
-              Fonctionne aussi avec Edge et Samsung Internet
-            </p>
+          <div ref={androidRef} style={{ opacity: 0 }}>
+            <StepCard
+              steps={ANDROID_STEPS}
+              platform="Android"
+              icon={Smartphone}
+              subtitle="Chrome ou Edge"
+            />
           </div>
         </div>
 
-        {/* 4 badges Bauhaus grid */}
-        <div className="pwa-badge-grid" style={{
+        {/* Features bar */}
+        <div ref={featuresRef} style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 1,
-          background: 'var(--text-dim, #3D3B38)',
-          border: '1px solid var(--text-dim, #3D3B38)',
-          marginTop: 1,
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(24px)',
-          transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 24,
+          padding: 'clamp(20px, 3vw, 32px) clamp(24px, 4vw, 40px)',
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          opacity: 0,
         }}>
-          {badges.map((b) => (
-            <div key={b.title} className="pwa-badge-item" style={{
-              background: 'var(--surface, #0D0C0B)',
-              padding: '24px 20px',
-              textAlign: 'center',
-              transition: 'background 0.3s ease',
-              cursor: 'default',
-            }}>
-              <div style={{ marginBottom: 12 }}>
-                {b.icon}
+          {[
+            { label: 'Hors-ligne', detail: 'Fonctionne sans connexion' },
+            { label: 'Notifications', detail: 'Rappels personnalisés' },
+            { label: 'Mises à jour auto', detail: 'Toujours dernière version' },
+            { label: 'Léger', detail: 'Moins de 3 MB · pas d\'espace' },
+          ].map((f, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <Zap size={16} strokeWidth={2} style={{
+                color: 'var(--gold)', marginTop: 4, flexShrink: 0,
+              }} />
+              <div>
+                <div style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 13, letterSpacing: 1.5,
+                  color: '#fff', textTransform: 'uppercase',
+                  marginBottom: 4,
+                }}>
+                  {f.label}
+                </div>
+                <div style={{
+                  fontSize: 11, color: 'rgba(255,255,255,0.5)',
+                  lineHeight: 1.4,
+                }}>
+                  {f.detail}
+                </div>
               </div>
-              <p style={{
-                fontFamily: "var(--font-alt, 'Barlow Condensed'), sans-serif",
-                fontWeight: 700,
-                fontSize: 14,
-                color: colors.goldContainer,
-                letterSpacing: 1,
-                textTransform: 'uppercase',
-                margin: '0 0 4px',
-              }}>
-                {b.title}
-              </p>
-              <p style={{
-                fontSize: 12,
-                color: 'var(--text-muted, #8A8580)',
-                fontWeight: 300,
-                margin: 0,
-              }}>
-                {b.desc}
-              </p>
             </div>
           ))}
         </div>
       </div>
-
-      <style>{`
-        .pwa-badge-item:hover {
-          background: var(--surface-2, #141310) !important;
-        }
-        @media (max-width: 1024px) {
-          .pwa-install-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .pwa-badge-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-      `}</style>
     </section>
-  );
+  )
 }
