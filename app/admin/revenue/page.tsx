@@ -1,20 +1,75 @@
+'use client'
+import { useMemo } from 'react'
+import { Coins, TrendingUp, CheckCircle2 } from 'lucide-react'
 import { PageHeader } from '../_components/PageHeader'
-import { DollarSign } from 'lucide-react'
+import { KpiCard } from '../_components/KpiCard'
+import { PaymentsTable } from './_components/PaymentsTable'
+import { usePayments } from './_hooks/usePayments'
+import { formatCurrency } from '../_components/formatters'
 
 export default function AdminRevenuePage() {
+  const { payments, loading, error, statusFilter, setStatusFilter, periodDays, setPeriodDays } = usePayments()
+
+  const recap = useMemo(() => {
+    let total = 0
+    let succeededAmount = 0
+    let succeededCount = 0
+    for (const p of payments) {
+      const amt = Number(p.amount) || 0
+      total += amt
+      if (p.status === 'succeeded' || p.status === 'paid') {
+        succeededAmount += amt
+        succeededCount += 1
+      }
+    }
+    return { total, succeededAmount, succeededCount }
+  }, [payments])
+
+  const periodLabel = periodDays === 0 ? 'depuis le debut' : `${periodDays}j`
+
   return (
     <div className="admin-fade-in">
       <PageHeader
         title="Revenue"
-        description="Détails Stripe et historique des paiements"
+        description="Historique des paiements et performance financiere"
       />
-      <div className="bg-[#15110B] border border-amber-900/15 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
-        <div className="w-12 h-12 rounded-xl bg-emerald-400/10 ring-1 ring-emerald-400/20 flex items-center justify-center mb-4">
-          <DollarSign size={20} className="text-emerald-400" strokeWidth={1.8} />
-        </div>
-        <h3 className="text-sm font-semibold text-zinc-200 mb-1">Page en construction</h3>
-        <p className="text-xs text-zinc-500">Détails Stripe, historique des paiements et breakdown revenue arrivent bientôt.</p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <KpiCard
+          label="Total periode"
+          value={loading ? '—' : formatCurrency(recap.total, 'CHF')}
+          subtext={`${payments.length} paiement${payments.length > 1 ? 's' : ''} ${periodLabel}`}
+          icon={Coins}
+          loading={loading}
+          accent="emerald"
+        />
+        <KpiCard
+          label="Reussis"
+          value={loading ? '—' : formatCurrency(recap.succeededAmount, 'CHF')}
+          subtext={`${recap.succeededCount} succes`}
+          icon={CheckCircle2}
+          loading={loading}
+          accent="gold"
+        />
+        <KpiCard
+          label="Taux de succes"
+          value={loading ? '—' : payments.length > 0 ? `${Math.round((recap.succeededCount / payments.length) * 100)}%` : '—'}
+          subtext={periodLabel}
+          icon={TrendingUp}
+          loading={loading}
+          accent="zinc"
+        />
       </div>
+
+      <PaymentsTable
+        payments={payments}
+        loading={loading}
+        error={error}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        periodDays={periodDays}
+        onPeriodChange={setPeriodDays}
+      />
     </div>
   )
 }
