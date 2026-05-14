@@ -1,12 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
-import { ADMIN_EMAIL } from '../../lib/constants'
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { supabase } from '@/lib/supabase/client'
+import { ADMIN_EMAIL } from '@/lib/constants'
 
 export default function AdminPage() {
   const [status, setStatus] = useState<'loading' | 'denied' | 'ok'>('loading')
