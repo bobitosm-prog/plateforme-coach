@@ -31,6 +31,10 @@
     "stat_users": "aktive Nutzer",
     "stat_exercises": "geführte Übungen",
     "stat_foods": "Schweizer Lebensmittel",
-    "stat_coach": "KI-Coach"
+    "stat_coach": "KI-Coach",
+    "meta_status": "SYSTEM AKTIV",
+    "meta_location": "GENF · CH",
+    "hero_alt": "Athlet beim intensiven Training im MoovX-Fitnessstudio",
+    "marquee": "KRAFT • HYPERTROPHIE • ERNÄHRUNG • BARCODE-SCANNER • PPL 6 TAGE • KI-COACH 24/7 • SWISS MADE"
   }
 }

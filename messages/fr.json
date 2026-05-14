@@ -31,6 +31,10 @@
     "stat_users": "utilisateurs actifs",
     "stat_exercises": "exercices guidés",
     "stat_foods": "aliments suisses",
-    "stat_coach": "coach IA"
+    "stat_coach": "coach IA",
+    "meta_status": "SYSTEM LIVE",
+    "meta_location": "GENEVA · CH",
+    "hero_alt": "Athlète en plein effort dans une salle de musculation MoovX",
+    "marquee": "FORCE • HYPERTROPHIE • NUTRITION • SCANNER CODE-BARRES • PPL 6 JOURS • COACH IA 24/7 • SWISS MADE"
   }
 }

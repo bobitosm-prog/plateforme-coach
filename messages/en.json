@@ -31,6 +31,10 @@
     "stat_users": "active users",
     "stat_exercises": "guided exercises",
     "stat_foods": "Swiss foods",
-    "stat_coach": "AI coach"
+    "stat_coach": "AI coach",
+    "meta_status": "SYSTEM LIVE",
+    "meta_location": "GENEVA · CH",
+    "hero_alt": "Athlete training hard in a MoovX gym",
+    "marquee": "STRENGTH • HYPERTROPHY • NUTRITION • BARCODE SCANNER • PPL 6 DAYS • AI COACH 24/7 • SWISS MADE"
   }
 }

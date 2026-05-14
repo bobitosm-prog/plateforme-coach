@@ -3,14 +3,8 @@ import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import gsap from 'gsap'
+import { useTranslations } from 'next-intl'
 import { useCounter } from './shared'
-
-const STATS = [
-  { value: 1200, suffix: '+', label: 'utilisateurs actifs' },
-  { value: 163,  suffix: '',  label: 'exercices guides' },
-  { value: 170,  suffix: '',  label: 'aliments suisses' },
-  { value: 24,   suffix: '/7', label: 'coach IA' },
-]
 
 function HeroStat({ value, suffix, label }: { value: number; suffix: string; label: string }) {
   const { ref, value: count } = useCounter(value, 1800)
@@ -39,12 +33,23 @@ function HeroStat({ value, suffix, label }: { value: number; suffix: string; lab
 }
 
 export default function Hero() {
+  const t = useTranslations('hero')
+
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
   const subRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
+
+  const STATS = [
+    { value: 1200, suffix: '+', label: t('stat_users') },
+    { value: 163,  suffix: '',  label: t('stat_exercises') },
+    { value: 170,  suffix: '',  label: t('stat_foods') },
+    { value: 24,   suffix: '/7', label: t('stat_coach') },
+  ]
+
+  const marqueeItems = t('marquee').split(' • ')
 
   useEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
@@ -101,7 +106,7 @@ export default function Hero() {
       }}>
         <Image
           src="/images/new/hero-chalk.png"
-          alt="Athlète en plein effort dans une salle de musculation MoovX"
+          alt={t('hero_alt')}
           fill
           priority
           fetchPriority="high"
@@ -159,9 +164,9 @@ export default function Hero() {
             width: 6, height: 6, borderRadius: '50%',
             background: 'var(--gold)',
           }} />
-          SYSTEM LIVE
+          {t('meta_status')}
         </div>
-        <div>GENEVA · CH</div>
+        <div>{t('meta_location')}</div>
         <div>v2.4.1</div>
       </div>
 
@@ -192,7 +197,7 @@ export default function Hero() {
           opacity: 0,
         }}>
           <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-          Swiss Made · Coaching professionnel
+          {t('eyebrow')}
         </div>
 
         {/* Massive headline */}
@@ -206,7 +211,7 @@ export default function Hero() {
           marginBottom: 32,
         }}>
           <span className="hero-line" style={{ display: 'block', color: '#fff', opacity: 0 }}>
-            Transforme
+            {t('headline_line1')}
           </span>
           <span className="hero-line" style={{
             display: 'block',
@@ -214,7 +219,7 @@ export default function Hero() {
             paddingLeft: 'clamp(24px, 8vw, 160px)',
             opacity: 0,
           }}>
-            Ton corps
+            {t('headline_line2')}
           </span>
         </h1>
 
@@ -229,7 +234,7 @@ export default function Hero() {
             marginBottom: 16,
             textTransform: 'uppercase',
           }}>
-            Dépasse tes limites
+            {t('subtitle')}
           </span>
           <span style={{
             fontSize: 'clamp(14px, 1.5vw, 17px)',
@@ -237,9 +242,7 @@ export default function Hero() {
             color: 'rgba(255,255,255,0.75)',
             fontWeight: 300,
           }}>
-            La première plateforme de coaching fitness suisse propulsée
-            par des experts certifiés. Plans nutrition sur mesure,
-            programme PPL 6 jours, coach IA 24/7.
+            {t('description')}
           </span>
         </div>
 
@@ -280,7 +283,7 @@ export default function Hero() {
               e.currentTarget.style.boxShadow = 'none'
             }}
           >
-            Commencer — 10 jours gratuits →
+            {t('cta_primary')}
           </Link>
 
           <a
@@ -305,7 +308,7 @@ export default function Hero() {
               e.currentTarget.style.color = '#fff'
             }}
           >
-            Découvrir ↓
+            {t('cta_secondary')}
           </a>
 
           <span style={{
@@ -314,7 +317,7 @@ export default function Hero() {
             color: 'rgba(255,255,255,0.5)',
             letterSpacing: 1,
           }}>
-            Rejoins +1 200 utilisateurs · Sans engagement
+            {t('trust')}
           </span>
         </div>
 
@@ -355,13 +358,12 @@ export default function Hero() {
         }}>
           {[0, 1].map(k => (
             <div key={k} style={{ display: 'flex', gap: 48 }}>
-              <span>FORCE</span><span style={{ color: 'var(--gold)' }}>•</span>
-              <span>HYPERTROPHIE</span><span style={{ color: 'var(--gold)' }}>•</span>
-              <span>NUTRITION</span><span style={{ color: 'var(--gold)' }}>•</span>
-              <span>SCANNER CODE-BARRES</span><span style={{ color: 'var(--gold)' }}>•</span>
-              <span>PPL 6 JOURS</span><span style={{ color: 'var(--gold)' }}>•</span>
-              <span>COACH IA 24/7</span><span style={{ color: 'var(--gold)' }}>•</span>
-              <span>SWISS MADE</span><span style={{ color: 'var(--gold)' }}>•</span>
+              {marqueeItems.map((item, i) => (
+                <span key={i}>
+                  {item}
+                  {i < marqueeItems.length - 1 && <span style={{ color: 'var(--gold)', marginLeft: 48 }}>•</span>}
+                </span>
+              ))}
             </div>
           ))}
         </div>
