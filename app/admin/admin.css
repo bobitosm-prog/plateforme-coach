@@ -279,3 +279,102 @@
   letter-spacing: 0.05em;
   flex-shrink: 0;
 }
+
+/* =====================================================
+   Section header (titres "REVENUE", "UTILISATEURS"...)
+   ===================================================== */
+
+.admin-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 1.25rem;
+  margin-top: 1rem;
+}
+
+.admin-section-title {
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #d4a843;
+  white-space: nowrap;
+}
+
+.admin-section-divider {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(212, 168, 67, 0.2) 0%,
+    rgba(212, 168, 67, 0) 100%
+  );
+}
+
+/* =====================================================
+   Table polish
+   ===================================================== */
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-table thead th {
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #99907e;
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+  white-space: nowrap;
+}
+
+.admin-table tbody td {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  background: #0e0e0e;
+  border: 1px solid rgba(201, 168, 76, 0.15);
+}
+
+/* =====================================================
+   Search input (avec icon left)
+   ===================================================== */
+
+.admin-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-search-wrap .admin-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #99907e;
+  pointer-events: none;
+}
+
+.admin-search-wrap .admin-input {
+  padding-left: 44px;
+}

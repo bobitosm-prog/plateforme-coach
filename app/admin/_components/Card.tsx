@@ -8,15 +8,23 @@ interface Props {
 
 export function Card({ children, className = '', title, description, action }: Props) {
   return (
-    <div className={`bg-[#15110B] border border-amber-900/15 rounded-2xl overflow-hidden ${className}`}>
+    <div className={`admin-card overflow-hidden ${className}`}>
       {(title || description || action) && (
-        <div className="px-6 py-5 border-b border-amber-900/10 flex items-center justify-between gap-4">
+        <div
+          className="flex items-center justify-between gap-4"
+          style={{
+            padding: '20px 28px',
+            borderBottom: '1px solid rgba(201, 168, 76, 0.08)',
+          }}
+        >
           <div className="min-w-0">
             {title && (
-              <h3 className="text-sm font-semibold text-zinc-100 tracking-tight">{title}</h3>
+              <h3 className="admin-headline" style={{ fontSize: '1.1rem', letterSpacing: '0.04em' }}>
+                {title}
+              </h3>
             )}
             {description && (
-              <p className="text-[11px] text-zinc-500 mt-0.5">{description}</p>
+              <p className="text-xs mt-1" style={{ color: '#99907e' }}>{description}</p>
             )}
           </div>
           {action && <div className="shrink-0">{action}</div>}

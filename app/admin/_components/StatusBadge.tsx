@@ -1,11 +1,11 @@
 type Variant = 'gold' | 'emerald' | 'rose' | 'zinc' | 'amber'
 
-const VARIANTS: Record<Variant, string> = {
-  gold:    'bg-amber-400/10 text-amber-300 ring-amber-400/20',
-  emerald: 'bg-emerald-400/10 text-emerald-300 ring-emerald-400/20',
-  rose:    'bg-rose-400/10 text-rose-300 ring-rose-400/20',
-  amber:   'bg-amber-500/10 text-amber-400 ring-amber-500/20',
-  zinc:    'bg-zinc-400/10 text-zinc-300 ring-zinc-400/20',
+const VARIANTS: Record<Variant, { bg: string; color: string; border: string }> = {
+  gold:    { bg: 'rgba(212, 168, 67, 0.1)',  color: '#d4a843', border: 'rgba(212, 168, 67, 0.25)' },
+  emerald: { bg: 'rgba(52, 211, 153, 0.1)',  color: '#5eead4', border: 'rgba(52, 211, 153, 0.25)' },
+  rose:    { bg: 'rgba(244, 63, 94, 0.1)',   color: '#fb7185', border: 'rgba(244, 63, 94, 0.25)' },
+  amber:   { bg: 'rgba(245, 158, 11, 0.1)',  color: '#fbbf24', border: 'rgba(245, 158, 11, 0.25)' },
+  zinc:    { bg: 'rgba(208, 197, 178, 0.08)', color: '#d0c5b2', border: 'rgba(208, 197, 178, 0.18)' },
 }
 
 interface Props {
@@ -16,31 +16,37 @@ interface Props {
 }
 
 export function StatusBadge({ children, variant = 'zinc', onClick, className = '' }: Props) {
+  const v = VARIANTS[variant]
   const Tag = onClick ? 'button' : 'span'
   return (
     <Tag
       onClick={onClick}
-      className={`
-        inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium
-        ring-1 tabular-nums
-        ${VARIANTS[variant]}
-        ${onClick ? 'cursor-pointer hover:brightness-125 transition' : ''}
-        ${className}
-      `}
+      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md tabular-nums ${className}`}
+      style={{
+        background: v.bg,
+        color: v.color,
+        border: `1px solid ${v.border}`,
+        fontSize: '0.65rem',
+        fontWeight: 600,
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+        fontFamily: 'var(--font-body), Outfit, sans-serif',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'filter 0.15s ease',
+      }}
     >
       {children}
     </Tag>
   )
 }
 
-/** Mapper helpers pour les valeurs DB */
 export function roleVariant(role: string | null): Variant {
   switch (role) {
-    case 'admin':         return 'gold'
-    case 'coach':         return 'emerald'
-    case 'client':        return 'zinc'
-    case 'super_admin':   return 'gold'
-    default:              return 'zinc'
+    case 'admin':       return 'gold'
+    case 'coach':       return 'emerald'
+    case 'client':      return 'zinc'
+    case 'super_admin': return 'gold'
+    default:            return 'zinc'
   }
 }
 
