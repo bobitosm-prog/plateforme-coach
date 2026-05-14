@@ -67,7 +67,9 @@ export function Modal({ open, onClose, title, description, children, maxWidth = 
                   <X size={16} />
                 </button>
               </div>
-              <div className="p-6">{children}</div>
+              <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
+                {children}
+              </div>
             </motion.div>
           </div>
         </>

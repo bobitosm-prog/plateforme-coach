@@ -6,10 +6,20 @@ import { logAdminAction } from '@/lib/admin/logger'
 
 export const dynamic = 'force-dynamic'
 
+const StatusSchema = z.union([
+  z.enum(['nouveau', 'en_cours', 'resolu', 'rejete']),
+  z.null(),
+]).optional()
+
+const PrioritySchema = z.union([
+  z.enum(['basse', 'normal', 'haute', 'critique']),
+  z.null(),
+]).optional()
+
 const PatchSchema = z.object({
-  status: z.enum(['new', 'in_progress', 'resolved', 'wontfix']).nullable().optional(),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']).nullable().optional(),
-  admin_notes: z.string().max(2000).nullable().optional(),
+  status: StatusSchema,
+  priority: PrioritySchema,
+  admin_notes: z.union([z.string().max(2000), z.null()]).optional(),
 })
 
 /**
@@ -29,17 +39,30 @@ export async function PATCH(
     }
 
     const body = await req.json().catch(() => null)
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[bug-reports PATCH] Body recu:', JSON.stringify(body))
+    }
+
     const parsed = PatchSchema.safeParse(body)
     if (!parsed.success) {
+      const issues = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`)
+      console.error('[bug-reports PATCH] Zod issues:', issues)
       return NextResponse.json(
-        { error: 'Invalid body', details: parsed.error.flatten() },
+        {
+          error: issues.length > 0 ? issues.join(' · ') : 'Invalid body',
+          details: parsed.error.flatten(),
+          received: body,
+        },
         { status: 400 }
       )
     }
 
     const patch: Record<string, unknown> = {}
     if (parsed.data.status !== undefined) patch.status = parsed.data.status
-    if (parsed.data.priority !== undefined) patch.priority = parsed.data.priority
+    if (parsed.data.priority !== undefined) {
+      patch.priority = parsed.data.priority
+    }
     if (parsed.data.admin_notes !== undefined) patch.admin_notes = parsed.data.admin_notes
 
     if (Object.keys(patch).length === 0) {

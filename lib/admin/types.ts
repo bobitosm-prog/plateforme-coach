@@ -54,18 +54,19 @@ export interface AdminUserRow {
 
 export type BugReportType = 'bug' | 'amelioration' | 'autre'
 
+// Valeurs alignees sur les CHECK constraints PostgreSQL
 export type BugReportStatus =
-  | 'new'
-  | 'in_progress'
-  | 'resolved'
-  | 'wontfix'
+  | 'nouveau'
+  | 'en_cours'
+  | 'resolu'
+  | 'rejete'
   | null
 
 export type BugReportPriority =
-  | 'low'
-  | 'medium'
-  | 'high'
-  | 'urgent'
+  | 'basse'
+  | 'normal'
+  | 'haute'
+  | 'critique'
   | null
 
 export interface AdminBugReportRow {

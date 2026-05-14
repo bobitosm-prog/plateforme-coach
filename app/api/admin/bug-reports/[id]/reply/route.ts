@@ -19,7 +19,7 @@ const ReplySchema = z.object({
  * Body : { reply: string, send_email?: boolean }
  *
  * Persiste la reponse en DB + envoie un email a l'utilisateur.
- * Status auto-update : 'new' → 'in_progress' si non deja resolu.
+ * Status auto-update : 'nouveau' → 'en_cours' si non deja resolu.
  */
 export async function POST(
   req: Request,
@@ -73,9 +73,9 @@ export async function POST(
     }
 
     // Update DB : reply + status auto si necessaire
-    const newStatus = (report.status === 'resolved' || report.status === 'wontfix')
+    const newStatus = (report.status === 'resolu' || report.status === 'rejete')
       ? report.status
-      : 'in_progress'
+      : 'en_cours'
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('bug_reports')
