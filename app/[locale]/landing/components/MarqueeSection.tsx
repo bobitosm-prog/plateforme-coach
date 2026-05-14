@@ -1,12 +1,13 @@
-'use client';
-
-import React from 'react';
-import { useReveal } from './shared';
-
-const MARQUEE_TEXT = 'Nutrition Pro \u2726 Push Pull Legs \u2726 Scanner Code-Barres \u2726 Recettes Fitness \u2726 Coach personnel \u2726 HIIT & LISS \u2726 Records Personnels \u2726 Feedback Vidéo \u2726 Swiss Made \u2726 Coaching Connecté \u2726 ';
+'use client'
+import React from 'react'
+import { useTranslations } from 'next-intl'
+import { useReveal } from './shared'
 
 export default function MarqueeSection() {
-  const { ref, visible } = useReveal();
+  const t = useTranslations('marquee')
+  const { ref, visible } = useReveal()
+
+  const segments = t('text').split('✦')
 
   return (
     <>
@@ -46,11 +47,11 @@ export default function MarqueeSection() {
                 flexShrink: 0,
               }}
             >
-              {MARQUEE_TEXT.split('\u2726').map((segment, i, arr) => (
+              {segments.map((segment, i) => (
                 <React.Fragment key={i}>
                   {segment}
-                  {i < arr.length - 1 && (
-                    <span style={{ color: 'var(--text-dim)' }}>{'\u2726'}</span>
+                  {i < segments.length - 1 && (
+                    <span style={{ color: 'var(--text-dim)' }}>✦</span>
                   )}
                 </React.Fragment>
               ))}
@@ -59,5 +60,5 @@ export default function MarqueeSection() {
         </div>
       </div>
     </>
-  );
+  )
 }

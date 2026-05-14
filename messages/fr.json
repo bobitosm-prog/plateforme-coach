@@ -36,5 +36,36 @@
     "meta_location": "GENEVA · CH",
     "hero_alt": "Athlète en plein effort dans une salle de musculation MoovX",
     "marquee": "FORCE • HYPERTROPHIE • NUTRITION • SCANNER CODE-BARRES • PPL 6 JOURS • COACH IA 24/7 • SWISS MADE"
+  },
+  "marquee": {
+    "text": "Nutrition Pro ✦ Push Pull Legs ✦ Scanner Code-Barres ✦ Recettes Fitness ✦ Coach personnel ✦ HIIT & LISS ✦ Records Personnels ✦ Feedback Vidéo ✦ Swiss Made ✦ Coaching Connecté"
+  },
+  "footer": {
+    "tagline": "Swiss Made · Swiss Quality",
+    "copyright": "© 2026 MoovX · Genève, Suisse",
+    "app": "Application",
+    "pricing": "Tarifs",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "terms": "CGU",
+    "privacy": "Confidentialité"
+  },
+  "steps": {
+    "eyebrow": "Simple & rapide",
+    "headline_line1": "Prêt en",
+    "headline_line2": "4 étapes.",
+    "lede": "Ta transformation commence maintenant. Pas demain.",
+    "step1_title": "Crée ton profil",
+    "step1_desc": "2 minutes. Objectifs, mensurations, préférences alimentaires, niveau fitness.",
+    "step1_detail": "Athena analyse ton input",
+    "step2_title": "Scanne ton frigo",
+    "step2_desc": "L'IA apprend ce que tu manges et adapte tous tes plans nutrition.",
+    "step2_detail": "Scanner code-barres inclus",
+    "step3_title": "Suis ton programme",
+    "step3_desc": "PPL 6 jours + nutrition personnalisée. Valide tes repas et tes séances.",
+    "step3_detail": "163 exercices guidés",
+    "step4_title": "Mesure tes résultats",
+    "step4_desc": "Graphiques de progression, records personnels, photos avant/après.",
+    "step4_detail": "Analytics 100% privé"
   }
 }

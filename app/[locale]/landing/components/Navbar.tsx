@@ -1,9 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { colors } from '@/lib/design-tokens'
 
 export default function Navbar() {
+  const t = useTranslations('nav')
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -29,9 +31,7 @@ export default function Navbar() {
         className="landing-nav"
         style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
+          top: 0, left: 0, right: 0,
           zIndex: 1000,
           height: 60,
           display: 'flex',
@@ -50,33 +50,23 @@ export default function Navbar() {
             src="https://app.moovx.ch/logo-moovx.png"
             alt="MoovX"
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 6,
+              width: 32, height: 32, borderRadius: 6,
               animation: 'pulse-gold 3s ease-in-out infinite',
             }}
           />
-          <span
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 26,
-              color: 'var(--gold)',
-              letterSpacing: 3,
-            }}
-          >
+          <span style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 26, color: 'var(--gold)', letterSpacing: 3,
+          }}>
             MOOVX
           </span>
-          <span
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 10,
-              color: 'var(--text-muted)',
-              paddingLeft: 12,
-              borderLeft: '1px solid var(--text-dim)',
-              letterSpacing: 1,
-            }}
-          >
-            Swiss Made
+          <span style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 10, color: 'var(--text-muted)',
+            paddingLeft: 12, borderLeft: '1px solid var(--text-dim)',
+            letterSpacing: 1,
+          }}>
+            {t('swissMade')}
           </span>
         </div>
 
@@ -86,49 +76,30 @@ export default function Navbar() {
             href="/login"
             className="nav-btn-ghost"
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              background: 'transparent',
-              color: 'var(--text)',
-              fontFamily: 'var(--font-alt)',
-              fontWeight: 700,
-              fontSize: 13,
-              letterSpacing: 1.5,
-              padding: '8px 20px',
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              background: 'transparent', color: 'var(--text)',
+              fontFamily: 'var(--font-alt)', fontWeight: 700,
+              fontSize: 13, letterSpacing: 1.5, padding: '8px 20px',
               border: '1px solid var(--gold-rule)',
-              cursor: 'none',
-              transition: 'all 0.3s',
-              
-              textDecoration: 'none',
+              cursor: 'none', transition: 'all 0.3s', textDecoration: 'none',
             }}
           >
-            Connexion
+            {t('login')}
           </Link>
           <Link
             href="/register-client"
             className="nav-btn-gold"
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              background: 'var(--gold)',
-              color: '#0D0B08',
-              fontFamily: 'var(--font-alt)',
-              fontWeight: 800,
-              fontSize: 13,
-              letterSpacing: 1.5,
-              padding: '8px 24px',
-              border: 'none',
-              cursor: 'none',
-              position: 'relative',
-              overflow: 'hidden',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              
-              textDecoration: 'none',
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              background: 'var(--gold)', color: '#0D0B08',
+              fontFamily: 'var(--font-alt)', fontWeight: 800,
+              fontSize: 13, letterSpacing: 1.5, padding: '8px 24px',
+              border: 'none', cursor: 'none',
+              position: 'relative', overflow: 'hidden',
+              transition: 'transform 0.2s, box-shadow 0.2s', textDecoration: 'none',
             }}
           >
-            Commencer
+            {t('start')}
           </Link>
         </div>
       </nav>

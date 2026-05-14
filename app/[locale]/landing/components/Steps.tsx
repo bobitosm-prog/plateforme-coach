@@ -3,46 +3,29 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { UserPlus, ScanLine, Dumbbell, TrendingUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const STEPS = [
-  {
-    n: '01',
-    icon: UserPlus,
-    title: 'Crée ton profil',
-    desc: '2 minutes. Objectifs, mensurations, préférences alimentaires, niveau fitness.',
-    detail: 'Athena analyse ton input',
-  },
-  {
-    n: '02',
-    icon: ScanLine,
-    title: 'Scanne ton frigo',
-    desc: 'L\'IA apprend ce que tu manges et adapte tous tes plans nutrition.',
-    detail: 'Scanner code-barres inclus',
-  },
-  {
-    n: '03',
-    icon: Dumbbell,
-    title: 'Suis ton programme',
-    desc: 'PPL 6 jours + nutrition personnalisée. Valide tes repas et tes séances.',
-    detail: '163 exercices guidés',
-  },
-  {
-    n: '04',
-    icon: TrendingUp,
-    title: 'Mesure tes résultats',
-    desc: 'Graphiques de progression, records personnels, photos avant/après.',
-    detail: 'Analytics 100% privé',
-  },
-]
+const STEP_ICONS = [UserPlus, ScanLine, Dumbbell, TrendingUp]
+const STEP_NUMBERS = ['01', '02', '03', '04']
 
 export default function Steps() {
+  const t = useTranslations('steps')
+
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
   const ledeRef = useRef<HTMLParagraphElement>(null)
   const stepsRef = useRef<HTMLDivElement>(null)
+
+  const steps = [1, 2, 3, 4].map(i => ({
+    n: STEP_NUMBERS[i - 1],
+    icon: STEP_ICONS[i - 1],
+    title: t(`step${i}_title`),
+    desc: t(`step${i}_desc`),
+    detail: t(`step${i}_detail`),
+  }))
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -99,7 +82,6 @@ export default function Steps() {
         position: 'relative',
       }}>
 
-        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 96 }}>
           <div ref={eyebrowRef} style={{
             display: 'inline-flex', alignItems: 'center', gap: 12,
@@ -110,7 +92,7 @@ export default function Steps() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            Simple & rapide
+            {t('eyebrow')}
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
           </div>
 
@@ -123,7 +105,7 @@ export default function Steps() {
             margin: '0 0 24px',
             color: '#fff',
           }}>
-            Prêt en <span style={{ color: 'var(--gold)' }}>4 étapes.</span>
+            {t('headline_line1')} <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
 
           <p ref={ledeRef} style={{
@@ -133,13 +115,11 @@ export default function Steps() {
             margin: '0 auto',
             fontWeight: 300,
           }}>
-            Ta transformation commence maintenant. Pas demain.
+            {t('lede')}
           </p>
         </div>
 
-        {/* Steps */}
         <div ref={stepsRef} style={{ position: 'relative' }}>
-          {/* Connector line */}
           <div className="step-connector" style={{
             position: 'absolute',
             top: 56,
@@ -157,77 +137,54 @@ export default function Steps() {
             position: 'relative',
             zIndex: 2,
           }}>
-            {STEPS.map((s, i) => {
+            {steps.map((s, i) => {
               const Icon = s.icon
               return (
                 <div key={i} data-step style={{ textAlign: 'center' }}>
-                  {/* Number badge */}
                   <div style={{
                     width: 112, height: 112,
                     margin: '0 auto 32px',
                     background: '#0a0807',
                     border: '1px solid rgba(212,168,67,0.4)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                     position: 'relative',
                   }}>
-                    <div style={{
-                      position: 'absolute', top: 4, left: 4,
-                      width: 12, height: 12,
-                      borderTop: '1px solid var(--gold)',
-                      borderLeft: '1px solid var(--gold)',
-                    }} />
-                    <div style={{
-                      position: 'absolute', bottom: 4, right: 4,
-                      width: 12, height: 12,
-                      borderBottom: '1px solid var(--gold)',
-                      borderRight: '1px solid var(--gold)',
-                    }} />
+                    <div style={{ position: 'absolute', top: 4, left: 4, width: 12, height: 12, borderTop: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)' }} />
+                    <div style={{ position: 'absolute', bottom: 4, right: 4, width: 12, height: 12, borderBottom: '1px solid var(--gold)', borderRight: '1px solid var(--gold)' }} />
                     <span style={{
                       fontFamily: 'var(--font-display)',
-                      fontSize: 56,
-                      color: 'var(--gold)',
-                      letterSpacing: 2,
-                      lineHeight: 1,
+                      fontSize: 56, color: 'var(--gold)',
+                      letterSpacing: 2, lineHeight: 1,
                     }}>
                       {s.n}
                     </span>
                   </div>
 
-                  {/* Icon */}
                   <Icon size={22} strokeWidth={1.5} style={{ color: 'var(--gold)', marginBottom: 16 }} />
 
-                  {/* Title */}
                   <h3 style={{
                     fontFamily: 'var(--font-display)',
                     fontSize: 'clamp(18px, 1.8vw, 24px)',
-                    letterSpacing: 1.5,
-                    color: '#fff',
+                    letterSpacing: 1.5, color: '#fff',
                     textTransform: 'uppercase',
-                    marginBottom: 16,
-                    lineHeight: 1.2,
+                    marginBottom: 16, lineHeight: 1.2,
                   }}>
                     {s.title}
                   </h3>
 
-                  {/* Description */}
                   <p style={{
                     fontSize: 13, lineHeight: 1.6,
                     color: 'rgba(255,255,255,0.65)',
-                    marginBottom: 20,
-                    minHeight: 80,
+                    marginBottom: 20, minHeight: 80,
                   }}>
                     {s.desc}
                   </p>
 
-                  {/* Detail tag */}
                   <div style={{
                     display: 'inline-block',
                     fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
                     fontSize: 10, letterSpacing: 2,
-                    color: 'var(--gold)',
-                    textTransform: 'uppercase',
+                    color: 'var(--gold)', textTransform: 'uppercase',
                     padding: '6px 12px',
                     border: '1px solid rgba(212,168,67,0.25)',
                     background: 'rgba(212,168,67,0.04)',

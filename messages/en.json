@@ -36,5 +36,36 @@
     "meta_location": "GENEVA · CH",
     "hero_alt": "Athlete training hard in a MoovX gym",
     "marquee": "STRENGTH • HYPERTROPHY • NUTRITION • BARCODE SCANNER • PPL 6 DAYS • AI COACH 24/7 • SWISS MADE"
+  },
+  "marquee": {
+    "text": "Nutrition Pro ✦ Push Pull Legs ✦ Barcode Scanner ✦ Fitness Recipes ✦ Personal Coach ✦ HIIT & LISS ✦ Personal Records ✦ Video Feedback ✦ Swiss Made ✦ Connected Coaching"
+  },
+  "footer": {
+    "tagline": "Swiss Made · Swiss Quality",
+    "copyright": "© 2026 MoovX · Geneva, Switzerland",
+    "app": "App",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
+  "steps": {
+    "eyebrow": "Simple & fast",
+    "headline_line1": "Ready in",
+    "headline_line2": "4 steps.",
+    "lede": "Your transformation starts now. Not tomorrow.",
+    "step1_title": "Create your profile",
+    "step1_desc": "2 minutes. Goals, measurements, dietary preferences, fitness level.",
+    "step1_detail": "Athena analyzes your input",
+    "step2_title": "Scan your fridge",
+    "step2_desc": "AI learns what you eat and adapts all your nutrition plans.",
+    "step2_detail": "Barcode scanner included",
+    "step3_title": "Follow your program",
+    "step3_desc": "PPL 6 days + personalized nutrition. Log your meals and workouts.",
+    "step3_detail": "163 guided exercises",
+    "step4_title": "Measure your results",
+    "step4_desc": "Progress charts, personal records, before/after photos.",
+    "step4_detail": "100% private analytics"
   }
 }
