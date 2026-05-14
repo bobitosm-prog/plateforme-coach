@@ -1,17 +1,18 @@
 'use client'
+import './admin.css'
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { ADMIN_EMAIL } from '@/lib/constants'
 import { AdminSidebar } from './_components/AdminSidebar'
 import { Toaster } from 'sonner'
-import './admin.css'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const [status, setStatus] = useState<'loading' | 'denied' | 'ok'>('loading')
   const [email, setEmail] = useState<string>('')
+  const [fullName, setFullName] = useState<string>('')
 
   useEffect(() => {
     let mounted = true
@@ -24,6 +25,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
       const userEmail = session.user.email || ''
       setEmail(userEmail)
+
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', session.user.id)
+        .single()
+      setFullName(prof?.full_name || userEmail.split('@')[0])
+
       if (userEmail !== ADMIN_EMAIL) {
         setStatus('denied')
         return
@@ -35,10 +44,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-[#0D0B08] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-zinc-400">
-          <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm">Vérification des accès…</span>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#131313' }}>
+        <div className="flex items-center gap-3" style={{ color: '#99907e' }}>
+          <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: '#d4a843', borderTopColor: 'transparent' }} />
+          <span className="admin-label">Verification des acces</span>
         </div>
       </div>
     )
@@ -46,18 +55,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (status === 'denied') {
     return (
-      <div className="min-h-screen bg-[#0D0B08] flex items-center justify-center px-6">
-        <div className="max-w-md text-center">
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-semibold text-zinc-100 mb-2">Accès refusé</h1>
-          <p className="text-zinc-400 mb-6">
-            Cet espace est réservé à l'administrateur de la plateforme.
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#131313' }}>
+        <div className="max-w-md text-center admin-card p-10">
+          <div className="text-5xl mb-5">🔒</div>
+          <h1 className="admin-headline text-3xl mb-3">Acces refuse</h1>
+          <p style={{ color: '#99907e' }} className="text-sm mb-7">
+            Cet espace est reserve a l'administrateur de la plateforme.
           </p>
-          <a
-            href="/"
-            className="inline-block px-5 py-2.5 rounded-xl bg-amber-400 text-[#0D0B08] font-medium hover:bg-amber-300 transition"
-          >
-            Retour à l'accueil
+          <a href="/" className="admin-btn-gold">
+            Retour a l'accueil
           </a>
         </div>
       </div>
@@ -65,8 +71,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0B08] text-zinc-100">
-      <AdminSidebar pathname={pathname} email={email} />
+    <div className="min-h-screen" style={{ background: '#131313', color: '#e5e2e1' }}>
+      <AdminSidebar pathname={pathname} email={email} fullName={fullName} />
       <main className="admin-main">
         <div className="admin-container">
           {children}
@@ -77,9 +83,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         theme="dark"
         toastOptions={{
           style: {
-            background: '#1A150E',
-            border: '1px solid rgba(180, 83, 9, 0.2)',
-            color: '#fafafa',
+            background: '#0e0e0e',
+            border: '1px solid rgba(201, 168, 76, 0.25)',
+            color: '#e5e2e1',
           },
         }}
       />

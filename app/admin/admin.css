@@ -1,17 +1,20 @@
+/* =====================================================
+   MoovX Admin — Design System (aligne sur Coach Pro)
+   ===================================================== */
+
+/* Layout shell */
 .admin-main {
   min-height: 100vh;
 }
-
 @media (min-width: 1024px) {
   .admin-main {
     padding-left: 240px;
   }
 }
 
-/* Container content centré, max-width premium */
 .admin-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1.5rem;
@@ -19,21 +22,260 @@
   padding-top: 4rem;
   padding-bottom: 3rem;
 }
-
 @media (min-width: 1024px) {
   .admin-container {
     padding-left: 2.5rem;
     padding-right: 2.5rem;
-    padding-top: 3rem;
+    padding-top: 2.5rem;
   }
 }
 
-/* Anim subtile au mount */
+/* Fade-in mount */
 .admin-fade-in {
-  animation: adminFadeIn 0.4s ease-out;
+  animation: adminFadeIn 0.35s ease-out;
 }
-
 @keyframes adminFadeIn {
   from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =====================================================
+   Typography brand
+   ===================================================== */
+
+/* Headline display (Bebas Neue) */
+.admin-headline {
+  font-family: var(--font-display), 'Bebas Neue', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #e5e2e1;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* Numeric/stat display */
+.admin-stat {
+  font-family: var(--font-display), 'Bebas Neue', sans-serif;
+  font-weight: 400;
+  color: #e5e2e1;
+  font-feature-settings: 'tnum';
+  line-height: 1;
+}
+
+/* Label tag */
+.admin-label {
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #99907e;
+}
+
+.admin-label-gold {
+  color: #d4a843;
+}
+
+/* =====================================================
+   Cards brand
+   ===================================================== */
+
+.admin-card {
+  background: #0e0e0e;
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease;
+}
+.admin-card:hover {
+  border-color: rgba(201, 168, 76, 0.25);
+}
+
+.admin-card-flat {
+  background: #0e0e0e;
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  border-radius: 16px;
+}
+
+.admin-card-inner {
+  background: #1a1817;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+}
+
+/* Section divider (gold rule) */
+.admin-rule {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(201, 168, 76, 0.25),
+    rgba(201, 168, 76, 0)
+  );
+}
+
+/* =====================================================
+   Buttons brand
+   ===================================================== */
+
+.admin-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #e6c364 0%, #c9a84c 100%);
+  color: #0d0b08;
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.admin-btn-gold:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+.admin-btn-gold:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  color: #d4a843;
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.admin-btn-ghost:hover {
+  background: rgba(201, 168, 76, 0.08);
+  border-color: rgba(201, 168, 76, 0.5);
+}
+
+.admin-btn-text {
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  color: #d0c5b2;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+.admin-btn-text:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e5e2e1;
+}
+
+/* =====================================================
+   Sidebar brand
+   ===================================================== */
+
+.admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 240px;
+  background: #0a0908;
+  border-right: 1px solid rgba(201, 168, 76, 0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  margin: 0 8px;
+  border-radius: 10px;
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #99907e;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+.admin-nav-item:hover {
+  color: #e5e2e1;
+  background: rgba(255, 255, 255, 0.02);
+}
+.admin-nav-item-active {
+  color: #d4a843;
+  background: rgba(212, 168, 67, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(212, 168, 67, 0.15);
+}
+.admin-nav-item-active:hover {
+  color: #d4a843;
+  background: rgba(212, 168, 67, 0.1);
+}
+
+/* =====================================================
+   Form inputs brand
+   ===================================================== */
+
+.admin-input,
+.admin-select {
+  width: 100%;
+  background: #0e0e0e;
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  color: #e5e2e1;
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  transition: all 0.15s ease;
+}
+.admin-input::placeholder {
+  color: #5a5246;
+}
+.admin-input:focus,
+.admin-select:focus {
+  outline: none;
+  border-color: rgba(212, 168, 67, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.1);
+}
+
+.admin-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23d4a843' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* =====================================================
+   Avatar circle
+   ===================================================== */
+
+.admin-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(212, 168, 67, 0.08);
+  border: 1px solid rgba(212, 168, 67, 0.2);
+  color: #d4a843;
+  font-family: var(--font-display), 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
 }
