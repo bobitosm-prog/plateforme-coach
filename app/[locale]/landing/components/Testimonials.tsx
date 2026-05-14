@@ -4,48 +4,50 @@ import Image from 'next/image'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Star, Quote } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const TESTIMONIALS = [
-  {
-    initials: 'TM',
-    name: 'Thomas M.',
-    location: 'Plainpalais',
-    age: 34,
-    program: 'Hypertrophie · 6 mois',
-    stars: 5,
-    quote: 'En 6 mois, j\'ai gagné 7 kg de muscle sec. Le programme PPL et les conseils nutrition d\'Athena ont tout changé. Je n\'ai jamais été aussi constant.',
-    metric: { value: '+7kg', label: 'masse maigre' },
-  },
-  {
-    initials: 'LB',
-    name: 'Léa B.',
-    location: 'Pâquis',
-    age: 28,
-    program: 'Perte de poids · 4 mois',
-    stars: 5,
-    quote: 'Les recettes fitness sont incroyables. Adaptées à mes macros, avec les ingrédients que j\'ai déjà. Jamais été aussi constante dans ma diète.',
-    metric: { value: '-9kg', label: 'sur 4 mois' },
-  },
-  {
-    initials: 'AR',
-    name: 'Alexandre R.',
-    location: 'Carouge',
-    age: 41,
-    program: 'Remise en forme · 3 mois',
-    stars: 5,
-    quote: 'À 41 ans, je pensais qu\'il était trop tard. Mon coach Alexandre a tout adapté à ma vie de famille. Aujourd\'hui je cours 10K sans m\'arrêter.',
-    metric: { value: '10K', label: 'sans s\'arrêter' },
-  },
-]
-
 export default function Testimonials() {
+  const t = useTranslations('testimonials')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
   const cardsRef = useRef<HTMLDivElement>(null)
   const medalRef = useRef<HTMLDivElement>(null)
+
+  const TESTIMONIALS = [
+    {
+      initials: 'TM',
+      name: t('card1_name'),
+      location: t('card1_location'),
+      age: t('card1_age'),
+      program: t('card1_program'),
+      stars: 5,
+      quote: t('card1_quote'),
+      metric: { value: t('card1_metric_value'), label: t('card1_metric_label') },
+    },
+    {
+      initials: 'LB',
+      name: t('card2_name'),
+      location: t('card2_location'),
+      age: t('card2_age'),
+      program: t('card2_program'),
+      stars: 5,
+      quote: t('card2_quote'),
+      metric: { value: t('card2_metric_value'), label: t('card2_metric_label') },
+    },
+    {
+      initials: 'AR',
+      name: t('card3_name'),
+      location: t('card3_location'),
+      age: t('card3_age'),
+      program: t('card3_program'),
+      stars: 5,
+      quote: t('card3_quote'),
+      metric: { value: t('card3_metric_value'), label: t('card3_metric_label') },
+    },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -112,7 +114,7 @@ export default function Testimonials() {
               textTransform: 'uppercase',
             }}>
               <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-              Témoignages
+              {t('eyebrow')}
             </div>
 
             <h2 ref={headlineRef} style={{
@@ -124,9 +126,9 @@ export default function Testimonials() {
               margin: 0,
               color: '#fff',
             }}>
-              Ils ont<br />
-              <span style={{ color: 'var(--gold)' }}>transformé</span><br />
-              leur corps.
+              {t('headline_line1')}<br />
+              <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span><br />
+              {t('headline_line3')}
             </h2>
           </div>
 
@@ -141,7 +143,7 @@ export default function Testimonials() {
           }}>
             <Image
               src="/images/new/medal-gold.png"
-              alt="Médaille MoovX — Discipline, Dedication, Transformation"
+              alt={t('medal_alt')}
               fill
               quality={85}
               sizes="(max-width: 768px) 60vw, 360px"
@@ -156,7 +158,7 @@ export default function Testimonials() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: 24,
         }}>
-          {TESTIMONIALS.map((t, i) => (
+          {TESTIMONIALS.map((item, i) => (
             <article key={i} style={{
               background: 'rgba(255,255,255,0.02)',
               border: '1px solid rgba(212,168,67,0.15)',
@@ -184,7 +186,7 @@ export default function Testimonials() {
                 display: 'flex', alignItems: 'center', gap: 4,
                 marginBottom: 20,
               }}>
-                {[...Array(t.stars)].map((_, j) => (
+                {[...Array(item.stars)].map((_, j) => (
                   <Star key={j} size={14} fill="var(--gold)" stroke="var(--gold)" />
                 ))}
               </div>
@@ -197,7 +199,7 @@ export default function Testimonials() {
                 marginBottom: 28,
                 minHeight: 130,
               }}>
-                « {t.quote} »
+                {item.quote}
               </p>
 
               {/* Author */}
@@ -219,7 +221,7 @@ export default function Testimonials() {
                   color: 'var(--gold)',
                   flexShrink: 0,
                 }}>
-                  {t.initials}
+                  {item.initials}
                 </div>
 
                 <div style={{ flex: 1 }}>
@@ -230,14 +232,14 @@ export default function Testimonials() {
                     color: '#fff',
                     textTransform: 'uppercase',
                   }}>
-                    {t.name}
+                    {item.name}
                   </div>
                   <div style={{
                     fontSize: 11,
                     color: 'rgba(255,255,255,0.5)',
                     marginTop: 2,
                   }}>
-                    {t.age} ans · {t.location}
+                    {item.age} · {item.location}
                   </div>
                 </div>
 
@@ -250,7 +252,7 @@ export default function Testimonials() {
                     letterSpacing: 0.5,
                     lineHeight: 1,
                   }}>
-                    {t.metric.value}
+                    {item.metric.value}
                   </div>
                   <div style={{
                     fontSize: 9,
@@ -259,7 +261,7 @@ export default function Testimonials() {
                     letterSpacing: 1,
                     textTransform: 'uppercase',
                   }}>
-                    {t.metric.label}
+                    {item.metric.label}
                   </div>
                 </div>
               </div>
@@ -273,7 +275,7 @@ export default function Testimonials() {
                 letterSpacing: 2,
                 textTransform: 'uppercase',
               }}>
-                {t.program}
+                {item.program}
               </div>
             </article>
           ))}

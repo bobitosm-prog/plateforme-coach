@@ -4,17 +4,12 @@ import Image from 'next/image'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Shield, Lock, Globe, Sparkles } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const VALUES = [
-  { icon: Shield,    title: 'RGPD',                desc: 'Conformité européenne stricte' },
-  { icon: Lock,      title: 'Hébergement Suisse',  desc: 'Datacenters en Suisse, chiffrés' },
-  { icon: Globe,     title: 'Multilingue',         desc: 'FR · DE · EN — bientôt IT' },
-  { icon: Sparkles,  title: 'Premium standard',    desc: 'Qualité Swiss-made dans chaque détail' },
-]
-
 export default function GenevaSection() {
+  const t = useTranslations('geneva')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -22,6 +17,13 @@ export default function GenevaSection() {
   const valuesRef = useRef<HTMLDivElement>(null)
   const coordsRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
+
+  const VALUES = [
+    { icon: Shield,    title: t('value1_title'), desc: t('value1_desc') },
+    { icon: Lock,      title: t('value2_title'), desc: t('value2_desc') },
+    { icon: Globe,     title: t('value3_title'), desc: t('value3_desc') },
+    { icon: Sparkles,  title: t('value4_title'), desc: t('value4_desc') },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -107,7 +109,7 @@ export default function GenevaSection() {
           textTransform: 'uppercase',
         }}>
           <span style={{ width: 40, height: 1, background: 'var(--gold)' }} />
-          Conçu en Suisse
+          {t('eyebrow')}
           <span style={{ width: 40, height: 1, background: 'var(--gold)' }} />
         </div>
 
@@ -120,9 +122,9 @@ export default function GenevaSection() {
           margin: '0 0 32px',
           color: '#fff',
         }}>
-          Genève.<br />
-          <span style={{ color: 'var(--gold)' }}>L'excellence</span><br />
-          par défaut.
+          {t('headline_line1')}<br />
+          <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span><br />
+          {t('headline_line3')}
         </h2>
 
         <p ref={ledeRef} style={{
@@ -133,9 +135,7 @@ export default function GenevaSection() {
           fontWeight: 300,
           letterSpacing: 0.2,
         }}>
-          MoovX est conçu et hébergé à Genève. Une plateforme suisse,
-          taillée pour les standards les plus exigeants : confidentialité
-          radicale, qualité dans chaque pixel, support en 3 langues.
+          {t('lede')}
         </p>
 
         {/* 4 values grid */}
@@ -205,9 +205,9 @@ export default function GenevaSection() {
           flexWrap: 'wrap',
           justifyContent: 'center',
         }}>
-          <span style={{ color: 'var(--gold)' }}>46.2044° N · 6.1432° E</span>
+          <span style={{ color: 'var(--gold)' }}>{t('coords')}</span>
           <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.2)' }} />
-          <span>Geneva · Switzerland</span>
+          <span>{t('location')}</span>
           <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.2)' }} />
           <span style={{ color: 'var(--gold)' }}>v2.4.1</span>
         </div>

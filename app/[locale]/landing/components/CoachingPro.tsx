@@ -5,40 +5,12 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Award, UserCheck, Video, Target } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const COACH_SPECS = [
-  {
-    icon: Award,
-    title: 'Certifiés',
-    desc: 'EREPS, FSCEP, BLS-AED — diplômes officiels suisses',
-  },
-  {
-    icon: UserCheck,
-    title: 'Spécialisations',
-    desc: 'Hypertrophie, force, perte de poids, post-grossesse, seniors',
-  },
-  {
-    icon: Video,
-    title: 'Visio 1-to-1',
-    desc: 'Sessions hebdomadaires de 30-60 min, en français ou anglais',
-  },
-  {
-    icon: Target,
-    title: 'Suivi personnalisé',
-    desc: 'Ajustements programme/nutrition selon ta progression réelle',
-  },
-]
-
-const CREDENTIALS = [
-  'EREPS Level 4',
-  'FSCEP certifié',
-  'Spécialiste nutrition sportive',
-  'BLS-AED',
-]
-
 export default function CoachingPro() {
+  const t = useTranslations('coachingPro')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -47,6 +19,20 @@ export default function CoachingPro() {
   const credentialsRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const imageWrapRef = useRef<HTMLDivElement>(null)
+
+  const COACH_SPECS = [
+    { icon: Award, title: t('spec1_title'), desc: t('spec1_desc') },
+    { icon: UserCheck, title: t('spec2_title'), desc: t('spec2_desc') },
+    { icon: Video, title: t('spec3_title'), desc: t('spec3_desc') },
+    { icon: Target, title: t('spec4_title'), desc: t('spec4_desc') },
+  ]
+
+  const CREDENTIALS = [
+    t('credential1'),
+    t('credential2'),
+    t('credential3'),
+    t('credential4'),
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -110,7 +96,7 @@ export default function CoachingPro() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            05 — Coaching humain
+            {t('eyebrow')}
           </div>
 
           <h2 ref={headlineRef} style={{
@@ -122,9 +108,9 @@ export default function CoachingPro() {
             margin: '0 0 24px',
             color: '#fff',
           }}>
-            Un coach<br />
-            <span style={{ color: 'var(--gold)' }}>en chair</span><br />
-            et en os.
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span><br />
+            {t('headline_line3')}
           </h2>
 
           <p ref={ledeRef} style={{
@@ -132,8 +118,7 @@ export default function CoachingPro() {
             color: 'rgba(255,255,255,0.7)',
             maxWidth: 480, marginBottom: 48, fontWeight: 300,
           }}>
-            Au-delà d'Athena, accède à un vrai coach certifié pour les ajustements
-            fins. Sessions visio, feedback technique, motivation directe.
+            {t('lede')}
           </p>
 
           {/* 4 specs grid 2x2 */}
@@ -225,7 +210,7 @@ export default function CoachingPro() {
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              Réserver un coach →
+              {t('cta')}
             </Link>
           </div>
         </div>
@@ -246,7 +231,7 @@ export default function CoachingPro() {
           }}>
             <Image
               src="/images/new/coach-tablet.png"
-              alt="Coach certifié MoovX consultant la progression d'un client sur tablette"
+              alt={t('image_alt')}
               fill
               quality={85}
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -279,20 +264,20 @@ export default function CoachingPro() {
               marginBottom: 4,
               textTransform: 'uppercase',
             }}>
-              Prochaine session
+              {t('data_next_label')}
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
               fontSize: 20, color: '#fff',
               lineHeight: 1.2, letterSpacing: 0.5,
             }}>
-              Mardi 19h00
+              {t('data_next_day')}
             </div>
             <div style={{
               fontSize: 11, color: 'var(--gold)',
               marginTop: 4, letterSpacing: 0.5,
             }}>
-              Visio · 45 min
+              {t('data_next_detail')}
             </div>
           </div>
 
@@ -315,19 +300,19 @@ export default function CoachingPro() {
               marginBottom: 6,
               textTransform: 'uppercase',
             }}>
-              Coach attitré
+              {t('data_coach_label')}
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
               fontSize: 18, color: '#fff',
               letterSpacing: 1, marginBottom: 2,
             }}>
-              Alexandre B.
+              {t('data_coach_name')}
             </div>
             <div style={{
               fontSize: 11, color: 'rgba(255,255,255,0.5)',
             }}>
-              Hypertrophie · 8 ans XP
+              {t('data_coach_xp')}
             </div>
           </div>
         </div>

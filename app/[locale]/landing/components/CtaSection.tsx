@@ -5,10 +5,12 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Star, ArrowRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function CtaSection() {
+  const t = useTranslations('cta')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -59,7 +61,7 @@ export default function CtaSection() {
       }}>
         <Image
           src="/images/new/victory.png"
-          alt="Athlète MoovX hurlant de victoire après transformation accomplie"
+          alt={t('image_alt')}
           fill
           quality={90}
           sizes="100vw"
@@ -105,7 +107,7 @@ export default function CtaSection() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            Le moment est venu
+            {t('eyebrow')}
           </div>
 
           <h2 ref={headlineRef} style={{
@@ -117,10 +119,10 @@ export default function CtaSection() {
             margin: '0 0 32px',
             color: '#fff',
           }}>
-            Prêt à devenir<br />
-            <span style={{ color: 'var(--gold)' }}>la meilleure</span><br />
-            version<br />
-            de toi-même ?
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span><br />
+            {t('headline_line3')}<br />
+            {t('headline_line4')}
           </h2>
 
           <p ref={ledeRef} style={{
@@ -130,9 +132,8 @@ export default function CtaSection() {
             marginBottom: 56,
             fontWeight: 300,
           }}>
-            Programme personnalisé, coach IA Athena 24/7, suivi humain par
-            experts certifiés. <strong style={{ color: '#fff', fontWeight: 600 }}>
-            14 jours d'essai gratuit, sans engagement.</strong>
+            {t('lede_part1')} <strong style={{ color: '#fff', fontWeight: 600 }}>
+            {t('lede_part2')}</strong>
           </p>
 
           {/* Dual CTAs */}
@@ -165,7 +166,7 @@ export default function CtaSection() {
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              Commencer maintenant
+              {t('primary_cta')}
               <ArrowRight size={18} strokeWidth={2.5} />
             </Link>
 
@@ -193,7 +194,7 @@ export default function CtaSection() {
                 e.currentTarget.style.color = '#fff'
               }}
             >
-              Voir les tarifs
+              {t('secondary_cta')}
             </Link>
           </div>
 
@@ -214,7 +215,7 @@ export default function CtaSection() {
                 fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
                 fontSize: 12, color: '#fff', marginLeft: 6, letterSpacing: 1,
               }}>
-                4.9 / 5
+                {t('proof_rating')}
               </span>
             </div>
 
@@ -224,7 +225,7 @@ export default function CtaSection() {
               fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
               fontSize: 12, color: 'rgba(255,255,255,0.7)', letterSpacing: 1,
             }}>
-              <span style={{ color: 'var(--gold)', fontWeight: 600 }}>1 200+</span> athlètes nous font confiance
+              <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{t('proof_count')}</span> {t('proof_count_label')}
             </div>
 
             <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)' }} />
@@ -233,7 +234,7 @@ export default function CtaSection() {
               fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
               fontSize: 12, color: 'rgba(255,255,255,0.7)', letterSpacing: 1,
             }}>
-              Made in Geneva
+              {t('proof_made')}
             </div>
           </div>
         </div>

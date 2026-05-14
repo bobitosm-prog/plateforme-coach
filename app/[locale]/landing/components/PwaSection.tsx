@@ -3,23 +3,12 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Apple, Smartphone, Zap } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const IOS_STEPS = [
-  { n: '01', title: 'Ouvre Safari', detail: 'app.moovx.ch' },
-  { n: '02', title: 'Bouton Partager', detail: 'icône en bas de Safari' },
-  { n: '03', title: 'Sur l\'écran d\'accueil', detail: 'Tap pour confirmer' },
-]
-
-const ANDROID_STEPS = [
-  { n: '01', title: 'Ouvre Chrome', detail: 'app.moovx.ch' },
-  { n: '02', title: 'Menu ⋮', detail: '3 points en haut à droite' },
-  { n: '03', title: 'Installer l\'application', detail: 'Confirme l\'installation' },
-]
-
 function StepCard({ steps, platform, icon: Icon, subtitle }: {
-  steps: typeof IOS_STEPS
+  steps: { n: string; title: string; detail: string }[]
   platform: string
   icon: typeof Apple
   subtitle: string
@@ -133,6 +122,7 @@ function StepCard({ steps, platform, icon: Icon, subtitle }: {
 }
 
 export default function PWASection() {
+  const t = useTranslations('pwa')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -140,6 +130,18 @@ export default function PWASection() {
   const iosRef = useRef<HTMLDivElement>(null)
   const androidRef = useRef<HTMLDivElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
+
+  const IOS_STEPS = [
+    { n: '01', title: t('ios_step1_title'), detail: t('ios_step1_detail') },
+    { n: '02', title: t('ios_step2_title'), detail: t('ios_step2_detail') },
+    { n: '03', title: t('ios_step3_title'), detail: t('ios_step3_detail') },
+  ]
+
+  const ANDROID_STEPS = [
+    { n: '01', title: t('android_step1_title'), detail: t('android_step1_detail') },
+    { n: '02', title: t('android_step2_title'), detail: t('android_step2_detail') },
+    { n: '03', title: t('android_step3_title'), detail: t('android_step3_detail') },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -207,7 +209,7 @@ export default function PWASection() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            Application · PWA
+            {t('eyebrow')}
           </div>
 
           <h2 ref={headlineRef} style={{
@@ -219,8 +221,8 @@ export default function PWASection() {
             margin: '0 0 24px',
             color: '#fff',
           }}>
-            Installe MoovX<br />
-            <span style={{ color: 'var(--gold)' }}>en 30 secondes.</span>
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
 
           <p ref={ledeRef} style={{
@@ -229,8 +231,7 @@ export default function PWASection() {
             maxWidth: 540,
             fontWeight: 300,
           }}>
-            Pas besoin d'App Store. Installation directe depuis ton navigateur,
-            comme une vraie app native.
+            {t('lede')}
           </p>
         </div>
 
@@ -244,17 +245,17 @@ export default function PWASection() {
           <div ref={iosRef} style={{ opacity: 0 }}>
             <StepCard
               steps={IOS_STEPS}
-              platform="iPhone"
+              platform={t('ios_platform')}
               icon={Apple}
-              subtitle="Safari uniquement"
+              subtitle={t('ios_subtitle')}
             />
           </div>
           <div ref={androidRef} style={{ opacity: 0 }}>
             <StepCard
               steps={ANDROID_STEPS}
-              platform="Android"
+              platform={t('android_platform')}
               icon={Smartphone}
-              subtitle="Chrome ou Edge"
+              subtitle={t('android_subtitle')}
             />
           </div>
         </div>
@@ -270,10 +271,10 @@ export default function PWASection() {
           opacity: 0,
         }}>
           {[
-            { label: 'Hors-ligne', detail: 'Fonctionne sans connexion' },
-            { label: 'Notifications', detail: 'Rappels personnalisés' },
-            { label: 'Mises à jour auto', detail: 'Toujours dernière version' },
-            { label: 'Léger', detail: 'Moins de 3 MB · pas d\'espace' },
+            { label: t('feat1_label'), detail: t('feat1_detail') },
+            { label: t('feat2_label'), detail: t('feat2_detail') },
+            { label: t('feat3_label'), detail: t('feat3_detail') },
+            { label: t('feat4_label'), detail: t('feat4_detail') },
           ].map((f, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <Zap size={16} strokeWidth={2} style={{

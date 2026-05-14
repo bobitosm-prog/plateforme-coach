@@ -4,35 +4,9 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Plus, MessageCircle } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
-
-const FAQS = [
-  {
-    q: 'C\'est quoi MoovX ?',
-    a: 'MoovX est une plateforme suisse complète qui combine programme d\'entraînement personnalisé, nutrition adaptée, coach IA Athena disponible 24/7, et suivi humain par des coachs certifiés. Conçue et hébergée à Genève, elle s\'adresse aux athlètes amateurs, sportifs débutants et professionnels du coaching.',
-  },
-  {
-    q: 'Comment fonctionne la nutrition experte ?',
-    a: 'Tu scannes ton frigo ou tes codes-barres alimentaires. Notre IA Athena analyse tes ingrédients disponibles, ton historique nutritionnel, et tes macros cibles pour générer des recettes personnalisées en temps réel. Plus de 500 recettes adaptables, suivi des micronutriments, et alertes intelligentes.',
-  },
-  {
-    q: 'Le scanner code-barres fonctionne comment ?',
-    a: 'Active la caméra de ton téléphone, vise le code-barres. En moins d\'une seconde, l\'app reconnaît le produit (base de données de 2.5M références), affiche les macros et micronutriments, et le suggère pour tes prochains repas selon tes objectifs. Fonctionne sur tous les produits avec EAN-13.',
-  },
-  {
-    q: 'C\'est quoi le programme PPL ?',
-    a: 'PPL = Push / Pull / Legs. C\'est une méthode d\'entraînement éprouvée organisée sur 6 jours : 2 séances Push (pecs, épaules, triceps), 2 séances Pull (dos, biceps), 2 séances Legs (jambes complètes). 163 exercices guidés en vidéo, adaptables selon ton niveau et ton équipement.',
-  },
-  {
-    q: 'Mes données sont sécurisées ?',
-    a: 'Oui. Tes données sont hébergées en Suisse sur des serveurs conformes nLPD (équivalent suisse RGPD), chiffrées de bout en bout en AES-256. Aucune donnée n\'est revendue ni partagée avec des tiers. Tu peux exporter ou supprimer tes données à tout moment depuis ton profil.',
-  },
-  {
-    q: 'Je peux essayer gratuitement ?',
-    a: '14 jours d\'essai 100% gratuit, sans carte bancaire, sans engagement. Tu accèdes à toutes les fonctionnalités : programmes, nutrition, scanner, Athena IA, analytics. Si MoovX te plaît, tu choisis ton abonnement. Sinon, ton compte se désactive automatiquement.',
-  },
-]
 
 function FaqItem({ q, a, isOpen, onToggle, index }: {
   q: string; a: string; isOpen: boolean; onToggle: () => void; index: number
@@ -126,6 +100,7 @@ function FaqItem({ q, a, isOpen, onToggle, index }: {
 }
 
 export default function FaqSection() {
+  const t = useTranslations('faq')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -133,6 +108,15 @@ export default function FaqSection() {
   const ctaRef = useRef<HTMLDivElement>(null)
 
   const [openIndex, setOpenIndex] = useState<number | null>(0)
+
+  const FAQS = [
+    { q: t('q1'), a: t('a1') },
+    { q: t('q2'), a: t('a2') },
+    { q: t('q3'), a: t('a3') },
+    { q: t('q4'), a: t('a4') },
+    { q: t('q5'), a: t('a5') },
+    { q: t('q6'), a: t('a6') },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -200,7 +184,7 @@ export default function FaqSection() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            Questions fréquentes
+            {t('eyebrow')}
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
           </div>
 
@@ -213,8 +197,8 @@ export default function FaqSection() {
             margin: 0,
             color: '#fff',
           }}>
-            Tout ce que tu<br />
-            <span style={{ color: 'var(--gold)' }}>dois savoir.</span>
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
         </div>
 
@@ -265,13 +249,13 @@ export default function FaqSection() {
                 color: '#fff', textTransform: 'uppercase',
                 marginBottom: 4,
               }}>
-                Une autre question ?
+                {t('cta_card_title')}
               </div>
               <div style={{
                 fontSize: 13, color: 'rgba(255,255,255,0.6)',
                 lineHeight: 1.5,
               }}>
-                Notre équipe répond en moins de 2h en semaine.
+                {t('cta_card_detail')}
               </div>
             </div>
           </div>
@@ -300,7 +284,7 @@ export default function FaqSection() {
               e.currentTarget.style.boxShadow = 'none'
             }}
           >
-            Contacter le support
+            {t('cta_button')}
           </Link>
         </div>
       </div>

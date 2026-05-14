@@ -4,34 +4,12 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Check, Sparkles, Crown } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const CLIENT_FEATURES = [
-  'Plans nutrition illimités',
-  'Programme PPL 6 jours',
-  'Scanner code-barres + recettes',
-  'Coach IA Athena 24/7',
-  'Analytics & suivi complet',
-  'Photos avant/après privées',
-]
-
-const CLIENT_PLANS = [
-  { price: 'CHF 10', period: '/mois', label: 'Mensuel', popular: false },
-  { price: 'CHF 80', period: '/an', label: 'Annuel', popular: true, save: '−33%' },
-  { price: 'CHF 150', period: 'à vie', label: 'Lifetime', popular: false },
-]
-
-const COACH_FEATURES = [
-  'Dashboard de gestion clients illimité',
-  'Plans nutrition personnalisés',
-  'Visio 1-to-1 intégrée',
-  'Paiements directs via Stripe',
-  'Programmes personnalisés',
-  'Analytics business mensuelles',
-]
-
 export default function PricingSection() {
+  const t = useTranslations('pricing')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -39,6 +17,30 @@ export default function PricingSection() {
   const clientCardRef = useRef<HTMLDivElement>(null)
   const coachCardRef = useRef<HTMLDivElement>(null)
   const guaranteeRef = useRef<HTMLDivElement>(null)
+
+  const CLIENT_FEATURES = [
+    t('client_feat1'),
+    t('client_feat2'),
+    t('client_feat3'),
+    t('client_feat4'),
+    t('client_feat5'),
+    t('client_feat6'),
+  ]
+
+  const CLIENT_PLANS = [
+    { price: 'CHF 10', period: t('plan_monthly_period'), label: t('plan_monthly_label'), popular: false },
+    { price: 'CHF 80', period: t('plan_yearly_period'), label: t('plan_yearly_label'), popular: true, save: t('plan_yearly_save') },
+    { price: 'CHF 150', period: t('plan_lifetime_period'), label: t('plan_lifetime_label'), popular: false },
+  ]
+
+  const COACH_FEATURES = [
+    t('coach_feat1'),
+    t('coach_feat2'),
+    t('coach_feat3'),
+    t('coach_feat4'),
+    t('coach_feat5'),
+    t('coach_feat6'),
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -106,7 +108,7 @@ export default function PricingSection() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            Transparence totale
+            {t('eyebrow')}
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
           </div>
 
@@ -119,8 +121,8 @@ export default function PricingSection() {
             margin: '0 0 24px',
             color: '#fff',
           }}>
-            Un modèle<br />
-            <span style={{ color: 'var(--gold)' }}>transparent.</span>
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
 
           <p ref={ledeRef} style={{
@@ -130,7 +132,7 @@ export default function PricingSection() {
             margin: '0 auto',
             fontWeight: 300,
           }}>
-            Zéro surprise. Zéro frais cachés. Tu sais exactement ce que tu paies.
+            {t('lede')}
           </p>
         </div>
 
@@ -161,7 +163,7 @@ export default function PricingSection() {
               fontWeight: 700,
               textTransform: 'uppercase',
             }}>
-              Recommandé
+              {t('client_badge')}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
@@ -172,7 +174,7 @@ export default function PricingSection() {
                 color: 'rgba(255,255,255,0.5)',
                 textTransform: 'uppercase',
               }}>
-                Pour les clients
+                {t('client_label')}
               </div>
             </div>
 
@@ -185,15 +187,15 @@ export default function PricingSection() {
               margin: '0 0 16px',
               lineHeight: 1,
             }}>
-              Accès complet
+              {t('client_title')}
             </h3>
 
             <p style={{
               fontSize: 14, color: 'rgba(255,255,255,0.65)',
               marginBottom: 32, lineHeight: 1.6,
             }}>
-              Sans coach : abonnement direct.<br />
-              <span style={{ color: 'var(--gold)' }}>Avec coach invité : accès gratuit.</span>
+              {t('client_subtitle1')}<br />
+              <span style={{ color: 'var(--gold)' }}>{t('client_subtitle2')}</span>
             </p>
 
             {/* 3 price pills */}
@@ -281,7 +283,7 @@ export default function PricingSection() {
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              Commencer — 14 jours gratuits
+              {t('client_cta')}
             </Link>
           </div>
 
@@ -305,7 +307,7 @@ export default function PricingSection() {
               border: '1px solid var(--gold)',
               textTransform: 'uppercase',
             }}>
-              Pro
+              {t('coach_badge')}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
@@ -316,7 +318,7 @@ export default function PricingSection() {
                 color: 'rgba(255,255,255,0.5)',
                 textTransform: 'uppercase',
               }}>
-                Pour les coachs
+                {t('coach_subtitle')}
               </div>
             </div>
 
@@ -327,14 +329,14 @@ export default function PricingSection() {
               textTransform: 'uppercase',
               margin: '0 0 16px', lineHeight: 1,
             }}>
-              Coach Pro
+              {t('coach_title')}
             </h3>
 
             <p style={{
               fontSize: 14, color: 'rgba(255,255,255,0.65)',
               marginBottom: 32, lineHeight: 1.6,
             }}>
-              Tu fixes ton propre tarif. Tes clients paient directement via Stripe.
+              {t('coach_subtitle')}
             </p>
 
             {/* Big price + split */}
@@ -354,7 +356,7 @@ export default function PricingSection() {
                 CHF 50
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 8 }}>
-                /mois · Abonnement Coach Pro
+                {t('coach_price_period')}
               </div>
 
               <div style={{
@@ -374,7 +376,7 @@ export default function PricingSection() {
                     color: 'rgba(255,255,255,0.5)',
                     marginTop: 6, textTransform: 'uppercase',
                   }}>
-                    Pour toi
+                    {t('coach_split_you')}
                   </div>
                 </div>
                 <div style={{ alignSelf: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 20 }}>+</div>
@@ -390,7 +392,7 @@ export default function PricingSection() {
                     color: 'rgba(255,255,255,0.5)',
                     marginTop: 6, textTransform: 'uppercase',
                   }}>
-                    Commission MoovX
+                    {t('coach_split_commission')}
                   </div>
                 </div>
               </div>
@@ -428,7 +430,7 @@ export default function PricingSection() {
                 e.currentTarget.style.color = '#fff'
               }}
             >
-              Devenir Coach Pro
+              {t('coach_cta')}
             </Link>
           </div>
         </div>
@@ -447,10 +449,10 @@ export default function PricingSection() {
           opacity: 0,
         }}>
           {[
-            { label: 'Sans engagement', detail: 'Annule quand tu veux' },
-            { label: '14 jours d\'essai', detail: '100% gratuit, sans CB' },
-            { label: 'Paiement sécurisé', detail: 'Stripe · Twint · CB' },
-            { label: 'RGPD Suisse', detail: 'Données hébergées en CH' },
+            { label: t('guarantee1_label'), detail: t('guarantee1_detail') },
+            { label: t('guarantee2_label'), detail: t('guarantee2_detail') },
+            { label: t('guarantee3_label'), detail: t('guarantee3_detail') },
+            { label: t('guarantee4_label'), detail: t('guarantee4_detail') },
           ].map((g, i) => (
             <div key={i} style={{ textAlign: 'center', flex: '1 1 auto', minWidth: 140 }}>
               <div style={{
