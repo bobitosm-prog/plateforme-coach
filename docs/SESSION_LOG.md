@@ -49,3 +49,35 @@
 - Pas de push sans validation utilisateur
 - Commits atomiques, messages descriptifs
 - tsc clean obligatoire avant commit
+
+---
+
+## Session du 14 mai 2026 (soir) — Feedback admin + visibilite in-app
+
+### Livre
+- Page /admin/feedback (KPIs + liste filtrable + dialog reply avec form)
+- Backend bug-reports : GET (filters/sort) + PATCH (meta) + POST /reply (email branded)
+- Helper lib/email.ts partage (SMTP Infomaniak + template HTML gold)
+- Hooks useMyFeedback + useMyFeedbackBadge cote client
+- API /api/feedback/mine + /api/feedback/mark-all-read (RLS-scoped)
+- Page client "Mes rapports" dans AccountTab (badge gold + auto-mark-read)
+- BugReport modal universel : 2 tabs (Nouveau / Mes rapports), badge sur 💬
+  → couvre client SPA et coach page automatiquement
+- Audit trail complet (bug_report_update, bug_report_reply dans app_logs)
+- Premier email admin → client envoye (Melanie + info@design-wordpress)
+
+### Bugs rencontres et resolus
+- RLS bug_reports : admin role 'admin' en DB mais policies sur 'super_admin'
+  → service_role bypass via API routes server-side avec verifyAdmin par email
+- Zod 4 : chaines .nullable().optional() peu fiables → migre vers z.union explicite
+- Postgres CHECK constraints en francais decouvertes a l'execution
+  (DB: 'nouveau/en_cours/resolu/rejete' + 'basse/normal/haute/critique')
+  → tout le code aligne sur la DB pour bug_reports
+- Typo SMTP_USER Vercel : 'noreply.moovx.ch' au lieu de 'noreply@moovx.ch' → fixe
+- React StrictMode causait double toast → dedup par id sonner
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 13 | 99da29c | feat(admin): feedback page with branded email reply (FR-aligned schema) |
+| 14 | 86460a7 | feat(client+coach): in-app visibility for admin replies on bug reports |

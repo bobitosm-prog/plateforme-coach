@@ -11,17 +11,22 @@
 
 ### UI
 - Shell admin : sidebar 240px brand (logo MOOVX + ADMIN, user card initiales)
-- 4 pages : Overview / Comptes / Revenue / Logs
+- 5 pages : Overview / Comptes / Revenue / Feedback / Logs
 - KPI cards value-first avec Bebas Neue
 - Tables avec search + filtres + actions hover
 - 2 dialogs : RoleDialog + SubscriptionDialog (optimistic UI)
 - Graphique area 12 mois (brut + net Stripe avec tooltip custom)
 - Design system aligne Coach Pro (gold #d4a843, polices brand, uppercase labels)
+- Polish visuel KPI cards + tables + toolbars + section headers gold
 
-## En attente de validation (commit 5989bf8)
-- Polish visuel KPI cards + tables + toolbars
-- Section headers gold visibles
-- Padding tables agrandi, plus de colonnes coupees
+### Feedback pipeline (14 mai soir)
+- Page /admin/feedback : KPIs + liste filtrable + dialog reply avec email branded
+- Backend : GET/PATCH/POST reply avec Zod validation + audit trail
+- lib/email.ts : helper SMTP partage + template HTML gold branded
+- Visibilite client+coach : BugReport modal 2 tabs (Nouveau / Mes rapports)
+- AccountTab client : entree "Mes rapports" avec badge unread gold
+- Auto-mark-read : admin reply → user voit → DB updated
+- Schema aligne sur CHECK constraints PostgreSQL FR (nouveau/en_cours/resolu/rejete)
 
 ## Backlog priorise
 
@@ -36,12 +41,14 @@
 - [ ] Export CSV des paiements (avec frais Stripe par ligne)
 - [ ] Tracker MRR historique : snapshot mensuel dans table dediee
 - [ ] Page `/admin/coach/[id]` detaillee (commissions, clients, paiements percus)
+- [ ] Push notification (web-push VAPID) quand admin repond, badge realtime
 
 ### P3 — Productivite admin
 - [ ] Cmd+K command palette (recherche globale + actions rapides)
 - [ ] Bulk actions sur table users (selection multi-lignes)
 - [ ] Filtre date sur les logs (today / 7j / 30j / custom)
 - [ ] Notifications real-time (Supabase realtime) pour nouveaux paiements
+- [ ] Bouton "Renvoyer email" dans admin feedback dialog (relancer sans reecrire admin_reply)
 
 ### P4 — Tech debt (separee mission admin)
 - [ ] Migrer les 21 fichiers `createBrowserClient` inline → `import { supabase }`
@@ -51,6 +58,8 @@
 - [ ] Webhook : tracer aussi `payment_intent.payment_failed`
 - [ ] Tailwind 4 : auditer toutes les arbitrary values `[xxx]` non-rendues
 - [ ] Git identity warning (config user.name + user.email)
+- [ ] Audit CHECK constraints des autres tables (profiles, payments, sessions) pour anticiper le bug langue FR/EN
+- [ ] Refacto invite-client → utiliser lib/email.ts au lieu de dupliquer le transporter nodemailer
 
 ### P5 — Polish design (en cours)
 - [ ] Comparer visuellement avec coach.tsx, ajuster densite finale
