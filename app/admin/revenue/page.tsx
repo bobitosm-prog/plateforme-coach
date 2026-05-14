@@ -5,7 +5,7 @@ import { PageHeader } from '../_components/PageHeader'
 import { KpiCard } from '../_components/KpiCard'
 import { PaymentsTable } from './_components/PaymentsTable'
 import { usePayments } from './_hooks/usePayments'
-import { formatCurrency } from '../_components/formatters'
+import { formatCurrencyFromMajor } from '../_components/formatters'
 
 export default function AdminRevenuePage() {
   const { payments, loading, error, statusFilter, setStatusFilter, periodDays, setPeriodDays } = usePayments()
@@ -37,7 +37,7 @@ export default function AdminRevenuePage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <KpiCard
           label="Total periode"
-          value={loading ? '—' : formatCurrency(recap.total, 'CHF')}
+          value={loading ? '—' : formatCurrencyFromMajor(recap.total, 'CHF')}
           subtext={`${payments.length} paiement${payments.length > 1 ? 's' : ''} ${periodLabel}`}
           icon={Coins}
           loading={loading}
@@ -45,7 +45,7 @@ export default function AdminRevenuePage() {
         />
         <KpiCard
           label="Reussis"
-          value={loading ? '—' : formatCurrency(recap.succeededAmount, 'CHF')}
+          value={loading ? '—' : formatCurrencyFromMajor(recap.succeededAmount, 'CHF')}
           subtext={`${recap.succeededCount} succes`}
           icon={CheckCircle2}
           loading={loading}

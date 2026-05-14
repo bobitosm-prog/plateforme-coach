@@ -5,7 +5,7 @@ import { adminFetch } from '@/lib/admin/api-client'
 import { PageHeader } from './_components/PageHeader'
 import { KpiCard } from './_components/KpiCard'
 import { Card } from './_components/Card'
-import { formatCurrency, formatDateTime } from './_components/formatters'
+import { formatCurrencyFromCents, formatCurrencyFromMajor, formatDateTime } from './_components/formatters'
 
 interface StatsResponse {
   mrr: { amount: number; currency: string }
@@ -73,7 +73,7 @@ export default function AdminOverviewPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard
             label="MRR"
-            value={loading ? '—' : formatCurrency(stats?.mrr.amount || 0, stats?.mrr.currency)}
+            value={loading ? '—' : formatCurrencyFromCents(stats?.mrr.amount || 0, stats?.mrr.currency)}
             subtext="Récurrent mensuel"
             icon={Zap}
             loading={loading}
@@ -81,7 +81,7 @@ export default function AdminOverviewPage() {
           />
           <KpiCard
             label="CA total"
-            value={loading ? '—' : formatCurrency(stats?.total_revenue.amount || 0, stats?.total_revenue.currency)}
+            value={loading ? '—' : formatCurrencyFromMajor(stats?.total_revenue.amount || 0, stats?.total_revenue.currency)}
             subtext="Cumul plateforme"
             icon={Coins}
             loading={loading}
@@ -89,7 +89,7 @@ export default function AdminOverviewPage() {
           />
           <KpiCard
             label="30 derniers jours"
-            value={loading ? '—' : formatCurrency(stats?.last_30d.amount || 0, 'CHF')}
+            value={loading ? '—' : formatCurrencyFromMajor(stats?.last_30d.amount || 0, 'CHF')}
             subtext={`${stats?.last_30d.count || 0} paiement${(stats?.last_30d.count || 0) > 1 ? 's' : ''}`}
             icon={Calendar}
             loading={loading}
@@ -183,7 +183,7 @@ export default function AdminOverviewPage() {
                         />
                       </div>
                       <div className="text-xs text-zinc-200 w-28 text-right font-mono tabular-nums">
-                        {formatCurrency(m.amount, 'CHF')}
+                        {formatCurrencyFromMajor(m.amount, 'CHF')}
                       </div>
                       <div className="text-[11px] text-zinc-500 w-10 text-right tabular-nums shrink-0">
                         {m.count}x

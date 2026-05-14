@@ -1,7 +1,7 @@
 'use client'
 import { ChevronDown, ExternalLink } from 'lucide-react'
 import { StatusBadge } from '../../_components/StatusBadge'
-import { formatCurrency, formatDateTime } from '../../_components/formatters'
+import { formatCurrencyFromMajor, formatDateTime } from '../../_components/formatters'
 import type { AdminPaymentRow } from '../_hooks/usePayments'
 
 interface Props {
@@ -124,7 +124,7 @@ export function PaymentsTable({
                       )}
                     </td>
                     <td className="px-3 py-4 text-right tabular-nums text-zinc-100 font-medium">
-                      {formatCurrency(Number(p.amount), p.currency || 'CHF')}
+                      {formatCurrencyFromMajor(Number(p.amount), p.currency || 'CHF')}
                     </td>
                     <td className="px-3 py-4">
                       <StatusBadge variant={paymentStatusVariant(p.status)}>

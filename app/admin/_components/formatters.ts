@@ -1,4 +1,8 @@
-export function formatCurrency(
+/**
+ * Formate un montant en CENTIMES (convention Stripe SDK).
+ * Ex: 1000 → "CHF 10"
+ */
+export function formatCurrencyFromCents(
   amountCents: number,
   currency = 'CHF',
   locale = 'fr-CH'
@@ -10,6 +14,27 @@ export function formatCurrency(
     maximumFractionDigits: 0,
   }).format(amountCents / 100)
 }
+
+/**
+ * Formate un montant en UNITE MAJEURE (francs, euros).
+ * Ex: 10.00 → "CHF 10"
+ * Pour la table `payments` qui stocke en francs.
+ */
+export function formatCurrencyFromMajor(
+  amountMajor: number,
+  currency = 'CHF',
+  locale = 'fr-CH'
+): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amountMajor)
+}
+
+/** @deprecated Utiliser formatCurrencyFromCents ou formatCurrencyFromMajor */
+export const formatCurrency = formatCurrencyFromCents
 
 export function formatDate(iso: string | null, locale = 'fr-CH'): string {
   if (!iso) return '—'
