@@ -10,11 +10,11 @@
 
 **Date derniere mise a jour** : 2026-05-14
 **Branche** : main
-**HEAD** : `8e4e0ee` style(admin): align design system with Coach Pro brand (foundation)
+**HEAD** : `5989bf8` style(admin): polish KPI cards, tables and toolbars (brand alignment)
 **Working tree** : clean
 
 ### Tache en cours
-Admin console — design brand foundation livre (5a)
+Admin console — design polish KPIs + tables livre (5b)
 
 ### Blockers
 Aucun
@@ -49,6 +49,7 @@ Test navigateur page admin/users
 - 14:30 `c8eea7c` fix(admin): correct currency conversion cents vs francs
 - 14:45 `0b4c428` feat(admin): Stripe net revenue + 12-month chart
 - 15:00 `8e4e0ee` style(admin): align design with Coach Pro brand (5a)
+- 15:15 `5989bf8` style(admin): polish KPI cards, tables, toolbars (5b)
 
 ### 2026-05-11
 
