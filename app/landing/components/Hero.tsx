@@ -104,7 +104,8 @@ export default function Hero() {
           alt="Athlète en plein effort dans une salle de musculation MoovX"
           fill
           priority
-          quality={88}
+          fetchPriority="high"
+          quality={85}
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
         />
