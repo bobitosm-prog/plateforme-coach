@@ -1,132 +1,284 @@
-'use client';
+'use client'
+import { useEffect, useRef } from 'react'
+import Image from 'next/image'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Star, Quote } from 'lucide-react'
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useReveal } from './shared';
+gsap.registerPlugin(ScrollTrigger)
 
-const testimonials = [
-  { quote: "MoovX a révolutionné ma nutrition. En 3 mois, j'ai perdu 8kg tout en gardant ma masse musculaire. Les plans sont parfaitement adaptés.", author: 'Marc D.', location: 'Genève' },
-  { quote: "Le programme PPL est exactement ce qu'il me fallait. Le timer de repos et le suivi des PR me motivent à chaque séance. Top qualité suisse !", author: 'Julie K.', location: 'Carouge' },
-  { quote: "Le scanner code-barres est génial. Je scanne mon frigo et MoovX me crée un plan complet. La liste de courses automatique est un game changer.", author: 'Thomas R.', location: 'Eaux-Vives' },
-  { quote: "Meilleure app fitness que j'ai testée. Le coach répond à toutes mes questions. CHF 10/mois c'est vraiment donné pour ce niveau de qualité.", author: 'Sarah M.', location: 'Plainpalais' },
-  { quote: "En tant que coach, MoovX me permet de gérer mes clients efficacement. La messagerie et les plans personnalisés sont un duo imbattable.", author: 'Alex P.', location: 'Coach Pro' },
-  { quote: "Les recettes fitness sont incroyables. Adaptées à mes macros, avec les ingrédients que j'ai déjà. Jamais été aussi constant dans ma diète.", author: 'Léa B.', location: 'Pâquis' },
-];
+const TESTIMONIALS = [
+  {
+    initials: 'TM',
+    name: 'Thomas M.',
+    location: 'Plainpalais',
+    age: 34,
+    program: 'Hypertrophie · 6 mois',
+    stars: 5,
+    quote: 'En 6 mois, j\'ai gagné 7 kg de muscle sec. Le programme PPL et les conseils nutrition d\'Athena ont tout changé. Je n\'ai jamais été aussi constant.',
+    metric: { value: '+7kg', label: 'masse maigre' },
+  },
+  {
+    initials: 'LB',
+    name: 'Léa B.',
+    location: 'Pâquis',
+    age: 28,
+    program: 'Perte de poids · 4 mois',
+    stars: 5,
+    quote: 'Les recettes fitness sont incroyables. Adaptées à mes macros, avec les ingrédients que j\'ai déjà. Jamais été aussi constante dans ma diète.',
+    metric: { value: '-9kg', label: 'sur 4 mois' },
+  },
+  {
+    initials: 'AR',
+    name: 'Alexandre R.',
+    location: 'Carouge',
+    age: 41,
+    program: 'Remise en forme · 3 mois',
+    stars: 5,
+    quote: 'À 41 ans, je pensais qu\'il était trop tard. Mon coach Alexandre a tout adapté à ma vie de famille. Aujourd\'hui je cours 10K sans m\'arrêter.',
+    metric: { value: '10K', label: 'sans s\'arrêter' },
+  },
+]
 
 export default function Testimonials() {
-  const { ref, visible } = useReveal();
-  const [active, setActive] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sectionRef = useRef<HTMLElement>(null)
+  const eyebrowRef = useRef<HTMLDivElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const cardsRef = useRef<HTMLDivElement>(null)
+  const medalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => setActive(p => (p + 1) % testimonials.length), 5000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) };
-  }, []);
+    if (!sectionRef.current) return
 
-  function goTo(i: number) {
-    setActive(i);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => setActive(p => (p + 1) % testimonials.length), 5000);
-  }
+    const ctx = gsap.context(() => {
+      gsap.fromTo(medalRef.current,
+        { opacity: 0, scale: 0.85, rotate: -8 },
+        {
+          opacity: 1, scale: 1, rotate: 0, duration: 1.4, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 75%', toggleActions: 'play none none reverse' },
+        }
+      )
 
-  const t = testimonials[active];
+      gsap.fromTo([eyebrowRef.current, headlineRef.current],
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 70%', toggleActions: 'play none none reverse' },
+        }
+      )
+
+      gsap.fromTo(cardsRef.current?.children || [],
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1, y: 0, duration: 0.7, stagger: 0.15, ease: 'power3.out',
+          scrollTrigger: { trigger: cardsRef.current, start: 'top 80%', toggleActions: 'play none none reverse' },
+        }
+      )
+    }, sectionRef)
+
+    return () => ctx.revert()
+  }, [])
 
   return (
-    <section id="testimonials" ref={ref}>
+    <section ref={sectionRef} id="testimonials" style={{
+      position: 'relative',
+      background: '#0D0B08',
+      color: '#fff',
+      padding: 'clamp(80px, 12vw, 120px) 0',
+      overflow: 'hidden',
+    }}>
       <div style={{
-        maxWidth: 900, margin: '0 auto', padding: '80px 64px',
-        textAlign: 'center',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+        maxWidth: 1400,
+        margin: '0 auto',
+        padding: '0 clamp(20px, 5vw, 48px)',
+        position: 'relative',
       }}>
-        {/* Section header */}
-        <span style={{
-          display: 'inline-flex', fontFamily: 'var(--font-alt)', fontWeight: 700,
-          fontSize: 11, letterSpacing: 2, color: 'var(--gold)',
-          background: 'var(--gold-dim)', border: '1px solid var(--gold-rule)',
-          padding: '5px 14px', textTransform: 'uppercase', marginBottom: 20,
-        }}>
-          Témoignages
-        </span>
-        <h2 style={{
-          fontFamily: 'var(--font-display)', fontSize: 'clamp(40px, 5vw, 64px)',
-          letterSpacing: 2, lineHeight: 0.95, color: 'var(--text)', margin: '0 0 48px',
-        }}>
-          ILS ONT TRANSFORMÉ LEUR CORPS
-        </h2>
 
-        {/* Large gold quotation mark */}
+        {/* Header with medal on right */}
         <div style={{
-          fontFamily: 'Georgia, serif', fontSize: 120, lineHeight: 0.5,
-          color: 'var(--gold)', opacity: 0.25, marginBottom: 16, userSelect: 'none',
-        }}>&ldquo;</div>
+          display: 'grid',
+          gridTemplateColumns: '1.6fr 1fr',
+          gap: 'clamp(32px, 5vw, 64px)',
+          alignItems: 'center',
+          marginBottom: 80,
+        }}>
+          <div>
+            <div ref={eyebrowRef} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 12,
+              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+              fontSize: 11, letterSpacing: 3,
+              color: 'var(--gold)',
+              marginBottom: 32,
+              textTransform: 'uppercase',
+            }}>
+              <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
+              Témoignages
+            </div>
 
-        {/* Active testimonial */}
-        <div style={{ minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p
-            key={active}
-            style={{
-              fontSize: 'clamp(18px, 2.5vw, 24px)',
-              color: 'var(--text)',
-              fontStyle: 'italic',
-              fontWeight: 300,
-              lineHeight: 1.7,
-              margin: '0 auto',
-              maxWidth: 700,
-              animation: 'fadeQuote 0.5s ease',
-            }}
-          >
-            {t.quote}
-          </p>
-        </div>
+            <h2 ref={headlineRef} style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(48px, 7vw, 120px)',
+              lineHeight: 0.9,
+              letterSpacing: '-0.01em',
+              textTransform: 'uppercase',
+              margin: 0,
+              color: '#fff',
+            }}>
+              Ils ont<br />
+              <span style={{ color: 'var(--gold)' }}>transformé</span><br />
+              leur corps.
+            </h2>
+          </div>
 
-        {/* Author */}
-        <div style={{ marginTop: 32 }}>
-          <span style={{
-            fontFamily: 'var(--font-alt)', fontWeight: 800, fontSize: 16,
-            color: 'var(--gold)', letterSpacing: 2, textTransform: 'uppercase',
+          {/* Medal image */}
+          <div ref={medalRef} style={{
+            position: 'relative',
+            aspectRatio: '1/1',
+            width: '100%',
+            maxWidth: 360,
+            marginLeft: 'auto',
+            opacity: 0,
           }}>
-            {t.author}
-          </span>
-          <span style={{ color: 'var(--text-dim)', margin: '0 10px' }}>—</span>
-          <span style={{
-            fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)',
-          }}>
-            {t.location}
-          </span>
-        </div>
-
-        {/* Stars */}
-        <div style={{ marginTop: 12, letterSpacing: 4, color: 'var(--gold)', fontSize: 14 }}>
-          ★★★★★
-        </div>
-
-        {/* Dots */}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 32 }}>
-          {testimonials.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              style={{
-                width: active === i ? 28 : 8, height: 8, borderRadius: 4,
-                background: active === i ? 'var(--gold)' : 'var(--text-dim)',
-                border: 'none', cursor: 'pointer',
-                transition: 'all 0.3s ease',
-              }}
+            <Image
+              src="/images/new/medal-gold.png"
+              alt="Médaille MoovX — Discipline, Dedication, Transformation"
+              fill
+              quality={85}
+              sizes="(max-width: 768px) 60vw, 360px"
+              style={{ objectFit: 'contain' }}
             />
+          </div>
+        </div>
+
+        {/* 3 testimonials grid */}
+        <div ref={cardsRef} style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: 24,
+        }}>
+          {TESTIMONIALS.map((t, i) => (
+            <article key={i} style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(212,168,67,0.15)',
+              padding: 'clamp(20px, 3vw, 32px)',
+              position: 'relative',
+              transition: 'all 0.3s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'var(--gold)'
+              e.currentTarget.style.background = 'rgba(212,168,67,0.04)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'rgba(212,168,67,0.15)'
+              e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
+            }}
+            >
+              <Quote size={28} strokeWidth={1} style={{
+                color: 'var(--gold)',
+                opacity: 0.4,
+                marginBottom: 16,
+              }} />
+
+              {/* Stars */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                marginBottom: 20,
+              }}>
+                {[...Array(t.stars)].map((_, j) => (
+                  <Star key={j} size={14} fill="var(--gold)" stroke="var(--gold)" />
+                ))}
+              </div>
+
+              {/* Quote */}
+              <p style={{
+                fontSize: 14, lineHeight: 1.6,
+                color: 'rgba(255,255,255,0.85)',
+                fontStyle: 'italic',
+                marginBottom: 28,
+                minHeight: 130,
+              }}>
+                « {t.quote} »
+              </p>
+
+              {/* Author */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                paddingTop: 20,
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+              }}>
+                <div style={{
+                  width: 44, height: 44,
+                  background: 'rgba(212,168,67,0.15)',
+                  border: '1px solid rgba(212,168,67,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 14,
+                  letterSpacing: 1,
+                  color: 'var(--gold)',
+                  flexShrink: 0,
+                }}>
+                  {t.initials}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 14,
+                    letterSpacing: 1,
+                    color: '#fff',
+                    textTransform: 'uppercase',
+                  }}>
+                    {t.name}
+                  </div>
+                  <div style={{
+                    fontSize: 11,
+                    color: 'rgba(255,255,255,0.5)',
+                    marginTop: 2,
+                  }}>
+                    {t.age} ans · {t.location}
+                  </div>
+                </div>
+
+                {/* Metric */}
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 20,
+                    color: 'var(--gold)',
+                    letterSpacing: 0.5,
+                    lineHeight: 1,
+                  }}>
+                    {t.metric.value}
+                  </div>
+                  <div style={{
+                    fontSize: 9,
+                    color: 'rgba(255,255,255,0.4)',
+                    marginTop: 4,
+                    letterSpacing: 1,
+                    textTransform: 'uppercase',
+                  }}>
+                    {t.metric.label}
+                  </div>
+                </div>
+              </div>
+
+              {/* Program tag */}
+              <div style={{
+                marginTop: 16,
+                fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+                fontSize: 10,
+                color: 'rgba(212,168,67,0.7)',
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+              }}>
+                {t.program}
+              </div>
+            </article>
           ))}
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeQuote {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 768px) {
-          #testimonials > div { padding: 80px 24px !important; }
-        }
-      `}</style>
     </section>
-  );
+  )
 }
