@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MessageCircle, Sparkles, User, Target, Settings, LogOut, ChevronRight } from 'lucide-react'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight } from 'lucide-react'
+import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 import { colors, fonts } from '../../../lib/design-tokens'
 import { getLevelFromXP } from '../../../lib/gamification'
 
@@ -18,7 +19,7 @@ interface AccountTabProps {
   unreadCount: number
   supabase: any
   userId?: string
-  onNavigate: (tab: 'messages' | 'coachIA' | 'profil') => void
+  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback') => void
   onLogout: () => void
 }
 
@@ -60,6 +61,7 @@ export default function AccountTab({
       .then(({ data }: any) => { if (data) setXpData(data) })
   }, [supabase, userId])
 
+  const feedbackUnread = useMyFeedbackBadge()
   const xp = xpData?.total_xp || 0
   const { level, xpForNext, xpInLevel } = getLevelFromXP(xp)
 
@@ -126,6 +128,18 @@ export default function AccountTab({
             <User size={18} color={GOLD} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Mon profil</span>
             <span style={{ flex: 1 }} />
+            <ChevronRight size={16} color={TEXT_DIM} />
+          </button>
+          <div style={divider} />
+          <button onClick={() => onNavigate('feedback')} style={itemStyle}>
+            <MessageSquare size={18} color={GOLD} />
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Mes rapports</span>
+            <span style={{ flex: 1 }} />
+            {feedbackUnread > 0 && (
+              <span style={{ background: GOLD, color: '#0e0e0e', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
+                {feedbackUnread}
+              </span>
+            )}
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
           <div style={divider} />
