@@ -10,11 +10,11 @@
 
 **Date derniere mise a jour** : 2026-05-14
 **Branche** : main
-**HEAD** : `ef6df1c` feat(admin): revenue dashboard + audit logs pages
+**HEAD** : `c8eea7c` fix(admin): correct currency conversion (Stripe cents vs DB major units)
 **Working tree** : clean
 
 ### Tache en cours
-Admin console — pages Revenue + Logs livrees
+Admin console — fix conversion centimes/francs livre
 
 ### Blockers
 Aucun
@@ -46,6 +46,7 @@ Test navigateur page admin/users
 
 - 14:00 `ac04cfc` feat(admin): users management page with search, filters and inline actions (4b.1)
 - 14:15 `ef6df1c` feat(admin): revenue dashboard + audit logs pages (4b.2)
+- 14:30 `c8eea7c` fix(admin): correct currency conversion cents vs francs
 
 ### 2026-05-11
 
