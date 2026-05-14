@@ -10,11 +10,11 @@
 
 **Date derniere mise a jour** : 2026-05-14
 **Branche** : main
-**HEAD** : `c8eea7c` fix(admin): correct currency conversion (Stripe cents vs DB major units)
+**HEAD** : `0b4c428` feat(admin): show Stripe net revenue + 12-month evolution chart
 **Working tree** : clean
 
 ### Tache en cours
-Admin console — fix conversion centimes/francs livre
+Admin console — net revenue + chart 12 mois livre
 
 ### Blockers
 Aucun
@@ -47,6 +47,7 @@ Test navigateur page admin/users
 - 14:00 `ac04cfc` feat(admin): users management page with search, filters and inline actions (4b.1)
 - 14:15 `ef6df1c` feat(admin): revenue dashboard + audit logs pages (4b.2)
 - 14:30 `c8eea7c` fix(admin): correct currency conversion cents vs francs
+- 14:45 `0b4c428` feat(admin): Stripe net revenue + 12-month chart
 
 ### 2026-05-11
 
