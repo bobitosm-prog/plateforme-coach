@@ -6,16 +6,18 @@ interface Props {
 
 export function PageHeader({ title, description, action }: Props) {
   return (
-    <div className="flex items-start justify-between mb-8">
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
-          {title}
-        </h1>
-        {description && (
-          <p className="text-sm text-zinc-400 mt-1.5">{description}</p>
-        )}
+    <header className="mb-10 pb-6 border-b border-amber-900/10">
+      <div className="flex items-end justify-between gap-6 flex-wrap">
+        <div className="min-w-0">
+          <h1 className="text-[28px] leading-tight font-semibold text-zinc-100 tracking-tight">
+            {title}
+          </h1>
+          {description && (
+            <p className="text-sm text-zinc-500 mt-2 max-w-xl">{description}</p>
+          )}
+        </div>
+        {action && <div className="shrink-0">{action}</div>}
       </div>
-      {action && <div>{action}</div>}
-    </div>
+    </header>
   )
 }

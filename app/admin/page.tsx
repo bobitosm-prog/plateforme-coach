@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Users, DollarSign, Zap, Calendar, Coins, Crown } from 'lucide-react'
+import { Users, Zap, Calendar, Coins, Crown, CreditCard, UserCheck, Mail } from 'lucide-react'
 import { adminFetch } from '@/lib/admin/api-client'
 import { PageHeader } from './_components/PageHeader'
 import { KpiCard } from './_components/KpiCard'
@@ -16,6 +16,13 @@ interface StatsResponse {
   last_30d: { amount: number; count: number }
   revenue_by_month: { month: string; amount: number; count: number }[]
   generated_at: string
+}
+
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+
+function formatMonth(monthKey: string): string {
+  const [y, m] = monthKey.split('-')
+  return `${MONTH_LABELS[parseInt(m, 10) - 1]} ${y.slice(2)}`
 }
 
 export default function AdminOverviewPage() {
@@ -37,10 +44,10 @@ export default function AdminOverviewPage() {
   }, [])
 
   return (
-    <>
+    <div className="admin-fade-in">
       <PageHeader
         title="Overview"
-        description="Vue d'ensemble de la plateforme MoovX"
+        description="État de la plateforme MoovX en temps réel"
       />
 
       {error && (
@@ -55,114 +62,146 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      {/* KPIs revenue */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <KpiCard
-          label="MRR"
-          value={loading ? '—' : formatCurrency(stats?.mrr.amount || 0, stats?.mrr.currency)}
-          subtext="Revenue récurrent mensuel"
-          icon={Zap}
-          loading={loading}
-          accent="gold"
-        />
-        <KpiCard
-          label="CA total"
-          value={loading ? '—' : formatCurrency(stats?.total_revenue.amount || 0, stats?.total_revenue.currency)}
-          subtext="Cumul depuis le début"
-          icon={Coins}
-          loading={loading}
-          accent="emerald"
-        />
-        <KpiCard
-          label="30 derniers jours"
-          value={loading ? '—' : formatCurrency(stats?.last_30d.amount || 0, 'CHF')}
-          subtext={`${stats?.last_30d.count || 0} paiement${(stats?.last_30d.count || 0) > 1 ? 's' : ''}`}
-          icon={Calendar}
-          loading={loading}
-          accent="zinc"
-        />
-        <KpiCard
-          label="Abonnements actifs"
-          value={loading ? '—' : String(stats?.active_subscriptions || 0)}
-          subtext="Stripe live"
-          icon={DollarSign}
-          loading={loading}
-          accent="gold"
-        />
-      </div>
-
-      {/* KPIs users */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KpiCard
-          label="Total comptes"
-          value={loading ? '—' : String(stats?.users.total || 0)}
-          icon={Users}
-          loading={loading}
-          accent="zinc"
-        />
-        <KpiCard
-          label="Lifetime"
-          value={loading ? '—' : String(stats?.users.lifetime || 0)}
-          icon={Crown}
-          loading={loading}
-          accent="gold"
-        />
-        <KpiCard
-          label="Monthly actifs"
-          value={loading ? '—' : String(stats?.users.monthly || 0)}
-          loading={loading}
-          accent="emerald"
-        />
-        <KpiCard
-          label="Invités"
-          value={loading ? '—' : String(stats?.users.invited || 0)}
-          loading={loading}
-          accent="zinc"
-        />
-      </div>
-
-      {/* Mini breakdown mensuel */}
-      <Card title="Revenue par mois" description="12 derniers mois (table payments)">
-        <div className="p-6">
-          {loading ? (
-            <div className="h-32 bg-white/5 rounded animate-pulse" />
-          ) : !stats?.revenue_by_month || stats.revenue_by_month.length === 0 ? (
-            <div className="text-zinc-500 text-sm text-center py-8">
-              Aucune donnée disponible
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {stats.revenue_by_month.slice().reverse().map((m) => {
-                const max = Math.max(...stats.revenue_by_month.map(x => x.amount))
-                const pct = max > 0 ? (m.amount / max) * 100 : 0
-                return (
-                  <div key={m.month} className="flex items-center gap-4">
-                    <div className="text-xs text-zinc-500 w-16 font-mono">{m.month}</div>
-                    <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <div className="text-xs text-zinc-300 w-24 text-right font-mono">
-                      {formatCurrency(m.amount, 'CHF')}
-                    </div>
-                    <div className="text-xs text-zinc-500 w-12 text-right">
-                      {m.count}x
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+      {/* Section : Revenue */}
+      <section className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.12em] text-zinc-500 font-semibold">
+            Revenue
+          </h2>
+          <div className="flex-1 h-px bg-amber-900/10" />
         </div>
-      </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="MRR"
+            value={loading ? '—' : formatCurrency(stats?.mrr.amount || 0, stats?.mrr.currency)}
+            subtext="Récurrent mensuel"
+            icon={Zap}
+            loading={loading}
+            accent="gold"
+          />
+          <KpiCard
+            label="CA total"
+            value={loading ? '—' : formatCurrency(stats?.total_revenue.amount || 0, stats?.total_revenue.currency)}
+            subtext="Cumul plateforme"
+            icon={Coins}
+            loading={loading}
+            accent="emerald"
+          />
+          <KpiCard
+            label="30 derniers jours"
+            value={loading ? '—' : formatCurrency(stats?.last_30d.amount || 0, 'CHF')}
+            subtext={`${stats?.last_30d.count || 0} paiement${(stats?.last_30d.count || 0) > 1 ? 's' : ''}`}
+            icon={Calendar}
+            loading={loading}
+            accent="zinc"
+          />
+          <KpiCard
+            label="Abonnés actifs"
+            value={loading ? '—' : String(stats?.active_subscriptions || 0)}
+            subtext="Stripe live"
+            icon={CreditCard}
+            loading={loading}
+            accent="gold"
+          />
+        </div>
+      </section>
+
+      {/* Section : Utilisateurs */}
+      <section className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.12em] text-zinc-500 font-semibold">
+            Utilisateurs
+          </h2>
+          <div className="flex-1 h-px bg-amber-900/10" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="Total comptes"
+            value={loading ? '—' : String(stats?.users.total || 0)}
+            icon={Users}
+            loading={loading}
+            accent="zinc"
+          />
+          <KpiCard
+            label="Lifetime"
+            value={loading ? '—' : String(stats?.users.lifetime || 0)}
+            subtext="Accès permanent"
+            icon={Crown}
+            loading={loading}
+            accent="gold"
+          />
+          <KpiCard
+            label="Monthly actifs"
+            value={loading ? '—' : String(stats?.users.monthly || 0)}
+            subtext="Abonnement en cours"
+            icon={UserCheck}
+            loading={loading}
+            accent="emerald"
+          />
+          <KpiCard
+            label="Invités"
+            value={loading ? '—' : String(stats?.users.invited || 0)}
+            subtext="Pas encore actifs"
+            icon={Mail}
+            loading={loading}
+            accent="zinc"
+          />
+        </div>
+      </section>
+
+      {/* Section : Revenue par mois */}
+      <section>
+        <Card
+          title="Revenue mensuel"
+          description="12 derniers mois (table payments)"
+        >
+          <div className="p-6">
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : !stats?.revenue_by_month || stats.revenue_by_month.length === 0 ? (
+              <div className="text-zinc-500 text-sm text-center py-12">
+                Aucune donnée disponible
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.revenue_by_month.slice().reverse().map((m) => {
+                  const max = Math.max(...stats.revenue_by_month.map(x => x.amount))
+                  const pct = max > 0 ? (m.amount / max) * 100 : 0
+                  return (
+                    <div key={m.month} className="flex items-center gap-4 group/row">
+                      <div className="text-xs text-zinc-500 w-20 font-mono shrink-0">
+                        {formatMonth(m.month)}
+                      </div>
+                      <div className="flex-1 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500/80 to-amber-400 rounded-full transition-all duration-500 ease-out group-hover/row:from-amber-400 group-hover/row:to-amber-300"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-zinc-200 w-28 text-right font-mono tabular-nums">
+                        {formatCurrency(m.amount, 'CHF')}
+                      </div>
+                      <div className="text-[11px] text-zinc-500 w-10 text-right tabular-nums shrink-0">
+                        {m.count}x
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </Card>
+      </section>
 
       {stats?.generated_at && (
-        <p className="text-[10px] text-zinc-600 mt-6 text-right">
+        <p className="text-[10px] text-zinc-600 mt-8 text-right tabular-nums">
           Données générées à {formatDateTime(stats.generated_at)}
         </p>
       )}
-    </>
+    </div>
   )
 }

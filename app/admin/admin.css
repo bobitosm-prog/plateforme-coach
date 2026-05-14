@@ -7,3 +7,33 @@
     padding-left: 240px;
   }
 }
+
+/* Container content centré, max-width premium */
+.admin-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 4rem;
+  padding-bottom: 3rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+    padding-top: 3rem;
+  }
+}
+
+/* Anim subtile au mount */
+.admin-fade-in {
+  animation: adminFadeIn 0.4s ease-out;
+}
+
+@keyframes adminFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
