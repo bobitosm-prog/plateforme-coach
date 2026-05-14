@@ -47,7 +47,7 @@ export function AdminSidebar({ pathname, email }: Props) {
       )}
 
       <aside className={`
-        fixed top-0 left-0 h-screen w-[240px] z-40
+        fixed top-0 left-0 h-screen w-60 z-40
         bg-[#0A0805] border-r border-amber-900/15
         flex flex-col
         transition-transform duration-200 ease-out
