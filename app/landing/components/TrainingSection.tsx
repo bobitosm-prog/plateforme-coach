@@ -1,298 +1,332 @@
-'use client';
+'use client'
+import { useEffect, useRef } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Dumbbell, Flame, Activity, Trophy } from 'lucide-react'
 
-import React from 'react';
-import { useReveal } from './shared';
+gsap.registerPlugin(ScrollTrigger)
 
-const PPL_ROWS = [
-  { day: 'LUNDI', type: 'Push A', focus: 'Poitrine, Épaules, Triceps' },
-  { day: 'MARDI', type: 'Pull A', focus: 'Dos, Biceps, Arrière épaules' },
-  { day: 'MERCREDI', type: 'Legs A', focus: 'Quadriceps, Ischio, Mollets' },
-  { day: 'JEUDI', type: 'Push B', focus: 'Poitrine, Épaules, Triceps' },
-  { day: 'VENDREDI', type: 'Pull B', focus: 'Dos, Biceps, Trapèzes' },
-  { day: 'SAMEDI', type: 'Legs B', focus: 'Fessiers, Ischio, Mollets' },
-];
+const PPL_DAYS = [
+  { day: 'Lun', focus: 'Push', muscles: 'Pecs · Épaules · Triceps' },
+  { day: 'Mar', focus: 'Pull', muscles: 'Dos · Biceps · Trapèzes' },
+  { day: 'Mer', focus: 'Legs', muscles: 'Quadriceps · Fessiers · Mollets' },
+  { day: 'Jeu', focus: 'Push', muscles: 'Variations & intensité' },
+  { day: 'Ven', focus: 'Pull', muscles: 'Volume & isolation' },
+  { day: 'Sam', focus: 'Legs', muscles: 'Force & explosivité' },
+]
+
+const FEATURES = [
+  { icon: Dumbbell, value: '163', label: 'exercices guidés' },
+  { icon: Activity, value: '14',  label: 'séances HIIT & LISS' },
+  { icon: Flame,    value: '6',   label: 'jours / semaine' },
+  { icon: Trophy,   value: '∞',   label: 'records personnels' },
+]
 
 export default function TrainingSection() {
-  const { ref, visible } = useReveal();
+  const sectionRef = useRef<HTMLElement>(null)
+  const eyebrowRef = useRef<HTMLDivElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const ledeRef = useRef<HTMLParagraphElement>(null)
+  const planRef = useRef<HTMLDivElement>(null)
+  const statsRef = useRef<HTMLDivElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
+  const imageWrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!sectionRef.current) return
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(imageWrapRef.current,
+        { opacity: 0, scale: 1.08 },
+        {
+          opacity: 1, scale: 1, duration: 1.4, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 75%', toggleActions: 'play none none reverse' },
+        }
+      )
+
+      gsap.fromTo([eyebrowRef.current, headlineRef.current, ledeRef.current, planRef.current, statsRef.current, ctaRef.current],
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 70%', toggleActions: 'play none none reverse' },
+        }
+      )
+    }, sectionRef)
+
+    return () => ctx.revert()
+  }, [])
 
   return (
-    <>
-      <style>{`
-        .training-ppl-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 64px;
-          align-items: center;
-        }
-        .training-ppl-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        .training-ppl-table thead th {
-          font-family: var(--font-alt);
-          font-weight: 800;
-          font-size: 11px;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-          color: var(--gold);
-          border-bottom: 1px solid var(--gold-rule);
-          padding: 0 0 14px;
-          text-align: left;
-        }
-        .training-ppl-table tbody tr {
-          border-bottom: 1px solid var(--text-dim);
-          transition: background 0.3s ease;
-        }
-        .training-ppl-table tbody tr:hover {
-          background: var(--surface-2);
-        }
-        .training-ppl-table tbody td {
-          padding: 16px 0;
-        }
-        .training-mini-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1px;
-          background: var(--text-dim);
-          border: 1px solid var(--text-dim);
-          margin-top: 32px;
-        }
-        .training-mini-cell {
-          background: var(--surface);
-          padding: 28px 24px;
-          text-align: center;
-        }
-        @media (max-width: 1024px) {
-          .training-ppl-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-      <section
-        ref={ref}
-        id="training"
-        style={{
-          background: 'var(--surface)',
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(30px)',
-          transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1280,
-            margin: '0 auto',
-            padding: '80px 64px',
-          }}
-        >
-          {/* Section header */}
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <span
-              style={{
-                display: 'inline-flex',
-                fontFamily: 'var(--font-alt)',
-                fontWeight: 700,
-                fontSize: 11,
-                letterSpacing: 2,
-                color: 'var(--gold)',
-                background: 'var(--gold-dim)',
-                border: '1px solid var(--gold-rule)',
-                padding: '5px 14px',
-                textTransform: 'uppercase',
-                marginBottom: 20,
-              }}
-            >
-              02 &mdash; Entra&icirc;nement
-            </span>
-            <h2
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(40px, 5vw, 64px)',
-                letterSpacing: 2,
-                lineHeight: 0.95,
-                color: 'var(--text)',
-                marginBottom: 16,
-                marginTop: 0,
-              }}
-            >
-              PROGRAMME HYPERTROPHIE
-            </h2>
-            <p
-              style={{
-                fontSize: 16,
-                color: 'var(--text-muted)',
-                fontWeight: 300,
-                margin: 0,
-              }}
-            >
-              Push/Pull/Legs 6 jours + Cardio HIIT &amp; LISS int&eacute;gr&eacute;
-            </p>
+    <section ref={sectionRef} id="training" style={{
+      position: 'relative',
+      background: '#0D0B08',
+      color: '#fff',
+      padding: 'clamp(80px, 12vw, 120px) 0',
+      overflow: 'hidden',
+    }}>
+      {/* Radial accent (left side — opposite from Nutrition) */}
+      <div style={{
+        position: 'absolute',
+        top: '30%', left: '-10%',
+        width: 600, height: 600,
+        background: 'radial-gradient(circle, rgba(212,168,67,0.06), transparent 60%)',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{
+        maxWidth: 1400,
+        margin: '0 auto',
+        padding: '0 clamp(20px, 5vw, 48px)',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 'clamp(40px, 6vw, 80px)',
+        alignItems: 'center',
+        position: 'relative',
+        zIndex: 2,
+      }}>
+
+        {/* LEFT : Image + data cards */}
+        <div ref={imageWrapRef} style={{
+          position: 'relative',
+          aspectRatio: '4/5',
+          width: '100%',
+          order: 1,
+          opacity: 0,
+        }}>
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 4,
+            overflow: 'hidden',
+            border: '1px solid rgba(212,168,67,0.15)',
+          }}>
+            <Image
+              src="/images/new/runner-mountains.png"
+              alt="Coureur en montagne au coucher de soleil — entraînement cardio MoovX"
+              fill
+              quality={85}
+              sizes="(max-width: 768px) 100vw, 50vw"
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+            />
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.5) 100%)',
+              pointerEvents: 'none',
+            }} />
           </div>
 
-          {/* PPL grid — with watermark */}
-          <div className="training-ppl-grid" style={{ position: 'relative' }}>
-            {/* Oversized watermark */}
+          {/* Data card top-right */}
+          <div style={{
+            position: 'absolute',
+            top: 24, right: -20,
+            background: 'rgba(20,18,9,0.92)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(212,168,67,0.25)',
+            padding: '16px 20px',
+            borderRadius: 4,
+            zIndex: 3,
+          }}>
             <div style={{
-              position: 'absolute', top: '-40px', left: '-20px',
-              fontFamily: 'var(--font-display)', fontSize: 'clamp(180px, 20vw, 280px)',
-              color: 'rgba(212,168,67,0.04)', lineHeight: 1, pointerEvents: 'none',
-              userSelect: 'none', letterSpacing: -4, zIndex: 0,
-            }}>163</div>
-
-            {/* Left: PPL table */}
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <table className="training-ppl-table">
-                <thead>
-                  <tr>
-                    <th>Jour</th>
-                    <th>Type</th>
-                    <th>Focus Musculaire</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {PPL_ROWS.map((row) => (
-                    <tr key={row.day}>
-                      <td
-                        style={{
-                          fontFamily: 'var(--font-display)',
-                          fontSize: 20,
-                          color: 'var(--text)',
-                          letterSpacing: 1,
-                        }}
-                      >
-                        {row.day}
-                      </td>
-                      <td>
-                        <span
-                          style={{
-                            fontFamily: 'var(--font-alt)',
-                            fontWeight: 800,
-                            fontSize: 13,
-                            letterSpacing: 1,
-                            padding: '2px 10px',
-                            background: 'var(--gold-dim)',
-                            color: 'var(--gold)',
-                          }}
-                        >
-                          {row.type}
-                        </span>
-                      </td>
-                      <td
-                        style={{
-                          fontSize: 14,
-                          color: 'var(--text-muted)',
-                          fontWeight: 300,
-                        }}
-                      >
-                        {row.focus}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+              fontSize: 10, letterSpacing: 2,
+              color: 'rgba(255,255,255,0.5)',
+              marginBottom: 4,
+              textTransform: 'uppercase',
+            }}>
+              Séance du jour
             </div>
+            <div style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 28,
+              color: 'var(--gold)',
+              lineHeight: 1, letterSpacing: 1,
+            }}>
+              PUSH A
+            </div>
+            <div style={{
+              fontSize: 11, color: 'rgba(255,255,255,0.5)',
+              marginTop: 6, letterSpacing: 0.5,
+            }}>
+              8 exercices · 52 min
+            </div>
+          </div>
 
-            {/* Right: description */}
-            <div>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  fontFamily: 'var(--font-alt)',
-                  fontWeight: 700,
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  color: 'var(--gold)',
-                  background: 'var(--gold-dim)',
-                  border: '1px solid var(--gold-rule)',
-                  padding: '5px 14px',
-                  textTransform: 'uppercase',
-                  marginBottom: 20,
-                }}
-              >
-                Scientifiquement optimis&eacute;
-              </span>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 'clamp(32px, 4vw, 52px)',
-                  letterSpacing: 2,
-                  lineHeight: 0.95,
-                  color: 'var(--text)',
-                  margin: '0 0 20px',
-                }}
-              >
-                163 EXERCICES GUID&Eacute;S EN FRAN&Ccedil;AIS
-              </h3>
-              <p
-                style={{
-                  fontSize: 15,
-                  color: 'var(--text-muted)',
-                  fontWeight: 300,
-                  lineHeight: 1.7,
-                  margin: '0 0 8px',
-                }}
-              >
-                Chaque exercice est accompagn&eacute; d&apos;un guide visuel d&eacute;taill&eacute; en fran&ccedil;ais.
-                Timer de repos intelligent, suivi des s&eacute;ries et r&eacute;p&eacute;titions,
-                records personnels automatiques. Le programme PPL est con&ccedil;u pour maximiser
-                l&apos;hypertrophie musculaire avec une progression scientifique.
-              </p>
-
-              {/* Mini Bauhaus grid */}
-              <div className="training-mini-grid">
-                <div className="training-mini-cell">
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: 'clamp(36px, 4vw, 48px)',
-                      color: 'var(--gold)',
-                      lineHeight: 1,
-                      marginBottom: 8,
-                    }}
-                  >
-                    163
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: 13,
-                      color: 'var(--text-muted)',
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}
-                  >
-                    Exercices avec vid&eacute;os
-                  </div>
-                </div>
-                <div className="training-mini-cell">
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: 'clamp(36px, 4vw, 48px)',
-                      color: 'var(--gold)',
-                      lineHeight: 1,
-                      marginBottom: 8,
-                    }}
-                  >
-                    14
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: 13,
-                      color: 'var(--text-muted)',
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}
-                  >
-                    S&eacute;ances HIIT &amp; LISS
-                  </div>
-                </div>
-              </div>
+          {/* Data card bottom-left */}
+          <div style={{
+            position: 'absolute',
+            bottom: 32, left: -16,
+            background: 'rgba(20,18,9,0.92)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(212,168,67,0.25)',
+            padding: '14px 18px',
+            borderRadius: 4,
+            zIndex: 3,
+          }}>
+            <div style={{
+              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+              fontSize: 10, letterSpacing: 2,
+              color: 'rgba(255,255,255,0.5)',
+              marginBottom: 6,
+              textTransform: 'uppercase',
+            }}>
+              Streak
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 32, color: 'var(--gold)',
+                lineHeight: 1, letterSpacing: 1,
+              }}>12</span>
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>jours</span>
             </div>
           </div>
         </div>
-      </section>
-    </>
-  );
+
+        {/* RIGHT : Text */}
+        <div style={{ order: 2 }}>
+          <div ref={eyebrowRef} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 12,
+            fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+            fontSize: 11, letterSpacing: 3,
+            color: 'var(--gold)',
+            marginBottom: 32,
+            textTransform: 'uppercase',
+          }}>
+            <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
+            02 — Entraînement
+          </div>
+
+          <h2 ref={headlineRef} style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(48px, 7vw, 120px)',
+            lineHeight: 0.9,
+            letterSpacing: '-0.01em',
+            textTransform: 'uppercase',
+            margin: '0 0 24px',
+            color: '#fff',
+          }}>
+            Programme<br />
+            <span style={{ color: 'var(--gold)' }}>hypertrophie</span>
+          </h2>
+
+          <p ref={ledeRef} style={{
+            fontSize: 'clamp(14px, 1.5vw, 17px)', lineHeight: 1.6,
+            color: 'rgba(255,255,255,0.7)',
+            maxWidth: 480, marginBottom: 40, fontWeight: 300,
+          }}>
+            Push / Pull / Legs sur 6 jours, cardio HIIT & LISS intégré.
+            163 exercices guidés en vidéo, par des experts certifiés.
+          </p>
+
+          {/* PPL Week table */}
+          <div ref={planRef} style={{
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 4,
+            marginBottom: 40,
+            overflow: 'hidden',
+          }}>
+            {PPL_DAYS.map((d, i) => (
+              <div key={i} style={{
+                display: 'grid',
+                gridTemplateColumns: '60px 100px 1fr',
+                gap: 16,
+                padding: '14px 20px',
+                borderBottom: i < PPL_DAYS.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                alignItems: 'center',
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,168,67,0.04)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{
+                  fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+                  fontSize: 10, letterSpacing: 2,
+                  color: 'rgba(255,255,255,0.4)',
+                  textTransform: 'uppercase',
+                }}>
+                  {d.day}
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 14, letterSpacing: 2,
+                  color: 'var(--gold)',
+                  textTransform: 'uppercase',
+                }}>
+                  {d.focus}
+                </span>
+                <span style={{
+                  fontSize: 12,
+                  color: 'rgba(255,255,255,0.55)',
+                }}>
+                  {d.muscles}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Mini stats row */}
+          <div ref={statsRef} style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 24,
+            marginBottom: 40,
+          }}>
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon
+              return (
+                <div key={i}>
+                  <Icon size={18} strokeWidth={1.5} style={{ color: 'var(--gold)', marginBottom: 8 }} />
+                  <div style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 28, color: '#fff',
+                    lineHeight: 1, letterSpacing: 1,
+                  }}>
+                    {f.value}
+                  </div>
+                  <div style={{
+                    fontSize: 10, color: 'rgba(255,255,255,0.5)',
+                    letterSpacing: 1, marginTop: 4,
+                    textTransform: 'uppercase',
+                  }}>
+                    {f.label}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div ref={ctaRef}>
+            <Link
+              href="#pricing"
+              style={{
+                background: 'var(--gold)',
+                color: 'var(--bg, #0D0B08)',
+                padding: '16px 32px',
+                fontFamily: 'var(--font-display)',
+                fontSize: 14, letterSpacing: 3,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                fontWeight: 600,
+                display: 'inline-flex', alignItems: 'center', gap: 12,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translate(-2px, -2px)'
+                e.currentTarget.style.boxShadow = '4px 4px 0 #B8902F'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translate(0, 0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              Démarrer mon programme →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
