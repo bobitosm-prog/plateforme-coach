@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "locale": "de",
+    "name": "Deutsch",
+    "flag": "🇩🇪"
+  },
+  "common": {
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "confirm": "Bestätigen"
+  },
+  "nav": {
+    "login": "Anmelden",
+    "start": "Loslegen",
+    "swissMade": "Swiss Made"
+  },
+  "hero": {
+    "eyebrow": "Swiss Made · Professionelles Coaching",
+    "headline_line1": "Verwandle",
+    "headline_line2": "deinen Körper",
+    "subtitle": "Übertreffe deine Grenzen",
+    "description": "Die erste Schweizer Fitness-Coaching-Plattform, angetrieben von zertifizierten Experten. Massgeschneiderte Ernährungspläne, 6-Tage-PPL-Programm, KI-Coach 24/7.",
+    "cta_primary": "Jetzt starten — 10 Tage gratis →",
+    "cta_secondary": "Entdecken ↓",
+    "trust": "Schliesse dich 1.200+ Nutzern an · Keine Bindung",
+    "stat_users": "aktive Nutzer",
+    "stat_exercises": "geführte Übungen",
+    "stat_foods": "Schweizer Lebensmittel",
+    "stat_coach": "KI-Coach"
+  }
+}

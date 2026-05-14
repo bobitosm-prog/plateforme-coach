@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "locale": "en",
+    "name": "English",
+    "flag": "🇬🇧"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm"
+  },
+  "nav": {
+    "login": "Sign in",
+    "start": "Get started",
+    "swissMade": "Swiss Made"
+  },
+  "hero": {
+    "eyebrow": "Swiss Made · Professional coaching",
+    "headline_line1": "Transform",
+    "headline_line2": "your body",
+    "subtitle": "Push your limits",
+    "description": "The first Swiss fitness coaching platform powered by certified experts. Custom nutrition plans, 6-day PPL program, AI coach 24/7.",
+    "cta_primary": "Get started — 10 days free →",
+    "cta_secondary": "Discover ↓",
+    "trust": "Join 1,200+ users · No commitment",
+    "stat_users": "active users",
+    "stat_exercises": "guided exercises",
+    "stat_foods": "Swiss foods",
+    "stat_coach": "AI coach"
+  }
+}

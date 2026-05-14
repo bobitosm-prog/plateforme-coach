@@ -401,7 +401,7 @@ export default function useClientDetail() {
   /* ── Auth ───────────────────────────────────────────────────── */
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { router.replace('/landing'); return }
+      if (!session) { router.replace('/fr/landing'); return }
       setCoachId(session.user.id)
     })
   }, [router])

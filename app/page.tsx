@@ -94,7 +94,7 @@ export default function CoachApp() {
   /* ── Not authenticated → landing ── */
   if (!h.session && !h.loading) {
     h.supabase.from('app_logs').insert({ level: 'warning', message: 'PAGE_REDIRECT_LANDING', details: { loading: h.loading, hasSession: !!h.session, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/' })
-    h.router.push('/landing')
+    h.router.push('/fr/landing')
     return null
   }
 

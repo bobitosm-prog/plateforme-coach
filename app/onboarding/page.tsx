@@ -73,7 +73,7 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { router.replace('/landing'); return }
+      if (!session) { router.replace('/fr/landing'); return }
       setSession(session)
       const meta = session.user.user_metadata
       if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])

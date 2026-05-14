@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { colors } from '../../../lib/design-tokens'
+import { colors } from '@/lib/design-tokens'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)

@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { colors } from '../../../lib/design-tokens'
+import { colors } from '@/lib/design-tokens'
 
 export default function ScrollBar() {
   const [pct, setPct] = useState(0)
