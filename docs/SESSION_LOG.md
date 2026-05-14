@@ -8,23 +8,19 @@
 
 ## ETAT ACTUEL (mis a jour en continu)
 
-**Date derniere mise a jour** : 2026-05-13 00:00
+**Date derniere mise a jour** : 2026-05-14
 **Branche** : main
-**HEAD** : `ee96e4a` feat(analytics): ProgressTab hex cleanup + fix recharts warnings
+**HEAD** : `ac04cfc` feat(admin): users management page with search, filters and inline actions
 **Working tree** : clean
 
 ### Tache en cours
-Aucune — Nutrition 100% + Analytics ProgressTab + AnalyticsSection cables + 5 fixes
+Admin console — page Comptes (users) livree
 
 ### Blockers
 Aucun
 
 ### Prochaine tache prevue
-1. N2.2.3 (M, 1h) : Calendrier harmonise T3 Training (reporte, risque moyen)
-2. Sprint Recovery Modal V2 — overlay SVG zones sur images IA (P1, 1h30-2h)
-3. Test gym BUG 2 tap-to-autofill + validation sprint progression
-4. Sprint Refonte modele exercices (exercise_id FK) — M, 3-4h, P1
-5. Sprint Layout Desktop autres sections
+Test navigateur page admin/users
 
 ### Backlog priorisee
 1. ~~Sprint Securite~~ ✅ DONE
@@ -45,6 +41,10 @@ Aucun
 ---
 
 ## LOG CHRONOLOGIQUE (append-only, ne jamais effacer)
+
+### 2026-05-14
+
+- 14:00 `ac04cfc` feat(admin): users management page with search, filters and inline actions (4b.1)
 
 ### 2026-05-11
 
