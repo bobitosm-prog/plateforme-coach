@@ -10,11 +10,11 @@
 
 **Date derniere mise a jour** : 2026-05-14
 **Branche** : main
-**HEAD** : `0b4c428` feat(admin): show Stripe net revenue + 12-month evolution chart
+**HEAD** : `8e4e0ee` style(admin): align design system with Coach Pro brand (foundation)
 **Working tree** : clean
 
 ### Tache en cours
-Admin console — net revenue + chart 12 mois livre
+Admin console — design brand foundation livre (5a)
 
 ### Blockers
 Aucun
@@ -48,6 +48,7 @@ Test navigateur page admin/users
 - 14:15 `ef6df1c` feat(admin): revenue dashboard + audit logs pages (4b.2)
 - 14:30 `c8eea7c` fix(admin): correct currency conversion cents vs francs
 - 14:45 `0b4c428` feat(admin): Stripe net revenue + 12-month chart
+- 15:00 `8e4e0ee` style(admin): align design with Coach Pro brand (5a)
 
 ### 2026-05-11
 
