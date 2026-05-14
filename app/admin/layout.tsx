@@ -65,14 +65,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-[#0D0B08] text-zinc-100">
-      <div className="flex">
-        <AdminSidebar pathname={pathname} email={email} />
-        <main className="flex-1 min-h-screen ml-0 lg:ml-[240px]">
-          <div className="px-6 lg:px-10 py-8 lg:py-10 max-w-[1400px]">
-            {children}
-          </div>
-        </main>
-      </div>
+      <AdminSidebar pathname={pathname} email={email} />
+      <main className="lg:pl-[240px] min-h-screen">
+        <div className="px-6 lg:px-10 pt-16 lg:pt-10 pb-10 max-w-[1400px]">
+          {children}
+        </div>
+      </main>
       <Toaster
         position="top-right"
         theme="dark"

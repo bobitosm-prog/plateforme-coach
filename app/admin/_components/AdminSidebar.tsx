@@ -32,7 +32,7 @@ export function AdminSidebar({ pathname, email }: Props) {
       {/* Mobile toggle */}
       <button
         onClick={() => setOpen(!open)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#1A150E] border border-amber-900/30 text-zinc-300"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#1A150E] border border-amber-900/40 text-zinc-300 shadow-lg shadow-black/40 backdrop-blur"
         aria-label="Toggle navigation"
       >
         {open ? <X size={20} /> : <Menu size={20} />}
