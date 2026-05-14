@@ -1,177 +1,309 @@
-'use client';
+'use client'
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Plus, MessageCircle } from 'lucide-react'
 
-import React, { useState } from 'react';
-import { useReveal } from './shared';
+gsap.registerPlugin(ScrollTrigger)
 
-const FAQ_DATA = [
+const FAQS = [
   {
-    q: "C'est quoi MoovX ?",
-    a: "MoovX est une plateforme de coaching fitness Swiss Made propulsée par des experts certifiés. Elle combine nutrition personnalisée, entraînement hypertrophie PPL, suivi de progression et coaching connecté. Accessible partout dans le monde.",
+    q: 'C\'est quoi MoovX ?',
+    a: 'MoovX est une plateforme suisse complète qui combine programme d\'entraînement personnalisé, nutrition adaptée, coach IA Athena disponible 24/7, et suivi humain par des coachs certifiés. Conçue et hébergée à Genève, elle s\'adresse aux athlètes amateurs, sportifs débutants et professionnels du coaching.',
   },
   {
-    q: "Comment fonctionne la nutrition experte ?",
-    a: "Nos nutritionnistes analysent ton profil (poids, objectif, activité) et génèrent des plans alimentaires sur 7 jours respectant exactement tes macros. Tu peux scanner ton frigo pour utiliser tes produits existants.",
+    q: 'Comment fonctionne la nutrition experte ?',
+    a: 'Tu scannes ton frigo ou tes codes-barres alimentaires. Notre IA Athena analyse tes ingrédients disponibles, ton historique nutritionnel, et tes macros cibles pour générer des recettes personnalisées en temps réel. Plus de 500 recettes adaptables, suivi des micronutriments, et alertes intelligentes.',
   },
   {
-    q: "Le scanner code-barres fonctionne comment ?",
-    a: "Scanne le code-barres de tes produits avec la caméra. MoovX identifie l'aliment via OpenFoodFacts et l'intègre dans tes plans nutritionnels automatiquement.",
+    q: 'Le scanner code-barres fonctionne comment ?',
+    a: 'Active la caméra de ton téléphone, vise le code-barres. En moins d\'une seconde, l\'app reconnaît le produit (base de données de 2.5M références), affiche les macros et micronutriments, et le suggère pour tes prochains repas selon tes objectifs. Fonctionne sur tous les produits avec EAN-13.',
   },
   {
-    q: "C'est quoi le programme PPL ?",
-    a: "Push/Pull/Legs est un split d'entraînement sur 6 jours optimisé pour l'hypertrophie. Chaque muscle est travaillé 2 fois par semaine pour une croissance maximale.",
+    q: 'C\'est quoi le programme PPL ?',
+    a: 'PPL = Push / Pull / Legs. C\'est une méthode d\'entraînement éprouvée organisée sur 6 jours : 2 séances Push (pecs, épaules, triceps), 2 séances Pull (dos, biceps), 2 séances Legs (jambes complètes). 163 exercices guidés en vidéo, adaptables selon ton niveau et ton équipement.',
   },
   {
-    q: "Mes données sont sécurisées ?",
-    a: "Oui. MoovX utilise Supabase avec chiffrement. Tes données sont hébergées en Europe. Tu peux les exporter ou supprimer ton compte à tout moment. Conformité RGPD complète.",
+    q: 'Mes données sont sécurisées ?',
+    a: 'Oui. Tes données sont hébergées en Suisse sur des serveurs conformes nLPD (équivalent suisse RGPD), chiffrées de bout en bout en AES-256. Aucune donnée n\'est revendue ni partagée avec des tiers. Tu peux exporter ou supprimer tes données à tout moment depuis ton profil.',
   },
   {
-    q: "Je peux essayer gratuitement ?",
-    a: "Oui ! 10 jours d'essai gratuit avec accès à toutes les fonctionnalités. Sans engagement, sans carte de crédit requise.",
+    q: 'Je peux essayer gratuitement ?',
+    a: '14 jours d\'essai 100% gratuit, sans carte bancaire, sans engagement. Tu accèdes à toutes les fonctionnalités : programmes, nutrition, scanner, Athena IA, analytics. Si MoovX te plaît, tu choisis ton abonnement. Sinon, ton compte se désactive automatiquement.',
   },
-  {
-    q: "Comment installer l'app ?",
-    a: "MoovX est une Progressive Web App. iPhone : Safari → Partager → Écran d'accueil. Android : Chrome → menu ⋮ → Installer. Pas besoin d'App Store.",
-  },
-  {
-    q: "Comment fonctionnent les paiements pour les coaches ?",
-    a: "Les coaches fixent leur propre tarif. Les clients paient via Stripe. Le coach reçoit 97% automatiquement, MoovX prélève 3% de commission.",
-  },
-  {
-    q: "Les clients invités par un coach paient la plateforme ?",
-    a: "Non. Les clients invités par un coach accèdent gratuitement à toutes les fonctionnalités MoovX. Ils paient uniquement le tarif de coaching fixé par leur coach.",
-  },
-  {
-    q: "Je peux remplacer un exercice si je n'ai pas le matériel ?",
-    a: "Oui. Notre système analyse tes contraintes et propose 3 alternatives adaptées en temps réel. Blessure, manque de matériel, durée réduite — tout est géré.",
-  },
-];
+]
+
+function FaqItem({ q, a, isOpen, onToggle, index }: {
+  q: string; a: string; isOpen: boolean; onToggle: () => void; index: number
+}) {
+  return (
+    <div style={{
+      borderBottom: '1px solid rgba(255,255,255,0.08)',
+      transition: 'all 0.3s',
+    }}>
+      <button
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        style={{
+          width: '100%',
+          background: 'transparent',
+          border: 'none',
+          padding: 'clamp(20px, 3vw, 32px) 0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'clamp(12px, 2vw, 24px)',
+          cursor: 'pointer',
+          textAlign: 'left',
+          transition: 'all 0.3s',
+        }}
+      >
+        <div style={{
+          fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+          fontSize: 11, letterSpacing: 2,
+          color: isOpen ? 'var(--gold)' : 'rgba(255,255,255,0.4)',
+          minWidth: 32,
+          transition: 'color 0.3s',
+        }}>
+          {String(index + 1).padStart(2, '0')}
+        </div>
+
+        <span style={{
+          flex: 1,
+          fontFamily: 'var(--font-display)',
+          fontSize: 'clamp(18px, 2vw, 28px)',
+          letterSpacing: 0.5,
+          color: isOpen ? '#fff' : 'rgba(255,255,255,0.85)',
+          textTransform: 'uppercase',
+          lineHeight: 1.2,
+          transition: 'color 0.3s',
+        }}>
+          {q}
+        </span>
+
+        <div style={{
+          width: 40, height: 40,
+          border: `1px solid ${isOpen ? 'var(--gold)' : 'rgba(255,255,255,0.2)'}`,
+          background: isOpen ? 'var(--gold)' : 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.3s',
+          flexShrink: 0,
+        }}>
+          <Plus
+            size={18}
+            strokeWidth={2}
+            style={{
+              color: isOpen ? '#0D0B08' : 'var(--gold)',
+              transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s',
+            }}
+          />
+        </div>
+      </button>
+
+      <div style={{
+        overflow: 'hidden',
+        maxHeight: isOpen ? '500px' : '0px',
+        opacity: isOpen ? 1 : 0,
+        transition: 'max-height 0.4s ease, opacity 0.3s ease',
+      }}>
+        <div style={{
+          paddingLeft: 'clamp(44px, 5vw, 56px)',
+          paddingRight: 'clamp(48px, 6vw, 64px)',
+          paddingBottom: 32,
+          fontSize: 15,
+          lineHeight: 1.7,
+          color: 'rgba(255,255,255,0.7)',
+          maxWidth: 800,
+        }}>
+          {a}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function FaqSection() {
-  const { ref, visible } = useReveal();
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null)
+  const eyebrowRef = useRef<HTMLDivElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const accordionRef = useRef<HTMLDivElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
 
-  const handleToggle = (index: number) => {
-    setOpenIndex(prev => (prev === index ? null : index));
-  };
+  const [openIndex, setOpenIndex] = useState<number | null>(0)
+
+  useEffect(() => {
+    if (!sectionRef.current) return
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo([eyebrowRef.current, headlineRef.current],
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 75%', toggleActions: 'play none none reverse' },
+        }
+      )
+
+      gsap.fromTo(accordionRef.current,
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
+          scrollTrigger: { trigger: accordionRef.current, start: 'top 80%', toggleActions: 'play none none reverse' },
+        }
+      )
+
+      gsap.fromTo(ctaRef.current,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1, y: 0, duration: 0.7, ease: 'power3.out',
+          scrollTrigger: { trigger: ctaRef.current, start: 'top 90%', toggleActions: 'play none none reverse' },
+        }
+      )
+    }, sectionRef)
+
+    return () => ctx.revert()
+  }, [])
 
   return (
-    <section
-      ref={ref}
-      id="faq"
-      style={{
-        padding: '120px 64px',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(30px)',
-        transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-      }}
-    >
-      {/* Section header centered */}
-      <div style={{ textAlign: 'center', marginBottom: 64 }}>
-        <span
-          style={{
-            display: 'inline-block',
-            fontFamily: 'var(--font-alt)',
-            fontSize: 13,
-            fontWeight: 600,
-            letterSpacing: 2,
-            color: 'var(--gold)',
-            textTransform: 'uppercase',
-            border: '1px solid var(--gold-rule)',
-            padding: '6px 16px',
-            marginBottom: 24,
-          }}
-        >
-          Questions fréquentes
-        </span>
-        <h2
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(36px, 5vw, 64px)',
-            color: 'var(--text)',
-            letterSpacing: 3,
-            lineHeight: 1,
-            margin: 0,
-          }}
-        >
-          TOUT CE QUE TU DOIS SAVOIR
-        </h2>
-      </div>
+    <section ref={sectionRef} id="faq" style={{
+      position: 'relative',
+      background: '#0D0B08',
+      color: '#fff',
+      padding: 'clamp(80px, 12vw, 120px) 0',
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: '15%', left: '-10%',
+        width: 600, height: 600,
+        background: 'radial-gradient(circle, rgba(212,168,67,0.05), transparent 60%)',
+        pointerEvents: 'none',
+      }} />
 
-      {/* FAQ list */}
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
-        {FAQ_DATA.map((item, index) => {
-          const isOpen = openIndex === index;
-          return (
-            <div
-              key={index}
-              style={{
-                borderBottom: '1px solid var(--text-dim)',
-              }}
-            >
-              <button
-                onClick={() => handleToggle(index)}
-                style={{
-                  width: '100%',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '20px 0',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 16,
-                  fontWeight: 500,
-                  color: 'var(--text)',
-                  textAlign: 'left' as const,
-                }}
-              >
-                <span>{item.q}</span>
-                <span
-                  style={{
-                    width: 28,
-                    height: 28,
-                    minWidth: 28,
-                    border: '1px solid var(--gold-rule)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--gold)',
-                    fontSize: 18,
-                    lineHeight: 1,
-                    transition: 'transform 0.3s ease',
-                    transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
-                    marginLeft: 16,
-                  }}
-                >
-                  +
-                </span>
-              </button>
-              <div
-                style={{
-                  maxHeight: isOpen ? 300 : 0,
-                  overflow: 'hidden',
-                  transition: 'max-height 0.4s ease',
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 14,
-                    color: 'var(--text-muted)',
-                    lineHeight: 1.8,
-                    fontWeight: 300,
-                    paddingBottom: 24,
-                    margin: 0,
-                  }}
-                >
-                  {item.a}
-                </p>
+      <div style={{
+        maxWidth: 1100,
+        margin: '0 auto',
+        padding: '0 clamp(20px, 5vw, 48px)',
+        position: 'relative',
+      }}>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <div ref={eyebrowRef} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 12,
+            fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+            fontSize: 11, letterSpacing: 3,
+            color: 'var(--gold)',
+            marginBottom: 32,
+            textTransform: 'uppercase',
+          }}>
+            <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
+            Questions fréquentes
+            <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
+          </div>
+
+          <h2 ref={headlineRef} style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(48px, 6vw, 100px)',
+            lineHeight: 0.95,
+            letterSpacing: '-0.01em',
+            textTransform: 'uppercase',
+            margin: 0,
+            color: '#fff',
+          }}>
+            Tout ce que tu<br />
+            <span style={{ color: 'var(--gold)' }}>dois savoir.</span>
+          </h2>
+        </div>
+
+        {/* Accordion */}
+        <div ref={accordionRef} style={{
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          marginBottom: 64,
+          opacity: 0,
+        }}>
+          {FAQS.map((f, i) => (
+            <FaqItem
+              key={i}
+              q={f.q}
+              a={f.a}
+              isOpen={openIndex === i}
+              onToggle={() => setOpenIndex(openIndex === i ? null : i)}
+              index={i}
+            />
+          ))}
+        </div>
+
+        {/* CTA Contact */}
+        <div ref={ctaRef} style={{
+          padding: 'clamp(24px, 4vw, 40px) clamp(24px, 4vw, 48px)',
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(212,168,67,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 32,
+          flexWrap: 'wrap',
+          opacity: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{
+              width: 56, height: 56,
+              background: 'rgba(212,168,67,0.08)',
+              border: '1px solid rgba(212,168,67,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <MessageCircle size={24} strokeWidth={1.5} style={{ color: 'var(--gold)' }} />
+            </div>
+            <div>
+              <div style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 20, letterSpacing: 1,
+                color: '#fff', textTransform: 'uppercase',
+                marginBottom: 4,
+              }}>
+                Une autre question ?
+              </div>
+              <div style={{
+                fontSize: 13, color: 'rgba(255,255,255,0.6)',
+                lineHeight: 1.5,
+              }}>
+                Notre équipe répond en moins de 2h en semaine.
               </div>
             </div>
-          );
-        })}
+          </div>
+
+          <Link
+            href="mailto:hello@moovx.ch"
+            style={{
+              background: 'var(--gold)',
+              color: '#0D0B08',
+              padding: '14px 28px',
+              fontFamily: 'var(--font-display)',
+              fontSize: 13, letterSpacing: 2.5,
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              fontWeight: 700,
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              transition: 'all 0.2s',
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translate(-2px, -2px)'
+              e.currentTarget.style.boxShadow = '4px 4px 0 #B8902F'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translate(0, 0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
+            Contacter le support
+          </Link>
+        </div>
       </div>
     </section>
-  );
+  )
 }
