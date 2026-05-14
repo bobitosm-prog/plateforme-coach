@@ -1,28 +1,25 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Users, Zap, Calendar, Coins, Crown, CreditCard, UserCheck, Mail } from 'lucide-react'
+import { Users, Zap, Calendar, Coins, Crown, CreditCard, UserCheck, Mail, TrendingDown } from 'lucide-react'
 import { adminFetch } from '@/lib/admin/api-client'
 import { PageHeader } from './_components/PageHeader'
 import { KpiCard } from './_components/KpiCard'
 import { Card } from './_components/Card'
-import { formatCurrencyFromCents, formatCurrencyFromMajor, formatDateTime } from './_components/formatters'
+import { RevenueChart } from './_components/RevenueChart'
+import { formatCurrencyFromCents, formatDateTime } from './_components/formatters'
 
 interface StatsResponse {
   mrr: { amount: number; currency: string }
   active_subscriptions: number
   stripe_error: string | null
   users: { lifetime: number; monthly: number; trial: number; invited: number; total: number }
-  total_revenue: { amount: number; currency: string }
-  last_30d: { amount: number; count: number }
-  revenue_by_month: { month: string; amount: number; count: number }[]
+  total_gross: number
+  total_fee: number
+  total_net: number
+  last_30d: { gross: number; fee: number; net: number; count: number }
+  revenue_by_month: { month: string; gross: number; fee: number; net: number; count: number }[]
+  currency: string
   generated_at: string
-}
-
-const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-
-function formatMonth(monthKey: string): string {
-  const [y, m] = monthKey.split('-')
-  return `${MONTH_LABELS[parseInt(m, 10) - 1]} ${y.slice(2)}`
 }
 
 export default function AdminOverviewPage() {
@@ -43,11 +40,15 @@ export default function AdminOverviewPage() {
     })()
   }, [])
 
+  const feePercentage = stats && stats.total_gross > 0
+    ? ((stats.total_fee / stats.total_gross) * 100).toFixed(1)
+    : '0'
+
   return (
     <div className="admin-fade-in">
       <PageHeader
         title="Overview"
-        description="État de la plateforme MoovX en temps réel"
+        description="Etat de la plateforme MoovX en temps reel"
       />
 
       {error && (
@@ -58,11 +59,11 @@ export default function AdminOverviewPage() {
 
       {stats?.stripe_error && (
         <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
-          Données Stripe indisponibles : {stats.stripe_error}
+          Donnees Stripe partielles : {stats.stripe_error}
         </div>
       )}
 
-      {/* Section : Revenue */}
+      {/* Section Revenue */}
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-[11px] uppercase tracking-[0.12em] text-zinc-500 font-semibold">
@@ -70,44 +71,90 @@ export default function AdminOverviewPage() {
           </h2>
           <div className="flex-1 h-px bg-amber-900/10" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           <KpiCard
-            label="MRR"
-            value={loading ? '—' : formatCurrencyFromCents(stats?.mrr.amount || 0, stats?.mrr.currency)}
-            subtext="Récurrent mensuel"
-            icon={Zap}
+            label="CA brut"
+            value={loading ? '—' : formatCurrencyFromCents(stats?.total_gross || 0, stats?.currency)}
+            subtext="Cumul depuis le debut"
+            icon={Coins}
             loading={loading}
             accent="gold"
           />
           <KpiCard
-            label="CA total"
-            value={loading ? '—' : formatCurrencyFromMajor(stats?.total_revenue.amount || 0, stats?.total_revenue.currency)}
-            subtext="Cumul plateforme"
-            icon={Coins}
+            label="Net apres frais"
+            value={loading ? '—' : formatCurrencyFromCents(stats?.total_net || 0, stats?.currency)}
+            subtext="Ce que vous touchez reellement"
+            icon={CreditCard}
             loading={loading}
             accent="emerald"
           />
           <KpiCard
-            label="30 derniers jours"
-            value={loading ? '—' : formatCurrencyFromMajor(stats?.last_30d.amount || 0, 'CHF')}
-            subtext={`${stats?.last_30d.count || 0} paiement${(stats?.last_30d.count || 0) > 1 ? 's' : ''}`}
-            icon={Calendar}
+            label="Frais Stripe"
+            value={loading ? '—' : formatCurrencyFromCents(stats?.total_fee || 0, stats?.currency)}
+            subtext={`≈ ${feePercentage}% du brut`}
+            icon={TrendingDown}
             loading={loading}
-            accent="zinc"
+            accent="rose"
           />
           <KpiCard
-            label="Abonnés actifs"
-            value={loading ? '—' : String(stats?.active_subscriptions || 0)}
-            subtext="Stripe live"
-            icon={CreditCard}
+            label="MRR"
+            value={loading ? '—' : formatCurrencyFromCents(stats?.mrr.amount || 0, stats?.mrr.currency)}
+            subtext={`${stats?.active_subscriptions || 0} abonne(s) actif(s)`}
+            icon={Zap}
             loading={loading}
             accent="gold"
           />
         </div>
+
+        {/* Graphique evolution */}
+        <Card
+          title="Evolution sur 12 mois"
+          description="Brut (or) vs Net apres frais Stripe (vert)"
+        >
+          <div className="p-6">
+            <RevenueChart
+              data={stats?.revenue_by_month || []}
+              loading={loading}
+            />
+          </div>
+        </Card>
       </section>
 
-      {/* Section : Utilisateurs */}
+      {/* Section 30 derniers jours */}
       <section className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.12em] text-zinc-500 font-semibold">
+            30 derniers jours
+          </h2>
+          <div className="flex-1 h-px bg-amber-900/10" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <KpiCard
+            label="Brut 30j"
+            value={loading ? '—' : formatCurrencyFromCents(stats?.last_30d.gross || 0, stats?.currency)}
+            subtext={`${stats?.last_30d.count || 0} transaction(s)`}
+            icon={Calendar}
+            loading={loading}
+            accent="gold"
+          />
+          <KpiCard
+            label="Net 30j"
+            value={loading ? '—' : formatCurrencyFromCents(stats?.last_30d.net || 0, stats?.currency)}
+            subtext="Apres commission Stripe"
+            loading={loading}
+            accent="emerald"
+          />
+          <KpiCard
+            label="Frais 30j"
+            value={loading ? '—' : formatCurrencyFromCents(stats?.last_30d.fee || 0, stats?.currency)}
+            loading={loading}
+            accent="rose"
+          />
+        </div>
+      </section>
+
+      {/* Section Utilisateurs */}
+      <section>
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-[11px] uppercase tracking-[0.12em] text-zinc-500 font-semibold">
             Utilisateurs
@@ -125,7 +172,7 @@ export default function AdminOverviewPage() {
           <KpiCard
             label="Lifetime"
             value={loading ? '—' : String(stats?.users.lifetime || 0)}
-            subtext="Accès permanent"
+            subtext="Acces permanent"
             icon={Crown}
             loading={loading}
             accent="gold"
@@ -139,7 +186,7 @@ export default function AdminOverviewPage() {
             accent="emerald"
           />
           <KpiCard
-            label="Invités"
+            label="Invites"
             value={loading ? '—' : String(stats?.users.invited || 0)}
             subtext="Pas encore actifs"
             icon={Mail}
@@ -149,57 +196,9 @@ export default function AdminOverviewPage() {
         </div>
       </section>
 
-      {/* Section : Revenue par mois */}
-      <section>
-        <Card
-          title="Revenue mensuel"
-          description="12 derniers mois (table payments)"
-        >
-          <div className="p-6">
-            {loading ? (
-              <div className="space-y-3">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
-                ))}
-              </div>
-            ) : !stats?.revenue_by_month || stats.revenue_by_month.length === 0 ? (
-              <div className="text-zinc-500 text-sm text-center py-12">
-                Aucune donnée disponible
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {stats.revenue_by_month.slice().reverse().map((m) => {
-                  const max = Math.max(...stats.revenue_by_month.map(x => x.amount))
-                  const pct = max > 0 ? (m.amount / max) * 100 : 0
-                  return (
-                    <div key={m.month} className="flex items-center gap-4 group/row">
-                      <div className="text-xs text-zinc-500 w-20 font-mono shrink-0">
-                        {formatMonth(m.month)}
-                      </div>
-                      <div className="flex-1 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-amber-500/80 to-amber-400 rounded-full transition-all duration-500 ease-out group-hover/row:from-amber-400 group-hover/row:to-amber-300"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <div className="text-xs text-zinc-200 w-28 text-right font-mono tabular-nums">
-                        {formatCurrencyFromMajor(m.amount, 'CHF')}
-                      </div>
-                      <div className="text-[11px] text-zinc-500 w-10 text-right tabular-nums shrink-0">
-                        {m.count}x
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </Card>
-      </section>
-
       {stats?.generated_at && (
         <p className="text-[10px] text-zinc-600 mt-8 text-right tabular-nums">
-          Données générées à {formatDateTime(stats.generated_at)}
+          Donnees generees a {formatDateTime(stats.generated_at)}
         </p>
       )}
     </div>
