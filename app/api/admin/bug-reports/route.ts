@@ -29,6 +29,7 @@ export async function GET(req: Request) {
         id, user_id, user_email, user_role,
         type, title, description, screenshot_url, page_url,
         status, priority, admin_notes,
+        admin_reply, replied_at, replied_by, read_by_user,
         created_at, updated_at
       `)
       .order('created_at', { ascending: false })

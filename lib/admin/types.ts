@@ -83,10 +83,16 @@ export interface AdminBugReportRow {
   admin_notes: string | null
   created_at: string
   updated_at: string | null
+
+  // Reply admin
+  admin_reply: string | null
+  replied_at: string | null
+  replied_by: string | null
+  read_by_user: boolean | null
 }
 
 export interface AdminActionLog {
-  action: 'role_change' | 'subscription_change' | 'user_delete' | 'bug_report_update'
+  action: 'role_change' | 'subscription_change' | 'user_delete' | 'bug_report_update' | 'bug_report_reply'
   target_user_id: string
   target_email: string
   actor_email: string
