@@ -1,145 +1,243 @@
-'use client';
+'use client'
+import { useEffect, useRef } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Star, ArrowRight } from 'lucide-react'
 
-import React from 'react';
-import Link from 'next/link';
-import { useReveal } from './shared';
-import { colors } from '../../../lib/design-tokens'
+gsap.registerPlugin(ScrollTrigger)
 
 export default function CtaSection() {
-  const { ref, visible } = useReveal();
+  const sectionRef = useRef<HTMLElement>(null)
+  const eyebrowRef = useRef<HTMLDivElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const ledeRef = useRef<HTMLParagraphElement>(null)
+  const ctasRef = useRef<HTMLDivElement>(null)
+  const proofRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!sectionRef.current) return
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(imageRef.current,
+        { scale: 1.15, opacity: 0 },
+        {
+          scale: 1, opacity: 1, duration: 2, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 90%', toggleActions: 'play none none reverse' },
+        }
+      )
+
+      gsap.fromTo([eyebrowRef.current, headlineRef.current, ledeRef.current, ctasRef.current, proofRef.current],
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 70%', toggleActions: 'play none none reverse' },
+        }
+      )
+    }, sectionRef)
+
+    return () => ctx.revert()
+  }, [])
 
   return (
-    <section
-      ref={ref}
-      id="cta"
-      style={{
+    <section ref={sectionRef} id="cta-final" style={{
+      position: 'relative',
+      minHeight: '100vh',
+      color: '#fff',
+      overflow: 'hidden',
+      display: 'flex',
+      alignItems: 'center',
+    }}>
+      {/* Background full-bleed victory image */}
+      <div ref={imageRef} style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 0,
+        opacity: 0,
+      }}>
+        <Image
+          src="/images/new/victory.png"
+          alt="Athlète MoovX hurlant de victoire après transformation accomplie"
+          fill
+          quality={90}
+          sizes="100vw"
+          style={{ objectFit: 'cover', objectPosition: 'center' }}
+        />
+      </div>
+
+      {/* Dark gradient overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: `
+          linear-gradient(180deg, rgba(13,11,8,0.75) 0%, rgba(13,11,8,0.5) 50%, rgba(13,11,8,0.95) 100%),
+          radial-gradient(ellipse at 70% 50%, rgba(212,168,67,0.15) 0%, transparent 60%)
+        `,
+        zIndex: 1,
+      }} />
+
+      {/* Side fade for text readability */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(90deg, rgba(13,11,8,0.85) 0%, rgba(13,11,8,0.3) 50%, transparent 100%)',
+        zIndex: 1,
+      }} />
+
+      <div style={{
+        position: 'relative',
+        zIndex: 2,
+        maxWidth: 1400,
+        margin: '0 auto',
+        padding: 'clamp(80px, 12vw, 120px) clamp(20px, 5vw, 48px)',
         width: '100%',
-        padding: '120px 64px',
-        textAlign: 'center' as const,
-        position: 'relative' as const,
-        overflow: 'hidden',
-      }}
-    >
-      {/* Ghost text */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(120px, 18vw, 240px)',
-          color: colors.goldDim,
-          pointerEvents: 'none' as const,
-          letterSpacing: 4,
-          whiteSpace: 'nowrap' as const,
-          userSelect: 'none' as const,
-          lineHeight: 1,
-        }}
-      >
-        MOOVX
+      }}>
+
+        <div style={{ maxWidth: 800 }}>
+          <div ref={eyebrowRef} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 12,
+            fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+            fontSize: 11, letterSpacing: 4,
+            color: 'var(--gold)',
+            marginBottom: 40,
+            textTransform: 'uppercase',
+          }}>
+            <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
+            Le moment est venu
+          </div>
+
+          <h2 ref={headlineRef} style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(52px, 9vw, 160px)',
+            lineHeight: 0.9,
+            letterSpacing: '-0.01em',
+            textTransform: 'uppercase',
+            margin: '0 0 32px',
+            color: '#fff',
+          }}>
+            Prêt à devenir<br />
+            <span style={{ color: 'var(--gold)' }}>la meilleure</span><br />
+            version<br />
+            de toi-même ?
+          </h2>
+
+          <p ref={ledeRef} style={{
+            fontSize: 'clamp(15px, 1.5vw, 19px)', lineHeight: 1.6,
+            color: 'rgba(255,255,255,0.85)',
+            maxWidth: 580,
+            marginBottom: 56,
+            fontWeight: 300,
+          }}>
+            Programme personnalisé, coach IA Athena 24/7, suivi humain par
+            experts certifiés. <strong style={{ color: '#fff', fontWeight: 600 }}>
+            14 jours d'essai gratuit, sans engagement.</strong>
+          </p>
+
+          {/* Dual CTAs */}
+          <div ref={ctasRef} style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 16,
+            marginBottom: 64,
+          }}>
+            <Link
+              href="/register-client"
+              style={{
+                background: 'var(--gold)',
+                color: 'var(--bg, #0D0B08)',
+                padding: '20px 40px',
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(13px, 1.2vw, 16px)', letterSpacing: 3,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                fontWeight: 700,
+                display: 'inline-flex', alignItems: 'center', gap: 12,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translate(-3px, -3px)'
+                e.currentTarget.style.boxShadow = '6px 6px 0 #B8902F'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translate(0, 0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              Commencer maintenant
+              <ArrowRight size={18} strokeWidth={2.5} />
+            </Link>
+
+            <Link
+              href="#pricing"
+              style={{
+                background: 'transparent',
+                color: '#fff',
+                padding: '20px 40px',
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(13px, 1.2vw, 16px)', letterSpacing: 3,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                fontWeight: 600,
+                border: '1px solid rgba(255,255,255,0.3)',
+                display: 'inline-flex', alignItems: 'center', gap: 12,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'var(--gold)'
+                e.currentTarget.style.color = 'var(--gold)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+                e.currentTarget.style.color = '#fff'
+              }}
+            >
+              Voir les tarifs
+            </Link>
+          </div>
+
+          {/* Social proof */}
+          <div ref={proofRef} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'clamp(12px, 2vw, 24px)',
+            flexWrap: 'wrap',
+            paddingTop: 32,
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <Star key={i} size={16} fill="var(--gold)" stroke="var(--gold)" />
+              ))}
+              <span style={{
+                fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+                fontSize: 12, color: '#fff', marginLeft: 6, letterSpacing: 1,
+              }}>
+                4.9 / 5
+              </span>
+            </div>
+
+            <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)' }} />
+
+            <div style={{
+              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+              fontSize: 12, color: 'rgba(255,255,255,0.7)', letterSpacing: 1,
+            }}>
+              <span style={{ color: 'var(--gold)', fontWeight: 600 }}>1 200+</span> athlètes nous font confiance
+            </div>
+
+            <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)' }} />
+
+            <div style={{
+              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+              fontSize: 12, color: 'rgba(255,255,255,0.7)', letterSpacing: 1,
+            }}>
+              Made in Geneva
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Tag */}
-      <span
-        style={{
-          display: 'inline-block',
-          fontFamily: 'var(--font-alt)',
-          fontSize: 13,
-          fontWeight: 600,
-          letterSpacing: 2,
-          color: 'var(--gold)',
-          textTransform: 'uppercase' as const,
-          border: '1px solid var(--gold-rule)',
-          padding: '6px 16px',
-          margin: '0 auto 32px',
-          position: 'relative' as const,
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        Commence maintenant
-      </span>
-
-      {/* Heading */}
-      <h2
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(48px, 7vw, 96px)',
-          color: 'var(--text)',
-          letterSpacing: 3,
-          lineHeight: 0.95,
-          margin: '0 0 24px',
-          position: 'relative' as const,
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s',
-        }}
-      >
-        PRÊT À TRANSFORMER TON CORPS ?
-      </h2>
-
-      {/* Subtitle */}
-      <p
-        style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 16,
-          color: 'var(--text-muted)',
-          fontWeight: 300,
-          margin: '0 0 40px',
-          position: 'relative' as const,
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 0.6s ease 0.2s',
-        }}
-      >
-        Rejoins MoovX et commence ta transformation dès aujourd&apos;hui.
-      </p>
-
-      {/* CTA Button */}
-      <div
-        style={{
-          position: 'relative' as const,
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(10px)',
-          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
-          marginBottom: 20,
-        }}
-      >
-        <Link
-          href="/register-client"
-          style={{
-            display: 'inline-block',
-            background: 'var(--gold)',
-            color: '#0D0B08',
-            fontFamily: 'var(--font-alt)',
-            fontWeight: 800,
-            fontSize: 16,
-            letterSpacing: 1.5,
-            padding: '18px 56px',
-            textDecoration: 'none',
-            textTransform: 'uppercase' as const,
-            
-          }}
-        >
-          Commencer — 10 jours gratuits
-        </Link>
-      </div>
-
-      {/* Fine print */}
-      <p
-        style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 13,
-          color: 'var(--text-dim)',
-          margin: 0,
-          position: 'relative' as const,
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 0.6s ease 0.4s',
-        }}
-      >
-        Sans engagement · Résiliable à tout moment · 100% Swiss Made
-      </p>
     </section>
-  );
+  )
 }
