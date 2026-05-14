@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { ADMIN_EMAIL } from '@/lib/constants'
 import { AdminSidebar } from './_components/AdminSidebar'
 import { Toaster } from 'sonner'
+import './admin.css'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -66,8 +67,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[#0D0B08] text-zinc-100">
       <AdminSidebar pathname={pathname} email={email} />
-      <main className="lg:pl-60 min-h-screen">
-        <div className="px-6 lg:px-10 pt-16 lg:pt-10 pb-10 max-w-[1400px]">
+      <main className="admin-main">
+        <div className="px-6 lg:px-10 pt-16 lg:pt-10 pb-10 max-w-[1400px] mx-auto">
           {children}
         </div>
       </main>

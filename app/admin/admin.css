@@ -1,0 +1,9 @@
+.admin-main {
+  min-height: 100vh;
+}
+
+@media (min-width: 1024px) {
+  .admin-main {
+    padding-left: 240px;
+  }
+}
