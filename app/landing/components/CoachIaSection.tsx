@@ -1,209 +1,337 @@
-'use client';
+'use client'
+import { useEffect, useRef } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Sparkles, MessageCircle, Zap, Brain } from 'lucide-react'
 
-import React, { useState } from 'react';
-import { useReveal } from './shared';
+gsap.registerPlugin(ScrollTrigger)
 
-const PILLS = [
-  'Comment atteindre mes macros ?',
-  'Quel exercice pour les pectoraux ?',
-  'Remplacer un aliment du plan ?',
-  'Combien de protéines post-training ?',
-  'Programme cardio pour sécher ?',
-];
+const EXAMPLE_QUESTIONS = [
+  '« Crée-moi un plan force 4 semaines »',
+  '« Quels exos pour les épaules en hypertrophie ? »',
+  '« Comment ajuster mes macros pour la prise de masse ? »',
+  '« Je n\'ai pas d\'haltères, alternative pour les biceps ? »',
+  '« Plan de récupération après séance jambes intense »',
+]
+
+const FEATURES = [
+  { icon: Brain,         title: 'Compréhension contextuelle', desc: 'Analyse ton historique pour des conseils personnalisés' },
+  { icon: MessageCircle, title: 'Disponible 24/7',           desc: 'Pose tes questions à n\'importe quelle heure' },
+  { icon: Zap,           title: 'Réponses instantanées',     desc: 'Programmes, exercices, nutrition — en quelques secondes' },
+  { icon: Sparkles,      title: 'Apprend de toi',            desc: 'S\'améliore au fil de tes interactions et préférences' },
+]
 
 export default function CoachIaSection() {
-  const { ref, visible } = useReveal();
-  const [hoveredPill, setHoveredPill] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null)
+  const eyebrowRef = useRef<HTMLDivElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const ledeRef = useRef<HTMLParagraphElement>(null)
+  const questionsRef = useRef<HTMLDivElement>(null)
+  const featuresRef = useRef<HTMLDivElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
+  const imageWrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!sectionRef.current) return
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(imageWrapRef.current,
+        { opacity: 0, scale: 1.08 },
+        {
+          opacity: 1, scale: 1, duration: 1.4, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 75%', toggleActions: 'play none none reverse' },
+        }
+      )
+
+      gsap.fromTo([eyebrowRef.current, headlineRef.current, ledeRef.current, questionsRef.current, featuresRef.current, ctaRef.current],
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out',
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 70%', toggleActions: 'play none none reverse' },
+        }
+      )
+    }, sectionRef)
+
+    return () => ctx.revert()
+  }, [])
 
   return (
-    <section
-      id="coach-ia"
-      ref={ref}
-      style={{
-        background: 'var(--surface)',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(40px)',
-        transition: 'opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1)',
-      }}
-    >
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '120px 64px' }}>
-        {/* Section header — centered */}
-        <div style={{ marginBottom: 72, textAlign: 'center' }}>
-          <span style={{
-            display: 'inline-flex',
-            fontFamily: 'var(--font-alt)',
-            fontWeight: 700,
-            fontSize: 11,
-            letterSpacing: 2,
-            color: 'var(--gold)',
-            background: 'var(--gold-dim)',
-            border: '1px solid var(--gold-rule)',
-            padding: '5px 14px',
-            textTransform: 'uppercase',
-            margin: '0 auto',
-          }}>
-            04 — Coach personnel
-          </span>
-          <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(40px, 5vw, 64px)',
-            letterSpacing: 2,
-            lineHeight: 0.95,
-            color: 'var(--text)',
-            margin: '20px 0 0',
-          }}>
-            TON COACH PERSONNEL DISPONIBLE 24/7
-          </h2>
-          <p style={{
-            fontSize: 16,
-            color: 'var(--text-muted)',
-            fontWeight: 300,
-            margin: '16px 0 0',
-          }}>
-            Pose n&apos;importe quelle question — il connaît ton profil, tes macros, ton historique
-          </p>
-        </div>
-
-        {/* Coach card */}
+    <section ref={sectionRef} id="coach-ia" style={{
+      position: 'relative',
+      background: '#0D0B08',
+      color: '#fff',
+      padding: 'clamp(80px, 12vw, 120px) 0',
+      overflow: 'hidden',
+    }}>
+      {/* Background : neurones image dimmed */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        opacity: 0.15,
+        pointerEvents: 'none',
+      }}>
+        <Image
+          src="/images/new/ai-neurons.png"
+          alt=""
+          fill
+          quality={75}
+          sizes="100vw"
+          style={{ objectFit: 'cover', objectPosition: 'center' }}
+        />
         <div style={{
-          maxWidth: 720,
-          margin: '0 auto',
-          border: '1px solid var(--gold-rule)',
-          background: 'var(--surface)',
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse at center, transparent 0%, #0D0B08 70%)',
+        }} />
+      </div>
+
+      <div style={{
+        maxWidth: 1400,
+        margin: '0 auto',
+        padding: '0 clamp(20px, 5vw, 48px)',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 'clamp(40px, 6vw, 80px)',
+        alignItems: 'center',
+        position: 'relative',
+        zIndex: 2,
+      }}>
+
+        {/* LEFT : iPhone Athena AI */}
+        <div ref={imageWrapRef} style={{
+          position: 'relative',
+          aspectRatio: '4/5',
+          width: '100%',
+          order: 1,
+          opacity: 0,
         }}>
-          {/* Card header */}
           <div style={{
-            padding: '24px 36px',
-            borderBottom: '1px solid var(--gold-rule)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 4,
+            overflow: 'hidden',
+            border: '1px solid rgba(212,168,67,0.15)',
+            background: '#000',
           }}>
-            {/* Avatar */}
-            <div style={{
-              width: 44,
-              height: 44,
-              background: 'var(--gold-dim)',
-              border: '1px solid var(--gold-rule)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <rect x="3" y="7" width="16" height="12" rx="3" stroke="#D4A843" strokeWidth="1.2"/>
-                <circle cx="8" cy="13" r="2" stroke="#D4A843" strokeWidth="1"/>
-                <circle cx="14" cy="13" r="2" stroke="#D4A843" strokeWidth="1"/>
-                <path d="M11 4V7" stroke="#D4A843" strokeWidth="1.2"/>
-                <circle cx="11" cy="3" r="1.5" stroke="#D4A843" strokeWidth="1"/>
-                <path d="M2 12H3M19 12H20" stroke="#D4A843" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-            </div>
+            <Image
+              src="/images/new/app-athena-ai.png"
+              alt="Interface Coach IA Athena — plan force 4 semaines personnalisé"
+              fill
+              quality={85}
+              sizes="(max-width: 768px) 100vw, 50vw"
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+            />
+          </div>
 
-            {/* Text */}
-            <div>
-              <h3 style={{
-                fontFamily: 'var(--font-alt)',
-                fontWeight: 800,
-                fontSize: 18,
-                letterSpacing: 2,
-                textTransform: 'uppercase',
-                color: 'var(--text)',
-                margin: 0,
-              }}>
-                COACH MOOVX
-              </h3>
-              <p style={{
-                fontSize: 12,
-                color: 'var(--text-muted)',
-                margin: '4px 0 0',
-              }}>
-                Actif maintenant &middot; Disponible 24/7
-              </p>
-            </div>
-
-            {/* Online status — right */}
+          {/* Data card top-right : status */}
+          <div style={{
+            position: 'absolute',
+            top: 24, right: -20,
+            background: 'rgba(20,18,9,0.92)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(212,168,67,0.25)',
+            padding: '14px 18px',
+            borderRadius: 4,
+            zIndex: 3,
+          }}>
             <div style={{
-              marginLeft: 'auto',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
+              display: 'flex', alignItems: 'center', gap: 8,
+              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+              fontSize: 10, letterSpacing: 2,
+              color: 'var(--gold)',
+              textTransform: 'uppercase',
             }}>
-              <div style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: 'var(--green)',
-                animation: 'pulse-green 2s ease-in-out infinite',
+              <span className="coach-ia-pulse" style={{
+                width: 7, height: 7, borderRadius: '50%',
+                background: '#34d399',
               }} />
-              <span style={{
-                fontSize: 12,
-                color: 'var(--green)',
-                fontFamily: 'var(--font-alt)',
-                fontWeight: 700,
-              }}>
-                EN LIGNE
-              </span>
+              IA active
+            </div>
+            <div style={{
+              fontSize: 12,
+              color: 'rgba(255,255,255,0.6)',
+              marginTop: 4,
+            }}>
+              Réponse en 2.4s
             </div>
           </div>
 
-          {/* Card body */}
-          <div style={{ padding: 36 }}>
-            <p style={{
-              fontSize: 15,
-              color: 'var(--text-muted)',
-              lineHeight: 1.8,
-              fontWeight: 300,
-              margin: '0 0 28px',
-              fontFamily: 'var(--font-body)',
+          {/* Data card bottom-left : interactions */}
+          <div style={{
+            position: 'absolute',
+            bottom: 32, left: -16,
+            background: 'rgba(20,18,9,0.92)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(212,168,67,0.25)',
+            padding: '14px 18px',
+            borderRadius: 4,
+            zIndex: 3,
+            minWidth: 170,
+          }}>
+            <div style={{
+              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+              fontSize: 10, letterSpacing: 2,
+              color: 'rgba(255,255,255,0.5)',
+              marginBottom: 6,
+              textTransform: 'uppercase',
             }}>
-              Le Coach MoovX connaît ton profil, tes objectifs, tes macros et ton historique complet
-              d&apos;entraînement. Il te répond en français, de manière personnalisée et motivante.
-              Disponible 24 heures sur 24, 7 jours sur 7 — même à 5h du matin avant ta séance.
-            </p>
-
-            {/* Pills */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              {PILLS.map((pill, i) => {
-                const isHovered = hoveredPill === i;
-                return (
-                  <span
-                    key={pill}
-                    onMouseEnter={() => setHoveredPill(i)}
-                    onMouseLeave={() => setHoveredPill(null)}
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: 13,
-                      color: isHovered ? 'var(--gold)' : 'var(--text-muted)',
-                      border: `1px solid ${isHovered ? 'var(--gold)' : 'var(--text-dim)'}`,
-                      padding: '8px 18px',
-                      fontWeight: 300,
-                      background: isHovered ? 'var(--gold-dim)' : 'transparent',
-                      transition: 'all 0.25s ease',
-                      cursor: 'default',
-                    }}
-                  >
-                    {pill}
-                  </span>
-                );
-              })}
+              Cette semaine
             </div>
+            <div style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 28, color: 'var(--gold)',
+              lineHeight: 1, letterSpacing: 1,
+            }}>
+              47 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>questions</span>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT : Text + example questions */}
+        <div style={{ order: 2 }}>
+          <div ref={eyebrowRef} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 12,
+            fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+            fontSize: 11, letterSpacing: 3,
+            color: 'var(--gold)',
+            marginBottom: 32,
+            textTransform: 'uppercase',
+          }}>
+            <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
+            04 — Coach personnel
+          </div>
+
+          <h2 ref={headlineRef} style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(48px, 7vw, 120px)',
+            lineHeight: 0.9,
+            letterSpacing: '-0.01em',
+            textTransform: 'uppercase',
+            margin: '0 0 24px',
+            color: '#fff',
+          }}>
+            Ton coach<br />
+            <span style={{ color: 'var(--gold)' }}>24 / 7.</span>
+          </h2>
+
+          <p ref={ledeRef} style={{
+            fontSize: 'clamp(14px, 1.5vw, 17px)', lineHeight: 1.6,
+            color: 'rgba(255,255,255,0.7)',
+            maxWidth: 480, marginBottom: 36, fontWeight: 300,
+          }}>
+            Athena, ton coach IA propulsé par l'expertise de nos certifiés.
+            Demande-lui n'importe quoi sur l'entraînement, la nutrition,
+            la récupération.
+          </p>
+
+          {/* Example questions pills */}
+          <div ref={questionsRef} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            marginBottom: 40,
+            maxWidth: 540,
+          }}>
+            {EXAMPLE_QUESTIONS.map((q, i) => (
+              <div key={i} style={{
+                padding: '12px 16px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderLeft: '2px solid var(--gold)',
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.75)',
+                fontStyle: 'italic',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(212,168,67,0.06)'
+                e.currentTarget.style.color = '#fff'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+                e.currentTarget.style.color = 'rgba(255,255,255,0.75)'
+              }}
+              >
+                {q}
+              </div>
+            ))}
+          </div>
+
+          {/* Mini features grid */}
+          <div ref={featuresRef} style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 24,
+            marginBottom: 40,
+          }}>
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon
+              return (
+                <div key={i}>
+                  <Icon size={16} strokeWidth={1.5} style={{ color: 'var(--gold)', marginBottom: 8 }} />
+                  <div style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 14, letterSpacing: 1,
+                    color: '#fff',
+                    marginBottom: 4,
+                    textTransform: 'uppercase',
+                  }}>
+                    {f.title}
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    color: 'rgba(255,255,255,0.5)',
+                    lineHeight: 1.5,
+                  }}>
+                    {f.desc}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div ref={ctaRef}>
+            <Link
+              href="#pricing"
+              style={{
+                background: 'var(--gold)',
+                color: 'var(--bg, #0D0B08)',
+                padding: '16px 32px',
+                fontFamily: 'var(--font-display)',
+                fontSize: 14, letterSpacing: 3,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                fontWeight: 600,
+                display: 'inline-flex', alignItems: 'center', gap: 12,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translate(-2px, -2px)'
+                e.currentTarget.style.boxShadow = '4px 4px 0 #B8902F'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translate(0, 0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              Parler à Athena →
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Pulse animation */}
+      {/* Keyframes */}
       <style>{`
-        @keyframes pulse-green {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
+        .coach-ia-pulse {
+          animation: coachIaPulse 2s infinite;
         }
-        @media (max-width: 768px) {
-          #coach-ia > div {
-            padding: 80px 24px !important;
-          }
+        @keyframes coachIaPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
         }
       `}</style>
     </section>
-  );
+  )
 }
