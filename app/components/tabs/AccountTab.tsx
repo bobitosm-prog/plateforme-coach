@@ -115,7 +115,7 @@ export default function AccountTab({
           <div style={divider} />
           <button onClick={() => onNavigate('coachIA')} style={itemStyle}>
             <Sparkles size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Coach IA</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Athena</span>
             <span style={{ flex: 1 }} />
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>

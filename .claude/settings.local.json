@@ -81,7 +81,8 @@
       "Read(//mnt/user-data/**)",
       "Read(//Users/marcoferreira/Downloads/**)",
       "Bash(gh run:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npx lighthouse:*)"
     ]
   }
 }

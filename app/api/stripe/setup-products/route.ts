@@ -23,9 +23,9 @@ export async function POST() {
   try {
     const stripe = getStripe()
 
-    // Product 1: MoovX Coach IA (for autonomous clients)
+    // Product 1: MoovX Athena (for autonomous clients with AI coach)
     const clientProduct = await stripe.products.create({
-      name: 'MoovX Coach IA',
+      name: 'MoovX Athena',
       description: 'Coaching fitness IA - Nutrition + Training + Suivi',
     })
 
