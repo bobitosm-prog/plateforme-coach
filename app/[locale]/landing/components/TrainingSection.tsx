@@ -5,26 +5,12 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Dumbbell, Flame, Activity, Trophy } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const PPL_DAYS = [
-  { day: 'Lun', focus: 'Push', muscles: 'Pecs · Épaules · Triceps' },
-  { day: 'Mar', focus: 'Pull', muscles: 'Dos · Biceps · Trapèzes' },
-  { day: 'Mer', focus: 'Legs', muscles: 'Quadriceps · Fessiers · Mollets' },
-  { day: 'Jeu', focus: 'Push', muscles: 'Variations & intensité' },
-  { day: 'Ven', focus: 'Pull', muscles: 'Volume & isolation' },
-  { day: 'Sam', focus: 'Legs', muscles: 'Force & explosivité' },
-]
-
-const FEATURES = [
-  { icon: Dumbbell, value: '163', label: 'exercices guidés' },
-  { icon: Activity, value: '14',  label: 'séances HIIT & LISS' },
-  { icon: Flame,    value: '6',   label: 'jours / semaine' },
-  { icon: Trophy,   value: '∞',   label: 'records personnels' },
-]
-
 export default function TrainingSection() {
+  const t = useTranslations('training')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -33,6 +19,22 @@ export default function TrainingSection() {
   const statsRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const imageWrapRef = useRef<HTMLDivElement>(null)
+
+  const PPL_DAYS = [
+    { day: t('day1'), focus: t('focus1'), muscles: t('muscles1') },
+    { day: t('day2'), focus: t('focus2'), muscles: t('muscles2') },
+    { day: t('day3'), focus: t('focus3'), muscles: t('muscles3') },
+    { day: t('day4'), focus: t('focus4'), muscles: t('muscles4') },
+    { day: t('day5'), focus: t('focus5'), muscles: t('muscles5') },
+    { day: t('day6'), focus: t('focus6'), muscles: t('muscles6') },
+  ]
+
+  const FEATURES = [
+    { icon: Dumbbell, value: t('stat1_value'), label: t('stat1_label') },
+    { icon: Activity, value: t('stat2_value'), label: t('stat2_label') },
+    { icon: Flame,    value: t('stat3_value'), label: t('stat3_label') },
+    { icon: Trophy,   value: t('stat4_value'), label: t('stat4_label') },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -104,7 +106,7 @@ export default function TrainingSection() {
           }}>
             <Image
               src="/images/new/runner-mountains.png"
-              alt="Coureur en montagne au coucher de soleil — entraînement cardio MoovX"
+              alt={t('image_alt')}
               fill
               quality={85}
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -136,7 +138,7 @@ export default function TrainingSection() {
               marginBottom: 4,
               textTransform: 'uppercase',
             }}>
-              Séance du jour
+              {t('data_session_label')}
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
@@ -144,13 +146,13 @@ export default function TrainingSection() {
               color: 'var(--gold)',
               lineHeight: 1, letterSpacing: 1,
             }}>
-              PUSH A
+              {t('data_session_value')}
             </div>
             <div style={{
               fontSize: 11, color: 'rgba(255,255,255,0.5)',
               marginTop: 6, letterSpacing: 0.5,
             }}>
-              8 exercices · 52 min
+              {t('data_session_detail')}
             </div>
           </div>
 
@@ -172,15 +174,15 @@ export default function TrainingSection() {
               marginBottom: 6,
               textTransform: 'uppercase',
             }}>
-              Streak
+              {t('data_streak_label')}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
               <span style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 32, color: 'var(--gold)',
                 lineHeight: 1, letterSpacing: 1,
-              }}>12</span>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>jours</span>
+              }}>{t('data_streak_value')}</span>
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{t('data_streak_unit')}</span>
             </div>
           </div>
         </div>
@@ -196,7 +198,7 @@ export default function TrainingSection() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            02 — Entraînement
+            {t('eyebrow')}
           </div>
 
           <h2 ref={headlineRef} style={{
@@ -208,8 +210,8 @@ export default function TrainingSection() {
             margin: '0 0 24px',
             color: '#fff',
           }}>
-            Programme<br />
-            <span style={{ color: 'var(--gold)' }}>hypertrophie</span>
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
 
           <p ref={ledeRef} style={{
@@ -217,8 +219,7 @@ export default function TrainingSection() {
             color: 'rgba(255,255,255,0.7)',
             maxWidth: 480, marginBottom: 40, fontWeight: 300,
           }}>
-            Push / Pull / Legs sur 6 jours, cardio HIIT & LISS intégré.
-            163 exercices guidés en vidéo, par des experts certifiés.
+            {t('lede')}
           </p>
 
           {/* PPL Week table */}
@@ -322,7 +323,7 @@ export default function TrainingSection() {
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              Démarrer mon programme →
+              {t('cta')}
             </Link>
           </div>
         </div>

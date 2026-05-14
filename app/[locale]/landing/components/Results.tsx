@@ -3,15 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
-
-const STATS = [
-  { value: 1200, suffix: '+', label: 'transformations',  detail: 'depuis 2024' },
-  { value: 12,   suffix: '',  label: 'semaines',         detail: 'moyenne avant résultats' },
-  { value: 96,   suffix: '%', label: 'satisfaction',     detail: 'clients abonnés' },
-  { value: 7,    suffix: 'kg', label: 'masse maigre',    detail: 'gain moyen / 6 mois' },
-]
 
 function Counter({ target, suffix, duration = 1800 }: { target: number; suffix: string; duration?: number }) {
   const [val, setVal] = useState(0)
@@ -43,12 +37,20 @@ function Counter({ target, suffix, duration = 1800 }: { target: number; suffix: 
 }
 
 export default function Results() {
+  const t = useTranslations('results')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
   const imageWrapRef = useRef<HTMLDivElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
   const quoteRef = useRef<HTMLDivElement>(null)
+
+  const STATS = [
+    { value: 1200, suffix: '+', label: t('stat1_label'), detail: t('stat1_detail') },
+    { value: 12,   suffix: '',  label: t('stat2_label'), detail: t('stat2_detail') },
+    { value: 96,   suffix: '%', label: t('stat3_label'), detail: t('stat3_detail') },
+    { value: 7,    suffix: 'kg', label: t('stat4_label'), detail: t('stat4_detail') },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -98,7 +100,7 @@ export default function Results() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            Résultats mesurables
+            {t('eyebrow')}
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
           </div>
 
@@ -111,8 +113,8 @@ export default function Results() {
             margin: 0,
             color: '#fff',
           }}>
-            Des chiffres<br />
-            <span style={{ color: 'var(--gold)' }}>qui parlent.</span>
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
         </div>
 
@@ -129,7 +131,7 @@ export default function Results() {
         }}>
           <Image
             src="/images/new/transformation.png"
-            alt="Transformation physique d'un client MoovX — avant / après programme 6 mois"
+            alt={t('image_alt')}
             fill
             quality={88}
             sizes="(max-width: 1400px) 100vw, 1400px"
@@ -152,10 +154,10 @@ export default function Results() {
               color: 'rgba(255,255,255,0.6)',
               textTransform: 'uppercase',
             }}>
-              AVANT
+              {t('before_label')}
             </div>
             <div style={{ fontSize: 13, color: '#fff', marginTop: 4 }}>
-              Janvier 2026 · 94 kg
+              {t('before_date')}
             </div>
           </div>
 
@@ -174,10 +176,10 @@ export default function Results() {
               textTransform: 'uppercase',
               opacity: 0.7,
             }}>
-              Après · 6 mois
+              {t('after_label')}
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4 }}>
-              Juillet 2026 · 81 kg
+              {t('after_date')}
             </div>
           </div>
 
@@ -211,8 +213,7 @@ export default function Results() {
               lineHeight: 1.5,
               marginBottom: 8,
             }}>
-              « 13 kg en 6 mois, sans régime extrême. Le programme MoovX
-              m'a redonné le contrôle de mon corps. »
+              {t('quote')}
             </div>
             <div style={{
               fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
@@ -220,7 +221,7 @@ export default function Results() {
               color: 'var(--gold)',
               textTransform: 'uppercase',
             }}>
-              Thomas · 34 ans · Genève
+              {t('quote_author')}
             </div>
           </div>
         </div>

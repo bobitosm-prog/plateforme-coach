@@ -5,43 +5,12 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { TrendingUp, Camera, Trophy, Flame, Droplet, Shield } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const FEATURES = [
-  {
-    icon: TrendingUp,
-    title: 'Analytics avancées',
-    desc: 'Graphiques de progression, charges, volume hebdomadaire',
-  },
-  {
-    icon: Camera,
-    title: 'Photos avant/après',
-    desc: 'Compare ton évolution mois par mois, en privé',
-  },
-  {
-    icon: Trophy,
-    title: 'Records personnels',
-    desc: 'Track tes PR sur chaque exercice, célèbre chaque palier',
-  },
-  {
-    icon: Flame,
-    title: 'Streak quotidien',
-    desc: 'Maintiens ton rythme, ne casse jamais la chaîne',
-  },
-  {
-    icon: Droplet,
-    title: 'Hydratation',
-    desc: 'Rappels personnalisés selon ton poids et ton activité',
-  },
-  {
-    icon: Shield,
-    title: 'RGPD · Suisse',
-    desc: 'Tes données hébergées en Suisse, chiffrées de bout en bout',
-  },
-]
-
 export default function TrackingSection() {
+  const t = useTranslations('tracking')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -49,6 +18,39 @@ export default function TrackingSection() {
   const featuresRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const imageWrapRef = useRef<HTMLDivElement>(null)
+
+  const FEATURES = [
+    {
+      icon: TrendingUp,
+      title: t('feature1_title'),
+      desc: t('feature1_desc'),
+    },
+    {
+      icon: Camera,
+      title: t('feature2_title'),
+      desc: t('feature2_desc'),
+    },
+    {
+      icon: Trophy,
+      title: t('feature3_title'),
+      desc: t('feature3_desc'),
+    },
+    {
+      icon: Flame,
+      title: t('feature4_title'),
+      desc: t('feature4_desc'),
+    },
+    {
+      icon: Droplet,
+      title: t('feature5_title'),
+      desc: t('feature5_desc'),
+    },
+    {
+      icon: Shield,
+      title: t('feature6_title'),
+      desc: t('feature6_desc'),
+    },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -113,7 +115,7 @@ export default function TrackingSection() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            03 — Suivi
+            {t('eyebrow')}
           </div>
 
           <h2 ref={headlineRef} style={{
@@ -125,8 +127,8 @@ export default function TrackingSection() {
             margin: '0 0 24px',
             color: '#fff',
           }}>
-            Mesure<br />
-            <span style={{ color: 'var(--gold)' }}>chaque progrès</span>
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
 
           <p ref={ledeRef} style={{
@@ -134,8 +136,7 @@ export default function TrackingSection() {
             color: 'rgba(255,255,255,0.7)',
             maxWidth: 480, marginBottom: 48, fontWeight: 300,
           }}>
-            Visualise ta progression, célèbre chaque record, garde la cadence.
-            Tes données 100% hébergées en Suisse, chiffrées.
+            {t('lede')}
           </p>
 
           {/* 6 features in 2 columns */}
@@ -204,7 +205,7 @@ export default function TrackingSection() {
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              Suivre ma progression →
+              {t('cta')}
             </Link>
           </div>
         </div>
@@ -225,7 +226,7 @@ export default function TrackingSection() {
           }}>
             <Image
               src="/images/new/dashboard-3d.png"
-              alt="Dashboard de progression MoovX — analytics, body composition, recovery"
+              alt={t('image_alt')}
               fill
               quality={85}
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -258,20 +259,20 @@ export default function TrackingSection() {
               marginBottom: 4,
               textTransform: 'uppercase',
             }}>
-              Force totale
+              {t('data_strength_label')}
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
               fontSize: 32, color: 'var(--gold)',
               lineHeight: 1, letterSpacing: 1,
             }}>
-              +24<span style={{ fontSize: 16 }}>%</span>
+              {t('data_strength_value')}
             </div>
             <div style={{
               fontSize: 11, color: '#34d399',
               marginTop: 6, letterSpacing: 0.5,
             }}>
-              ↑ vs mois dernier
+              {t('data_strength_trend')}
             </div>
           </div>
 
@@ -294,20 +295,20 @@ export default function TrackingSection() {
               marginBottom: 4,
               textTransform: 'uppercase',
             }}>
-              Récupération
+              {t('data_recovery_label')}
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
               fontSize: 32, color: 'var(--gold)',
               lineHeight: 1, letterSpacing: 1,
             }}>
-              92<span style={{ fontSize: 14 }}>%</span>
+              {t('data_recovery_value')}
             </div>
             <div style={{
               fontSize: 11, color: 'rgba(255,255,255,0.5)',
               marginTop: 6, letterSpacing: 0.5,
             }}>
-              Sommeil · HRV
+              {t('data_recovery_detail')}
             </div>
           </div>
         </div>

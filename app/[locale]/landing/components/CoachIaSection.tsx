@@ -5,25 +5,12 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Sparkles, MessageCircle, Zap, Brain } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const EXAMPLE_QUESTIONS = [
-  '« Crée-moi un plan force 4 semaines »',
-  '« Quels exos pour les épaules en hypertrophie ? »',
-  '« Comment ajuster mes macros pour la prise de masse ? »',
-  '« Je n\'ai pas d\'haltères, alternative pour les biceps ? »',
-  '« Plan de récupération après séance jambes intense »',
-]
-
-const FEATURES = [
-  { icon: Brain,         title: 'Compréhension contextuelle', desc: 'Analyse ton historique pour des conseils personnalisés' },
-  { icon: MessageCircle, title: 'Disponible 24/7',           desc: 'Pose tes questions à n\'importe quelle heure' },
-  { icon: Zap,           title: 'Réponses instantanées',     desc: 'Programmes, exercices, nutrition — en quelques secondes' },
-  { icon: Sparkles,      title: 'Apprend de toi',            desc: 'S\'améliore au fil de tes interactions et préférences' },
-]
-
 export default function CoachIaSection() {
+  const t = useTranslations('coachIa')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -32,6 +19,21 @@ export default function CoachIaSection() {
   const featuresRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const imageWrapRef = useRef<HTMLDivElement>(null)
+
+  const EXAMPLE_QUESTIONS = [
+    t('question1'),
+    t('question2'),
+    t('question3'),
+    t('question4'),
+    t('question5'),
+  ]
+
+  const FEATURES = [
+    { icon: Brain,         title: t('feature1_title'), desc: t('feature1_desc') },
+    { icon: MessageCircle, title: t('feature2_title'), desc: t('feature2_desc') },
+    { icon: Zap,           title: t('feature3_title'), desc: t('feature3_desc') },
+    { icon: Sparkles,      title: t('feature4_title'), desc: t('feature4_desc') },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -117,7 +119,7 @@ export default function CoachIaSection() {
           }}>
             <Image
               src="/images/new/app-athena-ai.png"
-              alt="Interface Coach IA Athena — plan force 4 semaines personnalisé"
+              alt={t('image_alt')}
               fill
               quality={85}
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -147,14 +149,14 @@ export default function CoachIaSection() {
                 width: 7, height: 7, borderRadius: '50%',
                 background: '#34d399',
               }} />
-              IA active
+              {t('data_status')}
             </div>
             <div style={{
               fontSize: 12,
               color: 'rgba(255,255,255,0.6)',
               marginTop: 4,
             }}>
-              Réponse en 2.4s
+              {t('data_status_detail')}
             </div>
           </div>
 
@@ -177,14 +179,14 @@ export default function CoachIaSection() {
               marginBottom: 6,
               textTransform: 'uppercase',
             }}>
-              Cette semaine
+              {t('data_week_label')}
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
               fontSize: 28, color: 'var(--gold)',
               lineHeight: 1, letterSpacing: 1,
             }}>
-              47 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>questions</span>
+              {t('data_week_value')} <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{t('data_week_unit')}</span>
             </div>
           </div>
         </div>
@@ -200,7 +202,7 @@ export default function CoachIaSection() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            04 — Coach personnel
+            {t('eyebrow')}
           </div>
 
           <h2 ref={headlineRef} style={{
@@ -212,8 +214,8 @@ export default function CoachIaSection() {
             margin: '0 0 24px',
             color: '#fff',
           }}>
-            Ton coach<br />
-            <span style={{ color: 'var(--gold)' }}>24 / 7.</span>
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
 
           <p ref={ledeRef} style={{
@@ -221,9 +223,7 @@ export default function CoachIaSection() {
             color: 'rgba(255,255,255,0.7)',
             maxWidth: 480, marginBottom: 36, fontWeight: 300,
           }}>
-            Athena, ton coach IA propulsé par l'expertise de nos certifiés.
-            Demande-lui n'importe quoi sur l'entraînement, la nutrition,
-            la récupération.
+            {t('lede')}
           </p>
 
           {/* Example questions pills */}
@@ -316,7 +316,7 @@ export default function CoachIaSection() {
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              Parler à Athena →
+              {t('cta')}
             </Link>
           </div>
         </div>

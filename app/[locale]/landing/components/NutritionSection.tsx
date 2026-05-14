@@ -5,33 +5,12 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Calendar, ScanLine, Apple, ChefHat } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const FEATURES = [
-  {
-    icon: Calendar,
-    title: 'Plans sur 7 jours',
-    desc: 'Générés par nos experts certifiés, adaptés à tes macros exacts',
-  },
-  {
-    icon: ScanLine,
-    title: 'Scanner code-barres',
-    desc: 'Identifie chaque produit suisse en un instant',
-  },
-  {
-    icon: Apple,
-    title: '170 aliments suisses',
-    desc: 'Base de données spécifique au marché helvétique',
-  },
-  {
-    icon: ChefHat,
-    title: 'Recettes pro',
-    desc: 'Sélection complète de recettes fitness équilibrées',
-  },
-]
-
 export default function NutritionSection() {
+  const t = useTranslations('nutrition')
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -39,6 +18,29 @@ export default function NutritionSection() {
   const featuresRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const imageWrapRef = useRef<HTMLDivElement>(null)
+
+  const FEATURES = [
+    {
+      icon: Calendar,
+      title: t('feature1_title'),
+      desc: t('feature1_desc'),
+    },
+    {
+      icon: ScanLine,
+      title: t('feature2_title'),
+      desc: t('feature2_desc'),
+    },
+    {
+      icon: Apple,
+      title: t('feature3_title'),
+      desc: t('feature3_desc'),
+    },
+    {
+      icon: ChefHat,
+      title: t('feature4_title'),
+      desc: t('feature4_desc'),
+    },
+  ]
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -122,7 +124,7 @@ export default function NutritionSection() {
             textTransform: 'uppercase',
           }}>
             <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
-            01 — Nutrition
+            {t('eyebrow')}
           </div>
 
           {/* Headline */}
@@ -135,8 +137,8 @@ export default function NutritionSection() {
             margin: '0 0 24px',
             color: '#fff',
           }}>
-            Alimentation<br />
-            <span style={{ color: 'var(--gold)' }}>sur mesure</span>
+            {t('headline_line1')}<br />
+            <span style={{ color: 'var(--gold)' }}>{t('headline_line2')}</span>
           </h2>
 
           {/* Lede */}
@@ -148,8 +150,7 @@ export default function NutritionSection() {
             marginBottom: 48,
             fontWeight: 300,
           }}>
-            Plans sur 7 jours générés par nos experts certifiés, adaptés à tes
-            macros exacts. Scanne ton frigo, on crée ton plan.
+            {t('lede')}
           </p>
 
           {/* Features grid */}
@@ -227,7 +228,7 @@ export default function NutritionSection() {
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              Découvrir les plans →
+              {t('cta')}
             </Link>
           </div>
         </div>
@@ -249,7 +250,7 @@ export default function NutritionSection() {
           }}>
             <Image
               src="/images/new/nutrition-bowl.png"
-              alt="Bowl saumon avocat brocolis quinoa — exemple de plan nutrition MoovX"
+              alt={t('image_alt')}
               fill
               quality={85}
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -284,7 +285,7 @@ export default function NutritionSection() {
               marginBottom: 4,
               textTransform: 'uppercase',
             }}>
-              Bowl du jour
+              {t('data_bowl_label')}
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
@@ -293,7 +294,7 @@ export default function NutritionSection() {
               lineHeight: 1,
               letterSpacing: 1,
             }}>
-              1 247 <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>kcal</span>
+              {t('data_bowl_value')} <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>{t('data_bowl_unit')}</span>
             </div>
           </div>
 
@@ -316,7 +317,7 @@ export default function NutritionSection() {
               marginBottom: 8,
               textTransform: 'uppercase',
             }}>
-              Macros
+              {t('data_macros_label')}
             </div>
             <div style={{ display: 'flex', gap: 16 }}>
               <Macro label="P" value="142g" />
