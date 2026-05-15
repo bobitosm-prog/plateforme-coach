@@ -1,11 +1,19 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { Link, usePathname } from '@/i18n/routing'
 import { colors } from '@/lib/design-tokens'
+
+const LOCALES = [
+  { code: 'fr' as const, flag: '🇫🇷', label: 'Français' },
+  { code: 'en' as const, flag: '🇬🇧', label: 'English' },
+  { code: 'de' as const, flag: '🇩🇪', label: 'Deutsch' },
+]
 
 export default function Navbar() {
   const t = useTranslations('nav')
+  const locale = useLocale()
+  const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -25,6 +33,7 @@ export default function Navbar() {
           .landing-nav { padding: 0 20px !important; }
           .landing-nav .nav-btn-ghost { padding: 6px 14px !important; font-size: 11px !important; }
           .landing-nav .nav-btn-gold { padding: 6px 16px !important; font-size: 11px !important; }
+          .landing-nav .locale-switcher { display: none !important; }
         }
       `}</style>
       <nav
@@ -44,7 +53,7 @@ export default function Navbar() {
           backdropFilter: scrolled ? 'blur(16px)' : 'none',
         }}
       >
-        {/* Logo */}
+        {/* Logo + Swiss Made + Locale switcher */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img
             src="https://app.moovx.ch/logo-moovx.png"
@@ -68,11 +77,53 @@ export default function Navbar() {
           }}>
             {t('swissMade')}
           </span>
+
+          {/* Locale switcher */}
+          <div
+            className="locale-switcher"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              marginLeft: 12,
+              paddingLeft: 12,
+              borderLeft: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            {LOCALES
+              .filter(l => l.code !== locale)
+              .map(l => (
+                <Link
+                  key={l.code}
+                  href={pathname}
+                  locale={l.code}
+                  aria-label={`Switch to ${l.label}`}
+                  style={{
+                    fontSize: 18,
+                    opacity: 0.55,
+                    transition: 'all 0.2s',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                    lineHeight: 1,
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.opacity = '1'
+                    e.currentTarget.style.transform = 'scale(1.15)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.opacity = '0.55'
+                    e.currentTarget.style.transform = 'scale(1)'
+                  }}
+                >
+                  {l.flag}
+                </Link>
+              ))}
+          </div>
         </div>
 
         {/* Links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Link
+          <a
             href="/login"
             className="nav-btn-ghost"
             style={{
@@ -85,8 +136,8 @@ export default function Navbar() {
             }}
           >
             {t('login')}
-          </Link>
-          <Link
+          </a>
+          <a
             href="/register-client"
             className="nav-btn-gold"
             style={{
@@ -100,7 +151,7 @@ export default function Navbar() {
             }}
           >
             {t('start')}
-          </Link>
+          </a>
         </div>
       </nav>
     </>
