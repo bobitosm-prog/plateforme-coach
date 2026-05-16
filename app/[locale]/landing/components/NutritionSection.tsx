@@ -97,7 +97,7 @@ export default function NutritionSection() {
         pointerEvents: 'none',
       }} />
 
-      <div style={{
+      <div className="landing-grid-2col" style={{
         maxWidth: 1400,
         margin: '0 auto',
         padding: '0 clamp(20px, 5vw, 48px)',
@@ -234,13 +234,12 @@ export default function NutritionSection() {
         </div>
 
         {/* RIGHT : Image + data cards */}
-        <div ref={imageWrapRef} style={{
+        <div ref={imageWrapRef} className="landing-image-wrap" style={{
           position: 'relative',
           aspectRatio: '4/5',
           width: '100%',
           opacity: 0,
         }}>
-          {/* Image bowl */}
           <div style={{
             position: 'absolute',
             inset: 0,
@@ -256,7 +255,6 @@ export default function NutritionSection() {
               sizes="(max-width: 768px) 100vw, 50vw"
               style={{ objectFit: 'cover' }}
             />
-            {/* Subtle gradient overlay */}
             <div style={{
               position: 'absolute',
               inset: 0,
@@ -266,9 +264,9 @@ export default function NutritionSection() {
           </div>
 
           {/* Data card top-left */}
-          <div style={{
+          <div className="landing-data-card" style={{
             position: 'absolute',
-            top: 24, left: -16,
+            top: 24, left: 8,
             background: 'rgba(20,18,9,0.92)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(212,168,67,0.25)',
@@ -279,29 +277,25 @@ export default function NutritionSection() {
           }}>
             <div style={{
               fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
-              fontSize: 10,
-              letterSpacing: 2,
+              fontSize: 10, letterSpacing: 2,
               color: 'rgba(255,255,255,0.5)',
-              marginBottom: 4,
-              textTransform: 'uppercase',
+              marginBottom: 4, textTransform: 'uppercase',
             }}>
               {t('data_bowl_label')}
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 36,
-              color: 'var(--gold)',
-              lineHeight: 1,
-              letterSpacing: 1,
+              fontSize: 36, color: 'var(--gold)',
+              lineHeight: 1, letterSpacing: 1,
             }}>
               {t('data_bowl_value')} <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>{t('data_bowl_unit')}</span>
             </div>
           </div>
 
           {/* Data card bottom-right */}
-          <div style={{
+          <div className="landing-data-card" style={{
             position: 'absolute',
-            bottom: 32, right: -20,
+            bottom: 32, right: 8,
             background: 'rgba(20,18,9,0.92)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(212,168,67,0.25)',
@@ -311,11 +305,9 @@ export default function NutritionSection() {
           }}>
             <div style={{
               fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
-              fontSize: 10,
-              letterSpacing: 2,
+              fontSize: 10, letterSpacing: 2,
               color: 'rgba(255,255,255,0.5)',
-              marginBottom: 8,
-              textTransform: 'uppercase',
+              marginBottom: 8, textTransform: 'uppercase',
             }}>
               {t('data_macros_label')}
             </div>

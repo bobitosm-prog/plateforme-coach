@@ -118,108 +118,128 @@ export default function Results() {
           </h2>
         </div>
 
-        {/* Transformation image full-bleed */}
-        <div ref={imageWrapRef} style={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '16/9',
-          marginBottom: 64,
-          borderRadius: 4,
-          overflow: 'hidden',
-          border: '1px solid rgba(212,168,67,0.15)',
-          opacity: 0,
-        }}>
-          <Image
-            src="/images/new/transformation.png"
-            alt={t('image_alt')}
-            fill
-            quality={88}
-            sizes="(max-width: 1400px) 100vw, 1400px"
-            style={{ objectFit: 'cover', objectPosition: 'center' }}
-          />
-
-          {/* Label avant */}
+        {/* Transformation image + quote */}
+        <div ref={imageWrapRef} style={{ marginBottom: 64, opacity: 0 }}>
+          {/* Image with labels */}
           <div style={{
-            position: 'absolute',
-            top: 32, left: 32,
-            background: 'rgba(20,18,9,0.92)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            padding: '12px 20px',
-            zIndex: 3,
+            position: 'relative',
+            width: '100%',
+            aspectRatio: '16/9',
+            borderRadius: 4,
+            overflow: 'hidden',
+            border: '1px solid rgba(212,168,67,0.15)',
           }}>
-            <div style={{
-              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
-              fontSize: 10, letterSpacing: 2,
-              color: 'rgba(255,255,255,0.6)',
-              textTransform: 'uppercase',
+            <Image
+              src="/images/new/transformation.png"
+              alt={t('image_alt')}
+              fill
+              quality={88}
+              sizes="(max-width: 1400px) 100vw, 1400px"
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+            />
+
+            {/* Label avant */}
+            <div className="results-label" style={{
+              position: 'absolute',
+              top: 'clamp(12px, 3vw, 32px)', left: 'clamp(12px, 3vw, 32px)',
+              background: 'rgba(20,18,9,0.92)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              padding: 'clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 20px)',
+              zIndex: 3,
             }}>
-              {t('before_label')}
+              <div style={{
+                fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+                fontSize: 'clamp(8px, 1.2vw, 10px)', letterSpacing: 2,
+                color: 'rgba(255,255,255,0.6)',
+                textTransform: 'uppercase',
+              }}>
+                {t('before_label')}
+              </div>
+              <div style={{ fontSize: 'clamp(10px, 1.5vw, 13px)', color: '#fff', marginTop: 4 }}>
+                {t('before_date')}
+              </div>
             </div>
-            <div style={{ fontSize: 13, color: '#fff', marginTop: 4 }}>
-              {t('before_date')}
+
+            {/* Label après */}
+            <div className="results-label" style={{
+              position: 'absolute',
+              top: 'clamp(12px, 3vw, 32px)', right: 'clamp(12px, 3vw, 32px)',
+              background: 'rgba(212,168,67,0.92)',
+              color: '#0D0B08',
+              padding: 'clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 20px)',
+              zIndex: 3,
+            }}>
+              <div style={{
+                fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+                fontSize: 'clamp(8px, 1.2vw, 10px)', letterSpacing: 2,
+                textTransform: 'uppercase',
+                opacity: 0.7,
+              }}>
+                {t('after_label')}
+              </div>
+              <div style={{ fontSize: 'clamp(10px, 1.5vw, 13px)', fontWeight: 700, marginTop: 4 }}>
+                {t('after_date')}
+              </div>
+            </div>
+
+            {/* Center divider line */}
+            <div className="results-divider" style={{
+              position: 'absolute',
+              top: 0, bottom: 0,
+              left: '50%',
+              width: 1,
+              background: 'rgba(212,168,67,0.4)',
+              zIndex: 2,
+            }} />
+
+            {/* Quote — desktop only: overlay on image */}
+            <div ref={quoteRef} className="results-quote-desktop" style={{
+              position: 'absolute',
+              bottom: 32, left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(20,18,9,0.92)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(212,168,67,0.25)',
+              padding: '16px 28px',
+              maxWidth: 520,
+              textAlign: 'center',
+              zIndex: 3,
+            }}>
+              <div style={{
+                fontStyle: 'italic', fontSize: 14,
+                color: '#fff', lineHeight: 1.5, marginBottom: 8,
+              }}>
+                {t('quote')}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
+                fontSize: 10, letterSpacing: 2,
+                color: 'var(--gold)', textTransform: 'uppercase',
+              }}>
+                {t('quote_author')}
+              </div>
             </div>
           </div>
 
-          {/* Label après */}
-          <div style={{
-            position: 'absolute',
-            top: 32, right: 32,
-            background: 'rgba(212,168,67,0.92)',
-            color: '#0D0B08',
-            padding: '12px 20px',
-            zIndex: 3,
-          }}>
-            <div style={{
-              fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
-              fontSize: 10, letterSpacing: 2,
-              textTransform: 'uppercase',
-              opacity: 0.7,
-            }}>
-              {t('after_label')}
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4 }}>
-              {t('after_date')}
-            </div>
-          </div>
-
-          {/* Center divider line */}
-          <div style={{
-            position: 'absolute',
-            top: 0, bottom: 0,
-            left: '50%',
-            width: 1,
-            background: 'rgba(212,168,67,0.4)',
-            zIndex: 2,
-          }} />
-
-          {/* Quote bottom */}
-          <div ref={quoteRef} style={{
-            position: 'absolute',
-            bottom: 32, left: '50%',
-            transform: 'translateX(-50%)',
+          {/* Quote — mobile only: below image */}
+          <div className="results-quote-mobile" style={{
             background: 'rgba(20,18,9,0.92)',
-            backdropFilter: 'blur(20px)',
             border: '1px solid rgba(212,168,67,0.25)',
-            padding: '16px 28px',
-            maxWidth: 520,
+            padding: '16px 20px',
+            marginTop: 16,
             textAlign: 'center',
-            zIndex: 3,
           }}>
             <div style={{
-              fontStyle: 'italic',
-              fontSize: 14,
-              color: '#fff',
-              lineHeight: 1.5,
-              marginBottom: 8,
+              fontStyle: 'italic', fontSize: 13,
+              color: '#fff', lineHeight: 1.5, marginBottom: 8,
             }}>
               {t('quote')}
             </div>
             <div style={{
               fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
               fontSize: 10, letterSpacing: 2,
-              color: 'var(--gold)',
-              textTransform: 'uppercase',
+              color: 'var(--gold)', textTransform: 'uppercase',
             }}>
               {t('quote_author')}
             </div>
@@ -235,7 +255,7 @@ export default function Results() {
           borderTop: '1px solid rgba(255,255,255,0.08)',
         }}>
           {STATS.map((s, i) => (
-            <div key={i} style={{
+            <div key={i} className="results-stat" style={{
               borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
               paddingLeft: i > 0 ? 'clamp(16px, 3vw, 32px)' : 0,
             }}>

@@ -92,7 +92,7 @@ export default function TrackingSection() {
         pointerEvents: 'none',
       }} />
 
-      <div style={{
+      <div className="landing-grid-2col" style={{
         maxWidth: 1400,
         margin: '0 auto',
         padding: '0 clamp(20px, 5vw, 48px)',
@@ -211,7 +211,7 @@ export default function TrackingSection() {
         </div>
 
         {/* RIGHT : Image + data cards */}
-        <div ref={imageWrapRef} style={{
+        <div ref={imageWrapRef} className="landing-image-wrap" style={{
           position: 'relative',
           aspectRatio: '4/5',
           width: '100%',
@@ -241,9 +241,9 @@ export default function TrackingSection() {
           </div>
 
           {/* Data card top-left : strength */}
-          <div style={{
+          <div className="landing-data-card" style={{
             position: 'absolute',
-            top: 24, left: -16,
+            top: 24, left: 8,
             background: 'rgba(20,18,9,0.92)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(212,168,67,0.25)',
@@ -277,9 +277,9 @@ export default function TrackingSection() {
           </div>
 
           {/* Data card bottom-right : recovery */}
-          <div style={{
+          <div className="landing-data-card" style={{
             position: 'absolute',
-            bottom: 32, right: -20,
+            bottom: 32, right: 8,
             background: 'rgba(20,18,9,0.92)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(212,168,67,0.25)',

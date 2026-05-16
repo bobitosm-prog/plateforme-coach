@@ -89,7 +89,7 @@ export default function CoachIaSection() {
         }} />
       </div>
 
-      <div style={{
+      <div className="landing-grid-2col" style={{
         maxWidth: 1400,
         margin: '0 auto',
         padding: '0 clamp(20px, 5vw, 48px)',
@@ -102,7 +102,7 @@ export default function CoachIaSection() {
       }}>
 
         {/* LEFT : iPhone Athena AI */}
-        <div ref={imageWrapRef} style={{
+        <div ref={imageWrapRef} className="landing-image-wrap" style={{
           position: 'relative',
           aspectRatio: '4/5',
           width: '100%',
@@ -128,9 +128,9 @@ export default function CoachIaSection() {
           </div>
 
           {/* Data card top-right : status */}
-          <div style={{
+          <div className="landing-data-card" style={{
             position: 'absolute',
-            top: 24, right: -20,
+            top: 24, right: 8,
             background: 'rgba(20,18,9,0.92)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(212,168,67,0.25)',
@@ -161,9 +161,9 @@ export default function CoachIaSection() {
           </div>
 
           {/* Data card bottom-left : interactions */}
-          <div style={{
+          <div className="landing-data-card" style={{
             position: 'absolute',
-            bottom: 32, left: -16,
+            bottom: 32, left: 8,
             background: 'rgba(20,18,9,0.92)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(212,168,67,0.25)',
