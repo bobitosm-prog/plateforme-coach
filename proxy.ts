@@ -7,6 +7,34 @@ const PROTECTED: Record<string, string[]> = {
   '/client': ['coach', 'super_admin'],
 }
 
+// ===== Locale detection (for unauthenticated visitors on /) =====
+const SUPPORTED_LOCALES = ['fr', 'en', 'de'] as const
+const DEFAULT_LOCALE = 'fr'
+
+function detectLocale(request: NextRequest): string {
+  // 1. Cookie NEXT_LOCALE (user's previous choice)
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
+  if (cookieLocale && (SUPPORTED_LOCALES as readonly string[]).includes(cookieLocale)) {
+    return cookieLocale
+  }
+
+  // 2. Accept-Language header (browser language)
+  const acceptLang = request.headers.get('accept-language') || ''
+  const primaryLang = acceptLang.split(',')[0]?.trim().toLowerCase() || ''
+  if (primaryLang.startsWith('fr')) return 'fr'
+  if (primaryLang.startsWith('de')) return 'de'
+  if (primaryLang.startsWith('en')) return 'en'
+
+  // 3. Geolocation via Vercel IP header
+  const country = (request.headers.get('x-vercel-ip-country') || '').toUpperCase()
+  if (['CH', 'FR', 'BE', 'LU', 'MC'].includes(country)) return 'fr'
+  if (['DE', 'AT', 'LI'].includes(country)) return 'de'
+  if (['US', 'GB', 'IE', 'CA', 'AU', 'NZ'].includes(country)) return 'en'
+
+  // 4. Fallback
+  return DEFAULT_LOCALE
+}
+
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
     request: { headers: request.headers },
@@ -29,6 +57,14 @@ export async function proxy(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   const { pathname } = request.nextUrl
 
+  // ===== ROOT PATH: locale detection for non-auth visitors =====
+  if (pathname === '/' && !session) {
+    const locale = detectLocale(request)
+    const url = request.nextUrl.clone()
+    url.pathname = `/${locale}/landing`
+    return NextResponse.redirect(url, 308)
+  }
+
   // Chained onboarding redirect — applies to authenticated clients on /
   if (session && pathname === '/') {
     const { data: prof } = await supabase
@@ -37,16 +73,13 @@ export async function proxy(request: NextRequest) {
       .eq('id', session.user.id)
       .single()
     if (prof?.role === 'client') {
-      // Étape 1 : fitness onboarding
       if (!prof.onboarding_completed_at) {
         return NextResponse.redirect(new URL('/onboarding-fitness', request.url))
       }
-      // Étape 2 : repas/profil onboarding
       const fn = prof.full_name?.trim()
       if (!fn || fn === 'Athlete') {
         return NextResponse.redirect(new URL('/onboarding', request.url))
       }
-      // Étape 3 : photo + analyse IA
       if (!prof.onboarding_photo_completed_at) {
         return NextResponse.redirect(new URL('/onboarding-photo', request.url))
       }
@@ -62,7 +95,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // Always fetch role fresh from DB — no cookie cache (stale cookies caused redirect loops)
+  // Always fetch role fresh from DB
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -72,7 +105,6 @@ export async function proxy(request: NextRequest) {
 
   const allowed = PROTECTED[matchedPrefix]
   if (!allowed.includes(role)) {
-    // Redirect to appropriate home based on actual role
     if (role === 'coach') return NextResponse.redirect(new URL('/coach', request.url))
     return NextResponse.redirect(new URL('/', request.url))
   }

@@ -18,6 +18,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
 
+  const setLocaleCookie = (code: string) => {
+    document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
+  }
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -92,6 +96,7 @@ export default function Navbar() {
                   key={l.code}
                   href={pathname}
                   locale={l.code}
+                  onClick={() => setLocaleCookie(l.code)}
                   aria-label={`Switch to ${l.label}`}
                   style={{
                     fontSize: 18, opacity: 0.55,
@@ -192,7 +197,7 @@ export default function Navbar() {
                 key={l.code}
                 href={pathname}
                 locale={l.code}
-                onClick={() => setOpen(false)}
+                onClick={() => { setLocaleCookie(l.code); setOpen(false) }}
                 aria-label={`Switch to ${l.label}`}
                 style={{
                   fontSize: 32,
