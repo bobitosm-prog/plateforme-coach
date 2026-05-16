@@ -1,3 +1,12 @@
+import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
+import {
+  SITE_URL,
+  buildHreflangAlternates,
+  getOgLocale,
+  getAlternateOgLocales,
+  type Locale,
+} from '@/lib/seo'
 import Cursor from './components/Cursor';
 import ScrollBar from './components/ScrollBar';
 import Navbar from './components/Navbar';
@@ -19,6 +28,68 @@ import FaqSection from './components/FaqSection';
 import GenevaSection from './components/GenevaSection';
 import CtaSection from './components/CtaSection';
 import FooterSection from './components/FooterSection';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'metadata' })
+
+  const path = '/landing'
+  const canonical = `${SITE_URL}/${locale}${path}`
+  const ogImage = `${SITE_URL}/og-image.jpg`
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: t('title'),
+    description: t('description'),
+    keywords: t('keywords').split(','),
+    authors: [{ name: 'MoovX SA', url: SITE_URL }],
+    creator: 'MoovX SA',
+    publisher: 'MoovX SA',
+    alternates: {
+      canonical,
+      languages: buildHreflangAlternates(path),
+    },
+    openGraph: {
+      type: 'website',
+      url: canonical,
+      siteName: 'MoovX',
+      title: t('ogTitle'),
+      description: t('ogDescription'),
+      locale: getOgLocale(locale),
+      alternateLocale: getAlternateOgLocales(locale),
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: t('ogImageAlt'),
+          type: 'image/jpeg',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('twitterTitle'),
+      description: t('twitterDescription'),
+      images: [ogImage],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-snippet': -1,
+        'max-image-preview': 'large',
+        'max-video-preview': -1,
+      },
+    },
+  }
+}
 
 function GoldSeparator() {
   return (

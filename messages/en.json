@@ -283,6 +283,16 @@
     "value4_title": "Premium standard", "value4_desc": "Swiss-made quality in every detail",
     "coords": "46.2044° N · 6.1432° E", "location": "Geneva · Switzerland"
   },
+  "metadata": {
+    "title": "MoovX — Power & Performance",
+    "description": "Personalized coaching platform. Athena, your AI coach that pushes you harder. Custom programs, real-time tracking, measurable results.",
+    "keywords": "personal training,AI coach,Athena,fitness,strength training,performance,Geneva,Switzerland,custom program,MoovX",
+    "ogTitle": "MoovX — Power & Performance",
+    "ogDescription": "Personalized coaching + Athena, your AI coach. Push harder, go further.",
+    "ogImageAlt": "MoovX — Power & Performance coaching platform",
+    "twitterTitle": "MoovX — Power & Performance",
+    "twitterDescription": "Personalized coaching + AI. Push harder."
+  },
   "cta": {
     "eyebrow": "The time is now",
     "headline_line1": "Ready to become", "headline_line2": "the best", "headline_line3": "version", "headline_line4": "of yourself?",
