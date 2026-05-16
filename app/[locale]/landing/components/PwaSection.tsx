@@ -238,7 +238,7 @@ export default function PWASection() {
         {/* 2 platform cards */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: 32,
           marginBottom: 48,
         }}>

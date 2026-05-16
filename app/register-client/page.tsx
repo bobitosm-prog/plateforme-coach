@@ -200,10 +200,15 @@ function RegisterContent() {
 
       <div className="auth-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', overflowY: 'auto', position: 'relative', zIndex: 1 }}>
 
-        {/* Mobile logo */}
+        {/* Mobile logo + back link */}
         <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-          <img src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
-          <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
+          <a href="/fr/landing" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
+            <img src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
+            <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
+          </a>
+          <a href="/fr/landing" style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
+            ← Retour à l'accueil
+          </a>
         </div>
         <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
 

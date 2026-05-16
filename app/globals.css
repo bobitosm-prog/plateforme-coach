@@ -72,6 +72,9 @@ html, body {
   .landing-grid-2col {
     grid-template-columns: 1fr !important;
   }
+  .landing-connector {
+    display: none !important;
+  }
   /* Data cards: keep absolute ON image, compact, no overflow */
   .landing-data-card {
     padding: 10px 12px !important;

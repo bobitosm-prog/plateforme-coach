@@ -97,7 +97,7 @@ export default function Testimonials() {
       }}>
 
         {/* Header with medal on right */}
-        <div style={{
+        <div className="landing-grid-2col" style={{
           display: 'grid',
           gridTemplateColumns: '1.6fr 1fr',
           gap: 'clamp(32px, 5vw, 64px)',
@@ -155,7 +155,7 @@ export default function Testimonials() {
         {/* 3 testimonials grid */}
         <div ref={cardsRef} style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: 24,
         }}>
           {TESTIMONIALS.map((item, i) => (

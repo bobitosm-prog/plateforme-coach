@@ -120,7 +120,7 @@ export default function Steps() {
         </div>
 
         <div ref={stepsRef} style={{ position: 'relative' }}>
-          <div className="step-connector" style={{
+          <div className="step-connector landing-connector" style={{
             position: 'absolute',
             top: 56,
             left: '12.5%', right: '12.5%',

@@ -82,7 +82,9 @@
       "Read(//Users/marcoferreira/Downloads/**)",
       "Bash(gh run:*)",
       "Bash(npx eslint:*)",
-      "Bash(npx lighthouse:*)"
+      "Bash(npx lighthouse:*)",
+      "Bash(do)",
+      "Read(//Users/marcoferreira/plateforme-coach/app/[locale]/landing/components/**)"
     ]
   }
 }

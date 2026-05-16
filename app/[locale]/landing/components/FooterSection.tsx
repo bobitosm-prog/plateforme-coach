@@ -36,7 +36,7 @@ export default function FooterSection() {
       ref={ref}
       style={{
         borderTop: '1px solid var(--text-dim)',
-        padding: '40px 64px',
+        padding: '40px clamp(20px, 5vw, 64px)',
         opacity: visible ? 1 : 0,
         transition: 'opacity 0.6s ease',
       }}
@@ -105,7 +105,7 @@ export default function FooterSection() {
       <style>{`
         @media (max-width: 1024px) {
           .footer-inner { flex-direction: column !important; text-align: center !important; gap: 24px !important; }
-          .footer-links { justify-content: center !important; }
+          .footer-links { justify-content: center !important; flex-wrap: wrap !important; gap: 16px 28px !important; }
         }
       `}</style>
     </footer>
