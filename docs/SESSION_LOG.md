@@ -4,6 +4,27 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-17 — Sprint 4b LocaleSelector
+
+Selecteur de langue persistant dans Compte > Preferences de l'app authentifiee.
+
+Stack :
+- Migration profiles.preferred_locale (text fr/en/de, default 'fr', CHECK, index)
+- API POST /api/user/locale : switch (DB update + cookie sync 12 mois)
+- API POST /api/user/sync-locale : POST au login (DB → cookie, cross-device)
+- Composant LocaleSelector dans Compte > Preferences (section expandable)
+
+Limitation : l'app authentifiee reste FR hardcode (134 fichiers Sprint 5+).
+Le LocaleSelector affecte : 6 ecrans auth Sprint 4 + landing publique.
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 1 | 62ade68 | feat(i18n): persistance langue user via profiles.preferred_locale |
+| 2 | 403299f | feat(i18n): LocaleSelector dans Compte > Preferences |
+
+---
+
 ## 2026-05-17 — Sprint 4 i18n Critical Path
 
 ### Realisations
