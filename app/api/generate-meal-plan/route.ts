@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit } from '../../../lib/rate-limit'
+import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-plan'
 
@@ -317,6 +317,12 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`meal-plan:${ip}`, 3, 60000)
   if (!rl.allowed) return new Response(JSON.stringify({ error: 'Trop de requetes. Reessayez dans ' + rl.retryAfter + 's.' }), { status: 429 })
+
+  // DB-backed hourly rate limit (Sprint 3)
+  const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'generate-meal-plan')
+  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+  await logAiUsage(supabaseAuth, user.id, 'generate-meal-plan')
+
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {

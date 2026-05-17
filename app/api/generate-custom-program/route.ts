@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit } from '../../../lib/rate-limit'
+import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
 import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
 import { PROGRAM_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 
@@ -142,6 +142,11 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`custom-prog:${ip}`, 3, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
+
+  // DB-backed hourly rate limit (Sprint 3)
+  const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'generate-custom-program')
+  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+  await logAiUsage(supabaseAuth, user.id, 'generate-custom-program')
 
   try {
     const body = await req.json()
