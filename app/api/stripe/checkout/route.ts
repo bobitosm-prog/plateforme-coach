@@ -8,6 +8,8 @@ function getServiceSupabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
 
 // Static Price ID map — explicit access so Next.js can resolve at build time
@@ -29,7 +31,9 @@ const PLAN_META: Record<string, { mode: 'subscription' | 'payment'; subType: str
 export async function POST(req: NextRequest) {
   try {
     const { clientId, planId, coachId } = await req.json()
-    if (!clientId) return NextResponse.json({ error: 'clientId required' }, { status: 400 })
+    if (!clientId || !UUID_RE.test(clientId)) {
+      return NextResponse.json({ error: 'clientId invalide' }, { status: 400 })
+    }
 
     const resolvedPlanId = planId || 'client_monthly'
 
@@ -95,8 +99,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams)
+    // FIX: Create Stripe session FIRST with idempotency key, THEN insert payment record
+    const idempotencyKey = `checkout-${clientId}-${resolvedPlanId}-${Date.now()}`
+    const session = await stripe.checkout.sessions.create(sessionParams, { idempotencyKey })
 
+    // Only insert payment record AFTER Stripe session is successfully created
     await getServiceSupabase().from('payments').insert({
       coach_id: coachId && coachId !== 'platform' ? coachId : null,
       client_id: clientId,
@@ -108,14 +115,9 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (e: any) {
-    console.error('[stripe/checkout] ERROR:', {
-      message: e.message,
-      type: e.type,
-      code: e.code,
-      statusCode: e.statusCode,
-      raw: e.raw?.message,
-    })
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Checkout error'
+    console.error('[stripe/checkout] ERROR:', { message })
+    return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
   }
 }

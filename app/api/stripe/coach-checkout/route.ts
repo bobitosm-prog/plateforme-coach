@@ -67,8 +67,9 @@ export async function POST(req: NextRequest) {
       await supabaseAdmin.from('profiles').update({ stripe_customer_id: customerId }).eq('id', clientId)
     }
 
-    // Create checkout session with transfer to coach
+    // Create checkout session with transfer to coach + idempotency key
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
+    const idempotencyKey = `coach-checkout-${clientId}-${coachId}-${Date.now()}`
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -93,10 +94,12 @@ export async function POST(req: NextRequest) {
       success_url: `${appUrl}/?payment=success`,
       cancel_url: `${appUrl}/?payment=canceled`,
       metadata: { clientId, coachId, type: 'coach_subscription' },
-    })
+    }, { idempotencyKey })
 
     return NextResponse.json({ url: session.url })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Coach checkout error'
+    console.error('[stripe/coach-checkout] ERROR:', { message })
+    return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
   }
 }
