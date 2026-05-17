@@ -1,64 +1,48 @@
 # MoovX — ROADMAP
 
-> **Derniere mise a jour** : 14 mai 2026, post-session refonte landing Power + i18n
-> **Version actuelle** : v2.4.1
+> **Derniere mise a jour** : 17 mai 2026, post-session SEO technique + Stripe rebrand
+> **Version actuelle** : v2.5.0
 > **Status** : Production live, 0 clients payants, Stripe `sk_LIVE`
 
 ---
 
-## PRIORITE #1 — Mobile Responsive (~3-4h, prochaine session)
+## Etat SEO (mai 2026)
 
-> Landing Power refondue desktop-only durant la session du 14 mai. Mobile NON teste.
-> Bloquant pour launch : impossible d'envoyer du trafic tant que mobile casse (>70% du trafic landing).
+- Hreflang fr/en/de/x-default: ✅
+- Sitemap multilingue: ✅ (3 URLs avec alternates)
+- Robots: ✅
+- OpenGraph + Twitter Cards par locale: ✅
+- Schema.org: ✅ Organization, HealthAndBeautyBusiness, WebSite, SoftwareApplication
+- Canonical URLs par locale: ✅
+- Google Rich Results: 5 elements valides detectes
+- Note: aucun client RGPD a expurger (MRR 0 au 17 mai)
 
-### Breakpoints a valider
-- 375px iPhone SE/13 mini · 390px iPhone 14/15 Pro · 428px 15 Pro Max · 768px iPad portrait · 1024px iPad landscape · >=1280px desktop (DEJA OK)
+---
 
-### Sections a auditer/fixer
-- [ ] Navbar — burger menu mobile
-- [ ] Hero — Bebas Neue responsive, stats grid
-- [ ] MarqueeSection — vitesse + taille
-- [ ] Results — stack vertical avant/apres
-- [ ] NutritionSection — features grid 2→1 col
-- [ ] TrainingSection — PPL table responsive
-- [ ] TrackingSection — 6 features grid
-- [ ] CoachIaSection — iPhone + questions
-- [ ] CoachingPro — coach tablet + specs
-- [ ] Testimonials — 3 cards carousel/stack
-- [ ] Steps — 4 corners → 1 col mobile
-- [ ] PwaSection — iOS/Android stack
-- [ ] PricingSection — 2 plans → 1 col
-- [ ] FaqSection — accordeons (probablement OK)
-- [ ] GenevaSection — image + values stack
-- [ ] CtaSection — headline + CTAs full-width
-- [ ] FooterSection — links wrap
+## ✅ FAIT
+
+- Landing Power & Performance desktop (14 sections, direction Nike/Whoop/IWC)
+- Architecture i18n complete (next-intl 4.12.0, FR/EN/DE, 16 sections traduites)
+- Mobile responsive complet (auth + 14 sections landing)
+- Language switcher Navbar (FR/EN/DE drapeaux)
+- SEO technique complet (hreflang multilingue, sitemap, robots, OpenGraph, Schema.org Organization/LocalBusiness/WebSite)
+- Detection langue automatique avec cookie persistant
+- Rebrand Stripe Coach IA → Athena (dashboard manuel)
+- Console admin complete (users, revenue, logs, feedback)
+- Feedback admin + visibilite in-app (email branded)
+- PWA (manifest, service worker, install prompt)
+- Cleanup repo (14 fichiers .OLD.tsx supprimes)
 
 ---
 
 ## TODO IMMEDIAT — Avant premiers clients
-
-### Manuel (5 min)
-- [ ] **Stripe Dashboard live** : renommer "MoovX Coach IA" → "MoovX Athena"
 
 ### Architecture domaine
 - [ ] Decider strategie `moovx.ch` vs `app.moovx.ch`
 
 ---
 
-## SESSION SUIVANTE+1 — SEO + Detection langue (~2-3h)
-
-- [ ] Detection langue dans `proxy.ts` (cookie → Accept-Language → IP country → fallback fr)
-- [ ] Selecteur langue UI dans Navbar (FR/EN/DE)
-- [ ] Hreflang tags dans layout.tsx via generateMetadata()
-- [ ] Sitemap multilingue
-- [ ] Canonical URLs + robots.txt
-- [ ] OpenGraph + Twitter Cards par locale
-- [ ] Schema.org (LocalBusiness, Organization)
-- [ ] Google Search Console
-
----
-
-## SESSION SUIVANTE+2 — EconomicModel & Polish (~1-2h)
+## SESSION SUIVANTE — EconomicModel & Polish (~1-2h)
 
 - [ ] Refondre EconomicModel direction Power OU supprimer
 - [ ] i18n FR/EN/DE
@@ -114,8 +98,9 @@
 - [ ] Cancel subscription flow
 - [ ] Coach invitation flow
 - [ ] Backup quotidien Supabase
-- [ ] OG images par locale
+- [ ] OG images par locale (remplacer placeholder)
 - [ ] 10 testeurs beta Geneve
+- [ ] Ajouter sameAs reseaux sociaux dans lib/structured-data.ts quand comptes crees
 
 ---
 
@@ -142,15 +127,22 @@
 - Stripe Connect commission MoovX = 3%
 - Mobile responsive identifie comme PRIORITE #1 post-session
 
+### Decisions SEO (17 mai 2026)
+
+- generateMetadata doit vivre dans la route la plus profonde (page.tsx > layout.tsx)
+- Sitemap/robots dynamiques via app/sitemap.ts et app/robots.ts (pas de fichiers statiques dans public/)
+- JSON-LD via @graph unique (recommandation Google) + SoftwareApplication separe (legacy)
+- lib/seo.ts et lib/structured-data.ts = single source of truth pour donnees business
+
 ---
 
 ## Progression globale
 
 ```
 Landing Marketing desktop  100%  (14/14 sections Power + i18n)
-Landing Marketing mobile     0%  (priorite #1)
-Landing SEO                 30%  (i18n done, hreflang/sitemap TODO)
-Rebrand Athena             100%  code · 0% Stripe Dashboard
+Landing Marketing mobile   100%  (responsive complet, valide iPhone)
+Landing SEO                100%  (hreflang, sitemap, robots, OG, Schema.org, Rich Results)
+Rebrand Athena             100%  code + Stripe Dashboard
 App utilisateur i18n         0%  (151 fichiers)
 Stack tech                 100%  (Next 16, Tailwind 4, Supabase, Stripe live)
 RGPD / Legal                50%  (architecture OK, contenus a finaliser)
@@ -160,4 +152,4 @@ Cleanup repo               100%
 Performance                 60%
 ```
 
-**Global readiness pour launch** : ~55% (revu en baisse a cause du mobile)
+**Global readiness pour launch** : ~65%

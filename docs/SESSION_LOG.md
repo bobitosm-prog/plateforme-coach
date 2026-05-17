@@ -4,6 +4,81 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## Session 2026-05-16 → 2026-05-17 — SEO Technique + Stripe Rebrand
+
+### Objectifs
+- Mettre en place SEO multilingue technique de niveau production
+- Finaliser le rebrand Coach IA → Athena (cote Stripe Dashboard)
+
+### Realisations
+
+**VAGUE 1 SEO — Detection langue automatique** (commit anterieur)
+- proxy.ts detecte la locale via cookie NEXT_LOCALE → Accept-Language → x-vercel-ip-country → fallback fr
+- Cookie NEXT_LOCALE persiste le choix au click drapeau
+
+**VAGUE 2 SEO — Hreflang + Sitemap + Robots + OG** (commit fff580a)
+- Creation lib/seo.ts (helper centralise: SITE_URL, LOCALES, hreflang builder, OG locale mapping)
+- Creation app/sitemap.ts (3 langues × pages avec alternates hreflang)
+- Creation app/robots.ts (reference sitemap, disallow auth routes)
+- generateMetadata deplace dans app/[locale]/landing/page.tsx (route la plus profonde = priorite Next.js)
+- Suppression ancien export const metadata "Coaching Fitness Pro" dans landing/layout.tsx
+- Ajout namespace "metadata" dans messages/fr.json + en.json + de.json
+- Ajout placeholder og-image.jpg 1200x630
+- Suppression des anciens public/sitemap.xml et public/robots.txt (remplaces par routes dynamiques)
+
+**VAGUE 3 SEO — Schema.org structured data** (commit b6fec2d)
+- Creation lib/structured-data.ts (helpers types: Organization, LocalBusiness, WebSite, schemaGraph builder)
+- Creation components/StructuredData.tsx (composant serveur JSON-LD)
+- Injection @graph dans app/[locale]/landing/page.tsx (Organization + HealthAndBeautyBusiness + WebSite)
+- SoftwareApplication existant preserve dans landing/layout.tsx
+- Coordonnees GPS Geneve (46.2044, 6.1432), areaServed CH/FR/DE
+- inLanguage adapte a la locale (fr/en/de)
+
+**Stripe Rebrand Coach IA → Athena**
+- Produit Stripe renomme: MoovX Coach IA → MoovX Athena
+- Description mise a jour: "Athena, ton coach IA personnel 24/7"
+- 3 price IDs preserves (10 CHF/mois, 80 CHF/an, 150 CHF lifetime)
+- Product ID inchange: prod_UFWe600xptRDsp
+- Aucune modification de code necessaire (la formulation "Coach IA Athena" / "AI Coach Athena" / "KI-Coach Athena" dans les JSON est intentionnelle: nom propre + descripteur)
+
+### Validations
+- Schema.org validator: 0 erreur, 0 warning, 3 elements detectes
+- Google Rich Results Test: 5 elements valides (Commerces et services, Organisation, Extraits d'avis, Applications logicielles)
+- Hreflang Testing Tool: 4 hreflang valides (fr/en/de/x-default), self-referencing OK, 200 OK
+- Tests iPhone reel via moovx.ch: tous les flows OK (landing 3 langues, login, register-client)
+
+### Bugs resolus
+- Conflit /sitemap.xml entre public/sitemap.xml (statique) et app/sitemap.ts (dynamique) → suppression du statique
+- generateMetadata ignore sur /fr/landing (ancien "Coaching Fitness Pro" ecrasait le nouveau) → cause racine: metadata declaree trop haut dans l'arbre de routes Next.js. Fix: deplacer generateMetadata dans la page la plus profonde (landing/page.tsx)
+
+### Fichiers impactes
+Crees:
+- lib/seo.ts
+- lib/structured-data.ts
+- components/StructuredData.tsx
+- app/sitemap.ts
+- app/robots.ts
+- public/og-image.jpg (placeholder)
+
+Modifies:
+- app/[locale]/landing/page.tsx (generateMetadata + injection StructuredData)
+- app/[locale]/landing/layout.tsx (suppression ancien metadata)
+- app/[locale]/layout.tsx (retour a l'etat pre-VAGUE 2)
+- messages/fr.json, en.json, de.json (namespace metadata)
+
+Supprimes:
+- public/sitemap.xml
+- public/robots.txt
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 1 | 3930bb3 | feat(seo): auto-detect locale on root path + persistent cookie |
+| 2 | fff580a | feat(seo): hreflang multilingue + sitemap + robots + OG par locale |
+| 3 | b6fec2d | feat(seo): add Organization + LocalBusiness + WebSite JSON-LD schemas |
+
+---
+
 ## 14 mai 2026 (nuit) — Refonte Landing Power + Rebrand Athena + i18n Complete
 
 **Duree** : ~10 heures
