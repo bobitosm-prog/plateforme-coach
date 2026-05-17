@@ -4,6 +4,33 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-17 — Sprint 4 i18n Critical Path
+
+### Realisations
+
+Infrastructure :
+- lib/get-locale.ts + components/AuthIntlProvider.tsx
+  → useTranslations() utilisable sur routes hors [locale]
+- Pattern split server wrapper + client content
+
+6 ecrans business-critical traduits FR/EN/DE :
+- login (21 cles), join (19 cles), register-client (50 cles)
+- onboarding (68 cles), onboarding-fitness (62 cles), onboarding-photo (26 cles)
+- Total : 246 cles extraites + 492 traductions EN/DE
+- 12 ICU variables preservees (firstName, count, coachName, etc.)
+
+Strategie : Option B (wrapper local AuthIntlProvider) plutot que migration structure URL.
+Reste FR hardcode (Sprint 5+) : dashboards coach/client, Paywall, admin, profils.
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 1 | 96cbff5 | feat(i18n): infrastructure i18n pour routes hors [locale] |
+| 2 | f5893f2 | feat(i18n): extraction strings auth flow vers namespaces |
+| 3 | 3764c7a | feat(i18n): traductions EN + DE pour 246 cles auth |
+
+---
+
 ## 2026-05-17 — Sprint 3 Hardening
 
 ### Realisations
