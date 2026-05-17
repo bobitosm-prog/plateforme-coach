@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight } from 'lucide-react'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight, ChevronDown, Globe } from 'lucide-react'
+import LocaleSelector from '@/components/LocaleSelector'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 import { colors, fonts } from '../../../lib/design-tokens'
 import { getLevelFromXP } from '../../../lib/gamification'
@@ -54,6 +55,7 @@ export default function AccountTab({
   firstName, displayAvatar, unreadCount, supabase, userId, onNavigate, onLogout,
 }: AccountTabProps) {
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
+  const [showPrefs, setShowPrefs] = useState(false)
 
   useEffect(() => {
     if (!supabase || !userId) return
@@ -150,12 +152,23 @@ export default function AccountTab({
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
           <div style={divider} />
-          <button onClick={() => alert('Section Preferences : bientot disponible')} style={itemStyle}>
+          <button onClick={() => setShowPrefs(p => !p)} style={itemStyle}>
             <Settings size={18} color={GOLD} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Preferences</span>
             <span style={{ flex: 1 }} />
-            <ChevronRight size={16} color={TEXT_DIM} />
+            <ChevronDown size={16} color={TEXT_DIM} style={{ transition: 'transform 150ms', transform: showPrefs ? 'rotate(180deg)' : 'none' }} />
           </button>
+          {showPrefs && (
+            <div style={{ padding: '12px 16px 16px', borderTop: `1px solid ${colors.divider}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Globe size={16} color={GOLD} />
+                  <span style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, color: TEXT_PRIMARY }}>Langue</span>
+                </div>
+                <LocaleSelector />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── COMPTE ── */}

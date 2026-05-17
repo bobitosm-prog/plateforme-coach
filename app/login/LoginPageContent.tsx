@@ -57,6 +57,8 @@ export default function LoginPageContent() {
       }
       const target = role === 'coach' && !profile?.coach_onboarding_complete ? '/onboarding-coach' : '/'
       supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_REDIRECT', details: { target, userId: data.session.user.id, role: profile?.role }, page_url: '/login' })
+      // Sync locale from DB → cookie (cross-device consistency)
+      try { await fetch('/api/user/sync-locale', { method: 'POST' }) } catch {}
       router.push(target)
     }
   }
