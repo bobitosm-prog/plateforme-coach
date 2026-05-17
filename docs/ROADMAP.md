@@ -1,7 +1,7 @@
 # MoovX — ROADMAP
 
-> **Derniere mise a jour** : 17 mai 2026, post-session SEO technique + Stripe rebrand
-> **Version actuelle** : v2.5.0
+> **Derniere mise a jour** : 17 mai 2026, post-Sprint 4b LocaleSelector
+> **Version actuelle** : v2.8.0
 > **Status** : Production live, 0 clients payants, Stripe `sk_LIVE`
 
 ---
@@ -15,23 +15,55 @@
 - Schema.org: ✅ Organization, HealthAndBeautyBusiness, WebSite, SoftwareApplication
 - Canonical URLs par locale: ✅
 - Google Rich Results: 5 elements valides detectes
-- Note: aucun client RGPD a expurger (MRR 0 au 17 mai)
 
 ---
 
 ## ✅ FAIT
 
+### Landing & Branding
 - Landing Power & Performance desktop (14 sections, direction Nike/Whoop/IWC)
-- Architecture i18n complete (next-intl 4.12.0, FR/EN/DE, 16 sections traduites)
 - Mobile responsive complet (auth + 14 sections landing)
 - Language switcher Navbar (FR/EN/DE drapeaux)
-- SEO technique complet (hreflang multilingue, sitemap, robots, OpenGraph, Schema.org Organization/LocalBusiness/WebSite)
+- Architecture i18n complete (next-intl 4.12.0, FR/EN/DE, 16 sections traduites)
+- Rebrand Stripe Coach IA → Athena (code + dashboard)
+- Cleanup repo (14 fichiers .OLD.tsx supprimes)
+
+### SEO (Sprint SEO Vague 1-3)
 - Detection langue automatique avec cookie persistant
-- Rebrand Stripe Coach IA → Athena (dashboard manuel)
+- SEO technique complet (hreflang, sitemap, robots, OpenGraph)
+- Schema.org Organization + LocalBusiness + WebSite + SoftwareApplication
+
+### Securite (Sprint 1)
+- Stripe webhook dedup (table stripe_webhook_events, UNIQUE event_id)
+- Webhook handler refetch defense in depth, return 200 sauf signature invalide
+- Checkout idempotency keys, ordre safe (Stripe avant DB insert)
+- UUID validation clientId, erreurs sanitizees, catch e: unknown
+- Security headers CSP + X-Frame-Options + X-Content-Type-Options + HSTS + Permissions-Policy
+
+### Legal (Sprint 2)
+- CGU + Privacy multilingues FR/EN/DE (nLPD CH + RGPD UE)
+- CookieConsent v3 minimal premium (card flottante, animation slide-up)
+- AnalyticsGate (Vercel Analytics conditionne au consentement)
+- Checkboxes obligatoires PricingSection (acceptCgu + waiveWithdrawal)
+- Footer locale-aware + ManageCookiesButton
+
+### Hardening (Sprint 3)
+- Rate limiting DB-backed sur 3 endpoints IA couteux (5/h custom-program, 10/h photo, 10/h meal-plan)
+- Table ai_usage_logs (RLS, indexes, fail-open)
+- Stripe Connect dedup (idempotency key + DB pre-check + update conditionnel)
+- Validation coach_monthly_rate 30-500 CHF + normalisation 2 decimales
+
+### i18n Auth (Sprint 4 + 4b)
+- Infrastructure AuthIntlProvider pour routes hors [locale] (Strategie B wrapper local)
+- 6 ecrans auth traduits FR/EN/DE : login, join, register-client, onboarding, onboarding-fitness, onboarding-photo
+- 246 cles extraites, 492 traductions EN/DE, 12 ICU variables
+- LocaleSelector dans Compte > Preferences (DB + cookie persistance cross-device)
+- Cookie sync au login (profiles.preferred_locale → NEXT_LOCALE)
+
+### Admin & Feedback
 - Console admin complete (users, revenue, logs, feedback)
 - Feedback admin + visibilite in-app (email branded)
 - PWA (manifest, service worker, install prompt)
-- Cleanup repo (14 fichiers .OLD.tsx supprimes)
 
 ---
 
@@ -51,18 +83,26 @@
 
 ---
 
-## i18n APPLICATION AUTHENTIFIEE (~4-6h)
+## i18n APPLICATION AUTHENTIFIEE (Sprint 5+, estime ~17h)
 
-> 151 fichiers .tsx, 277 imports relatifs a auditer.
+> 134 fichiers .tsx restants, ~2740 lignes deja faites Sprint 4.
 
-- [ ] Onboarding (client + coach)
-- [ ] AccountTab + Stripe sub
+Fait (Sprint 4) :
+- [x] Login, Register, Join
+- [x] Onboarding client (profil + fitness + photo)
+- [x] LocaleSelector dans Compte > Preferences
+
+Reste :
+- [ ] Onboarding coach (~556 lignes)
+- [ ] Dashboard client (HomeTab, TrainingTab, NutritionTab, ProgressTab, ProfileTab)
+- [ ] AccountTab contenu (au-dela des Preferences)
 - [ ] ChatTab (Athena)
-- [ ] Dashboard client
-- [ ] Dashboard coach
+- [ ] Dashboard coach (~925 lignes)
+- [ ] Client view detaillee (~660 lignes)
+- [ ] Paywall (~217 lignes)
 - [ ] Admin dashboards
-- [ ] CGU + Privacy (juridique critique)
 - [ ] Emails transactionnels
+- [ ] Notifications, toasts, error messages
 
 ---
 
@@ -77,20 +117,20 @@
 
 ---
 
-## SECURITE & RGPD (~2h)
+## SECURITE & RGPD
 
-- [ ] Headers securite (CSP, HSTS, X-Frame-Options)
-- [ ] Cookie banner RGPD multilingue
-- [ ] Politique confidentialite 3 langues (nLPD CH + RGPD UE)
-- [ ] CGU 3 langues
+- [x] Headers securite (CSP, HSTS, X-Frame-Options)
+- [x] Cookie banner RGPD multilingue
+- [x] Politique confidentialite 3 langues (nLPD CH + RGPD UE)
+- [x] CGU 3 langues
 - [ ] Export donnees utilisateur
-- [ ] Suppression compte cascade
+- [ ] Suppression compte avec transaction RPC Supabase
 
 ---
 
 ## LAUNCH PREPARATION
 
-- [ ] Stripe webhooks signatures
+- [x] Stripe webhooks signatures (dedup + idempotency)
 - [ ] Supabase RLS policies audit
 - [ ] Emails transactionnels 3 langues
 - [ ] PWA install iOS + Android
@@ -114,25 +154,52 @@
 - [ ] Tests E2E Playwright (FR/EN/DE)
 - [ ] CI/CD preview deployments
 - [ ] Monitoring Sentry / Datadog
+- [ ] Admin RBAC en DB (actuellement email hardcode lib/admin/auth.ts)
+- [ ] Standardiser catch (e: unknown) sur 33 routes API restantes
+- [ ] Creation Sarl quand CA >30-50k CHF ou 10+ clients
 
 ---
 
-## Decisions architecturales (14 mai 2026)
+## Limitations connues
 
+### i18n incomplet
+L'app authentifiee reste FR hardcode (134 fichiers non i18n).
+Le LocaleSelector affecte uniquement les 6 ecrans auth + landing publique.
+
+### Patterns DB FR hardcodes
+- `mapGoalToObjective` compare des dbLabels en francais (Perdre du poids, etc.)
+- Pattern food matching a l'etape meals reste FR-only
+- → traiter dans Sprint dedie "i18n DB food names" (~2-3h)
+
+### Delete account sans transaction
+Suppression partielle possible si erreur au milieu (15+ tables sequentielles).
+→ Migrer vers RPC Supabase avec transaction.
+
+---
+
+## Decisions architecturales
+
+### 14 mai 2026
 - `proxy.ts` (Next 16) > `middleware.ts` pour auth + i18n
 - `localePrefix: 'always'` → URLs propres
 - `app/layout.tsx` racine (fonts, PWA, providers globaux)
 - `app/[locale]/layout.tsx` wrapper minimal NextIntlClientProvider
 - EconomicModel skip (refonte Power a venir)
 - Stripe Connect commission MoovX = 3%
-- Mobile responsive identifie comme PRIORITE #1 post-session
 
-### Decisions SEO (17 mai 2026)
-
+### 17 mai 2026 — SEO
 - generateMetadata doit vivre dans la route la plus profonde (page.tsx > layout.tsx)
-- Sitemap/robots dynamiques via app/sitemap.ts et app/robots.ts (pas de fichiers statiques dans public/)
-- JSON-LD via @graph unique (recommandation Google) + SoftwareApplication separe (legacy)
-- lib/seo.ts et lib/structured-data.ts = single source of truth pour donnees business
+- Sitemap/robots dynamiques via app/sitemap.ts et app/robots.ts
+- JSON-LD via @graph unique (recommandation Google)
+- lib/seo.ts et lib/structured-data.ts = single source of truth
+
+### 17 mai 2026 — i18n Sprint 4
+- Strategie B (AuthIntlProvider wrapper local) plutot que migration URL [locale]/login
+  → preserve les liens existants (magic links Stripe, emails deja envoyes)
+- Pattern split server wrapper (page.tsx) + client content (PageContent.tsx)
+- IDs techniques DB (weight_loss, omnivore) jamais traduits
+- dbLabels FR conserves pour compat mapGoalToObjective
+- profiles.preferred_locale = source de verite cross-device, synce via cookie NEXT_LOCALE
 
 ---
 
@@ -143,13 +210,15 @@ Landing Marketing desktop  100%  (14/14 sections Power + i18n)
 Landing Marketing mobile   100%  (responsive complet, valide iPhone)
 Landing SEO                100%  (hreflang, sitemap, robots, OG, Schema.org, Rich Results)
 Rebrand Athena             100%  code + Stripe Dashboard
-App utilisateur i18n         0%  (151 fichiers)
+Securite Stripe            100%  (webhook dedup, idempotency, headers CSP/HSTS)
+Legal nLPD/RGPD            100%  (CGU, Privacy, CookieConsent, checkboxes checkout)
+Rate limiting IA           100%  (3 endpoints, fail-open, headers RFC)
+App auth i18n               18%  (6/~35 ecrans, 246/~1400 cles estimees)
+App auth LocaleSelector    100%  (Compte > Preferences, DB + cookie sync)
 Stack tech                 100%  (Next 16, Tailwind 4, Supabase, Stripe live)
-RGPD / Legal                50%  (architecture OK, contenus a finaliser)
 PWA                        100%
 Tests E2E                    0%
-Cleanup repo               100%
 Performance                 60%
 ```
 
-**Global readiness pour launch** : ~65%
+**Global readiness pour launch** : ~78%
