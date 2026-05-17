@@ -4,6 +4,50 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-17 — Sprint 2 Legal Safe
+
+### Realisations
+- CGU + Privacy multilingues FR/EN/DE (nLPD CH + RGPD UE)
+- CookieConsent v3 minimal premium (card flottante centree, animation slide-up 400ms, accent gold)
+- AnalyticsGate (Vercel Analytics + SpeedInsights conditionnes au consentement)
+- Checkboxes checkout Stripe : acceptCgu + waiveWithdrawal (bloquent CTA)
+- Footer locale-aware + ManageCookiesButton
+- Migration app/cgu et app/privacy vers app/[locale]/cgu et app/[locale]/privacy
+- Convertisseur markdown→HTML lib/markdown.ts (zero dependency, npm cache casse)
+- 6 nouvelles routes legales validees en prod
+- Strings i18n cookieConsent/legal/footer ajoutees FR/EN/DE
+
+### Iterations design
+- v1 : bandeau edge-to-edge (trop large)
+- v2 : card flottante max-w-2xl + icone M + glow gold (trop dense)
+- v3 : card max-w-xl + titre label uppercase + suppression icone/glow + padding px-12 py-10 (final)
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 1 | e8b4d5e | feat(legal): CGU + Privacy multilingues FR/EN/DE |
+| 2 | 3812e44 | feat(legal): CookieConsent v3 minimal + checkboxes Stripe + footer |
+
+---
+
+## 2026-05-17 — Sprint 1 Stripe Live Safe + Security Headers
+
+### Realisations
+- Table stripe_webhook_events pour deduplication events Stripe (UNIQUE event_id)
+- Webhook handler: dedup, refetch Stripe (defense in depth), return 200 sauf signature invalide
+- Checkout: idempotency keys, ordre inverse (Stripe avant DB insert), UUID validation
+- Coach checkout: idempotency keys, erreurs sanitizees
+- Security headers: CSP, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, HSTS (prod), Permissions-Policy camera=(self)
+- catch (e: unknown) au lieu de any pour type safety
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 1 | 48f5e2e | docs: update SESSION_LOG and ROADMAP after SEO waves 1-3 |
+| 2 | 07e8ade | feat(security): Sprint 1 — Stripe Live Safe + Security Headers |
+
+---
+
 ## Session 2026-05-16 → 2026-05-17 — SEO Technique + Stripe Rebrand
 
 ### Objectifs
