@@ -28,6 +28,13 @@ import FaqSection from './components/FaqSection';
 import GenevaSection from './components/GenevaSection';
 import CtaSection from './components/CtaSection';
 import FooterSection from './components/FooterSection';
+import StructuredData from '@/components/StructuredData';
+import {
+  buildOrganizationSchema,
+  buildLocalBusinessSchema,
+  buildWebSiteSchema,
+  buildSchemaGraph,
+} from '@/lib/structured-data';
 
 export async function generateMetadata({
   params,
@@ -102,9 +109,21 @@ function GoldSeparator() {
   )
 }
 
-export default function LandingPage() {
+export default async function LandingPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params;
+  const schemaGraph = buildSchemaGraph([
+    buildOrganizationSchema(),
+    buildLocalBusinessSchema(),
+    buildWebSiteSchema(locale),
+  ]);
+
   return (
     <>
+      <StructuredData data={schemaGraph} />
       <Cursor />
       <ScrollBar />
 
