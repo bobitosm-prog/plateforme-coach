@@ -4,6 +4,35 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-17 — Sprint 3 Hardening
+
+### Realisations
+
+Infrastructure rate limiting :
+- Table ai_usage_logs (RLS, 2 indexes, 2 policies) — migration validee en DB
+- Helper lib/rate-limit.ts : checkAiRateLimit + logAiUsage + aiRateLimitResponse
+- Fail-open en cas d'erreur DB, headers X-RateLimit-* RFC
+
+Rate limits appliques sur 3 endpoints IA couteux :
+- generate-custom-program : 5/h
+- analyze-progress-photo : 10/h
+- generate-meal-plan : 10/h
+
+Hardening Stripe :
+- Connect : idempotency key + DB pre-check + update conditionnel (anti race)
+- coach-checkout : validation 30-500 CHF + normalisation 2 decimales
+
+Test runtime valide local : 2 meal-plans generes → 2 entries DB confirmees.
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 1 | 06b6702 | feat(security): rate limiting infrastructure (Sprint 3) |
+| 2 | 8803e5f | feat(security): apply rate limits on 3 expensive AI endpoints |
+| 3 | 0e2a4fb | feat(security): Stripe Connect dedup + coach rate validation |
+
+---
+
 ## 2026-05-17 — Sprint 2 Legal Safe
 
 ### Realisations
