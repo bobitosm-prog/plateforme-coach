@@ -1,11 +1,13 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useReveal } from './shared'
+import { ManageCookiesButton } from '@/components/CookieConsent'
 
 export default function FooterSection() {
   const t = useTranslations('footer')
+  const locale = useLocale()
   const { ref, visible } = useReveal()
 
   const LINKS = [
@@ -13,8 +15,8 @@ export default function FooterSection() {
     { label: t('pricing'), href: '#pricing', type: 'anchor' as const },
     { label: t('faq'), href: '#faq', type: 'anchor' as const },
     { label: t('contact'), href: 'mailto:contact@moovx.ch', type: 'external' as const },
-    { label: t('terms'), href: '/cgu', type: 'internal' as const },
-    { label: t('privacy'), href: '/privacy', type: 'internal' as const },
+    { label: t('terms'), href: `/${locale}/cgu`, type: 'internal' as const },
+    { label: t('privacy'), href: `/${locale}/privacy`, type: 'internal' as const },
   ]
 
   const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -71,12 +73,12 @@ export default function FooterSection() {
             fontFamily: 'var(--font-body)',
             fontSize: 12, color: 'var(--text-dim)', margin: 0,
           }}>
-            {t('copyright')}
+            {t('rights')}
           </p>
         </div>
 
         {/* Right: links */}
-        <div className="footer-links" style={{ display: 'flex', gap: 28 }}>
+        <div className="footer-links" style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
           {LINKS.map((link) => {
             if (link.type === 'internal') {
               return (
@@ -99,6 +101,7 @@ export default function FooterSection() {
               </a>
             )
           })}
+          <ManageCookiesButton className="text-[13px] text-[var(--text-muted)]" />
         </div>
       </div>
 

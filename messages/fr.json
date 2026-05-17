@@ -48,7 +48,10 @@
     "faq": "FAQ",
     "contact": "Contact",
     "terms": "CGU",
-    "privacy": "Confidentialité"
+    "privacy": "Confidentialité",
+    "legal": "Légal",
+    "cookies": "Cookies",
+    "rights": "© 2026 Marco Ferreira / MoovX — Tous droits réservés"
   },
   "steps": {
     "eyebrow": "Simple & rapide",
@@ -304,5 +307,51 @@
     "proof_rating": "4.9 / 5", "proof_count": "1 200+", "proof_count_label": "athlètes nous font confiance",
     "proof_made": "Made in Geneva",
     "image_alt": "Athlète MoovX hurlant de victoire après transformation accomplie"
+  },
+  "cookieConsent": {
+    "title": "Cookies",
+    "description": "Nous utilisons des cookies pour faire fonctionner la plateforme et améliorer votre expérience. Vos données ne sont jamais vendues.",
+    "necessaryOnly": "Refuser",
+    "acceptAll": "Tout accepter",
+    "customize": "Personnaliser",
+    "save": "Enregistrer mes choix",
+    "back": "Retour",
+    "manageCookies": "Gérer mes cookies",
+    "categories": {
+      "necessary": {
+        "title": "Strictement nécessaires",
+        "description": "Indispensables au fonctionnement de la plateforme (authentification, préférence de langue, sécurité). Toujours actifs.",
+        "alwaysActive": "Toujours actifs"
+      },
+      "analytics": {
+        "title": "Mesure d'audience",
+        "description": "Nous aident à comprendre comment vous utilisez le site (Vercel Analytics, Speed Insights). Données anonymisées."
+      },
+      "functional": {
+        "title": "Fonctionnels (Stripe)",
+        "description": "Nécessaires aux paiements sécurisés via Stripe. Activés uniquement lors d'un achat."
+      }
+    },
+    "links": {
+      "privacy": "Politique de confidentialité",
+      "cgu": "Conditions générales"
+    },
+    "moreInfo": "En savoir plus"
+  },
+  "legal": {
+    "cgu": {
+      "title": "Conditions Générales d'Utilisation",
+      "lastUpdated": "Dernière mise à jour : 17 mai 2026",
+      "version": "Version 1.0"
+    },
+    "privacy": {
+      "title": "Politique de Confidentialité",
+      "lastUpdated": "Dernière mise à jour : 17 mai 2026",
+      "version": "Version 1.0"
+    },
+    "checkbox": {
+      "acceptCgu": "J'ai lu et j'accepte les <link>Conditions Générales d'Utilisation</link> et la <link2>Politique de Confidentialité</link2>",
+      "waiveWithdrawal": "Je renonce expressément à mon droit de rétractation de 14 jours et reconnais que l'exécution du service commence immédiatement après le paiement"
+    }
   }
 }

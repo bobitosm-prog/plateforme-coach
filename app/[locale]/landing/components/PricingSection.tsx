@@ -1,15 +1,20 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Check, Sparkles, Crown } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function PricingSection() {
   const t = useTranslations('pricing')
+  const tLegal = useTranslations('legal')
+  const locale = useLocale()
+  const [acceptCgu, setAcceptCgu] = useState(false)
+  const [waiveWithdrawal, setWaiveWithdrawal] = useState(false)
+  const canProceed = acceptCgu && waiveWithdrawal
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -262,19 +267,52 @@ export default function PricingSection() {
               ))}
             </ul>
 
+            {/* Legal checkboxes */}
+            <div style={{ marginBottom: 20, display: 'grid', gap: 12 }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+                <input
+                  type="checkbox"
+                  checked={acceptCgu}
+                  onChange={e => setAcceptCgu(e.target.checked)}
+                  style={{ accentColor: '#D4A843', marginTop: 3, flexShrink: 0 }}
+                />
+                <span>
+                  {tLegal.rich('checkbox.acceptCgu', {
+                    link: (chunks) => <Link href={`/${locale}/cgu`} style={{ color: '#D4A843', textDecoration: 'underline' }}>{chunks}</Link>,
+                    link2: (chunks) => <Link href={`/${locale}/privacy`} style={{ color: '#D4A843', textDecoration: 'underline' }}>{chunks}</Link>,
+                  })}
+                </span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+                <input
+                  type="checkbox"
+                  checked={waiveWithdrawal}
+                  onChange={e => setWaiveWithdrawal(e.target.checked)}
+                  style={{ accentColor: '#D4A843', marginTop: 3, flexShrink: 0 }}
+                />
+                <span>{tLegal('checkbox.waiveWithdrawal')}</span>
+              </label>
+            </div>
+
             <Link
-              href="/register-client"
+              href={canProceed ? '/register-client' : '#pricing'}
+              onClick={e => { if (!canProceed) e.preventDefault() }}
+              aria-disabled={!canProceed}
               style={{
                 display: 'block',
-                background: 'var(--gold)', color: '#0D0B08',
+                background: canProceed ? 'var(--gold)' : 'rgba(212,168,67,0.3)',
+                color: canProceed ? '#0D0B08' : 'rgba(13,11,8,0.5)',
                 padding: '16px 24px',
                 fontFamily: 'var(--font-display)',
                 fontSize: 14, letterSpacing: 3,
                 textTransform: 'uppercase', textDecoration: 'none',
                 fontWeight: 700, textAlign: 'center',
                 transition: 'all 0.2s',
+                pointerEvents: canProceed ? 'auto' : 'none',
+                opacity: canProceed ? 1 : 0.5,
               }}
               onMouseEnter={e => {
+                if (!canProceed) return
                 e.currentTarget.style.transform = 'translate(-2px, -2px)'
                 e.currentTarget.style.boxShadow = '4px 4px 0 #B8902F'
               }}

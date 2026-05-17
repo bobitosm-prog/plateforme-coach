@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { setRequestLocale } from 'next-intl/server'
 import { routing } from '../../i18n/routing'
+import CookieConsent from '@/components/CookieConsent'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -25,6 +26,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider>
       {children}
+      <CookieConsent />
     </NextIntlClientProvider>
   )
 }

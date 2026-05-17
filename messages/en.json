@@ -48,7 +48,10 @@
     "faq": "FAQ",
     "contact": "Contact",
     "terms": "Terms",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "legal": "Legal",
+    "cookies": "Cookies",
+    "rights": "© 2026 Marco Ferreira / MoovX — All rights reserved"
   },
   "steps": {
     "eyebrow": "Simple & fast",
@@ -302,5 +305,51 @@
     "proof_rating": "4.9 / 5", "proof_count": "1,200+", "proof_count_label": "athletes trust us",
     "proof_made": "Made in Geneva",
     "image_alt": "MoovX athlete shouting in victory after accomplished transformation"
+  },
+  "cookieConsent": {
+    "title": "Cookies",
+    "description": "We use cookies to operate the platform and improve your experience. Your data is never sold.",
+    "necessaryOnly": "Decline",
+    "acceptAll": "Accept all",
+    "customize": "Customize",
+    "save": "Save my choices",
+    "back": "Back",
+    "manageCookies": "Manage my cookies",
+    "categories": {
+      "necessary": {
+        "title": "Strictly necessary",
+        "description": "Essential to the operation of the platform (authentication, language preference, security). Always active.",
+        "alwaysActive": "Always active"
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "Help us understand how you use the site (Vercel Analytics, Speed Insights). Anonymized data."
+      },
+      "functional": {
+        "title": "Functional (Stripe)",
+        "description": "Required for secure payments via Stripe. Only activated during a purchase."
+      }
+    },
+    "links": {
+      "privacy": "Privacy Policy",
+      "cgu": "Terms and Conditions"
+    },
+    "moreInfo": "Learn more"
+  },
+  "legal": {
+    "cgu": {
+      "title": "Terms and Conditions of Use",
+      "lastUpdated": "Last updated: 17 May 2026",
+      "version": "Version 1.0"
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last updated: 17 May 2026",
+      "version": "Version 1.0"
+    },
+    "checkbox": {
+      "acceptCgu": "I have read and accept the <link>Terms and Conditions of Use</link> and the <link2>Privacy Policy</link2>",
+      "waiveWithdrawal": "I expressly waive my 14-day right of withdrawal and acknowledge that service performance begins immediately after payment"
+    }
   }
 }

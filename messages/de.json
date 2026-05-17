@@ -48,7 +48,10 @@
     "faq": "FAQ",
     "contact": "Kontakt",
     "terms": "AGB",
-    "privacy": "Datenschutz"
+    "privacy": "Datenschutz",
+    "legal": "Rechtliches",
+    "cookies": "Cookies",
+    "rights": "© 2026 Marco Ferreira / MoovX — Alle Rechte vorbehalten"
   },
   "steps": {
     "eyebrow": "Einfach & schnell",
@@ -302,5 +305,51 @@
     "proof_rating": "4,9 / 5", "proof_count": "1.200+", "proof_count_label": "Athleten vertrauen uns",
     "proof_made": "Made in Geneva",
     "image_alt": "MoovX-Athlet schreit vor Freude nach vollbrachter Transformation"
+  },
+  "cookieConsent": {
+    "title": "Cookies",
+    "description": "Wir verwenden Cookies, um die Plattform zu betreiben und Ihre Erfahrung zu verbessern. Ihre Daten werden nie verkauft.",
+    "necessaryOnly": "Ablehnen",
+    "acceptAll": "Alle akzeptieren",
+    "customize": "Anpassen",
+    "save": "Auswahl speichern",
+    "back": "Zurück",
+    "manageCookies": "Cookies verwalten",
+    "categories": {
+      "necessary": {
+        "title": "Unbedingt erforderlich",
+        "description": "Notwendig für den Betrieb der Plattform (Authentifizierung, Spracheinstellung, Sicherheit). Immer aktiv.",
+        "alwaysActive": "Immer aktiv"
+      },
+      "analytics": {
+        "title": "Reichweitenmessung",
+        "description": "Helfen uns zu verstehen, wie Sie die Website nutzen (Vercel Analytics, Speed Insights). Anonymisierte Daten."
+      },
+      "functional": {
+        "title": "Funktional (Stripe)",
+        "description": "Erforderlich für sichere Zahlungen über Stripe. Wird nur bei einem Kauf aktiviert."
+      }
+    },
+    "links": {
+      "privacy": "Datenschutzerklärung",
+      "cgu": "AGB"
+    },
+    "moreInfo": "Mehr erfahren"
+  },
+  "legal": {
+    "cgu": {
+      "title": "Allgemeine Geschäftsbedingungen",
+      "lastUpdated": "Letzte Aktualisierung: 17. Mai 2026",
+      "version": "Version 1.0"
+    },
+    "privacy": {
+      "title": "Datenschutzerklärung",
+      "lastUpdated": "Letzte Aktualisierung: 17. Mai 2026",
+      "version": "Version 1.0"
+    },
+    "checkbox": {
+      "acceptCgu": "Ich habe die <link>Allgemeinen Geschäftsbedingungen</link> und die <link2>Datenschutzerklärung</link2> gelesen und akzeptiere sie",
+      "waiveWithdrawal": "Ich verzichte ausdrücklich auf mein 14-tägiges Widerrufsrecht und bestätige, dass die Leistung unmittelbar nach Zahlung beginnt"
+    }
   }
 }
