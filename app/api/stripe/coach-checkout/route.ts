@@ -45,7 +45,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Le coach n'a pas encore configuré Stripe" }, { status: 400 })
     }
 
-    const rate = coach.coach_monthly_rate || 50
+    const MIN_COACH_RATE = 30
+    const MAX_COACH_RATE = 500
+    const rawRate = coach.coach_monthly_rate || 50
+    if (
+      typeof rawRate !== 'number' ||
+      !Number.isFinite(rawRate) ||
+      rawRate < MIN_COACH_RATE ||
+      rawRate > MAX_COACH_RATE
+    ) {
+      return NextResponse.json(
+        { error: `Le tarif doit être entre ${MIN_COACH_RATE} et ${MAX_COACH_RATE} CHF.` },
+        { status: 400 }
+      )
+    }
+    const rate = Math.round(rawRate * 100) / 100
     const amountCentimes = Math.round(rate * 100)
 
     // Fetch client
