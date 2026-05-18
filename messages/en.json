@@ -1172,5 +1172,59 @@
     },
     "clearConfirm": "Clear the entire conversation? This action is irreversible.",
     "clearLabel": "Clear conversation"
+  },
+  "training_tab": {
+    "header": {
+      "title": "TRAINING",
+      "noActiveProgram": "NO ACTIVE PROGRAM",
+      "managePrograms": "Manage my programs"
+    },
+    "hero": {
+      "session": "SESSION",
+      "restDay": "REST DAY",
+      "noProgram": "NO PROGRAM",
+      "noExercises": "NO EXERCISES",
+      "sessionDone": "SESSION DONE",
+      "sessionToday": "TODAY'S SESSION"
+    },
+    "activeBar": {
+      "series": "{done}/{total} sets"
+    },
+    "phase": {
+      "week": "Week {current}/{total}",
+      "nextWeek": "Next week →"
+    },
+    "recent": {
+      "noSessions": "No sessions"
+    },
+    "session": {
+      "exercises": "EXERCISES",
+      "rest": "REST",
+      "restDone": "REST DONE",
+      "freeSession": "+ FREE SESSION",
+      "noActiveProgram": "No active program.",
+      "noExercisesForDay": "No exercises planned for {day}.",
+      "addExercise": "+ ADD EXERCISE",
+      "discoverExercises": "Discover exercises",
+      "finishSession": "Finish session",
+      "exerciseCount": "{count} exercise(s)",
+      "sessionNotes": "{done}/{total} sets · {exercises} exercises"
+    },
+    "programs": {
+      "title": "MY PROGRAMS",
+      "coachProgram": "YOUR PROGRAM",
+      "createProgram": "Create a program",
+      "programCount": "{count} program(s)",
+      "noPrograms": "No programs created",
+      "noExercises": "No exercises",
+      "deleteProgram": "DELETE THIS PROGRAM",
+      "programName": "Program name",
+      "noVariants": "No variants found",
+      "noDetails": "No details recorded",
+      "newProgramToast": "Your new program starts today!"
+    },
+    "shared": {
+      "close": "Close"
+    }
   }
 }

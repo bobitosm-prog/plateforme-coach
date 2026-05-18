@@ -1172,5 +1172,59 @@
     },
     "clearConfirm": "Gesamte Unterhaltung löschen? Diese Aktion ist unwiderruflich.",
     "clearLabel": "Unterhaltung löschen"
+  },
+  "training_tab": {
+    "header": {
+      "title": "TRAINING",
+      "noActiveProgram": "KEIN AKTIVES PROGRAMM",
+      "managePrograms": "Meine Programme verwalten"
+    },
+    "hero": {
+      "session": "EINHEIT",
+      "restDay": "RUHETAG",
+      "noProgram": "KEIN PROGRAMM",
+      "noExercises": "KEINE ÜBUNGEN",
+      "sessionDone": "EINHEIT BEENDET",
+      "sessionToday": "HEUTIGE EINHEIT"
+    },
+    "activeBar": {
+      "series": "{done}/{total} Sätze"
+    },
+    "phase": {
+      "week": "Woche {current}/{total}",
+      "nextWeek": "Nächste Woche →"
+    },
+    "recent": {
+      "noSessions": "Keine Einheiten"
+    },
+    "session": {
+      "exercises": "ÜBUNGEN",
+      "rest": "PAUSE",
+      "restDone": "PAUSE BEENDET",
+      "freeSession": "+ FREIE EINHEIT",
+      "noActiveProgram": "Kein aktives Programm.",
+      "noExercisesForDay": "Keine Übungen geplant für {day}.",
+      "addExercise": "+ ÜBUNG HINZUFÜGEN",
+      "discoverExercises": "Übungen entdecken",
+      "finishSession": "Einheit beenden",
+      "exerciseCount": "{count} Übung(en)",
+      "sessionNotes": "{done}/{total} Sätze · {exercises} Übungen"
+    },
+    "programs": {
+      "title": "MEINE PROGRAMME",
+      "coachProgram": "DEIN PROGRAMM",
+      "createProgram": "Programm erstellen",
+      "programCount": "{count} Programm(e)",
+      "noPrograms": "Keine Programme erstellt",
+      "noExercises": "Keine Übungen",
+      "deleteProgram": "DIESES PROGRAMM LÖSCHEN",
+      "programName": "Programmname",
+      "noVariants": "Keine Varianten gefunden",
+      "noDetails": "Keine Details aufgezeichnet",
+      "newProgramToast": "Dein neues Programm startet heute!"
+    },
+    "shared": {
+      "close": "Schliessen"
+    }
   }
 }

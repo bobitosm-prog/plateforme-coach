@@ -1172,5 +1172,59 @@
     },
     "clearConfirm": "Effacer toute la conversation ? Cette action est irréversible.",
     "clearLabel": "Effacer la conversation"
+  },
+  "training_tab": {
+    "header": {
+      "title": "TRAINING",
+      "noActiveProgram": "AUCUN PROGRAMME ACTIF",
+      "managePrograms": "Gerer mes programmes"
+    },
+    "hero": {
+      "session": "SÉANCE",
+      "restDay": "JOUR DE REPOS",
+      "noProgram": "AUCUN PROGRAMME",
+      "noExercises": "AUCUN EXERCICE",
+      "sessionDone": "SÉANCE TERMINÉE",
+      "sessionToday": "SÉANCE DU JOUR"
+    },
+    "activeBar": {
+      "series": "{done}/{total} séries"
+    },
+    "phase": {
+      "week": "Semaine {current}/{total}",
+      "nextWeek": "Semaine suivante →"
+    },
+    "recent": {
+      "noSessions": "Aucune seance"
+    },
+    "session": {
+      "exercises": "EXERCICES",
+      "rest": "REPOS",
+      "restDone": "REPOS TERMINÉ",
+      "freeSession": "+ SÉANCE LIBRE",
+      "noActiveProgram": "Aucun programme actif.",
+      "noExercisesForDay": "Aucun exercice prevu pour {day}.",
+      "addExercise": "+ AJOUTER UN EXERCICE",
+      "discoverExercises": "Decouvrir les exercices",
+      "finishSession": "Terminer la seance",
+      "exerciseCount": "{count} exercice(s)",
+      "sessionNotes": "{done}/{total} séries · {exercises} exercices"
+    },
+    "programs": {
+      "title": "MES PROGRAMMES",
+      "coachProgram": "TON PROGRAMME",
+      "createProgram": "Creer un programme",
+      "programCount": "{count} programme(s)",
+      "noPrograms": "Aucun programme créé",
+      "noExercises": "Aucun exercice",
+      "deleteProgram": "SUPPRIMER CE PROGRAMME",
+      "programName": "Nom du programme",
+      "noVariants": "Aucune variante trouvée",
+      "noDetails": "Aucun détail enregistré",
+      "newProgramToast": "Ton nouveau programme démarre aujourd'hui !"
+    },
+    "shared": {
+      "close": "Fermer"
+    }
   }
 }
