@@ -1226,5 +1226,44 @@
     "shared": {
       "close": "Close"
     }
+  },
+  "progress": {
+    "pills": {
+      "poids": "WEIGHT",
+      "records": "RECORDS",
+      "photos": "PHOTOS",
+      "mensurations": "MEASUREMENTS",
+      "bienetre": "WELLNESS",
+      "graphiques": "CHARTS"
+    },
+    "stats": {
+      "volume": "VOLUME"
+    },
+    "weight": {
+      "title": "WEIGHT EVOLUTION",
+      "addMeasure": "Add a weight measurement",
+      "prCount": "{count} PR"
+    },
+    "photos": {
+      "title": "PHOTOS",
+      "addPhoto": "Add a photo",
+      "noAnalysis": "No analysis yet",
+      "analysisPhotos": "PHOTOS FOR ANALYSIS"
+    },
+    "measurements": {
+      "title": "My measurements",
+      "waist": "Waist",
+      "hips": "Hips",
+      "chest": "Chest",
+      "arms": "Arms",
+      "thighs": "Thighs"
+    },
+    "wellness": {
+      "noCheckins": "No check-ins recorded for this period."
+    },
+    "empty": {
+      "noData": "No data",
+      "noRecords": "No records"
+    }
   }
 }

@@ -1226,5 +1226,44 @@
     "shared": {
       "close": "Fermer"
     }
+  },
+  "progress": {
+    "pills": {
+      "poids": "POIDS",
+      "records": "RECORDS",
+      "photos": "PHOTOS",
+      "mensurations": "MENSURATIONS",
+      "bienetre": "BIEN-ÊTRE",
+      "graphiques": "GRAPHIQUES"
+    },
+    "stats": {
+      "volume": "VOLUME"
+    },
+    "weight": {
+      "title": "ÉVOLUTION DU POIDS",
+      "addMeasure": "Ajouter une mesure kg",
+      "prCount": "{count} PR"
+    },
+    "photos": {
+      "title": "PHOTOS",
+      "addPhoto": "Ajouter une photo",
+      "noAnalysis": "Aucune analyse encore",
+      "analysisPhotos": "PHOTOS POUR ANALYSE"
+    },
+    "measurements": {
+      "title": "Mes mensurations",
+      "waist": "Tour de taille",
+      "hips": "Hanches",
+      "chest": "Poitrine",
+      "arms": "Bras",
+      "thighs": "Cuisses"
+    },
+    "wellness": {
+      "noCheckins": "Aucun check-in enregistre sur cette periode."
+    },
+    "empty": {
+      "noData": "Aucune donnee",
+      "noRecords": "Aucun record"
+    }
   }
 }

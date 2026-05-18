@@ -1226,5 +1226,44 @@
     "shared": {
       "close": "Schliessen"
     }
+  },
+  "progress": {
+    "pills": {
+      "poids": "GEWICHT",
+      "records": "REKORDE",
+      "photos": "FOTOS",
+      "mensurations": "MASSE",
+      "bienetre": "WOHLBEFINDEN",
+      "graphiques": "DIAGRAMME"
+    },
+    "stats": {
+      "volume": "VOLUMEN"
+    },
+    "weight": {
+      "title": "GEWICHTSENTWICKLUNG",
+      "addMeasure": "Gewichtsmessung hinzufügen",
+      "prCount": "{count} PR"
+    },
+    "photos": {
+      "title": "FOTOS",
+      "addPhoto": "Foto hinzufügen",
+      "noAnalysis": "Noch keine Analyse",
+      "analysisPhotos": "FOTOS FÜR ANALYSE"
+    },
+    "measurements": {
+      "title": "Meine Masse",
+      "waist": "Taillenumfang",
+      "hips": "Hüfte",
+      "chest": "Brust",
+      "arms": "Arme",
+      "thighs": "Oberschenkel"
+    },
+    "wellness": {
+      "noCheckins": "Keine Check-ins für diesen Zeitraum aufgezeichnet."
+    },
+    "empty": {
+      "noData": "Keine Daten",
+      "noRecords": "Keine Rekorde"
+    }
   }
 }
