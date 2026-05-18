@@ -1,7 +1,11 @@
 'use client'
 import React, { useState, useMemo, useEffect } from 'react'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr as frLocale } from 'date-fns/locale/fr'
+import { enUS } from 'date-fns/locale/en-US'
+import { de as deLocale } from 'date-fns/locale/de'
+import type { Locale } from 'date-fns'
+import { useTranslations, useLocale } from 'next-intl'
 import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight, Star, Info, Clock, User } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import * as XLSX from 'xlsx'
@@ -77,6 +81,10 @@ export default function ProgressTab({
   weightHistoryFull, wSessions, calorieGoal, goalWeight, waterGoal,
   streak, currentWeight,
 }: ProgressTabProps) {
+  const t = useTranslations('progress')
+  const locale = useLocale()
+  const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
+  const dateLocale = DATE_LOCALES[locale] || frLocale
   const [activePill, setActivePill] = useState<PillSection>('poids')
   const sectionRefs = { poids: React.useRef<HTMLDivElement>(null), records: React.useRef<HTMLDivElement>(null), photos: React.useRef<HTMLDivElement>(null), mensurations: React.useRef<HTMLDivElement>(null), bienetre: React.useRef<HTMLDivElement>(null), graphiques: React.useRef<HTMLDivElement>(null) }
   const [weightPeriod, setWeightPeriod] = useState<'7' | '30' | '90' | 'all'>('30')
@@ -420,7 +428,7 @@ export default function ProgressTab({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
         {[
           { label: 'SÉANCES', value: wSessions.length },
-          { label: 'VOLUME', value: totalVolume >= 1000 ? `${(totalVolume / 1000).toFixed(1)}T` : `${Math.round(totalVolume)}kg` },
+          { label: t('stats.volume'), value: totalVolume >= 1000 ? `${(totalVolume / 1000).toFixed(1)}T` : `${Math.round(totalVolume)}kg` },
           { label: 'STREAK', value: streak },
         ].map(s => (
           <div key={s.label} style={{ ...cardStyle, padding: 14, textAlign: 'center' }}>
@@ -433,12 +441,12 @@ export default function ProgressTab({
       {/* ═══ SECTION 3 — PILLS NAVIGATION ═══ */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 16, marginBottom: 8 }}>
         {([
-          { id: 'poids' as PillSection, label: 'POIDS' },
-          { id: 'records' as PillSection, label: 'RECORDS' },
-          { id: 'photos' as PillSection, label: 'PHOTOS' },
-          { id: 'mensurations' as PillSection, label: 'MENSURATIONS' },
-          { id: 'bienetre' as PillSection, label: 'BIEN-ETRE' },
-          { id: 'graphiques' as PillSection, label: 'GRAPHIQUES' },
+          { id: 'poids' as PillSection, label: t('pills.poids') },
+          { id: 'records' as PillSection, label: t('pills.records') },
+          { id: 'photos' as PillSection, label: t('pills.photos') },
+          { id: 'mensurations' as PillSection, label: t('pills.mensurations') },
+          { id: 'bienetre' as PillSection, label: t('pills.bienetre') },
+          { id: 'graphiques' as PillSection, label: t('pills.graphiques') },
         ]).map(({ id, label }) => {
           const active = activePill === id
           return (
@@ -460,7 +468,7 @@ export default function ProgressTab({
       {/* ═══ SECTION 4 — ÉVOLUTION DU POIDS ═══ */}
       <div ref={sectionRefs.poids} style={{ scrollMarginTop: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>ÉVOLUTION DU POIDS</span>
+          <span style={cardTitleAbove}>{t('weight.title')}</span>
           <div style={titleLineStyle} />
           <span style={{ ...mutedStyle, fontSize: 10 }}>{weightPeriod === 'all' ? 'TOUT' : `${weightPeriod}J`}</span>
         </div>
@@ -508,7 +516,7 @@ export default function ProgressTab({
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
             <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>Enregistrer mon poids</div>
-            <div style={{ ...mutedStyle, fontSize: 10 }}>Ajouter une mesure kg</div>
+            <div style={{ ...mutedStyle, fontSize: 10 }}>{t('weight.addMeasure')}</div>
           </div>
           <ChevronRight size={16} color={colors.textDim} />
         </button>
@@ -519,7 +527,7 @@ export default function ProgressTab({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <span style={cardTitleAbove}>RECORDS PERSONNELS</span>
           <div style={titleLineStyle} />
-          <span style={{ ...mutedStyle, fontSize: 10 }}>{personalRecords.length} PR</span>
+          <span style={{ ...mutedStyle, fontSize: 10 }}>{t('weight.prCount', { count: personalRecords.length })}</span>
         </div>
         <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
           {personalRecords.length > 0 ? personalRecords.slice(0, 10).map((pr: any, i: number) => (
@@ -529,7 +537,7 @@ export default function ProgressTab({
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pr.exercise}</div>
-                <div style={{ ...mutedStyle, fontSize: 9 }}>{pr.date ? format(new Date(pr.date), 'd MMM yyyy', { locale: fr }) : ''}</div>
+                <div style={{ ...mutedStyle, fontSize: 9 }}>{pr.date ? format(new Date(pr.date), 'd MMM yyyy', { locale: dateLocale }) : ''}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.gold }}>{pr.weight || pr.value}</span>
@@ -591,7 +599,7 @@ export default function ProgressTab({
             <Camera size={20} color={colors.gold} />
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>Ajouter une photo</div>
+            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('photos.addPhoto')}</div>
             <div style={{ ...mutedStyle, fontSize: 10 }}>Photo avant/après progression</div>
           </div>
           <ChevronRight size={16} color={colors.textDim} />
@@ -696,7 +704,7 @@ export default function ProgressTab({
               <div style={{ background: `${colors.gold}0a`, border: `1px solid ${colors.gold}1a`, borderRadius: 10, padding: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Clock size={12} color='rgba(255,255,255,0.25)' />
                 <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)' }}>
-                  Dernière analyse : {bodyAnalysis.created_at ? format(new Date(bodyAnalysis.created_at), 'd MMM yyyy', { locale: fr }) : '—'} — Basée sur {bodyAnalysis.photos_used || 3} photos
+                  Dernière analyse : {bodyAnalysis.created_at ? format(new Date(bodyAnalysis.created_at), 'd MMM yyyy', { locale: dateLocale }) : '—'} — Basée sur {bodyAnalysis.photos_used || 3} photos
                 </span>
               </div>
             </>
@@ -706,7 +714,7 @@ export default function ProgressTab({
           {!bodyAnalysisLoading && !bodyAnalysis && (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <User size={28} color={colors.textDim} style={{ marginBottom: 6 }} />
-              <p style={{ ...mutedStyle, fontSize: 12, margin: '0 0 4px' }}>Aucune analyse encore</p>
+              <p style={{ ...mutedStyle, fontSize: 12, margin: '0 0 4px' }}>{t('photos.noAnalysis')}</p>
               <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: 0 }}>Upload 3 photos pour lancer ta première analyse</p>
             </div>
           )}
@@ -718,7 +726,7 @@ export default function ProgressTab({
             <div onClick={e => e.stopPropagation()} style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 20, padding: 24, width: '100%', maxWidth: 360 }}>
               {/* a) Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <span style={titleStyle}>PHOTOS POUR ANALYSE</span>
+                <span style={titleStyle}>{t('photos.analysisPhotos')}</span>
                 <button onClick={() => { setShowBodyUpload(false); setBodyUploadPhotos({}) }} style={{ width: 32, height: 32, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={colors.textMuted} /></button>
               </div>
               {/* b) 3 photo zones */}
@@ -804,7 +812,7 @@ export default function ProgressTab({
             <Ruler size={20} color={colors.gold} />
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>Mes mensurations</div>
+            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('measurements.title')}</div>
             <div style={{ ...mutedStyle, fontSize: 10 }}>Taille, hanches, poitrine, bras, cuisses</div>
           </div>
           <ChevronRight size={16} color={colors.textDim} />
@@ -861,7 +869,7 @@ export default function ProgressTab({
 
           return checkinData.length === 0 ? (
             <div style={{ ...cardStyle, padding: 32, textAlign: 'center' }}>
-              <p style={{ ...bodyStyle, color: colors.textDim }}>Aucun check-in enregistre sur cette periode.</p>
+              <p style={{ ...bodyStyle, color: colors.textDim }}>{t('wellness.noCheckins')}</p>
               <p style={{ ...mutedStyle, marginTop: 4 }}>Fais ton check-in quotidien dans l&apos;onglet Accueil.</p>
             </div>
           ) : (
@@ -985,8 +993,8 @@ export default function ProgressTab({
         if (!beforePhoto || !afterPhoto) return null
         const beforeUrl = signedUrls[beforePhoto.id] || ''
         const afterUrl = signedUrls[afterPhoto.id] || ''
-        const beforeDate = beforePhoto.date ? format(new Date(beforePhoto.date), 'd MMM yyyy', { locale: fr }) : ''
-        const afterDate = afterPhoto.date ? format(new Date(afterPhoto.date), 'd MMM yyyy', { locale: fr }) : ''
+        const beforeDate = beforePhoto.date ? format(new Date(beforePhoto.date), 'd MMM yyyy', { locale: dateLocale }) : ''
+        const afterDate = afterPhoto.date ? format(new Date(afterPhoto.date), 'd MMM yyyy', { locale: dateLocale }) : ''
         const afterTransform = alignment
           ? `scale(${alignment.after.zoom}) translate(${alignment.after.x}%, ${alignment.after.y}%)`
           : 'none'
@@ -1041,7 +1049,7 @@ export default function ProgressTab({
                   <select value={compareIdx[idx]} onChange={e => { const n = [...compareIdx] as [number, number]; n[idx] = Number(e.target.value); setCompareIdx(n); setAlignment(null) }}
                     style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 8, padding: '6px 8px', color: '#fff', fontSize: 12 }}>
                     {progressPhotos.map((p: any, i: number) => (
-                      <option key={i} value={i}>{p.date ? format(new Date(p.date), 'd MMM yyyy', { locale: fr }) : `Photo ${i + 1}`}</option>
+                      <option key={i} value={i}>{p.date ? format(new Date(p.date), 'd MMM yyyy', { locale: dateLocale }) : `Photo ${i + 1}`}</option>
                     ))}
                   </select>
                 </div>
