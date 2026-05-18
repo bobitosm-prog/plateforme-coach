@@ -45,6 +45,26 @@ Funnel coach onboarding + dashboard i18n complet ✅
 - Noms exercices/aliments DB en FR → migration dediee
 - Motivational quotes HomeTab : 3 categories × 15 quotes FR — EN/DE traduits (indexed)
 
+### Fixes session tardive (19h-20h30)
+
+Bug exercise videos :
+- Diagnostic : 34/59 exos sans match en DB (58%)
+- Root cause : IA genere des variants ("Hip Thrust Unilateral") sans match exact
+- Fix 1 : lib/exercise-matching.ts — normalize + prefix fallback + copie video_url
+- Fix 2 : INSERT 25 exos parents manquants en DB
+- Fix 3 : CSP media-src etendu a Supabase Storage
+- Fix 4 : script enrich-parent-exercises.mjs — 9 parents enrichis avec videos locales
+
+Bilan media : 42% → 85% couverture exercises
+
+### Commits session tardive
+| # | Hash | Description |
+|---|---|---|
+| 1 | b959de8 | fix(exercises): fuzzy match + copy video_url |
+| 2 | c2169c3 | data(exercises): add 25 missing parent exercises |
+| 3 | 9defb8d | fix(csp): allow media from supabase storage |
+| 4 | 2202e1e | feat(media): one-shot script to enrich parent exercises |
+
 ---
 
 ## 2026-05-18 — (superseded by consolidated entry above)

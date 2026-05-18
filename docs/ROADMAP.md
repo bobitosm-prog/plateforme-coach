@@ -183,6 +183,17 @@ Le LocaleSelector affecte uniquement les 6 ecrans auth + landing publique.
 - Pattern food matching a l'etape meals reste FR-only
 - → traiter dans Sprint dedie "i18n DB food names" (~2-3h)
 
+### Exercise videos — 16 parents sans media
+Squat Halteres, Mollets Debout, Planche, Rowing Haltere, Leg Curl Couche,
+Face Pulls, Good Morning, Fentes, Fente Bulgare, Tirage Vertical,
+Curl Barre EZ, Extension Triceps Poulie, Triceps Poulie Corde,
+Kickbacks Cable, Abduction Machine, Pont Fessier.
+→ Tournage en salle ou bibliotheque stock (MP4 H.264, 5-10s loop, 720p).
+
+### Exercise name matching — limites du prefix fallback
+"Developpe Halteres Couche" ne matche pas "Developpe Couche" (pas un prefix).
+→ Token matching plus avance si volume de faux negatifs augmente.
+
 ### Delete account sans transaction
 Suppression partielle possible si erreur au milieu (15+ tables sequentielles).
 → Migrer vers RPC Supabase avec transaction.
@@ -251,4 +262,4 @@ Tests E2E                    0%
 Performance                 90%  (TBT 35ms, CLS 0, desktop 96/100, LCP mobile simule ~9s)
 ```
 
-**Global readiness pour launch** : ~85%
+**Global readiness pour launch** : ~88%
