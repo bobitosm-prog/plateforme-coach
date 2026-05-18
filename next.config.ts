@@ -1,9 +1,16 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin'
+import withBundleAnalyzer from '@next/bundle-analyzer'
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
+const analyzeBundles = withBundleAnalyzer({ enabled: process.env.ANALYZE === 'true' })
 
 const nextConfig: NextConfig = {
+  // AVIF first (5-10x compression vs PNG), WebP fallback navigateurs anciens.
+  // Quality default 75 = sweet spot Vercel/Next, ne pas surcharger.
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
   async headers() {
     const isDev = process.env.NODE_ENV === 'development'
 
@@ -43,4 +50,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default analyzeBundles(withNextIntl(nextConfig));
