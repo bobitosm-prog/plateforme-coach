@@ -3,6 +3,7 @@ import { Bebas_Neue, Barlow_Condensed, Outfit, DM_Sans, Anton } from "next/font/
 import "./globals.css";
 import { Toaster } from "sonner";
 import AnalyticsGate from "@/components/AnalyticsGate";
+import { WebVitals } from "./web-vitals";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -78,6 +79,7 @@ export default function RootLayout({
         {children}
         <Toaster position="top-center" richColors theme="dark" />
         <AnalyticsGate />
+        <WebVitals />
       </body>
     </html>
   );
