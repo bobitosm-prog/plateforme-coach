@@ -99,7 +99,7 @@ Reste :
 - [ ] ChatTab (Athena)
 - [ ] Dashboard coach (~925 lignes)
 - [ ] Client view detaillee (~660 lignes)
-- [ ] Paywall (~217 lignes)
+- [x] Paywall (~217 lignes, 49 cles)
 - [ ] Admin dashboards
 - [ ] Emails transactionnels
 - [ ] Notifications, toasts, error messages
@@ -235,7 +235,7 @@ Rebrand Athena             100%  code + Stripe Dashboard
 Securite Stripe            100%  (webhook dedup, idempotency, headers CSP/HSTS)
 Legal nLPD/RGPD            100%  (CGU, Privacy, CookieConsent, checkboxes checkout)
 Rate limiting IA           100%  (3 endpoints, fail-open, headers RFC)
-App auth i18n               23%  (7/~35 ecrans, 329/~1400 cles estimees)
+App auth i18n               27%  (8/~35 ecrans, 378/~1400 cles estimees)
 App auth LocaleSelector    100%  (Compte > Preferences, DB + cookie sync)
 Stack tech                 100%  (Next 16, Tailwind 4, Supabase, Stripe live)
 PWA                        100%
