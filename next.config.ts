@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
       `img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com https://app.moovx.ch`,
       `font-src 'self' data: https://fonts.gstatic.com`,
       `connect-src 'self' https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com`,
+      `media-src 'self' https://*.supabase.co blob:`,
       `frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com`,
       `frame-ancestors 'none'`,
       `base-uri 'self'`,
