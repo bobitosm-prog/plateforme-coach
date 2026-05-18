@@ -1345,5 +1345,40 @@
       "nutrition": "ERNÄHRUNG",
       "myProfile": "MEIN PROFIL"
     }
+  },
+  "home": {
+    "quotes": {
+      "mass": {
+        "0": "Jede Kalorie zählt. Du baust die beste Version von dir selbst.",
+        "1": "Masse wird Tag für Tag aufgebaut, Wiederholung für Wiederholung.",
+        "2": "Dein Körper ist eine Maschine — gib ihm den Treibstoff, den er verdient.",
+        "3": "Heute pflanzt du, morgen erntest du.",
+        "4": "Jede Mahlzeit ist ein weiterer Baustein.",
+        "5": "Das Volumen von heute ist die Kraft von morgen.",
+        "6": "Ergebnisse kommen zu denen, die durchhalten.",
+        "7": "Iss um zu performen, nicht um zu überleben.",
+        "8": "Aufbau ist ein Marathon, kein Sprint.",
+        "9": "Disziplin schlägt Motivation jeden Tag der Woche.",
+        "10": "Dein zukünftiges Ich wird dir für die heutige Anstrengung danken.",
+        "11": "Baue den Körper auf, den du verdienst.",
+        "12": "Stiller Fortschritt ist der mächtigste.",
+        "13": "Eisen lügt nie. Harte Arbeit zahlt sich immer aus.",
+        "14": "Wachstum beginnt dort, wo der Komfort endet."
+      },
+      "cut": {
+        "0": "Jeder Tag Disziplin bringt dich der perfekten Definition näher.",
+        "1": "Definition zeigt das Meisterwerk, das du aufgebaut hast.",
+        "2": "Vorübergehendes Opfer für dauerhafte Ergebnisse.",
+        "3": "Die Disziplin von heute ist der Stolz von morgen.",
+        "4": "Verbrenne die Zweifel, nicht nur die Kalorien."
+      },
+      "massCount": "15",
+      "cutCount": "5"
+    },
+    "cards": {
+      "energy": "Energie",
+      "recovery": "Erholung",
+      "noData": "Keine Daten"
+    }
   }
 }

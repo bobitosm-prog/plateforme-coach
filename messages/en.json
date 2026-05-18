@@ -1345,5 +1345,40 @@
       "nutrition": "NUTRITION",
       "myProfile": "MY PROFILE"
     }
+  },
+  "home": {
+    "quotes": {
+      "mass": {
+        "0": "Every calorie counts. You're building the best version of yourself.",
+        "1": "Mass is built day after day, rep after rep.",
+        "2": "Your body is a machine — give it the fuel it deserves.",
+        "3": "Today you plant, tomorrow you harvest.",
+        "4": "Every meal is another brick in your foundation.",
+        "5": "Today's volume is tomorrow's strength.",
+        "6": "Results come to those who persist.",
+        "7": "Eat to perform, not to survive.",
+        "8": "Gains are a marathon, not a sprint.",
+        "9": "Discipline beats motivation every day of the week.",
+        "10": "Your future self will thank you for today's effort.",
+        "11": "Build the physique you deserve.",
+        "12": "Silent progress is the most powerful.",
+        "13": "Iron never lies. Hard work always pays.",
+        "14": "Growth begins where comfort ends."
+      },
+      "cut": {
+        "0": "Every day of discipline brings you closer to perfect definition.",
+        "1": "Cutting reveals the masterpiece you've built.",
+        "2": "Temporary sacrifice for permanent results.",
+        "3": "Today's discipline is tomorrow's pride.",
+        "4": "Burn the doubts, not just the calories."
+      },
+      "massCount": "15",
+      "cutCount": "5"
+    },
+    "cards": {
+      "energy": "Energy",
+      "recovery": "Recovery",
+      "noData": "No data"
+    }
   }
 }

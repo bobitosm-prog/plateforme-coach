@@ -1,6 +1,7 @@
 'use client'
 
 import { Zap } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../../lib/design-tokens'
 
 const GOLD = colors.gold
@@ -31,6 +32,7 @@ interface EnergyCardProps {
 }
 
 export default function EnergyCard({ consumedKcal, calorieGoal, weekData }: EnergyCardProps) {
+  const t = useTranslations('home.cards')
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
   const label = getEnergyLabel(calPct)
   const r = 32
@@ -51,7 +53,7 @@ export default function EnergyCard({ consumedKcal, calorieGoal, weekData }: Ener
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <Zap size={12} color={GOLD} />
         <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: GOLD, textTransform: 'uppercase' }}>
-          Energie
+          {t('energy')}
         </span>
       </div>
 

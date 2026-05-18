@@ -1345,5 +1345,40 @@
       "nutrition": "NUTRITION",
       "myProfile": "MON PROFIL"
     }
+  },
+  "home": {
+    "quotes": {
+      "mass": {
+        "0": "Chaque calorie compte. Tu construis la meilleure version de toi-meme.",
+        "1": "La masse se construit jour apres jour, rep apres rep.",
+        "2": "Ton corps est une machine — donne-lui le carburant qu'il merite.",
+        "3": "Aujourd'hui tu plantes, demain tu recoltes.",
+        "4": "Chaque repas est une brique de plus dans ta construction.",
+        "5": "Le volume d'aujourd'hui, c'est la force de demain.",
+        "6": "Les resultats viennent a ceux qui persistent.",
+        "7": "Mange pour performer, pas pour survivre.",
+        "8": "Le gain est un marathon, pas un sprint.",
+        "9": "La discipline bat la motivation chaque jour de la semaine.",
+        "10": "Ton futur toi te remerciera pour l'effort d'aujourd'hui.",
+        "11": "Construis le physique que tu merites.",
+        "12": "La progression silencieuse est la plus puissante.",
+        "13": "Le fer ne ment jamais. Le travail paie toujours.",
+        "14": "La croissance commence la ou le confort s'arrete."
+      },
+      "cut": {
+        "0": "Chaque jour de discipline te rapproche de la definition parfaite.",
+        "1": "La seche, c'est reveler le chef-d'oeuvre que tu as construit.",
+        "2": "Le sacrifice temporaire pour un resultat permanent.",
+        "3": "Ta discipline d'aujourd'hui est ta fierte de demain.",
+        "4": "Brule les doutes, pas juste les calories."
+      },
+      "massCount": "15",
+      "cutCount": "5"
+    },
+    "cards": {
+      "energy": "Energie",
+      "recovery": "Recup.",
+      "noData": "Pas de donnees"
+    }
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { User } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../../lib/design-tokens'
 
 const GOLD = colors.gold
@@ -34,6 +35,7 @@ interface RecoveryCardProps {
 }
 
 export default function RecoveryCard({ muscleStatus, onCardClick }: RecoveryCardProps) {
+  const t = useTranslations('home.cards')
   const status = getRecoveryStatus(muscleStatus)
 
   return (
@@ -42,7 +44,7 @@ export default function RecoveryCard({ muscleStatus, onCardClick }: RecoveryCard
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <User size={12} color={GOLD} />
         <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: GOLD, textTransform: 'uppercase' }}>
-          Recup.
+          {t('recovery')}
         </span>
       </div>
 

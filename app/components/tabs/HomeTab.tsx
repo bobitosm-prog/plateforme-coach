@@ -3,7 +3,11 @@ import React, { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr as frLocale } from 'date-fns/locale/fr'
+import { enUS } from 'date-fns/locale/en-US'
+import { de as deLocale } from 'date-fns/locale/de'
+import type { Locale } from 'date-fns'
+import { useTranslations, useLocale } from 'next-intl'
 import {
   Ruler, Camera, Zap, Moon, CheckCircle, Flame, Dumbbell, TrendingUp, Droplets,
 } from 'lucide-react'
@@ -126,6 +130,10 @@ export default function HomeTab({
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
 }: HomeTabProps) {
+  const ht = useTranslations('home')
+  const locale = useLocale()
+  const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
+  const dateLocale = DATE_LOCALES[locale] || frLocale
   const [showLevelModal, setShowLevelModal] = useState(false)
   const [showRecoveryModal, setShowRecoveryModal] = useState(false)
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
