@@ -96,7 +96,7 @@ Reste :
 - [x] Onboarding coach (~556 lignes, 83 cles)
 - [ ] Dashboard client (HomeTab, TrainingTab, NutritionTab, ProgressTab, ProfileTab)
 - [x] ProfileTab + CoachSection + PaymentHistory + DeleteAccountSection (86 cles)
-- [ ] ChatTab (Athena)
+- [x] ChatTab Athena (33 cles, suggestions + prompts localises)
 - [ ] Dashboard coach (~925 lignes)
 - [ ] Client view detaillee (~660 lignes)
 - [x] Paywall (~217 lignes, 49 cles)
@@ -235,7 +235,7 @@ Rebrand Athena             100%  code + Stripe Dashboard
 Securite Stripe            100%  (webhook dedup, idempotency, headers CSP/HSTS)
 Legal nLPD/RGPD            100%  (CGU, Privacy, CookieConsent, checkboxes checkout)
 Rate limiting IA           100%  (3 endpoints, fail-open, headers RFC)
-App auth i18n               33%  (9/~35 ecrans, 464/~1400 cles estimees)
+App auth i18n               36%  (10/~35 ecrans, 497/~1400 cles estimees)
 App auth LocaleSelector    100%  (Compte > Preferences, DB + cookie sync)
 Stack tech                 100%  (Next 16, Tailwind 4, Supabase, Stripe live)
 PWA                        100%
