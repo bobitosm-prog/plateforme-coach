@@ -920,5 +920,82 @@
         }
       }
     }
+  },
+  "paywall": {
+    "client": {
+      "title": "WÄHLE DEINEN PLAN",
+      "subtitle": "Starte deine Transformation mit deinem persönlichen Coach"
+    },
+    "coach": {
+      "title": "AKTIVIERE DEIN DASHBOARD",
+      "subtitle": "Zugang zu deinem Coach-Bereich und Kundenverwaltung"
+    },
+    "coachCard": {
+      "badge": "Empfohlen",
+      "coachingWith": "Coaching mit {coachName}",
+      "perMonth": "/Monat",
+      "subscribe": "Abonnieren -- CHF {rate}/Monat",
+      "orChoosePlan": "oder wähle einen Plan ohne Coach:"
+    },
+    "plans": {
+      "monthly": "Monatlich",
+      "yearly": "Jährlich",
+      "lifetime": "Lebenslang",
+      "coachPro": "Coach Pro",
+      "perMonth": "/Monat",
+      "perYear": "/Jahr",
+      "popular": "Beliebt",
+      "bestOffer": "Bestes Angebot",
+      "save33": "33% sparen"
+    },
+    "features": {
+      "clientMonthly": {
+        "0": "Personalisierte Ernährung",
+        "1": "Personalisiertes Trainingsprogramm",
+        "2": "Fortschrittsverfolgung",
+        "3": "BMR/TDEE-Rechner"
+      },
+      "clientYearly": {
+        "0": "Alles im Monatsplan",
+        "1": "Spare CHF 40/Jahr",
+        "2": "Frühzeitiger Zugang zu neuen Funktionen"
+      },
+      "clientLifetime": {
+        "0": "Dauerhafter Zugang",
+        "1": "Alle Funktionen",
+        "2": "Lebenslange Updates",
+        "3": "Kein Abonnement"
+      },
+      "coachPro": {
+        "0": "Unbegrenzte Kunden",
+        "1": "Personalisierte Pläne für jeden Kunden",
+        "2": "Kalender & Einheiten",
+        "3": "Echtzeit-Nachrichten",
+        "4": "Umsatz-Analytics",
+        "5": "Stripe-Zahlungen"
+      },
+      "coachClient": {
+        "0": "Unbegrenzte personalisierte Ernährungspläne",
+        "1": "Personalisiertes Trainingsprogramm",
+        "2": "Direktnachrichten mit deinem Coach",
+        "3": "Vollständige Fortschrittsverfolgung",
+        "4": "Alle MoovX-Funktionen"
+      }
+    },
+    "cta": {
+      "startMonthly": "Starten -- CHF {price}/Monat",
+      "startYearly": "Starten -- CHF {price}/Jahr",
+      "payLifetime": "CHF {price} zahlen -- Lebenslanger Zugang",
+      "redirecting": "Weiterleitung..."
+    },
+    "footer": {
+      "security": "Sichere Zahlung über Stripe -- Jederzeit kündbar",
+      "signOut": "Abmelden"
+    },
+    "errors": {
+      "serverError": "Serverfehler ({status})",
+      "paymentLink": "Zahlungslink nicht verfügbar",
+      "paymentFailed": "Zahlung konnte nicht gestartet werden. Bitte versuche es erneut."
+    }
   }
 }

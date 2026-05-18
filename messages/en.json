@@ -920,5 +920,82 @@
         }
       }
     }
+  },
+  "paywall": {
+    "client": {
+      "title": "CHOOSE YOUR PLAN",
+      "subtitle": "Start your transformation with your personal coach"
+    },
+    "coach": {
+      "title": "ACTIVATE YOUR DASHBOARD",
+      "subtitle": "Access your coach space and manage your clients"
+    },
+    "coachCard": {
+      "badge": "Recommended",
+      "coachingWith": "Coaching with {coachName}",
+      "perMonth": "/month",
+      "subscribe": "Subscribe -- CHF {rate}/month",
+      "orChoosePlan": "or choose a plan without coach:"
+    },
+    "plans": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "lifetime": "Lifetime",
+      "coachPro": "Coach Pro",
+      "perMonth": "/month",
+      "perYear": "/year",
+      "popular": "Popular",
+      "bestOffer": "Best offer",
+      "save33": "Save 33%"
+    },
+    "features": {
+      "clientMonthly": {
+        "0": "Personalized nutrition",
+        "1": "Personalized training program",
+        "2": "Progress tracking",
+        "3": "BMR/TDEE calculator"
+      },
+      "clientYearly": {
+        "0": "Everything in the monthly plan",
+        "1": "Save CHF 40/year",
+        "2": "Early access to new features"
+      },
+      "clientLifetime": {
+        "0": "Permanent access",
+        "1": "All features",
+        "2": "Lifetime updates",
+        "3": "No subscription"
+      },
+      "coachPro": {
+        "0": "Unlimited clients",
+        "1": "Personalized plans for each client",
+        "2": "Calendar & sessions",
+        "3": "Real-time messaging",
+        "4": "Revenue analytics",
+        "5": "Stripe payments"
+      },
+      "coachClient": {
+        "0": "Unlimited personalized nutrition plans",
+        "1": "Personalized training program",
+        "2": "Direct messaging with your coach",
+        "3": "Full progress tracking",
+        "4": "All MoovX features"
+      }
+    },
+    "cta": {
+      "startMonthly": "Start -- CHF {price}/month",
+      "startYearly": "Start -- CHF {price}/year",
+      "payLifetime": "Pay CHF {price} -- Lifetime access",
+      "redirecting": "Redirecting..."
+    },
+    "footer": {
+      "security": "Secure payment by Stripe -- Cancel anytime",
+      "signOut": "Sign out"
+    },
+    "errors": {
+      "serverError": "Server error ({status})",
+      "paymentLink": "Payment link unavailable",
+      "paymentFailed": "Unable to start payment. Please try again."
+    }
   }
 }

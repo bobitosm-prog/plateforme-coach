@@ -920,5 +920,82 @@
         }
       }
     }
+  },
+  "paywall": {
+    "client": {
+      "title": "CHOISIS TON PLAN",
+      "subtitle": "Commence ta transformation avec ton coach personnel"
+    },
+    "coach": {
+      "title": "ACTIVE TON DASHBOARD",
+      "subtitle": "Accede a ton espace coach et gere tes clients"
+    },
+    "coachCard": {
+      "badge": "Recommande",
+      "coachingWith": "Coaching avec {coachName}",
+      "perMonth": "/mois",
+      "subscribe": "S'abonner -- CHF {rate}/mois",
+      "orChoosePlan": "ou choisis un plan sans coach :"
+    },
+    "plans": {
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "lifetime": "A vie",
+      "coachPro": "Coach Pro",
+      "perMonth": "/mois",
+      "perYear": "/an",
+      "popular": "Populaire",
+      "bestOffer": "Meilleure offre",
+      "save33": "Economise 33%"
+    },
+    "features": {
+      "clientMonthly": {
+        "0": "Nutrition personnalisee",
+        "1": "Programme training personnalise",
+        "2": "Suivi progression",
+        "3": "Calculateur BMR/TDEE"
+      },
+      "clientYearly": {
+        "0": "Tout le plan mensuel",
+        "1": "Economie de 40 CHF/an",
+        "2": "Acces prioritaire nouvelles fonctionnalites"
+      },
+      "clientLifetime": {
+        "0": "Acces permanent",
+        "1": "Toutes les fonctionnalites",
+        "2": "Mises a jour a vie",
+        "3": "Zero abonnement"
+      },
+      "coachPro": {
+        "0": "Clients illimites",
+        "1": "Plans personnalises pour chaque client",
+        "2": "Calendrier & seances",
+        "3": "Messagerie temps reel",
+        "4": "Analytics revenus",
+        "5": "Paiements Stripe"
+      },
+      "coachClient": {
+        "0": "Plans nutrition personnalises illimites",
+        "1": "Programme training personnalise",
+        "2": "Messagerie directe avec ton coach",
+        "3": "Suivi progression complet",
+        "4": "Toutes les fonctionnalites MoovX"
+      }
+    },
+    "cta": {
+      "startMonthly": "Commencer -- CHF {price}/mois",
+      "startYearly": "Commencer -- CHF {price}/an",
+      "payLifetime": "Payer CHF {price} -- Acces a vie",
+      "redirecting": "Redirection..."
+    },
+    "footer": {
+      "security": "Paiement securise par Stripe -- Resiliable a tout moment",
+      "signOut": "Deconnexion"
+    },
+    "errors": {
+      "serverError": "Erreur serveur ({status})",
+      "paymentLink": "Lien de paiement indisponible",
+      "paymentFailed": "Impossible de lancer le paiement. Reessaye."
+    }
   }
 }
