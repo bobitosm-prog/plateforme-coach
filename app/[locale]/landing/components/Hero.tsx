@@ -54,24 +54,21 @@ export default function Hero() {
   useEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
 
-    tl.fromTo(bgRef.current,
-      { opacity: 0, scale: 1.08 },
-      { opacity: 1, scale: 1, duration: 1.6 }
-    )
-    .fromTo(eyebrowRef.current,
+    // Hero bg fade-in handled by CSS animation (LCP path, no JS dependency)
+    // GSAP handles only the text/UI entrance animations below
+    tl.fromTo(eyebrowRef.current,
       { opacity: 0, y: 16 },
-      { opacity: 1, y: 0, duration: 0.6 },
-      '-=1.1'
+      { opacity: 1, y: 0, duration: 0.6, delay: 0.3 }
     )
     .fromTo(headlineRef.current?.querySelectorAll('.hero-line') ?? [],
       { opacity: 0, y: 40 },
       { opacity: 1, y: 0, duration: 0.8, stagger: 0.12 },
-      '-=0.5'
+      '-=0.3'
     )
     .fromTo([subRef.current, ctaRef.current],
       { opacity: 0, y: 20 },
       { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 },
-      '-=0.6'
+      '-=0.5'
     )
     .fromTo(statsRef.current,
       { opacity: 0, y: 12 },
@@ -96,13 +93,16 @@ export default function Hero() {
       background: '#000',
       color: '#fff',
     }}>
-      {/* Background image full-bleed */}
-      <div ref={bgRef} style={{
+      {/* Background image full-bleed — CSS fade-in for LCP, GSAP handles parallax after */}
+      <style>{`
+        @keyframes heroFadeIn { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
+        .hero-bg-container { animation: heroFadeIn 1.2s ease-out 0.1s both; }
+      `}</style>
+      <div ref={bgRef} className="hero-bg-container" style={{
         position: 'absolute',
         inset: 0,
         zIndex: 1,
         willChange: 'transform',
-        opacity: 0,
       }}>
         <Image
           src="/images/new/hero-chalk.png"
