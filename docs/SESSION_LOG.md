@@ -4,72 +4,50 @@ Historique des sessions de developpement marathon.
 
 ---
 
-## 2026-05-18 — Performance + i18n Sprint 5A & 5B
-
-Duree : ~3h
+## 2026-05-18 — Performance + i18n Sprint 5A-5J (~8h)
 
 ### Sprint Performance (~2h)
+- Score mobile 53 → 70, desktop 80 → 96
+- TBT 590 → 35ms (-94%)
+- Desktop LCP 2.1s → 0.54s
+- Hero converti Server Component (texte SSR, hydration decouplee du LCP)
+- AVIF config (active sur upgrade Vercel Pro, WebP -99% en attendant)
+- RUM via /api/vitals + useReportWebVitals
 
-Resultats Lighthouse mobile 4G slow :
-| Metrique | Baseline | Final | Delta |
-|----------|----------|-------|-------|
-| Score | 53 | 70 | +17 |
-| TBT | 590ms | 35ms | -555ms (-94%) |
-| FCP | 1.3s | 1.2s | -0.1s |
-| LCP | 8.9s | ~9s | network-bound 4G slow simulated |
-| CLS | 0 | 0 | = |
+### Sprints i18n (10 sprints, 1050 cles × 3 langues)
+- 5A Onboarding Coach : 83 cles
+- 5B Paywall : 49 cles + nouveau pattern ClientIntlProvider
+- 5C ProfileTab : 86 cles + delete account localise + locale-aware dates
+- 5D ChatTab Athena : 33 cles + prompts localises front
+- 5F TrainingTab couche 1 : 36 cles (parent + 4 sub-components)
+- 5G ProgressTab : 23 cles
+- 5H NutritionTab couche 1 : 31 cles
+- 5I Dashboard Coach : 23 cles
+- 5J HomeTab couche 1 : 23 cles (cards + quotes + date locale)
+- Fix critique 0e8f856 : ClientIntlProvider wraps tout l'app shell
 
-Desktop : Score 80 → 96, LCP 2.1s → 0.54s.
-Images : hero PNG 1.84 MB → WebP 24 KB (-99%).
+### Crash + Fix critique
+Root cause : useTranslations() appele sans ClientIntlProvider parent.
+Fix : ClientIntlProvider wraps tout l'app shell (app/page.tsx).
+Script prevention : npm run i18n:check (scripts/check-i18n.mjs).
 
-Decisions :
-- Hero converti en Server Component (texte SSR, hydration decouplee du LCP)
-- Animation GSAP isolee dans HeroAnimationLazy (dynamic import, ssr:false)
-- AVIF config en place, attente upgrade Vercel Pro
-- RUM en place via /api/vitals + useReportWebVitals, conditionne consent
+### Progression cumulative i18n
+Avant : 18% (6 ecrans, 246 cles)
+Apres : ~48% (15 ecrans, 1050 cles)
+Funnel acquisition i18n complet ✅
+Funnel paid lifecycle i18n complet ✅
+Funnel coach onboarding + dashboard i18n complet ✅
 
-### Commits Performance
-| # | Hash | Description |
-|---|---|---|
-| 1 | 18e1062 | perf(images): enable AVIF format for next/image |
-| 2 | 1b02f79 | perf(hero): replace GSAP-gated opacity with CSS animation |
-| 3 | 3460360 | fix(build): remove @next/bundle-analyzer from next.config.ts |
-| 4 | cc2d0f9 | perf(hero): convert to server component for LCP optimization |
-| 5 | 83be8d2 | feat(monitoring): real user monitoring for Core Web Vitals |
-| 6 | ad90ba2 | docs(perf): final sprint performance report |
-| 7 | 86d2aeb | docs(roadmap): performance sprint complete |
+### Dette technique consciente
+- Couches 2/3 tabs Training, Nutrition, Progress, Home → Sprint 6
+- BadgesModal, BadgeCelebration → Sprint 6
+- Client view detaillee coach (~660 lignes) → Sprint 6
+- Noms exercices/aliments DB en FR → migration dediee
+- Motivational quotes HomeTab : 3 categories × 15 quotes FR — EN/DE traduits (indexed)
 
-### Sprint 5A — i18n Onboarding Coach (~1h)
+---
 
-83 cles × 3 langues = 249 traductions.
-4 etapes : profil, business, stripe, welcome.
-Constantes : 8 specialites, 4 experience, 7 jours, 5 max clients, 4 modes suivi.
-DB labels FR preserves (retrocompat coach_speciality).
-
-### Commits Sprint 5A
-| # | Hash | Description |
-|---|---|---|
-| 1 | 91bbed3 | feat(i18n): add onboarding coach translations FR/EN/DE (83 keys) |
-| 2 | b2a2a88 | refactor(onboarding-coach): use next-intl with AuthIntlProvider |
-| 3 | fdb869a | docs(roadmap): onboarding coach i18n complete |
-
-### Sprint 5B — i18n Paywall (~30 min)
-
-49 cles × 3 langues = 147 traductions.
-Nouveau composant ClientIntlProvider : wrapper client-side i18n pour composants
-dans pages 'use client' (SPA) sans AuthIntlProvider serveur.
-Paywall traduit dans 2 emplacements : app/page.tsx + ProfileTab modal.
-
-### Commits Sprint 5B
-| # | Hash | Description |
-|---|---|---|
-| 1 | 8f13ec4 | feat(i18n): add paywall translations FR/EN/DE (49 keys) |
-| 2 | 01eca34 | refactor(paywall): use next-intl + ClientIntlProvider |
-| 3 | 94f17df | docs(roadmap): paywall i18n complete |
-
-### Progression i18n authentifie
-Avant : 18% (6 ecrans, 246 cles) → Apres : 27% (8 ecrans, 378 cles)
-Funnel acquisition i18n complet : landing → register → onboarding → paywall ✅
+## 2026-05-18 — (superseded by consolidated entry above)
 
 ---
 
