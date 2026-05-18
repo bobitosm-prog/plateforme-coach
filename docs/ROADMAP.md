@@ -93,7 +93,7 @@ Fait (Sprint 4) :
 - [x] LocaleSelector dans Compte > Preferences
 
 Reste :
-- [ ] Onboarding coach (~556 lignes)
+- [x] Onboarding coach (~556 lignes, 83 cles)
 - [ ] Dashboard client (HomeTab, TrainingTab, NutritionTab, ProgressTab, ProfileTab)
 - [ ] AccountTab contenu (au-dela des Preferences)
 - [ ] ChatTab (Athena)
@@ -235,7 +235,7 @@ Rebrand Athena             100%  code + Stripe Dashboard
 Securite Stripe            100%  (webhook dedup, idempotency, headers CSP/HSTS)
 Legal nLPD/RGPD            100%  (CGU, Privacy, CookieConsent, checkboxes checkout)
 Rate limiting IA           100%  (3 endpoints, fail-open, headers RFC)
-App auth i18n               18%  (6/~35 ecrans, 246/~1400 cles estimees)
+App auth i18n               23%  (7/~35 ecrans, 329/~1400 cles estimees)
 App auth LocaleSelector    100%  (Compte > Preferences, DB + cookie sync)
 Stack tech                 100%  (Next 16, Tailwind 4, Supabase, Stripe live)
 PWA                        100%
