@@ -407,13 +407,15 @@ export default function CoachApp() {
 
       <BugReport session={h.session} profile={h.profile} />
       {!perms.isInvited && (
-        <ChatAI
-          session={h.session}
-          profile={h.profile}
-          externalOpen={h.activeTab === 'coachIA'}
-          onExternalClose={() => h.setActiveTab('compte')}
-          hideFloatingButton={true}
-        />
+        <ClientIntlProvider>
+          <ChatAI
+            session={h.session}
+            profile={h.profile}
+            externalOpen={h.activeTab === 'coachIA'}
+            onExternalClose={() => h.setActiveTab('compte')}
+            hideFloatingButton={true}
+          />
+        </ClientIntlProvider>
       )}
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}

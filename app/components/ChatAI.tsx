@@ -2,23 +2,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, Heart, Dumbbell, BarChart3, UtensilsCrossed, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslations, useLocale } from 'next-intl'
 import { colors, fonts, titleStyle, bodyStyle, mutedStyle, subtitleStyle, cardStyle } from '../../lib/design-tokens'
 import { useChatAI } from '../hooks/useChatAI'
 
-const SUGGESTION_CARDS = [
-  { label: 'Que manger ce soir ?', sub: 'Basé sur tes macros', icon: UtensilsCrossed, msg: 'Que manger ce soir en fonction de mes macros restantes ?' },
-  { label: 'Optimiser ma séance', sub: 'Tips pour demain', icon: Dumbbell, msg: 'Comment optimiser ma prochaine séance d\'entraînement ?' },
-  { label: 'Récupération', sub: 'Repos et stretching', icon: Heart, msg: 'Quels exercices de récupération et stretching me recommandes-tu ?' },
-  { label: 'Mon bilan semaine', sub: 'Résumé et conseils', icon: BarChart3, msg: 'Fais-moi un bilan de ma semaine avec des conseils pour la suivante.' },
-]
-
-const QUICK_PILLS = [
-  'Repas post-training ?',
-  'Combien de protéines ?',
-  'Remplacer un exercice',
-  'Mes macros ce soir ?',
-  'Plateau musculaire',
-]
+const SUGGESTION_ICONS = [UtensilsCrossed, Dumbbell, Heart, BarChart3]
 
 function renderMarkdown(text: string) {
   return text
@@ -38,6 +26,8 @@ interface ChatAIProps {
 }
 
 export default function ChatAI({ session, profile, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
+  const t = useTranslations('chat')
+  const locale = useLocale()
   const isInvited = profile?.subscription_type === 'invited'
   const [open, setOpen] = useState(false)
 
@@ -45,16 +35,13 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     if (externalOpen) setOpen(true)
   }, [externalOpen])
 
-  // Invited clients see a disabled state
   if (isInvited && open) {
     return (
       <div style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: colors.background, zIndex: 1001, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-        <div style={{ ...titleStyle, fontSize: 24, letterSpacing: '0.1em', color: colors.text, marginBottom: 12 }}>COACH IA</div>
-        <p style={{ ...bodyStyle, fontSize: 15, color: colors.textMuted, lineHeight: 1.6, marginBottom: 24 }}>
-          Ton coach gère ton programme et ta nutrition. Contacte-le directement via la messagerie.
-        </p>
-        <button onClick={() => { setOpen(false); onExternalClose?.() }} style={{ padding: '12px 28px', borderRadius: 12, background: 'transparent', border: `1px solid ${colors.goldRule}`, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', cursor: 'pointer' }}>FERMER</button>
+        <div style={{ ...titleStyle, fontSize: 24, letterSpacing: '0.1em', color: colors.text, marginBottom: 12 }}>{t('invited.title')}</div>
+        <p style={{ ...bodyStyle, fontSize: 15, color: colors.textMuted, lineHeight: 1.6, marginBottom: 24 }}>{t('invited.message')}</p>
+        <button onClick={() => { setOpen(false); onExternalClose?.() }} style={{ padding: '12px 28px', borderRadius: 12, background: 'transparent', border: `1px solid ${colors.goldRule}`, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', cursor: 'pointer' }}>{t('invited.close')}</button>
       </div>
     )
   }
@@ -74,7 +61,6 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
   const firstName = profile?.full_name?.split(' ')[0] || ''
   const hasConversation = messages.length > 0
 
-  // Scroll to bottom on new messages or sending state change
   useEffect(() => {
     if (open) {
       setTimeout(() => {
@@ -99,7 +85,6 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     onExternalClose?.()
   }
 
-  // Floating button
   if (!open) {
     if (hideFloatingButton) return null
     return (
@@ -110,7 +95,8 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     )
   }
 
-  // Chat panel
+  const calorieContext = profile?.calorie_goal ? t('welcomeCalorie', { calorieGoal: profile.calorie_goal }) : ''
+
   return (
     <AnimatePresence>
       <motion.div
@@ -121,22 +107,20 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         className="chat-ai-panel"
         style={{ position: 'fixed', inset: 0, width: '100%', height: '100dvh', background: colors.background, zIndex: 1001, display: 'flex', flexDirection: 'column' }}
       >
-        {/* ═══ SCROLLABLE CONTENT ═══ */}
         <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
 
-          {/* ═══ SECTION 1 — HEADER COACH ═══ */}
+          {/* Header */}
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'max(24px, env(safe-area-inset-top, 24px))', marginBottom: 20 }}>
-            {/* Close + Trash buttons */}
             <div style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
               {messages.length > 0 && (
                 <button
                   onClick={async () => {
-                    if (confirm('Effacer toute la conversation ? Cette action est irréversible.')) {
+                    if (confirm(t('clearConfirm'))) {
                       await clearHistory()
                     }
                   }}
-                  aria-label="Effacer la conversation"
-                  title="Effacer la conversation"
+                  aria-label={t('clearLabel')}
+                  title={t('clearLabel')}
                   style={{ width: 36, height: 36, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, transition: 'opacity 200ms' }}
                   onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
                   onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5' }}
@@ -151,62 +135,64 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             <div style={{ width: 56, height: 56, borderRadius: 16, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
               <Bot size={28} color={colors.gold} strokeWidth={2} />
             </div>
-            <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.text, letterSpacing: '0.08em', marginBottom: 6 }}>COACH MOOVX</div>
+            <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.text, letterSpacing: '0.08em', marginBottom: 6 }}>{t('header.title')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: colors.success }} />
-              <span style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.success }}>EN LIGNE</span>
+              <span style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.success }}>{t('header.online')}</span>
             </div>
           </div>
 
-          {/* ═══ SECTION 2 — RÉSUMÉ PROFIL ═══ */}
+          {/* Profile summary */}
           <div style={{ ...cardStyle, padding: 14, marginBottom: 16 }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', marginBottom: 10 }}>TON RÉSUMÉ</div>
+            <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', marginBottom: 10 }}>{t('summary.title')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, textAlign: 'center' }}>
               <div>
-                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.text }}>{profile?.current_weight || '—'}<span style={{ fontSize: 8, color: colors.textMuted, marginLeft: 2 }}>KG</span></div>
+                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.text }}>{profile?.current_weight || '—'}<span style={{ fontSize: 8, color: colors.textMuted, marginLeft: 2 }}>{t('summary.kg')}</span></div>
               </div>
               <div>
-                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.gold }}>{profile?.calorie_goal || profile?.tdee || '—'}<span style={{ fontSize: 8, color: colors.textMuted, marginLeft: 2 }}>KCAL/J</span></div>
+                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.gold }}>{profile?.calorie_goal || profile?.tdee || '—'}<span style={{ fontSize: 8, color: colors.textMuted, marginLeft: 2 }}>{t('summary.kcalDay')}</span></div>
               </div>
               <div>
-                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.text }}>{profile?.sessions_per_week || '—'}<span style={{ fontSize: 8, color: colors.textMuted, marginLeft: 2 }}>SÉANCES</span></div>
+                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.text }}>{profile?.sessions_per_week || '—'}<span style={{ fontSize: 8, color: colors.textMuted, marginLeft: 2 }}>{t('summary.sessions')}</span></div>
               </div>
             </div>
           </div>
 
-          {/* ═══ HISTORY LOADING STATE ═══ */}
+          {/* Loading */}
           {historyLoading && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 32, color: colors.textMuted, fontSize: 13, fontFamily: fonts.body }}>
-              Chargement de la conversation...
+              {t('loading')}
             </div>
           )}
 
-          {/* ═══ SECTION 3 — SUGGESTIONS RAPIDES (hidden when conversation started or loading) ═══ */}
+          {/* Suggestions */}
           {!historyLoading && !hasConversation && (
             <>
-              <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', textAlign: 'center', marginBottom: 10 }}>SUGGESTIONS RAPIDES</div>
+              <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', textAlign: 'center', marginBottom: 10 }}>{t('suggestions.title')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-                {SUGGESTION_CARDS.map(({ label, sub, icon: Icon, msg }) => (
-                  <button key={label} onClick={() => handleSend(msg)} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 14, padding: 12, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <Icon size={16} color={colors.gold} strokeWidth={2} />
-                    <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.text, lineHeight: 1.3 }}>{label}</div>
-                    <div style={{ fontSize: 9, color: colors.textMuted }}>{sub}</div>
-                  </button>
-                ))}
+                {[0, 1, 2, 3].map(i => {
+                  const Icon = SUGGESTION_ICONS[i]
+                  return (
+                    <button key={i} onClick={() => handleSend(t(`suggestions.cards.${i}.msg`))} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 14, padding: 12, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <Icon size={16} color={colors.gold} strokeWidth={2} />
+                      <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.text, lineHeight: 1.3 }}>{t(`suggestions.cards.${i}.label`)}</div>
+                      <div style={{ fontSize: 9, color: colors.textMuted }}>{t(`suggestions.cards.${i}.sub`)}</div>
+                    </button>
+                  )
+                })}
               </div>
 
-              {/* ═══ SECTION 4 — PILLS RAPIDES ═══ */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-                {QUICK_PILLS.map(pill => (
-                  <button key={pill} onClick={() => handleSend(pill)} style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, borderRadius: 999, padding: '6px 12px', cursor: 'pointer' }}>
-                    {pill}
+                {[0, 1, 2, 3, 4].map(i => (
+                  <button key={i} onClick={() => handleSend(t(`suggestions.pills.${i}`))} style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, borderRadius: 999, padding: '6px 12px', cursor: 'pointer' }}>
+                    {t(`suggestions.pills.${i}`)}
                   </button>
                 ))}
               </div>
             </>
           )}
 
-          {/* ═══ SECTION 5 — WELCOME MESSAGE (no conversation, not loading) ═══ */}
+          {/* Welcome */}
           {!historyLoading && !hasConversation && (
             <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -214,13 +200,13 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               </div>
               <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '4px 14px 14px 14px', padding: '12px 14px' }}>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
-                  Salut {firstName} ! {profile?.calorie_goal ? `Ton objectif est de ${profile.calorie_goal} kcal/jour.` : ''} Pose-moi une question sur ta nutrition, ton entraînement ou tes objectifs.
+                  {t('welcome', { firstName, calorieContext })}
                 </div>
               </div>
             </div>
           )}
 
-          {/* ═══ SECTION 6 — CONVERSATION ═══ */}
+          {/* Messages */}
           {messages.map((msg) => (
             <div key={msg.id} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', gap: 8, marginBottom: 12 }}>
               {msg.role === 'assistant' && (
@@ -240,13 +226,13 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
                   </div>
                 )}
                 <div style={{ fontSize: 9, color: colors.textDim, marginTop: 4, textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                  {new Date(msg.created_at).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.created_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             </div>
           ))}
 
-          {/* ═══ SENDING INDICATOR ═══ */}
+          {/* Sending indicator */}
           {sending && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -262,7 +248,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
             </div>
           )}
 
-          {/* ═══ ERROR BANNER ═══ */}
+          {/* Error */}
           {hookError && (
             <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 12, marginBottom: 12, fontFamily: fonts.body }}>
               {hookError}
@@ -272,7 +258,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
           <div style={{ height: 1 }} />
         </div>
 
-        {/* ═══ INPUT BAR (fixed bottom) ═══ */}
+        {/* Input */}
         <div style={{
           display: 'flex', gap: 10, alignItems: 'center',
           padding: '12px 20px',
@@ -283,7 +269,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         }}>
           <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-            placeholder="Pose ta question..."
+            placeholder={t('input.placeholder')}
             rows={1}
             style={{
               flex: 1, padding: '12px 16px',
