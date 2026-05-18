@@ -1,0 +1,104 @@
+
+> mon-coach-app@0.1.0 build
+> next build
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/marcoferreira/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/marcoferreira/plateforme-coach/package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.9s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/57) ...
+  Generating static pages using 7 workers (14/57) 
+  Generating static pages using 7 workers (28/57) 
+  Generating static pages using 7 workers (42/57) 
+✓ Generating static pages using 7 workers (57/57) in 293.4ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ● /[locale]/cgu
+│ ├ /fr/cgu
+│ ├ /en/cgu
+│ └ /de/cgu
+├ ● /[locale]/landing
+│ ├ /fr/landing
+│ ├ /en/landing
+│ └ /de/landing
+├ ● /[locale]/privacy
+│ ├ /fr/privacy
+│ ├ /en/privacy
+│ └ /de/privacy
+├ ○ /admin
+├ ○ /admin/feedback
+├ ○ /admin/logs
+├ ○ /admin/revenue
+├ ○ /admin/users
+├ ƒ /api/adapt-workout
+├ ƒ /api/admin/bug-reports
+├ ƒ /api/admin/bug-reports/[id]
+├ ƒ /api/admin/bug-reports/[id]/reply
+├ ƒ /api/admin/logs
+├ ƒ /api/admin/stripe/payments
+├ ƒ /api/admin/stripe/stats
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[id]/role
+├ ƒ /api/admin/users/[id]/subscription
+├ ƒ /api/analyze-body
+├ ƒ /api/analyze-meal-photo
+├ ƒ /api/analyze-progress-photo
+├ ƒ /api/assign-coach
+├ ƒ /api/chat-ai
+├ ƒ /api/debug-auth
+├ ƒ /api/delete-account
+├ ƒ /api/feedback/mark-all-read
+├ ƒ /api/feedback/mine
+├ ƒ /api/food-barcode
+├ ƒ /api/food-search
+├ ƒ /api/generate-custom-program
+├ ƒ /api/generate-exercise-instructions
+├ ƒ /api/generate-meal-plan
+├ ƒ /api/generate-program
+├ ƒ /api/generate-recipe
+├ ƒ /api/invite-client
+├ ƒ /api/log-error
+├ ƒ /api/send-notification
+├ ƒ /api/stripe/check-account
+├ ƒ /api/stripe/checkout
+├ ƒ /api/stripe/coach-checkout
+├ ƒ /api/stripe/connect
+├ ƒ /api/stripe/setup-products
+├ ƒ /api/stripe/webhook
+├ ƒ /api/suggest-exercise
+├ ƒ /api/suggest-overload
+├ ƒ /api/user/locale
+├ ƒ /api/user/sync-locale
+├ ƒ /auth/callback
+├ ƒ /client/[id]
+├ ○ /coach
+├ ƒ /join
+├ ƒ /login
+├ ƒ /onboarding
+├ ○ /onboarding-coach
+├ ƒ /onboarding-fitness
+├ ƒ /onboarding-photo
+├ ƒ /register-client
+├ ○ /robots.txt
+└ ○ /sitemap.xml
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
