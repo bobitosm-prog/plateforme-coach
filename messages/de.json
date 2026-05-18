@@ -812,6 +812,113 @@
         "progressionAxes": "FORTSCHRITTS-ACHSEN",
         "priorityRecommendation": "PRIORITÄTS-EMPFEHLUNG"
       }
+    },
+    "onboardingCoach": {
+      "nav": {
+        "back": "Zurück",
+        "next": "Weiter",
+        "progress": "{current}/{total}",
+        "saving": "Wird gespeichert...",
+        "submit": "Zum Dashboard"
+      },
+      "profile": {
+        "title": "DEIN COACH-PROFIL",
+        "subtitle": "Stelle dich deinen zukünftigen Kunden vor",
+        "avatarAlt": "Profilfoto",
+        "nameLabel": "Vollständiger Name *",
+        "namePlaceholder": "Max Mustermann",
+        "bioLabel": "Professionelle Bio",
+        "bioPlaceholder": "Beschreibe deine Erfahrung und Coaching-Philosophie...",
+        "specialityLabel": "Hauptspezialisierung",
+        "specialityPlaceholder": "Wählen...",
+        "certificationsLabel": "Zertifizierungen / Diplome",
+        "certificationsPlaceholder": "z.B.: EREPS, FSCEP, Hochschulabschluss...",
+        "experienceLabel": "Jahre Erfahrung",
+        "experiencePlaceholder": "Wählen..."
+      },
+      "business": {
+        "title": "RICHTE DEINEN BEREICH EIN",
+        "subtitle": "Konfiguriere dein Coaching-Geschäft",
+        "maxClientsLabel": "Maximale Kundenanzahl",
+        "daysLabel": "Verfügbare Tage",
+        "hoursLabel": "Verfügbare Zeiten",
+        "hoursTo": "bis",
+        "followUpLabel": "Bevorzugter Betreuungsmodus",
+        "businessModelTitle": "So funktioniert's",
+        "businessModelDesc": "Du zahlst CHF 50/Monat für Zugang zu allen MoovX-Tools. Deine Kunden melden sich kostenlos über deinen Einladungslink an und erhalten Zugang zu allen Funktionen.",
+        "inviteLinkLabel": "Dein Einladungslink",
+        "inviteLinkCopy": "Kopieren",
+        "inviteLinkCopied": "Kopiert",
+        "inviteLinkNote": "Teile diesen Link mit deinen Kunden. Sie melden sich an und werden dir automatisch zugewiesen."
+      },
+      "stripe": {
+        "title": "ZAHLUNGEN EMPFANGEN",
+        "subtitle": "Verbinde Stripe, um Geld von deinen Kunden zu erhalten",
+        "point1": "Deine Kunden zahlen direkt über MoovX",
+        "point2": "Das Geld wird automatisch auf dein Konto überwiesen",
+        "point3": "Stripe kümmert sich um Rechnungsstellung und Compliance",
+        "connectButton": "Mein Stripe-Konto verbinden",
+        "connecting": "Verbindung...",
+        "connected": "Stripe verbunden",
+        "later": "Später einrichten",
+        "note": "Du kannst Stripe jederzeit in deinem Profil verbinden.",
+        "errorConnect": "Fehler bei der Stripe-Verbindung",
+        "errorGeneric": "Stripe konnte nicht verbunden werden"
+      },
+      "welcome": {
+        "title": "WILLKOMMEN COACH!",
+        "subtitle": "Dein professioneller Bereich ist bereit",
+        "defaultSpeciality": "Professioneller Coach",
+        "experienceLabel": "Erfahrung",
+        "maxClientsLabel": "Max. Kunden",
+        "inviteTitle": "Lade deine Kunden ein",
+        "inviteDesc": "Teile deinen einzigartigen Einladungslink",
+        "inviteCopied": "Link kopiert!",
+        "aiPlanTitle": "Erstelle einen KI-Plan",
+        "aiPlanDesc": "Erstelle ein Ernährungs- oder Trainingsprogramm für einen Kunden",
+        "dashboardTitle": "Entdecke dein Dashboard",
+        "dashboardDesc": "Entdecke alle Coach-Funktionen"
+      },
+      "constants": {
+        "specialities": {
+          "0": "Krafttraining / Hypertrophie",
+          "1": "Gewichtsverlust",
+          "2": "Sporternährung",
+          "3": "Allgemeines Fitness",
+          "4": "CrossFit / Funktionell",
+          "5": "Physische Vorbereitung",
+          "6": "Sportrehabilitation",
+          "7": "Andere"
+        },
+        "experience": {
+          "0": "1-2 Jahre",
+          "1": "3-5 Jahre",
+          "2": "5-10 Jahre",
+          "3": "10+ Jahre"
+        },
+        "days": {
+          "0": "Mo",
+          "1": "Di",
+          "2": "Mi",
+          "3": "Do",
+          "4": "Fr",
+          "5": "Sa",
+          "6": "So"
+        },
+        "maxClients": {
+          "0": "5",
+          "1": "10",
+          "2": "20",
+          "3": "50",
+          "4": "Unbegrenzt"
+        },
+        "followUpModes": {
+          "0": "Chat in der App",
+          "1": "Videoanrufe",
+          "2": "Automatisierte personalisierte Pläne",
+          "3": "Wöchentliche Betreuung"
+        }
+      }
     }
   }
 }

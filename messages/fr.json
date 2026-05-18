@@ -812,6 +812,113 @@
         "progressionAxes": "AXES DE PROGRESSION",
         "priorityRecommendation": "RECOMMANDATION PRIORITAIRE"
       }
+    },
+    "onboardingCoach": {
+      "nav": {
+        "back": "Retour",
+        "next": "Suivant",
+        "progress": "{current}/{total}",
+        "saving": "Enregistrement...",
+        "submit": "Acceder a mon dashboard"
+      },
+      "profile": {
+        "title": "TON PROFIL COACH",
+        "subtitle": "Presente-toi a tes futurs clients",
+        "avatarAlt": "Photo de profil",
+        "nameLabel": "Nom complet *",
+        "namePlaceholder": "Jean Dupont",
+        "bioLabel": "Bio professionnelle",
+        "bioPlaceholder": "Decris ton experience et ta philosophie de coaching...",
+        "specialityLabel": "Specialite principale",
+        "specialityPlaceholder": "Choisir...",
+        "certificationsLabel": "Certifications / Diplomes",
+        "certificationsPlaceholder": "Ex: BPJEPS, CQP, diplome universitaire...",
+        "experienceLabel": "Annees d'experience",
+        "experiencePlaceholder": "Choisir..."
+      },
+      "business": {
+        "title": "CONFIGURE TON ESPACE",
+        "subtitle": "Parametre ton activite de coaching",
+        "maxClientsLabel": "Nombre maximum de clients",
+        "daysLabel": "Jours de disponibilite",
+        "hoursLabel": "Horaires de disponibilite",
+        "hoursTo": "a",
+        "followUpLabel": "Mode de suivi prefere",
+        "businessModelTitle": "Comment ca marche",
+        "businessModelDesc": "Tu paies CHF 50/mois pour acceder a tous les outils MoovX. Tes clients s'inscrivent gratuitement via ton lien d'invitation et ont acces a toutes les fonctionnalites.",
+        "inviteLinkLabel": "Ton lien d'invitation",
+        "inviteLinkCopy": "Copier",
+        "inviteLinkCopied": "Copie",
+        "inviteLinkNote": "Partage ce lien avec tes clients. Ils s'inscrivent et sont automatiquement assignes a toi."
+      },
+      "stripe": {
+        "title": "RECOIS TES PAIEMENTS",
+        "subtitle": "Connecte Stripe pour recevoir l'argent de tes clients",
+        "point1": "Tes clients paient directement via MoovX",
+        "point2": "L'argent est transfere automatiquement sur ton compte",
+        "point3": "Stripe gere la facturation et la conformite",
+        "connectButton": "Connecter mon compte Stripe",
+        "connecting": "Connexion...",
+        "connected": "Stripe connecte",
+        "later": "Configurer plus tard",
+        "note": "Tu pourras toujours connecter Stripe depuis ton profil.",
+        "errorConnect": "Erreur de connexion a Stripe",
+        "errorGeneric": "Impossible de connecter Stripe"
+      },
+      "welcome": {
+        "title": "BIENVENUE COACH !",
+        "subtitle": "Ton espace professionnel est pret",
+        "defaultSpeciality": "Coach professionnel",
+        "experienceLabel": "Experience",
+        "maxClientsLabel": "Clients max",
+        "inviteTitle": "Invite tes clients",
+        "inviteDesc": "Partage ton lien d'invitation unique",
+        "inviteCopied": "Lien copie !",
+        "aiPlanTitle": "Genere un plan IA",
+        "aiPlanDesc": "Cree un programme nutrition ou training pour un client",
+        "dashboardTitle": "Explore ton dashboard",
+        "dashboardDesc": "Decouvre toutes les fonctionnalites coach"
+      },
+      "constants": {
+        "specialities": {
+          "0": "Musculation / Hypertrophie",
+          "1": "Perte de poids",
+          "2": "Nutrition sportive",
+          "3": "Fitness general",
+          "4": "CrossFit / Fonctionnel",
+          "5": "Preparation physique",
+          "6": "Reeducation sportive",
+          "7": "Autre"
+        },
+        "experience": {
+          "0": "1-2 ans",
+          "1": "3-5 ans",
+          "2": "5-10 ans",
+          "3": "10+ ans"
+        },
+        "days": {
+          "0": "Lun",
+          "1": "Mar",
+          "2": "Mer",
+          "3": "Jeu",
+          "4": "Ven",
+          "5": "Sam",
+          "6": "Dim"
+        },
+        "maxClients": {
+          "0": "5",
+          "1": "10",
+          "2": "20",
+          "3": "50",
+          "4": "Illimite"
+        },
+        "followUpModes": {
+          "0": "Chat dans l'app",
+          "1": "Appels video",
+          "2": "Plans personnalises automatiques",
+          "3": "Suivi hebdomadaire"
+        }
+      }
     }
   }
 }

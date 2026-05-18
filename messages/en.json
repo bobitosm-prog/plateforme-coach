@@ -812,6 +812,113 @@
         "progressionAxes": "PROGRESSION AXES",
         "priorityRecommendation": "PRIORITY RECOMMENDATION"
       }
+    },
+    "onboardingCoach": {
+      "nav": {
+        "back": "Back",
+        "next": "Next",
+        "progress": "{current}/{total}",
+        "saving": "Saving...",
+        "submit": "Access my dashboard"
+      },
+      "profile": {
+        "title": "YOUR COACH PROFILE",
+        "subtitle": "Introduce yourself to your future clients",
+        "avatarAlt": "Profile photo",
+        "nameLabel": "Full name *",
+        "namePlaceholder": "John Smith",
+        "bioLabel": "Professional bio",
+        "bioPlaceholder": "Describe your experience and coaching philosophy...",
+        "specialityLabel": "Main specialty",
+        "specialityPlaceholder": "Choose...",
+        "certificationsLabel": "Certifications / Degrees",
+        "certificationsPlaceholder": "E.g.: NASM, ACE, university degree...",
+        "experienceLabel": "Years of experience",
+        "experiencePlaceholder": "Choose..."
+      },
+      "business": {
+        "title": "SET UP YOUR SPACE",
+        "subtitle": "Configure your coaching business",
+        "maxClientsLabel": "Maximum number of clients",
+        "daysLabel": "Available days",
+        "hoursLabel": "Available hours",
+        "hoursTo": "to",
+        "followUpLabel": "Preferred follow-up mode",
+        "businessModelTitle": "How it works",
+        "businessModelDesc": "You pay CHF 50/month to access all MoovX tools. Your clients sign up for free via your invite link and get access to all features.",
+        "inviteLinkLabel": "Your invite link",
+        "inviteLinkCopy": "Copy",
+        "inviteLinkCopied": "Copied",
+        "inviteLinkNote": "Share this link with your clients. They sign up and are automatically assigned to you."
+      },
+      "stripe": {
+        "title": "RECEIVE YOUR PAYMENTS",
+        "subtitle": "Connect Stripe to receive money from your clients",
+        "point1": "Your clients pay directly via MoovX",
+        "point2": "Money is automatically transferred to your account",
+        "point3": "Stripe handles billing and compliance",
+        "connectButton": "Connect my Stripe account",
+        "connecting": "Connecting...",
+        "connected": "Stripe connected",
+        "later": "Set up later",
+        "note": "You can always connect Stripe from your profile.",
+        "errorConnect": "Error connecting to Stripe",
+        "errorGeneric": "Unable to connect Stripe"
+      },
+      "welcome": {
+        "title": "WELCOME COACH!",
+        "subtitle": "Your professional space is ready",
+        "defaultSpeciality": "Professional coach",
+        "experienceLabel": "Experience",
+        "maxClientsLabel": "Max clients",
+        "inviteTitle": "Invite your clients",
+        "inviteDesc": "Share your unique invite link",
+        "inviteCopied": "Link copied!",
+        "aiPlanTitle": "Generate an AI plan",
+        "aiPlanDesc": "Create a nutrition or training program for a client",
+        "dashboardTitle": "Explore your dashboard",
+        "dashboardDesc": "Discover all coach features"
+      },
+      "constants": {
+        "specialities": {
+          "0": "Weight Training / Hypertrophy",
+          "1": "Weight Loss",
+          "2": "Sports Nutrition",
+          "3": "General Fitness",
+          "4": "CrossFit / Functional",
+          "5": "Physical Preparation",
+          "6": "Sports Rehabilitation",
+          "7": "Other"
+        },
+        "experience": {
+          "0": "1-2 years",
+          "1": "3-5 years",
+          "2": "5-10 years",
+          "3": "10+ years"
+        },
+        "days": {
+          "0": "Mon",
+          "1": "Tue",
+          "2": "Wed",
+          "3": "Thu",
+          "4": "Fri",
+          "5": "Sat",
+          "6": "Sun"
+        },
+        "maxClients": {
+          "0": "5",
+          "1": "10",
+          "2": "20",
+          "3": "50",
+          "4": "Unlimited"
+        },
+        "followUpModes": {
+          "0": "In-app chat",
+          "1": "Video calls",
+          "2": "Automated personalized plans",
+          "3": "Weekly follow-up"
+        }
+      }
     }
   }
 }
