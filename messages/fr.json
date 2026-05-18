@@ -997,5 +997,123 @@
       "paymentLink": "Lien de paiement indisponible",
       "paymentFailed": "Impossible de lancer le paiement. Reessaye."
     }
+  },
+  "profile": {
+    "header": {
+      "swissMade": "SWISS MADE",
+      "memberSince": "MEMBRE DEPUIS {date}"
+    },
+    "stats": {
+      "weight": "POIDS",
+      "goal": "OBJECTIF",
+      "kcal": "KCAL/J"
+    },
+    "sections": {
+      "myProfile": "MON PROFIL",
+      "phone": "TÉLÉPHONE",
+      "tools": "OUTILS",
+      "reminders": "RAPPELS",
+      "myCoach": "MON COACH",
+      "subscription": "MON ABONNEMENT",
+      "badges": "MES BADGES"
+    },
+    "fields": {
+      "firstName": "Prénom",
+      "birthDate": "Date de naissance",
+      "gender": "Genre",
+      "height": "Taille",
+      "goalWeight": "Poids cible",
+      "objective": "Objectif",
+      "activityLevel": "Niveau d'activité",
+      "male": "Homme",
+      "female": "Femme",
+      "objectives": {
+        "mass": "Prise de masse",
+        "cut": "Sèche",
+        "maintain": "Maintien"
+      },
+      "activityLevels": {
+        "sedentary": "Sédentaire",
+        "light": "Léger",
+        "moderate": "Modéré",
+        "active": "Actif",
+        "extreme": "Intense"
+      }
+    },
+    "phone": {
+      "addNumber": "Ajouter un numéro",
+      "edit": "Modifier",
+      "placeholder": "+41 79 000 00 00"
+    },
+    "tools": {
+      "bmrCalculator": "Calculateur BMR",
+      "regenerateSchedule": "Régénérer le planning"
+    },
+    "reminders": {
+      "pushNotifications": "Notifications push",
+      "pushDescription": "Messages du coach + rappels",
+      "sessionReminders": "Rappels seance",
+      "timerSound": "Son du timer",
+      "trainingTime": "HEURE D'ENTRAÎNEMENT",
+      "reminderBefore": "RAPPEL AVANT SÉANCE",
+      "reminderPreview": "Rappel à {time} pour ta séance de {sessionTime}",
+      "iosAlert": "Pour activer les notifications sur iPhone, ajoute d'abord MoovX a ton ecran d'accueil : Safari > Partager > Sur l'ecran d'accueil"
+    },
+    "coach": {
+      "title": "Mon coach",
+      "activeStatus": "Coach actif",
+      "active": "Actif",
+      "changeCoach": "Changer de coach",
+      "noCoach": "Aucun coach lie. Rejoins un coach via son lien d'invitation.",
+      "changeModal": {
+        "title": "CHANGER DE COACH",
+        "description": "Pour changer de coach, contacte ton nouveau coach pour qu'il te partage son lien d'invitation. Ton historique sera conserve.",
+        "leaveButton": "Quitter mon coach actuel",
+        "leaving": "En cours...",
+        "cancel": "Annuler"
+      }
+    },
+    "subscription": {
+      "lifetime": "Accès à vie",
+      "lifetimeDesc": "Accès permanent à toutes les fonctionnalités MoovX.",
+      "coachAccess": "Accès Coach",
+      "coachAccessDesc": "Ton accès est inclus via ton coach.",
+      "planMonthly": "Plan Mensuel — CHF 10/mois",
+      "planYearly": "Plan Annuel — CHF 80/an",
+      "planCoach": "Coach Pro — CHF 50/mois",
+      "daysRemaining": "{days} jours restants",
+      "renewalDate": "Renouvellement le {date}",
+      "expiringSoon": "Ton abonnement expire bientôt",
+      "manageSubscription": "GÉRER MON ABONNEMENT",
+      "subscribePrompt": "Abonne-toi pour accéder à toutes les fonctionnalités.",
+      "subscribeCta": "S'abonner — Dès CHF 10/mois"
+    },
+    "billing": {
+      "title": "Historique des paiements",
+      "empty": "Aucun paiement enregistre",
+      "statusPaid": "Paye",
+      "statusRefunded": "Rembourse",
+      "statusFailed": "Echoue"
+    },
+    "delete": {
+      "button": "Supprimer mon compte",
+      "title": "SUPPRIMER MON COMPTE",
+      "warning": "Toutes tes donnees seront supprimees definitivement. Cette action est irreversible.",
+      "confirmPrompt": "Tape <bold>{word}</bold> pour confirmer :",
+      "confirmWord": "SUPPRIMER",
+      "placeholder": "SUPPRIMER",
+      "cancel": "Annuler",
+      "deleting": "Suppression...",
+      "submit": "Supprimer",
+      "errorGeneric": "Echec",
+      "errorNetwork": "Erreur reseau"
+    },
+    "badges": {
+      "viewAll": "VOIR TOUT →",
+      "emptyState": "Complète des actions pour débloquer des badges !",
+      "backToAccount": "Compte"
+    },
+    "logout": "DÉCONNEXION",
+    "avatarAlt": "Photo de profil"
   }
 }

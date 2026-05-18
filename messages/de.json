@@ -997,5 +997,123 @@
       "paymentLink": "Zahlungslink nicht verfügbar",
       "paymentFailed": "Zahlung konnte nicht gestartet werden. Bitte versuche es erneut."
     }
+  },
+  "profile": {
+    "header": {
+      "swissMade": "SWISS MADE",
+      "memberSince": "MITGLIED SEIT {date}"
+    },
+    "stats": {
+      "weight": "GEWICHT",
+      "goal": "ZIEL",
+      "kcal": "KCAL/TAG"
+    },
+    "sections": {
+      "myProfile": "MEIN PROFIL",
+      "phone": "TELEFON",
+      "tools": "WERKZEUGE",
+      "reminders": "ERINNERUNGEN",
+      "myCoach": "MEIN COACH",
+      "subscription": "MEIN ABONNEMENT",
+      "badges": "MEINE ABZEICHEN"
+    },
+    "fields": {
+      "firstName": "Vorname",
+      "birthDate": "Geburtsdatum",
+      "gender": "Geschlecht",
+      "height": "Grösse",
+      "goalWeight": "Zielgewicht",
+      "objective": "Ziel",
+      "activityLevel": "Aktivitätslevel",
+      "male": "Mann",
+      "female": "Frau",
+      "objectives": {
+        "mass": "Muskelaufbau",
+        "cut": "Definition",
+        "maintain": "Erhaltung"
+      },
+      "activityLevels": {
+        "sedentary": "Sitzend",
+        "light": "Leicht",
+        "moderate": "Moderat",
+        "active": "Aktiv",
+        "extreme": "Intensiv"
+      }
+    },
+    "phone": {
+      "addNumber": "Nummer hinzufügen",
+      "edit": "Bearbeiten",
+      "placeholder": "+41 79 000 00 00"
+    },
+    "tools": {
+      "bmrCalculator": "BMR-Rechner",
+      "regenerateSchedule": "Zeitplan neu erstellen"
+    },
+    "reminders": {
+      "pushNotifications": "Push-Benachrichtigungen",
+      "pushDescription": "Coach-Nachrichten + Erinnerungen",
+      "sessionReminders": "Einheits-Erinnerungen",
+      "timerSound": "Timer-Ton",
+      "trainingTime": "TRAININGSZEIT",
+      "reminderBefore": "ERINNERUNG VOR EINHEIT",
+      "reminderPreview": "Erinnerung um {time} für deine Einheit um {sessionTime}",
+      "iosAlert": "Um Benachrichtigungen auf dem iPhone zu aktivieren, füge zuerst MoovX zu deinem Startbildschirm hinzu: Safari > Teilen > Zum Startbildschirm"
+    },
+    "coach": {
+      "title": "Mein Coach",
+      "activeStatus": "Aktiver Coach",
+      "active": "Aktiv",
+      "changeCoach": "Coach wechseln",
+      "noCoach": "Kein Coach verknüpft. Tritt einem Coach über seinen Einladungslink bei.",
+      "changeModal": {
+        "title": "COACH WECHSELN",
+        "description": "Um den Coach zu wechseln, kontaktiere deinen neuen Coach, damit er dir seinen Einladungslink teilt. Dein Verlauf bleibt erhalten.",
+        "leaveButton": "Meinen aktuellen Coach verlassen",
+        "leaving": "Wird bearbeitet...",
+        "cancel": "Abbrechen"
+      }
+    },
+    "subscription": {
+      "lifetime": "Lebenslanger Zugang",
+      "lifetimeDesc": "Dauerhafter Zugang zu allen MoovX-Funktionen.",
+      "coachAccess": "Coach-Zugang",
+      "coachAccessDesc": "Dein Zugang ist über deinen Coach enthalten.",
+      "planMonthly": "Monatsplan — CHF 10/Monat",
+      "planYearly": "Jahresplan — CHF 80/Jahr",
+      "planCoach": "Coach Pro — CHF 50/Monat",
+      "daysRemaining": "{days} Tage verbleibend",
+      "renewalDate": "Verlängerung am {date}",
+      "expiringSoon": "Dein Abonnement läuft bald ab",
+      "manageSubscription": "MEIN ABONNEMENT VERWALTEN",
+      "subscribePrompt": "Abonniere, um Zugang zu allen Funktionen zu erhalten.",
+      "subscribeCta": "Abonnieren — Ab CHF 10/Monat"
+    },
+    "billing": {
+      "title": "Zahlungsverlauf",
+      "empty": "Keine Zahlungen verzeichnet",
+      "statusPaid": "Bezahlt",
+      "statusRefunded": "Erstattet",
+      "statusFailed": "Fehlgeschlagen"
+    },
+    "delete": {
+      "button": "Mein Konto löschen",
+      "title": "MEIN KONTO LÖSCHEN",
+      "warning": "Alle deine Daten werden dauerhaft gelöscht. Diese Aktion ist unwiderruflich.",
+      "confirmPrompt": "Tippe <bold>{word}</bold> zum Bestätigen:",
+      "confirmWord": "LÖSCHEN",
+      "placeholder": "LÖSCHEN",
+      "cancel": "Abbrechen",
+      "deleting": "Wird gelöscht...",
+      "submit": "Löschen",
+      "errorGeneric": "Fehlgeschlagen",
+      "errorNetwork": "Netzwerkfehler"
+    },
+    "badges": {
+      "viewAll": "ALLE ANSEHEN →",
+      "emptyState": "Schliesse Aktionen ab, um Abzeichen freizuschalten!",
+      "backToAccount": "Konto"
+    },
+    "logout": "ABMELDEN",
+    "avatarAlt": "Profilfoto"
   }
 }

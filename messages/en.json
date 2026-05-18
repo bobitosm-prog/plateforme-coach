@@ -997,5 +997,123 @@
       "paymentLink": "Payment link unavailable",
       "paymentFailed": "Unable to start payment. Please try again."
     }
+  },
+  "profile": {
+    "header": {
+      "swissMade": "SWISS MADE",
+      "memberSince": "MEMBER SINCE {date}"
+    },
+    "stats": {
+      "weight": "WEIGHT",
+      "goal": "GOAL",
+      "kcal": "KCAL/DAY"
+    },
+    "sections": {
+      "myProfile": "MY PROFILE",
+      "phone": "PHONE",
+      "tools": "TOOLS",
+      "reminders": "REMINDERS",
+      "myCoach": "MY COACH",
+      "subscription": "MY SUBSCRIPTION",
+      "badges": "MY BADGES"
+    },
+    "fields": {
+      "firstName": "First name",
+      "birthDate": "Date of birth",
+      "gender": "Gender",
+      "height": "Height",
+      "goalWeight": "Goal weight",
+      "objective": "Objective",
+      "activityLevel": "Activity level",
+      "male": "Male",
+      "female": "Female",
+      "objectives": {
+        "mass": "Muscle gain",
+        "cut": "Cut",
+        "maintain": "Maintenance"
+      },
+      "activityLevels": {
+        "sedentary": "Sedentary",
+        "light": "Light",
+        "moderate": "Moderate",
+        "active": "Active",
+        "extreme": "Intense"
+      }
+    },
+    "phone": {
+      "addNumber": "Add a number",
+      "edit": "Edit",
+      "placeholder": "+41 79 000 00 00"
+    },
+    "tools": {
+      "bmrCalculator": "BMR Calculator",
+      "regenerateSchedule": "Regenerate schedule"
+    },
+    "reminders": {
+      "pushNotifications": "Push notifications",
+      "pushDescription": "Coach messages + reminders",
+      "sessionReminders": "Session reminders",
+      "timerSound": "Timer sound",
+      "trainingTime": "TRAINING TIME",
+      "reminderBefore": "REMINDER BEFORE SESSION",
+      "reminderPreview": "Reminder at {time} for your {sessionTime} session",
+      "iosAlert": "To enable notifications on iPhone, first add MoovX to your home screen: Safari > Share > Add to Home Screen"
+    },
+    "coach": {
+      "title": "My coach",
+      "activeStatus": "Active coach",
+      "active": "Active",
+      "changeCoach": "Change coach",
+      "noCoach": "No coach linked. Join a coach via their invite link.",
+      "changeModal": {
+        "title": "CHANGE COACH",
+        "description": "To change coach, contact your new coach so they can share their invite link. Your history will be preserved.",
+        "leaveButton": "Leave my current coach",
+        "leaving": "Processing...",
+        "cancel": "Cancel"
+      }
+    },
+    "subscription": {
+      "lifetime": "Lifetime access",
+      "lifetimeDesc": "Permanent access to all MoovX features.",
+      "coachAccess": "Coach Access",
+      "coachAccessDesc": "Your access is included via your coach.",
+      "planMonthly": "Monthly Plan — CHF 10/month",
+      "planYearly": "Yearly Plan — CHF 80/year",
+      "planCoach": "Coach Pro — CHF 50/month",
+      "daysRemaining": "{days} days remaining",
+      "renewalDate": "Renewal on {date}",
+      "expiringSoon": "Your subscription is expiring soon",
+      "manageSubscription": "MANAGE MY SUBSCRIPTION",
+      "subscribePrompt": "Subscribe to access all features.",
+      "subscribeCta": "Subscribe — From CHF 10/month"
+    },
+    "billing": {
+      "title": "Payment history",
+      "empty": "No payments recorded",
+      "statusPaid": "Paid",
+      "statusRefunded": "Refunded",
+      "statusFailed": "Failed"
+    },
+    "delete": {
+      "button": "Delete my account",
+      "title": "DELETE MY ACCOUNT",
+      "warning": "All your data will be permanently deleted. This action is irreversible.",
+      "confirmPrompt": "Type <bold>{word}</bold> to confirm:",
+      "confirmWord": "DELETE",
+      "placeholder": "DELETE",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "submit": "Delete",
+      "errorGeneric": "Failed",
+      "errorNetwork": "Network error"
+    },
+    "badges": {
+      "viewAll": "VIEW ALL →",
+      "emptyState": "Complete actions to unlock badges!",
+      "backToAccount": "Account"
+    },
+    "logout": "LOG OUT",
+    "avatarAlt": "Profile photo"
   }
 }
