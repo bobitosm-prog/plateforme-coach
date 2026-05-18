@@ -1312,5 +1312,38 @@
       "configurePrompt": "Configure your preferences then generate your personalized AI plan.",
       "configureCta": "Configure my preferences"
     }
+  },
+  "coach_dashboard": {
+    "nav": {
+      "myClients": "MY CLIENTS",
+      "seeAll": "VIEW ALL",
+      "newClient": "NEW CLIENT",
+      "signOut": "Sign out"
+    },
+    "header": {
+      "coachPro": "COACH PRO · {count} clients",
+      "clientsActive": "{count} active client(s) · {unread} unread message(s)",
+      "searchPlaceholder": "Search a client...",
+      "invited": "INVITED",
+      "videosToReview": "Videos to review"
+    },
+    "invite": {
+      "emailSubject": "{coachName} invites you to MoovX",
+      "emailBody": "Hi!\n\nJoin me on MoovX:\n{link}"
+    },
+    "sidebar": {
+      "dashboard": "MY CLIENTS",
+      "calendar": "CALENDAR",
+      "programs": "PROGRAMS",
+      "analytics": "ANALYTICS",
+      "messages": "MESSAGES",
+      "aliments": "FOODS",
+      "videos": "VIDEOS",
+      "profile": "PROFILE",
+      "home": "HOME",
+      "tracking": "TRACKING",
+      "nutrition": "NUTRITION",
+      "myProfile": "MY PROFILE"
+    }
   }
 }

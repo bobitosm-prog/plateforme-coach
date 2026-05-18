@@ -158,6 +158,7 @@ export default function CoachApp() {
      MAIN APP SHELL (Mobile <1024px)
   ══════════════════════════════════════════════════════════════ */
   return (
+    <ClientIntlProvider>
     <div className="app-shell" style={{ display: 'flex', width: '100%', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: BG_BASE, borderRight: `1px solid ${BORDER}`, zIndex: 50, padding: '24px 0' }}>
@@ -407,7 +408,6 @@ export default function CoachApp() {
 
       <BugReport session={h.session} profile={h.profile} />
       {!perms.isInvited && (
-        <ClientIntlProvider>
           <ChatAI
             session={h.session}
             profile={h.profile}
@@ -415,7 +415,6 @@ export default function CoachApp() {
             onExternalClose={() => h.setActiveTab('compte')}
             hideFloatingButton={true}
           />
-        </ClientIntlProvider>
       )}
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
@@ -451,5 +450,6 @@ export default function CoachApp() {
       </nav>}
 
     </div>
+    </ClientIntlProvider>
   )
 }

@@ -1,5 +1,7 @@
 'use client'
 import React, { useEffect, useState, useRef } from 'react'
+import { useTranslations } from 'next-intl'
+import ClientIntlProvider from '@/components/ClientIntlProvider'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { cache } from '../../lib/cache'
@@ -94,6 +96,15 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
 }
 
 export default function CoachPage({ initialSession }: { initialSession?: any } = {}) {
+  return (
+    <ClientIntlProvider>
+      <CoachPageInner initialSession={initialSession} />
+    </ClientIntlProvider>
+  )
+}
+
+function CoachPageInner({ initialSession }: { initialSession?: any }) {
+  const ct = useTranslations('coach_dashboard')
   const h = useCoachDashboard(initialSession)
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [revMonth, setRevMonth] = useState(new Date().getMonth())
@@ -164,14 +175,14 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
     const SEC_LINE = { flex: 1, height: 1, background: 'rgba(201,168,76,0.25)' }
 
     const navItems = [
-      { id: 'accueil', icon: Home, label: 'ACCUEIL' },
-      { id: 'dashboard', icon: Users, label: 'MES CLIENTS' },
-      { id: 'suivi', icon: Activity, label: 'SUIVI' },
-      { id: 'programs', icon: Dumbbell, label: 'PROGRAMMES' },
-      { id: 'aliments', icon: UtensilsCrossed, label: 'NUTRITION' },
-      { id: 'messages', icon: MessageCircle, label: 'MESSAGES' },
-      { id: 'calendar', icon: Calendar, label: 'CALENDRIER' },
-      { id: 'profil', icon: User, label: 'MON PROFIL' },
+      { id: 'accueil', icon: Home, label: ct('sidebar.home') },
+      { id: 'dashboard', icon: Users, label: ct('sidebar.dashboard') },
+      { id: 'suivi', icon: Activity, label: ct('sidebar.tracking') },
+      { id: 'programs', icon: Dumbbell, label: ct('sidebar.programs') },
+      { id: 'aliments', icon: UtensilsCrossed, label: ct('sidebar.nutrition') },
+      { id: 'messages', icon: MessageCircle, label: ct('sidebar.messages') },
+      { id: 'calendar', icon: Calendar, label: ct('sidebar.calendar') },
+      { id: 'profil', icon: User, label: ct('sidebar.myProfile') },
     ]
 
     // Revenue calc
@@ -201,7 +212,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
             <div style={{ width: 40, height: 40, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 700, color: BG_BASE }}>{h.coachInitials}</div>
             <div>
               <div style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.05em' }}>{h.coachName}</div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 9, fontWeight: 700, color: GOLD, letterSpacing: '0.15em' }}>COACH PRO · {h.clients.length} clients</div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 9, fontWeight: 700, color: GOLD, letterSpacing: '0.15em' }}>{ct('header.coachPro', { count: h.clients.length })}</div>
             </div>
           </div>
           <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: '0 12px' }}>
@@ -219,7 +230,7 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
           </nav>
           <div style={{ padding: '16px 20px' }}>
             <button onClick={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
-              <LogOut size={14} />Deconnexion
+              <LogOut size={14} />{ct('nav.signOut')}
             </button>
           </div>
         </aside>
@@ -304,12 +315,12 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                 <div style={{ gridColumn: 'span 8', ...CARD }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                     <span style={SEC_TITLE}>Mes Clients</span><div style={SEC_LINE} />
-                    <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{h.clients.length} actif{h.clients.length !== 1 ? 's' : ''}</span>
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{ct('header.clientsActive', { count: h.clients.length, unread: h.totalUnread })}</span>
                   </div>
                   {/* Search */}
                   <div style={{ position: 'relative', marginBottom: 12 }}>
                     <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: TEXT_DIM, pointerEvents: 'none' }}>&#128269;</span>
-                    <input value={clientSearch} onChange={e => setClientSearch(e.target.value)} placeholder="Rechercher un client..."
+                    <input value={clientSearch} onChange={e => setClientSearch(e.target.value)} placeholder={ct('header.searchPlaceholder')}
                       style={{ width: '100%', padding: '8px 12px 8px 34px', background: BG_BASE, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: FONT_BODY, fontSize: 12, color: TEXT_PRIMARY, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -352,14 +363,14 @@ export default function CoachPage({ initialSession }: { initialSession?: any } =
                       })
                     })()}
                   </div>
-                  {h.clients.length > 10 && !clientSearch && <button onClick={() => h.setSection('dashboard' as any)} style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer' }}>VOIR TOUS</button>}
+                  {h.clients.length > 10 && !clientSearch && <button onClick={() => h.setSection('dashboard' as any)} style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer' }}>{ct('nav.seeAll')}</button>}
                 </div>
 
                 {/* Quick actions */}
                 <div style={{ gridColumn: 'span 4', ...CARD }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Actions Rapides</span><div style={SEC_LINE} /></div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <button onClick={() => { h.setShowInvite(true); h.setSection('dashboard' as any) }} style={{ width: '100%', padding: '12px', background: GOLD, color: BG_BASE, border: 'none', borderRadius: 10, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Plus size={14} />NOUVEAU CLIENT</button>
+                    <button onClick={() => { h.setShowInvite(true); h.setSection('dashboard' as any) }} style={{ width: '100%', padding: '12px', background: GOLD, color: BG_BASE, border: 'none', borderRadius: 10, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Plus size={14} />{ct('nav.newClient')}</button>
                     <button onClick={() => h.setSection('programs' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Dumbbell size={14} />NOUVEAU PROGRAMME</button>
                     <button onClick={() => h.setSection('aliments' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><UtensilsCrossed size={14} />PLAN NUTRITION</button>
                     <button onClick={() => h.setSection('messages' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><MessageCircle size={14} />ENVOYER UN MESSAGE</button>

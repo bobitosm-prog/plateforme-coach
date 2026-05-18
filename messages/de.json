@@ -1312,5 +1312,38 @@
       "configurePrompt": "Konfiguriere deine Einstellungen und erstelle dann deinen personalisierten KI-Plan.",
       "configureCta": "Meine Einstellungen konfigurieren"
     }
+  },
+  "coach_dashboard": {
+    "nav": {
+      "myClients": "MEINE KLIENTEN",
+      "seeAll": "ALLE ANZEIGEN",
+      "newClient": "NEUER KLIENT",
+      "signOut": "Abmelden"
+    },
+    "header": {
+      "coachPro": "COACH PRO · {count} Klienten",
+      "clientsActive": "{count} aktive(r) Klient(en) · {unread} ungelesene Nachricht(en)",
+      "searchPlaceholder": "Klient suchen...",
+      "invited": "EINGELADEN",
+      "videosToReview": "Videos zu überprüfen"
+    },
+    "invite": {
+      "emailSubject": "{coachName} lädt dich zu MoovX ein",
+      "emailBody": "Hallo!\n\nSchliess dich mir auf MoovX an:\n{link}"
+    },
+    "sidebar": {
+      "dashboard": "MEINE KLIENTEN",
+      "calendar": "KALENDER",
+      "programs": "PROGRAMME",
+      "analytics": "ANALYTICS",
+      "messages": "NACHRICHTEN",
+      "aliments": "LEBENSMITTEL",
+      "videos": "VIDEOS",
+      "profile": "PROFIL",
+      "home": "STARTSEITE",
+      "tracking": "TRACKING",
+      "nutrition": "ERNÄHRUNG",
+      "myProfile": "MEIN PROFIL"
+    }
   }
 }
