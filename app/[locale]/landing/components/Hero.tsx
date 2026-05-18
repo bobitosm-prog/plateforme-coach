@@ -1,46 +1,11 @@
-'use client'
-import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import gsap from 'gsap'
-import { useTranslations } from 'next-intl'
-import { useCounter } from './shared'
+import { getTranslations } from 'next-intl/server'
+import HeroStats from './HeroStats'
+import HeroAnimation from './HeroAnimation'
 
-function HeroStat({ value, suffix, label }: { value: number; suffix: string; label: string }) {
-  const { ref, value: count } = useCounter(value, 1800)
-  return (
-    <div ref={ref}>
-      <div style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: 'clamp(36px, 5vw, 56px)',
-        color: 'var(--gold)',
-        lineHeight: 1,
-        letterSpacing: 1,
-      }}>
-        {count}{suffix}
-      </div>
-      <div style={{
-        marginTop: 8,
-        fontSize: 11,
-        color: 'rgba(255,255,255,0.55)',
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-      }}>
-        {label}
-      </div>
-    </div>
-  )
-}
-
-export default function Hero() {
-  const t = useTranslations('hero')
-
-  const eyebrowRef = useRef<HTMLDivElement>(null)
-  const headlineRef = useRef<HTMLHeadingElement>(null)
-  const subRef = useRef<HTMLDivElement>(null)
-  const ctaRef = useRef<HTMLDivElement>(null)
-  const statsRef = useRef<HTMLDivElement>(null)
-  const bgRef = useRef<HTMLDivElement>(null)
+export default async function Hero() {
+  const t = await getTranslations('hero')
 
   const STATS = [
     { value: 1200, suffix: '+', label: t('stat_users') },
@@ -51,40 +16,6 @@ export default function Hero() {
 
   const marqueeItems = t('marquee').split(' • ')
 
-  useEffect(() => {
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-
-    // Hero bg fade-in handled by CSS animation (LCP path, no JS dependency)
-    // GSAP handles only the text/UI entrance animations below
-    tl.fromTo(eyebrowRef.current,
-      { opacity: 0, y: 16 },
-      { opacity: 1, y: 0, duration: 0.6, delay: 0.3 }
-    )
-    .fromTo(headlineRef.current?.querySelectorAll('.hero-line') ?? [],
-      { opacity: 0, y: 40 },
-      { opacity: 1, y: 0, duration: 0.8, stagger: 0.12 },
-      '-=0.3'
-    )
-    .fromTo([subRef.current, ctaRef.current],
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 },
-      '-=0.5'
-    )
-    .fromTo(statsRef.current,
-      { opacity: 0, y: 12 },
-      { opacity: 1, y: 0, duration: 0.6 },
-      '-=0.3'
-    )
-
-    const onScroll = () => {
-      if (!bgRef.current) return
-      const y = window.scrollY * 0.3
-      bgRef.current.style.transform = `translate3d(0, ${y}px, 0) scale(1.05)`
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
     <section style={{
       position: 'relative',
@@ -93,12 +24,16 @@ export default function Hero() {
       background: '#000',
       color: '#fff',
     }}>
-      {/* Background image full-bleed — CSS fade-in for LCP, GSAP handles parallax after */}
+      {/* Background image — CSS fade-in for LCP, GSAP handles parallax via HeroAnimation */}
       <style>{`
         @keyframes heroFadeIn { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
         .hero-bg-container { animation: heroFadeIn 1.2s ease-out 0.1s both; }
+        @keyframes heroContentIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hero-content-animate { animation: heroContentIn 0.8s ease-out 0.4s both; }
+        .hero-content-animate-delay { animation: heroContentIn 0.8s ease-out 0.6s both; }
+        .hero-content-animate-delay2 { animation: heroContentIn 0.8s ease-out 0.8s both; }
       `}</style>
-      <div ref={bgRef} className="hero-bg-container" style={{
+      <div className="hero-bg-container" style={{
         position: 'absolute',
         inset: 0,
         zIndex: 1,
@@ -110,7 +45,6 @@ export default function Hero() {
           fill
           priority
           fetchPriority="high"
-          quality={85}
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
         />
@@ -147,7 +81,7 @@ export default function Hero() {
         backgroundSize: '160px',
       }} />
 
-      {/* Meta corner (top right) */}
+      {/* Meta corner */}
       <div style={{
         position: 'absolute',
         top: 32, right: 48,
@@ -167,10 +101,10 @@ export default function Hero() {
           {t('meta_status')}
         </div>
         <div>{t('meta_location')}</div>
-        <div>v2.4.1</div>
+        <div>v2.8.0</div>
       </div>
 
-      {/* Main content */}
+      {/* Main content — SSR'd, visible immediately in HTML */}
       <div style={{
         position: 'relative',
         zIndex: 5,
@@ -184,7 +118,7 @@ export default function Hero() {
       }}>
 
         {/* Eyebrow */}
-        <div ref={eyebrowRef} style={{
+        <div className="hero-content-animate" style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: 12,
@@ -194,14 +128,13 @@ export default function Hero() {
           color: 'var(--gold)',
           marginBottom: 32,
           textTransform: 'uppercase',
-          opacity: 0,
         }}>
           <span style={{ width: 32, height: 1, background: 'var(--gold)' }} />
           {t('eyebrow')}
         </div>
 
-        {/* Massive headline */}
-        <h1 ref={headlineRef} style={{
+        {/* Headline */}
+        <h1 className="hero-content-animate" style={{
           fontFamily: 'var(--font-display)',
           fontSize: 'clamp(64px, 14vw, 240px)',
           lineHeight: 0.85,
@@ -210,21 +143,20 @@ export default function Hero() {
           margin: 0,
           marginBottom: 32,
         }}>
-          <span className="hero-line" style={{ display: 'block', color: '#fff', opacity: 0 }}>
+          <span style={{ display: 'block', color: '#fff' }}>
             {t('headline_line1')}
           </span>
-          <span className="hero-line" style={{
+          <span style={{
             display: 'block',
             color: 'var(--gold)',
             paddingLeft: 'clamp(24px, 8vw, 160px)',
-            opacity: 0,
           }}>
             {t('headline_line2')}
           </span>
         </h1>
 
-        {/* Tagline + body */}
-        <div ref={subRef} style={{ maxWidth: 560, marginBottom: 48, opacity: 0 }}>
+        {/* Subtitle + description */}
+        <div className="hero-content-animate-delay" style={{ maxWidth: 560, marginBottom: 48 }}>
           <span style={{
             display: 'block',
             fontFamily: 'var(--font-display)',
@@ -247,13 +179,12 @@ export default function Hero() {
         </div>
 
         {/* CTAs */}
-        <div ref={ctaRef} style={{
+        <div className="hero-content-animate-delay" style={{
           display: 'flex',
           gap: 16,
           alignItems: 'center',
           marginBottom: 64,
           flexWrap: 'wrap',
-          opacity: 0,
         }}>
           <Link
             href="/register-client"
@@ -272,16 +203,6 @@ export default function Hero() {
               gap: 12,
               transition: 'all 0.2s',
             }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = '#E6C364'
-              e.currentTarget.style.transform = 'translate(-2px, -2px)'
-              e.currentTarget.style.boxShadow = '4px 4px 0 #B8902F'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'var(--gold)'
-              e.currentTarget.style.transform = 'translate(0, 0)'
-              e.currentTarget.style.boxShadow = 'none'
-            }}
           >
             {t('cta_primary')}
           </Link>
@@ -299,14 +220,6 @@ export default function Hero() {
               border: '1px solid rgba(255,255,255,0.25)',
               transition: 'all 0.2s',
             }}
-            onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'var(--gold)'
-              e.currentTarget.style.color = 'var(--gold)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'
-              e.currentTarget.style.color = '#fff'
-            }}
           >
             {t('cta_secondary')}
           </a>
@@ -322,18 +235,15 @@ export default function Hero() {
         </div>
 
         {/* Stats bar */}
-        <div ref={statsRef} style={{
+        <div className="hero-content-animate-delay2" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
           gap: 'clamp(20px, 3vw, 40px)',
           paddingTop: 32,
           borderTop: '1px solid rgba(255,255,255,0.1)',
           maxWidth: 880,
-          opacity: 0,
         }}>
-          {STATS.map((s, i) => (
-            <HeroStat key={i} {...s} />
-          ))}
+          <HeroStats stats={STATS} />
         </div>
       </div>
 
@@ -389,6 +299,9 @@ export default function Hero() {
           .hero-marquee { font-size: 11px !important; gap: 24px !important; }
         }
       `}</style>
+
+      {/* Client-only: scroll parallax */}
+      <HeroAnimation />
     </section>
   )
 }
