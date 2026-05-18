@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
 import { resolveSessionType, HISTORY_FILTERS, getHeroImage } from '../../../lib/session-types'
 import { colors, fonts } from '../../../lib/design-tokens'
@@ -10,6 +11,7 @@ interface RecentSessionsListProps {
 }
 
 export default function RecentSessionsList({ workoutHistory, onOpenDetail }: RecentSessionsListProps) {
+  const t = useTranslations('training_tab.recent')
   const [showFullHistory, setShowFullHistory] = useState(false)
   const [historyFilter, setHistoryFilter] = useState('all')
 
@@ -62,7 +64,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
       {/* Session items */}
       {visible.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
-          Aucune seance
+          {t('noSessions')}
         </div>
       ) : (
         <>

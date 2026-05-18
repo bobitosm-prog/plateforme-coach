@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../lib/design-tokens'
 
 interface PhaseProgressBannerProps {
@@ -11,6 +12,7 @@ interface PhaseProgressBannerProps {
 }
 
 export default function PhaseProgressBanner({ program, onAdvanceWeek }: PhaseProgressBannerProps) {
+  const t = useTranslations('training_tab.phase')
   const week = program.current_week || 1
   const totalWeeks = program.total_weeks
   const phase = (program.phases || []).find((p) => week >= p.weeks[0] && week <= p.weeks[1])
@@ -23,7 +25,7 @@ export default function PhaseProgressBanner({ program, onAdvanceWeek }: PhasePro
           {phase?.name || `Phase ${week <= 4 ? 1 : week <= 8 ? 2 : 3}`}
         </span>
         <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>
-          Semaine {week}/{totalWeeks}
+          {t('week', { current: week, total: totalWeeks })}
         </span>
       </div>
       <div style={{ height: 4, background: colors.goldDim, borderRadius: 2, overflow: 'hidden' }}>
@@ -31,7 +33,7 @@ export default function PhaseProgressBanner({ program, onAdvanceWeek }: PhasePro
       </div>
       {totalWeeks && (program.current_week || 1) < totalWeeks && (
         <button onClick={onAdvanceWeek} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, background: 'none', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '4px 10px', cursor: 'pointer', marginTop: 6 }}>
-          Semaine suivante &rarr;
+          {t('nextWeek')}
         </button>
       )}
     </div>

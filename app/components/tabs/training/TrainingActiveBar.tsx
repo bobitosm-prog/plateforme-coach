@@ -1,12 +1,17 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { format, type Locale } from 'date-fns'
+import { fr as frLocale } from 'date-fns/locale/fr'
+import { enUS } from 'date-fns/locale/en-US'
+import { de as deLocale } from 'date-fns/locale/de'
+import { useTranslations, useLocale } from 'next-intl'
 import { Timer, Check } from 'lucide-react'
 import {
   BG_CARD, BORDER, GOLD, GREEN, TEXT_PRIMARY, TEXT_MUTED,
   FONT_ALT, FONT_DISPLAY,
 } from '../../../../lib/design-tokens'
+
+const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
 interface TrainingActiveBarProps {
   workoutStarted: number | null
@@ -20,6 +25,9 @@ interface TrainingActiveBarProps {
 export default function TrainingActiveBar({
   workoutStarted, elapsedSecs, trainingDoneSets, trainingTotalSets, onFinish, fmtElapsed,
 }: TrainingActiveBarProps) {
+  const t = useTranslations('training_tab.activeBar')
+  const locale = useLocale()
+  const dateLocale = DATE_LOCALES[locale] || frLocale
   return (
     <AnimatePresence>
       {workoutStarted && (
@@ -41,7 +49,7 @@ export default function TrainingActiveBar({
               <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.45rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.08em', lineHeight: 1 }}>{fmtElapsed(elapsedSecs)}</span>
             </div>
             <span style={{ fontFamily: FONT_ALT, fontSize: '0.62rem', color: TEXT_MUTED, paddingLeft: 21 }}>
-              {format(new Date(), 'EEE d MMM', { locale: fr })} · {trainingDoneSets}/{trainingTotalSets} séries
+              {format(new Date(), 'EEE d MMM', { locale: dateLocale })} · {t('series', { done: trainingDoneSets, total: trainingTotalSets })}
             </span>
           </div>
           {/* Terminer right */}

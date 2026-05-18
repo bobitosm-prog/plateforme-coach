@@ -1,8 +1,11 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { format, type Locale } from 'date-fns'
+import { fr as frLocale } from 'date-fns/locale/fr'
+import { enUS } from 'date-fns/locale/en-US'
+import { de as deLocale } from 'date-fns/locale/de'
+import { useTranslations, useLocale } from 'next-intl'
 import { addXP, updateStreak } from '../../../lib/gamification'
 import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
@@ -43,6 +46,8 @@ import PhaseProgressBanner from '../training/PhaseProgressBanner'
 import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
 import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
 
+const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
+
 interface TrainingTabProps {
   supabase: any
   session: any
@@ -65,6 +70,9 @@ export default function TrainingTab({
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
   lastCompletedByIndex,
 }: TrainingTabProps) {
+  const t = useTranslations('training_tab')
+  const locale = useLocale()
+  const dateLocale = DATE_LOCALES[locale] || frLocale
   const T = titleStyle
   // Source de vérité : profiles.subscription_type (pas coach_clients.invited_by_coach)
   const aiAllowed = profile?.subscription_type !== 'invited'
@@ -285,7 +293,7 @@ export default function TrainingTab({
           dueToStart[0].is_active = true
           dueToStart[0].scheduled = false
           programs.forEach((p: any) => { if (p.id !== dueToStart[0].id) p.is_active = false })
-          toast.success(`Ton nouveau programme démarre aujourd'hui !`)
+          toast.success(t('programs.newProgramToast'))
         }
         setCustomPrograms(programs)
         const active = programs.find((p: any) => p.is_active)
@@ -771,7 +779,7 @@ export default function TrainingTab({
               </svg>
             </div>
             <h2 style={{ ...statStyle, fontSize: 36, color: colors.gold, letterSpacing: 3, margin: '0 0 8px' }}>
-              REPOS TERMINÉ
+              {t('session.restDone')}
             </h2>
             <p style={{ ...subtitleStyle, fontWeight: 800, fontSize: 20, color: colors.text, letterSpacing: 2, margin: '0 0 24px' }}>
               {motivationalMsg}
@@ -795,15 +803,15 @@ export default function TrainingTab({
       <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <div>
           <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
-            TRAINING
+            {t('header.title')}
           </div>
           <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
             {activeCustomProgram
               ? `${activeCustomProgram.name}${activeCustomProgram.total_weeks ? ` • SEMAINE ${activeCustomProgram.current_week || 1}/${activeCustomProgram.total_weeks}` : ''}`
-              : 'AUCUN PROGRAMME ACTIF'}
+              : t('header.noActiveProgram')}
           </div>
         </div>
-        <button onClick={() => setShowProgramManager(true)} aria-label="Gerer mes programmes"
+        <button onClick={() => setShowProgramManager(true)} aria-label={t('header.managePrograms')}
           style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
           <BookOpen size={18} color={colors.gold} />
         </button>
@@ -942,7 +950,7 @@ export default function TrainingTab({
       {aiAllowed && (
         <div style={{ margin: '16px 24px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={T}>MES PROGRAMMES</span>
+            <span style={T}>{t('programs.title')}</span>
             <div style={titleLineStyle} />
             <span style={{ ...mutedStyle, flexShrink: 0 }}>{customPrograms.length}</span>
           </div>
@@ -953,7 +961,7 @@ export default function TrainingTab({
               </div>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.text }}>
-                  {activeCustomProgram ? activeCustomProgram.name : customPrograms.length > 0 ? `${customPrograms.length} programme${customPrograms.length > 1 ? 's' : ''}` : 'Creer un programme'}
+                  {activeCustomProgram ? activeCustomProgram.name : customPrograms.length > 0 ? `${customPrograms.length} programme${customPrograms.length > 1 ? 's' : ''}` : t('programs.createProgram')}
                 </div>
                 {activeCustomProgram && <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, marginTop: 1 }}>Programme actif · Tap pour gerer</div>}
               </div>
@@ -967,7 +975,7 @@ export default function TrainingTab({
       {!aiAllowed && coachProgram && (
         <div style={{ margin: '16px 24px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={T}>TON PROGRAMME</span>
+            <span style={T}>{t('programs.coachProgram')}</span>
             <div style={titleLineStyle} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1087,7 +1095,7 @@ export default function TrainingTab({
                 onClick={() => startProgramWorkout({ day_name: 'Séance libre' }, [])}
                 style={{ ...btnSecondary, width: '100%', padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
               >
-                + SÉANCE LIBRE
+                {t('session.freeSession')}
               </button>
             </div>
             <SessionDetailModal
@@ -1104,11 +1112,11 @@ export default function TrainingTab({
                 if (!activeCustomProgram && !coachProgram) return (
                   <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textDim }}>
                     <Dumbbell size={48} color={colors.textDim} style={{ marginBottom: 16 }} />
-                    <p style={{ fontFamily: fonts.body, fontSize: 14, margin: 0 }}>Aucun programme actif.</p>
+                    <p style={{ fontFamily: fonts.body, fontSize: 14, margin: 0 }}>{t('session.noActiveProgram')}</p>
                   </div>
                 )
                 if (trainingExercises.length === 0) return (
-                  <p style={{ textAlign: 'center', padding: 40, color: colors.textDim, fontFamily: fonts.body }}>Aucun exercice prevu pour {trainingDay}.</p>
+                  <p style={{ textAlign: 'center', padding: 40, color: colors.textDim, fontFamily: fonts.body }}>{t('session.noExercisesForDay', { day: trainingDay })}</p>
                 )
 
                 const totalSets = trainingExercises.reduce((s: number, e: any) => s + (Number(e.sets) || 3), 0)
@@ -1126,8 +1134,8 @@ export default function TrainingTab({
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
                       {[
                         { label: 'SETS', value: totalSets },
-                        { label: 'EXERCICES', value: trainingExercises.length },
-                        { label: 'REPOS', value: `${totalRest}min` },
+                        { label: t('session.exercises'), value: trainingExercises.length },
+                        { label: t('session.rest'), value: `${totalRest}min` },
                       ].map(stat => (
                         <div key={stat.label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 14, textAlign: 'center' }}>
                           <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 400, color: colors.gold, lineHeight: 1 }}>{stat.value}</div>
@@ -1200,7 +1208,7 @@ export default function TrainingTab({
                               </div>
                             </div>
                           ))}
-                          <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${colors.goldRule}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>+ AJOUTER UN EXERCICE</button>
+                          <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${colors.goldRule}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>{t('session.addExercise')}</button>
                           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                             <button onClick={saveEditedProgram} style={{ ...btnPrimary, flex: 1, padding: 12, borderRadius: 12 }}>SAUVEGARDER</button>
                             <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ ...btnSecondary, flex: 1, padding: 12, borderRadius: 12 }}>ANNULER</button>
@@ -1268,7 +1276,7 @@ export default function TrainingTab({
                         {/* Add exercise to session (active workout) */}
                         {trainingIsToday && (workoutStarted || trainingDoneSets > 0) && (
                           <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 14, marginTop: 12, background: 'transparent', border: `1.5px dashed rgba(212,168,67,0.4)`, borderRadius: 16, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                            + AJOUTER UN EXERCICE
+                            {t('session.addExercise')}
                           </button>
                         )}
 
@@ -1279,7 +1287,7 @@ export default function TrainingTab({
                           style={{ width: '100%', marginTop: 12, background: colors.surface2, border: `2px dashed ${colors.goldBorder}`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}
                         >
                           <Search size={16} color={colors.gold} />
-                          <span style={{ ...labelStyle, fontSize: 13, fontWeight: 800, letterSpacing: '2px' }}>Decouvrir les exercices</span>
+                          <span style={{ ...labelStyle, fontSize: 13, fontWeight: 800, letterSpacing: '2px' }}>{t('session.discoverExercises')}</span>
                         </motion.button>
 
                         {/* Start workout button (today, not started, not done) */}
@@ -1301,7 +1309,7 @@ export default function TrainingTab({
                             style={{ width: '100%', marginTop: 12, background: colors.success, color: '#0D0B08', fontWeight: 700, padding: '16px', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase' as const, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
                           >
                             <Award size={18} color="#0D0B08" />
-                            Terminer la seance
+                            {t('session.finishSession')}
                           </motion.button>
                         )}
                       </>
@@ -1339,7 +1347,7 @@ export default function TrainingTab({
         <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Header */}
           <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0 }}>
-            <span style={pageTitleStyle}>MES PROGRAMMES</span>
+            <span style={pageTitleStyle}>{t('programs.title')}</span>
             <button onClick={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} style={{ width: 36, height: 36, borderRadius: 12, background: colors.surface2, border: `1px solid ${colors.divider}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.textMuted, fontSize: 16 }}>✕</button>
           </div>
 
@@ -1373,7 +1381,7 @@ export default function TrainingTab({
             {customPrograms.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <Dumbbell size={48} color={colors.textDim} strokeWidth={1.5} />
-                <p style={{ ...bodyStyle, marginTop: 12 }}>Aucun programme créé</p>
+                <p style={{ ...bodyStyle, marginTop: 12 }}>{t('programs.noPrograms')}</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1461,7 +1469,7 @@ export default function TrainingTab({
                                     </div>
                                   )}
                                   {!day.is_rest && exList.length === 0 && (
-                                    <span style={{ ...mutedStyle, fontSize: 12 }}>Aucun exercice</span>
+                                    <span style={{ ...mutedStyle, fontSize: 12 }}>{t('programs.noExercises')}</span>
                                   )}
                                 </div>
                               )
@@ -1476,7 +1484,7 @@ export default function TrainingTab({
                                 <button onClick={() => setConfirmDelete(null)} style={{ padding: '12px 20px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>ANNULER</button>
                               </div>
                             ) : (
-                              <button onClick={() => setConfirmDelete(prog.id)} style={{ width: '100%', padding: 12, background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>SUPPRIMER CE PROGRAMME</button>
+                              <button onClick={() => setConfirmDelete(prog.id)} style={{ width: '100%', padding: 12, background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('programs.deleteProgram')}</button>
                             )}
                           </div>
                         </div>
@@ -1513,7 +1521,7 @@ export default function TrainingTab({
               </div>
 
               <div style={{ marginTop: 16 }}>
-                <div style={{ ...labelStyle, marginBottom: 4 }}>Nom du programme</div>
+                <div style={{ ...labelStyle, marginBottom: 4 }}>{t('programs.programName')}</div>
                 <input value={importName} onChange={e => setImportName(e.target.value)} style={{ width: '100%', padding: 12, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none' }} />
               </div>
 
@@ -1666,7 +1674,7 @@ export default function TrainingTab({
             </div>
             <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px 30px'}}>
               {variantPopup.variants.length===0?(
-                <div style={{textAlign:'center',padding:32,color:colors.textMuted,fontSize:14,fontFamily:fonts.body}}>Aucune variante trouvée</div>
+                <div style={{textAlign:'center',padding:32,color:colors.textMuted,fontSize:14,fontFamily:fonts.body}}>{t('programs.noVariants')}</div>
               ):variantPopup.variants.map((v: any,i: number)=>(
                 <button key={i} onClick={()=>selectEditVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius: 16,background:colors.background,border:`1px solid ${colors.goldBorder}`,cursor:'pointer',textAlign:'left'}}>
                   <div style={{width:40,height:40,borderRadius:10,background:colors.goldDim,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
@@ -1701,7 +1709,7 @@ export default function TrainingTab({
               {loadingDetail?(
                 <div style={{textAlign:'center',padding:40,color:colors.textMuted}}>Chargement...</div>
               ):workoutDetail.length===0?(
-                <div style={{textAlign:'center',padding:40,color:colors.textDim,fontSize:14,fontFamily:fonts.body}}>Aucun détail enregistré</div>
+                <div style={{textAlign:'center',padding:40,color:colors.textDim,fontSize:14,fontFamily:fonts.body}}>{t('programs.noDetails')}</div>
               ):(
                 workoutDetail.map((ex,i)=>(
                   <div key={i} style={{marginBottom:16,paddingBottom:16,borderBottom:i<workoutDetail.length-1?`1px solid ${colors.goldBorder}`:'none'}}>

@@ -1,8 +1,11 @@
 'use client'
 
 import { Calendar, Clock, CheckCircle, ArrowRight } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { format, type Locale } from 'date-fns'
+import { fr as frLocale } from 'date-fns/locale/fr'
+import { enUS } from 'date-fns/locale/en-US'
+import { de as deLocale } from 'date-fns/locale/de'
+import { useTranslations, useLocale } from 'next-intl'
 import {
   colors, fonts,
 } from '../../../lib/design-tokens'
@@ -12,6 +15,7 @@ const GOLD = colors.gold
 const FONT_DISPLAY = fonts.headline
 const FONT_ALT = fonts.alt
 const FONT_BODY = fonts.body
+const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
 export type HeroState = 'active' | 'done' | 'rest' | 'no-program' | 'no-exercises'
 
@@ -34,20 +38,24 @@ export function shortenSessionTitle(title: string | null | undefined): string {
   return (title || '').split('(')[0].trim().toUpperCase()
 }
 
-function getHeroTitle(state: HeroState, sessionTitle: string): string {
-  switch (state) {
-    case 'active': case 'done': return shortenSessionTitle(sessionTitle) || 'SÉANCE'
-    case 'rest': return 'JOUR DE REPOS'
-    case 'no-program': return 'AUCUN PROGRAMME'
-    case 'no-exercises': return 'AUCUN EXERCICE'
-  }
-}
-
 export default function HeroSessionCard({
   state, sessionTitle, todayExercises, todaySession,
   onStart, onCalendar, onViewDetail,
   onClick, dayLabel, dayBadge, hideCalendarButton, hideStartButton,
 }: HeroSessionCardProps) {
+  const t = useTranslations('training_tab.hero')
+  const locale = useLocale()
+  const dateLocale = DATE_LOCALES[locale] || frLocale
+
+  function getHeroTitle(state: HeroState, sessionTitle: string): string {
+    switch (state) {
+      case 'active': case 'done': return shortenSessionTitle(sessionTitle) || t('session')
+      case 'rest': return t('restDay')
+      case 'no-program': return t('noProgram')
+      case 'no-exercises': return t('noExercises')
+    }
+  }
+
   const heroImage = state === 'rest' || state === 'no-program' || state === 'no-exercises'
     ? '/images/hero/hero-default.webp'
     : getHeroImage(sessionTitle)
@@ -103,7 +111,7 @@ export default function HeroSessionCard({
             fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
             letterSpacing: '0.2em', color: GOLD, textTransform: 'uppercase',
           }}>
-            {dayLabel || (state === 'done' ? 'SÉANCE TERMINÉE' : 'SÉANCE DU JOUR')}
+            {dayLabel || (state === 'done' ? t('sessionDone') : t('sessionToday'))}
           </span>
           {!hideCalendarButton && (
             <button
@@ -166,7 +174,7 @@ export default function HeroSessionCard({
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
               <CheckCircle size={14} color={colors.success} />
-              TERMINEE &bull; {format(new Date(todaySession.created_at), 'HH:mm', { locale: fr })}
+              TERMINEE &bull; {format(new Date(todaySession.created_at), 'HH:mm', { locale: dateLocale })}
             </div>
           )}
           {state === 'rest' && (
