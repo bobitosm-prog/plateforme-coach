@@ -9,6 +9,7 @@ import {
 
 import useClientDashboard, { type Tab } from './hooks/useClientDashboard'
 import Paywall from './components/Paywall'
+import ClientIntlProvider from '../components/ClientIntlProvider'
 import BugReport from './components/BugReport'
 import FeedbackTab from './components/client/FeedbackTab'
 import ChatAI from './components/ChatAI'
@@ -113,7 +114,9 @@ export default function CoachApp() {
           </p>
         </div>
       )}
-      <Paywall role="client" userId={h.session.user.id} coachId={h.coachId} onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} />
+      <ClientIntlProvider>
+        <Paywall role="client" userId={h.session.user.id} coachId={h.coachId} onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} />
+      </ClientIntlProvider>
     </div>
   )
 
