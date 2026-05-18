@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays, Beef, Wheat, Droplet, X } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
@@ -13,12 +14,7 @@ import {
   fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
 } from '../../../lib/design-tokens'
 import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
-const MEAL_LABELS: Record<string, string> = {
-  petit_dejeuner: 'Petit-déjeuner',
-  dejeuner: 'Déjeuner',
-  collation: 'Collation',
-  diner: 'Dîner',
-}
+// MEAL_LABELS moved inside component to use translations — see getMealLabel()
 const MEAL_TIMES: Record<string, string> = {
   petit_dejeuner: '7h00',
   dejeuner: '12h30',
@@ -40,6 +36,10 @@ interface NutritionTabProps {
 }
 
 export default function NutritionTab({ coachMealPlan, todayKey, setModal, profile, supabase, userId, fetchAll }: NutritionTabProps) {
+  const nt = useTranslations('nutrition_tab')
+  const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
+  const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
+  const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const T = titleStyle
   const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
   const [activeMealPlan, setActiveMealPlan] = useState<any>(null)
@@ -342,10 +342,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🍽️</div>
         <h2 style={{ ...subtitleStyle, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: '0 0 10px' }}>Aucun plan alimentaire</h2>
         <p style={{ ...bodyStyle, fontSize: '0.82rem', margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
-          Configure tes preferences puis genere ton plan IA personnalise.
+          {nt('prefs.configurePrompt')}
         </p>
         <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
-          Configurer mes preferences
+          {nt('prefs.configureCta')}
         </button>
       </div>
     )
@@ -593,11 +593,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* PILLS NAVIGATION */}
       <div style={{ display: 'flex', gap: 6, padding: '12px 20px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {([
-          { id: 'today' as SubTab, label: 'JOURNAL' },
-          { id: 'plan' as SubTab, label: 'PLAN' },
-          ...(!isInvited ? [{ id: 'prefs' as SubTab, label: 'PREFS' }] : []),
-          ...(!isInvited ? [{ id: 'recipes' as SubTab, label: 'RECETTES' }] : []),
-          { id: 'meals' as SubTab, label: 'REPAS' },
+          { id: 'today' as SubTab, label: nt('tabs.journal') },
+          { id: 'plan' as SubTab, label: nt('tabs.plan') },
+          ...(!isInvited ? [{ id: 'prefs' as SubTab, label: nt('tabs.prefs') }] : []),
+          ...(!isInvited ? [{ id: 'recipes' as SubTab, label: nt('tabs.recipes') }] : []),
+          { id: 'meals' as SubTab, label: nt('tabs.meals') },
         ]).map(({ id, label }) => {
           const active = subTab === id
           return (
@@ -825,7 +825,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                             title={!isViewingToday ? 'Disponible uniquement pour aujourd\'hui' : undefined}
                             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(230,195,100,0.15)', backdropFilter: 'blur(8px)', border: `1px solid ${colors.gold}`, color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, transition: 'all 0.15s' }}
                           >
-                            <Download size={14} /> {isInvited ? 'Importer' : 'Import IA'}
+                            <Download size={14} /> {isInvited ? nt('actions.import') : nt('actions.importAI')}
                           </button>
                         )
                       })()}
@@ -915,7 +915,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder="Rechercher un repas..." style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
             {/* Filter pills */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
-              {[{ k: 'all', l: 'TOUT' }, { k: 'petit_dejeuner', l: 'PETIT-DÉJ' }, { k: 'dejeuner', l: 'DÉJEUNER' }, { k: 'diner', l: 'DÎNER' }, { k: 'collation', l: 'COLLATION' }].map(({ k, l }) => (
+              {[{ k: 'all', l: nt('filters.all') }, { k: 'petit_dejeuner', l: nt('filters.breakfast') }, { k: 'dejeuner', l: nt('filters.lunch') }, { k: 'diner', l: nt('filters.dinner') }, { k: 'collation', l: nt('filters.snack') }].map(({ k, l }) => (
                 <button key={k} onClick={() => setMyMealsFilter(k)} style={{
                   fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em',
                   padding: '8px 14px', borderRadius: 10, whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all 0.15s',
@@ -1060,10 +1060,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               setEditMealSaved(true)
               setTimeout(() => setEditMealSaved(false), 2000)
             }} disabled={editMealSaving} style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, marginBottom: 8, opacity: editMealSaving ? 0.6 : 1 }}>
-              {editMealSaving ? 'SAUVEGARDE...' : editMealSaved ? 'SAUVEGARDÉ ✓' : 'SAUVEGARDER'}
+              {editMealSaving ? nt('actions.saving') : editMealSaved ? nt('actions.saved') : nt('actions.save')}
             </button>
             <button onClick={async () => {
-              if (confirm('Supprimer ce repas définitivement ?')) {
+              if (confirm(nt('actions.deleteConfirm'))) {
                 await supabase.from('saved_meals').delete().eq('id', editingMeal.id)
                 setMyMeals(prev => prev.filter(m => m.id !== editingMeal.id))
                 setEditingMeal(null)
@@ -1168,7 +1168,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>COPIER LE REPAS</h3>
             <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>DATE</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-              {[{ l: 'Demain', d: 1 }, { l: '+2j', d: 2 }, { l: '+3j', d: 3 }, { l: '+1 sem', d: 7 }].map(s => {
+              {[{ l: nt('copy.tomorrow'), d: 1 }, { l: nt('copy.plus2d'), d: 2 }, { l: nt('copy.plus3d'), d: 3 }, { l: nt('copy.plus1w'), d: 7 }].map(s => {
                 const dt = new Date(Date.now() + s.d * 86400000).toISOString().split('T')[0]
                 return <button key={s.l} onClick={() => setCopyTargetDate(dt)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetDate === dt ? `1px solid ${colors.gold}` : `1px solid ${colors.goldDim}`, background: copyTargetDate === dt ? colors.goldDim : 'transparent', color: copyTargetDate === dt ? colors.gold : colors.textMuted, fontFamily: fonts.body, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{s.l}</button>
               })}
