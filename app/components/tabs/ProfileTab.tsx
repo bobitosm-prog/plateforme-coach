@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { useTranslations, useLocale } from 'next-intl'
 import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, X, Clock, Calendar, Volume2, User, Cake, Ruler, Target, Activity, ArrowLeft } from 'lucide-react'
 import Paywall from '../Paywall'
 import ClientIntlProvider from '@/components/ClientIntlProvider'
@@ -47,6 +48,8 @@ export default function ProfileTab({
   currentWeight, goalWeight, calorieGoal, coachProgram, coachId, setModal, fetchAll,
   updateReminderSettings, regenerateWeekSchedule, onBack,
 }: ProfileTabProps) {
+  const t = useTranslations('profile')
+  const locale = useLocale()
   const [phoneForm, setPhoneForm] = useState<string>(profile?.phone || '')
   const [phoneEditing, setPhoneEditing] = useState(false)
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle')
@@ -166,7 +169,7 @@ export default function ProfileTab({
       {onBack && (
         <button onClick={onBack} aria-label="Retour a Compte" style={{ padding: '8px 0', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: colors.gold }}>
           <ArrowLeft size={18} />
-          <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Compte</span>
+          <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>{t('badges.backToAccount')}</span>
         </button>
       )}
 
@@ -175,7 +178,7 @@ export default function ProfileTab({
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <button onClick={() => avatarRef.current?.click()} style={{ width: 80, height: 80, borderRadius: '50%', background: displayAvatar ? 'transparent' : colors.surfaceHigh, border: `2px solid ${colors.goldContainer}4d`, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
             {displayAvatar
-              ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt="Photo de profil" />
+              ? <img src={displayAvatar} style={{ width: 80, height: 80, objectFit: 'cover' }} alt={t('avatarAlt')} />
               : <span style={{ fontFamily: fonts.headline, fontWeight: 700, fontSize: 32, color: colors.gold }}>{firstName.charAt(0).toUpperCase()}</span>}
           </button>
           <div style={{ position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderRadius: '50%', background: colors.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => avatarRef.current?.click()}>
@@ -186,14 +189,14 @@ export default function ProfileTab({
         <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: '0.12em', textTransform: 'uppercase' as const, textAlign: 'center', marginBottom: 4 }}>{fullName}</div>
         <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 10 }}>{session.user.email}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 8, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, border: `1px solid ${colors.goldContainer}33`, borderRadius: 999, padding: '4px 10px', letterSpacing: '0.08em' }}>SWISS MADE</span>
+          <span style={{ fontSize: 8, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, border: `1px solid ${colors.goldContainer}33`, borderRadius: 999, padding: '4px 10px', letterSpacing: '0.08em' }}>{t('header.swissMade')}</span>
           {profile?.fitness_level && (
             <span style={{ fontSize: 8, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: colors.goldBorder, border: `1px solid ${colors.gold}4d`, borderRadius: 999, padding: '4px 10px', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{profile.fitness_level}</span>
           )}
         </div>
         {profile?.created_at && (
           <div style={{ fontSize: 8, color: colors.textMuted, letterSpacing: '0.1em' }}>
-            MEMBRE DEPUIS {new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
+            {t('header.memberSince', { date: new Date(profile.created_at).toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase() })}
           </div>
         )}
       </div>
@@ -201,9 +204,9 @@ export default function ProfileTab({
       {/* ═══ SECTION 2 — STATS ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24 }}>
         {[
-          { label: 'POIDS', value: currentWeight || '—', color: colors.gold },
-          { label: 'OBJECTIF', value: goalWeight || '—', color: colors.text },
-          { label: 'KCAL/J', value: calorieGoal || '—', color: colors.gold },
+          { label: t('stats.weight'), value: currentWeight || '—', color: colors.gold },
+          { label: t('stats.goal'), value: goalWeight || '—', color: colors.text },
+          { label: t('stats.kcal'), value: calorieGoal || '—', color: colors.gold },
         ].map(s => (
           <div key={s.label} style={{ ...cardStyle, padding: 14, textAlign: 'center' }}>
             <div style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -214,18 +217,18 @@ export default function ProfileTab({
 
       {/* ═══ SECTION 3 — MON PROFIL ═══ */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={cardTitleAbove}>MON PROFIL</span>
+        <span style={cardTitleAbove}>{t('sections.myProfile')}</span>
         <div style={titleLineStyle} />
       </div>
       <div style={{ ...cardStyle, padding: '4px 16px', marginBottom: 24 }}>
         {[
-          { icon: User, label: 'Prénom', value: firstName },
-          { icon: Cake, label: 'Date de naissance', value: profile?.birth_date ? new Date(profile.birth_date).toLocaleDateString('fr-FR') : '—' },
-          { icon: User, label: 'Genre', value: profile?.gender === 'male' ? 'Homme' : profile?.gender === 'female' ? 'Femme' : '—' },
-          { icon: Ruler, label: 'Taille', value: profile?.height ? `${profile.height} cm` : '—' },
-          { icon: Target, label: 'Poids cible', value: goalWeight ? `${goalWeight} kg` : '—' },
-          { icon: Target, label: 'Objectif', value: ({ mass: 'Prise de masse', cut: 'Sèche', maintain: 'Maintien' } as Record<string, string>)[profile?.objective] || profile?.objective || '—', action: 'objective' },
-          { icon: Activity, label: 'Niveau d\'activité', value: ({ sedentary: 'Sédentaire', light: 'Léger', moderate: 'Modéré', active: 'Actif', extreme: 'Intense' } as Record<string, string>)[profile?.activity_level] || profile?.activity_level || '—', action: 'objective' },
+          { icon: User, label: t('fields.firstName'), value: firstName },
+          { icon: Cake, label: t('fields.birthDate'), value: profile?.birth_date ? new Date(profile.birth_date).toLocaleDateString(locale) : '—' },
+          { icon: User, label: t('fields.gender'), value: profile?.gender === 'male' ? t('fields.male') : profile?.gender === 'female' ? t('fields.female') : '—' },
+          { icon: Ruler, label: t('fields.height'), value: profile?.height ? `${profile.height} cm` : '—' },
+          { icon: Target, label: t('fields.goalWeight'), value: goalWeight ? `${goalWeight} kg` : '—' },
+          { icon: Target, label: t('fields.objective'), value: ({ mass: t('fields.objectives.mass'), cut: t('fields.objectives.cut'), maintain: t('fields.objectives.maintain') } as Record<string, string>)[profile?.objective] || profile?.objective || '—', action: 'objective' },
+          { icon: Activity, label: t('fields.activityLevel'), value: ({ sedentary: t('fields.activityLevels.sedentary'), light: t('fields.activityLevels.light'), moderate: t('fields.activityLevels.moderate'), active: t('fields.activityLevels.active'), extreme: t('fields.activityLevels.extreme') } as Record<string, string>)[profile?.activity_level] || profile?.activity_level || '—', action: 'objective' },
         ].map((row, i, arr) => (
           <React.Fragment key={row.label}>
             <div style={rowStyle} onClick={'action' in row ? () => setModal(row.action as string) : undefined}>
@@ -241,34 +244,34 @@ export default function ProfileTab({
 
       {/* ═══ SECTION 4 — TÉLÉPHONE ═══ */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={cardTitleAbove}>TÉLÉPHONE</span>
+        <span style={cardTitleAbove}>{t('sections.phone')}</span>
         <div style={titleLineStyle} />
       </div>
       <div style={{ ...cardStyle, padding: '14px 16px', marginBottom: 24 }}>
         {phoneEditing ? (
           <div style={{ display: 'flex', gap: 8 }}>
-            <input type="tel" value={phoneForm} onChange={e => setPhoneForm(e.target.value)} placeholder="+41 79 000 00 00"
+            <input type="tel" value={phoneForm} onChange={e => setPhoneForm(e.target.value)} placeholder={t('phone.placeholder')}
               style={{ flex: 1, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.button, padding: '8px 12px', color: colors.text, fontSize: 14, outline: 'none', fontFamily: fonts.body }} />
             <button onClick={savePhone} style={{ background: colors.gold, border: 'none', borderRadius: radii.button, padding: '8px 14px', color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>OK</button>
             <button onClick={() => { setPhoneEditing(false); setPhoneForm(profile?.phone || '') }} style={{ background: colors.surfaceHigh, border: 'none', borderRadius: radii.button, padding: '8px 12px', color: colors.textMuted, fontSize: 12, cursor: 'pointer' }}>✕</button>
           </div>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 14, color: profile?.phone ? colors.text : colors.textMuted }}>{profile?.phone || 'Ajouter un numéro'}</span>
-            <button onClick={() => setPhoneEditing(true)} style={{ background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: radii.button, padding: '4px 10px', color: colors.textMuted, fontSize: 10, cursor: 'pointer', fontFamily: fonts.headline, fontWeight: 700 }}>Modifier</button>
+            <span style={{ fontSize: 14, color: profile?.phone ? colors.text : colors.textMuted }}>{profile?.phone || t('phone.addNumber')}</span>
+            <button onClick={() => setPhoneEditing(true)} style={{ background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: radii.button, padding: '4px 10px', color: colors.textMuted, fontSize: 10, cursor: 'pointer', fontFamily: fonts.headline, fontWeight: 700 }}>{t('phone.edit')}</button>
           </div>
         )}
       </div>
 
       {/* ═══ SECTION 5 — OUTILS ═══ */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={cardTitleAbove}>OUTILS</span>
+        <span style={cardTitleAbove}>{t('sections.tools')}</span>
         <div style={titleLineStyle} />
       </div>
       <div style={{ ...cardStyle, padding: '4px 16px', marginBottom: 24 }}>
         <div style={rowStyle} onClick={() => setModal('bmr')}>
           <div style={iconBoxStyle}><Zap size={14} color={colors.gold} /></div>
-          <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>Calculateur BMR</span>
+          <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('tools.bmrCalculator')}</span>
           <ChevronRight size={12} color="rgba(255,255,255,0.15)" />
         </div>
         {coachProgram && (
@@ -276,7 +279,7 @@ export default function ProfileTab({
             <div style={separatorStyle} />
             <div style={rowStyle} onClick={regenerateWeekSchedule}>
               <div style={iconBoxStyle}><Calendar size={14} color={colors.gold} /></div>
-              <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>Régénérer le planning</span>
+              <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('tools.regenerateSchedule')}</span>
               <ChevronRight size={12} color="rgba(255,255,255,0.15)" />
             </div>
           </>
@@ -285,7 +288,7 @@ export default function ProfileTab({
 
       {/* ═══ SECTION 6 — RAPPELS ═══ */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={cardTitleAbove}>RAPPELS</span>
+        <span style={cardTitleAbove}>{t('sections.reminders')}</span>
         <div style={titleLineStyle} />
       </div>
       <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
@@ -294,8 +297,8 @@ export default function ProfileTab({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={pushEnabled ? colors.success : colors.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <div>
-              <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.text }}>Notifications push</div>
-              <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginTop: 1 }}>Messages du coach + rappels</div>
+              <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.text }}>{t('reminders.pushNotifications')}</div>
+              <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginTop: 1 }}>{t('reminders.pushDescription')}</div>
             </div>
           </div>
           <Toggle active={pushEnabled} onToggle={async () => {
@@ -315,7 +318,7 @@ export default function ProfileTab({
               const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
               const isPWA = window.matchMedia('(display-mode: standalone)').matches
               if (isIOS && !isPWA) {
-                alert('Pour activer les notifications sur iPhone, ajoute d\'abord MoovX a ton ecran d\'accueil : Safari > Partager > Sur l\'ecran d\'accueil')
+                alert(t('reminders.iosAlert'))
                 setPushLoading(false); return
               }
               await enableNotifications()
@@ -330,7 +333,7 @@ export default function ProfileTab({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Bell size={14} color={profile?.reminder_enabled ? colors.success : colors.textMuted} />
-            <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>Rappels seance</span>
+            <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('reminders.sessionReminders')}</span>
           </div>
           <Toggle active={!!profile?.reminder_enabled} onToggle={async () => {
             const newVal = !profile?.reminder_enabled
@@ -345,19 +348,19 @@ export default function ProfileTab({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Volume2 size={14} color={timerSound ? colors.success : colors.textMuted} />
-            <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>Son du timer</span>
+            <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('reminders.timerSound')}</span>
           </div>
           <Toggle active={timerSound} onToggle={() => { const next = !timerSound; setTimerSound(next); setTimerSoundEnabled(next) }} />
         </div>
         {/* Training time */}
-        <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', marginBottom: 8, marginTop: 14 }}>HEURE D&apos;ENTRAÎNEMENT</div>
+        <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', marginBottom: 8, marginTop: 14 }}>{t('reminders.trainingTime')}</div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
           {['06:00', '08:00', '12:00', '17:00', '19:00'].map(time => (
             <Pill key={time} label={time} active={(profile?.preferred_training_time || '08:00') === time} onClick={() => updateReminderSettings({ preferred_training_time: time })} />
           ))}
         </div>
         {/* Reminder delay */}
-        <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', marginBottom: 8 }}>RAPPEL AVANT SÉANCE</div>
+        <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', marginBottom: 8 }}>{t('reminders.reminderBefore')}</div>
         <div style={{ display: 'flex', gap: 6 }}>
           {[{ label: '15 min', value: 15 }, { label: '30 min', value: 30 }, { label: '1h', value: 60 }].map(opt => (
             <Pill key={opt.value} label={opt.label} active={(profile?.reminder_minutes_before ?? 30) === opt.value} onClick={() => updateReminderSettings({ reminder_minutes_before: opt.value })} />
@@ -367,11 +370,10 @@ export default function ProfileTab({
         {profile?.reminder_enabled && (
           <div style={{ background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, padding: 10, marginTop: 14 }}>
             <span style={{ ...mutedStyle, fontSize: 10 }}>
-              Rappel à{' '}
-              <strong style={{ color: colors.text }}>
-                {(() => { const [h, m] = (profile?.preferred_training_time || '08:00').split(':').map(Number); const t = h * 60 + m - (profile?.reminder_minutes_before ?? 30); return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}` })()}
-              </strong>
-              {' '}pour ta séance de <strong style={{ color: colors.text }}>{profile?.preferred_training_time || '08:00'}</strong>
+              {t('reminders.reminderPreview', {
+                time: (() => { const [h, m] = (profile?.preferred_training_time || '08:00').split(':').map(Number); const tt = h * 60 + m - (profile?.reminder_minutes_before ?? 30); return `${String(Math.floor(tt / 60)).padStart(2, '0')}:${String(tt % 60).padStart(2, '0')}` })(),
+                sessionTime: profile?.preferred_training_time || '08:00',
+              })}
             </span>
           </div>
         )}
@@ -381,7 +383,7 @@ export default function ProfileTab({
       {coachProgram && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <span style={cardTitleAbove}>MON COACH</span>
+            <span style={cardTitleAbove}>{t('sections.myCoach')}</span>
             <div style={titleLineStyle} />
           </div>
           <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
@@ -389,9 +391,9 @@ export default function ProfileTab({
               <Crown size={18} color={colors.gold} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 700, color: colors.text }}>Coach</div>
-                <div style={{ ...mutedStyle, fontSize: 10 }}>Coach actif</div>
+                <div style={{ ...mutedStyle, fontSize: 10 }}>{t('coach.activeStatus')}</div>
               </div>
-              <span style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 999, padding: '4px 8px' }}>ACTIF</span>
+              <span style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 999, padding: '4px 8px' }}>{t('coach.active')}</span>
             </div>
           </div>
         </>
@@ -399,7 +401,7 @@ export default function ProfileTab({
 
       {/* ═══ SECTION 8 — MON ABONNEMENT ═══ */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={cardTitleAbove}>MON ABONNEMENT</span>
+        <span style={cardTitleAbove}>{t('sections.subscription')}</span>
         <div style={titleLineStyle} />
       </div>
       <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
@@ -407,39 +409,39 @@ export default function ProfileTab({
           const st = profile?.subscription_status
           const subType = profile?.subscription_type
           const days = profile?.subscription_end_date ? Math.max(0, Math.ceil((new Date(profile.subscription_end_date).getTime() - Date.now()) / 86400000)) : 0
-          const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date).toLocaleDateString('fr-FR') : ''
+          const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date).toLocaleDateString(locale) : ''
 
           if (st === 'lifetime') return (
             <div>
-              <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>Accès à vie</span>
-              <p style={{ fontSize: 12, color: colors.text, margin: 0, lineHeight: 1.6 }}>Accès permanent à toutes les fonctionnalités MoovX.</p>
+              <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{t('subscription.lifetime')}</span>
+              <p style={{ fontSize: 12, color: colors.text, margin: 0, lineHeight: 1.6 }}>{t('subscription.lifetimeDesc')}</p>
             </div>
           )
 
           if (st === 'invited' || subType === 'invited') return (
             <div>
-              <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>Accès Coach</span>
-              <p style={{ fontSize: 12, color: colors.text, margin: 0 }}>Ton accès est inclus via ton coach.</p>
+              <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{t('subscription.coachAccess')}</span>
+              <p style={{ fontSize: 12, color: colors.text, margin: 0 }}>{t('subscription.coachAccessDesc')}</p>
             </div>
           )
 
           if (st === 'active') {
-            const planLabel = subType === 'client_yearly' ? 'Plan Annuel — CHF 80/an' : subType === 'coach_monthly' ? 'Coach Pro — CHF 50/mois' : 'Plan Mensuel — CHF 10/mois'
+            const planLabel = subType === 'client_yearly' ? t('subscription.planYearly') : subType === 'coach_monthly' ? t('subscription.planCoach') : t('subscription.planMonthly')
             return (
               <div>
                 <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{planLabel}</span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
                   <span style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 800, color: colors.text }}>{days}</span>
-                  <span style={{ ...mutedStyle, fontSize: 12 }}>jours restants</span>
+                  <span style={{ ...mutedStyle, fontSize: 12 }}>{t('subscription.daysRemaining', { days: '' }).trimStart()}</span>
                 </div>
-                <div style={{ ...mutedStyle, fontSize: 10, marginBottom: days <= 7 ? 10 : 0 }}>Renouvellement le {endDate}</div>
+                <div style={{ ...mutedStyle, fontSize: 10, marginBottom: days <= 7 ? 10 : 0 }}>{t('subscription.renewalDate', { date: endDate })}</div>
                 {days <= 7 && (
                   <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', borderRadius: 12, padding: 10, marginBottom: 10 }}>
-                    <span style={{ fontSize: 10, color: 'rgba(239,68,68,0.6)' }}>Ton abonnement expire bientôt</span>
+                    <span style={{ fontSize: 10, color: 'rgba(239,68,68,0.6)' }}>{t('subscription.expiringSoon')}</span>
                   </div>
                 )}
                 <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: 12, borderRadius: radii.button, background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer', textTransform: 'uppercase' as const, marginTop: 4 }}>
-                  GÉRER MON ABONNEMENT
+                  {t('subscription.manageSubscription')}
                 </button>
               </div>
             )
@@ -447,9 +449,9 @@ export default function ProfileTab({
 
           return (
             <div>
-              <p style={{ ...mutedStyle, fontSize: 12, margin: '0 0 14px', lineHeight: 1.5 }}>Abonne-toi pour accéder à toutes les fonctionnalités.</p>
+              <p style={{ ...mutedStyle, fontSize: 12, margin: '0 0 14px', lineHeight: 1.5 }}>{t('subscription.subscribePrompt')}</p>
               <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: 14, background: colors.gold, border: 'none', borderRadius: radii.button, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.08em' }}>
-                S&apos;abonner — Dès CHF 10/mois
+                {t('subscription.subscribeCta')}
               </button>
             </div>
           )
@@ -480,10 +482,10 @@ export default function ProfileTab({
         return (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={cardTitleAbove}>MES BADGES</span>
+              <span style={cardTitleAbove}>{t('sections.badges')}</span>
               <div style={titleLineStyle} />
               <span style={{ ...labelStyle, fontSize: 10 }}>{earnedBadges.length}/{allBadges.length}</span>
-              <button onClick={() => setShowBadgesModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.08em' }}>VOIR TOUT →</button>
+              <button onClick={() => setShowBadgesModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.08em' }}>{t('badges.viewAll')}</button>
             </div>
             <div style={{ ...cardStyle, padding: 16, marginBottom: 8 }}>
               {/* Level bar */}
@@ -506,7 +508,7 @@ export default function ProfileTab({
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                  <span style={{ fontSize: 10, color: colors.textMuted }}>Complète des actions pour débloquer des badges !</span>
+                  <span style={{ fontSize: 10, color: colors.textMuted }}>{t('badges.emptyState')}</span>
                 </div>
               )}
             </div>
@@ -531,7 +533,7 @@ export default function ProfileTab({
       {/* ═══ SECTION 11 — ZONE DANGER ═══ */}
       <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
         style={{ width: '100%', padding: 16, borderRadius: radii.button, background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer', textTransform: 'uppercase' as const, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 24 }}>
-        <LogOut size={16} /> DÉCONNEXION
+        <LogOut size={16} /> {t('logout')}
       </button>
       <DeleteAccountSection session={session} />
     </div>
