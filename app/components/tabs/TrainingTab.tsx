@@ -9,6 +9,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { addXP, updateStreak } from '../../../lib/gamification'
 import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
+import { findExerciseMatch } from '../../../lib/exercise-matching'
 import { useBeforeUnload } from '../../hooks/useBeforeUnload'
 import {
   Dumbbell, Search, Award, Moon, ChevronRight, ChevronLeft, X, BookOpen,
@@ -172,8 +173,13 @@ export default function TrainingTab({
   })
 
   const trainingExercises: any[] = [...resolvedExercises, ...addedExercises].map((ex: any) => {
-    const dbMatch = exercisesCache.find((d: any) => d.name?.toLowerCase() === ex.name?.toLowerCase())
-    return dbMatch?.gif_url ? { ...ex, gif_url: dbMatch.gif_url } : ex
+    const dbMatch = findExerciseMatch(exercisesCache, ex.name)
+    if (!dbMatch) return ex
+    return {
+      ...ex,
+      gif_url: dbMatch.gif_url ?? ex.gif_url,
+      video_url: dbMatch.video_url ?? ex.video_url,
+    }
   })
 
   const trainingTotalSets = trainingExercises.reduce((s: number, ex: any) => {
