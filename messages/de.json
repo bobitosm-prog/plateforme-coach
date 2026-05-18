@@ -1265,5 +1265,52 @@
       "noData": "Keine Daten",
       "noRecords": "Keine Rekorde"
     }
+  },
+  "nutrition_tab": {
+    "meals": {
+      "breakfast": "Frühstück",
+      "lunch": "Mittagessen",
+      "snack": "Snack",
+      "dinner": "Abendessen"
+    },
+    "macros": {
+      "kcal": "Kcal",
+      "protein": "Prot",
+      "carbs": "Kohlenh.",
+      "fat": "Fett"
+    },
+    "tabs": {
+      "journal": "TAGEBUCH",
+      "plan": "PLAN",
+      "prefs": "EINST.",
+      "recipes": "REZEPTE",
+      "meals": "MAHLZEITEN"
+    },
+    "filters": {
+      "all": "ALLE",
+      "breakfast": "FRÜHSTÜCK",
+      "lunch": "MITTAG",
+      "dinner": "ABEND",
+      "snack": "SNACK"
+    },
+    "actions": {
+      "importAI": "KI-Import",
+      "import": "Importieren",
+      "save": "SPEICHERN",
+      "saving": "WIRD GESPEICHERT...",
+      "saved": "GESPEICHERT ✓",
+      "deleteConfirm": "Diese Mahlzeit dauerhaft löschen?",
+      "onlyToday": "Nur für heute verfügbar"
+    },
+    "copy": {
+      "tomorrow": "Morgen",
+      "plus2d": "+2T",
+      "plus3d": "+3T",
+      "plus1w": "+1 Woche"
+    },
+    "prefs": {
+      "configurePrompt": "Konfiguriere deine Einstellungen und erstelle dann deinen personalisierten KI-Plan.",
+      "configureCta": "Meine Einstellungen konfigurieren"
+    }
   }
 }

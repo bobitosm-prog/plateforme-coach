@@ -1265,5 +1265,52 @@
       "noData": "No data",
       "noRecords": "No records"
     }
+  },
+  "nutrition_tab": {
+    "meals": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "snack": "Snack",
+      "dinner": "Dinner"
+    },
+    "macros": {
+      "kcal": "Kcal",
+      "protein": "Prot",
+      "carbs": "Carbs",
+      "fat": "Fat"
+    },
+    "tabs": {
+      "journal": "JOURNAL",
+      "plan": "PLAN",
+      "prefs": "PREFS",
+      "recipes": "RECIPES",
+      "meals": "MEALS"
+    },
+    "filters": {
+      "all": "ALL",
+      "breakfast": "BREAKFAST",
+      "lunch": "LUNCH",
+      "dinner": "DINNER",
+      "snack": "SNACK"
+    },
+    "actions": {
+      "importAI": "AI Import",
+      "import": "Import",
+      "save": "SAVE",
+      "saving": "SAVING...",
+      "saved": "SAVED ✓",
+      "deleteConfirm": "Delete this meal permanently?",
+      "onlyToday": "Available for today only"
+    },
+    "copy": {
+      "tomorrow": "Tomorrow",
+      "plus2d": "+2d",
+      "plus3d": "+3d",
+      "plus1w": "+1 week"
+    },
+    "prefs": {
+      "configurePrompt": "Configure your preferences then generate your personalized AI plan.",
+      "configureCta": "Configure my preferences"
+    }
   }
 }
