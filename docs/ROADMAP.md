@@ -101,7 +101,7 @@ Reste :
   - [ ] TrainingTab couche 2/3 — modals, exercise cards, program builder (~100+ cles)
   - [ ] HomeTab + 12 sub-components (~150+ cles)
   - [ ] NutritionTab
-  - [ ] ProgressTab
+  - [x] ProgressTab parent — pills, sections, dates (23 cles)
 - [x] ProfileTab + CoachSection + PaymentHistory + DeleteAccountSection (86 cles)
 - [x] ChatTab Athena (33 cles, suggestions + prompts localises)
 - [ ] Dashboard coach (~925 lignes)
@@ -242,7 +242,7 @@ Rebrand Athena             100%  code + Stripe Dashboard
 Securite Stripe            100%  (webhook dedup, idempotency, headers CSP/HSTS)
 Legal nLPD/RGPD            100%  (CGU, Privacy, CookieConsent, checkboxes checkout)
 Rate limiting IA           100%  (3 endpoints, fail-open, headers RFC)
-App auth i18n               38%  (11/~35 ecrans, 533/~1400 cles estimees)
+App auth i18n               40%  (12/~35 ecrans, 556/~1400 cles estimees)
 App auth LocaleSelector    100%  (Compte > Preferences, DB + cookie sync)
 Stack tech                 100%  (Next 16, Tailwind 4, Supabase, Stripe live)
 PWA                        100%
