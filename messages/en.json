@@ -1115,5 +1115,62 @@
     },
     "logout": "LOG OUT",
     "avatarAlt": "Profile photo"
+  },
+  "chat": {
+    "header": {
+      "title": "MOOVX COACH",
+      "online": "ONLINE"
+    },
+    "summary": {
+      "title": "YOUR SUMMARY",
+      "kg": "KG",
+      "kcalDay": "KCAL/DAY",
+      "sessions": "SESSIONS"
+    },
+    "invited": {
+      "title": "AI COACH",
+      "message": "Your coach manages your program and nutrition. Contact them directly via messaging.",
+      "close": "CLOSE"
+    },
+    "suggestions": {
+      "title": "QUICK SUGGESTIONS",
+      "cards": {
+        "0": {
+          "label": "What to eat tonight?",
+          "sub": "Based on your macros",
+          "msg": "What should I eat tonight based on my remaining macros?"
+        },
+        "1": {
+          "label": "Optimize my session",
+          "sub": "Tips for tomorrow",
+          "msg": "How can I optimize my next training session?"
+        },
+        "2": {
+          "label": "Recovery",
+          "sub": "Rest and stretching",
+          "msg": "What recovery and stretching exercises do you recommend?"
+        },
+        "3": {
+          "label": "My weekly review",
+          "sub": "Summary and advice",
+          "msg": "Give me a review of my week with advice for the next one."
+        }
+      },
+      "pills": {
+        "0": "Post-training meal?",
+        "1": "How much protein?",
+        "2": "Replace an exercise",
+        "3": "My macros tonight?",
+        "4": "Muscle plateau"
+      }
+    },
+    "welcome": "Hi {firstName}! {calorieContext}Ask me anything about your nutrition, training, or goals.",
+    "welcomeCalorie": "Your goal is {calorieGoal} kcal/day. ",
+    "loading": "Loading conversation...",
+    "input": {
+      "placeholder": "Ask your question..."
+    },
+    "clearConfirm": "Clear the entire conversation? This action is irreversible.",
+    "clearLabel": "Clear conversation"
   }
 }

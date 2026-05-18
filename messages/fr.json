@@ -1115,5 +1115,62 @@
     },
     "logout": "DÉCONNEXION",
     "avatarAlt": "Photo de profil"
+  },
+  "chat": {
+    "header": {
+      "title": "COACH MOOVX",
+      "online": "EN LIGNE"
+    },
+    "summary": {
+      "title": "TON RÉSUMÉ",
+      "kg": "KG",
+      "kcalDay": "KCAL/J",
+      "sessions": "SÉANCES"
+    },
+    "invited": {
+      "title": "COACH IA",
+      "message": "Ton coach gère ton programme et ta nutrition. Contacte-le directement via la messagerie.",
+      "close": "FERMER"
+    },
+    "suggestions": {
+      "title": "SUGGESTIONS RAPIDES",
+      "cards": {
+        "0": {
+          "label": "Que manger ce soir ?",
+          "sub": "Basé sur tes macros",
+          "msg": "Que manger ce soir en fonction de mes macros restantes ?"
+        },
+        "1": {
+          "label": "Optimiser ma séance",
+          "sub": "Tips pour demain",
+          "msg": "Comment optimiser ma prochaine séance d'entraînement ?"
+        },
+        "2": {
+          "label": "Récupération",
+          "sub": "Repos et stretching",
+          "msg": "Quels exercices de récupération et stretching me recommandes-tu ?"
+        },
+        "3": {
+          "label": "Mon bilan semaine",
+          "sub": "Résumé et conseils",
+          "msg": "Fais-moi un bilan de ma semaine avec des conseils pour la suivante."
+        }
+      },
+      "pills": {
+        "0": "Repas post-training ?",
+        "1": "Combien de protéines ?",
+        "2": "Remplacer un exercice",
+        "3": "Mes macros ce soir ?",
+        "4": "Plateau musculaire"
+      }
+    },
+    "welcome": "Salut {firstName} ! {calorieContext}Pose-moi une question sur ta nutrition, ton entraînement ou tes objectifs.",
+    "welcomeCalorie": "Ton objectif est de {calorieGoal} kcal/jour. ",
+    "loading": "Chargement de la conversation...",
+    "input": {
+      "placeholder": "Pose ta question..."
+    },
+    "clearConfirm": "Effacer toute la conversation ? Cette action est irréversible.",
+    "clearLabel": "Effacer la conversation"
   }
 }

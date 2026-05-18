@@ -1115,5 +1115,62 @@
     },
     "logout": "ABMELDEN",
     "avatarAlt": "Profilfoto"
+  },
+  "chat": {
+    "header": {
+      "title": "MOOVX COACH",
+      "online": "ONLINE"
+    },
+    "summary": {
+      "title": "DEINE ZUSAMMENFASSUNG",
+      "kg": "KG",
+      "kcalDay": "KCAL/TAG",
+      "sessions": "EINHEITEN"
+    },
+    "invited": {
+      "title": "KI-COACH",
+      "message": "Dein Coach verwaltet dein Programm und deine Ernährung. Kontaktiere ihn direkt über die Nachrichten.",
+      "close": "SCHLIESSEN"
+    },
+    "suggestions": {
+      "title": "SCHNELLE VORSCHLÄGE",
+      "cards": {
+        "0": {
+          "label": "Was heute Abend essen?",
+          "sub": "Basierend auf deinen Makros",
+          "msg": "Was soll ich heute Abend essen basierend auf meinen verbleibenden Makros?"
+        },
+        "1": {
+          "label": "Einheit optimieren",
+          "sub": "Tipps für morgen",
+          "msg": "Wie kann ich meine nächste Trainingseinheit optimieren?"
+        },
+        "2": {
+          "label": "Erholung",
+          "sub": "Ruhe und Dehnung",
+          "msg": "Welche Erholungs- und Dehnübungen empfiehlst du mir?"
+        },
+        "3": {
+          "label": "Mein Wochenrückblick",
+          "sub": "Zusammenfassung und Tipps",
+          "msg": "Mach mir einen Rückblick meiner Woche mit Tipps für die nächste."
+        }
+      },
+      "pills": {
+        "0": "Post-Training Mahlzeit?",
+        "1": "Wie viel Protein?",
+        "2": "Übung ersetzen",
+        "3": "Meine Makros heute Abend?",
+        "4": "Muskelplateau"
+      }
+    },
+    "welcome": "Hallo {firstName}! {calorieContext}Stelle mir eine Frage zu deiner Ernährung, deinem Training oder deinen Zielen.",
+    "welcomeCalorie": "Dein Ziel ist {calorieGoal} kcal/Tag. ",
+    "loading": "Unterhaltung wird geladen...",
+    "input": {
+      "placeholder": "Stelle deine Frage..."
+    },
+    "clearConfirm": "Gesamte Unterhaltung löschen? Diese Aktion ist unwiderruflich.",
+    "clearLabel": "Unterhaltung löschen"
   }
 }
