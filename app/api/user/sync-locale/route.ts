@@ -33,6 +33,7 @@ export async function POST() {
       path: '/',
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
+      ...(process.env.NODE_ENV === 'production' && { domain: 'moovx.ch' }),
     })
     return response
   } catch (e: unknown) {
