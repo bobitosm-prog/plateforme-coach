@@ -2,6 +2,47 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// ===== Host-based redirect helpers (dead code until wired in) =====
+const MARKETING_HOSTS = ['moovx.ch', 'www.moovx.ch']
+const APP_HOST = 'app.moovx.ch'
+
+function isLandingPath(pathname: string): boolean {
+  // Pages localisées : /fr/landing, /en/cgu, /de/privacy
+  if (/^\/(fr|en|de)\/(landing|cgu|privacy)/.test(pathname)) return true
+  // Pages légales racine (legacy)
+  if (pathname === '/cgu' || pathname === '/privacy') return true
+  // SEO files
+  if (pathname === '/sitemap.xml' || pathname === '/robots.txt') return true
+  return false
+}
+
+function getHostRedirect(request: NextRequest): NextResponse | null {
+  const host = request.headers.get('host') || ''
+  const pathname = request.nextUrl.pathname
+  const search = request.nextUrl.search
+
+  const isMarketingHost = MARKETING_HOSTS.includes(host)
+  const isAppHost = host === APP_HOST
+
+  // En dev (localhost) ou preview Vercel (xxx.vercel.app) → no-op
+  if (!isMarketingHost && !isAppHost) return null
+
+  const isLanding = isLandingPath(pathname)
+
+  // Cas 1 : sur app.moovx.ch mais path landing → renvoyer sur moovx.ch
+  if (isAppHost && isLanding) {
+    return NextResponse.redirect(`https://moovx.ch${pathname}${search}`, 308)
+  }
+
+  // Cas 2 : sur moovx.ch mais path app
+  // Exception : pathname === '/' est géré par la logique aval
+  if (isMarketingHost && !isLanding && pathname !== '/') {
+    return NextResponse.redirect(`https://app.moovx.ch${pathname}${search}`, 308)
+  }
+
+  return null
+}
+
 const PROTECTED: Record<string, string[]> = {
   '/coach': ['coach', 'super_admin'],
   '/client': ['coach', 'super_admin'],
