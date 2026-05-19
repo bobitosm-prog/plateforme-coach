@@ -4,6 +4,111 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-19 — Sprint Launch Prep Phase 1 (Domain Split) — partial (~3h)
+
+### Objectif
+Préparer le split landing/app entre `moovx.ch` (marketing) et
+`app.moovx.ch` (app authentifiée). Phase 1 sur 3 du sprint Launch Prep.
+
+### Realisations (Phase 1.A → 1.D.1)
+
+**1.A — Refacto SEO**
+- `lib/seo.ts` : `SITE_URL` lit `NEXT_PUBLIC_SITE_URL` avec fallback `https://moovx.ch`
+- Symétrie avec `NEXT_PUBLIC_APP_URL`
+
+**1.B — Env vars**
+- Ajout `NEXT_PUBLIC_SITE_URL=https://moovx.ch` dans `.env.example`,
+  `.env.local`, Vercel (production + preview + development)
+- Validé localement : `curl /sitemap.xml` retourne bien `https://moovx.ch`
+
+**1.C — Cookie NEXT_LOCALE cross-subdomain**
+- Décision stratégique : auth Supabase **isolée** par host (least privilege),
+  `NEXT_LOCALE` **partagé** sur `.moovx.ch` (UX cohérente)
+- Patch 2 routes : `app/api/user/locale/route.ts` + `app/api/user/sync-locale/route.ts`
+- Pattern : `...(NODE_ENV === 'production' && { domain: 'moovx.ch' })`
+- Garde-fou localhost preservé (le `domain` n'est posé qu'en prod)
+- Validé visuellement DevTools : cookie `Domain=localhost` en dev ✅
+
+**1.D.1 — Helpers proxy host-based (dead code)**
+- Constantes `MARKETING_HOSTS = ['moovx.ch', 'www.moovx.ch']`, `APP_HOST`
+- Helper pur `isLandingPath()` : détermine si un path appartient à la landing
+- Helper pur `getHostRedirect()` : retourne un redirect 308 host-based ou null
+- Code mort : helpers pas encore appelés dans le middleware
+
+### Decisions architecturales
+
+- **Routing strategy : Option B** (split `moovx.ch` + `app.moovx.ch`)
+  - Pattern standard SaaS, séparation marketing/produit
+  - Headers de sécurité plus stricts possibles sur `app.`
+- **Cookies** : auth isolée par host, locale partagée cross-subdomain
+- **Mécanisme split** : middleware Next.js étendu, pas `next.config.ts` rewrites
+  - Centralisé, edge runtime, debug facile
+- **Helper séparé** `getHostRedirect()` : code testable mentalement, early-return en début de middleware pour économiser l'init Supabase
+
+### Bug détecté + résolu : transformation Markdown du terminal
+
+Lors de l'écriture du code par Claude Code, la string `'www.moovx.ch'`
+a été transformée silencieusement en `'[www.moovx.ch](https://www.moovx.ch)'`
+(format Markdown). tsc ne l'attrape pas (string valide), mais à l'exécution
+`MARKETING_HOSTS.includes('www.moovx.ch')` aurait retourné false.
+
+Cause racine : terminal/clipboard avec auto-formatting Markdown qui
+interprète les URLs au paste.
+
+Fix : édition directe via sed (regex échappée pour ne pas re-pase l'URL).
+Validation finale via `od -c` (vue binaire indiscutable).
+
+Apprentissage Senior consigné :
+- Pour les strings sensibles (URLs, regex), éviter le paste depuis Markdown
+- Pour valider un fichier en cas de doute, utiliser `od -c` ou `xxd`
+- Ne pas faire confiance à Claude Code quand il dit "le fichier est correct"
+  alors qu'on doute : valider au niveau binaire
+
+### Reste à faire — Phase 1 (prochaine session ~2-3h)
+
+- [ ] **1.D.2** Câbler `getHostRedirect()` en tout début du middleware (early return)
+- [ ] **1.D.3** Étendre le matcher du middleware avec regex inversée
+      (`/((?!_next/static|_next/image|favicon.ico|...).*)`)
+- [ ] **1.D.4** Tests locaux via `curl -H "Host: app.moovx.ch"` (simulation)
+- [ ] **1.E** Config Cloudflare DNS : CNAME `app` → `cname.vercel-dns.com`
+- [ ] **1.F** Config Vercel : ajouter `app.moovx.ch` dans Domains
+- [ ] **1.G** Config Supabase : Redirect URLs + CORS pour `https://app.moovx.ch`
+- [ ] **1.H** Validation prod : magic link, login, paywall Stripe end-to-end
+
+### Reste à faire — Phase 2 (Sprint Launch Prep)
+
+- [ ] **Phase 2** : RLS audit Supabase (script SQL cross-tenant)
+- [ ] **Phase 3** : Delete account RPC transactionnel (15+ tables)
+
+### Dette technique consciente
+
+- **Bug pré-existant proxy.ts** : early-returns (lignes 65, 77, 81, 84, 95, 108, 109)
+  créent un `NextResponse.redirect()` qui ne porte pas les cookies Supabase
+  mis à jour. Race condition rare (refresh token pendant redirect → re-login).
+  À traiter dans un sprint dédié `fix(proxy): preserve auth cookies in redirects`.
+- **4 stashes Git accumulés** (`stash@{0..3}`) — 1 récent + 3 anciens.
+  Session "git hygiene" 15 min à planifier (revue + drop ou apply).
+- **Cas `app.moovx.ch/` non loggué** non géré : redirige vers `/fr/landing`
+  sur `app.moovx.ch` au lieu de `moovx.ch`. Pas bloquant, à traiter avec un
+  redirect aval dans 1.D.2.
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 1 | 59e1c75 | config(env): add NEXT_PUBLIC_SITE_URL |
+| 2 | a15dfaa | refactor(seo): SITE_URL reads env var with fallback |
+| 3 | 48b4cd6 | feat(cookies): share NEXT_LOCALE across .moovx.ch subdomains |
+| 4 | 2878578 | feat(proxy): add host-based redirect helpers (dead code) |
+
+### Stash mis de côté
+- `stash@{0}` (créé aujourd'hui) : suppression de 9 fichiers vidéo curl
+  dans `public/videos/exercises/` (vidéos servies depuis Supabase Storage
+  depuis hier soir, fichiers locaux obsolètes) + `.claude/settings.local.json`,
+  `.exercise-media-sync.json`, `package-lock.json`.
+  À traiter dans un commit dédié `chore(videos): remove local files migrated to Supabase Storage`.
+
+---
+
 ## 2026-05-18 — Performance + i18n Sprint 5A-5J (~8h)
 
 ### Sprint Performance (~2h)

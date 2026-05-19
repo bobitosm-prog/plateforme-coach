@@ -1,6 +1,6 @@
 # MoovX — ROADMAP
 
-> **Derniere mise a jour** : 17 mai 2026, post-Sprint 4b LocaleSelector
+> **Derniere mise a jour** : 19 mai 2026, Sprint Launch Prep Phase 1
 > **Version actuelle** : v2.8.0
 > **Status** : Production live, 0 clients payants, Stripe `sk_LIVE`
 
@@ -69,8 +69,30 @@
 
 ## TODO IMMEDIAT — Avant premiers clients
 
-### Architecture domaine
-- [ ] Decider strategie `moovx.ch` vs `app.moovx.ch`
+### Sprint Launch Prep (en cours, 2026-05-19+)
+
+**Phase 1 — Split landing/app sur deux domaines** (4/8 sous-étapes ✅)
+- [x] 1.A Refacto `lib/seo.ts` env var
+- [x] 1.B Ajout `NEXT_PUBLIC_SITE_URL` (3 environnements)
+- [x] 1.C Cookie `NEXT_LOCALE` cross-subdomain (`.moovx.ch`)
+- [x] 1.D.1 Helpers `getHostRedirect()` dans `proxy.ts` (dead code)
+- [ ] 1.D.2 Câbler helpers dans le middleware (early return)
+- [ ] 1.D.3 Étendre le matcher avec regex inversée
+- [ ] 1.D.4 Tests locaux via curl avec Host header
+- [ ] 1.E Cloudflare DNS : CNAME `app` → `cname.vercel-dns.com`
+- [ ] 1.F Vercel : ajouter `app.moovx.ch` dans Domains
+- [ ] 1.G Supabase : Redirect URLs + CORS pour `app.moovx.ch`
+- [ ] 1.H Validation prod E2E (magic link, login, paywall)
+
+**Phase 2 — RLS audit Supabase**
+- [ ] Script SQL cross-tenant (coach A ne voit pas client B)
+- [ ] Fix policies trouées sur tables critiques (profiles, payments, bug_reports)
+- [ ] Documenter policies par table
+
+**Phase 3 — Delete account RPC transactionnel**
+- [ ] Migration `delete_user_account(uuid)` PL/pgSQL
+- [ ] Refacto route API pour appeler le RPC
+- [ ] Tests rollback (suppression échoue au milieu)
 
 ---
 
