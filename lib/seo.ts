@@ -1,7 +1,7 @@
 // lib/seo.ts
 // Helper centralisé pour metadata SEO multilingue
 
-export const SITE_URL = 'https://moovx.ch';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://moovx.ch';
 export const LOCALES = ['fr', 'en', 'de'] as const;
 export const DEFAULT_LOCALE = 'fr';
 export type Locale = (typeof LOCALES)[number];
