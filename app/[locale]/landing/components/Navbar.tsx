@@ -19,7 +19,10 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
 
   const setLocaleCookie = (code: string) => {
-    document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
+    const isProduction = process.env.NODE_ENV === 'production'
+    const domainPart = isProduction ? '; domain=moovx.ch' : ''
+    const securePart = isProduction ? '; Secure' : ''
+    document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax${domainPart}${securePart}`
   }
 
   useEffect(() => {
