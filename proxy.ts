@@ -168,5 +168,16 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/coach/:path*', '/client/:path*'],
+  matcher: [
+    /*
+     * Match all routes EXCEPT:
+     * - _next/static (Next.js compiled assets)
+     * - _next/image (Next.js image optimization)
+     * - favicon.ico, og-image.jpg (root static files)
+     * - manifest.json (PWA manifest)
+     * - icon-*.png (PWA icons)
+     * - sw.js, workbox-*.js (service worker)
+     */
+    '/((?!_next/static|_next/image|favicon\\.ico|og-image\\.jpg|manifest\\.json|icon-.*\\.png|sw\\.js|workbox-.*\\.js).*)',
+  ],
 }
