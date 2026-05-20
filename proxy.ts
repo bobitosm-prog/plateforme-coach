@@ -77,6 +77,10 @@ function detectLocale(request: NextRequest): string {
 }
 
 export async function proxy(request: NextRequest) {
+  // Host-based redirect (split landing/app domains)
+  const hostRedirect = getHostRedirect(request)
+  if (hostRedirect) return hostRedirect
+
   const response = NextResponse.next({
     request: { headers: request.headers },
   })
