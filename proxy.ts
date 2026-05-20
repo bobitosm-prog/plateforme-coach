@@ -81,6 +81,17 @@ export async function proxy(request: NextRequest) {
   const hostRedirect = getHostRedirect(request)
   if (hostRedirect) return hostRedirect
 
+  // Skip Supabase middleware for routes that don't need it
+  const pathname = request.nextUrl.pathname
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/') ||
+    pathname === '/sitemap.xml' ||
+    pathname === '/robots.txt'
+  ) {
+    return NextResponse.next()
+  }
+
   const response = NextResponse.next({
     request: { headers: request.headers },
   })
@@ -100,7 +111,6 @@ export async function proxy(request: NextRequest) {
   )
 
   const { data: { session } } = await supabase.auth.getSession()
-  const { pathname } = request.nextUrl
 
   // ===== ROOT PATH: locale detection for non-auth visitors =====
   if (pathname === '/' && !session) {
