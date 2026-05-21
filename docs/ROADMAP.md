@@ -90,13 +90,15 @@ Phase 2 — RLS audit Supabase
 - [x] Tier 1 audité : profiles, payments, progress_photos,
       body_measurements, messages, coach_clients, bug_reports,
       push_subscriptions
-- [x] 2 bugs critiques fixés en prod (USING: true sur photos et mesures)
-- [ ] Tier 2 audit (~30 min) : weight_logs, meal_plans, daily_food_logs,
-      meal_tracking, coach_notes, custom_programs, workout_sessions, etc.
-- [ ] Tier 3 audit light (~15 min) : exercises_db, fitness_foods, recipes,
-      etc.
-- [ ] Bug #3 coach_clients self-insert (~15-20 min, dette moyenne)
-- [ ] Cleanup doublons RLS (~1h, dette cosmétique)
+- [x] Tier 2 audité : 17 tables personnelles (meal_*, daily_*,
+      body_*, cardio_*, chat_*, client_*, etc.)
+- [x] 5 bugs critiques fixés en prod (USING: true sur photos,
+      mesures, meal_logs, meal_plans, meal_tracking)
+- [ ] Tier 3 audit light (~15 min) : tables de référence
+      (probablement déjà OK, juste à confirmer)
+- [ ] P1 : fix INSERT libre sur ai_usage_log + app_logs (~30 min)
+- [ ] P2 : bug coach_clients self-insert (~20 min)
+- [ ] P2 : cleanup doublons RLS (~1h)
 
 Phase 3 — Delete account RPC transactionnel (~1.5h estimé)
 - [ ] Migration delete_user_account(uuid) PL/pgSQL
@@ -293,4 +295,4 @@ Tests E2E                    0%
 Performance                 90%  (TBT 35ms, CLS 0, desktop 96/100, LCP mobile simule ~9s)
 ```
 
-**Global readiness pour launch** : ~94%
+**Global readiness pour launch** : ~96%

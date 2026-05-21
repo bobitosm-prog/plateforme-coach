@@ -4,6 +4,120 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-21 (suite) — Phase 2 RLS audit Tier 2 (~45 min)
+
+### Objectif
+Continuer l'audit RLS sur le Tier 2 (17 tables personnelles non
+critiques RGPD) avec pattern matching automatique pour identifier
+les policies dangereuses (USING: true, WITH CHECK: true).
+
+### Methode
+
+SQL d'introspection sur pg_policies avec verdict calculé par
+CASE WHEN sur les patterns dangereux. Sortie triée par sévérité
+décroissante.
+
+### Findings — 3 nouvelles fuites critiques (même pattern que Tier 1)
+
+Bug #4 — meal_logs
+- Policy : "coach read meal logs" (SELECT, authenticated, USING: true)
+- Sévérité : RGPD/nLPD majeur (données alimentaires)
+- Particularité : aucune policy de remplacement coach existante,
+  donc DROP + CREATE meal_logs_coach_read via coach_clients lookup
+
+Bug #5 — meal_plans
+- Policy : "coach manages meal plans" (ALL, authenticated, USING: true)
+- Sévérité : RGPD/nLPD majeur (plans nutritionnels)
+- Note : ALL et non SELECT — permettait aussi modification cross-tenant
+- Replacement existant : meal_plans_coach_read (DROP only)
+
+Bug #6 — meal_tracking
+- Policy : "coach read all tracking" (SELECT, authenticated, USING: true)
+- Sévérité : RGPD/nLPD majeur (compliance alimentaire)
+- 2 replacements existants : Coaches can view client meal tracking,
+  meal_tracking_coach_read (DROP only)
+
+### Fix appliqué
+
+Migration : supabase/migrations/20260521205152_drop_insecure_meal_rls_policies.sql
+
+DROP POLICY IF EXISTS "coach read meal logs" ON public.meal_logs;
+DROP POLICY IF EXISTS "coach manages meal plans" ON public.meal_plans;
+DROP POLICY IF EXISTS "coach read all tracking" ON public.meal_tracking;
+
+CREATE POLICY "meal_logs_coach_read" ON public.meal_logs
+  FOR SELECT TO public
+  USING (auth.uid() IN (
+    SELECT coach_id FROM coach_clients
+    WHERE client_id = meal_logs.user_id
+  ));
+
+Validation post-fix via pg_policies : 3 fautives parties, replacement
+actif, paths coach-read légitimes préservés.
+
+### Tables analysées et déclarées sûres ce sprint
+
+- profiles, payments, messages, bug_reports, push_subscriptions (Tier 1)
+- activity_feed, body_analyses, body_assessments, cardio_sessions,
+  chat_ai_messages, client_meal_plans, client_programs, coach_notes,
+  commissions, completed_sessions, custom_exercises, custom_foods,
+  custom_programs, daily_checkins, daily_food_logs, daily_habits,
+  exercise_feedback (Tier 2)
+- ai_usage_logs (Sprint 3, déjà sécurisé)
+
+### NON-bugs identifiés (catalogues de référence publics)
+
+USING: true volontaire et correct sur ces tables (données de
+référence consultables par tout user authentifié, INSERT/UPDATE
+correctement scopés par ailleurs) :
+- achievements, badges (gamification globale)
+- exercises_db (catalogue exercices)
+- food_items, fitness_foods, community_foods (catalogues aliments)
+- program_days, program_exercises (templates de programmes, enfants
+  de training_programs.is_template — pas de colonne user dans la
+  structure, vérifié via information_schema)
+- recipes (filtre is_public = true)
+- training_programs (filtre is_template = true)
+
+### Dette identifiée pour sessions futures
+
+P1 (à fixer rapidement, ~30 min) :
+- ai_usage_log.ai_usage_log_insert_all (INSERT, WITH CHECK: true) :
+  pollue le rate limiting Sprint 3 — un user peut insérer des logs
+  avec n'importe quel user_id, fausser le décompte
+- app_logs.Anyone can insert logs + app_logs.app_logs_insert_all
+  (INSERT, WITH CHECK: true) : pollution logs applicatifs
+
+P2 (cosmétique, ~1h) :
+- Doublons de policies sur la plupart des tables (3 policies "own"
+  qui font la même chose). Cleanup à faire dans session dédiée.
+- Roles incohérents : mix {public} / {authenticated}.
+
+P2 (architectural, ~20 min) :
+- Bug #3 coach_clients self-insert (déjà identifié Phase 2 Tier 1)
+
+### Apprentissages senior consignés
+
+Le pattern dangereux USING: true est récurrent dans ce repo —
+probablement des policies temporaires de debug oubliées. Règle à
+retenir : toute policy USING: true doit être justifiée explicitement
+(catalogue de référence public). Sinon = fuite.
+
+Pour tables avec doublons de policies, vérifier qu'AU MOINS UNE
+policy correcte existe AVANT de DROP la défectueuse. Sinon il faut
+CREATE en remplacement (cas meal_logs ce sprint).
+
+Stratégie audit RLS efficace : pattern matching SQL automatique avec
+verdict calculé > revue manuelle policy-par-policy. Gain de temps 5x.
+
+### Commits
+
+| # | Hash | Description |
+|---|---|---|
+| 2 | 2ba6219 | fix(rls): drop 3 more insecure policies on meal tables + add missing coach-read |
+
+---
+
 ## 2026-05-21 — Sprint Launch Prep Phase 2 RLS audit Tier 1 (~1h)
 
 ### Objectif
