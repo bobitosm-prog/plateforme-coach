@@ -4,6 +4,147 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-21 — Sprint Launch Prep Phase 2 RLS audit Tier 1 (~1h)
+
+### Objectif
+Auditer les Row Level Security policies Supabase sur les tables
+sensibles avant ouverture aux beta testers. Identifier et fixer
+toute fuite de données cross-tenant (coach A peut lire les
+données du coach B, etc.).
+
+### Methode
+
+Tier-based audit (1h timeboxé) :
+- Tier 1 (critique RGPD) : profiles, payments, progress_photos,
+  body_measurements, messages, coach_clients, bug_reports,
+  push_subscriptions
+- Tier 2 (personnel mais moins sensible) : à auditer prochaine session
+- Tier 3 (référence) : à skim plus tard
+
+Approche read-only : SQL d'introspection sur pg_tables et pg_policies,
+analyse manuelle des USING/WITH CHECK clauses, identification des
+patterns dangereux (USING: true, predicats trop larges).
+
+### Findings
+
+Inventaire général :
+- 57 tables dans le schéma public
+- 57/57 ont RLS active (très bonne hygiène générale)
+- ~170 policies au total
+- 2 tables avec RLS=true et 0 policies (volontaire : meal_plans_backup_*,
+  stripe_webhook_events accédé uniquement via service_role)
+
+### 2 bugs critiques détectés (data leak direct)
+
+Bug #1 — progress_photos
+- Policy : "coach read photos" (SELECT, public)
+- USING : true
+- Effet : tout utilisateur authentifié pouvait SELECT * sur
+  TOUTES les photos de progression (transformations corporelles)
+- Sévérité : RGPD/nLPD majeur (données de santé)
+
+Bug #2 — body_measurements
+- Policy : "coach read measurements" (SELECT, authenticated)
+- USING : true
+- Effet : tout utilisateur authentifié pouvait SELECT * sur
+  TOUTES les mesures corporelles (poids, taille, % graisse)
+- Sévérité : RGPD/nLPD majeur (données de santé)
+
+Cause racine probable : doublon défectueux laissé en place lors
+d'une migration antérieure. Chaque table avait déjà une policy
+correcte (progress_photos_coach_read, body_measurements_coach_read)
+faisant le bon check via coach_clients lookup, mais une second
+policy avec USING: true coexistait. Logique PERMISSIVE additive
+PostgreSQL = la plus permissive gagne.
+
+### Fix appliqué
+
+Migration : supabase/migrations/20260521203522_drop_insecure_rls_policies.sql
+
+DROP POLICY IF EXISTS "coach read photos" ON public.progress_photos;
+DROP POLICY IF EXISTS "coach read measurements" ON public.body_measurements;
+
+Pas de REPLACE nécessaire : les policies correctement scopées
+existent déjà sur les deux tables.
+
+Application : SQL Editor Supabase, validation par re-run de
+l'audit pg_policies.
+
+Validation post-fix :
+- progress_photos : 6 policies (était 7), policy correcte intacte
+- body_measurements : 5 policies (était 6), policy correcte intacte
+- Cross-tenant SELECT bloqué au niveau PostgreSQL
+
+### Bugs moyens détectés (non-fixés ce sprint)
+
+Bug #3 — coach_clients self-insert
+- Policies : "Clients can be assigned" + "clients can insert themselves"
+- Effet : un user authentifié peut s'auto-déclarer client de
+  N'IMPORTE QUEL coach (INSERT avec WITH CHECK auth.uid()=client_id,
+  pas de vérif sur coach_id existant ou consenting)
+- Impact : pas de leak de données (l'attaquant ne lit pas les
+  données du coach), mais pollution table coach_clients,
+  apparition potentielle sur dashboard coach victime, potentiellement
+  déclenchement de notifications
+- À traiter dans session ultérieure (~15-20 min, demande réflexion archi)
+
+### Dette cosmétique RLS (P2)
+
+Doublons de policies sur la plupart des tables Tier 1 (ex:
+body_measurements_own + own measurements + users manage own
+measurements font la même chose). Restes de migrations successives.
+Pas un bug, mais maintenance lourde. À nettoyer dans une session
+dédiée "RLS cleanup" (~1h).
+
+Roles incohérents : mix {public} et {authenticated} sur la même
+table. {public} inclut anon, mais auth.uid() retourne NULL pour
+anon donc effective. Sale mais pas dangereux.
+
+### Apprentissages senior consignés
+
+Pattern dangereux à chercher en audit RLS : USING: true (policy
+qui désactive effectivement le check pour SELECT). Toujours vérifier
+les colonnes using_clause et with_check du dump pg_policies.
+
+Tier-based audit > exhaustive audit en time-boxed session :
+prioriser sur la sensibilité des données et la surface d'attaque,
+pas sur le nombre de tables.
+
+PERMISSIVE est additive en PostgreSQL : si N policies existent
+pour une commande sur une table, l'utilisateur peut effectuer
+l'action si AU MOINS UNE le permet. Donc une policy défectueuse
+USING: true à côté d'une policy correcte = la défectueuse gagne.
+
+### Decisions architecturales
+
+- Migration versionnée dans le repo (supabase/migrations/) plutôt
+  que SQL ad-hoc dans le SQL Editor. Trace Git, reproductibilité,
+  audit RGPD facilité.
+- DROP plutôt que REPLACE : les policies correctes existent déjà,
+  on ne remplace pas une policy défectueuse par une autre.
+- Application via SQL Editor (Option A) plutôt que supabase CLI db
+  push (Option B) : 0 risque d'effet de bord sur autres migrations
+  en attente.
+
+### Reste à faire — Phase 2 partie 2 (cette session ou suivante)
+
+- Tester cross-tenant SQL sur les 17 tables Tier 2 (~30 min)
+- Si bugs trouvés : fix selon même pattern que Tier 1
+
+### Reste à faire — Phase 3 (~1.5h, prochaine session)
+
+- Migration delete_user_account(uuid) PL/pgSQL transactionnelle
+- Refacto route API pour appeler le RPC
+- Tests rollback
+
+### Commits
+
+| # | Hash | Description |
+|---|---|---|
+| 1 | a337951 | fix(rls): drop 2 insecure policies leaking sensitive data |
+
+---
+
 ## 2026-05-20 — Sprint Launch Prep Phase 1 COMPLETE (~3h)
 
 ### Objectif

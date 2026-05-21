@@ -1,6 +1,6 @@
 # MoovX — ROADMAP
 
-> **Derniere mise a jour** : 20 mai 2026, Sprint Launch Prep Phase 1 COMPLETE
+> **Derniere mise a jour** : 21 mai 2026, Phase 2 RLS audit Tier 1
 > **Version actuelle** : v2.8.0
 > **Status** : Production live, 0 clients payants, Stripe `sk_LIVE`
 
@@ -85,11 +85,18 @@ Phase 1 — Split landing/app sur deux domaines : LIVRÉE EN PROD
 - [x] 1.G Supabase Redirect URLs + Site URL
 - [x] 1.H Validation E2E prod (5 tests curl + 5 scénarios navigateur)
 
-Phase 2 — RLS audit Supabase (~1h estimé)
-- [ ] Inventaire tables avec RLS active
-- [ ] Script SQL cross-tenant (coach A ne voit pas client B)
-- [ ] Fix policies trouées (profiles, payments, bug_reports en priorité)
-- [ ] Documenter policies par table
+Phase 2 — RLS audit Supabase
+- [x] Inventaire tables avec RLS active (57/57 protégées)
+- [x] Tier 1 audité : profiles, payments, progress_photos,
+      body_measurements, messages, coach_clients, bug_reports,
+      push_subscriptions
+- [x] 2 bugs critiques fixés en prod (USING: true sur photos et mesures)
+- [ ] Tier 2 audit (~30 min) : weight_logs, meal_plans, daily_food_logs,
+      meal_tracking, coach_notes, custom_programs, workout_sessions, etc.
+- [ ] Tier 3 audit light (~15 min) : exercises_db, fitness_foods, recipes,
+      etc.
+- [ ] Bug #3 coach_clients self-insert (~15-20 min, dette moyenne)
+- [ ] Cleanup doublons RLS (~1h, dette cosmétique)
 
 Phase 3 — Delete account RPC transactionnel (~1.5h estimé)
 - [ ] Migration delete_user_account(uuid) PL/pgSQL
@@ -286,4 +293,4 @@ Tests E2E                    0%
 Performance                 90%  (TBT 35ms, CLS 0, desktop 96/100, LCP mobile simule ~9s)
 ```
 
-**Global readiness pour launch** : ~92%
+**Global readiness pour launch** : ~94%
