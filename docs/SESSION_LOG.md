@@ -4,6 +4,90 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-20 — Sprint Launch Prep Phase 1 COMPLETE (~3h)
+
+### Objectif
+Finaliser le split landing/app entre moovx.ch (marketing) et app.moovx.ch
+(app authentifiée). Suite directe de la session 19 mai.
+
+### Realisations
+
+1.D.2 — Câblage host-redirect (commit 093605a, fin session 19/05)
+
+1.D.3.a — Skip Supabase pour routes API et statiques (commit ea16d0f)
+- Early return dans proxy() pour /api/*, /_next/*, /sitemap.xml, /robots.txt
+- Évite getSession() redondant sur routes API qui gèrent leur auth en handler
+- Évite que les webhooks Stripe (sans cookie auth) déclenchent du boulot Supabase
+- Dédup const pathname
+
+1.D.3.b — Matcher étendu (commit ec25bcf)
+- AVANT : matcher ['/', '/coach/:path*', '/client/:path*']
+- APRÈS : match toutes routes sauf assets statiques (regex inversée)
+- Active enfin le redirect host-based sur /login, /register-client,
+  /onboarding*, /admin/*, /paywall
+
+1.E-1.G — Config externe
+- Cloudflare DNS : CNAME app vers Vercel — déjà configuré
+- Vercel : app.moovx.ch attaché, SSL valid — déjà configuré
+- Supabase : Site URL https://app.moovx.ch, Redirect URLs incluent
+  https://app.moovx.ch/** et https://moovx.ch/** (safety net)
+
+1.H — Validation E2E prod
+- 5 tests curl automatisés tous verts
+- 5 scénarios navigateur manuels tous verts
+
+### Bug prod détecté + fix immédiat
+
+Symptôme : user change langue sur landing (DE), navigue vers
+app.moovx.ch/login, page login en FR au lieu de DE.
+
+Root cause : Navbar.tsx ligne 22 posait NEXT_LOCALE via document.cookie
+brut, sans attribut domain. Cookie host-only sur moovx.ch, invisible
+depuis app.moovx.ch.
+
+Fix (commit 21cf850) : ajout conditionnel domain=moovx.ch + Secure
+en prod, même pattern que routes API patchées en 1.C (commit 48b4cd6).
+
+Validation DevTools post-fix :
+- Domain : .moovx.ch (avec point devant = cross-subdomain)
+- Secure : oui
+- Page login s'affiche désormais en DE après changement langue landing
+
+### Apprentissage senior consigné
+
+Les tests curl ne remplacent pas un test E2E navigateur pour les
+changements touchant cookies, redirects, ou état navigateur. Scénario 4
+(validation manuelle) a détecté un bug invisible aux 10 tests curl
+automatisés.
+
+### Decisions architecturales
+
+- Skip API du middleware : /api/* gère son auth en handler. Économie
+  5-20ms par requête + évite Stripe webhooks de déclencher du boulot inutile.
+- Matcher regex inversée : pattern Next.js standard, plus maintenable.
+- Cookie set client harmonisé avec serveur : même garde-fou NODE_ENV.
+
+### Reste à faire — Phase 2 et 3 du Sprint Launch Prep
+
+- Phase 2 : RLS audit Supabase
+- Phase 3 : Delete account RPC transactionnel
+
+### Dette technique consciente (rappel)
+
+- Bug pré-existant proxy.ts : early-returns redirects ne portent pas
+  les cookies Supabase mis à jour. Race condition rare.
+- 4 stashes Git accumulés. Session "git hygiene" 15 min à planifier.
+- Cas app.moovx.ch/ non loggué : 2 redirects au lieu d'1.
+
+### Commits
+| # | Hash | Description |
+|---|---|---|
+| 1 | ea16d0f | feat(proxy): skip middleware for API and static routes |
+| 2 | ec25bcf | feat(proxy): broaden matcher to all routes except static assets |
+| 3 | 21cf850 | fix(i18n): share NEXT_LOCALE cookie from landing navbar |
+
+---
+
 ## 2026-05-19 — Sprint Launch Prep Phase 1 (Domain Split) — partial (~3h)
 
 ### Objectif

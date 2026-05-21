@@ -1,6 +1,6 @@
 # MoovX — ROADMAP
 
-> **Derniere mise a jour** : 19 mai 2026, Sprint Launch Prep Phase 1
+> **Derniere mise a jour** : 20 mai 2026, Sprint Launch Prep Phase 1 COMPLETE
 > **Version actuelle** : v2.8.0
 > **Status** : Production live, 0 clients payants, Stripe `sk_LIVE`
 
@@ -69,30 +69,32 @@
 
 ## TODO IMMEDIAT — Avant premiers clients
 
-### Sprint Launch Prep (en cours, 2026-05-19+)
+### Sprint Launch Prep — Phase 1 COMPLETE (2026-05-19 → 2026-05-20)
 
-**Phase 1 — Split landing/app sur deux domaines** (4/8 sous-étapes ✅)
-- [x] 1.A Refacto `lib/seo.ts` env var
-- [x] 1.B Ajout `NEXT_PUBLIC_SITE_URL` (3 environnements)
-- [x] 1.C Cookie `NEXT_LOCALE` cross-subdomain (`.moovx.ch`)
-- [x] 1.D.1 Helpers `getHostRedirect()` dans `proxy.ts` (dead code)
-- [ ] 1.D.2 Câbler helpers dans le middleware (early return)
-- [ ] 1.D.3 Étendre le matcher avec regex inversée
-- [ ] 1.D.4 Tests locaux via curl avec Host header
-- [ ] 1.E Cloudflare DNS : CNAME `app` → `cname.vercel-dns.com`
-- [ ] 1.F Vercel : ajouter `app.moovx.ch` dans Domains
-- [ ] 1.G Supabase : Redirect URLs + CORS pour `app.moovx.ch`
-- [ ] 1.H Validation prod E2E (magic link, login, paywall)
+Phase 1 — Split landing/app sur deux domaines : LIVRÉE EN PROD
+- [x] 1.A Refacto lib/seo.ts env var
+- [x] 1.B Ajout NEXT_PUBLIC_SITE_URL (3 environnements Vercel)
+- [x] 1.C Cookie NEXT_LOCALE cross-subdomain (routes API)
+- [x] 1.C.3 Cookie NEXT_LOCALE côté client (Navbar landing) — fix prod bug
+- [x] 1.D.1 Helpers getHostRedirect() dans proxy.ts
+- [x] 1.D.2 Câblage du helper dans le middleware
+- [x] 1.D.3.a Skip Supabase pour routes API et statiques
+- [x] 1.D.3.b Matcher étendu avec regex inversée
+- [x] 1.E Cloudflare DNS app.moovx.ch
+- [x] 1.F Vercel domain app.moovx.ch
+- [x] 1.G Supabase Redirect URLs + Site URL
+- [x] 1.H Validation E2E prod (5 tests curl + 5 scénarios navigateur)
 
-**Phase 2 — RLS audit Supabase**
+Phase 2 — RLS audit Supabase (~1h estimé)
+- [ ] Inventaire tables avec RLS active
 - [ ] Script SQL cross-tenant (coach A ne voit pas client B)
-- [ ] Fix policies trouées sur tables critiques (profiles, payments, bug_reports)
+- [ ] Fix policies trouées (profiles, payments, bug_reports en priorité)
 - [ ] Documenter policies par table
 
-**Phase 3 — Delete account RPC transactionnel**
-- [ ] Migration `delete_user_account(uuid)` PL/pgSQL
+Phase 3 — Delete account RPC transactionnel (~1.5h estimé)
+- [ ] Migration delete_user_account(uuid) PL/pgSQL
 - [ ] Refacto route API pour appeler le RPC
-- [ ] Tests rollback (suppression échoue au milieu)
+- [ ] Tests rollback
 
 ---
 
@@ -284,4 +286,4 @@ Tests E2E                    0%
 Performance                 90%  (TBT 35ms, CLS 0, desktop 96/100, LCP mobile simule ~9s)
 ```
 
-**Global readiness pour launch** : ~88%
+**Global readiness pour launch** : ~92%
