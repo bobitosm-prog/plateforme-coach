@@ -222,6 +222,8 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   )
 }
 
+const AUTO_REDIRECT_SECONDS = 8
+
 export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
@@ -269,6 +271,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
   const elT = useRef<NodeJS.Timeout | null>(null)
   const [done, setDone] = useState(false)
+  const [autoRedirectCountdown, setAutoRedirectCountdown] = useState(AUTO_REDIRECT_SECONDS)
   const [showVideo, setShowVideo] = useState<string | null>(null)
   const [sessionModified, setSessionModified] = useState(false)
   const [showSavePopup, setShowSavePopup] = useState(false)
@@ -353,6 +356,23 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   }, [exoNamesKey])
 
   useEffect(() => { elT.current = setInterval(() => setElapsed(Date.now() - t0), 1000); return () => { if (elT.current) clearInterval(elT.current) } }, [])
+
+  useEffect(() => {
+    if (!done) return
+    setAutoRedirectCountdown(AUTO_REDIRECT_SECONDS)
+    const interval = setInterval(() => {
+      setAutoRedirectCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          onClose()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [done, onClose])
+
   const prevRemaining = useRef(Infinity)
   useEffect(() => {
     if (!restOn) { prevRemaining.current = Infinity; return }
@@ -594,31 +614,107 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   if (done) return (
     <>
     <WorkoutCelebration visible={done} />
-    <div className="fixed inset-0 z-50 flex flex-col items-center p-6 text-center" style={{ background: BG_BASE, fontFamily: FONT_BODY, overflowY: 'auto' }}>
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 70%)`, filter: 'blur(40px)' }} />
-      <div className="relative z-10 flex flex-col items-center w-full max-w-xs" style={{ margin: 'auto 0' }}>
-        <div className="w-20 h-20 flex items-center justify-center mb-5" style={{ background: GOLD, borderRadius: RADIUS_CARD }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: BG_BASE, fontFamily: FONT_BODY, overflowY: 'auto' }}>
+      {/* Glow décoratif top */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 65%)`, filter: 'blur(60px)', opacity: 0.6 }} />
+
+      {/* Contenu principal scrollable */}
+      <div className="relative z-10 flex-1 flex flex-col items-center px-6 pt-12 pb-32 max-w-md mx-auto w-full">
+
+        {/* Trophy hero */}
+        <div className="w-20 h-20 flex items-center justify-center mb-6" style={{ background: GOLD, borderRadius: RADIUS_CARD }}>
           <Trophy size={36} className="text-white" />
         </div>
-        <h1 className="mb-1 text-5xl" style={{ fontFamily: FONT_DISPLAY, letterSpacing: '0.06em', color: TEXT_PRIMARY }}>TERMINE</h1>
-        <p className="text-sm mb-7" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{sessionName}</p>
-        <div className="grid grid-cols-3 gap-3 mb-5 w-full">
-          {([
-            { icon: <Clock size={24} color={GOLD} />, value: dur(elapsed), label: 'Duree' },
-            { icon: <CheckCircle2 size={24} color={GOLD} />, value: `${completed}/${total}`, label: 'Sets' },
-            { icon: <Dumbbell size={24} color={GOLD} />, value: `${Math.round(volume)}kg`, label: 'Volume' },
-          ]).map(stat => (
-            <div key={stat.label} className="p-4 text-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: RADIUS_CARD }}>
-              <div className="flex justify-center mb-1">{stat.icon}</div>
-              <div className="text-xl" style={{ fontFamily: FONT_DISPLAY, color: GOLD }}>{stat.value}</div>
-              <div className="text-[9px] mt-0.5" style={{ color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{stat.label}</div>
+
+        {/* Titre + nom séance */}
+        <h1 className="mb-2 text-center" style={{ fontFamily: FONT_DISPLAY, fontSize: '2.25rem', letterSpacing: '0.1em', color: TEXT_PRIMARY, lineHeight: 1.1, textTransform: 'uppercase' as const }}>SEANCE<br/>TERMINEE</h1>
+        <p className="text-sm mb-10 text-center" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY, letterSpacing: '0.05em' }}>{sessionName}</p>
+
+        {/* Séparateur golden subtil */}
+        <div className="w-16 h-px mb-10" style={{ background: GOLD_RULE }} />
+
+        {/* HERO STAT — Volume */}
+        <div className="text-center mb-2">
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '4.5rem', fontWeight: 700, color: GOLD, letterSpacing: '0.02em', lineHeight: 1 }}>
+            {Math.round(volume).toLocaleString('fr-FR')}<span style={{ fontSize: '1.5rem', marginLeft: 6, letterSpacing: '0.05em', color: GOLD }}>kg</span>
+          </div>
+          <div className="mt-2" style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
+            Volume souleve
+          </div>
+        </div>
+
+        {/* Séparateur golden subtil */}
+        <div className="w-16 h-px my-10" style={{ background: GOLD_RULE }} />
+
+        {/* Stats secondaires : Durée + Sets */}
+        <div className="grid grid-cols-2 gap-6 w-full mb-10">
+          <div className="text-center">
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.25rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.02em', lineHeight: 1 }}>
+              {dur(elapsed)}
             </div>
-          ))}
+            <div className="mt-2" style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
+              Duree
+            </div>
+          </div>
+          <div className="text-center">
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.25rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.02em', lineHeight: 1 }}>
+              {completed}<span style={{ color: TEXT_DIM, fontSize: '1.5rem' }}>/{total}</span>
+            </div>
+            <div className="mt-2" style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
+              Sets
+            </div>
+          </div>
         </div>
-        <div className="w-full space-y-2 mb-7">
-          {exos.map(e => { const d = e.sets.filter(s => s.done); if (!d.length) return null; const best = Math.max(...d.map(s => Number(s.weight) || 0)); return (<div key={e.id} className="px-4 py-3 flex justify-between items-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: RADIUS_CARD }}><div><div className="text-sm" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700 }}>{e.name}</div><div className="text-[10px]" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY }}>{d.length} sets · {e.muscle}</div></div><div className="text-right"><div className="text-sm" style={{ color: GOLD, fontFamily: FONT_DISPLAY }}>{best > 0 ? `${best} kg` : '—'}</div><div className="text-[9px]" style={{ color: TEXT_DIM, fontFamily: FONT_ALT, fontWeight: 700 }}>max</div></div></div>) })}
+
+        {/* Top 3 meilleures performances */}
+        {(() => {
+          const performances = exos
+            .map(e => {
+              const doneSets = e.sets.filter(s => s.done)
+              if (!doneSets.length) return null
+              const best = Math.max(...doneSets.map(s => Number(s.weight) || 0))
+              return { name: e.name, muscle: e.muscle, setsCount: doneSets.length, best }
+            })
+            .filter((p): p is NonNullable<typeof p> => p !== null && p.best > 0)
+            .sort((a, b) => b.best - a.best)
+            .slice(0, 3)
+
+          if (performances.length === 0) return null
+
+          return (
+            <div className="w-full mb-10">
+              <div className="mb-4 text-center" style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
+                Meilleures performances
+              </div>
+              <div className="space-y-2">
+                {performances.map((p, i) => (
+                  <div key={i} className="px-4 py-3 flex justify-between items-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: RADIUS_CARD }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm truncate" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.02em' }}>{p.name}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY, letterSpacing: '0.03em' }}>{p.setsCount} sets · {p.muscle}</div>
+                    </div>
+                    <div className="text-right shrink-0 ml-3">
+                      <div style={{ color: GOLD, fontFamily: FONT_DISPLAY, fontSize: '1.1rem', letterSpacing: '0.02em' }}>{p.best} kg</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
+      </div>
+
+      {/* Bottom bar fixe : bouton dominant + compteur discret */}
+      <div className="fixed bottom-0 left-0 right-0 z-20" style={{ padding: '16px 24px', paddingBottom: 'max(16px, env(safe-area-inset-bottom, 16px))', background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}` }}>
+        <div className="max-w-md mx-auto">
+          <button onClick={onClose} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 14, border: 'none', cursor: 'pointer', letterSpacing: '0.2em', textTransform: 'uppercase' as const, fontSize: '0.9rem' }}>
+            Retour au Dashboard
+          </button>
+          <p className="text-center mt-2" style={{ fontSize: '0.7rem', color: TEXT_DIM, fontFamily: FONT_BODY, letterSpacing: '0.03em' }}>
+            Auto dans {autoRedirectCountdown}s · clique pour skip
+          </p>
         </div>
-        <button onClick={onClose} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 12, border: 'none', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.875rem' }}>Dashboard</button>
       </div>
     </div>
     </>

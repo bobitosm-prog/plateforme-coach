@@ -1,23 +1,40 @@
 'use client'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Award } from 'lucide-react'
 import { colors, fonts } from '../../../../lib/design-tokens'
 
 const CONFETTI_COLORS = [colors.orange, colors.success, colors.blue, colors.gold, colors.error, '#8B5CF6']
+const CELEBRATION_DURATION_MS = 3000
 
 interface WorkoutCelebrationProps {
   visible: boolean
 }
 
 export default function WorkoutCelebration({ visible }: WorkoutCelebrationProps) {
+  // Internal auto-dismiss : la celebration est une animation décorative
+  // qui doit révéler le récap (situé dessous) après quelques secondes.
+  // Sans ça, l'overlay reste indéfiniment et masque tout le contenu utile.
+  const [internalVisible, setInternalVisible] = useState(false)
+
+  useEffect(() => {
+    if (!visible) {
+      setInternalVisible(false)
+      return
+    }
+    setInternalVisible(true)
+    const timer = setTimeout(() => setInternalVisible(false), CELEBRATION_DURATION_MS)
+    return () => clearTimeout(timer)
+  }, [visible])
+
   return (
     <AnimatePresence>
-      {visible && (
+      {internalVisible && (
         <motion.div
           key="confetti-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 0, transition: { duration: 0.6 } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', zIndex: 55, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, overflow: 'hidden', pointerEvents: 'none' }}
         >
           {Array.from({ length: 24 }).map((_, i) => (
