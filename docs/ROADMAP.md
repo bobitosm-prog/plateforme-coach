@@ -110,6 +110,15 @@ P1 (bugs UX directs)
       l'app et rouvrir. À investiguer dans le flow de
       onFinishWorkout (probablement un state qui ne reset pas
       ou un router push manquant).
+- [ ] Page de confirmation après validation email — actuellement
+      après clic sur le lien de validation Supabase, l'utilisateur
+      atterrit sur la landing sans feedback. Créer une page dédiée
+      /auth/confirmed (ou similaire) qui : confirme visuellement la
+      validation ("Email confirmé"), explique l'étape suivante
+      ("Tu peux maintenant te connecter"), propose un CTA vers
+      /login. Optionnel : auto-redirect après 3-5 secondes. Impact :
+      friction onboarding réduite, taux de conversion amélioré sur
+      l'étape la plus critique du funnel.
 
 P2 (features nouvelles)
 - [ ] Minuteur de temps d'exécution de série après repos —
