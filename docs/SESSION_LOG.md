@@ -4,6 +4,225 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-21 (fin de journée) — Phase 2 RLS audit Tier 3 + P1 INSERT libres + P2 coach_clients (~3h)
+
+### Objectif initial
+"1-2h focus court" pour avancer sur le sprint Launch Prep.
+
+### Réalité
+Session de 4h+ qui a fermé toute la dette Phase 2 RLS (Tier 3,
+P1 INSERT libres, P2 coach_clients self-insert) et révélé un bug
+pré-existant dans useClientDashboard.ts.
+
+### Tier 3 audit light (~20 min)
+
+Pattern matching SQL sur les 16 tables restantes non encore
+auditées (workouts, weight_logs, user_xp, water_intake, etc.).
+
+Résultat : 34 policies analysées, 0 fuite détectée. Tier 3 = clean.
+
+Audit RLS 100% complet : 57/57 tables Supabase couvertes.
+
+### P1 INSERT libres fix (~30 min)
+
+Détecté lors du Tier 2 audit, déféré en P1. Trois policies
+INSERT avec WITH CHECK: true permettant à n'importe quel user
+authentifié d'insérer des lignes avec arbitrary user_id.
+
+Investigation préalable :
+- ai_usage_log (singulier) : table orpheline, 0 ligne, 0 référence
+  dans le code (grep confirmed). Sprint 3 (17 mai) avait introduit
+  ai_usage_logs (pluriel) comme remplacement, mais la table
+  singulière a été laissée. Une policy fautive avait été ajoutée
+  manuellement sans migration committée.
+- app_logs : table très utilisée (lib/admin/logger.ts, hooks
+  coach + client, app/coach/page.tsx). user_id colonne nullable
+  sans default, beaucoup d'inserts existants l'omettent (system
+  logs anonymes). DROP impossible, fix par patch policy.
+
+Migration : 20260521210640_fix_insert_libre_logs.sql
+- DROP TABLE public.ai_usage_log
+- DROP 2 policies INSERT WITH CHECK: true sur app_logs
+- CREATE app_logs_insert_safe avec
+  WITH CHECK (user_id IS NULL OR user_id = auth.uid())
+
+Validation : app_logs n'a plus que 2 policies (insert_safe +
+Admin can view logs). Le code existant ne casse pas (les inserts
+sans user_id passent toujours, ceux avec auth.uid() aussi, les
+spoofs sont bloqués).
+
+Commit : 01fd6c9
+
+### P2 coach_clients self-insert hardening (~3h)
+
+Ce qui devait prendre 20 min en a pris 3h. Pourquoi : on a
+découvert un bug RLS recursion subtil, puis un bug pré-existant
+dans le code, puis un retard webhook Vercel. Chaque obstacle
+demandait une compréhension fine de la stack.
+
+#### Étape 1 — Premier fix (cassé)
+
+Migration 20260521211443_harden_coach_clients_self_insert.sql :
+- DROP 2 policies INSERT "Clients can be assigned" et
+  "clients can insert themselves" (WITH CHECK auth.uid() = client_id
+  sans aucune validation du coach_id)
+- CREATE coach_clients_self_insert_safe avec
+  WITH CHECK (client_id = auth.uid() AND coach_id IN
+    (SELECT id FROM profiles WHERE role IN ('coach', 'super_admin')))
+
+Problème : la sous-requête lit profiles, qui a sa propre RLS
+(id = auth.uid() OR super_admin). Sous identité client, la
+sous-requête retourne 0 lignes, le check fail silencieusement,
+INSERT rejeté. Verified : login f.marco@me.com a réussi mais
+aucune row coach_clients créée.
+
+#### Étape 2 — Fix RLS recursion (cassé aussi)
+
+Migration 20260521212741_fix_coach_clients_policy_with_security_definer.sql :
+- Création fonction public.is_coach_role(uuid) SECURITY DEFINER
+- DROP policy défectueuse, CREATE nouvelle utilisant la fonction
+
+Note de la session : Supabase SQL Editor a tronqué $ ... $ en
+$ ... $ au paste, causant syntax error. Fix : utiliser des
+tagged dollar quotes $func$ ... $func$ pour les futurs CREATE
+FUNCTION. Apprentissage consigné.
+
+Test SQL en simulation (SET LOCAL ROLE authenticated + JWT sub) :
+INSERT réussit. Policy validée au niveau PostgreSQL.
+
+Mais le re-login app : toujours 0 row créée.
+
+#### Étape 3 — Diagnostic DevTools Network
+
+DevTools Network filtré sur coach_clients : seulement 4 requêtes
+GET (preflight + fetch), aucun POST. L'app n'envoie même pas
+l'upsert.
+
+Lecture du code useClientDashboard.ts:235 révèle un bug
+pré-existant : le lookup du default coach par email lit profiles
+directement, ce qui est RLS-bloqué pour les clients.
+defaultCoachId stayed null, la branche else if (defaultCoachId)
+jamais entrée, upsert jamais tenté.
+
+Les liens existants (marco.ferreira, mia.nunes, bobitosm) ont
+été créés par d'autres chemins (API admin, SQL direct, ou
+ancienne version de la RLS profiles).
+
+#### Étape 4 — Fix bug pré-existant
+
+Migration 20260522050836_add_get_default_coach_id_helper.sql :
+- Création fonction public.get_default_coach_id(text) SECURITY
+  DEFINER restreinte aux profiles avec role coach/super_admin
+- Pas d'oracle d'énumération possible (NULL pour les clients
+  ou emails inexistants)
+
+Code change : app/hooks/useClientDashboard.ts:235 remplacé par
+supabase.rpc('get_default_coach_id', { coach_email: defaultEmail })
+
+Commit : c7dd00d (4 fichiers ensemble : 3 migrations + code)
+
+#### Étape 5 — Retard webhook Vercel
+
+Push de c7dd00d n'a pas déclenché de build Vercel. Webhook stale.
+Fix : commit vide (e6d494c) pour réveiller. Build success en
+1m24s.
+
+#### Étape 6 — Test E2E final validé
+
+DELETE row coach_clients f.marco, logout/login propre, hard
+refresh, ré-query : 1 row créée à 03:29:55. Fix validé end-to-end.
+
+### Bilan Phase 2 complète
+
+Toutes les fuites RGPD/nLPD identifiées sont colmatées :
+
+| # | Fix | Status |
+|---|---|---|
+| 1 | progress_photos.coach read photos | ✅ |
+| 2 | body_measurements.coach read measurements | ✅ |
+| 3 | meal_logs.coach read meal logs | ✅ |
+| 4 | meal_plans.coach manages meal plans | ✅ |
+| 5 | meal_tracking.coach read all tracking | ✅ |
+| 6 | app_logs INSERT spoofing + DROP ai_usage_log orpheline | ✅ |
+| 7 | coach_clients self-insert hardening + bug pré-existant flow | ✅ |
+
+Audit RLS : 57/57 tables, 100% couvert.
+
+3 fonctions SECURITY DEFINER ajoutées :
+- is_coach_role(uuid) : check si un UUID désigne un coach
+- get_default_coach_id(text) : lookup coach par email
+Pattern réutilisable pour futures policies cross-table.
+
+### Apprentissages senior consignés
+
+1. RLS recursion : une policy ne doit pas lire une table qui a
+   elle-même RLS, sous peine de checks toujours faux. Utiliser
+   SECURITY DEFINER fonctions pour bypass.
+
+2. Bug pré-existant invisible : un select sur profiles non-self
+   est RLS-bloqué pour les clients, mais sans try/catch dans le
+   code, le résultat NULL est interprété comme "pas de default
+   coach" et l'upsert n'est pas tenté. Le bug ne crashe pas
+   l'app, juste un fail silencieux côté DB.
+
+3. Dollar quoting tagué : pour CREATE FUNCTION dans Supabase SQL
+   Editor, toujours utiliser $func$ ... $func$ (ou autre tag)
+   plutôt que $ ... $. Évite les troncatures invisibles au paste.
+
+4. Vercel webhook peut être stale : un push qui ne déclenche pas
+   de build n'est pas forcément un problème de config. Solution
+   simple : git commit --allow-empty pour réveiller.
+
+5. Time-boxing brutal : annoncer "1-2h" et finir à 4h+ révèle
+   qu'on n'avait pas mesuré la complexité. La cause racine
+   n'était pas paresse mais l'enchaînement de découvertes
+   (recursion → pré-existant → webhook). Chaque obstacle était
+   instructif. Mais en mode "ship aux beta", il faudrait scope
+   plus fin et stop strict.
+
+### Decisions architecturales
+
+- DROP table orpheline ai_usage_log plutôt que patcher (table
+  inutilisée = surface à supprimer, pas à maintenir)
+- SECURITY DEFINER functions plutôt que policies récursives sur
+  profiles (pattern propre, réutilisable)
+- Un seul commit (c7dd00d) pour les 3 migrations + code change
+  P2 (cohérence : la migration introduit une fonction utilisée
+  immédiatement par le code, on ne split pas)
+- Commit vide pour réveiller Vercel (trick courant, documenté
+  dans le message du commit pour traçabilité)
+
+### Dette résiduelle pour sessions futures
+
+P1 :
+- Bug #3 résiduel coach_clients : un client peut toujours
+  s'auto-inscrire chez N'IMPORTE QUEL coach (pas juste celui qui
+  l'a invité). Fix complet : invitation tokens (refacto archi,
+  ~2h). Aujourd'hui acceptable car 0 client payant.
+
+P2 :
+- Cleanup doublons RLS policies (~1h, cosmétique)
+- Roles incohérents {public} / {authenticated} (~30 min)
+- Admin bobitosm@gmail.com role='admin' à corriger en
+  'super_admin' (cohérence avec checks code)
+- Supabase client typé avec Database generics (rpc() actuellement
+  accepte n'importe quel nom de fonction sans erreur TS)
+
+P3 :
+- Refacto useClientDashboard.ts:244 pour passer par
+  /api/assign-coach (service_role) plutôt que upsert direct
+  (architecture plus propre, mais demande tests E2E complets)
+
+### Commits
+
+| # | Hash | Description |
+|---|---|---|
+| 1 | 01fd6c9 | fix(rls): drop orphaned table + fix app_logs INSERT spoofing |
+| 2 | c7dd00d | fix(rls): harden coach_clients self-insert + unblock new client onboarding |
+| 3 | e6d494c | chore: trigger Vercel redeploy after webhook miss for c7dd00d |
+
+---
+
 ## 2026-05-21 (suite) — Phase 2 RLS audit Tier 2 (~45 min)
 
 ### Objectif

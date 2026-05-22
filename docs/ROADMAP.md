@@ -1,6 +1,6 @@
 # MoovX — ROADMAP
 
-> **Derniere mise a jour** : 21 mai 2026, Phase 2 RLS audit Tier 1
+> **Derniere mise a jour** : 22 mai 2026, Phase 2 RLS audit COMPLET
 > **Version actuelle** : v2.8.0
 > **Status** : Production live, 0 clients payants, Stripe `sk_LIVE`
 
@@ -85,20 +85,17 @@ Phase 1 — Split landing/app sur deux domaines : LIVRÉE EN PROD
 - [x] 1.G Supabase Redirect URLs + Site URL
 - [x] 1.H Validation E2E prod (5 tests curl + 5 scénarios navigateur)
 
-Phase 2 — RLS audit Supabase
+Phase 2 — RLS audit Supabase ✅ COMPLET
 - [x] Inventaire tables avec RLS active (57/57 protégées)
-- [x] Tier 1 audité : profiles, payments, progress_photos,
-      body_measurements, messages, coach_clients, bug_reports,
-      push_subscriptions
-- [x] Tier 2 audité : 17 tables personnelles (meal_*, daily_*,
-      body_*, cardio_*, chat_*, client_*, etc.)
-- [x] 5 bugs critiques fixés en prod (USING: true sur photos,
-      mesures, meal_logs, meal_plans, meal_tracking)
-- [ ] Tier 3 audit light (~15 min) : tables de référence
-      (probablement déjà OK, juste à confirmer)
-- [ ] P1 : fix INSERT libre sur ai_usage_log + app_logs (~30 min)
-- [ ] P2 : bug coach_clients self-insert (~20 min)
-- [ ] P2 : cleanup doublons RLS (~1h)
+- [x] Tier 1 audité : 8 tables critiques RGPD
+- [x] Tier 2 audité : 17 tables personnelles
+- [x] Tier 3 audité : 14 tables restantes
+- [x] 7 bugs critiques fixés en prod (5 fuites RGPD + 2 manipulation)
+- [x] P1 INSERT libres : ai_usage_log + app_logs fixed
+- [x] P2 coach_clients self-insert : hardening + bug pré-existant
+      useClientDashboard fixed (3 migrations + 1 code change)
+- [ ] Cleanup doublons RLS (~1h, cosmétique P2)
+- [ ] Invitation tokens pour coach_clients (~2h, P1 vrai fix)
 
 Phase 3 — Delete account RPC transactionnel (~1.5h estimé)
 - [ ] Migration delete_user_account(uuid) PL/pgSQL
@@ -295,4 +292,4 @@ Tests E2E                    0%
 Performance                 90%  (TBT 35ms, CLS 0, desktop 96/100, LCP mobile simule ~9s)
 ```
 
-**Global readiness pour launch** : ~96%
+**Global readiness pour launch** : ~98%
