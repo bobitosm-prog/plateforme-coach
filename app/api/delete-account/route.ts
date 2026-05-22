@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     // statements in a single PostgreSQL transaction. If any
     // step fails, EVERYTHING rolls back: the user keeps all their
     // data and we return an error.
-    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+    const { data: rpcResult, error: rpcError } = await supabaseAuth.rpc(
       'delete_user_account',
       { target_user_id: userId }
     )
