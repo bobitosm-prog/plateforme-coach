@@ -102,6 +102,33 @@ Phase 3 — Delete account RPC transactionnel (~1.5h estimé)
 - [ ] Refacto route API pour appeler le RPC
 - [ ] Tests rollback
 
+### Backlog produit (post-Launch Prep)
+
+P1 (bugs UX directs)
+- [ ] Bug Celebration fin de séance — l'écran de fin de séance
+      ne permet pas de revenir à l'accueil, obligation de fermer
+      l'app et rouvrir. À investiguer dans le flow de
+      onFinishWorkout (probablement un state qui ne reset pas
+      ou un router push manquant).
+
+P2 (features nouvelles)
+- [ ] Minuteur de temps d'exécution de série après repos —
+      quand le timer de repos se termine, démarrer un compteur
+      mesurant le temps d'exécution de la série suivante.
+      Permet à terme de comparer le tempo réel au tempo prescrit.
+      Décision UX à prendre : démarrage auto à la fin du repos
+      ou bouton manuel "je commence ma série".
+- [ ] Définition tempo mouvement par exercice — permettre de
+      spécifier un tempo type "3-1-2-0" (descente-pause-montée-pause)
+      sur chaque exercice. À afficher pendant la série en cours.
+      Format à arbitrer : texte libre ou champs structurés.
+      Lié au minuteur d'exécution ci-dessus (les 2 features se
+      complètent : prescrire et mesurer).
+- [ ] Swipe horizontal entre onglets — navigation par geste
+      tactile entre Home, Training, Nutrition, Analytics, Compte.
+      Désactivé pendant une séance active pour éviter quit
+      accidentel. Mobile-first (PWA). Pas prioritaire sur desktop.
+
 ---
 
 ## SESSION SUIVANTE — EconomicModel & Polish (~1-2h)
