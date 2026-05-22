@@ -4,7 +4,7 @@ import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Sear
 import { toast } from 'sonner'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
-import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
+import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
@@ -688,132 +688,128 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       <div className="fixed inset-0 z-50 flex flex-col" style={{ background: BG_BASE, fontFamily: FONT_BODY, overflowY: 'auto' }}>
 
         {/* Glow décoratif top */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[28rem] h-[28rem] pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 65%)`, filter: 'blur(80px)', opacity: 0.5 }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[24rem] h-[24rem] pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 65%)`, filter: 'blur(80px)', opacity: 0.4 }} />
 
-        {/* Contenu principal */}
-        <div className="relative z-10 flex-1 flex flex-col px-6 pt-10 pb-36 max-w-md mx-auto w-full">
+        {/* Contenu principal scrollable */}
+        <div className="relative z-10 flex-1 flex flex-col px-6 pt-8 pb-36 max-w-md mx-auto w-full">
 
-          {/* Date contextuelle + trend */}
-          <div className="flex items-center justify-between mb-8">
-            <div style={{ fontFamily: FONT_BODY, fontSize: '0.75rem', color: TEXT_MUTED, letterSpacing: '0.04em' }}>
-              {dateLabel}
-            </div>
-            <div style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', color: trendColor, display: 'flex', alignItems: 'center', gap: 4 }}>
-              {summaryLoading ? (
-                <span style={{ width: 60, height: 10, background: BG_CARD_2, borderRadius: 2, display: 'inline-block', opacity: 0.5 }} />
-              ) : volumePercent !== null ? (
-                <>
-                  {trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'}
-                  {' '}{volumePercent > 0 ? '+' : ''}{volumePercent.toFixed(1)}%
-                </>
-              ) : null}
-            </div>
+          {/* Header : date + trend badge */}
+          <div className="flex items-center justify-between mb-6">
+            <div style={mutedStyle}>{dateLabel}</div>
+            {summaryLoading ? (
+              <div style={{ width: 64, height: 22, background: BG_CARD_2, borderRadius: 12, opacity: 0.5 }} />
+            ) : volumePercent !== null ? (
+              <div style={{ ...badgeStyle, color: trendColor, background: trend === 'up' ? 'rgba(74,222,128,0.12)' : trend === 'down' ? 'rgba(239,68,68,0.12)' : colors.goldDim, fontSize: 11, padding: '4px 10px' }}>
+                {trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'} {volumePercent > 0 ? '+' : ''}{volumePercent.toFixed(1)}%
+              </div>
+            ) : null}
           </div>
 
           {/* Titre éditorial */}
-          <h1 className="mb-1" style={{ fontFamily: FONT_DISPLAY, fontSize: '3.25rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.04em', lineHeight: 0.95, textTransform: 'uppercase' as const }}>
-            Seance<br/>terminee<span style={{ color: GOLD }}>.</span>
+          <h1 className="mb-1" style={{ ...pageTitleStyle, fontSize: 40, letterSpacing: '0.04em', lineHeight: 1.05 }}>
+            Séance<br/>terminée<span style={{ color: GOLD }}>.</span>
           </h1>
-          <p className="mb-10" style={{ fontFamily: FONT_BODY, fontSize: '0.95rem', color: TEXT_MUTED, fontStyle: 'italic', letterSpacing: '0.02em' }}>
+          <p className="mb-10" style={{ ...subtitleStyle, color: TEXT_MUTED, fontStyle: 'italic', textTransform: 'none' as const, letterSpacing: '0.02em', fontWeight: 400 }}>
             {sessionName}
           </p>
 
-          {/* Volume HERO */}
-          <div className="mb-2" style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', letterSpacing: '0.3em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
-            Volume total
+          {/* CARD : Volume HERO */}
+          <div className="flex items-center gap-3 mb-2">
+            <span style={titleStyle}>Volume total</span>
+            <div style={titleLineStyle} />
           </div>
-          <div className="mb-6 flex items-baseline gap-3" style={{ fontFamily: FONT_DISPLAY, color: GOLD }}>
-            <span style={{ fontSize: '5rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>
-              {Math.round(volume).toLocaleString('fr-FR')}
-            </span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 400, letterSpacing: '0.05em', color: TEXT_MUTED }}>kg</span>
+          <div style={{ ...cardStyle, padding: '32px 24px', marginBottom: 24, textAlign: 'center', background: `linear-gradient(135deg, ${colors.surface}, ${BG_CARD_2})` }}>
+            <div className="flex items-baseline justify-center gap-3">
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 64, fontWeight: 800, color: GOLD, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                {Math.round(volume).toLocaleString('fr-FR')}
+              </span>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.05em' }}>kg</span>
+            </div>
           </div>
 
-          {/* Mini-graph 4 dernières séances */}
+          {/* CARD : Mini-graph dernières séances */}
           {graphSessions.length > 0 && (
-            <div className="mb-10">
-              <div className="mb-3" style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', letterSpacing: '0.25em', color: TEXT_DIM, fontWeight: 700, textTransform: 'uppercase' as const }}>
-                Dernières séances
+            <>
+              <div className="flex items-center gap-3 mb-2">
+                <span style={titleStyle}>Dernières séances</span>
+                <div style={titleLineStyle} />
               </div>
-              <div className="flex items-end gap-2 h-20">
-                {graphSessions.map((s, i) => {
-                  const heightPct = (s.volume / maxGraphVolume) * 100
-                  const isCurrent = i === graphSessions.length - 1
-                  return (
-                    <div key={s.id} className="flex-1 flex flex-col items-center gap-1">
-                      <div className="w-full rounded-sm transition-all" style={{
-                        height: `${Math.max(heightPct, 4)}%`,
-                        background: isCurrent ? GOLD : GOLD_DIM,
-                        opacity: isCurrent ? 1 : 0.6,
-                      }} />
-                      <div style={{ fontSize: '0.6rem', color: TEXT_DIM, fontFamily: FONT_BODY }}>
-                        {new Date(s.date).getDate()}/{new Date(s.date).getMonth() + 1}
+              <div style={{ ...cardStyle, padding: '20px 16px', marginBottom: 24 }}>
+                <div className="flex items-end gap-3 h-24">
+                  {graphSessions.map((s, i) => {
+                    const heightPct = (s.volume / maxGraphVolume) * 100
+                    const isCurrent = i === graphSessions.length - 1
+                    return (
+                      <div key={s.id} className="flex-1 flex flex-col items-center gap-2">
+                        <div className="w-full rounded-t" style={{
+                          height: `${Math.max(heightPct, 6)}%`,
+                          background: isCurrent ? GOLD : GOLD_DIM,
+                          minHeight: 8,
+                        }} />
+                        <div style={{ ...mutedStyle, fontSize: 10 }}>
+                          {new Date(s.date).getDate()}/{new Date(s.date).getMonth() + 1}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
+            </>
           )}
 
-          {/* Stats secondaires sans card */}
-          <div className="grid grid-cols-2 gap-6 mb-10">
-            <div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>
-                {dur(elapsed)}
-              </div>
-              <div className="mt-1" style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
-                Durée
-              </div>
+          {/* CARDS : Stats secondaires 2 colonnes */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
+              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>Durée</div>
+              <div style={{ ...statStyle, fontSize: 32 }}>{dur(elapsed)}</div>
             </div>
-            <div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>
-                {completed}<span style={{ color: TEXT_DIM, fontSize: '1.2rem' }}>/{total}</span>
-              </div>
-              <div className="mt-1" style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
-                Séries
+            <div style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
+              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>Séries</div>
+              <div style={{ ...statStyle, fontSize: 32 }}>
+                {completed}<span style={{ color: TEXT_DIM, fontSize: 22 }}>/{total}</span>
               </div>
             </div>
           </div>
 
-          {/* Liste exercices sans card */}
+          {/* CARD : Liste exercices */}
           {performances.length > 0 && (
-            <div>
-              <div className="mb-4" style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', letterSpacing: '0.25em', color: TEXT_DIM, fontWeight: 700, textTransform: 'uppercase' as const }}>
-                Exercices
+            <>
+              <div className="flex items-center gap-3 mb-2">
+                <span style={titleStyle}>Exercices</span>
+                <div style={titleLineStyle} />
               </div>
-              {performances.map((p, i) => (
-                <div key={i}>
-                  <div className="py-3 flex justify-between items-center">
-                    <div className="flex-1 min-w-0">
-                      <div style={{ fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.01em' }} className="truncate">
-                        {p.name}
+              <div style={{ ...cardStyle, padding: '8px 20px' }}>
+                {performances.map((p, i) => (
+                  <div key={i}>
+                    <div className="py-3 flex justify-between items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontFamily: FONT_ALT, fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.01em' }} className="truncate">
+                          {p.name}
+                        </div>
+                        <div className="mt-0.5" style={{ ...mutedStyle, fontSize: 11 }}>
+                          {p.setsCount} séries · {p.muscle}
+                        </div>
                       </div>
-                      <div className="mt-0.5" style={{ fontFamily: FONT_BODY, fontSize: '0.7rem', color: TEXT_MUTED, letterSpacing: '0.02em' }}>
-                        {p.setsCount} séries · {p.muscle}
-                      </div>
+                      <div style={{ ...statSmallStyle, fontSize: 18 }}>{p.best} kg</div>
                     </div>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.1rem', color: GOLD, letterSpacing: '0.02em' }}>
-                      {p.best} kg
-                    </div>
+                    {i < performances.length - 1 && (
+                      <div style={{ height: 1, background: BORDER, opacity: 0.5 }} />
+                    )}
                   </div>
-                  {i < performances.length - 1 && (
-                    <div style={{ height: 1, background: BORDER, opacity: 0.6 }} />
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
 
         </div>
 
-        {/* Bottom bar : bouton avec marges latérales */}
+        {/* Bottom bar fixe : bouton premium + compteur */}
         <div className="fixed bottom-0 left-0 right-0 z-20" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
-          <div className="max-w-md mx-auto px-6 pt-4" style={{ background: 'linear-gradient(to top, rgba(13,11,8,0.98) 0%, rgba(13,11,8,0.95) 60%, transparent 100%)' }}>
-            <button onClick={onClose} className="w-full py-4 active:scale-[0.98] transition-transform" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 14, border: 'none', cursor: 'pointer', letterSpacing: '0.18em', textTransform: 'uppercase' as const, fontSize: '0.85rem' }}>
+          <div className="max-w-md mx-auto px-6 pt-6" style={{ background: 'linear-gradient(to top, rgba(13,11,8,0.98) 0%, rgba(13,11,8,0.95) 60%, transparent 100%)' }}>
+            <button onClick={onClose} style={{ ...btnPrimary, width: '100%', padding: '16px 0', fontSize: 14 }} className="active:scale-[0.98] transition-transform">
               Retour au Dashboard
             </button>
-            <p className="text-center mt-2 mb-2" style={{ fontSize: '0.7rem', color: TEXT_DIM, fontFamily: FONT_BODY, letterSpacing: '0.03em' }}>
+            <p className="text-center mt-3" style={{ ...mutedStyle, fontSize: 11 }}>
               Auto dans {autoRedirectCountdown}s
             </p>
           </div>
