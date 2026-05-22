@@ -82,9 +82,11 @@ function RegisterContent() {
     })
   }, [])
 
+  // Route via /auth/callback pour exchange PKCE + signOut + banner sur /login
+  // Le flag type=signup signale à la callback de forcer un re-login (vs auto-login)
   const redirectUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/${selectedRole === 'coach' ? 'onboarding-coach' : 'onboarding'}`
-    : selectedRole === 'coach' ? '/onboarding-coach' : '/onboarding'
+    ? `${window.location.origin}/auth/callback?type=signup`
+    : '/auth/callback?type=signup'
 
   function validate(): string | null {
     if (!email.trim()) return t('errors.emailRequired')

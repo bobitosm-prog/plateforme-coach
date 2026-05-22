@@ -1,7 +1,7 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, GOLD, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../lib/design-tokens'
@@ -14,6 +14,8 @@ const AppleIcon = () => <svg width="16" height="19" viewBox="0 0 16 19" fill="wh
 export default function LoginPageContent() {
   const t = useTranslations('auth.login')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [confirmedVisible, setConfirmedVisible] = useState(false)
   const [checking, setChecking] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,6 +26,15 @@ export default function LoginPageContent() {
   const [resetEmail, setResetEmail] = useState('')
   const [resetSent, setResetSent] = useState(false)
   const [resetError, setResetError] = useState('')
+
+  useEffect(() => {
+    if (searchParams.get('confirmed') === '1') {
+      setConfirmedVisible(true)
+      // Nettoie l'URL pour pas re-afficher au refresh
+      window.history.replaceState({}, '', '/login')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -153,6 +164,29 @@ export default function LoginPageContent() {
           ) : (
             /* ── Login form ── */
             <>
+              {confirmedVisible && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 12,
+                  padding: '14px 16px',
+                  background: 'rgba(212,175,55,0.06)',
+                  border: `1px solid ${GOLD_RULE}`,
+                  borderRadius: RADIUS_CARD,
+                  marginBottom: 28,
+                  animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)',
+                }}>
+                  <CheckCircle size={18} color={GOLD} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <div style={{ ...labelStyle, fontSize: '0.72rem', color: GOLD, marginBottom: 4, letterSpacing: 1.5, fontWeight: 600 }}>
+                      {t('banner.confirmed.title')}
+                    </div>
+                    <div style={{ ...bodyStyle, fontSize: '0.85rem', color: TEXT_PRIMARY, lineHeight: 1.5 }}>
+                      {t('banner.confirmed.body')}
+                    </div>
+                  </div>
+                </div>
+              )}
               <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
                 <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('title')}</h1>
                 <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px' }}>{t('subtitle')}</p>
@@ -177,12 +211,12 @@ export default function LoginPageContent() {
 
                 <div style={{ position: 'relative', animation: 'fadeUp 0.7s 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
                   <Mail size={16} color={TEXT_DIM} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                  <input type="email" className="auth-input" value={email} onChange={e => { setEmail(e.target.value); setError('') }} placeholder={t('emailPlaceholder')} />
+                  <input type="email" className="auth-input" value={email} onChange={e => { setEmail(e.target.value); setError(''); setConfirmedVisible(false) }} placeholder={t('emailPlaceholder')} />
                 </div>
 
                 <div style={{ position: 'relative', animation: 'fadeUp 0.7s 0.3s cubic-bezier(0.16,1,0.3,1) both' }}>
                   <Lock size={16} color={TEXT_DIM} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                  <input type={showPassword ? 'text' : 'password'} className="auth-input" style={{ paddingRight: 44 }} value={password} onChange={e => { setPassword(e.target.value); setError('') }} placeholder={t('passwordPlaceholder')}
+                  <input type={showPassword ? 'text' : 'password'} className="auth-input" style={{ paddingRight: 44 }} value={password} onChange={e => { setPassword(e.target.value); setError(''); setConfirmedVisible(false) }} placeholder={t('passwordPlaceholder')}
                     onKeyDown={e => { if (e.key === 'Enter') handleEmailLogin() }} />
                   <button onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                     {showPassword ? <EyeOff size={16} color={TEXT_DIM} /> : <Eye size={16} color={TEXT_DIM} />}

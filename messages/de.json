@@ -479,6 +479,12 @@
         "passwordRequired": "Passwort erforderlich",
         "invalidCredentials": "Ungültige E-Mail oder Passwort",
         "emailNotConfirmed": "E-Mail nicht bestätigt. Überprüfe dein Postfach."
+      },
+      "banner": {
+        "confirmed": {
+          "title": "KONTO BESTÄTIGT",
+          "body": "Ihre E-Mail ist bestätigt. Melden Sie sich an, um zu beginnen."
+        }
       }
     },
     "register": {
