@@ -691,7 +691,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[24rem] h-[24rem] pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 65%)`, filter: 'blur(80px)', opacity: 0.4 }} />
 
         {/* Contenu principal scrollable */}
-        <div className="relative z-10 flex-1 flex flex-col px-6 pt-8 pb-36 max-w-md mx-auto w-full">
+        <div className="relative z-10 flex-1 flex flex-col pt-8 pb-36 w-full" style={{ paddingLeft: 20, paddingRight: 20, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto' }}>
 
           {/* Header : date + trend badge */}
           <div className="flex items-center justify-between mb-6">
@@ -805,7 +805,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
         {/* Bottom bar fixe : bouton premium + compteur */}
         <div className="fixed bottom-0 left-0 right-0 z-20" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
-          <div className="max-w-md mx-auto px-6 pt-6" style={{ background: 'linear-gradient(to top, rgba(13,11,8,0.98) 0%, rgba(13,11,8,0.95) 60%, transparent 100%)' }}>
+          <div className="pt-6" style={{ paddingLeft: 20, paddingRight: 20, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto', background: 'linear-gradient(to top, rgba(13,11,8,0.98) 0%, rgba(13,11,8,0.95) 60%, transparent 100%)' }}>
             <button onClick={onClose} style={{ ...btnPrimary, width: '100%', padding: '16px 0', fontSize: 14 }} className="active:scale-[0.98] transition-transform">
               Retour au Dashboard
             </button>
