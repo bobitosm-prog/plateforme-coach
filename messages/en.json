@@ -479,6 +479,12 @@
         "passwordRequired": "Password required",
         "invalidCredentials": "Invalid email or password",
         "emailNotConfirmed": "Email not confirmed. Check your inbox."
+      },
+      "banner": {
+        "confirmed": {
+          "title": "ACCOUNT VERIFIED",
+          "body": "Your email is confirmed. Sign in to get started."
+        }
       }
     },
     "register": {

@@ -479,6 +479,12 @@
         "passwordRequired": "Mot de passe requis",
         "invalidCredentials": "Email ou mot de passe incorrect",
         "emailNotConfirmed": "Email non confirmé. Vérifie ta boîte mail."
+      },
+      "banner": {
+        "confirmed": {
+          "title": "COMPTE VALIDÉ",
+          "body": "Votre email est confirmé. Connectez-vous pour démarrer."
+        }
       }
     },
     "register": {
