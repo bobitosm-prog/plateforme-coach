@@ -97,5 +97,104 @@
     "videoPath": "planche-frontale/planche-frontale.mp4",
     "imagePath": "planche-frontale/planche-frontale.png",
     "syncedAt": "2026-05-12T17:20:53.282Z"
+  },
+  "curl-barre-droit": {
+    "id": "b146f249-6b3b-46f5-be9a-5ec6ec07c413",
+    "name": "Curl Barre Droit",
+    "mp4": "1468887-1779121402373.39",
+    "png": "1725510-1779120814069.3691",
+    "videoPath": "curl-barre-droit/curl-barre-droit.mp4",
+    "imagePath": "curl-barre-droit/curl-barre-droit.png",
+    "syncedAt": "2026-05-18T17:13:24.767Z"
+  },
+  "curl-concentre": {
+    "id": "1843e6ea-e387-4cde-84de-25d7db2b2e40",
+    "name": "Curl Concentré",
+    "mp4": "1475980-1779121855502.7925",
+    "png": "1862757-1779121302440.4504",
+    "videoPath": "curl-concentre/curl-concentre.mp4",
+    "imagePath": "curl-concentre/curl-concentre.png",
+    "syncedAt": "2026-05-18T17:13:25.596Z"
+  },
+  "curl-halteres-alterne": {
+    "id": "fec26eda-01c0-420b-a7ca-dc4941859ab2",
+    "name": "Curl Haltères Alterné",
+    "mp4": "1394986-1779122449242.857",
+    "png": "1812261-1779122062677.0195",
+    "videoPath": "curl-halteres-alterne/curl-halteres-alterne.mp4",
+    "imagePath": "curl-halteres-alterne/curl-halteres-alterne.png",
+    "syncedAt": "2026-05-18T17:13:26.187Z"
+  },
+  "curl-halteres-simultane": {
+    "id": "9be17796-5c34-4a82-bd91-7959f6350848",
+    "name": "Curl Haltères Simultané",
+    "mp4": "1522773-1779122819963.5952",
+    "png": "1763198-1779122310193.8713",
+    "videoPath": "curl-halteres-simultane/curl-halteres-simultane.mp4",
+    "imagePath": "curl-halteres-simultane/curl-halteres-simultane.png",
+    "syncedAt": "2026-05-18T17:13:26.817Z"
+  },
+  "curl-incline": {
+    "id": "78f75306-d2b9-4457-8f1f-b2d45209ba67",
+    "name": "Curl Incliné",
+    "mp4": "1656638-1779123533348.8833",
+    "png": "1865391-1779122748273.5005",
+    "videoPath": "curl-incline/curl-incline.mp4",
+    "imagePath": "curl-incline/curl-incline.png",
+    "syncedAt": "2026-05-18T17:13:27.477Z"
+  },
+  "curl-poulie-basse": {
+    "id": "00dbdad6-b94d-43a5-8463-6b2ba849cc18",
+    "name": "Curl Poulie Basse",
+    "mp4": "1444055-1779123841340.8286",
+    "png": "1773339-1779123575020.5396",
+    "videoPath": "curl-poulie-basse/curl-poulie-basse.mp4",
+    "imagePath": "curl-poulie-basse/curl-poulie-basse.png",
+    "syncedAt": "2026-05-18T17:13:28.119Z"
+  },
+  "curl-spider": {
+    "id": "b2eaccb5-9b91-475e-aeba-9d081709d54d",
+    "name": "Curl spider",
+    "mp4": "2658766-1779124383859.1523",
+    "png": "1903294-1779123966306.2468",
+    "videoPath": "curl-spider/curl-spider.mp4",
+    "imagePath": "curl-spider/curl-spider.png",
+    "syncedAt": "2026-05-18T17:13:28.794Z"
+  },
+  "curl-a-la-machine": {
+    "id": "88f3b1be-0a5e-4bf0-b501-8f42f3d85a3e",
+    "name": "Curl à la Machine",
+    "mp4": "1930239-1779120901583.2668",
+    "png": "1799692-1779120467868.1914",
+    "videoPath": "curl-a-la-machine/curl-a-la-machine.mp4",
+    "imagePath": "curl-a-la-machine/curl-a-la-machine.png",
+    "syncedAt": "2026-05-18T17:13:29.333Z"
+  },
+  "curl-barre-ez": {
+    "id": "15e5650c-a821-46a9-bf28-f1cfd859da38",
+    "name": "Curl barre EZ",
+    "mp4": "1885589-1779121739072.3867",
+    "png": "1957865-1779121044966.1333",
+    "videoPath": "curl-barre-ez/curl-barre-ez.mp4",
+    "imagePath": "curl-barre-ez/curl-barre-ez.png",
+    "syncedAt": "2026-05-18T17:13:29.887Z"
+  },
+  "curl-halteres": {
+    "id": "21c4f23d-9de8-46ac-8b01-288770114156",
+    "name": "Curl haltères",
+    "mp4": "1643505-1779122076468.8616",
+    "png": "1855181-1779121798583.7998",
+    "videoPath": "curl-halteres/curl-halteres.mp4",
+    "imagePath": "curl-halteres/curl-halteres.png",
+    "syncedAt": "2026-05-18T17:13:30.428Z"
+  },
+  "curl-pupitre": {
+    "id": "b3a84e09-ed26-43f8-b17f-4b8ab4f7c23f",
+    "name": "Curl pupitre",
+    "mp4": "1780051-1779124134904.7002",
+    "png": "1837524-1779123716175.7476",
+    "videoPath": "curl-pupitre/curl-pupitre.mp4",
+    "imagePath": "curl-pupitre/curl-pupitre.png",
+    "syncedAt": "2026-05-18T17:13:31.015Z"
   }
 }
