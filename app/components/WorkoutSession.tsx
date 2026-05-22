@@ -272,6 +272,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const elT = useRef<NodeJS.Timeout | null>(null)
   const [done, setDone] = useState(false)
   const [autoRedirectCountdown, setAutoRedirectCountdown] = useState(AUTO_REDIRECT_SECONDS)
+  const [summary, setSummary] = useState<{
+    previousSessions: { id: string; name: string; date: string; volume: number }[]
+    currentWeekVolume: number
+    lastWeekVolume: number
+  } | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(true)
   const [showVideo, setShowVideo] = useState<string | null>(null)
   const [sessionModified, setSessionModified] = useState(false)
   const [showSavePopup, setShowSavePopup] = useState(false)
@@ -372,6 +378,33 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     }, 1000)
     return () => clearInterval(interval)
   }, [done, onClose])
+
+  useEffect(() => {
+    if (!done) return
+    let cancelled = false
+    ;(async () => {
+      setSummaryLoading(true)
+      try {
+        const { data: userData } = await supabase.auth.getUser()
+        if (!userData.user) return
+        const { data, error } = await supabase.rpc('get_workout_session_summary', {
+          target_user_id: userData.user.id,
+          exclude_session_id: null
+        })
+        if (cancelled) return
+        if (error) {
+          console.error('[workout-summary]', error.message)
+          return
+        }
+        setSummary(data as any)
+      } catch (e: any) {
+        console.error('[workout-summary] unexpected', e?.message)
+      } finally {
+        if (!cancelled) setSummaryLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [done])
 
   const prevRemaining = useRef(Infinity)
   useEffect(() => {
@@ -611,114 +644,184 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
 
-  if (done) return (
-    <>
-    <WorkoutCelebration visible={done} />
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: BG_BASE, fontFamily: FONT_BODY, overflowY: 'auto' }}>
-      {/* Glow décoratif top */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 65%)`, filter: 'blur(60px)', opacity: 0.6 }} />
+  if (done) {
+    // Compute volume comparison
+    const volumeDelta = summary ? summary.currentWeekVolume - summary.lastWeekVolume : 0
+    const volumePercent = summary && summary.lastWeekVolume > 0
+      ? ((volumeDelta / summary.lastWeekVolume) * 100)
+      : null
+    const trend: 'up' | 'down' | 'neutral' =
+      volumePercent === null ? 'neutral' :
+      volumePercent > 0.5 ? 'up' :
+      volumePercent < -0.5 ? 'down' : 'neutral'
+    const trendColor = trend === 'up' ? GREEN : trend === 'down' ? RED : TEXT_DIM
 
-      {/* Contenu principal scrollable */}
-      <div className="relative z-10 flex-1 flex flex-col items-center px-6 pt-12 pb-32 max-w-md mx-auto w-full">
+    // Top 3 exos by max weight
+    const performances = exos
+      .map(e => {
+        const doneSets = e.sets.filter(s => s.done)
+        if (!doneSets.length) return null
+        const best = Math.max(...doneSets.map(s => Number(s.weight) || 0))
+        return { name: e.name, muscle: e.muscle, setsCount: doneSets.length, best }
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null && p.best > 0)
+      .sort((a, b) => b.best - a.best)
+      .slice(0, 3)
 
-        {/* Trophy hero */}
-        <div className="w-20 h-20 flex items-center justify-center mb-6" style={{ background: GOLD, borderRadius: RADIUS_CARD }}>
-          <Trophy size={36} className="text-white" />
-        </div>
+    // Format date contextually
+    const now = new Date()
+    const dayNames = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
+    const monthNames = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
+    const dateLabel = `${dayNames[now.getDay()]} ${now.getDate()} ${monthNames[now.getMonth()]} · ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
 
-        {/* Titre + nom séance */}
-        <h1 className="mb-2 text-center" style={{ fontFamily: FONT_DISPLAY, fontSize: '2.25rem', letterSpacing: '0.1em', color: TEXT_PRIMARY, lineHeight: 1.1, textTransform: 'uppercase' as const }}>SEANCE<br/>TERMINEE</h1>
-        <p className="text-sm mb-10 text-center" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY, letterSpacing: '0.05em' }}>{sessionName}</p>
+    // Mini-graph : up to 4 previous sessions, oldest first
+    const graphSessions = summary?.previousSessions
+      ? [...summary.previousSessions].reverse().slice(-4)
+      : []
+    const maxGraphVolume = graphSessions.length
+      ? Math.max(...graphSessions.map(s => s.volume), volume)
+      : volume
 
-        {/* Séparateur golden subtil */}
-        <div className="w-16 h-px mb-10" style={{ background: GOLD_RULE }} />
+    return (
+      <>
+      <WorkoutCelebration visible={done} />
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: BG_BASE, fontFamily: FONT_BODY, overflowY: 'auto' }}>
 
-        {/* HERO STAT — Volume */}
-        <div className="text-center mb-2">
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: '4.5rem', fontWeight: 700, color: GOLD, letterSpacing: '0.02em', lineHeight: 1 }}>
-            {Math.round(volume).toLocaleString('fr-FR')}<span style={{ fontSize: '1.5rem', marginLeft: 6, letterSpacing: '0.05em', color: GOLD }}>kg</span>
-          </div>
-          <div className="mt-2" style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
-            Volume souleve
-          </div>
-        </div>
+        {/* Glow décoratif top */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[28rem] h-[28rem] pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 65%)`, filter: 'blur(80px)', opacity: 0.5 }} />
 
-        {/* Séparateur golden subtil */}
-        <div className="w-16 h-px my-10" style={{ background: GOLD_RULE }} />
+        {/* Contenu principal */}
+        <div className="relative z-10 flex-1 flex flex-col px-6 pt-10 pb-36 max-w-md mx-auto w-full">
 
-        {/* Stats secondaires : Durée + Sets */}
-        <div className="grid grid-cols-2 gap-6 w-full mb-10">
-          <div className="text-center">
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.25rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.02em', lineHeight: 1 }}>
-              {dur(elapsed)}
+          {/* Date contextuelle + trend */}
+          <div className="flex items-center justify-between mb-8">
+            <div style={{ fontFamily: FONT_BODY, fontSize: '0.75rem', color: TEXT_MUTED, letterSpacing: '0.04em' }}>
+              {dateLabel}
             </div>
-            <div className="mt-2" style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
-              Duree
+            <div style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', color: trendColor, display: 'flex', alignItems: 'center', gap: 4 }}>
+              {summaryLoading ? (
+                <span style={{ width: 60, height: 10, background: BG_CARD_2, borderRadius: 2, display: 'inline-block', opacity: 0.5 }} />
+              ) : volumePercent !== null ? (
+                <>
+                  {trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'}
+                  {' '}{volumePercent > 0 ? '+' : ''}{volumePercent.toFixed(1)}%
+                </>
+              ) : null}
             </div>
           </div>
-          <div className="text-center">
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2.25rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.02em', lineHeight: 1 }}>
-              {completed}<span style={{ color: TEXT_DIM, fontSize: '1.5rem' }}>/{total}</span>
-            </div>
-            <div className="mt-2" style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
-              Sets
-            </div>
+
+          {/* Titre éditorial */}
+          <h1 className="mb-1" style={{ fontFamily: FONT_DISPLAY, fontSize: '3.25rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.04em', lineHeight: 0.95, textTransform: 'uppercase' as const }}>
+            Seance<br/>terminee<span style={{ color: GOLD }}>.</span>
+          </h1>
+          <p className="mb-10" style={{ fontFamily: FONT_BODY, fontSize: '0.95rem', color: TEXT_MUTED, fontStyle: 'italic', letterSpacing: '0.02em' }}>
+            {sessionName}
+          </p>
+
+          {/* Volume HERO */}
+          <div className="mb-2" style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', letterSpacing: '0.3em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
+            Volume total
           </div>
-        </div>
+          <div className="mb-6 flex items-baseline gap-3" style={{ fontFamily: FONT_DISPLAY, color: GOLD }}>
+            <span style={{ fontSize: '5rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>
+              {Math.round(volume).toLocaleString('fr-FR')}
+            </span>
+            <span style={{ fontSize: '1.5rem', fontWeight: 400, letterSpacing: '0.05em', color: TEXT_MUTED }}>kg</span>
+          </div>
 
-        {/* Top 3 meilleures performances */}
-        {(() => {
-          const performances = exos
-            .map(e => {
-              const doneSets = e.sets.filter(s => s.done)
-              if (!doneSets.length) return null
-              const best = Math.max(...doneSets.map(s => Number(s.weight) || 0))
-              return { name: e.name, muscle: e.muscle, setsCount: doneSets.length, best }
-            })
-            .filter((p): p is NonNullable<typeof p> => p !== null && p.best > 0)
-            .sort((a, b) => b.best - a.best)
-            .slice(0, 3)
-
-          if (performances.length === 0) return null
-
-          return (
-            <div className="w-full mb-10">
-              <div className="mb-4 text-center" style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
-                Meilleures performances
+          {/* Mini-graph 4 dernières séances */}
+          {graphSessions.length > 0 && (
+            <div className="mb-10">
+              <div className="mb-3" style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', letterSpacing: '0.25em', color: TEXT_DIM, fontWeight: 700, textTransform: 'uppercase' as const }}>
+                Dernières séances
               </div>
-              <div className="space-y-2">
-                {performances.map((p, i) => (
-                  <div key={i} className="px-4 py-3 flex justify-between items-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: RADIUS_CARD }}>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm truncate" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.02em' }}>{p.name}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: TEXT_MUTED, fontFamily: FONT_BODY, letterSpacing: '0.03em' }}>{p.setsCount} sets · {p.muscle}</div>
+              <div className="flex items-end gap-2 h-20">
+                {graphSessions.map((s, i) => {
+                  const heightPct = (s.volume / maxGraphVolume) * 100
+                  const isCurrent = i === graphSessions.length - 1
+                  return (
+                    <div key={s.id} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="w-full rounded-sm transition-all" style={{
+                        height: `${Math.max(heightPct, 4)}%`,
+                        background: isCurrent ? GOLD : GOLD_DIM,
+                        opacity: isCurrent ? 1 : 0.6,
+                      }} />
+                      <div style={{ fontSize: '0.6rem', color: TEXT_DIM, fontFamily: FONT_BODY }}>
+                        {new Date(s.date).getDate()}/{new Date(s.date).getMonth() + 1}
+                      </div>
                     </div>
-                    <div className="text-right shrink-0 ml-3">
-                      <div style={{ color: GOLD, fontFamily: FONT_DISPLAY, fontSize: '1.1rem', letterSpacing: '0.02em' }}>{p.best} kg</div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Stats secondaires sans card */}
+          <div className="grid grid-cols-2 gap-6 mb-10">
+            <div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>
+                {dur(elapsed)}
+              </div>
+              <div className="mt-1" style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
+                Durée
+              </div>
+            </div>
+            <div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>
+                {completed}<span style={{ color: TEXT_DIM, fontSize: '1.2rem' }}>/{total}</span>
+              </div>
+              <div className="mt-1" style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', letterSpacing: '0.25em', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase' as const }}>
+                Séries
+              </div>
+            </div>
+          </div>
+
+          {/* Liste exercices sans card */}
+          {performances.length > 0 && (
+            <div>
+              <div className="mb-4" style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', letterSpacing: '0.25em', color: TEXT_DIM, fontWeight: 700, textTransform: 'uppercase' as const }}>
+                Exercices
+              </div>
+              {performances.map((p, i) => (
+                <div key={i}>
+                  <div className="py-3 flex justify-between items-center">
+                    <div className="flex-1 min-w-0">
+                      <div style={{ fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.01em' }} className="truncate">
+                        {p.name}
+                      </div>
+                      <div className="mt-0.5" style={{ fontFamily: FONT_BODY, fontSize: '0.7rem', color: TEXT_MUTED, letterSpacing: '0.02em' }}>
+                        {p.setsCount} séries · {p.muscle}
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.1rem', color: GOLD, letterSpacing: '0.02em' }}>
+                      {p.best} kg
                     </div>
                   </div>
-                ))}
-              </div>
+                  {i < performances.length - 1 && (
+                    <div style={{ height: 1, background: BORDER, opacity: 0.6 }} />
+                  )}
+                </div>
+              ))}
             </div>
-          )
-        })()}
+          )}
 
-      </div>
+        </div>
 
-      {/* Bottom bar fixe : bouton dominant + compteur discret */}
-      <div className="fixed bottom-0 left-0 right-0 z-20" style={{ padding: '16px 24px', paddingBottom: 'max(16px, env(safe-area-inset-bottom, 16px))', background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}` }}>
-        <div className="max-w-md mx-auto">
-          <button onClick={onClose} className="w-full py-4 active:scale-[0.98]" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 14, border: 'none', cursor: 'pointer', letterSpacing: '0.2em', textTransform: 'uppercase' as const, fontSize: '0.9rem' }}>
-            Retour au Dashboard
-          </button>
-          <p className="text-center mt-2" style={{ fontSize: '0.7rem', color: TEXT_DIM, fontFamily: FONT_BODY, letterSpacing: '0.03em' }}>
-            Auto dans {autoRedirectCountdown}s · clique pour skip
-          </p>
+        {/* Bottom bar : bouton avec marges latérales */}
+        <div className="fixed bottom-0 left-0 right-0 z-20" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
+          <div className="max-w-md mx-auto px-6 pt-4" style={{ background: 'linear-gradient(to top, rgba(13,11,8,0.98) 0%, rgba(13,11,8,0.95) 60%, transparent 100%)' }}>
+            <button onClick={onClose} className="w-full py-4 active:scale-[0.98] transition-transform" style={{ background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, borderRadius: 14, border: 'none', cursor: 'pointer', letterSpacing: '0.18em', textTransform: 'uppercase' as const, fontSize: '0.85rem' }}>
+              Retour au Dashboard
+            </button>
+            <p className="text-center mt-2 mb-2" style={{ fontSize: '0.7rem', color: TEXT_DIM, fontFamily: FONT_BODY, letterSpacing: '0.03em' }}>
+              Auto dans {autoRedirectCountdown}s
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-    </>
-  )
+      </>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
