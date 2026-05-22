@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Trash2 } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
 import { BG_BASE, BG_CARD, BORDER, GOLD_RULE, RED, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../../../lib/design-tokens'
 
 export default function DeleteAccountSection({ session }: { session: any }) {
@@ -20,7 +21,10 @@ export default function DeleteAccountSection({ session }: { session: any }) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: session.user.id }),
       })
-      if (res.ok) { window.location.href = '/login' }
+      if (res.ok) {
+        await supabase.auth.signOut()
+        window.location.href = '/login'
+      }
       else { const { error } = await res.json(); alert(`Erreur : ${error || t('errorGeneric')}`); setDeleting(false) }
     } catch { alert(t('errorNetwork')); setDeleting(false) }
   }

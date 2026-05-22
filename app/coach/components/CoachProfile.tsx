@@ -50,7 +50,14 @@ export default function CoachProfile({
     setDeleting(true)
     try {
       const res = await fetch('/api/delete-account', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: session.user.id }) })
-      if (res.ok) { window.location.href = '/login' } else { const { error } = await res.json(); alert(`Erreur : ${error || 'Échec'}`); setDeleting(false) }
+      if (res.ok) {
+        await supabase.auth.signOut()
+        window.location.href = '/login'
+      } else {
+        const { error } = await res.json()
+        alert(`Erreur : ${error || 'Échec'}`)
+        setDeleting(false)
+      }
     } catch { alert('Erreur réseau'); setDeleting(false) }
   }
 
