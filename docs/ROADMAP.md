@@ -1,6 +1,6 @@
 # MoovX — ROADMAP
 
-> **Derniere mise a jour** : 22 mai 2026, Phase 2 RLS audit COMPLET
+> **Derniere mise a jour** : 22 mai 2026, Phase 3 Delete Account RPC COMPLET
 > **Version actuelle** : v2.8.0
 > **Status** : Production live, 0 clients payants, Stripe `sk_LIVE`
 
@@ -97,10 +97,14 @@ Phase 2 — RLS audit Supabase ✅ COMPLET
 - [ ] Cleanup doublons RLS (~1h, cosmétique P2)
 - [ ] Invitation tokens pour coach_clients (~2h, P1 vrai fix)
 
-Phase 3 — Delete account RPC transactionnel (~1.5h estimé)
-- [ ] Migration delete_user_account(uuid) PL/pgSQL
-- [ ] Refacto route API pour appeler le RPC
-- [ ] Tests rollback
+Phase 3 — Delete account RPC ✅ COMPLET
+- [x] Audit du code existant (16 tables vs ~45 nécessaires)
+- [x] Inventaire FK via information_schema
+- [x] Migration delete_user_account(uuid) PL/pgSQL transactionnel
+- [x] Refacto app/api/delete-account/route.ts
+- [x] Bug 1 fixed : RPC via authenticated client (auth.uid context)
+- [x] Bug 2 fixed : signOut avant redirect (no zombie state)
+- [x] Tests E2E validés : safety check + suppression réelle + UX
 
 ### Backlog produit (post-Launch Prep)
 
@@ -328,4 +332,4 @@ Tests E2E                    0%
 Performance                 90%  (TBT 35ms, CLS 0, desktop 96/100, LCP mobile simule ~9s)
 ```
 
-**Global readiness pour launch** : ~98%
+**Global readiness pour launch** : ~99%

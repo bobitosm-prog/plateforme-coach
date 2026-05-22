@@ -4,6 +4,178 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-22 — Ménage Git + Phase 3 Delete Account RPC (~3h)
+
+### Objectif
+Avancer sprint Launch Prep : ménage git (stashes + identité),
+Phase 3 (delete account RPC RGPD/nLPD), puis cleanup RLS si temps.
+
+### 1. Ménage Git (~25 min)
+
+- Identité Git configurée : Marco Ferreira <bobitosm@gmail.com>
+  (avant : warning auto à chaque commit, hash MacBook local)
+- 4 stashes triés :
+  * stash@{0} (19/05) wip-2026-05-19 : commit 829902f
+    chore(media): remove local exercise videos migrated to Supabase
+    Storage (9 fichiers binaires curl, ~16 MB libérés)
+  * 3 autres stashes droppés (.claude/settings.local.json modifs
+    triviales sur branches feature mergées et supprimées)
+- .claude/settings.local.json untracked (commit 203cf9d) :
+  fichier de config locale Claude Code commité par erreur, .gitignore
+  l'ignorait déjà mais le tracking restait — git rm --cached résolu
+- package-lock.json resync (commit abc3965) : @next/bundle-analyzer
+  déclaré dans package.json mais lockfile pas commit
+
+Total : 3 commits, repo allégé, identité Git propre.
+
+### 2. Phase 3 Delete Account RPC (~2.5h)
+
+#### Audit du code existant
+
+app/api/delete-account/route.ts (108 lignes) avait :
+- Pas de transaction (DELETE table par table, fails silencieux)
+- Seulement 16 tables couvertes (~30 user-related tables existent)
+- console.error + continue + return success:true même en cas
+  d'erreur DB (mensonge au frontend)
+- Manque de couverture coach-side (payments.coach_id,
+  client_meal_plans.coach_id, etc.)
+
+#### Inventaire FK via information_schema
+
+Query d'introspection sur pg_proc + information_schema pour lister
+toutes les colonnes UUID référençant des users (user_id, client_id,
+coach_id, created_by, sender_id, receiver_id) — 45+ touch points
+identifiés vs 16 dans le code existant. ~25 tables manquantes.
+
+#### Migration 20260522090303_add_delete_user_account_rpc
+
+Création RPC public.delete_user_account(uuid) PL/pgSQL :
+- SECURITY DEFINER pour cross-table cascade (bypass RLS safely)
+- Safety check : auth.uid() = target_user_id OR super_admin
+- 4 niveaux de DELETE selon profondeur FK
+- Stratégie d'anonymisation pour contenu partagé :
+  * community_foods.created_by → NULL
+  * exercises_db.created_by → NULL
+  * training_programs : NULL si is_template, DELETE si privé
+  * recipes : NULL si is_public, DELETE si privé
+  * messages : DELETE pour sender (RGPD strict), UPDATE NULL pour
+    receiver (préserve l'historique pour l'autre partie)
+- Exception handler global : tout error roll back la transaction
+
+Tests SQL (SQL Editor avec SET LOCAL ROLE simulant identité) :
+1. Existence + signature : OK (proname, args, SECURITY DEFINER, volatile)
+2. Sécurité : f.marco (client) essaie de delete fe.ma (coach) →
+   REJECTED ERRCODE 42501 'Unauthorized: can only delete your own
+   account' — safety check fonctionne
+3. Suppression réelle : marco.ferreira@bluemail.ch (95 lignes dans
+   8 tables) → SUCCESS, post-snapshot 0 partout, 11 messages
+   préservés pour fe.ma avec receiver_id = NULL
+
+#### Refacto route delete-account/route.ts
+
+Remplace la boucle de 16 DELETE par 1 appel RPC :
+1. Auth check
+2. Storage cleanup (best-effort, non-blocking)
+3. supabaseAuth.rpc('delete_user_account', { target_user_id })
+4. supabase.auth.admin.deleteUser
+
+Code 138 lignes (vs 108 avant, mais avec commentaires inline).
+
+#### Bug 1 — RPC appelé via service_role
+
+Commit 2d3406c initial appelait le RPC via service_role (variable
+`supabase`). Détecté en E2E test sur markoo.rosa@outlook.com :
+dialog 'Échec de la suppression : Unauthorized: can only delete
+your own account' (SQLSTATE 42501).
+
+Cause racine : service_role n'a pas de JWT context, donc auth.uid()
+retourne NULL, la safety check fail toujours pour cette voie.
+
+Fix commit e537ac1 : 1 ligne `supabase.rpc` → `supabaseAuth.rpc`.
+Le client cookie-aware préserve auth.uid(). RPC reste SECURITY
+DEFINER donc bypass RLS pour le cascade — auth.uid() sert uniquement
+au safety check, pas aux DELETE.
+
+#### Bug 2 — Zombie session après deletion réussie
+
+Re-test E2E sur markoo.rosa : delete-account renvoie 200, RPC OK,
+auth user supprimé en DB. MAIS l'app continue d'afficher le
+dashboard du compte supprimé. Refresh ne corrige pas.
+
+Cause racine : `if (res.ok) { window.location.href = '/login' }`
+fait juste une navigation. Le cookie sb-*-auth-token reste valide
+côté browser. Le middleware proxy détecte le cookie comme
+'authenticated' et redirige back vers /. État zombie : session
+active vers un user fantôme.
+
+Fix commit 5f93986 dans 2 composants :
+- app/components/tabs/profile/DeleteAccountSection.tsx (côté client)
+- app/coach/components/CoachProfile.tsx (côté coach)
+
+Pattern :
+  if (res.ok) {
+    await supabase.auth.signOut()  // ← AJOUTÉ
+    window.location.href = '/login'
+  }
+
+signOut() invalide le JWT serveur-side + clear cookies sb-*
+côté browser. Redirect arrive sur clean state.
+
+#### Test E2E final validé
+
+Création markoo.rosa@outlook.com → 80kg, prénom Marco, profil
+complet → Compte → Supprimer mon compte → SUPPRIMER → click :
+- POST /api/delete-account : 200
+- signOut() exécuté côté browser
+- Redirect vers landing/login propre
+- Vérif DB : profiles 0 rows, auth.users 0 rows
+
+### Apprentissages senior consignés (Phase 3)
+
+1. SECURITY DEFINER + auth.uid() check : appeler via le client
+   authentifié (cookie-aware), JAMAIS via service_role. Service_role
+   n'a pas de JWT context, auth.uid() retourne NULL, le safety
+   check fail toujours.
+
+2. Server-side deletion seule ≠ logout. Toujours pair avec
+   supabase.auth.signOut() côté browser AVANT redirect, sinon le
+   cookie JWT survit et le middleware redirige vers le dashboard.
+
+3. window.location.href change la page mais NE supprime PAS la
+   session JWT. Comportement à connaître pour tout flow de
+   suppression auth (account delete, role change, team removal).
+
+4. Faire à moitié RGPD = pas faire RGPD. L'audit FK exhaustif via
+   information_schema (vs liste à la main) garantit zéro oubli.
+   25+ tables manquantes dans le code existant — incidence directe
+   sur la compliance.
+
+5. Tester safety checks AVANT tests réussis : on a confirmé que la
+   fonction rejette une usurpation AVANT de la tester sur du delete
+   réel. Sans ça, on aurait pu shipper une RPC qui supprime n'importe
+   quoi sans vérification.
+
+### Commits
+
+| # | Hash | Description |
+|---|---|---|
+| 1 | 829902f | chore(media): remove local exercise videos |
+| 2 | 203cf9d | chore: untrack .claude/settings.local.json |
+| 3 | abc3965 | chore(deps): sync package-lock.json |
+| 4 | 2d3406c | feat(delete-account): transactional RPC RGPD/nLPD |
+| 5 | e537ac1 | fix(delete-account): call RPC via authenticated client |
+| 6 | 5f93986 | fix(delete-account): signOut before redirect |
+
+### Reste sprint Launch Prep
+
+- [ ] Améliorations training (P2 backlog : minuteur exec + tempo + swipe)
+- [ ] Bug Celebration fin séance (P1 backlog)
+- [ ] Page confirmation email validation (P1 backlog, identifié 22/05)
+- [ ] Cleanup doublons RLS (~1h, P2)
+- [ ] Sprint 6 i18n (langues) si miracle
+
+---
+
 ## 2026-05-21 (fin de journée) — Phase 2 RLS audit Tier 3 + P1 INSERT libres + P2 coach_clients (~3h)
 
 ### Objectif initial
