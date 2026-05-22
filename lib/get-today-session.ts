@@ -38,6 +38,7 @@ export function getSessionForDay(programDays: any[], dayOfWeek: number): TodaySe
     name: day.name || day.weekday || `Séance ${dayOfWeek + 1}`,
     focus: day.focus || day.muscle_group || '',
     exercises: (day.exercises || []).map((ex: any) => ({
+      ...ex,
       name: ex.exercise_name || ex.custom_name || ex.name || 'Exercice',
       exercise_name: ex.exercise_name || ex.custom_name || ex.name || 'Exercice',
       sets: ex.sets || 3,
