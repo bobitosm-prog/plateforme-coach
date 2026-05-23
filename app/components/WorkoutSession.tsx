@@ -6,7 +6,7 @@ import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
-import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds } from '../../lib/timer-audio'
+import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
@@ -268,6 +268,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [restNextInfo, setRestNextInfo] = useState('')
   const restT = useRef<NodeJS.Timeout | null>(null)
   const restEndsAtRef = useRef(0)
+  const restScheduledSoundsRef = useRef<ScheduledSound[]>([])
   const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
   const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
   const elT = useRef<NodeJS.Timeout | null>(null)
@@ -492,14 +493,28 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
     if (restT.current) clearInterval(restT.current)
+    // Cancel any previously scheduled sounds (defensive: shouldn't happen,
+    // but if startRest is called while a previous one is still pending
+    // (e.g. fast re-validation), we don't want stale beeps to fire)
+    if (restScheduledSoundsRef.current.length > 0) {
+      cancelScheduledSounds(restScheduledSoundsRef.current)
+      restScheduledSoundsRef.current = []
+    }
     restEndsAtRef.current = Date.now() + s * 1000
-    scheduleRestPeriodSounds(s)
+    restScheduledSoundsRef.current = scheduleRestPeriodSounds(s)
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
     if (exoId) setRestExoId(exoId)
     if (setId) setRestSetId(setId)
     if (nextInfo) setRestNextInfo(nextInfo)
   }
-  const skipRest = () => { setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null) }
+  const skipRest = () => {
+    // Cancel scheduled audio cues so they don't fire after skip
+    if (restScheduledSoundsRef.current.length > 0) {
+      cancelScheduledSounds(restScheduledSoundsRef.current)
+      restScheduledSoundsRef.current = []
+    }
+    setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null)
+  }
   const addRestTime = () => { restEndsAtRef.current += 30000; setRestMax(m => m + 30) }
   const dismissRestDone = () => { setRestDone(false); setRestExoId(null); setRestSetId(null) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) => {
