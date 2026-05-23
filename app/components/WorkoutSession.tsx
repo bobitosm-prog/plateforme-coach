@@ -6,7 +6,7 @@ import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
-import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds } from '../../lib/timer-audio'
+import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
@@ -14,6 +14,7 @@ import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
 import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
+import TempoExecutor from './training/TempoExecutor'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -268,6 +269,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [restNextInfo, setRestNextInfo] = useState('')
   const restT = useRef<NodeJS.Timeout | null>(null)
   const restEndsAtRef = useRef(0)
+  const restScheduledSoundsRef = useRef<ScheduledSound[]>([])
   const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
   const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
   const elT = useRef<NodeJS.Timeout | null>(null)
@@ -296,6 +298,24 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [repsWarning, setRepsWarning] = useState<{ eid: string; sid: string; reps: number } | null>(null)
   const [tempoModal, setTempoModal] = useState<{ tempo: string; name: string } | null>(null)
+  const [tempoExecutor, setTempoExecutor] = useState<{ exoId: string; setIdx: number; tempo: string; name: string; targetReps: number } | null>(null)
+
+  // Parse the target reps for TempoExecutor (e.g. '8-10' → 10, '12' → 12)
+  const parseTargetRepsForTempo = (targetReps: string): number => {
+    if (!targetReps) return 10
+    // If range like '8-10', use the higher number
+    const parts = String(targetReps).split('-').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n))
+    if (parts.length === 0) return 10
+    return Math.max(...parts)
+  }
+
+  // Check if a tempo string is valid (format X-X-X)
+  const isTempoValid = (tempo?: string): boolean => {
+    if (!tempo) return false
+    const parts = tempo.trim().split('-').map(p => parseInt(p.trim(), 10))
+    if (parts.length < 3) return false
+    return parts.slice(0, 3).every(n => !isNaN(n) && n >= 0)
+  }
 
   const progressionByExo = useMemo(() => {
     const map: Record<string, ReturnType<typeof computeProgression>> = {}
@@ -492,14 +512,28 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
     if (restT.current) clearInterval(restT.current)
+    // Cancel any previously scheduled sounds (defensive: shouldn't happen,
+    // but if startRest is called while a previous one is still pending
+    // (e.g. fast re-validation), we don't want stale beeps to fire)
+    if (restScheduledSoundsRef.current.length > 0) {
+      cancelScheduledSounds(restScheduledSoundsRef.current)
+      restScheduledSoundsRef.current = []
+    }
     restEndsAtRef.current = Date.now() + s * 1000
-    scheduleRestPeriodSounds(s)
+    restScheduledSoundsRef.current = scheduleRestPeriodSounds(s)
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
     if (exoId) setRestExoId(exoId)
     if (setId) setRestSetId(setId)
     if (nextInfo) setRestNextInfo(nextInfo)
   }
-  const skipRest = () => { setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null) }
+  const skipRest = () => {
+    // Cancel scheduled audio cues so they don't fire after skip
+    if (restScheduledSoundsRef.current.length > 0) {
+      cancelScheduledSounds(restScheduledSoundsRef.current)
+      restScheduledSoundsRef.current = []
+    }
+    setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null)
+  }
   const addRestTime = () => { restEndsAtRef.current += 30000; setRestMax(m => m + 30) }
   const dismissRestDone = () => { setRestDone(false); setRestExoId(null); setRestSetId(null) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) => {
@@ -1079,6 +1113,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
                   {/* Set cards */}
                   {exo.sets.map((set: ExSet, si: number) => {
+                    const firstUndoneIdx = exo.sets.findIndex(s => !s.done)
+                    const isFirstUndone = si === firstUndoneIdx
+                    const showTempoPlay = !set.done && isFirstUndone && isTempoValid(exo.tempo)
                     const ok = !set.done && (set.weight !== '' || set.reps !== '')
                     const prevSet = previousData[exo.name]?.[set.num - 1]
                     const isActive = ok && !set.done
@@ -1132,8 +1169,40 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                             style={{ width: 52, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: isActive ? 40 : 36, fontFamily: FONT_BODY, fontWeight: 800, color: (set.reps !== '') ? GOLD : 'rgba(201,168,76,0.4)', caretColor: GOLD, outline: 'none', lineHeight: 1, opacity: set.done ? 0.6 : 1 }} />
                         </div>
 
-                        {/* d) Validate button */}
-                        <div style={{ flexShrink: 0 }}>
+                        {/* d) Tempo play + Validate button */}
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                          {showTempoPlay && (
+                            <button
+                              onClick={() => {
+                                initAudio()
+                                setTempoExecutor({
+                                  exoId: exo.id,
+                                  setIdx: si,
+                                  tempo: exo.tempo!,
+                                  name: exo.name,
+                                  targetReps: parseTargetRepsForTempo(exo.targetReps),
+                                })
+                              }}
+                              aria-label="Démarrer le tempo"
+                              style={{
+                                width: 40,
+                                height: 40,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: GOLD_DIM,
+                                border: `1.5px solid ${GOLD}`,
+                                borderRadius: '50%',
+                                cursor: 'pointer',
+                                color: GOLD,
+                                marginRight: 8,
+                                transition: 'transform 0.15s',
+                              }}
+                              className="active:scale-95"
+                            >
+                              <Play size={16} fill={GOLD} strokeWidth={2} />
+                            </button>
+                          )}
                           {set.done ? (
                             <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.success, border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
                               onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.9)' }}
@@ -1485,6 +1554,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           tempo={tempoModal.tempo}
           exerciseName={tempoModal.name}
           onClose={() => setTempoModal(null)}
+        />
+      )}
+      {/* Tempo executor — fullscreen guided tempo for the current set */}
+      {tempoExecutor && (
+        <TempoExecutor
+          tempo={tempoExecutor.tempo}
+          exerciseName={tempoExecutor.name}
+          targetReps={tempoExecutor.targetReps}
+          onComplete={() => {
+            // For now in B.2 just close. B.3 will auto-trigger rest timer here.
+            setTempoExecutor(null)
+          }}
+          onClose={() => setTempoExecutor(null)}
         />
       )}
     </div>
