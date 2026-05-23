@@ -13,6 +13,7 @@ import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
 import WorkoutCelebration from './tabs/training/WorkoutCelebration'
+import TempoModal from './training/TempoModal'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -294,6 +295,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [showEndModal, setShowEndModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [repsWarning, setRepsWarning] = useState<{ eid: string; sid: string; reps: number } | null>(null)
+  const [tempoModal, setTempoModal] = useState<{ tempo: string; name: string } | null>(null)
 
   const progressionByExo = useMemo(() => {
     const map: Record<string, ReturnType<typeof computeProgression>> = {}
@@ -1025,7 +1027,32 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   </div>
                   <div style={{ fontSize: 12, color: 'rgba(245,241,232,0.7)', marginTop: 6, fontFamily: FONT_BODY }}>
                     {exo.targetSets} séries × {exo.targetReps} reps
-                    {exo.tempo && <span style={{ marginLeft: 8, fontSize: 10, padding: '2px 5px', background: 'rgba(0,0,0,0.35)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>{exo.tempo}</span>}
+                    {exo.tempo && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setTempoModal({ tempo: exo.tempo!, name: exo.name }) }}
+                        style={{
+                          marginLeft: 8,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          padding: '3px 8px',
+                          background: 'rgba(212,175,55,0.15)',
+                          border: `0.5px solid ${GOLD_RULE}`,
+                          borderRadius: 5,
+                          color: GOLD,
+                          fontFamily: FONT_ALT,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          letterSpacing: 0.5,
+                          cursor: 'pointer',
+                          verticalAlign: 'middle',
+                        }}
+                      >
+                        <Clock size={10} strokeWidth={2.5} />
+                        <span style={{ fontSize: 8, color: TEXT_DIM, letterSpacing: 1.5 }}>TEMPO</span>
+                        <span>{exo.tempo}</span>
+                      </button>
+                    )}
                     {exo.rir != null && <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 5px', background: 'rgba(0,0,0,0.35)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>R{exo.rir}</span>}
                     {exo.technique && TECHNIQUE_LABELS[exo.technique] && (
                       <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 6px', background: 'rgba(201,168,76,0.15)', border: '0.5px solid rgba(201,168,76,0.25)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, color: GOLD }}>
@@ -1451,6 +1478,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             </div>
           </div>
         </div>
+      )}
+      {/* Tempo modal */}
+      {tempoModal && (
+        <TempoModal
+          tempo={tempoModal.tempo}
+          exerciseName={tempoModal.name}
+          onClose={() => setTempoModal(null)}
+        />
       )}
     </div>
   )

@@ -4,6 +4,71 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-22 — P1 clôturé + Email infra + Phase A tempo
+
+**Durée** : ~6h (12h45 → 19h30)
+**Branches** : `fix/auth-signup-confirmation-banner` (mergée), `feat/tempo-modal-phase-a` (à merger demain)
+
+### Réalisé
+
+#### 1. P1 Launch Prep — Confirmation banner après email validation (MERGÉ)
+- **Root cause** : `emailRedirectTo` dans RegisterClientContent.tsx pointait directement vers /onboarding, le code PKCE était droppé silencieusement
+- **Fix** : redirect vers /auth/callback?type=signup → exchange + signOut + redirect /login?confirmed=1
+- **Banner gold** affiché sur /login avec icône CheckCircle, dismiss au premier input
+- **Décision senior** : self-signup = forced re-login (V2), invitation coach /join = auto-login préservée (pattern industrie)
+- Commit : 434d9bb (mergé sur main)
+- ⏳ Test E2E happy-path en prod skippé (email rate limit pendant la session)
+
+#### 2. Email infrastructure (Infomaniak SMTP + DKIM)
+- Migration de Supabase built-in SMTP (~4 emails/h limit) vers Infomaniak SMTP
+- Sender : `noreply@moovx.ch` via mail.infomaniak.com:465
+- **Bug fix latent** : `SMTP_USER=noreply.moovx.ch` (avec point) corrigé en `noreply@moovx.ch`
+- **DNS Cloudflare** : DKIM activé (selector 20251009), SPF + DMARC déjà OK
+- **Bug fix DNS critique** : NS records délégant `_domainkey` vers Infomaniak supprimés, TXT DKIM ajouté directement sur Cloudflare
+- Validation : `dkim=pass`, `dmarc=pass`, `spf=pass` confirmés dans headers test
+- Note : iCloud flag spam (réputation domaine fraîche), Gmail = OK
+
+#### 3. Email templates premium MoovX (3/6)
+- Itérations V1→V5 : abandonné dark theme (Apple Mail iOS ne respecte pas color-scheme:dark)
+- Final : light premium editorial style (Apple/Stripe/Linear), bg #FAFAF7, white cards, black CTA solid
+- Logo MoovX réel (`logo-moovx-192.png`, 96px)
+- Templates mis à jour dans Supabase : Confirm signup, Magic Link, Reset Password
+- Restants pour post-beta : invite user, change email, reauthentication
+
+#### 4. Phase A — Tempo prescrit affichage premium (PUSHÉ, MERGE DEMAIN)
+- **Nouveau composant** : `app/components/training/TempoModal.tsx` (modal pédagogique 3 phases)
+- **Modif** : `app/components/WorkoutSession.tsx` — pill gold tappable remplace badge gris
+- Format tempo confirmé : "X-X-X" (excentrique - pause bas - concentrique), pas 4 phases
+- Test validé sur compte `marco.ferreira@bluemail.ch` avec programme custom (tempos 3-1-2, 2-0-2, 4-2-1, 2-2-2)
+- Branche : `feat/tempo-modal-phase-a` (commits cddf96c + 5284ed6)
+
+#### 5. BUG FIX CRITIQUE LATENT — get-today-session.ts
+- **Découvert pendant le test de Phase A** : le pill ne s'affichait pas malgré tempo en DB
+- **Root cause** : `lib/get-today-session.ts` utilisait un whitelist explicit de 6 champs (name, exercise_name, sets, reps, rest_seconds, muscle_group), droppant silencieusement TOUS les autres champs : tempo, rir, notes, video_url, image_url, technique, technique_details, phases, description
+- **Impact rétroactif** : depuis le refactor de ce fichier, WorkoutSession n'a jamais reçu de tempo/rir/technique prescrits
+- **Fix** : remplace whitelist par `...ex` spread en première position du return, override des défauts par-dessus
+- Commit : cddf96c
+- ⚠️ À surveiller : maintenant tous les champs DB arrivent dans WorkoutSession, vérifier qu'il n'y a pas d'effet de bord
+
+### Bugs notables découverts (BACKLOG, pas fixés)
+
+1. **Dashboard "VOIR LA SEANCE"** → redirige vers Analytics au lieu du détail session
+2. **Désync scheduled_sessions vs dashboard** : DB dit "Jambes terminé" aujourd'hui, dashboard affiche "Push B terminé" — deux sources de données différentes
+3. **CustomBuilder ne permet pas saisie tempo** lors d'ajout d'exo en séance libre (feature manquante, optionnelle pour plus tard)
+
+### Décisions produit notables
+
+- **Phase A** : afficher le pill TOUJOURS (même si tempo standard 2-0-2), choix Marco contre la reco senior. À évaluer après usage réel.
+- **Pas d'édition de tempo dans WorkoutSession** : l'user n'override pas la prescription du coach. Décision senior accepted.
+- **Tempo dans CustomBuilder** : reporté en backlog post-launch.
+
+### Stats commits
+
+- 5 commits sur main et branches : P1 + chore + Phase A fix latent + Phase A feat
+- 0 régression TypeScript (npx tsc --noEmit : 0 erreur partout)
+
+---
+
 ## 2026-05-22 — Ménage Git + Phase 3 Delete Account RPC (~3h)
 
 ### Objectif
