@@ -117,6 +117,12 @@ export default function TempoExecutor({
   const currentRepRef = useRef(1)
   const phaseIndexRef = useRef(0)
   const phaseElapsedMsRef = useRef(0)
+  // Absolute timestamp of when the current phase should end.
+  // Used for iOS background-safe time tracking (in case JS is suspended)
+  const phaseEndsAtRef = useRef<number>(0)
+  const pausedRemainingMsRef = useRef<number>(0)
+  // True when we detected a JS suspension (background) mid-tempo
+  const [wasInterrupted, setWasInterrupted] = useState(false)
 
   // Sync refs with state for closures
   useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
@@ -146,10 +152,15 @@ export default function TempoExecutor({
   useEffect(() => {
     if (phases.length === 0) return
 
+    // Initialize phaseEndsAt to: now + duration of phase 0
+    phaseEndsAtRef.current = Date.now() + phases[0].durationMs
+
     lastTickAtRef.current = Date.now()
     tickRef.current = setInterval(() => {
       if (isPausedRef.current) {
         lastTickAtRef.current = Date.now()
+        // While paused, shift phaseEndsAt forward by elapsed time so resume is accurate
+        // (we don't apply delta here; we'll re-align below when resumed)
         return
       }
 
@@ -157,11 +168,20 @@ export default function TempoExecutor({
       const delta = now - lastTickAtRef.current
       lastTickAtRef.current = now
 
-      const newElapsed = phaseElapsedMsRef.current + delta
-      const currentPhaseDuration = phases[phaseIndexRef.current]?.durationMs ?? 0
+      // Background detection: if delta is way bigger than tick interval (100ms),
+      // JS was suspended (iOS lock screen, incoming call, app backgrounded, etc.)
+      // We can't reliably continue — stop the tempo and signal interruption.
+      if (delta > 2000) {
+        if (tickRef.current) clearInterval(tickRef.current)
+        setWasInterrupted(true)
+        return
+      }
 
-      if (newElapsed >= currentPhaseDuration) {
-        // Phase complete -> advance
+      // Compute remaining time for current phase based on absolute end timestamp
+      const remainingMs = phaseEndsAtRef.current - now
+
+      if (remainingMs <= 0) {
+        // Phase complete → advance
         const nextPhaseIndex = phaseIndexRef.current + 1
         const isLastPhase = nextPhaseIndex >= phases.length
 
@@ -178,14 +198,20 @@ export default function TempoExecutor({
           setCurrentRep(nextRep)
           setPhaseIndex(0)
           setPhaseElapsedMs(0)
+          // Reset phaseEndsAt for the new rep's first phase
+          phaseEndsAtRef.current = now + phases[0].durationMs
         } else {
           // Next phase same rep
           onPhaseTransition(false)
           setPhaseIndex(nextPhaseIndex)
           setPhaseElapsedMs(0)
+          phaseEndsAtRef.current = now + phases[nextPhaseIndex].durationMs
         }
       } else {
-        setPhaseElapsedMs(newElapsed)
+        // Compute elapsed in current phase for the progress circle UI
+        const currentPhaseDuration = phases[phaseIndexRef.current]?.durationMs ?? 0
+        const elapsed = currentPhaseDuration - remainingMs
+        setPhaseElapsedMs(elapsed)
       }
     }, 100)
 
@@ -196,7 +222,18 @@ export default function TempoExecutor({
   }, [])
 
   const handleTogglePause = () => {
-    setIsPaused(p => !p)
+    setIsPaused(prev => {
+      const next = !prev
+      if (next) {
+        // Pausing: remember how much time was left in the current phase
+        pausedRemainingMsRef.current = Math.max(0, phaseEndsAtRef.current - Date.now())
+      } else {
+        // Resuming: re-set phaseEndsAt to (now + remaining time at pause)
+        phaseEndsAtRef.current = Date.now() + pausedRemainingMsRef.current
+        lastTickAtRef.current = Date.now()
+      }
+      return next
+    })
   }
 
   const handleToggleSound = () => {
@@ -253,6 +290,80 @@ export default function TempoExecutor({
               fontSize: 12,
               letterSpacing: 2,
               cursor: 'pointer',
+            }}
+          >
+            FERMER
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Tempo was interrupted by background suspend (iOS) → graceful exit
+  if (wasInterrupted) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: 'rgba(0,0,0,0.95)',
+          backdropFilter: 'blur(12px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+        }}
+        onClick={onClose}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: BG_BASE,
+            border: `1px solid ${GOLD_RULE}`,
+            borderRadius: 16,
+            padding: 24,
+            textAlign: 'center',
+            maxWidth: 320,
+          }}
+        >
+          <div
+            style={{
+              color: TEXT_PRIMARY,
+              fontFamily: FONT_DISPLAY,
+              fontSize: 18,
+              marginBottom: 8,
+              letterSpacing: 2,
+            }}
+          >
+            TEMPO INTERROMPU
+          </div>
+          <div
+            style={{
+              color: TEXT_MUTED,
+              fontFamily: FONT_BODY,
+              fontSize: 13,
+              marginBottom: 20,
+              lineHeight: 1.5,
+            }}
+          >
+            L&apos;app a été mise en pause par le système. Saisis ton set manuellement et continue.
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: '100%',
+              padding: 12,
+              background: GOLD,
+              border: 'none',
+              borderRadius: 10,
+              color: '#0D0B08',
+              fontFamily: FONT_ALT,
+              fontWeight: 800,
+              fontSize: 12,
+              letterSpacing: 2,
+              cursor: 'pointer',
+              textTransform: 'uppercase',
             }}
           >
             FERMER
