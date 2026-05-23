@@ -19,7 +19,10 @@ import {
 import {
   initAudio,
   playBeep,
-  vibrateDevice,
+  vibrateEccentric,
+  vibratePause,
+  vibrateConcentric,
+  vibrateRepComplete,
   isTimerSoundEnabled,
   setTimerSoundEnabled,
 } from '../../../lib/timer-audio'
@@ -136,14 +139,26 @@ export default function TempoExecutor({
     initAudio()
   }, [])
 
-  // Audio cue on phase transition
-  const onPhaseTransition = useCallback((isLastPhaseOfRep: boolean) => {
-    vibrateDevice()
-    if (isLastPhaseOfRep) {
-      // End of rep = louder cue (3 quick beeps via playBeep)
+  /**
+   * Called when transitioning INTO a new phase.
+   * upcomingPhase: which phase is about to start (eccentric/pause/concentric)
+   *                or null if this is the end of a complete rep.
+   * Vibration pattern differs per phase to help user feel the change
+   * without looking at the screen.
+   */
+  const onPhaseTransition = useCallback((upcomingPhase: Phase | null) => {
+    if (upcomingPhase === null) {
+      // End of complete rep
+      vibrateRepComplete()
       playBeep()
-    } else {
-      // Phase transition = short tick (we use playBeep too but vibration is the primary cue)
+    } else if (upcomingPhase === 'eccentric') {
+      vibrateEccentric()
+      playBeep()
+    } else if (upcomingPhase === 'pause') {
+      vibratePause()
+      playBeep()
+    } else if (upcomingPhase === 'concentric') {
+      vibrateConcentric()
       playBeep()
     }
   }, [])
@@ -186,8 +201,8 @@ export default function TempoExecutor({
         const isLastPhase = nextPhaseIndex >= phases.length
 
         if (isLastPhase) {
-          // Rep complete
-          onPhaseTransition(true)
+          // Rep complete: dedicated 'done' cue
+          onPhaseTransition(null)
           const nextRep = currentRepRef.current + 1
           if (nextRep > targetReps) {
             // All reps done
@@ -200,9 +215,16 @@ export default function TempoExecutor({
           setPhaseElapsedMs(0)
           // Reset phaseEndsAt for the new rep's first phase
           phaseEndsAtRef.current = now + phases[0].durationMs
+          // Brief cue to signal start of phase 0 of the new rep
+          // (small delay so it's perceived as separate from the rep-complete cue)
+          setTimeout(() => {
+            if (phases[0].phase === 'eccentric') vibrateEccentric()
+            else if (phases[0].phase === 'pause') vibratePause()
+            else if (phases[0].phase === 'concentric') vibrateConcentric()
+          }, 300)
         } else {
           // Next phase same rep
-          onPhaseTransition(false)
+          onPhaseTransition(phases[nextPhaseIndex].phase)
           setPhaseIndex(nextPhaseIndex)
           setPhaseElapsedMs(0)
           phaseEndsAtRef.current = now + phases[nextPhaseIndex].durationMs

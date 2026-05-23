@@ -78,9 +78,53 @@ export function playWarningTick() {
   } catch {}
 }
 
+/**
+ * Original vibration pattern (kept for backward compat).
+ * Used by rest timer when set is validated.
+ */
 export function vibrateDevice() {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     navigator.vibrate([200, 100, 200, 100, 200])
+  }
+}
+
+/**
+ * Short pulse — signals start of eccentric phase (downward movement).
+ * Single subtle tap to say "go down".
+ */
+export function vibrateEccentric() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(80)
+  }
+}
+
+/**
+ * Double short pulse — signals start of bottom pause.
+ * "Hold" feel — two quick taps.
+ */
+export function vibratePause() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate([60, 80, 60])
+  }
+}
+
+/**
+ * Longer pulse — signals start of concentric phase (upward / explosive).
+ * Single longer tap to say "push up".
+ */
+export function vibrateConcentric() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(150)
+  }
+}
+
+/**
+ * Distinctive pattern — signals end of a complete rep.
+ * Three-burst pattern to feel different from phase transitions.
+ */
+export function vibrateRepComplete() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate([120, 60, 120, 60, 200])
   }
 }
 
