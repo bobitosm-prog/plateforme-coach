@@ -32,66 +32,13 @@ import NutritionCard from '../home/cards/NutritionCard'
 import RecoveryModal from '../home/modals/RecoveryModal'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 
-const QUOTES: Record<string, string[]> = {
-  bulk: [
-    'Chaque calorie compte. Tu construis la meilleure version de toi-meme.',
-    'La masse se construit jour apres jour, rep apres rep.',
-    'Ton corps est une machine — donne-lui le carburant qu\'il merite.',
-    'Aujourd\'hui tu plantes, demain tu recoltes.',
-    'Chaque repas est une brique de plus dans ta construction.',
-    'Le volume d\'aujourd\'hui, c\'est la force de demain.',
-    'Les resultats viennent a ceux qui persistent.',
-    'Mange pour performer, pas pour survivre.',
-    'Le gain est un marathon, pas un sprint.',
-    'La discipline bat la motivation chaque jour de la semaine.',
-    'Ton futur toi te remerciera pour l\'effort d\'aujourd\'hui.',
-    'Construis le physique que tu merites.',
-    'La progression silencieuse est la plus puissante.',
-    'Le fer ne ment jamais. Le travail paie toujours.',
-    'La croissance commence la ou le confort s\'arrete.',
-  ],
-  cut: [
-    'Chaque jour de discipline te rapproche de la definition parfaite.',
-    'La seche, c\'est reveler le chef-d\'oeuvre que tu as construit.',
-    'Le sacrifice temporaire pour un resultat permanent.',
-    'Ta discipline d\'aujourd\'hui est ta fierte de demain.',
-    'Brule les doutes, pas juste les calories.',
-    'Chaque choix alimentaire est un vote pour ton objectif.',
-    'Le gras part, le muscle reste. Continue.',
-    'Tu n\'es pas au regime. Tu es en transformation.',
-    'Les abdos se revelent a ceux qui persistent.',
-    'Transforme la sueur en resultats.',
-    'Tu es plus fort que tes envies.',
-    'Reste focus. Le resultat arrive.',
-    'La version shredded de toi est juste derriere l\'effort.',
-    'Controle ton assiette, controle ta transformation.',
-    'La douleur est temporaire. Le regret est eternel.',
-  ],
-  maintain: [
-    'L\'equilibre est le vrai luxe. Tu l\'as trouve.',
-    'Maintenir, c\'est maitriser. Tu controles ton physique.',
-    'La constance silencieuse est la plus grande force.',
-    'Le maintien est l\'art de la regularite.',
-    'Ton corps est une oeuvre achevee. Entretiens-la.',
-    'Le vrai succes, c\'est maintenir ce que tu as gagne.',
-    'L\'excellence, c\'est la regularite.',
-    'Tu as atteint ton objectif. Maintenant, tiens-le.',
-    'Profite du trajet, pas seulement de la destination.',
-    'Tu es exactement la ou tu dois etre.',
-    'Ta routine est ta superpuissance.',
-    'Le physique se maintient comme une montre suisse — avec precision.',
-    'La regularite bat l\'intensite sur le long terme.',
-    'Continue comme ca. Tu es sur la bonne voie.',
-    'La meilleure version de toi se construit chaque jour.',
-  ],
-}
-
-function getDailyQuote(objective?: string): string {
-  const key = (objective === 'weight_loss' || objective === 'seche') ? 'cut'
-    : (objective === 'mass' || objective === 'bulk') ? 'bulk' : 'maintain'
-  const quotes = QUOTES[key]
+/**
+ * Get daily quote index — deterministic per day of year.
+ * Same quote shown across FR/EN/DE on the same day.
+ */
+function getDailyQuoteIndex(count: number): number {
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000)
-  return quotes[dayOfYear % quotes.length]
+  return dayOfYear % count
 }
 
 interface HomeTabProps {
@@ -249,7 +196,7 @@ export default function HomeTab({
         })
         const days = Object.entries(calByDay).sort(([a], [b]) => a.localeCompare(b))
         setCaloriesWeekData(days.map(([day, calories]) => ({
-          day: new Date(day + 'T12:00:00').toLocaleDateString('fr-CH', { weekday: 'short' }),
+          day: new Date(day + 'T12:00:00').toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { weekday: 'short' }),
           calories: Math.round(calories as number),
         })))
       })
@@ -272,7 +219,7 @@ export default function HomeTab({
         if (data?.days) {
           const session = getTodaySession(data.days)
           if (session.type === 'rest') {
-            setCustomDayName('Repos')
+            setCustomDayName(ht('rest'))
             setCustomIsRest(true)
             setCustomProgramExercises([]) // empty array, not null — prevents coach fallthrough
             // Find next workout day
@@ -281,8 +228,8 @@ export default function HomeTab({
               const nextIdx = (todayIdx + offset) % 7
               const nextSession = getSessionForDay(data.days, nextIdx)
               if (nextSession.type === 'workout') {
-                const dayNames = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-                setNextSessionLabel(`${nextSession.name} — ${offset === 1 ? 'demain' : dayNames[nextIdx]}`)
+                const dayKeys = ['dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri', 'daySat', 'daySun'] as const
+                setNextSessionLabel(`${nextSession.name} — ${offset === 1 ? ht('tomorrow') : ht(dayKeys[nextIdx])}`)
                 break
               }
             }
@@ -357,12 +304,12 @@ export default function HomeTab({
     setCheckinSaving(false)
     if (error) {
       console.error('[CheckIn] Save error:', error.message, error)
-      toast.error(`Erreur check-in: ${error.message}`)
+      toast.error(`Check-in error: ${error.message}`)
       return false
     }
     if (!checkinSaved) { try { await addXP(session.user.id, 10, supabase) } catch {} }
     setCheckinSaved(true); setCheckinModified(false)
-    setLastSavedTime(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
+    setLastSavedTime(new Date().toLocaleTimeString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { hour: '2-digit', minute: '2-digit' }))
     // Reload week data for compact card
     const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
     supabase.from('daily_checkins').select('date, mood, sleep_hours').eq('user_id', session.user.id).gte('date', weekAgo).order('date')
@@ -384,7 +331,7 @@ export default function HomeTab({
   // Custom program is authoritative: if it says rest, it's rest — don't fall through to coach
   const todayExercises = customIsRest ? [] : (customProgramExercises?.length ? customProgramExercises : todayCoachDay?.exercises || [])
   // Session title: custom program > scheduled session > coach program
-  const rawSessionTitle = customIsRest ? 'Repos' : (customDayName || todayScheduledSession?.title || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || 'Entraînement'} du jour` : 'Séance du jour'))
+  const rawSessionTitle = customIsRest ? ht('rest') : (customDayName || todayScheduledSession?.title || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || ht('trainingOfDay')}` : ht('workoutOfDay')))
   const sessionTypeInfo = resolveSessionType(rawSessionTitle)
   const sessionTitle = rawSessionTitle
   // Has workout today: custom program says rest → no. Otherwise check exercises exist.
@@ -392,7 +339,7 @@ export default function HomeTab({
 
   const heroState: HeroState = (() => {
     if (!coachProgram && !customProgramExercises && !todayScheduledSession) return 'no-program'
-    if (!hasWorkoutToday && (customIsRest || customDayName === 'Repos' || todayCoachDay?.repos)) return 'rest'
+    if (!hasWorkoutToday && (customIsRest || customDayName === ht('rest') || todayCoachDay?.repos)) return 'rest'
     if (!todayExercises.length) return 'no-exercises'
     if (todaySession) return 'done'
     return 'active'
@@ -410,6 +357,11 @@ export default function HomeTab({
   // Objective label
   const objLabel = profile?.objective === 'weight_loss' || profile?.objective === 'seche' ? 'cut'
     : profile?.objective === 'mass' || profile?.objective === 'bulk' ? 'bulk' : 'maintain'
+
+  // Daily quote from translations (deterministic per day)
+  const quoteCategory = objLabel === 'bulk' ? 'mass' : objLabel
+  const quoteCount = parseInt(ht(`quotes.${quoteCategory}Count`), 10) || 15
+  const dailyQuote = ht(`quotes.${quoteCategory}.${getDailyQuoteIndex(quoteCount)}`)
 
   // Card title style from centralized design system
   const T = titleStyle
@@ -446,9 +398,9 @@ export default function HomeTab({
       <div style={{ padding: '0 20px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase', margin: 0 }}>
-            Apercu du jour
+            {ht('overview')}
           </h2>
-          <button onClick={() => setActiveTab('progress')} aria-label="Voir tous les details"
+          <button onClick={() => setActiveTab('progress')} aria-label={ht('details')}
             style={{ background: 'transparent', border: 'none', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
             &rsaquo;
           </button>
@@ -463,10 +415,10 @@ export default function HomeTab({
         <div style={{ marginTop: 12, background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
           <Droplets size={18} color={colors.blue} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase' }}>HYDRATATION</div>
+            <div style={{ fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase' }}>{ht('hydration')}</div>
             <div style={{ fontFamily: fonts.headline, fontSize: 16, color: colors.gold }}>{(waterToday / 1000).toFixed(1)}L <span style={{ fontSize: 11, color: colors.textMuted }}>/ {((profile?.water_goal || 3000) / 1000).toFixed(1)}L</span></div>
           </div>
-          <button onClick={() => addWater(250)} className="active:scale-95" style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.blue, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.15s' }}>+250ML</button>
+          <button onClick={() => addWater(250)} className="active:scale-95" style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.blue, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.15s' }}>{ht('addWater')}</button>
         </div>
       </div>
 
@@ -476,9 +428,9 @@ export default function HomeTab({
           /* ── COMPACT CARD: week calendar ── */
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.15em', margin: 0 }}>MON BIEN-ETRE</span>
+              <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.15em', margin: 0 }}>{ht('wellbeing')}</span>
               <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.25)' }} />
-              <button onClick={() => setActiveTab('progress')} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', cursor: 'pointer', padding: '4px 0' }}>VOIR TOUT →</button>
+              <button onClick={() => setActiveTab('progress')} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', cursor: 'pointer', padding: '4px 0' }}>{ht('viewAll')}</button>
             </div>
             <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 12 }}>
@@ -489,7 +441,7 @@ export default function HomeTab({
                     const d = new Date(Date.now() - i * 86400000)
                     const ds = d.toISOString().split('T')[0]
                     const c = last7Checkins.find((x: any) => x.date === ds)
-                    days.push({ ds, day: d.toLocaleDateString('fr-FR', { weekday: 'narrow' }).toUpperCase(), isToday: i === 0, c })
+                    days.push({ ds, day: d.toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { weekday: 'narrow' }).toUpperCase(), isToday: i === 0, c })
                   }
                   return days.map((d) => (
                     <div key={d.ds} onClick={() => { if (d.isToday) setCheckinEditMode(true) }} style={{
@@ -504,25 +456,25 @@ export default function HomeTab({
                   ))
                 })()}
               </div>
-              <button onClick={() => setCheckinEditMode(true)} style={{ width: '100%', padding: '8px 0', background: 'transparent', border: 'none', color: 'rgba(201,168,76,0.7)', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>MODIFIER AUJOURD&apos;HUI</button>
+              <button onClick={() => setCheckinEditMode(true)} style={{ width: '100%', padding: '8px 0', background: 'transparent', border: 'none', color: 'rgba(201,168,76,0.7)', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{ht('editToday')}</button>
             </div>
           </>
         ) : (
           /* ── FULL CHECK-IN CARD ── */
           <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold }}>CHECK-IN DU JOUR</div>
-              {checkinSaved && <button onClick={() => setCheckinEditMode(false)} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.textDim, cursor: 'pointer', padding: '2px 6px' }}>FERMER</button>}
+              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold }}>{ht('checkinTitle')}</div>
+              {checkinSaved && <button onClick={() => setCheckinEditMode(false)} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.textDim, cursor: 'pointer', padding: '2px 6px' }}>{ht('close')}</button>}
             </div>
             <div style={{ height: 1, background: 'rgba(201,168,76,0.1)', margin: '8px 0 14px' }} />
-            <div style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 12 }}>Comment te sens-tu aujourd&apos;hui ?</div>
+            <div style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 12 }}>{ht('checkinQuestion')}</div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
               {[
-                { id: 'fatigue', icon: '😴', label: 'Fatigue' },
-                { id: 'normal', icon: '😐', label: 'Normal' },
-                { id: 'bien', icon: '💪', label: 'Bien' },
-                { id: 'top', icon: '🔥', label: 'Top' },
-                { id: 'energie', icon: '⚡', label: 'Energie' },
+                { id: 'fatigue', icon: '😴', label: ht('moodFatigue') },
+                { id: 'normal', icon: '😐', label: ht('moodNormal') },
+                { id: 'bien', icon: '💪', label: ht('moodBien') },
+                { id: 'top', icon: '🔥', label: ht('moodTop') },
+                { id: 'energie', icon: '⚡', label: ht('moodEnergie') },
               ].map(m => (
                 <button key={m.id} onClick={() => setCheckinMood(m.id)} style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
@@ -539,7 +491,7 @@ export default function HomeTab({
               ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>SOMMEIL</span>
+              <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>{ht('sleep')}</span>
               <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={checkinSleep} onChange={e => setCheckinSleep(e.target.value)}
                 style={{ width: 60, padding: '7px 8px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
               <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>h</span>
@@ -548,7 +500,7 @@ export default function HomeTab({
               </div>
               <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textDim, flexShrink: 0 }}>/ 8h</span>
             </div>
-            <textarea value={checkinNote} onChange={e => setCheckinNote(e.target.value.slice(0, 200))} placeholder="Note pour ton coach (optionnel)..." rows={2} maxLength={200}
+            <textarea value={checkinNote} onChange={e => setCheckinNote(e.target.value.slice(0, 200))} placeholder={ht('checkinPlaceholder')} rows={2} maxLength={200}
               style={{ width: '100%', padding: '8px 12px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none', resize: 'none', marginBottom: 12 }} />
             <button disabled={!checkinMood || checkinSaving} onClick={() => { clearTimeout(checkinSaveRef.current); saveCheckin().then(ok => { if (ok) setCheckinEditMode(false) }) }}
               style={{
@@ -557,8 +509,8 @@ export default function HomeTab({
                 fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
                 background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08',
               }}>
-              {checkinSaving ? (<><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#0D0B08', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />SAUVEGARDE...</>)
-                : checkinSaved ? 'METTRE A JOUR' : 'VALIDER LE CHECK-IN'}
+              {checkinSaving ? (<><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#0D0B08', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />{ht('saving')}</>)
+                : checkinSaved ? ht('update') : ht('validateCheckin')}
             </button>
           </div>
         )}
@@ -568,9 +520,9 @@ export default function HomeTab({
 
         {/* ═══ PROGRESSION (streak + weight + XP) ═══ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-          <span style={T}>Progression</span>
+          <span style={T}>{ht('progression')}</span>
           <div style={titleLineStyle} />
-          <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 10, flexShrink: 0 }}>Details</button>
+          <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 10, flexShrink: 0 }}>{ht('details')}</button>
         </div>
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden' }}>
           {/* Streak */}
@@ -578,14 +530,14 @@ export default function HomeTab({
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Flame size={22} color={GOLD} fill={GOLD} style={{ opacity: 0.8 }} />
               <div>
-                <div style={{ ...statStyle, fontSize: 24, letterSpacing: '-0.02em' }}>{streak} JOUR{streak > 1 ? 'S' : ''}</div>
-                <div style={{ ...mutedStyle, fontSize: 10 }}>Streak actif</div>
+                <div style={{ ...statStyle, fontSize: 24, letterSpacing: '-0.02em' }}>{ht('streakDays', { count: streak })}</div>
+                <div style={{ ...mutedStyle, fontSize: 10 }}>{ht('activeStreak')}</div>
               </div>
             </div>
             {currentWeight && (
               <div style={{ textAlign: 'right' }}>
                 <div style={{ ...statStyle, fontSize: 24, lineHeight: 1 }}>{currentWeight} <span style={{ fontSize: 12, color: TEXT_MUTED }}>KG</span></div>
-                {goalWeight && <div style={{ ...mutedStyle, fontSize: 10 }}>Objectif : {goalWeight} kg {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}</div>}
+                {goalWeight && <div style={{ ...mutedStyle, fontSize: 10 }}>{ht('goal', { weight: goalWeight })} {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}</div>}
               </div>
             )}
           </div>
@@ -624,18 +576,18 @@ export default function HomeTab({
         {!aiAllowed && coachProgram && nextSession && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={titleStyle}>PROCHAINE SEANCE</span>
+              <span style={titleStyle}>{ht('nextSession')}</span>
               <div style={titleLineStyle} />
             </div>
             <div style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 20 }}>
               <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
-                {"SUGGERE POUR TOI"}
+                {ht('suggestedForYou')}
               </div>
               <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: 1, marginBottom: 4 }}>
                 {(nextSession.day.name || 'Seance').toUpperCase()}
               </div>
               <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
-                {nextSession.day.exercises?.length || 0} exercice{(nextSession.day.exercises?.length || 0) > 1 ? 's' : ''}
+                {ht('exerciseCount', { count: nextSession.day.exercises?.length || 0 })}
               </div>
               <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim, fontStyle: 'italic', marginBottom: 16 }}>
                 {nextSession.reason}
@@ -644,7 +596,7 @@ export default function HomeTab({
                 onClick={() => startProgramWorkout(nextSession.day, nextSession.day.exercises || [], nextSession.weekday)}
                 style={{ ...btnPrimary, width: '100%', padding: 14, borderRadius: 14 }}
               >
-                LANCER MAINTENANT
+                {ht('launchNow')}
               </button>
             </div>
           </div>
@@ -654,12 +606,13 @@ export default function HomeTab({
         {!aiAllowed && coachProgram && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={titleStyle}>TA SEMAINE</span>
+              <span style={titleStyle}>{ht('yourWeek')}</span>
               <div style={titleLineStyle} />
             </div>
             <div style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
-                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((label, idx) => {
+                {(['dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri', 'daySat', 'daySun'] as const).map((dayKey, idx) => {
+                  const label = ht(dayKey)
                   const jsDay = new Date().getDay()
                   const todayIdx = jsDay === 0 ? 6 : jsDay - 1
                   const isToday = idx === todayIdx
@@ -695,7 +648,7 @@ export default function HomeTab({
             <div style={{ width: 30, height: 1, background: 'rgba(201,168,76,0.4)' }} />
           </div>
           <p style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 500, fontStyle: 'italic', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, letterSpacing: '0.01em', margin: 0, maxWidth: 320, marginInline: 'auto' }}>
-            &ldquo;{getDailyQuote(profile?.objective)}&rdquo;
+            &ldquo;{dailyQuote}&rdquo;
           </p>
           <p style={{ fontSize: 10, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.15em', marginTop: 10, textTransform: 'uppercase', fontWeight: 700, margin: '10px 0 0' }}>
             — MOOVX MINDSET
@@ -709,12 +662,12 @@ export default function HomeTab({
       {showLevelModal && (
         <div style={modalOverlay} onClick={() => setShowLevelModal(false)}>
           <div style={{ ...modalContainer, padding: 24, maxWidth: 340, margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ ...titleStyle, fontSize: 14 }}>Mon niveau</h2>
+            <h2 style={{ ...titleStyle, fontSize: 14 }}>{ht('levelTitle')}</h2>
             <p style={{ color: colors.textDim, fontSize: 13, textAlign: 'center', margin: 0, fontFamily: fonts.body }}>
-              Details XP, prochains paliers et achievements arrivent bientot.
+              {ht('levelDesc')}
             </p>
             <button onClick={() => setShowLevelModal(false)} style={{ ...btnPrimaryStyle, padding: '12px 32px', fontSize: 13 }}>
-              Fermer
+              {ht('levelClose')}
             </button>
           </div>
         </div>

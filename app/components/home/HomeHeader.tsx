@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
   colors,
   fonts,
@@ -22,6 +23,7 @@ interface HomeHeaderProps {
 export default function HomeHeader({
   firstName, displayAvatar, level, streak, onLevelClick,
 }: HomeHeaderProps) {
+  const t = useTranslations('home.header')
   return (
     <div style={{
       padding: '16px 20px',
@@ -32,7 +34,7 @@ export default function HomeHeader({
       {/* Left — Avatar + Name + Level */}
       <button
         onClick={onLevelClick}
-        aria-label="Voir mon niveau"
+        aria-label={t('viewLevel')}
         style={{
           display: 'flex', alignItems: 'center', gap: 12,
           background: 'transparent', border: 'none', padding: 0,
@@ -75,7 +77,7 @@ export default function HomeHeader({
             textTransform: 'uppercase', marginTop: 4,
             display: 'flex', alignItems: 'center', gap: 4,
           }}>
-            NIVEAU {level} <span style={{ opacity: 0.5 }}>&rsaquo;</span>
+            {t('level', { level })} <span style={{ opacity: 0.5 }}>&rsaquo;</span>
           </div>
         </div>
       </button>
@@ -87,13 +89,13 @@ export default function HomeHeader({
             fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700,
             letterSpacing: '0.18em', color: TEXT_DIM,
           }}>
-            STREAK
+            {t('streak')}
           </span>
           <span style={{
             fontFamily: FONT_DISPLAY, fontSize: 18,
             color: GOLD, letterSpacing: '0.02em', lineHeight: 1,
           }}>
-            {streak} JOUR{streak > 1 ? 'S' : ''}
+            {t('streakDays', { count: streak })}
           </span>
         </div>
 

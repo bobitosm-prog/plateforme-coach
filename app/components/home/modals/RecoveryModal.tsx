@@ -1,6 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../../lib/design-tokens'
 import MuscleHeatMap from '../../ui/MuscleHeatMap'
 
@@ -11,20 +12,16 @@ const FONT_BODY = fonts.body
 const TEXT_DIM = colors.textDim
 const TEXT_MUTED = colors.textMuted
 
-function getRecoveryStatus(muscleStatus: Record<string, number>): { text: string; color: string; caption: string } {
-  const values = Object.values(muscleStatus)
-  if (!values.length) return { text: 'GOOD', color: '#4ade80', caption: 'Tu es pret a attaquer fort. Tous les groupes principaux sont recuperes.' }
-  const avg = values.reduce((a, b) => a + b, 0) / values.length
-  if (avg < 0.3) return { text: 'GOOD', color: '#4ade80', caption: 'Tu es pret a attaquer fort. Tous les groupes principaux sont recuperes.' }
-  if (avg < 0.6) return { text: 'WATCH', color: '#fb923c', caption: 'Quelques zones travaillent encore. Adapte ton entrainement aujourd\'hui.' }
-  return { text: 'RECOVER', color: '#ef4444', caption: 'Recuperation en cours. Privilegie repos actif ou cardio leger.' }
-}
+type RecoveryStatusKey = 'good' | 'watch' | 'recover'
 
-const SC = [
-  { fill: '#4ade80', label: 'Frais' },
-  { fill: '#D4A843', label: 'Recupere' },
-  { fill: '#EF4444', label: 'Fatigue' },
-]
+function getRecoveryStatusKey(muscleStatus: Record<string, number>): { key: RecoveryStatusKey; color: string } {
+  const values = Object.values(muscleStatus)
+  if (!values.length) return { key: 'good', color: '#4ade80' }
+  const avg = values.reduce((a, b) => a + b, 0) / values.length
+  if (avg < 0.3) return { key: 'good', color: '#4ade80' }
+  if (avg < 0.6) return { key: 'watch', color: '#fb923c' }
+  return { key: 'recover', color: '#ef4444' }
+}
 
 interface RecoveryModalProps {
   muscleStatus: Record<string, number>
@@ -32,7 +29,10 @@ interface RecoveryModalProps {
 }
 
 export default function RecoveryModal({ muscleStatus, onClose }: RecoveryModalProps) {
-  const status = getRecoveryStatus(muscleStatus)
+  const t = useTranslations('home.recovery')
+  const { key: statusKey, color: statusColor } = getRecoveryStatusKey(muscleStatus)
+  const statusTextMap: Record<RecoveryStatusKey, string> = { good: 'statusGood', watch: 'statusWatch', recover: 'statusRecover' }
+  const captionMap: Record<RecoveryStatusKey, string> = { good: 'captionGood', watch: 'captionWatch', recover: 'captionRecover' }
 
   return (
     <div
@@ -60,7 +60,7 @@ export default function RecoveryModal({ muscleStatus, onClose }: RecoveryModalPr
         {/* Close button */}
         <button
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t('close')}
           style={{
             position: 'absolute', top: 16, right: 16,
             background: 'transparent', border: 'none',
@@ -78,7 +78,7 @@ export default function RecoveryModal({ muscleStatus, onClose }: RecoveryModalPr
             color: GOLD, letterSpacing: '0.02em', margin: 0,
             textTransform: 'uppercase',
           }}>
-            Recuperation musculaire
+            {t('title')}
           </h2>
         </div>
 
@@ -89,20 +89,20 @@ export default function RecoveryModal({ muscleStatus, onClose }: RecoveryModalPr
             letterSpacing: '0.18em', color: TEXT_DIM,
             textTransform: 'uppercase', marginBottom: 6,
           }}>
-            Etat general
+            {t('overallStatus')}
           </div>
           <div style={{
             fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 400,
-            color: status.color, letterSpacing: '0.05em', marginBottom: 8,
+            color: statusColor, letterSpacing: '0.05em', marginBottom: 8,
           }}>
-            {status.text}
+            {t(statusTextMap[statusKey])}
           </div>
           <p style={{
             fontFamily: FONT_BODY, fontSize: 13,
             color: TEXT_MUTED, margin: 0, lineHeight: 1.5,
             maxWidth: 480,
           }}>
-            {status.caption}
+            {t(captionMap[statusKey])}
           </p>
         </div>
 

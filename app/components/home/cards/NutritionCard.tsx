@@ -1,6 +1,7 @@
 'use client'
 
 import { UtensilsCrossed } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../../lib/design-tokens'
 
 const GOLD = colors.gold
@@ -30,10 +31,11 @@ interface NutritionCardProps {
 export default function NutritionCard({
   consumedKcal, calorieGoal, proteinGoal, carbsGoal, fatGoal,
 }: NutritionCardProps) {
+  const t = useTranslations('home.nutritionCard')
   const macros = [
-    { label: 'PROTEINES', value: proteinGoal, color: '#4ade80' },
-    { label: 'GLUCIDES', value: carbsGoal, color: '#e6c364' },
-    { label: 'LIPIDES', value: fatGoal, color: '#fb923c' },
+    { label: t('protein'), value: proteinGoal, color: '#4ade80' },
+    { label: t('carbs'), value: carbsGoal, color: '#e6c364' },
+    { label: t('fat'), value: fatGoal, color: '#fb923c' },
   ]
 
   return (
@@ -42,7 +44,7 @@ export default function NutritionCard({
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <UtensilsCrossed size={12} color={GOLD} />
         <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: GOLD, textTransform: 'uppercase' }}>
-          Nutrition
+          {t('title')}
         </span>
       </div>
 
@@ -52,7 +54,7 @@ export default function NutritionCard({
           {consumedKcal}
         </div>
         <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: TEXT_DIM, marginTop: 2 }}>
-          KCAL
+          {t('kcal')}
         </div>
       </div>
 
