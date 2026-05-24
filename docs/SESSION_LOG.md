@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : 3ed8fa4
+- **HEAD** : b723df4
 - **Working tree** : clean
-- **Tâche en cours** : Sprint i18n closure — F1b done (nav + composants oubliés), suite F2 (format dates + Recharts) puis F3 (migration DB exos)
+- **Tâche en cours** : Sprint i18n closure — F1b REVERTED (régression boot), F1b-v2 à refaire avec pattern correct, suite F2 + F3
 
 ---
 
@@ -61,6 +61,7 @@ Plan 5 phases proposé :
 | 8 | 660aa0d | feat(i18n): NutritionTab L2 FR/EN/DE (35 keys) |
 | 9 | 58a5b42 | fix(i18n): NutritionTab + ProgressTab residual FR (28 keys) |
 | 10 | 3ed8fa4 | fix(i18n): bottom nav + headers retour + MeasureModal (8 keys) |
+| 11 | b723df4 | Revert "fix(i18n): bottom nav + headers retour + MeasureModal" |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -260,6 +261,38 @@ et des sections entières dont le contenu était dans cardTitleAbove patterns.
 - ProfileTab aria-label réutilise badges.backToAccount par CC (couplage accidentel
   entre namespaces sémantiquement non liés). À recoupler vers common.* dans le
   sprint vocab consolidation post-launch.
+
+### F1b — REVERTED (régression critique app crash)
+
+**Symptôme** :
+Après commit 3ed8fa4, app crash au boot avec runtime error :
+"Failed to call `useTranslations` because the context from
+`NextIntlClientProvider` was not found."
+
+**Root cause** :
+CC a ajouté `const tc = useTranslations('common')` au TOP du composant
+racine `CoachApp()` dans app/page.tsx L.48, AU-DESSUS du wrapper
+`<ClientIntlProvider>` qui n'est rendu que dans le JSX en dessous.
+Le hook est appelé hors contexte i18n → crash.
+
+**Pattern violé** :
+Sprint 5J avait explicitement noté : "Fix critique 0e8f856 :
+ClientIntlProvider wraps tout l'app shell". Le hook useTranslations
+ne peut être appelé QUE dans des composants rendus à l'intérieur
+de ce provider.
+
+**Action** :
+- git revert 3ed8fa4 (commit b723df4 sur main)
+- App reboot OK confirmé en local
+
+**Apprentissage senior** :
+- Pour app/page.tsx (composant racine) : NE PAS utiliser useTranslations
+  directement au top. Soit déplacer le i18n dans un sous-composant rendu
+  après ClientIntlProvider, soit utiliser getTranslations server-side
+  (mais page.tsx est 'use client' donc impossible).
+- À reprendre en F1b-v2 : pour le bottom nav et "Compte" hardcodé,
+  refacto avec un sous-composant <BottomNav /> qui contient le hook,
+  rendu après le provider.
 
 ---
 
