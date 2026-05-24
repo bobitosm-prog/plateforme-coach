@@ -1120,7 +1120,57 @@
       "backToAccount": "Konto"
     },
     "logout": "ABMELDEN",
-    "avatarAlt": "Profilfoto"
+    "avatarAlt": "Profilbild"
+  },
+  "badges": {
+    "title": "MEINE ABZEICHEN",
+    "globalLevel": "GESAMTSTUFE",
+    "levelPrefix": "LV. {level}",
+    "nextLevel": "Nächste Stufe: {maxXp} XP",
+    "xpSuffix": "{xp} XP",
+    "xpReward": "+{xp} XP",
+    "statEarned": "ERHALTEN",
+    "statLocked": "GESPERRT",
+    "statAlmost": "FAST",
+    "almostUnlocked": "FAST FREIGESCHALTET",
+    "categoryAll": "ALLE",
+    "categoryTraining": "TRAINING",
+    "categoryNutrition": "ERNÄHRUNG",
+    "categoryStreak": "STREAK",
+    "categorySocial": "SOZIAL",
+    "badgeUnlocked": "ABZEICHEN FREIGESCHALTET!",
+    "continue": "WEITER",
+    "levels": {
+      "beginner": "Anfänger",
+      "initiated": "Einsteiger",
+      "confirmed": "Fortgeschritten",
+      "advanced": "Erfahren",
+      "expert": "Experte",
+      "master": "Meister",
+      "legend": "Legende"
+    },
+    "items": {
+      "first_workout": { "name": "Erster Schritt", "desc": "1. Training abgeschlossen" },
+      "10_workouts": { "name": "10 Trainings", "desc": "Regelmässig" },
+      "50_workouts": { "name": "50 Trainings", "desc": "Maschine" },
+      "volume_10t": { "name": "Volumen 10T", "desc": "10 Tonnen gehoben" },
+      "volume_50t": { "name": "Volumen 50T", "desc": "Titan" },
+      "first_pr": { "name": "Erster PR", "desc": "Persönlicher Rekord" },
+      "first_meal": { "name": "1. Mahlzeit", "desc": "Mahlzeit erfasst" },
+      "first_weight": { "name": "1. Wiegung", "desc": "Gewicht erfasst" },
+      "plan_7d": { "name": "7-Tage-Plan", "desc": "7 Tage Mahlzeiten erfasst" },
+      "scanner_50": { "name": "Scanner Pro", "desc": "50 Lebensmittel gescannt" },
+      "macros_perfect": { "name": "Perfekte Makros", "desc": "Makros im Ziel 3 Tage" },
+      "streak_7": { "name": "Woche", "desc": "7-Tage-Streak" },
+      "streak_30": { "name": "Stahlmonat", "desc": "30-Tage-Streak" },
+      "streak_90": { "name": "Quartal", "desc": "90-Tage-Streak" },
+      "streak_180": { "name": "6 Monate", "desc": "Halbes Jahr" },
+      "streak_365": { "name": "1 Jahr", "desc": "Legende" },
+      "first_photo": { "name": "Vorher/Nachher", "desc": "1. Foto hochgeladen" },
+      "share": { "name": "Teiler", "desc": "Profil teilen" },
+      "referral": { "name": "Botschafter", "desc": "Freund empfehlen" },
+      "lifetime": { "name": "Lebenslang", "desc": "Lebenslang-Abo" }
+    }
   },
   "chat": {
     "header": {

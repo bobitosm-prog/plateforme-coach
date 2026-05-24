@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, cardStyle } from '../../lib/design-tokens'
 import type { Badge } from '../../lib/check-badges'
 
@@ -10,6 +11,7 @@ const BADGE_EMOJIS: Record<string, string> = {
 }
 
 export default function BadgeCelebration({ badge, xp, onClose }: { badge: Badge; xp: number; onClose: () => void }) {
+  const t = useTranslations('badges')
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       {/* Confetti */}
@@ -27,12 +29,12 @@ export default function BadgeCelebration({ badge, xp, onClose }: { badge: Badge;
         <div style={{ fontSize: 64, marginBottom: 16, animation: 'badgeBounce 0.6s ease-out' }}>
           {BADGE_EMOJIS[badge.icon] || '🏆'}
         </div>
-        <div style={{ ...titleStyle, fontSize: 16, marginBottom: 8 }}>BADGE DÉBLOQUÉ !</div>
-        <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.text, marginBottom: 4 }}>{badge.name}</div>
-        <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 16 }}>{badge.description}</div>
-        <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.gold, marginBottom: 20 }}>+{badge.xp_reward} XP</div>
+        <div style={{ ...titleStyle, fontSize: 16, marginBottom: 8 }}>{t('badgeUnlocked')}</div>
+        <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.text, marginBottom: 4 }}>{t(`items.${badge.id}.name`)}</div>
+        <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 16 }}>{t(`items.${badge.id}.desc`)}</div>
+        <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.gold, marginBottom: 20 }}>{t('xpReward', { xp: badge.xp_reward })}</div>
         <button onClick={onClose} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: colors.gold, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}>
-          CONTINUER
+          {t('continue')}
         </button>
       </div>
       <style>{`
