@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : afc3a96
+- **HEAD** : b536d38
 - **Working tree** : clean
-- **Tâche en cours** : Sprint 6 i18n — Phase 3b done (WorkoutSession), en route Phase 3c
+- **Tâche en cours** : Sprint 6 i18n — cluster Training closed, suite Phase 5
 
 ---
 
@@ -55,6 +55,7 @@ Plan 5 phases proposé :
 | 2 | f3bb247 | feat(i18n): HomeTab full coverage FR/EN/DE (91 keys) |
 | 3 | e4f11d5 | feat(i18n): Training small components FR/EN/DE (63 keys, 5 components) |
 | 4 | afc3a96 | feat(i18n): WorkoutSession 100% FR/EN/DE (91 keys) |
+| 5 | b536d38 | feat(i18n): ProgramBuilder 100% FR/EN/DE (94 keys) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -135,6 +136,22 @@ Plan 5 phases proposé :
 **Pattern technique** :
 - Sub-component interne (CustomBuilder dans WorkoutSession) : useTranslations propre
   plutôt que t() via props. Plus propre quand sub-comp < 200L.
+
+### Phase 3c — ProgramBuilder + cluster Training closed
+
+**Réalisé** :
+- ProgramBuilder.tsx : 1297L, 0% → 100% i18n
+- 94 clés sous training_tab.builder.* (7 sous-namespaces)
+- 135 t() calls
+
+**3 catégories de strings distinguées** :
+- Display : labels UI, boutons, dialogs (traduits)
+- DB values : MUSCLE_OPTIONS, EQUIPMENT_OPTIONS, DAY_NAMES (préservés)
+- Backend/AI : payloads /api/generate-custom-program (préservés FR)
+
+**Cluster Training CLOSED** :
+- 6 composants 100% i18n
+- 248 clés totales sur cluster training_tab
 
 ---
 
