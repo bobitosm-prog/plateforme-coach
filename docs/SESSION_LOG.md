@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : b0f4ecf
+- **HEAD** : 660aa0d
 - **Working tree** : clean
-- **Tâche en cours** : Sprint 6 i18n CLOSED (513 clés ajoutées, ~92% i18n global)
+- **Tâche en cours** : Sprint 6 i18n 100% CLOSED — all 5 app-shell tabs complete
 
 ---
 
@@ -58,6 +58,7 @@ Plan 5 phases proposé :
 | 5 | b536d38 | feat(i18n): ProgramBuilder 100% FR/EN/DE (94 keys) |
 | 6 | 0b3bf36 | feat(i18n): Progress L2/L3 FR/EN/DE (98 keys, 3 components) |
 | 7 | b0f4ecf | feat(i18n): AccountTab 100% FR/EN/DE (12 keys) |
+| 8 | 660aa0d | feat(i18n): NutritionTab L2 FR/EN/DE (35 keys) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -176,28 +177,41 @@ Plan 5 phases proposé :
 - 12 clés sous namespace account
 - "Athena" préservé comme brand name (non traduit)
 
-### Sprint 6 i18n — BILAN FINAL
+### Phase 4 — NutritionTab L2 (closure finale)
 
-Tous les composants app-shell 100% i18n :
-- Badges (BadgesModal, BadgeCelebration)
-- HomeTab + sub (HomeHeader, NutritionCard, RecoveryModal)
-- Training cluster : TempoModal, TempoExecutor, ExerciseLibrarySection,
-  SessionDetailModal, TrainingTab, WorkoutSession + CustomBuilder, ProgramBuilder
-- Progress cluster : ProgressTab, BodyAssessment, AbsCalculator
+**Réalisé** :
+- NutritionTab.tsx : 1216L, 45% → 100% i18n (61 nt() calls)
+- 35 clés ajoutées sous nutrition_tab.*
+- 7 sous-namespaces : chrome, macrosShort, macrosLong, mealMenu, saveMealPopup, copyMealPopup, savedMeals
+- Réutilisation clés Sprint 5H existantes (macros.kcal/protein/carbs/fat)
+
+**DB values préservées** :
+- MEAL_ORDER / MEAL_LABELS (DB meal_type values)
+- food.name, food.custom_name (DB daily_food_logs)
+- defaultMealType="dejeuner" (DB value passée à BarcodeScanner)
+
+### Sprint 6 i18n — BILAN FINAL UPDATED
+
+15 composants 100% i18n :
+- Badges cluster (2)
+- HomeTab cluster (4)
+- Training cluster (7 fichiers + 1 sub-component)
+- Progress cluster (3)
 - AccountTab
+- NutritionTab (+couche 2)
 
-**Stats session** :
-- Total clés : 1052 → 1565 (+513 clés, +48.8%)
-- Progression i18n globale : ~48% → ~92%
-- 14 composants 100% i18n (+ 1 sub-component CustomBuilder)
-- 7 phases : 1+1.5 / 2+2.5 / 3a / 3b / 3c / 5a / 5b
+**Stats finales** :
+- Total clés : 1052 → 1600 (+548 clés, +52.1%)
+- Progression i18n globale : ~48% → ~95%
+- 8 phases : 1+1.5 / 2+2.5 / 3a / 3b / 3c / 5a / 5b / 4
+- 0 régression TypeScript sur l'ensemble du sprint
+- 0 incident sur logique critique (Web Audio, iOS recovery, DB values, AI prompts)
 
-**Tech debt restante post-Sprint 6** :
-- NutritionTab L2 (Phase 4, ~35 clés) — non traitée cette session
+**Tech debt restante** :
 - Migration noms exercices/aliments DB en FR → sprint dédié séparé
 - Client view détaillée coach (~660L) — B2B, défère
-- Incohérence vocab i18n repo-wide : "série/SERIE/sets/SETS/Séries" — sprint
-  consolidation post-launch
+- Incohérence vocab i18n repo-wide : "série/SERIE/sets/SETS/Séries" — sprint consolidation post-launch
+- Sub-components nutrition/* hors NutritionTab top (FoodSearch, Recipes, BarcodeScanner, ShoppingList) si applicable → à vérifier post-launch
 
 ---
 
