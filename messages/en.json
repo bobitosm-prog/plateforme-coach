@@ -1795,6 +1795,55 @@
     "prefs": {
       "configurePrompt": "Configure your preferences then generate your personalized AI plan.",
       "configureCta": "Configure my preferences"
+    },
+    "chrome": {
+      "coachManaged": "Nutrition managed by your coach",
+      "noPlan": "No meal plan",
+      "noPlanForDay": "No plan for {day}.",
+      "noMealsForDay": "No meals for this day.",
+      "noFoodAdded": "No food added",
+      "add": "Add",
+      "prefsTitle": "Nutrition preferences",
+      "futureDate": "Future date not available",
+      "searchMeal": "Search a meal...",
+      "scanMeal": "SCAN A MEAL"
+    },
+    "macrosShort": {
+      "p": "P",
+      "g": "C",
+      "l": "F"
+    },
+    "macrosLong": {
+      "prot": "PROT.",
+      "gluc": "CARBS",
+      "lip": "FAT"
+    },
+    "mealMenu": {
+      "saveMeal": "Save meal",
+      "copyToDay": "Copy to another day",
+      "clearMeal": "Clear this meal",
+      "replace": "Replace",
+      "delete": "Delete"
+    },
+    "saveMealPopup": {
+      "title": "SAVE MEAL",
+      "placeholder": "Meal name...",
+      "foodCount": "{count} FOODS",
+      "cancel": "CANCEL",
+      "save": "SAVE"
+    },
+    "copyMealPopup": {
+      "title": "COPY MEAL",
+      "date": "DATE",
+      "meal": "MEAL",
+      "cancel": "CANCEL",
+      "copy": "COPY"
+    },
+    "savedMeals": {
+      "title": "MY MEALS",
+      "empty": "No saved meals.",
+      "foodCount": "{count} foods",
+      "usedCount": "{count}x used"
     }
   },
   "coach_dashboard": {

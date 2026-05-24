@@ -330,7 +330,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🔒</div>
-          <h2 style={{ ...subtitleStyle, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: '0 0 10px' }}>Nutrition gérée par ton coach</h2>
+          <h2 style={{ ...subtitleStyle, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: '0 0 10px' }}>{nt('chrome.coachManaged')}</h2>
           <p style={{ ...bodyStyle, fontSize: '0.82rem', margin: 0, lineHeight: 1.6, maxWidth: 300 }}>
             Ton coach prépare ton plan nutrition personnalisé. Contacte-le via la messagerie.
           </p>
@@ -340,7 +340,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🍽️</div>
-        <h2 style={{ ...subtitleStyle, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: '0 0 10px' }}>Aucun plan alimentaire</h2>
+        <h2 style={{ ...subtitleStyle, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: '0 0 10px' }}>{nt('chrome.noPlan')}</h2>
         <p style={{ ...bodyStyle, fontSize: '0.82rem', margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
           {nt('prefs.configurePrompt')}
         </p>
@@ -379,7 +379,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     if (!dayData) {
       return (
         <div style={{ padding: 20, textAlign: 'center' }}>
-          <p style={{ ...bodyStyle, fontSize: '0.85rem', marginBottom: 12 }}>Pas de plan pour {nutritionDay}.</p>
+          <p style={{ ...bodyStyle, fontSize: '0.85rem', marginBottom: 12 }}>{nt('chrome.noPlanForDay', { day: nutritionDay })}</p>
         </div>
       )
     }
@@ -389,10 +389,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       <>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
           {[
-            { label: 'Kcal', value: String(totals.kcal || plan.total_calories || '—') },
-            { label: 'Prot', value: `${totals.prot || plan.protein_g || '—'}g` },
-            { label: 'Gluc', value: `${totals.carb || plan.carbs_g || '—'}g` },
-            { label: 'Lip', value: `${totals.fat || plan.fat_g || '—'}g` },
+            { label: nt('macros.kcal'), value: String(totals.kcal || plan.total_calories || '—') },
+            { label: nt('macros.protein'), value: `${totals.prot || plan.protein_g || '—'}g` },
+            { label: nt('macros.carbs'), value: `${totals.carb || plan.carbs_g || '—'}g` },
+            { label: nt('macros.fat'), value: `${totals.fat || plan.fat_g || '—'}g` },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
               <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
@@ -490,10 +490,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       <>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
           {[
-            { label: 'Kcal', value: String(dayTotals.kcal || coachMealPlan.calorie_target || '—') },
-            { label: 'Prot', value: dayTotals.prot > 0 ? `${dayTotals.prot}g` : (coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—') },
-            { label: 'Gluc', value: dayTotals.carb > 0 ? `${dayTotals.carb}g` : (coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—') },
-            { label: 'Lip', value: dayTotals.fat > 0 ? `${dayTotals.fat}g` : (coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—') },
+            { label: nt('macros.kcal'), value: String(dayTotals.kcal || coachMealPlan.calorie_target || '—') },
+            { label: nt('macros.protein'), value: dayTotals.prot > 0 ? `${dayTotals.prot}g` : (coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—') },
+            { label: nt('macros.carbs'), value: dayTotals.carb > 0 ? `${dayTotals.carb}g` : (coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—') },
+            { label: nt('macros.fat'), value: dayTotals.fat > 0 ? `${dayTotals.fat}g` : (coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—') },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
               <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
@@ -529,7 +529,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           if (!dayPlanData || dayPlanData.meals.length === 0) return (
             <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '40px 20px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
               <UtensilsCrossed size={28} color={colors.textMuted} style={{ marginBottom: 8 }} />
-              <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>Aucun repas pour ce jour.</p>
+              <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>{nt('chrome.noMealsForDay')}</p>
             </div>
           )
           return (
@@ -548,9 +548,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     </div>
                     <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
                       {[
-                        { label: 'P', value: `${Math.round(mealProt)}g`, color: colors.gold },
-                        { label: 'G', value: `${Math.round(mealCarb)}g`, color: colors.blue },
-                        { label: 'L', value: `${Math.round(mealFat)}g`, color: colors.orange },
+                        { label: nt('macrosShort.p'), value: `${Math.round(mealProt)}g`, color: colors.gold },
+                        { label: nt('macrosShort.g'), value: `${Math.round(mealCarb)}g`, color: colors.blue },
+                        { label: nt('macrosShort.l'), value: `${Math.round(mealFat)}g`, color: colors.orange },
                       ].map(({ label, value, color }) => (
                         <span key={label} style={{ fontFamily: fonts.body, fontSize: '0.72rem', fontWeight: 700, color: colors.textMuted }}>
                           <span style={{ color }}>{label}</span> {value}
@@ -680,7 +680,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   const d = new Date(dt + 'T12:00:00')
                   const sel = dt === selectedDate, isTd = dt === today, hasMl = daysWithMeals.has(dt), fut = dt > today
                   return (
-                    <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? 'Date future indisponible' : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 8px', minWidth: 44, borderRadius: 12, border: sel ? `2px solid ${colors.gold}` : isTd ? `1px solid ${colors.goldRule}` : `1px solid ${colors.divider}`, background: sel ? `${colors.gold}12` : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
+                    <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? nt('chrome.futureDate') : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 8px', minWidth: 44, borderRadius: 12, border: sel ? `2px solid ${colors.gold}` : isTd ? `1px solid ${colors.goldRule}` : `1px solid ${colors.divider}`, background: sel ? `${colors.gold}12` : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
                       <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: sel ? colors.gold : colors.textDim }}>{d.toLocaleDateString('fr-CH', { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
                       <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: sel ? colors.gold : isTd ? colors.gold : colors.text }}>{d.getDate()}</span>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: hasMl ? colors.gold : 'transparent' }} />
@@ -719,9 +719,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {/* Macros bar */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'PROT.', current: consumed.protein, target: targetP, color: colors.gold, icon: Beef },
-                { label: 'GLUC.', current: consumed.carbs, target: targetG, color: colors.blue, icon: Wheat },
-                { label: 'LIP.', current: consumed.fat, target: targetL, color: colors.orange, icon: Droplet },
+                { label: nt('macrosLong.prot'), current: consumed.protein, target: targetP, color: colors.gold, icon: Beef },
+                { label: nt('macrosLong.gluc'), current: consumed.carbs, target: targetG, color: colors.blue, icon: Wheat },
+                { label: nt('macrosLong.lip'), current: consumed.fat, target: targetL, color: colors.orange, icon: Droplet },
               ].map(({ label, current, target, color, icon: Icon }) => {
                 const pct = Math.min(100, Math.round((current / target) * 100))
                 return (
@@ -759,9 +759,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                           <button onClick={() => setMealMenuOpen(mealMenuOpen === mealType ? null : mealType)} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>⋯</button>
                           {mealMenuOpen === mealType && (
                             <div style={{ position: 'absolute', top: 36, right: 0, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 6, zIndex: 50, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Save size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>Sauvegarder le repas</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Copy size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>Copier vers un autre jour</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Trash2 size={14} color={colors.error} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.error }}>Vider ce repas</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Save size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>{nt('mealMenu.saveMeal')}</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Copy size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>{nt('mealMenu.copyToDay')}</span></button>
+                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Trash2 size={14} color={colors.error} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.error }}>{nt('mealMenu.clearMeal')}</span></button>
                             </div>
                           )}
                         </div>
@@ -802,15 +802,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                         </div>
                         <span style={{ ...T, flexShrink: 0 }}>{Math.round(log.calories)}</span>
                         <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title="Remplacer"><RefreshCw size={14} color={colors.textMuted} /></button>
-                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title="Supprimer"><Trash2 size={14} color={colors.textMuted} /></button>
+                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.replace')}><RefreshCw size={14} color={colors.textMuted} /></button>
+                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.delete')}><Trash2 size={14} color={colors.textMuted} /></button>
                         </div>
                       </div>
                     ))}
 
                     {logs.length === 0 && (
                       <div style={{ padding: '16px 0', textAlign: 'center' }}>
-                        <span style={mutedStyle}>Aucun aliment ajouté</span>
+                        <span style={mutedStyle}>{nt('chrome.noFoodAdded')}</span>
                       </div>
                     )}
 
@@ -830,7 +830,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                         )
                       })()}
                       <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>
-                        <Plus size={14} strokeWidth={2.5} /> Ajouter
+                        <Plus size={14} strokeWidth={2.5} /> {nt('chrome.add')}
                       </button>
                       <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><Camera size={14} /></button>
                       <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><FolderOpen size={14} /></button>
@@ -890,7 +890,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <div style={{ padding: '0 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <SlidersHorizontal size={18} color={colors.gold} />
-            <h2 style={{ ...subtitleStyle, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: 0 }}>Preferences nutrition</h2>
+            <h2 style={{ ...subtitleStyle, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: 0 }}>{nt('chrome.prefsTitle')}</h2>
           </div>
           <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
         </div>
@@ -912,7 +912,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           </div>
           <div style={{ ...cardStyle, padding: 16 }}>
             {/* Search */}
-            <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder="Rechercher un repas..." style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
+            <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder={nt('chrome.searchMeal')} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
             {/* Filter pills */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
               {[{ k: 'all', l: nt('filters.all') }, { k: 'petit_dejeuner', l: nt('filters.breakfast') }, { k: 'dejeuner', l: nt('filters.lunch') }, { k: 'diner', l: nt('filters.dinner') }, { k: 'collation', l: nt('filters.snack') }].map(({ k, l }) => (
@@ -1087,7 +1087,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>SCANNER UN REPAS</span>
+              <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>{nt('chrome.scanMeal')}</span>
               <button onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
@@ -1138,10 +1138,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <>
           <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>SAUVEGARDER LE REPAS</h3>
-            <input type="text" placeholder="Nom du repas..." value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none', marginBottom: 12 }} />
+            <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>{nt('saveMealPopup.title')}</h3>
+            <input type="text" placeholder={nt('saveMealPopup.placeholder')} value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none', marginBottom: 12 }} />
             <div style={{ background: colors.background, borderRadius: 10, padding: 12, marginBottom: 16, border: `1px solid ${colors.goldDim}` }}>
-              <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: 2, marginBottom: 8 }}>{saveMealData.foods.length} ALIMENTS</div>
+              <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: 2, marginBottom: 8 }}>{nt('saveMealPopup.foodCount', { count: saveMealData.foods.length })}</div>
               {saveMealData.foods.map((f: any, i: number) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontFamily: fonts.body, fontSize: 12 }}>
                   <span style={{ color: colors.text }}>{f.name}</span>
@@ -1150,11 +1150,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               ))}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowSaveMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>ANNULER</button>
+              <button onClick={() => setShowSaveMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.cancel')}</button>
               <button disabled={!saveMealName.trim()} onClick={async () => {
                 await supabase.from('saved_meals').insert({ user_id: userId, name: saveMealName, meal_type: saveMealType, foods: saveMealData.foods, total_calories: saveMealData.foods.reduce((s: number, f: any) => s + (f.calories || 0), 0), total_proteins: saveMealData.foods.reduce((s: number, f: any) => s + (f.proteins || 0), 0), total_carbs: saveMealData.foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0), total_fats: saveMealData.foods.reduce((s: number, f: any) => s + (f.fats || 0), 0) })
                 setShowSaveMealPopup(false); setSaveMealName('')
-              }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: saveMealName.trim() ? '#0D0B08' : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>SAUVEGARDER</button>
+              }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: saveMealName.trim() ? '#0D0B08' : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.save')}</button>
             </div>
           </div>
         </>
@@ -1165,8 +1165,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <>
           <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>COPIER LE REPAS</h3>
-            <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>DATE</div>
+            <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>{nt('copyMealPopup.title')}</h3>
+            <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>{nt('copyMealPopup.date')}</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
               {[{ l: nt('copy.tomorrow'), d: 1 }, { l: nt('copy.plus2d'), d: 2 }, { l: nt('copy.plus3d'), d: 3 }, { l: nt('copy.plus1w'), d: 7 }].map(s => {
                 const dt = new Date(Date.now() + s.d * 86400000).toISOString().split('T')[0]
@@ -1174,13 +1174,13 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               })}
             </div>
             <input type="date" value={copyTargetDate} onChange={e => setCopyTargetDate(e.target.value)} min={today} style={{ width: '100%', padding: '10px 14px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none', marginBottom: 12, colorScheme: 'dark' }} />
-            <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>REPAS</div>
+            <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>{nt('copyMealPopup.meal')}</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
               {MEAL_ORDER.map(t => <button key={t} onClick={() => setCopyTargetMealType(t)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetMealType === t ? `1px solid ${colors.gold}` : `1px solid ${colors.goldDim}`, background: copyTargetMealType === t ? colors.goldDim : 'transparent', color: copyTargetMealType === t ? colors.gold : colors.textMuted, fontFamily: fonts.body, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{MEAL_LABELS[t]}</button>)}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowCopyMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>ANNULER</button>
-              <button disabled={!copyTargetDate || !copyTargetMealType} onClick={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} style={{ flex: 1, padding: 14, background: (copyTargetDate && copyTargetMealType) ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: (copyTargetDate && copyTargetMealType) ? '#0D0B08' : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>COPIER</button>
+              <button onClick={() => setShowCopyMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('copyMealPopup.cancel')}</button>
+              <button disabled={!copyTargetDate || !copyTargetMealType} onClick={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} style={{ flex: 1, padding: 14, background: (copyTargetDate && copyTargetMealType) ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: (copyTargetDate && copyTargetMealType) ? '#0D0B08' : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('copyMealPopup.copy')}</button>
             </div>
           </div>
         </>
@@ -1192,17 +1192,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>MES REPAS</span>
+              <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>{nt('savedMeals.title')}</span>
               <button onClick={() => setShowSavedMeals(false)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
               {savedMeals.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>Aucun repas sauvegarde.</div>
+                <div style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.empty')}</div>
               ) : savedMeals.map((meal: any) => (
                 <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
                   <div>
                     <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{meal.name}</div>
-                    <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>{(meal.foods || []).length} aliments{meal.use_count > 0 && ` · ${meal.use_count}x utilise`}</div>
+                    <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>{nt('savedMeals.foodCount', { count: (meal.foods || []).length })}{meal.use_count > 0 && ` · ${nt('savedMeals.usedCount', { count: meal.use_count })}`}</div>
                   </div>
                   <div style={statSmallStyle}>{Math.round(meal.total_calories || 0)}</div>
                 </button>

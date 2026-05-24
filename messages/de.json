@@ -1795,6 +1795,55 @@
     "prefs": {
       "configurePrompt": "Konfiguriere deine Einstellungen und erstelle dann deinen personalisierten KI-Plan.",
       "configureCta": "Meine Einstellungen konfigurieren"
+    },
+    "chrome": {
+      "coachManaged": "Ernährung von deinem Coach verwaltet",
+      "noPlan": "Kein Ernährungsplan",
+      "noPlanForDay": "Kein Plan für {day}.",
+      "noMealsForDay": "Keine Mahlzeiten für diesen Tag.",
+      "noFoodAdded": "Kein Lebensmittel hinzugefügt",
+      "add": "Hinzufügen",
+      "prefsTitle": "Ernährungseinstellungen",
+      "futureDate": "Zukünftiges Datum nicht verfügbar",
+      "searchMeal": "Mahlzeit suchen...",
+      "scanMeal": "MAHLZEIT SCANNEN"
+    },
+    "macrosShort": {
+      "p": "E",
+      "g": "K",
+      "l": "F"
+    },
+    "macrosLong": {
+      "prot": "EIWEISS",
+      "gluc": "KOHLENH.",
+      "lip": "FETT"
+    },
+    "mealMenu": {
+      "saveMeal": "Mahlzeit speichern",
+      "copyToDay": "Zu einem anderen Tag kopieren",
+      "clearMeal": "Mahlzeit leeren",
+      "replace": "Ersetzen",
+      "delete": "Löschen"
+    },
+    "saveMealPopup": {
+      "title": "MAHLZEIT SPEICHERN",
+      "placeholder": "Mahlzeitname...",
+      "foodCount": "{count} LEBENSMITTEL",
+      "cancel": "ABBRECHEN",
+      "save": "SPEICHERN"
+    },
+    "copyMealPopup": {
+      "title": "MAHLZEIT KOPIEREN",
+      "date": "DATUM",
+      "meal": "MAHLZEIT",
+      "cancel": "ABBRECHEN",
+      "copy": "KOPIEREN"
+    },
+    "savedMeals": {
+      "title": "MEINE MAHLZEITEN",
+      "empty": "Keine gespeicherten Mahlzeiten.",
+      "foodCount": "{count} Lebensmittel",
+      "usedCount": "{count}x verwendet"
     }
   },
   "coach_dashboard": {

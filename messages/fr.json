@@ -1795,6 +1795,55 @@
     "prefs": {
       "configurePrompt": "Configure tes preferences puis genere ton plan IA personnalise.",
       "configureCta": "Configurer mes preferences"
+    },
+    "chrome": {
+      "coachManaged": "Nutrition gérée par ton coach",
+      "noPlan": "Aucun plan alimentaire",
+      "noPlanForDay": "Pas de plan pour {day}.",
+      "noMealsForDay": "Aucun repas pour ce jour.",
+      "noFoodAdded": "Aucun aliment ajouté",
+      "add": "Ajouter",
+      "prefsTitle": "Preferences nutrition",
+      "futureDate": "Date future indisponible",
+      "searchMeal": "Rechercher un repas...",
+      "scanMeal": "SCANNER UN REPAS"
+    },
+    "macrosShort": {
+      "p": "P",
+      "g": "G",
+      "l": "L"
+    },
+    "macrosLong": {
+      "prot": "PROT.",
+      "gluc": "GLUC.",
+      "lip": "LIP."
+    },
+    "mealMenu": {
+      "saveMeal": "Sauvegarder le repas",
+      "copyToDay": "Copier vers un autre jour",
+      "clearMeal": "Vider ce repas",
+      "replace": "Remplacer",
+      "delete": "Supprimer"
+    },
+    "saveMealPopup": {
+      "title": "SAUVEGARDER LE REPAS",
+      "placeholder": "Nom du repas...",
+      "foodCount": "{count} ALIMENTS",
+      "cancel": "ANNULER",
+      "save": "SAUVEGARDER"
+    },
+    "copyMealPopup": {
+      "title": "COPIER LE REPAS",
+      "date": "DATE",
+      "meal": "REPAS",
+      "cancel": "ANNULER",
+      "copy": "COPIER"
+    },
+    "savedMeals": {
+      "title": "MES REPAS",
+      "empty": "Aucun repas sauvegarde.",
+      "foodCount": "{count} aliments",
+      "usedCount": "{count}x utilise"
     }
   },
   "coach_dashboard": {
