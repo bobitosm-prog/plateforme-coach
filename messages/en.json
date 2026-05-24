@@ -1281,6 +1281,83 @@
     },
     "shared": {
       "close": "Close"
+    },
+    "tempo": {
+      "phases": {
+        "eccentricLabel": "ECCENTRIC",
+        "eccentricDesc": "Controlled descent",
+        "pauseLabel": "BOTTOM PAUSE",
+        "pauseDesc": "Hold the position",
+        "concentricLabel": "CONCENTRIC",
+        "concentricDesc": "Explosive ascent"
+      },
+      "modal": {
+        "prescribed": "PRESCRIBED TEMPO",
+        "eccentricDetail": "Controlled descent in {seconds} second(s)",
+        "pauseDetail": "Hold the position for {seconds} second(s)",
+        "pauseNone": "No pause, continue directly",
+        "concentricDetail": "Explosive ascent in {seconds} second(s)",
+        "invalidFormat": "Unrecognized tempo. Expected format: X-X-X (eccentric - pause - concentric).",
+        "understood": "GOT IT"
+      },
+      "executor": {
+        "invalidTitle": "INVALID TEMPO",
+        "invalidDesc": "The tempo \"{tempo}\" is not in X-X-X format.",
+        "interruptedTitle": "TEMPO INTERRUPTED",
+        "interruptedDesc": "The app was paused by the system. Enter your set manually and continue.",
+        "close": "CLOSE",
+        "pause": "PAUSE",
+        "resume": "RESUME",
+        "rep": "Rep {current} / {total}",
+        "sec": "SEC",
+        "soundOn": "Mute sound",
+        "soundOff": "Enable sound"
+      }
+    },
+    "library": {
+      "exercises": "EXERCISES",
+      "viewAll": "View all",
+      "searchPlaceholder": "Search an exercise...",
+      "searchShort": "Search...",
+      "allMuscles": "All",
+      "noResults": "No exercise found.",
+      "moreExercises": "+{count} exercises · View all",
+      "libraryTitle": "LIBRARY",
+      "close": "Close",
+      "addToSession": "ADD TO MY WORKOUT",
+      "alternatives": "ALTERNATIVES",
+      "altDesc": "Don't have the machine? Find an equivalent exercise targeting the same muscles.",
+      "altSearchPlaceholder": "Which exercise do you want to replace?",
+      "sameTarget": "SAME TARGET",
+      "replace": "REPLACE",
+      "noAlt": "No alternative found for this muscle."
+    },
+    "sessionDetail": {
+      "close": "Close",
+      "placeholder": "Session details coming in T4.2b"
+    },
+    "calendar": {
+      "rest": "Rest",
+      "day": "Day {num}",
+      "session": "Workout {num}",
+      "freeSession": "Free workout",
+      "loading": "Loading...",
+      "activeProgram": "Active program · Tap to manage",
+      "prevWeek": "Previous week",
+      "nextWeek": "Next week",
+      "backToWeek": "Back to this week",
+      "legendDone": "Done",
+      "legendMissed": "Missed",
+      "legendRest": "Rest",
+      "weekLabel": "Wk. {start}-{end}",
+      "exercise": "Exercise",
+      "closeVariants": "Close variants",
+      "closeDetail": "Close exercise detail",
+      "sets": "Sets",
+      "reps": "Reps",
+      "restLabel": "Rest",
+      "tempoLabel": "Tempo",
+      "exerciseNum": "Exercise {num}"
     }
   },
   "progress": {

@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../lib/design-tokens'
 import { getHeroImage } from '../../../lib/session-types'
 import { shortenSessionTitle } from '../home/HeroSessionCard'
@@ -18,6 +19,7 @@ export interface SessionDetailModalProps {
 export default function SessionDetailModal({
   isOpen, onClose, sessionTitle, dayStatus, dayBadge, children,
 }: SessionDetailModalProps) {
+  const t = useTranslations('training_tab.sessionDetail')
   const heroImage = getHeroImage(sessionTitle)
   const isPast = dayStatus === 'done' || dayStatus === 'missed'
   const isDone = dayStatus === 'done'
@@ -61,7 +63,7 @@ export default function SessionDetailModal({
             {/* Close button */}
             <button
               onClick={onClose}
-              aria-label="Fermer"
+              aria-label={t('close')}
               style={{
                 position: 'absolute', top: 16, right: 16,
                 width: 40, height: 40, borderRadius: 12,
@@ -105,7 +107,7 @@ export default function SessionDetailModal({
           }}>
             {children || (
               <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textDim, fontFamily: fonts.body }}>
-                <p style={{ margin: 0, fontSize: 14 }}>Le detail de la seance arrive en T4.2b</p>
+                <p style={{ margin: 0, fontSize: 14 }}>{t('placeholder')}</p>
               </div>
             )}
           </div>

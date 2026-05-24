@@ -1281,6 +1281,83 @@
     },
     "shared": {
       "close": "Fermer"
+    },
+    "tempo": {
+      "phases": {
+        "eccentricLabel": "EXCENTRIQUE",
+        "eccentricDesc": "Descente contrôlée",
+        "pauseLabel": "PAUSE BASSE",
+        "pauseDesc": "Maintiens la position",
+        "concentricLabel": "CONCENTRIQUE",
+        "concentricDesc": "Remontée explosive"
+      },
+      "modal": {
+        "prescribed": "TEMPO PRESCRIT",
+        "eccentricDetail": "Descente contrôlée en {seconds} seconde(s)",
+        "pauseDetail": "Maintiens la position {seconds} seconde(s)",
+        "pauseNone": "Pas de pause, enchaîne directement",
+        "concentricDetail": "Remontée explosive en {seconds} seconde(s)",
+        "invalidFormat": "Tempo non reconnu. Format attendu : X-X-X (excentrique - pause - concentrique).",
+        "understood": "COMPRIS"
+      },
+      "executor": {
+        "invalidTitle": "TEMPO INVALIDE",
+        "invalidDesc": "Le tempo \"{tempo}\" n'est pas au format X-X-X.",
+        "interruptedTitle": "TEMPO INTERROMPU",
+        "interruptedDesc": "L'app a été mise en pause par le système. Saisis ton set manuellement et continue.",
+        "close": "FERMER",
+        "pause": "PAUSE",
+        "resume": "REPRENDRE",
+        "rep": "Rep {current} / {total}",
+        "sec": "SEC",
+        "soundOn": "Couper le son",
+        "soundOff": "Activer le son"
+      }
+    },
+    "library": {
+      "exercises": "EXERCICES",
+      "viewAll": "Voir tout",
+      "searchPlaceholder": "Rechercher un exercice...",
+      "searchShort": "Rechercher...",
+      "allMuscles": "Tous",
+      "noResults": "Aucun exercice trouve.",
+      "moreExercises": "+{count} exercices · Voir tout",
+      "libraryTitle": "BIBLIOTHEQUE",
+      "close": "Fermer",
+      "addToSession": "AJOUTER A MA SEANCE",
+      "alternatives": "ALTERNATIVES",
+      "altDesc": "Tu n'as pas la machine ? Trouve un exercice equivalent qui cible les memes muscles.",
+      "altSearchPlaceholder": "Quel exercice veux-tu remplacer ?",
+      "sameTarget": "MEME CIBLAGE",
+      "replace": "REMPLACER",
+      "noAlt": "Aucune alternative trouvee pour ce muscle."
+    },
+    "sessionDetail": {
+      "close": "Fermer",
+      "placeholder": "Le detail de la seance arrive en T4.2b"
+    },
+    "calendar": {
+      "rest": "Repos",
+      "day": "Jour {num}",
+      "session": "Séance {num}",
+      "freeSession": "Séance libre",
+      "loading": "Chargement...",
+      "activeProgram": "Programme actif · Tap pour gerer",
+      "prevWeek": "Semaine precedente",
+      "nextWeek": "Semaine suivante",
+      "backToWeek": "Revenir a cette semaine",
+      "legendDone": "Fait",
+      "legendMissed": "Manque",
+      "legendRest": "Repos",
+      "weekLabel": "Sem. {start}-{end}",
+      "exercise": "Exercice",
+      "closeVariants": "Fermer les variantes",
+      "closeDetail": "Fermer le detail de l'exercice",
+      "sets": "Sets",
+      "reps": "Reps",
+      "restLabel": "Repos",
+      "tempoLabel": "Tempo",
+      "exerciseNum": "Exercice {num}"
     }
   },
   "progress": {

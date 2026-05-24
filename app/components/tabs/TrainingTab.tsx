@@ -209,7 +209,7 @@ export default function TrainingTab({
       return {
         id: existing?.id || `custom-${i}`,
         user_id: session?.user?.id || '',
-        title: isRest ? 'Repos' : (day.name || day.weekday || `Jour ${i + 1}`),
+        title: isRest ? t('calendar.rest') : (day.name || day.weekday || t('calendar.day', { num: i + 1 })),
         session_type: isRest ? 'rest' as const : 'custom' as const,
         scheduled_date: dateStr,
         scheduled_time: existing?.scheduled_time || '08:00',
@@ -868,15 +868,15 @@ export default function TrainingTab({
               <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{monthLabel}</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 {weekOffset !== 0 && (
-                  <button onClick={() => setWeekOffset(0)} aria-label="Revenir a cette semaine"
+                  <button onClick={() => setWeekOffset(0)} aria-label={t('calendar.backToWeek')}
                     style={{ ...glassBtn, width: 'auto', padding: '6px 12px', fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' as const }}>
                     AUJOURD&apos;HUI
                   </button>
                 )}
-                <button onClick={() => setWeekOffset(o => o - 1)} aria-label="Semaine precedente" style={glassBtn}>
+                <button onClick={() => setWeekOffset(o => o - 1)} aria-label={t('calendar.prevWeek')} style={glassBtn}>
                   <ChevronLeft size={16} color={colors.gold} />
                 </button>
-                <button onClick={() => setWeekOffset(o => o + 1)} aria-label="Semaine suivante" style={glassBtn}>
+                <button onClick={() => setWeekOffset(o => o + 1)} aria-label={t('calendar.nextWeek')} style={glassBtn}>
                   <ChevronRight size={16} color={colors.gold} />
                 </button>
               </div>
@@ -886,7 +886,7 @@ export default function TrainingTab({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
               {displayDays.map(({ date, dateStr, ws, isProgRest }, i) => {
                 const dayNum = date.getDate()
-                const dayName = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'][i]
+                const dayName = format(date, 'EEE', { locale: dateLocale }).toUpperCase()
                 const isToday = dateStr === todayStr
                 const isRest = isProgRest || ws?.session_type === 'rest' || ws?.title === 'Repos'
                 const isDone = ws?.completed && !isRest
@@ -920,9 +920,9 @@ export default function TrainingTab({
             {/* Legend compact */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 16 }}>
               {[
-                { color: colors.success, label: 'Fait' },
-                { color: colors.error, label: 'Manque' },
-                { color: 'rgba(255,255,255,0.2)', label: 'Repos' },
+                { color: colors.success, label: t('calendar.legendDone') },
+                { color: colors.error, label: t('calendar.legendMissed') },
+                { color: 'rgba(255,255,255,0.2)', label: t('calendar.legendRest') },
               ].map(l => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: l.color }} />
@@ -969,7 +969,7 @@ export default function TrainingTab({
                 <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.text }}>
                   {activeCustomProgram ? activeCustomProgram.name : customPrograms.length > 0 ? `${customPrograms.length} programme${customPrograms.length > 1 ? 's' : ''}` : t('programs.createProgram')}
                 </div>
-                {activeCustomProgram && <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, marginTop: 1 }}>Programme actif · Tap pour gerer</div>}
+                {activeCustomProgram && <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, marginTop: 1 }}>{t('calendar.activeProgram')}</div>}
               </div>
             </div>
             <ChevronRight size={16} color={colors.textMuted} />
@@ -1021,7 +1021,7 @@ export default function TrainingTab({
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {exercises.slice(0, 4).map((ex: any, i: number) => (
                       <span key={i} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, background: colors.goldDim, padding: '2px 8px', borderRadius: 6 }}>
-                        {ex.name || ex.exercise_name || 'Exercice'}
+                        {ex.name || ex.exercise_name || t('calendar.exercise')}
                       </span>
                     ))}
                     {exercises.length > 4 && (
@@ -1185,23 +1185,23 @@ export default function TrainingTab({
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 26 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Sets</span>
+                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('calendar.sets')}</span>
                                   <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
                                 </div>
                                 <span style={{ color: colors.textDim, fontSize: 10 }}>×</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Reps</span>
+                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('calendar.reps')}</span>
                                   <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
                                 </div>
                                 <span style={{ color: colors.textDim, fontSize: 10 }}>·</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Repos</span>
+                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('calendar.restLabel')}</span>
                                   <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 44, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
                                   <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted }}>s</span>
                                 </div>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 6, marginLeft: 26 }}>
-                                <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Tempo</span>
+                                <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('calendar.tempoLabel')}</span>
                                 {[0, 1, 2].map(idx => {
                                   const parts = (ex.tempo || '2-0-2').split('-')
                                   return (
@@ -1449,7 +1449,7 @@ export default function TrainingTab({
                                   {/* Day header */}
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: day.is_rest ? 0 : 8 }}>
                                     <div style={{ ...titleStyle, fontSize: 12 }}>
-                                      Jour {di + 1} : {day.is_rest ? 'Repos' : (day.name || day.weekday || `Séance ${di + 1}`)}
+                                      {t('calendar.day', { num: di + 1 })} : {day.is_rest ? t('calendar.rest') : (day.name || day.weekday || t('calendar.session', { num: di + 1 }))}
                                       {!day.is_rest && day.focus && <span style={{ color: colors.textMuted, fontWeight: 400, marginLeft: 6 }}>({day.focus})</span>}
                                     </div>
                                     {day.is_rest ? (
@@ -1463,7 +1463,7 @@ export default function TrainingTab({
                                   {!day.is_rest && exList.length > 0 && (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                       {exList.map((ex: any, ei: number) => {
-                                        const exName = ex.exercise_name || ex.custom_name || ex.name || ex.exerciseName || `Exercice ${ei + 1}`
+                                        const exName = ex.exercise_name || ex.custom_name || ex.name || ex.exerciseName || t('calendar.exerciseNum', { num: ei + 1 })
                                         return (
                                           <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <span style={{ color: colors.gold, fontSize: 10 }}>•</span>
@@ -1537,7 +1537,7 @@ export default function TrainingTab({
                   {importPreview.phases.map((phase, i) => (
                     <div key={i} style={{ padding: '6px 10px', background: colors.goldDim, borderRadius: 6, display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontFamily: fonts.headline, fontSize: 11, color: colors.gold }}>{phase.name}</span>
-                      <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Sem. {phase.weeks[0]}-{phase.weeks[1]}</span>
+                      <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>{t('calendar.weekLabel', { start: phase.weeks[0], end: phase.weeks[1] })}</span>
                     </div>
                   ))}
                 </div>
@@ -1676,7 +1676,7 @@ export default function TrainingTab({
           <div onClick={e=>e.stopPropagation()} style={{background:colors.surface,border:`1px solid ${colors.goldRule}`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.goldBorder}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span style={{fontFamily:fonts.headline,fontSize:20,letterSpacing:2,color:colors.text}}>VARIANTES</span>
-              <button aria-label="Fermer les variantes" onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:colors.textMuted,fontSize:20,cursor:'pointer'}}>✕</button>
+              <button aria-label={t('calendar.closeVariants')} onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:colors.textMuted,fontSize:20,cursor:'pointer'}}>✕</button>
             </div>
             <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px 30px'}}>
               {variantPopup.variants.length===0?(
@@ -1703,17 +1703,17 @@ export default function TrainingTab({
           <div onClick={e=>e.stopPropagation()} style={{background:colors.surface,border:`1px solid ${colors.goldRule}`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.goldBorder}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
               <div>
-                <div style={{fontFamily:fonts.headline,fontSize:22,letterSpacing:2,color:colors.text}}>{selectedWorkout.name||'Séance'}</div>
+                <div style={{fontFamily:fonts.headline,fontSize:22,letterSpacing:2,color:colors.text}}>{selectedWorkout.name||t('calendar.exercise')}</div>
                 <div style={{fontFamily:fonts.body,fontSize:12,color:colors.textMuted,marginTop:2}}>
-                  {new Date(selectedWorkout.created_at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}
+                  {new Date(selectedWorkout.created_at).toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',{weekday:'long',day:'numeric',month:'long'})}
                   {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
                 </div>
               </div>
-              <button aria-label="Fermer le detail de l'exercice" onClick={()=>setSelectedWorkout(null)} style={{width:36,height:36,borderRadius:12,background:colors.goldDim,border:`1px solid ${colors.goldBorder}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:colors.textMuted,fontSize:16}}>✕</button>
+              <button aria-label={t('calendar.closeDetail')} onClick={()=>setSelectedWorkout(null)} style={{width:36,height:36,borderRadius:12,background:colors.goldDim,border:`1px solid ${colors.goldBorder}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:colors.textMuted,fontSize:16}}>✕</button>
             </div>
             <div style={{flex:1,overflowY:'auto',padding:'12px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
               {loadingDetail?(
-                <div style={{textAlign:'center',padding:40,color:colors.textMuted}}>Chargement...</div>
+                <div style={{textAlign:'center',padding:40,color:colors.textMuted}}>{t('calendar.loading')}</div>
               ):workoutDetail.length===0?(
                 <div style={{textAlign:'center',padding:40,color:colors.textDim,fontSize:14,fontFamily:fonts.body}}>{t('programs.noDetails')}</div>
               ):(

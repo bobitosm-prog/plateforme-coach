@@ -2,6 +2,7 @@
 
 import { Fragment } from 'react'
 import { ArrowDown, Pause, ArrowUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import {
   BG_BASE,
   GOLD,
@@ -20,43 +21,37 @@ interface TempoModalProps {
   onClose: () => void
 }
 
-interface TempoPhase {
-  label: string
-  description: string
-  icon: typeof ArrowDown
-  seconds: string
-}
-
-function parseTempo(tempo: string): TempoPhase[] | null {
+function parseTempoValues(tempo: string): string[] | null {
   const parts = tempo.trim().split('-').map(p => p.trim())
   if (parts.length < 3) return null
-  return [
-    {
-      label: 'EXCENTRIQUE',
-      description: `Descente contrôlée en ${parts[0]} seconde${parseInt(parts[0]) > 1 ? 's' : ''}`,
-      icon: ArrowDown,
-      seconds: `${parts[0]}s`,
-    },
-    {
-      label: 'PAUSE BASSE',
-      description: parts[1] === '0'
-        ? 'Pas de pause, enchaîne directement'
-        : `Maintiens la position ${parts[1]} seconde${parseInt(parts[1]) > 1 ? 's' : ''}`,
-      icon: Pause,
-      seconds: `${parts[1]}s`,
-    },
-    {
-      label: 'CONCENTRIQUE',
-      description: `Remontée explosive en ${parts[2]} seconde${parseInt(parts[2]) > 1 ? 's' : ''}`,
-      icon: ArrowUp,
-      seconds: `${parts[2]}s`,
-    },
-  ]
+  return parts.slice(0, 3)
 }
 
 export default function TempoModal({ tempo, exerciseName, onClose }: TempoModalProps) {
-  const phases = parseTempo(tempo)
+  const t = useTranslations('training_tab.tempo')
+  const tempoValues = parseTempoValues(tempo)
   const parts = tempo.split('-')
+
+  const phases = tempoValues ? [
+    {
+      label: t('phases.eccentricLabel'),
+      description: t('modal.eccentricDetail', { seconds: tempoValues[0] }),
+      icon: ArrowDown,
+      seconds: `${tempoValues[0]}s`,
+    },
+    {
+      label: t('phases.pauseLabel'),
+      description: tempoValues[1] === '0' ? t('modal.pauseNone') : t('modal.pauseDetail', { seconds: tempoValues[1] }),
+      icon: Pause,
+      seconds: `${tempoValues[1]}s`,
+    },
+    {
+      label: t('phases.concentricLabel'),
+      description: t('modal.concentricDetail', { seconds: tempoValues[2] }),
+      icon: ArrowUp,
+      seconds: `${tempoValues[2]}s`,
+    },
+  ] : null
 
   return (
     <div
@@ -97,7 +92,7 @@ export default function TempoModal({ tempo, exerciseName, onClose }: TempoModalP
               marginBottom: 12,
             }}
           >
-            TEMPO PRESCRIT
+            {t('modal.prescribed')}
           </div>
           {phases ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 8 }}>
@@ -231,7 +226,7 @@ export default function TempoModal({ tempo, exerciseName, onClose }: TempoModalP
               lineHeight: 1.5,
             }}
           >
-            Tempo non reconnu. Format attendu : X-X-X (excentrique - pause - concentrique).
+            {t('modal.invalidFormat')}
           </div>
         )}
 
@@ -253,7 +248,7 @@ export default function TempoModal({ tempo, exerciseName, onClose }: TempoModalP
             textTransform: 'uppercase',
           }}
         >
-          COMPRIS
+          {t('modal.understood')}
         </button>
       </div>
     </div>

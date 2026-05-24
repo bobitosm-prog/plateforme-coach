@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { X, Volume2, VolumeX, Pause, Play, ArrowDown, ArrowUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import {
   BG_BASE,
   BG_CARD_2,
@@ -60,41 +61,6 @@ function parseTempo(tempo: string): { eccentric: number; pause: number; concentr
   }
 }
 
-/**
- * Build the phase sequence for a single rep, skipping pause if duration is 0.
- */
-function buildPhases(parsed: { eccentric: number; pause: number; concentric: number }): PhaseConfig[] {
-  const phases: PhaseConfig[] = []
-  if (parsed.eccentric > 0) {
-    phases.push({
-      phase: 'eccentric',
-      label: 'EXCENTRIQUE',
-      description: 'Descente contr\u00f4l\u00e9e',
-      durationMs: parsed.eccentric * 1000,
-      icon: ArrowDown,
-    })
-  }
-  if (parsed.pause > 0) {
-    phases.push({
-      phase: 'pause',
-      label: 'PAUSE BASSE',
-      description: 'Maintiens la position',
-      durationMs: parsed.pause * 1000,
-      icon: Pause,
-    })
-  }
-  if (parsed.concentric > 0) {
-    phases.push({
-      phase: 'concentric',
-      label: 'CONCENTRIQUE',
-      description: 'Remont\u00e9e explosive',
-      durationMs: parsed.concentric * 1000,
-      icon: ArrowUp,
-    })
-  }
-  return phases
-}
-
 export default function TempoExecutor({
   tempo,
   exerciseName,
@@ -102,8 +68,22 @@ export default function TempoExecutor({
   onComplete,
   onClose,
 }: TempoExecutorProps) {
+  const t = useTranslations('training_tab.tempo')
   const parsed = parseTempo(tempo)
-  const phases = parsed ? buildPhases(parsed) : []
+
+  // Build phase sequence inline to access t() for i18n labels
+  const phases: PhaseConfig[] = []
+  if (parsed) {
+    if (parsed.eccentric > 0) {
+      phases.push({ phase: 'eccentric', label: t('phases.eccentricLabel'), description: t('phases.eccentricDesc'), durationMs: parsed.eccentric * 1000, icon: ArrowDown })
+    }
+    if (parsed.pause > 0) {
+      phases.push({ phase: 'pause', label: t('phases.pauseLabel'), description: t('phases.pauseDesc'), durationMs: parsed.pause * 1000, icon: Pause })
+    }
+    if (parsed.concentric > 0) {
+      phases.push({ phase: 'concentric', label: t('phases.concentricLabel'), description: t('phases.concentricDesc'), durationMs: parsed.concentric * 1000, icon: ArrowUp })
+    }
+  }
   const repTotalMs = phases.reduce((sum, p) => sum + p.durationMs, 0)
 
   // State
@@ -293,10 +273,10 @@ export default function TempoExecutor({
           }}
         >
           <div style={{ color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 18, marginBottom: 8 }}>
-            TEMPO INVALIDE
+            {t('executor.invalidTitle')}
           </div>
           <div style={{ color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 13, marginBottom: 20 }}>
-            Le tempo &quot;{tempo}&quot; n&apos;est pas au format X-X-X.
+            {t('executor.invalidDesc', { tempo })}
           </div>
           <button
             onClick={onClose}
@@ -314,7 +294,7 @@ export default function TempoExecutor({
               cursor: 'pointer',
             }}
           >
-            FERMER
+            {t('executor.close')}
           </button>
         </div>
       </div>
@@ -358,7 +338,7 @@ export default function TempoExecutor({
               letterSpacing: 2,
             }}
           >
-            TEMPO INTERROMPU
+            {t('executor.interruptedTitle')}
           </div>
           <div
             style={{
@@ -369,7 +349,7 @@ export default function TempoExecutor({
               lineHeight: 1.5,
             }}
           >
-            L&apos;app a été mise en pause par le système. Saisis ton set manuellement et continue.
+            {t('executor.interruptedDesc')}
           </div>
           <button
             onClick={onClose}
@@ -388,7 +368,7 @@ export default function TempoExecutor({
               textTransform: 'uppercase',
             }}
           >
-            FERMER
+            {t('executor.close')}
           </button>
         </div>
       </div>
@@ -433,7 +413,7 @@ export default function TempoExecutor({
       >
         <button
           onClick={handleToggleSound}
-          aria-label={soundOn ? 'Couper le son' : 'Activer le son'}
+          aria-label={soundOn ? t('executor.soundOn') : t('executor.soundOff')}
           style={{
             width: 40,
             height: 40,
@@ -470,7 +450,7 @@ export default function TempoExecutor({
 
         <button
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t('executor.close')}
           style={{
             width: 40,
             height: 40,
@@ -511,7 +491,7 @@ export default function TempoExecutor({
             textTransform: 'uppercase',
           }}
         >
-          Rep {currentRep} / {targetReps}
+          {t('executor.rep', { current: currentRep, total: targetReps })}
         </div>
 
         {/* Circle progression with countdown */}
@@ -572,7 +552,7 @@ export default function TempoExecutor({
                 letterSpacing: 2,
               }}
             >
-              SEC
+              {t('executor.sec')}
             </span>
           </div>
         </div>
@@ -632,7 +612,7 @@ export default function TempoExecutor({
           }}
         >
           {isPaused ? <Play size={18} /> : <Pause size={18} />}
-          {isPaused ? 'REPRENDRE' : 'PAUSE'}
+          {isPaused ? t('executor.resume') : t('executor.pause')}
         </button>
       </div>
     </div>

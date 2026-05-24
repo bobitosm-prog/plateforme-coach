@@ -1281,6 +1281,83 @@
     },
     "shared": {
       "close": "Schliessen"
+    },
+    "tempo": {
+      "phases": {
+        "eccentricLabel": "EXZENTRISCH",
+        "eccentricDesc": "Kontrollierter Abstieg",
+        "pauseLabel": "UNTERE PAUSE",
+        "pauseDesc": "Position halten",
+        "concentricLabel": "KONZENTRISCH",
+        "concentricDesc": "Explosive Aufwärtsbewegung"
+      },
+      "modal": {
+        "prescribed": "VORGESCHRIEBENES TEMPO",
+        "eccentricDetail": "Kontrollierter Abstieg in {seconds} Sekunde(n)",
+        "pauseDetail": "Position halten für {seconds} Sekunde(n)",
+        "pauseNone": "Keine Pause, direkt weiter",
+        "concentricDetail": "Explosive Aufwärtsbewegung in {seconds} Sekunde(n)",
+        "invalidFormat": "Tempo nicht erkannt. Erwartetes Format: X-X-X (exzentrisch - Pause - konzentrisch).",
+        "understood": "VERSTANDEN"
+      },
+      "executor": {
+        "invalidTitle": "UNGÜLTIGES TEMPO",
+        "invalidDesc": "Das Tempo \"{tempo}\" ist nicht im Format X-X-X.",
+        "interruptedTitle": "TEMPO UNTERBROCHEN",
+        "interruptedDesc": "Die App wurde vom System pausiert. Gib dein Set manuell ein und mach weiter.",
+        "close": "SCHLIESSEN",
+        "pause": "PAUSE",
+        "resume": "FORTSETZEN",
+        "rep": "Rep {current} / {total}",
+        "sec": "SEK",
+        "soundOn": "Ton ausschalten",
+        "soundOff": "Ton einschalten"
+      }
+    },
+    "library": {
+      "exercises": "ÜBUNGEN",
+      "viewAll": "Alle anzeigen",
+      "searchPlaceholder": "Übung suchen...",
+      "searchShort": "Suchen...",
+      "allMuscles": "Alle",
+      "noResults": "Keine Übung gefunden.",
+      "moreExercises": "+{count} Übungen · Alle anzeigen",
+      "libraryTitle": "BIBLIOTHEK",
+      "close": "Schliessen",
+      "addToSession": "ZUM TRAINING HINZUFÜGEN",
+      "alternatives": "ALTERNATIVEN",
+      "altDesc": "Kein Gerät verfügbar? Finde eine gleichwertige Übung für dieselben Muskeln.",
+      "altSearchPlaceholder": "Welche Übung willst du ersetzen?",
+      "sameTarget": "GLEICHE ZIELGRUPPE",
+      "replace": "ERSETZEN",
+      "noAlt": "Keine Alternative für diesen Muskel gefunden."
+    },
+    "sessionDetail": {
+      "close": "Schliessen",
+      "placeholder": "Trainingsdetails kommen in T4.2b"
+    },
+    "calendar": {
+      "rest": "Ruhetag",
+      "day": "Tag {num}",
+      "session": "Training {num}",
+      "freeSession": "Freies Training",
+      "loading": "Laden...",
+      "activeProgram": "Aktives Programm · Tippen zum Verwalten",
+      "prevWeek": "Vorherige Woche",
+      "nextWeek": "Nächste Woche",
+      "backToWeek": "Zurück zu dieser Woche",
+      "legendDone": "Erledigt",
+      "legendMissed": "Verpasst",
+      "legendRest": "Ruhetag",
+      "weekLabel": "Wo. {start}-{end}",
+      "exercise": "Übung",
+      "closeVariants": "Varianten schliessen",
+      "closeDetail": "Übungsdetail schliessen",
+      "sets": "Sätze",
+      "reps": "Wdh.",
+      "restLabel": "Pause",
+      "tempoLabel": "Tempo",
+      "exerciseNum": "Übung {num}"
     }
   },
   "progress": {
