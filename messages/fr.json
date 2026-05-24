@@ -1736,6 +1736,20 @@
       "months": "≈ {count} mois"
     }
   },
+  "account": {
+    "level": "NIVEAU {level}",
+    "coaching": "COACHING",
+    "messages": "Messages",
+    "profile": "PROFIL",
+    "myProfile": "Mon profil",
+    "myReports": "Mes rapports",
+    "goals": "Objectifs",
+    "goalsSoon": "Section Objectifs : bientot disponible",
+    "preferences": "Preferences",
+    "language": "Langue",
+    "accountSection": "COMPTE",
+    "signOut": "Deconnexion"
+  },
   "nutrition_tab": {
     "meals": {
       "breakfast": "Petit-déjeuner",

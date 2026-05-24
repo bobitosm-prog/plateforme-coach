@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight, ChevronDown, Globe } from 'lucide-react'
 import LocaleSelector from '@/components/LocaleSelector'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
@@ -54,6 +55,7 @@ const divider: React.CSSProperties = {
 export default function AccountTab({
   firstName, displayAvatar, unreadCount, supabase, userId, onNavigate, onLogout,
 }: AccountTabProps) {
+  const t = useTranslations('account')
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
   const [showPrefs, setShowPrefs] = useState(false)
 
@@ -95,17 +97,17 @@ export default function AccountTab({
               {firstName}
             </div>
             <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: TEXT_DIM, textTransform: 'uppercase', marginTop: 4 }}>
-              NIVEAU {level} &bull; {xpInLevel} / {xpForNext} XP
+              {t('level', { level })} &bull; {xpInLevel} / {xpForNext} XP
             </div>
           </div>
         </div>
 
         {/* ── COACHING ── */}
-        <div style={sectionLabel}>COACHING</div>
+        <div style={sectionLabel}>{t('coaching')}</div>
         <div style={cardGroup}>
           <button onClick={() => onNavigate('messages')} style={itemStyle}>
             <MessageCircle size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Messages</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('messages')}</span>
             <span style={{ flex: 1 }} />
             {unreadCount > 0 && (
               <span style={{ background: GOLD, color: '#0e0e0e', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
@@ -124,18 +126,18 @@ export default function AccountTab({
         </div>
 
         {/* ── PROFIL ── */}
-        <div style={sectionLabel}>PROFIL</div>
+        <div style={sectionLabel}>{t('profile')}</div>
         <div style={cardGroup}>
           <button onClick={() => onNavigate('profil')} style={itemStyle}>
             <User size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Mon profil</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('myProfile')}</span>
             <span style={{ flex: 1 }} />
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
           <div style={divider} />
           <button onClick={() => onNavigate('feedback')} style={itemStyle}>
             <MessageSquare size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Mes rapports</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('myReports')}</span>
             <span style={{ flex: 1 }} />
             {feedbackUnread > 0 && (
               <span style={{ background: GOLD, color: '#0e0e0e', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
@@ -145,16 +147,16 @@ export default function AccountTab({
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
           <div style={divider} />
-          <button onClick={() => alert('Section Objectifs : bientot disponible')} style={itemStyle}>
+          <button onClick={() => alert(t('goalsSoon'))} style={itemStyle}>
             <Target size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Objectifs</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('goals')}</span>
             <span style={{ flex: 1 }} />
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
           <div style={divider} />
           <button onClick={() => setShowPrefs(p => !p)} style={itemStyle}>
             <Settings size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Preferences</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('preferences')}</span>
             <span style={{ flex: 1 }} />
             <ChevronDown size={16} color={TEXT_DIM} style={{ transition: 'transform 150ms', transform: showPrefs ? 'rotate(180deg)' : 'none' }} />
           </button>
@@ -163,7 +165,7 @@ export default function AccountTab({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Globe size={16} color={GOLD} />
-                  <span style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, color: TEXT_PRIMARY }}>Langue</span>
+                  <span style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, color: TEXT_PRIMARY }}>{t('language')}</span>
                 </div>
                 <LocaleSelector />
               </div>
@@ -172,11 +174,11 @@ export default function AccountTab({
         </div>
 
         {/* ── COMPTE ── */}
-        <div style={sectionLabel}>COMPTE</div>
+        <div style={sectionLabel}>{t('accountSection')}</div>
         <div style={cardGroup}>
           <button onClick={onLogout} style={itemStyle}>
             <LogOut size={18} color={colors.error} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: colors.error }}>Deconnexion</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: colors.error }}>{t('signOut')}</span>
           </button>
         </div>
 
