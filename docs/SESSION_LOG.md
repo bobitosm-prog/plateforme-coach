@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : 660aa0d
+- **HEAD** : 58a5b42
 - **Working tree** : clean
-- **Tâche en cours** : Sprint 6 i18n 100% CLOSED — all 5 app-shell tabs complete
+- **Tâche en cours** : Sprint i18n closure — F1a done (correctifs P4+P5a), suite F1b (nav + composants oubliés) puis F2 + F3
 
 ---
 
@@ -59,6 +59,7 @@ Plan 5 phases proposé :
 | 6 | 0b3bf36 | feat(i18n): Progress L2/L3 FR/EN/DE (98 keys, 3 components) |
 | 7 | b0f4ecf | feat(i18n): AccountTab 100% FR/EN/DE (12 keys) |
 | 8 | 660aa0d | feat(i18n): NutritionTab L2 FR/EN/DE (35 keys) |
+| 9 | 58a5b42 | fix(i18n): NutritionTab + ProgressTab residual FR (28 keys) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -212,6 +213,37 @@ Plan 5 phases proposé :
 - Client view détaillée coach (~660L) — B2B, défère
 - Incohérence vocab i18n repo-wide : "série/SERIE/sets/SETS/Séries" — sprint consolidation post-launch
 - Sub-components nutrition/* hors NutritionTab top (FoodSearch, Recipes, BarcodeScanner, ShoppingList) si applicable → à vérifier post-launch
+
+## Sprint i18n closure (post-Sprint 6) — corrections terrain
+
+### Découverte
+Tests user en mode EN sur prod ont révélé du FR résiduel sur :
+- 5 sections entières ProgressTab (Transformation, Analyse IA, Mensurations,
+  Bien-être, Records perso, Graphiques, Export)
+- 6 strings NutritionTab (Liste de courses x2, Recommandé, modals scan meal)
+- Bottom nav (label "Compte" hardcodé)
+- Headers retour MessagesTab + ProfileTab
+- MeasureModal entièrement non i18n
+
+**Root cause** : Phase 4 et Phase 5a CC ont déclaré "0 string FR résiduelle"
+basé sur grep avec regex {3,} qui a raté des libellés courts (Moy., HUMEUR)
+et des sections entières dont le contenu était dans cardTitleAbove patterns.
+
+### F1a — Correctifs NutritionTab + ProgressTab (DONE)
+
+- NutritionTab.tsx : 6 strings résiduelles (Liste de courses x2, Recommandé,
+  scan meal modal, REPRENDRE, AJOUTER TOUT)
+- ProgressTab.tsx : 22 strings résiduelles (sections + chart legends + ANALYSIS_STEPS)
+- Locale-aware date fixé (fr-FR hardcoded L.850 → useLocale)
+- 28 clés ajoutées
+- Total i18n keys : 1600 → 1628
+
+**Apprentissage senior** :
+- Le grep {3,} sur > rate les libellés courts. Toujours utiliser {2,} pour
+  validation finale i18n.
+- "cardTitleAbove" pattern (style avec <span style={cardTitleAbove}>X</span>)
+  a été un point faible récurrent — CC n'a pas systématiquement matché ces
+  cas. À ajouter explicitement dans les prompts futurs.
 
 ---
 
