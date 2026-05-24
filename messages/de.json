@@ -1358,6 +1358,125 @@
       "restLabel": "Pause",
       "tempoLabel": "Tempo",
       "exerciseNum": "Übung {num}"
+    },
+    "ws": {
+      "back": "Zurück",
+      "exercise": "Übung",
+      "freeSession": "FREIES TRAINING",
+      "progression": "Fortschritt",
+      "addExercise": "+ ÜBUNG HINZUFÜGEN",
+      "emptyTitle": "Füge deine erste Übung hinzu",
+      "emptyHint": "Tippe oben auf \"+ HINZUFÜGEN\"",
+      "time": "ZEIT",
+      "finish": "BEENDEN",
+      "set": "SATZ",
+      "prev": "VORH.",
+      "keep": "Halten",
+      "rest": "PAUSE",
+      "skipRest": "Überspringen →",
+      "addSet": "Satz hinzufügen",
+      "reorderLink": "↕ Übungen umordnen",
+      "startTempo": "Tempo starten",
+      "cancel": "Abbrechen",
+      "delete": "LÖSCHEN",
+      "demo": "Demo",
+      "closeVideo": "Video schliessen",
+      "exerciseDone": "Übung abgeschlossen",
+      "templateSaved": "Vorlage gespeichert ✓",
+      "setsReps": "{sets} Sätze × {reps} Wdh.",
+      "allMuscles": "Alle",
+      "noVariants": "Keine Variante gefunden",
+      "difficulty": {
+        "debutant": "Anfänger",
+        "intermediaire": "Mittel",
+        "avance": "Fortgeschritten"
+      },
+      "builder": {
+        "defaultName": "Mein Training",
+        "configure": "KONFIGURIEREN",
+        "launch": "STARTEN",
+        "launchSession": "TRAINING STARTEN",
+        "add": "HINZUFÜGEN",
+        "next": "WEITER ({count})",
+        "searchPlaceholder": "Übung suchen...",
+        "noResults": "Keine Übung gefunden",
+        "addExercises": "{count, plural, one {# ÜBUNG HINZUFÜGEN} other {# ÜBUNGEN HINZUFÜGEN}}",
+        "sets": "SÄTZE",
+        "reps": "WDH.",
+        "rest": "PAUSE"
+      },
+      "done": {
+        "title": "Training abgeschlossen.",
+        "totalVolume": "Gesamtvolumen",
+        "lastSessions": "Letzte Trainings",
+        "duration": "Dauer",
+        "sets": "Sätze",
+        "exercises": "Übungen",
+        "setsCount": "{count} Sätze",
+        "backToDashboard": "Zurück zum Dashboard",
+        "autoRedirect": "Auto in {seconds}s"
+      },
+      "reorder": {
+        "title": "UMORDNEN",
+        "hint": "Halten und ziehen zum Umordnen",
+        "done": "✓ FERTIG"
+      },
+      "menu": {
+        "moveUp": "↑ HOCH",
+        "moveDown": "↓ RUNTER",
+        "replace": "ERSETZEN",
+        "delete": "LÖSCHEN"
+      },
+      "draft": {
+        "title": "Training fortsetzen?",
+        "description": "Ein unterbrochenes Training für {name} wurde gefunden. Fortsetzen oder neu starten?",
+        "restart": "Neu starten",
+        "resume": "Fortsetzen"
+      },
+      "restDone": {
+        "title": "PAUSE BEENDET",
+        "next": "Nächste:",
+        "start": "STARTEN →"
+      },
+      "endModal": {
+        "title": "TRAINING BEENDEN",
+        "question": "Was willst du mit diesem Training machen?",
+        "duration": "Dauer",
+        "save": "TRAINING SPEICHERN",
+        "saveHint": "Speichere deinen Fortschritt und deine Rekorde",
+        "delete": "TRAINING LÖSCHEN",
+        "deleteHint": "Die Daten dieses Trainings gehen verloren",
+        "continue": "TRAINING FORTSETZEN"
+      },
+      "deleteModal": {
+        "title": "BIST DU SICHER?",
+        "withSets": "{count, plural, one {# validierter Satz geht unwiderruflich verloren.} other {# validierte Sätze gehen unwiderruflich verloren.}}",
+        "noSets": "Dieses Training wird gelöscht."
+      },
+      "repsWarning": {
+        "title": "ÜBERPRÜFE DEINE WIEDERHOLUNGEN",
+        "description": "Du hast {reps} Wdh. eingegeben — das ist viel! Bist du sicher?",
+        "edit": "BEARBEITEN",
+        "confirm": "BESTÄTIGEN"
+      },
+      "saveTemplate": {
+        "title": "ALS VORLAGE SPEICHERN?",
+        "description": "Verwende dieses Training später wieder.",
+        "yes": "JA — SPEICHERN",
+        "no": "NEIN — NUR DIESES MAL"
+      },
+      "exerciseInfo": {
+        "videoSoon": "VIDEO KOMMT BALD",
+        "description": "BESCHREIBUNG",
+        "execution": "AUSFÜHRUNG",
+        "tips": "TIPPS"
+      },
+      "savePopup": {
+        "title": "PROGRAMM GEÄNDERT",
+        "description": "Du hast die Übungen geändert. Im Programm speichern?",
+        "save": "PROGRAMM SPEICHERN",
+        "justThisTime": "NUR DIESES TRAINING"
+      }
     }
   },
   "progress": {

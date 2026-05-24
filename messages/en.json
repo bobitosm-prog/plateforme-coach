@@ -1358,6 +1358,125 @@
       "restLabel": "Rest",
       "tempoLabel": "Tempo",
       "exerciseNum": "Exercise {num}"
+    },
+    "ws": {
+      "back": "Back",
+      "exercise": "Exercise",
+      "freeSession": "FREE WORKOUT",
+      "progression": "Progress",
+      "addExercise": "+ ADD AN EXERCISE",
+      "emptyTitle": "Add your first exercise",
+      "emptyHint": "Tap \"+ ADD\" above",
+      "time": "TIME",
+      "finish": "FINISH",
+      "set": "SET",
+      "prev": "PREV.",
+      "keep": "Keep",
+      "rest": "REST",
+      "skipRest": "Skip →",
+      "addSet": "Add a set",
+      "reorderLink": "↕ Reorder exercises",
+      "startTempo": "Start tempo",
+      "cancel": "Cancel",
+      "delete": "DELETE",
+      "demo": "Demo",
+      "closeVideo": "Close video",
+      "exerciseDone": "Exercise done",
+      "templateSaved": "Template saved ✓",
+      "setsReps": "{sets} sets × {reps} reps",
+      "allMuscles": "All",
+      "noVariants": "No variant found",
+      "difficulty": {
+        "debutant": "Beginner",
+        "intermediaire": "Intermediate",
+        "avance": "Advanced"
+      },
+      "builder": {
+        "defaultName": "My Workout",
+        "configure": "CONFIGURE",
+        "launch": "START",
+        "launchSession": "START WORKOUT",
+        "add": "ADD",
+        "next": "NEXT ({count})",
+        "searchPlaceholder": "Search an exercise...",
+        "noResults": "No exercise found",
+        "addExercises": "{count, plural, one {ADD # EXERCISE} other {ADD # EXERCISES}}",
+        "sets": "SETS",
+        "reps": "REPS",
+        "rest": "REST"
+      },
+      "done": {
+        "title": "Workout complete.",
+        "totalVolume": "Total volume",
+        "lastSessions": "Recent workouts",
+        "duration": "Duration",
+        "sets": "Sets",
+        "exercises": "Exercises",
+        "setsCount": "{count} sets",
+        "backToDashboard": "Back to Dashboard",
+        "autoRedirect": "Auto in {seconds}s"
+      },
+      "reorder": {
+        "title": "REORDER",
+        "hint": "Hold and drag to change order",
+        "done": "✓ DONE"
+      },
+      "menu": {
+        "moveUp": "↑ MOVE UP",
+        "moveDown": "↓ MOVE DOWN",
+        "replace": "REPLACE",
+        "delete": "DELETE"
+      },
+      "draft": {
+        "title": "Resume workout?",
+        "description": "An interrupted workout was found for {name}. Resume or start a new one?",
+        "restart": "Start over",
+        "resume": "Resume"
+      },
+      "restDone": {
+        "title": "REST DONE",
+        "next": "Next:",
+        "start": "START →"
+      },
+      "endModal": {
+        "title": "END WORKOUT",
+        "question": "What do you want to do with this workout?",
+        "duration": "Duration",
+        "save": "SAVE WORKOUT",
+        "saveHint": "Record your progress and records",
+        "delete": "DELETE WORKOUT",
+        "deleteHint": "This workout data will be lost",
+        "continue": "CONTINUE WORKOUT"
+      },
+      "deleteModal": {
+        "title": "ARE YOU SURE?",
+        "withSets": "{count, plural, one {# validated set will be permanently lost.} other {# validated sets will be permanently lost.}}",
+        "noSets": "This workout will be deleted."
+      },
+      "repsWarning": {
+        "title": "CHECK YOUR REPS",
+        "description": "You entered {reps} reps — that's a lot! Are you sure about this number?",
+        "edit": "EDIT",
+        "confirm": "CONFIRM"
+      },
+      "saveTemplate": {
+        "title": "SAVE AS TEMPLATE?",
+        "description": "Reuse this workout later without recreating it.",
+        "yes": "YES — SAVE",
+        "no": "NO — JUST THIS TIME"
+      },
+      "exerciseInfo": {
+        "videoSoon": "VIDEO COMING SOON",
+        "description": "DESCRIPTION",
+        "execution": "EXECUTION",
+        "tips": "TIPS"
+      },
+      "savePopup": {
+        "title": "PROGRAM MODIFIED",
+        "description": "You modified the exercises. Save to your program?",
+        "save": "SAVE PROGRAM",
+        "justThisTime": "JUST THIS WORKOUT"
+      }
     }
   },
   "progress": {

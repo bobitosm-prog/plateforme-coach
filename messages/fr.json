@@ -1358,6 +1358,125 @@
       "restLabel": "Repos",
       "tempoLabel": "Tempo",
       "exerciseNum": "Exercice {num}"
+    },
+    "ws": {
+      "back": "Retour",
+      "exercise": "Exercice",
+      "freeSession": "SÉANCE LIBRE",
+      "progression": "Progression",
+      "addExercise": "+ AJOUTER UN EXERCICE",
+      "emptyTitle": "Ajoute ton premier exercice",
+      "emptyHint": "Tape \"+ AJOUTER\" ci-dessus",
+      "time": "TEMPS",
+      "finish": "TERMINER",
+      "set": "SERIE",
+      "prev": "PREC.",
+      "keep": "Garder",
+      "rest": "REPOS",
+      "skipRest": "Passer →",
+      "addSet": "Ajouter une serie",
+      "reorderLink": "↕ Réorganiser les exercices",
+      "startTempo": "Démarrer le tempo",
+      "cancel": "Annuler",
+      "delete": "SUPPRIMER",
+      "demo": "Démonstration",
+      "closeVideo": "Fermer la video",
+      "exerciseDone": "Exercice termine",
+      "templateSaved": "Modèle sauvegardé ✓",
+      "setsReps": "{sets} séries × {reps} reps",
+      "allMuscles": "Tous",
+      "noVariants": "Aucune variante trouvée",
+      "difficulty": {
+        "debutant": "Débutant",
+        "intermediaire": "Intermédiaire",
+        "avance": "Avancé"
+      },
+      "builder": {
+        "defaultName": "Ma Séance",
+        "configure": "CONFIGURER",
+        "launch": "LANCER",
+        "launchSession": "LANCER LA SEANCE",
+        "add": "AJOUTER",
+        "next": "SUITE ({count})",
+        "searchPlaceholder": "Rechercher un exercice...",
+        "noResults": "Aucun exercice trouvé",
+        "addExercises": "{count, plural, one {AJOUTER # EXERCICE} other {AJOUTER # EXERCICES}}",
+        "sets": "SETS",
+        "reps": "REPS",
+        "rest": "REPOS"
+      },
+      "done": {
+        "title": "Séance terminée.",
+        "totalVolume": "Volume total",
+        "lastSessions": "Dernières séances",
+        "duration": "Durée",
+        "sets": "Séries",
+        "exercises": "Exercices",
+        "setsCount": "{count} séries",
+        "backToDashboard": "Retour au Dashboard",
+        "autoRedirect": "Auto dans {seconds}s"
+      },
+      "reorder": {
+        "title": "RÉORGANISER",
+        "hint": "Maintiens et glisse pour changer l'ordre",
+        "done": "✓ TERMINÉ"
+      },
+      "menu": {
+        "moveUp": "↑ MONTER",
+        "moveDown": "↓ DESCENDRE",
+        "replace": "REMPLACER",
+        "delete": "SUPPRIMER"
+      },
+      "draft": {
+        "title": "Reprendre la seance ?",
+        "description": "Une seance interrompue a ete trouvee pour {name}. Veux-tu reprendre ou commencer une nouvelle seance ?",
+        "restart": "Recommencer",
+        "resume": "Reprendre"
+      },
+      "restDone": {
+        "title": "REPOS TERMINE",
+        "next": "Prochain :",
+        "start": "COMMENCER →"
+      },
+      "endModal": {
+        "title": "FIN DE SEANCE",
+        "question": "Que veux-tu faire de cette seance ?",
+        "duration": "Duree",
+        "save": "SAUVEGARDER LA SEANCE",
+        "saveHint": "Enregistre ta progression et tes records",
+        "delete": "SUPPRIMER LA SEANCE",
+        "deleteHint": "Les donnees de cette seance seront perdues",
+        "continue": "CONTINUER LA SEANCE"
+      },
+      "deleteModal": {
+        "title": "ES-TU SUR ?",
+        "withSets": "{count, plural, one {# set validé sera perdu définitivement.} other {# sets validés seront perdus définitivement.}}",
+        "noSets": "Cette seance sera supprimee."
+      },
+      "repsWarning": {
+        "title": "VÉRIFIE TES RÉPÉTITIONS",
+        "description": "Tu as saisi {reps} reps — c'est beaucoup ! Es-tu sûr de ce nombre ?",
+        "edit": "MODIFIER",
+        "confirm": "CONFIRMER"
+      },
+      "saveTemplate": {
+        "title": "SAUVEGARDER COMME MODÈLE ?",
+        "description": "Réutilise cette séance plus tard sans la recréer.",
+        "yes": "OUI — SAUVEGARDER",
+        "no": "NON — JUSTE CETTE FOIS"
+      },
+      "exerciseInfo": {
+        "videoSoon": "VIDÉO À VENIR",
+        "description": "DESCRIPTION",
+        "execution": "EXÉCUTION",
+        "tips": "CONSEILS"
+      },
+      "savePopup": {
+        "title": "PROGRAMME MODIFIÉ",
+        "description": "Tu as modifié les exercices. Sauvegarder dans ton programme ?",
+        "save": "SAUVEGARDER LE PROGRAMME",
+        "justThisTime": "JUSTE CETTE SÉANCE"
+      }
     }
   },
   "progress": {

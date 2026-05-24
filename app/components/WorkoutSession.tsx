@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useMemo, Fragment } from 'react'
 import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
@@ -51,12 +52,15 @@ function readDraft(name: string): { exos: Exo[] } | null {
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Cardio']
 
 function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: any[]) => void; onCancel: () => void }) {
+  const t = useTranslations('training_tab.ws')
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
-  const [name, setName] = useState('Ma Séance')
+  const ALL_KEY = '__all__'
+  const muscleFilters = [{ key: ALL_KEY, label: t('allMuscles') }, ...WORKOUT_MUSCLE_FILTERS.slice(1).map(m => ({ key: m, label: m }))]
+  const [name, setName] = useState(t('builder.defaultName'))
   const [search, setSearch] = useState('')
   const [dbExos, setDbExos] = useState<any[]>([])
   const [selected, setSelected] = useState<any[]>([])
-  const [filter, setFilter] = useState('')
+  const [filter, setFilter] = useState(ALL_KEY)
   const [step, setStep] = useState<'build' | 'config'>('build')
   const [cfg, setCfg] = useState<any[]>([])
   const ref = useRef<any>(null)
@@ -66,7 +70,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
     ref.current = setTimeout(async () => {
       let q = supabase.from('exercises_db').select('id, name, muscle_group, equipment, difficulty, description')
       if (search.length >= 2) q = q.ilike('name', `%${search}%`)
-      if (filter && filter !== 'Tous') q = q.eq('muscle_group', filter)
+      if (filter && filter !== ALL_KEY) q = q.eq('muscle_group', filter)
       const { data } = await q.limit(60).order('name')
       // Deduplicate by name
       const unique = (data || []).filter((ex: any, i: number, arr: any[]) => arr.findIndex((e: any) => e.name.toLowerCase() === ex.name.toLowerCase()) === i)
@@ -91,10 +95,10 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: BG_BASE, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flexShrink: 0, padding: '16px', paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', borderBottom: `1px solid ${BORDER}`, background: BG_BASE, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={() => setStep('build')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <ArrowLeft size={14} /> Retour
+          <ArrowLeft size={14} /> {t('back')}
         </button>
-        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>CONFIGURER</span>
-        <button onClick={launch} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>LANCER</button>
+        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{t('builder.configure')}</span>
+        <button onClick={launch} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.launch')}</button>
       </div>
       <div style={{ flex: 1, padding: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {cfg.map((e, i) => (
@@ -109,7 +113,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-              {[['SETS', 'targetSets', 'number', ''], ['REPS', 'targetReps', 'text', ''], ['REPOS', 'rest', 'number', 's']].map(([label, key, type, unit]) => (
+              {[[t('builder.sets'), 'targetSets', 'number', ''], [t('builder.reps'), 'targetReps', 'text', ''], [t('builder.rest'), 'rest', 'number', 's']].map(([label, key, type, unit]) => (
                 <div key={key} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 12 }}>
                   <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' as const, marginBottom: 6 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
@@ -126,7 +130,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       </div>
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}`, zIndex: 51 }}>
         <button onClick={launch} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
-          LANCER LA SEANCE
+          {t('builder.launchSession')}
         </button>
       </div>
     </div>
@@ -138,11 +142,11 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       <div style={{ flexShrink: 0, background: BG_BASE, padding: '16px 16px 10px', paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <ArrowLeft size={14} /> Retour
+            <ArrowLeft size={14} /> {t('back')}
           </button>
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>AJOUTER</span>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{t('builder.add')}</span>
           {selected.length > 0 ? (
-            <button onClick={goConfig} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>SUITE ({selected.length})</button>
+            <button onClick={goConfig} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.next', { count: selected.length })}</button>
           ) : <div style={{ width: 60 }} />}
         </div>
 
@@ -161,7 +165,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
         <div style={{ position: 'relative', marginBottom: 10 }}>
           <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
           <input autoFocus autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} inputMode="search" enterKeyHint="search"
-            value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un exercice..."
+            value={search} onChange={e => setSearch(e.target.value)} placeholder={t('builder.searchPlaceholder')}
             style={{ width: '100%', padding: '14px 44px 14px 36px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16, fontFamily: FONT_BODY, outline: 'none' }} />
           {search && (
             <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: '50%', background: GOLD_DIM, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -172,14 +176,14 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 
         {/* Muscle filters */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
-          {WORKOUT_MUSCLE_FILTERS.map(f => (
-            <button key={f} onClick={() => setFilter(f === 'Tous' ? '' : f)} style={{
+          {muscleFilters.map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)} style={{
               flexShrink: 0, padding: '6px 14px', borderRadius: 10,
-              border: `1px solid ${(!filter && f === 'Tous') || filter === f ? GOLD : BORDER}`,
-              background: (!filter && f === 'Tous') || filter === f ? GOLD_DIM : colors.surface2,
-              color: (!filter && f === 'Tous') || filter === f ? GOLD : TEXT_MUTED,
+              border: `1px solid ${filter === f.key ? GOLD : BORDER}`,
+              background: filter === f.key ? GOLD_DIM : colors.surface2,
+              color: filter === f.key ? GOLD : TEXT_MUTED,
               fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: 'pointer',
-            }}>{f}</button>
+            }}>{f.label}</button>
           ))}
         </div>
       </div>
@@ -202,21 +206,21 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
                 <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{e.name}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                   {e.muscle_group && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: GOLD_DIM, color: GOLD, letterSpacing: 1, textTransform: 'uppercase' as const }}>{e.muscle_group}</span>}
-                  {e.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${dc(e.difficulty)}18`, color: dc(e.difficulty), letterSpacing: 1 }}>{e.difficulty === 'debutant' ? 'Débutant' : e.difficulty === 'intermediaire' ? 'Intermédiaire' : 'Avancé'}</span>}
+                  {e.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${dc(e.difficulty)}18`, color: dc(e.difficulty), letterSpacing: 1 }}>{t(`difficulty.${e.difficulty}`)}</span>}
                   {e.equipment && <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_DIM }}>{e.equipment}</span>}
                 </div>
               </div>
             </button>
           )
         })}
-        {dbExos.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontSize: 14 }}>Aucun exercice trouvé</div>}
+        {dbExos.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontSize: 14 }}>{t('builder.noResults')}</div>}
       </div>
 
       {/* Bottom button */}
       {selected.length > 0 && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', background: 'rgba(13,11,8,0.9)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${BORDER}` }}>
           <button onClick={goConfig} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
-            AJOUTER {selected.length} EXERCICE{selected.length > 1 ? 'S' : ''}
+            {t('builder.addExercises', { count: selected.length })}
           </button>
         </div>
       )}
@@ -227,11 +231,12 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 const AUTO_REDIRECT_SECONDS = 8
 
 export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
+  const t = useTranslations('training_tab.ws')
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
   const draftCheckedRef = useRef(false)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, technique: e.technique, techniqueDetails: e.technique_details, sets: makeSets(e.sets || 3), open: true })))
+  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || t('exercise'), muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, technique: e.technique, techniqueDetails: e.technique_details, sets: makeSets(e.sets || 3), open: true })))
   // Draft resume prompt
   const [draftPrompt, setDraftPrompt] = useState<Exo[] | null>(null)
   // Persist exos to localStorage after each mutation (gated by draftCheckedRef)
@@ -286,7 +291,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [showSavePopup, setShowSavePopup] = useState(false)
   const [exerciseMenu, setExerciseMenu] = useState<number | null>(null)
   const [showSaveTemplate, setShowSaveTemplate] = useState(false)
-  const [templateName, setTemplateName] = useState(sessionName || 'Séance libre')
+  const [templateName, setTemplateName] = useState(sessionName || 'Séance libre') // DB value, do not translate
   const [variantPopup, setVariantPopup] = useState<{exIdx: number, variants: any[], originalName: string} | null>(null)
   const [exerciseInfo, setExerciseInfo] = useState<any>(null)
   const [reorderMode, setReorderMode] = useState(false)
@@ -584,7 +589,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     const prevInfo = prev?.[nextSetNum - 1]
     const nextInfo = nextSetNum > 0
       ? `Set ${nextSetNum}${prevInfo ? ` — ${prevInfo.weight} kg × ${prevInfo.reps}` : ''}`
-      : 'Exercice termine'
+      : t('exerciseDone')
     startRest(r, eid, nextInfo, sid)
   }
   const validate = (eid: string, sid: string) => {
@@ -621,7 +626,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       source: 'free_session',
       is_active: false,
     })
-    toast.success('Modèle sauvegardé ✓')
+    toast.success(t('templateSaved'))
     setShowSaveTemplate(false)
     setDone(true)
   }
@@ -678,7 +683,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     setVariantPopup(null)
   }
 
-  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || 'Exercice', muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
+  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || t('exercise'), muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
 
   if (done) {
     // Compute volume comparison
@@ -704,11 +709,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       .sort((a, b) => b.best - a.best)
       .slice(0, 3)
 
-    // Format date contextually
+    // Format date contextually — locale-aware
     const now = new Date()
-    const dayNames = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
-    const monthNames = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
-    const dateLabel = `${dayNames[now.getDay()]} ${now.getDate()} ${monthNames[now.getMonth()]} · ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+    const dateLabel = `${now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })} · ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
 
     // Mini-graph : up to 4 previous sessions, oldest first
     const graphSessions = summary?.previousSessions
@@ -743,7 +746,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
           {/* Titre éditorial */}
           <h1 className="mb-1" style={{ ...pageTitleStyle, fontSize: 40, letterSpacing: '0.04em', lineHeight: 1.05 }}>
-            Séance<br/>terminée<span style={{ color: GOLD }}>.</span>
+            {t('done.title')}<span style={{ color: GOLD }}></span>
           </h1>
           <p className="mb-10" style={{ ...subtitleStyle, color: TEXT_MUTED, fontStyle: 'italic', textTransform: 'none' as const, letterSpacing: '0.02em', fontWeight: 400 }}>
             {sessionName}
@@ -751,7 +754,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
           {/* CARD : Volume HERO */}
           <div className="flex items-center gap-3 mb-2">
-            <span style={titleStyle}>Volume total</span>
+            <span style={titleStyle}>{t('done.totalVolume')}</span>
             <div style={titleLineStyle} />
           </div>
           <div style={{ ...cardStyle, padding: '32px 24px', marginBottom: 24, textAlign: 'center', background: `linear-gradient(135deg, ${colors.surface}, ${BG_CARD_2})` }}>
@@ -767,7 +770,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           {graphSessions.length > 0 && (
             <>
               <div className="flex items-center gap-3 mb-2">
-                <span style={titleStyle}>Dernières séances</span>
+                <span style={titleStyle}>{t('done.lastSessions')}</span>
                 <div style={titleLineStyle} />
               </div>
               <div style={{ ...cardStyle, padding: '20px 16px', marginBottom: 24 }}>
@@ -796,11 +799,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           {/* CARDS : Stats secondaires 2 colonnes */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
-              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>Durée</div>
+              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>{t('done.duration')}</div>
               <div style={{ ...statStyle, fontSize: 32 }}>{dur(elapsed)}</div>
             </div>
             <div style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
-              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>Séries</div>
+              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>{t('done.sets')}</div>
               <div style={{ ...statStyle, fontSize: 32 }}>
                 {completed}<span style={{ color: TEXT_DIM, fontSize: 22 }}>/{total}</span>
               </div>
@@ -811,7 +814,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           {performances.length > 0 && (
             <>
               <div className="flex items-center gap-3 mb-2">
-                <span style={titleStyle}>Exercices</span>
+                <span style={titleStyle}>{t('done.exercises')}</span>
                 <div style={titleLineStyle} />
               </div>
               <div style={{ ...cardStyle, padding: '8px 20px' }}>
@@ -823,7 +826,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                           {p.name}
                         </div>
                         <div className="mt-0.5" style={{ ...mutedStyle, fontSize: 11 }}>
-                          {p.setsCount} séries · {p.muscle}
+                          {t('done.setsCount', { count: p.setsCount })} · {p.muscle}
                         </div>
                       </div>
                       <div style={{ ...statSmallStyle, fontSize: 18 }}>{p.best} kg</div>
@@ -843,10 +846,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         <div className="fixed bottom-0 left-0 right-0 z-20" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
           <div className="pt-6" style={{ paddingLeft: 20, paddingRight: 20, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto', background: 'linear-gradient(to top, rgba(13,11,8,0.98) 0%, rgba(13,11,8,0.95) 60%, transparent 100%)' }}>
             <button onClick={onClose} style={{ ...btnPrimary, width: '100%', padding: '16px 0', fontSize: 14 }} className="active:scale-[0.98] transition-transform">
-              Retour au Dashboard
+              {t('done.backToDashboard')}
             </button>
             <p className="text-center mt-3" style={{ ...mutedStyle, fontSize: 11 }}>
-              Auto dans {autoRedirectCountdown}s
+              {t('done.autoRedirect', { seconds: autoRedirectCountdown })}
             </p>
           </div>
         </div>
@@ -883,13 +886,13 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       {draftPrompt && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
-            <h2 style={{ fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.95rem', fontWeight: 800, color: GOLD, margin: '0 0 12px' }}>Reprendre la seance ?</h2>
+            <h2 style={{ fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.95rem', fontWeight: 800, color: GOLD, margin: '0 0 12px' }}>{t('draft.title')}</h2>
             <p style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 24px' }}>
-              Une seance interrompue a ete trouvee pour <strong style={{ color: TEXT_PRIMARY }}>{sessionName}</strong>. Veux-tu reprendre ou commencer une nouvelle seance ?
+              {t('draft.description', { name: sessionName })}
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={discardDraft} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Recommencer</button>
-              <button onClick={resumeDraft} style={{ flex: 2, padding: '12px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Reprendre</button>
+              <button onClick={discardDraft} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.restart')}</button>
+              <button onClick={resumeDraft} style={{ flex: 2, padding: '12px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.resume')}</button>
             </div>
           </div>
         </div>
@@ -902,14 +905,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(201,168,76,0.15)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 3, margin: '0 0 8px' }}>REPOS TERMINE</h2>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: '0 0 8px' }}>Prochain :</p>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 3, margin: '0 0 8px' }}>{t('restDone.title')}</h2>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: '0 0 8px' }}>{t('restDone.next')}</p>
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD, letterSpacing: 1, margin: '0 0 24px' }}>{restNextInfo || motivationalMsg}</p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => { dismissRestDone(); startRest(30, restExoId || undefined, restNextInfo) }} className="active:scale-95"
                 style={{ flex: 1, padding: '14px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: GOLD, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30S</button>
               <button onClick={dismissRestDone} className="active:scale-95"
-                style={{ flex: 2, padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer' }}>COMMENCER →</button>
+                style={{ flex: 2, padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('restDone.start')}</button>
             </div>
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
               <div style={{ height: '100%', background: GOLD, animation: 'rest-autoclose-progress 5s linear forwards' }} />
@@ -917,7 +920,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           </div>
         </div>
       )}
-      {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>Démonstration</span><button aria-label="Fermer la video" onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
+      {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>{t('demo')}</span><button aria-label={t('closeVideo')} onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       {/* HEADER */}
       <div className="sticky top-0 z-40 border-b" style={{ background: '#0D0B08', borderColor: BORDER, backdropFilter: 'blur(20px)', padding: '0 16px 10px', paddingTop: 'max(12px, env(safe-area-inset-top, 12px))', position: 'relative' }}>
@@ -925,14 +928,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
             <ArrowLeft size={22} color={TEXT_PRIMARY} />
           </button>
-          <h1 style={{ flex: 1, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', margin: 0, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sessionName || 'SÉANCE LIBRE'}</h1>
+          <h1 style={{ flex: 1, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', margin: 0, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sessionName || t('freeSession')}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN, animation: 'pulse 2s infinite' }} />
             <span style={{ fontSize: 14, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '1px' }}>{dur(elapsed)}</span>
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <span style={{ fontSize: 10, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>Progression</span>
+          <span style={{ fontSize: 10, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('progression')}</span>
           <span style={{ fontSize: 11, color: GOLD, fontFamily: FONT_DISPLAY }}>{completed}/{total} sets</span>
         </div>
         <div style={{ height: 2, background: TEXT_DIM, overflow: 'hidden' }}>
@@ -951,15 +954,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               color: GOLD,
               fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
               letterSpacing: 2, cursor: 'pointer',
-            }}>+ AJOUTER UN EXERCICE</button>
+            }}>{t('addExercise')}</button>
           </div>
         )}
 
         {!reorderMode && exos.length === 0 && (
           <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${colors.divider}`, borderRadius: 14, background: colors.surface2 }}>
             <Dumbbell size={32} color={TEXT_DIM} style={{ marginBottom: 12 }} />
-            <p style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1, margin: '0 0 4px' }}>Ajoute ton premier exercice</p>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_DIM, margin: 0 }}>Tape &quot;+ AJOUTER&quot; ci-dessus</p>
+            <p style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1, margin: '0 0 4px' }}>{t('emptyTitle')}</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_DIM, margin: 0 }}>{t('emptyHint')}</p>
           </div>
         )}
 
@@ -967,8 +970,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         {reorderMode && (
           <div>
             <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid rgba(201,168,76,0.10)' }}>
-              <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, fontFamily: FONT_ALT }}>RÉORGANISER</div>
-              <div style={{ fontSize: 10, color: TEXT_DIM, marginTop: 4, fontFamily: FONT_BODY }}>Maintiens et glisse pour changer l&apos;ordre</div>
+              <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, fontFamily: FONT_ALT }}>{t('reorder.title')}</div>
+              <div style={{ fontSize: 10, color: TEXT_DIM, marginTop: 4, fontFamily: FONT_BODY }}>{t('reorder.hint')}</div>
             </div>
             <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => setExos(newOrder)} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {exos.map((exo, idx) => (
@@ -994,7 +997,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.15em', flexShrink: 0, minWidth: 16, fontFamily: FONT_ALT, fontWeight: 700 }}>{idx + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, color: TEXT_PRIMARY, fontWeight: 600, lineHeight: 1.2, fontFamily: FONT_BODY }}>{exo.name}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: FONT_BODY }}>{exo.muscle ? `${exo.muscle} · ` : ''}{exo.targetSets} séries</div>
+                    <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: FONT_BODY }}>{exo.muscle ? `${exo.muscle} · ` : ''}{t('done.setsCount', { count: exo.targetSets })}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: 4, flexShrink: 0 }}>
                     <div style={{ width: 18, height: 2, background: GOLD, borderRadius: 1 }} />
@@ -1004,7 +1007,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 </Reorder.Item>
               ))}
             </Reorder.Group>
-            <button onClick={() => setReorderMode(false)} style={{ width: '100%', background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: '#0D0B08', letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>✓ TERMINÉ</button>
+            <button onClick={() => setReorderMode(false)} style={{ width: '100%', background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: '#0D0B08', letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>{t('reorder.done')}</button>
           </div>
         )}
 
@@ -1060,7 +1063,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     )}
                   </div>
                   <div style={{ fontSize: 12, color: 'rgba(245,241,232,0.7)', marginTop: 6, fontFamily: FONT_BODY }}>
-                    {exo.targetSets} séries × {exo.targetReps} reps
+                    {t('setsReps', { sets: exo.targetSets, reps: exo.targetReps })}
                     {exo.tempo && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setTempoModal({ tempo: exo.tempo!, name: exo.name }) }}
@@ -1100,10 +1103,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               {/* Exercise menu */}
               {exerciseMenu === idx && (
                 <div style={{ display: 'flex', gap: 6, padding: '10px 0 4px', flexWrap: 'wrap' }}>
-                  <button disabled={idx === 0} onClick={() => { moveExercise(idx, -1); setExerciseMenu(null) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: idx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`, color: idx === 0 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: idx === 0 ? 'default' : 'pointer' }}>↑ MONTER</button>
-                  <button disabled={idx === exos.length - 1} onClick={() => { moveExercise(idx, 1); setExerciseMenu(null) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`, color: idx === exos.length - 1 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: idx === exos.length - 1 ? 'default' : 'pointer' }}>↓ DESCENDRE</button>
-                  <button onClick={() => { setExerciseMenu(null); loadVariantsForSession(exo, idx) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: 'pointer' }}>REMPLACER</button>
-                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: colors.error, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: 'pointer' }}>SUPPRIMER</button>
+                  <button disabled={idx === 0} onClick={() => { moveExercise(idx, -1); setExerciseMenu(null) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: idx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`, color: idx === 0 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: idx === 0 ? 'default' : 'pointer' }}>{t('menu.moveUp')}</button>
+                  <button disabled={idx === exos.length - 1} onClick={() => { moveExercise(idx, 1); setExerciseMenu(null) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`, color: idx === exos.length - 1 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: idx === exos.length - 1 ? 'default' : 'pointer' }}>{t('menu.moveDown')}</button>
+                  <button onClick={() => { setExerciseMenu(null); loadVariantsForSession(exo, idx) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: 'pointer' }}>{t('menu.replace')}</button>
+                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: colors.error, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: 'pointer' }}>{t('menu.delete')}</button>
                 </div>
               )}
 
@@ -1130,13 +1133,13 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                       }}>
                         {/* a) Set number */}
                         <div style={{ width: 42, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                          <span style={{ fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(245,241,232,0.4)', textTransform: 'uppercase' as const }}>SERIE</span>
+                          <span style={{ fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(245,241,232,0.4)', textTransform: 'uppercase' as const }}>{t('set')}</span>
                           <span style={{ fontSize: 22, fontFamily: FONT_DISPLAY, fontWeight: 700, color: set.done ? GOLD : isActive ? GOLD : 'rgba(245,241,232,0.5)', lineHeight: 1 }}>{set.num}</span>
                         </div>
 
                         {/* b) Previous data + progression badge on 1st set */}
                         <div style={{ width: 60, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <span style={{ fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase' as const }}>PREC.</span>
+                          <span style={{ fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase' as const }}>{t('prev')}</span>
                           <span style={{ fontSize: 13, fontFamily: FONT_BODY, fontWeight: 600, color: prevSet ? GOLD : 'rgba(245,241,232,0.25)', whiteSpace: 'nowrap' }}>
                             {prevSet ? `${prevSet.weight} × ${prevSet.reps}` : '—'}
                           </span>
@@ -1150,7 +1153,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                                   ? { color: colors.orange, background: 'rgba(251,146,60,0.15)' }
                                   : { color: TEXT_DIM, background: `${TEXT_DIM}20` }),
                             }}>
-                              {progressionByExo[exo.name]!.status === 'progress' ? `+${fmtStep(progressionByExo[exo.name]!.step)}` : progressionByExo[exo.name]!.status === 'deload' ? `-${fmtStep(progressionByExo[exo.name]!.step)}` : 'Garder'}
+                              {progressionByExo[exo.name]!.status === 'progress' ? `+${fmtStep(progressionByExo[exo.name]!.step)}` : progressionByExo[exo.name]!.status === 'deload' ? `-${fmtStep(progressionByExo[exo.name]!.step)}` : t('keep')}
                             </span>
                           )}
                         </div>
@@ -1183,7 +1186,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                                   targetReps: parseTargetRepsForTempo(exo.targetReps),
                                 })
                               }}
-                              aria-label="Démarrer le tempo"
+                              aria-label={t('startTempo')}
                               style={{
                                 width: 40,
                                 height: 40,
@@ -1241,12 +1244,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                             </svg>
                             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                               <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONT_ALT, color: restSecs <= 10 ? colors.orange : GOLD, lineHeight: 1 }}>{restSecs}s</span>
-                              <span style={{ fontSize: 8, fontFamily: FONT_ALT, color: TEXT_DIM, letterSpacing: '0.1em', marginTop: 2 }}>REPOS</span>
+                              <span style={{ fontSize: 8, fontFamily: FONT_ALT, color: TEXT_DIM, letterSpacing: '0.1em', marginTop: 2 }}>{t('rest')}</span>
                             </div>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
                             <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
-                            <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>Passer →</button>
+                            <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('skipRest')}</button>
                           </div>
                         </div>
                       )}
@@ -1262,7 +1265,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(230,195,100,0.04)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
-                    <Plus size={12} /> Ajouter une serie
+                    <Plus size={12} /> {t('addSet')}
                   </button>
                 </div>
               )}
@@ -1273,7 +1276,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         {/* Reorder link — visible only in normal mode with 2+ exos */}
         {exos.length >= 2 && !reorderMode && (
           <div style={{ textAlign: 'center', padding: '6px 0', marginBottom: 14 }}>
-            <button onClick={() => setReorderMode(true)} style={{ background: 'transparent', border: 'none', fontSize: 12, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.05em', textDecoration: 'underline', textDecorationColor: 'rgba(201,168,76,0.3)', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: FONT_BODY }}>↕ Réorganiser les exercices</button>
+            <button onClick={() => setReorderMode(true)} style={{ background: 'transparent', border: 'none', fontSize: 12, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.05em', textDecoration: 'underline', textDecorationColor: 'rgba(201,168,76,0.3)', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: FONT_BODY }}>{t('reorderLink')}</button>
           </div>
         )}
 
@@ -1285,10 +1288,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       {!reorderMode && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>TEMPS</span>
+            <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>{t('time')}</span>
             <span style={{ fontSize: 18, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>TERMINER</button>
+          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
         </div>
       </div>}
 
@@ -1298,12 +1301,12 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           <div style={{ background: BG_BASE, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTop: `1px solid ${BORDER}`, width: '100%', maxWidth: 480, padding: 24, paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))', animation: 'wsSlideUp 300ms ease-out' }}>
             {/* Handle */}
             <div style={{ width: 40, height: 4, background: 'rgba(201,168,76,0.3)', borderRadius: 2, margin: '0 auto 20px' }} />
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY, textAlign: 'center', margin: '0 0 4px' }}>FIN DE SEANCE</h3>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 20px' }}>Que veux-tu faire de cette seance ?</p>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY, textAlign: 'center', margin: '0 0 4px' }}>{t('endModal.title')}</h3>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 20px' }}>{t('endModal.question')}</p>
             {/* Summary stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
               {([
-                { icon: <Clock size={24} color={GOLD} />, value: dur(elapsed), label: 'Duree' },
+                { icon: <Clock size={24} color={GOLD} />, value: dur(elapsed), label: t('endModal.duration') },
                 { icon: <CheckCircle2 size={24} color={GOLD} />, value: `${completed}/${total}`, label: 'Sets' },
                 { icon: <Dumbbell size={24} color={GOLD} />, value: `${Math.round(volume)} kg`, label: 'Volume' },
               ]).map(stat => (
@@ -1320,9 +1323,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
             }}>
-              <Check size={16} strokeWidth={3} />SAUVEGARDER LA SEANCE
+              <Check size={16} strokeWidth={3} />{t('endModal.save')}
             </button>
-            <p style={{ fontSize: 10, color: TEXT_DIM, textAlign: 'center', margin: '0 0 16px' }}>Enregistre ta progression et tes records</p>
+            <p style={{ fontSize: 10, color: TEXT_DIM, textAlign: 'center', margin: '0 0 16px' }}>{t('endModal.saveHint')}</p>
             {/* Delete button */}
             <button onClick={() => setShowDeleteConfirm(true)} className="active:scale-[0.98]" style={{
               width: '100%', padding: 14, borderRadius: 14,
@@ -1330,15 +1333,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               color: 'rgba(239,68,68,0.8)', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
             }}>
-              <X size={16} strokeWidth={3} />SUPPRIMER LA SEANCE
+              <X size={16} strokeWidth={3} />{t('endModal.delete')}
             </button>
-            <p style={{ fontSize: 10, color: TEXT_DIM, textAlign: 'center', margin: '0 0 20px' }}>Les donnees de cette seance seront perdues</p>
+            <p style={{ fontSize: 10, color: TEXT_DIM, textAlign: 'center', margin: '0 0 20px' }}>{t('endModal.deleteHint')}</p>
             {/* Cancel */}
             <button onClick={() => setShowEndModal(false)} className="active:scale-[0.98]" style={{
               width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
               border: `1px solid ${colors.divider}`, color: TEXT_MUTED,
               fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
-            }}>CONTINUER LA SEANCE</button>
+            }}>{t('endModal.continue')}</button>
           </div>
         </div>
       )}
@@ -1350,21 +1353,21 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={28} color={colors.error} strokeWidth={2} />
             </div>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 8px' }}>ES-TU SUR ?</h3>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 8px' }}>{t('deleteModal.title')}</h3>
             <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 20px' }}>
-              {completed > 0 ? `${completed} set${completed > 1 ? 's' : ''} valide${completed > 1 ? 's' : ''} ser${completed > 1 ? 'ont' : 'a'} perdu${completed > 1 ? 's' : ''} definitivement.` : 'Cette seance sera supprimee.'}
+              {completed > 0 ? t('deleteModal.withSets', { count: completed }) : t('deleteModal.noSets')}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowDeleteConfirm(false)} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12, background: 'transparent',
                 border: `1px solid ${BORDER}`, color: TEXT_MUTED,
                 fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
-              }}>ANNULER</button>
+              }}>{t('cancel')}</button>
               <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12,
                 background: colors.error, border: 'none', color: '#fff',
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
-              }}>SUPPRIMER</button>
+              }}>{t('delete')}</button>
             </div>
           </div>
         </div>
@@ -1384,22 +1387,22 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               </svg>
             </div>
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>
-              VÉRIFIE TES RÉPÉTITIONS
+              {t('repsWarning.title')}
             </h3>
             <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
-              Tu as saisi <strong style={{ color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 22 }}>{repsWarning.reps} reps</strong> — c&apos;est beaucoup !<br />Es-tu sûr de ce nombre ?
+              {t('repsWarning.description', { reps: repsWarning.reps })}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <button onClick={() => setRepsWarning(null)} className="active:scale-[0.98]" style={{
                 width: '100%', padding: 12, borderRadius: 12,
                 background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
-              }}>MODIFIER</button>
+              }}>{t('repsWarning.edit')}</button>
               <button onClick={() => { doValidate(repsWarning.eid, repsWarning.sid); setRepsWarning(null) }} className="active:scale-[0.98]" style={{
                 width: '100%', padding: 12, borderRadius: 12,
                 background: GOLD, border: 'none', color: '#0D0B08',
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
-              }}>CONFIRMER</button>
+              }}>{t('repsWarning.confirm')}</button>
             </div>
           </div>
         </div>
@@ -1409,9 +1412,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       {showSaveTemplate && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>SAUVEGARDER COMME MODÈLE ?</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>{t('saveTemplate.title')}</div>
             <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
-              Réutilise cette séance plus tard sans la recréer.
+              {t('saveTemplate.description')}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 16 }}>
               {SESSION_TYPE_OPTIONS.filter(t => t.key !== 'repos').map(t => (
@@ -1429,10 +1432,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button onClick={saveAsTemplate} style={{ width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer' }}>
-                OUI — SAUVEGARDER
+                {t('saveTemplate.yes')}
               </button>
               <button onClick={() => { setShowSaveTemplate(false); setDone(true) }} style={{ width: '100%', padding: 14, borderRadius: 14, background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>
-                NON — JUSTE CETTE FOIS
+                {t('saveTemplate.no')}
               </button>
             </div>
           </div>
@@ -1466,24 +1469,24 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               ):(
                 <div style={{marginBottom:20,borderRadius:14,border:`1px dashed ${BORDER}`,padding:'40px 20px',textAlign:'center',background:GOLD_DIM}}>
                   <div style={{fontSize:32,marginBottom:8}}>🎬</div>
-                  <div style={{fontFamily:FONT_ALT,fontSize:12,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>VIDÉO À VENIR</div>
+                  <div style={{fontFamily:FONT_ALT,fontSize:12,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>{t('exerciseInfo.videoSoon')}</div>
                 </div>
               )}
               {exerciseInfo.description&&(
                 <div style={{marginBottom:20}}>
-                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>DESCRIPTION</div>
+                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>{t('exerciseInfo.description')}</div>
                   <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_MUTED,lineHeight:1.6}}>{exerciseInfo.description}</div>
                 </div>
               )}
               {exerciseInfo.instructions&&(
                 <div style={{marginBottom:20}}>
-                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>EXÉCUTION</div>
+                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>{t('exerciseInfo.execution')}</div>
                   <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,lineHeight:1.6}}>{exerciseInfo.instructions}</div>
                 </div>
               )}
               {(exerciseInfo.execution_tips||exerciseInfo.tips)&&(
                 <div style={{marginBottom:20}}>
-                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>CONSEILS</div>
+                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>{t('exerciseInfo.tips')}</div>
                   <div style={{fontFamily:FONT_BODY,fontSize:13,color:TEXT_MUTED,lineHeight:1.6,padding:'12px 14px',background:GOLD_DIM,border:`1px solid ${GOLD_RULE}`,borderRadius:12}}>{exerciseInfo.execution_tips||exerciseInfo.tips}</div>
                 </div>
               )}
@@ -1498,14 +1501,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           <div onClick={e=>e.stopPropagation()} style={{background:colors.surface2,border:`1px solid ${colors.divider}`,borderRadius:'20px 20px 0 0',width:'100%',maxHeight:'60vh',display:'flex',flexDirection:'column'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.divider}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
-                <div style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>REMPLACER</div>
+                <div style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>{t('menu.replace')}</div>
                 <div style={{fontFamily:FONT_BODY,fontSize:12,color:TEXT_MUTED,marginTop:2}}>{variantPopup.originalName}</div>
               </div>
               <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
             </div>
             <div style={{overflowY:'auto',padding:'8px 12px 32px'}}>
               {variantPopup.variants.length===0?(
-                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14}}>Aucune variante trouvée</div>
+                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14}}>{t('noVariants')}</div>
               ):variantPopup.variants.map((v: any,i: number)=>(
                 <button key={i} onClick={()=>selectSessionVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:colors.surface2,border:`1px solid ${colors.divider}`,cursor:'pointer',textAlign:'left'}}>
                   <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
@@ -1526,24 +1529,24 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       {showSavePopup && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>PROGRAMME MODIFIÉ</div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>{t('savePopup.title')}</div>
             <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 24 }}>
-              Tu as modifié les exercices. Sauvegarder dans ton programme ?
+              {t('savePopup.description')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button onClick={() => { setShowSavePopup(false); finish() }} style={{
                 width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08',
                 fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer',
-              }}>SAUVEGARDER LE PROGRAMME</button>
+              }}>{t('savePopup.save')}</button>
               <button onClick={() => { setSessionModified(false); setShowSavePopup(false); finish() }} style={{
                 width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
                 border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
                 fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer',
-              }}>JUSTE CETTE SÉANCE</button>
+              }}>{t('savePopup.justThisTime')}</button>
               <button onClick={() => setShowSavePopup(false)} style={{
                 width: '100%', padding: 12, background: 'transparent', border: 'none',
                 color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 13, cursor: 'pointer',
-              }}>Annuler</button>
+              }}>{t('cancel')}</button>
             </div>
           </div>
         </div>
