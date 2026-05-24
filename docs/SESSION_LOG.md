@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : 58a5b42
+- **HEAD** : 3ed8fa4
 - **Working tree** : clean
-- **Tâche en cours** : Sprint i18n closure — F1a done (correctifs P4+P5a), suite F1b (nav + composants oubliés) puis F2 + F3
+- **Tâche en cours** : Sprint i18n closure — F1b done (nav + composants oubliés), suite F2 (format dates + Recharts) puis F3 (migration DB exos)
 
 ---
 
@@ -60,6 +60,7 @@ Plan 5 phases proposé :
 | 7 | b0f4ecf | feat(i18n): AccountTab 100% FR/EN/DE (12 keys) |
 | 8 | 660aa0d | feat(i18n): NutritionTab L2 FR/EN/DE (35 keys) |
 | 9 | 58a5b42 | fix(i18n): NutritionTab + ProgressTab residual FR (28 keys) |
+| 10 | 3ed8fa4 | fix(i18n): bottom nav + headers retour + MeasureModal (8 keys) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -244,6 +245,21 @@ et des sections entières dont le contenu était dans cardTitleAbove patterns.
 - "cardTitleAbove" pattern (style avec <span style={cardTitleAbove}>X</span>)
   a été un point faible récurrent — CC n'a pas systématiquement matché ces
   cas. À ajouter explicitement dans les prompts futurs.
+
+### F1b — Bottom nav + headers retour + MeasureModal (DONE)
+
+- app/page.tsx : bottom nav "Compte" → t('common.navAccount')
+  (Home/Training/Nutrition/Analytics laissés EN, décision brand universel)
+- MessagesTab.tsx + ProfileTab.tsx : headers retour via t()
+- MeasureModal.tsx : 100% i18n (title, fields, date, buttons, history)
+- Locale-aware date formatting (fr → dateLocale)
+- 8 clés ajoutées sous common.* et measureModal.*
+- Total i18n keys : 1628 → 1636
+
+**Tech debt loggée** :
+- ProfileTab aria-label réutilise badges.backToAccount par CC (couplage accidentel
+  entre namespaces sémantiquement non liés). À recoupler vers common.* dans le
+  sprint vocab consolidation post-launch.
 
 ---
 
