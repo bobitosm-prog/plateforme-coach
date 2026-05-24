@@ -4,6 +4,97 @@ Historique des sessions de developpement marathon.
 
 ---
 
+## 2026-05-23 — Phase A merge prod + Phase B Tempo Executor + Fix bug audio
+
+**Durée** : ~6h
+**Branches** : `feat/tempo-modal-phase-a` (mergée, supprimée), `feat/tempo-executor-phase-b` (mergée, supprimée)
+
+### Réalisé
+
+#### 1. Phase A — Merge en production (matin)
+- Test E2E local validé sur compte réel `f.marco@me.com` avec programme PPL Elite 12 Semaines
+- Pill gold tempo visible sur tous les exos du programme
+- Merge sur main + déploiement Vercel auto → LIVE sur app.moovx.ch
+- Validation PWA iPhone : pill gold + modal pédagogique fonctionnent en prod
+
+#### 2. FIX BUG AUDIO CRITIQUE — scheduled rest sounds
+- **Découvert avant Phase B** : Marco a signalé que les bips de fin de rest timer sonnaient ~90s après un skip, parasitant la série suivante
+- **Root cause** : Web Audio API schedule les oscillators directement dans l'AudioContext (`oscillator.start(futureTime)`). Une fois schedulés, ils jouent peu importe ce qui se passe en JS. `skipRest()` ne touchait pas aux oscillators, donc les bips programmés sonnaient quand même.
+- **Pourquoi Web Audio scheduling** : c'est le seul moyen fiable pour que les bips de fin de timer fonctionnent quand iOS suspend le JS (écran verrouillé). Choix architectural valide mais cancellation absente.
+- **Fix** :
+  - `scheduleBeep` retourne maintenant `ScheduledSound { oscillator, gain } | null`
+  - `scheduleRestPeriodSounds` retourne `ScheduledSound[]`
+  - Nouveau `cancelScheduledSounds(sounds)` qui cancel les gains + stop les oscillators + disconnect les nodes
+  - `WorkoutSession.startRest` capture les sons schedulés dans un ref
+  - `WorkoutSession.skipRest` cancel les sons avant reset des states
+  - Defensive: startRest cancel aussi les sons précédents (cas re-validation rapide)
+- Commit : 4336966
+- ⚠️ Backlog noté : `addRestTime` (+30s) ne re-schedule pas les sons (mineur)
+
+#### 3. Phase B — TempoExecutor (4 sous-phases, mergée prod)
+
+##### B.1 — Composant standalone (commit ec24e37)
+- `app/components/training/TempoExecutor.tsx` (262 lignes)
+- Modal plein écran avec backdrop noir + blur (focus total)
+- Parse `X-X-X` tempo, skip phases à 0s automatiquement
+- Tick loop 100ms granularity
+- Cercle SVG 220px avec progression gold + chiffre central animé
+- Rep counter, label phase, description, icône (↓ pause ↑)
+- Audio cue + vibration aux transitions
+- Pause/resume, sound toggle (partagé avec rest timer via `timerSound` localStorage)
+- Fallback gracieux si tempo invalide
+
+##### B.2 — Intégration WorkoutSession (commit a768dbc)
+- Bouton PLAY gold sur le 1er set non-done de chaque exo avec tempo valide
+- Helpers `parseTargetRepsForTempo` (handles ranges '8-10' → 10), `isTempoValid`
+- State `tempoExecutor: { exoId, setIdx, tempo, name, targetReps } | null`
+- `initAudio()` au tap pour unlock iOS audio
+- Render conditionnel à la fin du JSX
+- Décision UX : option B (1er set non-done uniquement) — pattern Strong/Hevy
+
+##### B.4.1 — iOS background recovery (commit 1fd348b)
+- **Problème** : setInterval suspendu quand iOS background l'app → au retour, tempo continue depuis là où il était sans audio joué → user perdu
+- **Fix** :
+  - Remplace `elapsedMs` cumulé par `phaseEndsAtRef` (timestamp absolu)
+  - Détection saut : si `delta > 2000ms` entre 2 ticks (vs normal 100ms) → JS a été suspendu
+  - Stoppe le tempo + flag `wasInterrupted` → modal "TEMPO INTERROMPU" avec bouton FERMER
+  - Refactor `handleTogglePause` pour mémoriser le remaining ms à la pause et ré-ancrer phaseEndsAt au resume
+  - Nouveau ref `pausedRemainingMsRef`
+- **Test validé** : iPhone via IP locale 192.168.1.14, background app 5s → modal "TEMPO INTERROMPU" apparaît correctement
+
+##### B.4.2 — Vibrations différenciées (commit 386ba67)
+- 4 nouveaux patterns dans `lib/timer-audio.ts` :
+  - `vibrateEccentric` (80ms) — descente
+  - `vibratePause` (60-80-60ms) — maintien
+  - `vibrateConcentric` (150ms) — explosif
+  - `vibrateRepComplete` (120-60-120-60-200ms) — fin de rep
+- `onPhaseTransition` reçoit maintenant `Phase | null` au lieu de boolean
+- Délai 300ms entre rep-complete cue et phase 0 de la rep suivante
+- Note : `navigator.vibrate` non supporté Safari iOS, mais OK Android/Chrome desktop
+
+### Décisions UX notables
+
+- **Pas de bridge auto vers rest timer après tempo** : décision finale Marco, l'user saisit kg/reps manuellement + valide (qui déclenche le rest timer comme aujourd'hui). Pas de magie automatique.
+- **Pas de modal saisie post-tempo** : redondant avec UI inputs existante dans la card du set
+- **Pas de countdown 3-2-1** (B.4.3 reportée) : à évaluer après usage réel
+- **Pas d'animations cosmétiques** (B.4.4 reportée) : non critique
+
+### Tests validés
+- ✅ TypeScript 0 erreur sur tous les commits
+- ✅ Test E2E local Phase A sur compte réel (programme PPL Elite)
+- ✅ Test prod Phase A (PWA iPhone)
+- ✅ Test fix audio rest timer (skip → silence après 90s)
+- ✅ Test B.1+B.2 sur compte réel (bouton PLAY + modal tempo)
+- ✅ Test B.4.1 iPhone via IP locale (background → "TEMPO INTERROMPU")
+
+### Stats commits
+
+5 commits sur main via 2 branches successives :
+- Branche `feat/tempo-modal-phase-a` (mergée matin) : Phase A
+- Branche `feat/tempo-executor-phase-b` (mergée fin journée) : fix audio + B.1 + B.2 + B.4.1 + B.4.2
+
+---
+
 ## 2026-05-22 — P1 clôturé + Email infra + Phase A tempo
 
 **Durée** : ~6h (12h45 → 19h30)

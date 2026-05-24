@@ -1,91 +1,77 @@
-# Démarrage prochaine session — 2026-05-23
+# Démarrage prochaine session
 
 ## Contexte rapide
 
-Dernière session : 2026-05-22, ~6h. Voir `docs/SESSION_LOG.md` pour le détail complet.
+Dernière session : 2026-05-23 (~6h). Voir `docs/SESSION_LOG.md` pour le détail.
 
 État au démarrage :
-- Branche `feat/tempo-modal-phase-a` poussée, **PAS encore mergée**
-- 2 commits : fix latent `get-today-session.ts` + feat Phase A tempo modal
-- Cleanup DB de test fait (séance + programme test du compte `marco.ferreira@bluemail.ch`)
+- `main` clean, Phase A + Phase B en production
+- Toutes les branches `feat/*` mergées et supprimées
+- Working tree clean
 
 ## ÉTAPE 1 — Commandes de démarrage
 
 ```bash
 cd /Users/marcoferreira/plateforme-coach
-
-# Mettre à jour git
 git fetch
 git status
-
-# Lister les branches locales et distantes
-git branch -a
-
-# Vérifier l'état des fichiers modifiés (devrait être clean)
 git --no-pager log --oneline -10
 ```
 
-## ÉTAPE 2 — Test E2E avant merge
+Doit afficher main clean, dernier commit `Merge feat/tempo-executor-phase-b`.
 
-1. Lance le dev local :
-```bash
-   git checkout feat/tempo-modal-phase-a
-   npm run dev
-```
+## ÉTAPE 2 — Choisir le sujet de la session
 
-2. Sur Chrome `localhost:3000` :
-   - Login avec `f.marco@me.com` (compte réel)
-   - Lance ta séance du jour (programme PPL Hypertrophie Elite — 12 Semaines)
-   - **Tu dois voir le pill gold ⏱ TEMPO sur chaque exo**
-   - Tap sur le pill → modal pédagogique s'ouvre avec les 3 phases
-   - Screenshot pour archive
+### Sujet le plus prioritaire — Feedback usage réel Phase A + B
 
-3. Tests de non-régression :
-   - Démarrer/valider une série fonctionne
-   - Timer de repos OK
-   - Pas de bug visuel sur RIR, technique, autres badges
-   - Card exo ouvre/ferme normalement
+Marco a maintenant en prod le tempo executor. Avant de coder du polish, observer :
+- Est-ce que le countdown 3-2-1 manque ?
+- Est-ce que l'user clique PLAY systématiquement ?
+- Est-ce que la modal "TEMPO INTERROMPU" se déclenche en usage normal ?
+- Est-ce que les vibrations sont perceptibles (Android user) ?
 
-## ÉTAPE 3 — Merge sur main (si tout OK)
+Si rien à signaler en usage, passer aux sujets ci-dessous.
 
-```bash
-git checkout main
-git pull
-git merge --no-ff feat/tempo-modal-phase-a
-git push
-```
+### Backlog bugs (priorité)
 
-Vercel auto-deploy déclenchera en prod sous 2-3 min.
+1. **Dashboard "VOIR LA SEANCE" → Analytics** (1h)
+   - Bug actuel : le bouton ne va pas vers le détail session
+   - Investiguer la route + le composant qui redirige
 
-## ÉTAPE 4 — Cleanup branche (après merge)
+2. **CustomBuilder saisie tempo** (30 min)
+   - Pendant une séance libre, l'user devrait pouvoir prescrire un tempo
+   - Reproduire le pattern 3 inputs number existant dans TrainingTab/ProgramBuilder
 
-```bash
-git branch -d feat/tempo-modal-phase-a
-git push origin --delete feat/tempo-modal-phase-a
-```
+3. **`addRestTime` ne re-schedule pas les sons** (15 min)
+   - Bug mineur découvert dans le fix audio
+   - Re-schedule les bips quand on ajoute du temps au rest timer
 
-## ÉTAPE 5 — Validation prod
+### Phases C — Swipe navigation (3-4h)
 
-1. Va sur `app.moovx.ch` (PWA iPhone ou web)
-2. Hard refresh (force la PWA à recharger)
-3. Lance une vraie séance → vérifier que les pills s'affichent
+Reco senior : préférer un stepper "Exo 2/6 ← →" en header plutôt que swipe horizontal (conflit avec scroll vertical iOS).
 
-## Si bug en local — diagnostic rapide
+### Templates email restants (1-2h)
 
-Si le pill ne s'affiche pas :
+3 templates à premiumiser : invite user, change email, reauthentication
 
+## ÉTAPE 3 — Workflow standard
+
+Pour chaque sujet :
+1. Créer branche `feat/<nom>` ou `fix/<nom>`
+2. Coder avec Claude Code (toujours avec `tsc --noEmit` 0 erreur avant commit)
+3. Tester en local (`npm run dev`)
+4. Si feature critique (modif WorkoutSession), tester aussi sur iPhone via IP locale
+5. Commit avec message descriptif
+6. Push branche, créer PR ou merge direct avec `--no-ff`
+7. Cleanup branche
+
+## Si bug critique en prod
+
+Diagnostic rapide :
 ```js
 // Console Chrome sur l'écran de séance
 const ws = JSON.parse(localStorage.getItem('moovx_active_workout'));
-console.log('Tempos arrivés:', ws?.exercises?.map(e => e.tempo));
+console.log('Exo first full:', JSON.stringify(ws?.exercises?.[0], null, 2));
 ```
 
-Si tempos = `[undefined, undefined, ...]` → bug dans le chemin DB → state, faut investiguer (voir SESSION_LOG.md section "BUG FIX CRITIQUE LATENT").
-
-Si tempos = `["2-0-2", "2-1-2", ...]` → données OK, bug UI dans WorkoutSession (regarder la condition `{exo.tempo && (<button>...)}` ligne ~1028).
-
-## Backlog à reprendre après merge
-
-Voir `docs/ROADMAP.md` — sections Backlog bugs et Phase B/C.
-
-Sujet le plus mûr pour la prochaine session : **Phase B — Minuteur exec piloté par tempo** (4-5h, spec déjà cadrée).
+Tous les champs avancés (tempo, rir, video_url, etc.) doivent être présents grâce au fix `get-today-session.ts` de la session 2026-05-22.
