@@ -1678,7 +1678,29 @@
         "hips": "Hips",
         "arms": "Biceps",
         "body_fat": "BF%"
-      }
+      },
+      "transformation": "TRANSFORMATION",
+      "aiSection": "AI ANALYSIS",
+      "analyzing": "Analyzing...",
+      "launchAi": "RUN AI ANALYSIS",
+      "analyzingShort": "ANALYZING...",
+      "newAnalysis": "NEW ANALYSIS",
+      "seePro": "SEE A PRO",
+      "measurementsSection": "MEASUREMENTS",
+      "myWellness": "MY WELLNESS",
+      "mood": "MOOD",
+      "moodChart": "Mood",
+      "sleep": "SLEEP",
+      "sleepAvg": "Avg. {avg}h",
+      "sleepChart": "Sleep (h)",
+      "exportData": "EXPORT MY DATA (.XLSX)",
+      "myMeasurements": "MY MEASUREMENTS",
+      "personalRecords": "PERSONAL RECORDS",
+      "charts": "CHARTS",
+      "analysisStep0": "Analyzing...",
+      "analysisStep1": "Detecting muscle groups...",
+      "analysisStep2": "Calculating proportions...",
+      "analysisStep3": "Generating report..."
     },
     "bodyAssessment": {
       "title": "FULL BODY ASSESSMENT",
@@ -1806,7 +1828,13 @@
       "prefsTitle": "Nutrition preferences",
       "futureDate": "Future date not available",
       "searchMeal": "Search a meal...",
-      "scanMeal": "SCAN A MEAL"
+      "scanMeal": "SCAN A MEAL",
+      "shoppingList": "Shopping list",
+      "recommended": "Recommended: {kcal} kcal · P:{p}g · C:{c}g · F:{f}g",
+      "takePhoto": "TAKE A PHOTO",
+      "orGallery": "or choose from gallery",
+      "retake": "RETAKE",
+      "addAll": "ADD ALL"
     },
     "macrosShort": {
       "p": "P",

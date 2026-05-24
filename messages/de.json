@@ -1678,7 +1678,29 @@
         "hips": "Hüfte",
         "arms": "Bizeps",
         "body_fat": "KF%"
-      }
+      },
+      "transformation": "TRANSFORMATION",
+      "aiSection": "KI-ANALYSE",
+      "analyzing": "Wird analysiert...",
+      "launchAi": "KI-ANALYSE STARTEN",
+      "analyzingShort": "ANALYSE...",
+      "newAnalysis": "NEUE ANALYSE",
+      "seePro": "PROFI KONSULTIEREN",
+      "measurementsSection": "MESSUNGEN",
+      "myWellness": "MEIN WOHLBEFINDEN",
+      "mood": "STIMMUNG",
+      "moodChart": "Stimmung",
+      "sleep": "SCHLAF",
+      "sleepAvg": "Ø {avg}h",
+      "sleepChart": "Schlaf (h)",
+      "exportData": "MEINE DATEN EXPORTIEREN (.XLSX)",
+      "myMeasurements": "MEINE MESSUNGEN",
+      "personalRecords": "PERSÖNLICHE REKORDE",
+      "charts": "GRAFIKEN",
+      "analysisStep0": "Wird analysiert...",
+      "analysisStep1": "Erkennung der Muskelgruppen...",
+      "analysisStep2": "Berechnung der Proportionen...",
+      "analysisStep3": "Bericht wird erstellt..."
     },
     "bodyAssessment": {
       "title": "VOLLSTÄNDIGE KÖRPERANALYSE",
@@ -1806,7 +1828,13 @@
       "prefsTitle": "Ernährungseinstellungen",
       "futureDate": "Zukünftiges Datum nicht verfügbar",
       "searchMeal": "Mahlzeit suchen...",
-      "scanMeal": "MAHLZEIT SCANNEN"
+      "scanMeal": "MAHLZEIT SCANNEN",
+      "shoppingList": "Einkaufsliste",
+      "recommended": "Empfohlen: {kcal} kcal · E:{p}g · K:{c}g · F:{f}g",
+      "takePhoto": "FOTO AUFNEHMEN",
+      "orGallery": "oder aus Galerie wählen",
+      "retake": "ERNEUT",
+      "addAll": "ALLE HINZUFÜGEN"
     },
     "macrosShort": {
       "p": "E",

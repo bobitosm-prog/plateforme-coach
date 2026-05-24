@@ -432,7 +432,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           color: colors.gold, marginBottom: 12,
         }}>
           <ShoppingCart size={16} color={colors.gold} />
-          Liste de courses
+          {nt('chrome.shoppingList')}
         </button>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -769,7 +769,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     </div>
                     {rec && (
                       <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, fontStyle: 'italic' }}>
-                        Recommandé : {rec.kcal} kcal · P:{Math.round(rec.protein)}g · G:{Math.round(rec.carbs)}g · L:{Math.round(rec.fat)}g
+                        {nt('chrome.recommended', { kcal: rec.kcal, p: Math.round(rec.protein), c: Math.round(rec.carbs), f: Math.round(rec.fat) })}
                       </div>
                     )}
                     {logs.length > 0 && (
@@ -856,7 +856,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 padding: '12px', border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: 'pointer',
                 fontFamily: fonts.body, fontSize: 12, color: colors.gold, marginBottom: 20,
               }}>
-                <ShoppingCart size={14} /> Liste de courses
+                <ShoppingCart size={14} /> {nt('chrome.shoppingList')}
               </button>
             )}
           </div>
@@ -1095,8 +1095,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               {!photoResults && !analyzingPhoto && (
                 <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: colors.goldDim, border: `2px dashed ${colors.goldRule}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                   <Camera size={48} color={colors.gold} />
-                  <span style={{ ...statSmallStyle, letterSpacing: 2 }}>PRENDRE UNE PHOTO</span>
-                  <span style={mutedStyle}>ou choisir depuis la galerie</span>
+                  <span style={{ ...statSmallStyle, letterSpacing: 2 }}>{nt('chrome.takePhoto')}</span>
+                  <span style={mutedStyle}>{nt('chrome.orGallery')}</span>
                 </button>
               )}
               {analyzingPhoto && (
@@ -1125,8 +1125,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             </div>
             {photoResults?.foods && (
               <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.goldDim}`, display: 'flex', gap: 12, flexShrink: 0 }}>
-                <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>REPRENDRE</button>
-                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, borderRadius: 12, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>AJOUTER TOUT</button>
+                <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
+                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, borderRadius: 12, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.addAll')}</button>
               </div>
             )}
           </div>

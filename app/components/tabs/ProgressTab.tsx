@@ -142,7 +142,7 @@ export default function ProgressTab({
       .then(({ data }: any) => { if (data?.[0]) setBodyAnalysis(data[0]) })
   }, [session?.user?.id])
 
-  const ANALYSIS_STEPS = ['Analyse en cours...', 'Détection des groupes musculaires...', 'Calcul des proportions...', 'Génération du rapport...']
+  const ANALYSIS_STEPS = [t('tab.analysisStep0'), t('tab.analysisStep1'), t('tab.analysisStep2'), t('tab.analysisStep3')]
   useEffect(() => {
     if (!bodyAnalysisLoading) return
     const interval = setInterval(() => setBodyAnalysisStep(s => (s + 1) % ANALYSIS_STEPS.length), 2500)
@@ -525,7 +525,7 @@ export default function ProgressTab({
       {/* ═══ SECTION 5 — RECORDS PERSONNELS ═══ */}
       <div ref={sectionRefs.records} style={{ scrollMarginTop: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>RECORDS PERSONNELS</span>
+          <span style={cardTitleAbove}>{t('tab.personalRecords')}</span>
           <div style={titleLineStyle} />
           <span style={{ ...mutedStyle, fontSize: 10 }}>{t('weight.prCount', { count: personalRecords.length })}</span>
         </div>
@@ -559,7 +559,7 @@ export default function ProgressTab({
       )}
       <div ref={sectionRefs.photos} style={{ scrollMarginTop: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>TRANSFORMATION</span>
+          <span style={cardTitleAbove}>{t('tab.transformation')}</span>
           <div style={titleLineStyle} />
           <span style={{ ...mutedStyle, fontSize: 10 }}>PHOTOS</span>
         </div>
@@ -609,7 +609,7 @@ export default function ProgressTab({
       {/* ═══ SECTION 6.5 — ANALYSE IA ═══ */}
       <div style={{ scrollMarginTop: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>ANALYSE IA</span>
+          <span style={cardTitleAbove}>{t('tab.aiSection')}</span>
           <div style={titleLineStyle} />
           <span style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.goldContainer}1a`, border: `1px solid ${colors.goldRule}`, borderRadius: 999, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
             <Sparkles size={8} /> BETA
@@ -754,7 +754,7 @@ export default function ProgressTab({
                 return (
                   <button onClick={runBodyAnalysis} disabled={!ready || bodyAnalysisLoading}
                     style={{ width: '100%', padding: 14, borderRadius: radii.button, border: 'none', cursor: ready && !bodyAnalysisLoading ? 'pointer' : 'default', background: ready ? colors.gold : colors.surfaceHigh, color: ready ? '#000' : colors.textMuted, fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, opacity: ready && !bodyAnalysisLoading ? 1 : 0.5 }}>
-                    {bodyAnalysisLoading ? 'Analyse en cours...' : 'LANCER L\'ANALYSE IA'}
+                    {bodyAnalysisLoading ? t('tab.analyzing') : t('tab.launchAi')}
                   </button>
                 )
               })()}
@@ -769,14 +769,14 @@ export default function ProgressTab({
           <button onClick={() => setShowBodyUpload(true)} style={{ flex: 1, background: `linear-gradient(135deg, ${colors.goldBorder}, ${colors.goldDim})`, border: `1px solid ${colors.goldRule}`, borderRadius: 14, padding: 14, cursor: 'pointer', textAlign: 'left' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <Camera size={14} color={colors.gold} />
-              <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.08em' }}>NOUVELLE ANALYSE</span>
+              <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.08em' }}>{t('tab.newAnalysis')}</span>
             </div>
             <div style={{ ...mutedStyle, fontSize: 8 }}>{t('tab.upload3Short')}</div>
           </button>
           <button onClick={() => setModal('messages')} style={{ ...cardStyle, flex: 1, borderRadius: 14, padding: 14, cursor: 'pointer', textAlign: 'left', border: `1px solid ${colors.goldBorder}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <Send size={14} color='rgba(255,255,255,0.4)' />
-              <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em' }}>VOIR UN PRO</span>
+              <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em' }}>{t('tab.seePro')}</span>
             </div>
             <div style={{ ...mutedStyle, fontSize: 8 }}>{t('tab.contactCoach')}</div>
           </button>
@@ -786,7 +786,7 @@ export default function ProgressTab({
       {/* ═══ SECTION 7 — MENSURATIONS ═══ */}
       <div ref={sectionRefs.mensurations} style={{ scrollMarginTop: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>MENSURATIONS</span>
+          <span style={cardTitleAbove}>{t('tab.measurementsSection')}</span>
           <div style={titleLineStyle} />
         </div>
         <div style={{ ...cardStyle, padding: 16, marginBottom: 12 }}>
@@ -822,7 +822,7 @@ export default function ProgressTab({
       {/* ═══ SECTION 7.5 — MON BIEN-ÊTRE ═══ */}
       <div ref={sectionRefs.bienetre} style={{ scrollMarginTop: 20, marginTop: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>MON BIEN-ETRE</span>
+          <span style={cardTitleAbove}>{t('tab.myWellness')}</span>
           <div style={titleLineStyle} />
         </div>
         {/* Period selector */}
@@ -847,7 +847,7 @@ export default function ProgressTab({
             const d = new Date(Date.now() - i * 86400000)
             const ds = d.toISOString().split('T')[0]
             const c = checkinData.find((x: any) => x.date === ds)
-            chartData.push({ date: ds, day: d.toLocaleDateString('fr-FR', { weekday: 'short' }), mood: c ? moodScore(c.mood) : null, sleep: c?.sleep_hours || null, note: c?.note })
+            chartData.push({ date: ds, day: d.toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { weekday: 'short' }), mood: c ? moodScore(c.mood) : null, sleep: c?.sleep_hours || null, note: c?.note })
           }
           // Stats
           const moods = checkinData.filter((c: any) => c.mood).map((c: any) => moodScore(c.mood)).filter(Boolean)
@@ -876,7 +876,7 @@ export default function ProgressTab({
             <>
               {/* Mood chart */}
               <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
-                <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>HUMEUR</div>
+                <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>{t('tab.mood')}</div>
                 <div style={{ height: 160 }}>
                   <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <AreaChart data={chartData}>
@@ -885,7 +885,7 @@ export default function ProgressTab({
                       <XAxis dataKey="day" tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} />
                       <YAxis domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} width={20} tickFormatter={(v: number) => ['', '😴', '😐', '💪', '🔥', '⚡'][v] || ''} />
                       <Tooltip content={<ChartTip />} />
-                      <Area type="monotone" dataKey="mood" name="Humeur" stroke={colors.gold} strokeWidth={2.5} fill="url(#moodGrad)" dot={{ fill: colors.gold, r: 4, strokeWidth: 0 }} connectNulls />
+                      <Area type="monotone" dataKey="mood" name={t('tab.moodChart')} stroke={colors.gold} strokeWidth={2.5} fill="url(#moodGrad)" dot={{ fill: colors.gold, r: 4, strokeWidth: 0 }} connectNulls />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -894,8 +894,8 @@ export default function ProgressTab({
               {/* Sleep chart */}
               <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase' }}>SOMMEIL</span>
-                  <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>Moy. {sleepAvg}h</span>
+                  <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{t('tab.sleep')}</span>
+                  <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>{t('tab.sleepAvg', { avg: sleepAvg })}</span>
                 </div>
                 <div style={{ height: 140 }}>
                   <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -905,7 +905,7 @@ export default function ProgressTab({
                       <YAxis domain={[0, 12]} tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} width={20} />
                       <Tooltip content={<ChartTip />} />
                       <ReferenceLine y={8} stroke={colors.gold} strokeDasharray="6 4" strokeWidth={1} />
-                      <Bar dataKey="sleep" name="Sommeil (h)" fill={colors.gold} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="sleep" name={t('tab.sleepChart')} fill={colors.gold} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -936,7 +936,7 @@ export default function ProgressTab({
       {/* ═══ SECTION 8 — GRAPHIQUES ═══ */}
       <div ref={sectionRefs.graphiques} style={{ scrollMarginTop: 20, marginTop: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>GRAPHIQUES</span>
+          <span style={cardTitleAbove}>{t('tab.charts')}</span>
           <div style={titleLineStyle} />
         </div>
         <AnalyticsSection
@@ -982,7 +982,7 @@ export default function ProgressTab({
           color: colors.textMuted, fontFamily: fonts.headline, fontSize: 11, fontWeight: 700,
           letterSpacing: '0.08em', cursor: 'pointer', textTransform: 'uppercase' as const,
         }}>
-          <Download size={14} /> EXPORTER MES DONNÉES (.XLSX)
+          <Download size={14} /> {t('tab.exportData')}
         </button>
       )}
 
@@ -1023,7 +1023,7 @@ export default function ProgressTab({
                 <button onClick={handleAutoAlign} disabled={isAligning}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: isAligning ? '#222' : `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: isAligning ? colors.textMuted : '#0D0B08', border: 'none', borderRadius: 10, cursor: isAligning ? 'default' : 'pointer', fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
                   {isAligning ? (
-                    <><div style={{ width: 12, height: 12, border: '2px solid #555', borderTopColor: colors.gold, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />ANALYSE...</>
+                    <><div style={{ width: 12, height: 12, border: '2px solid #555', borderTopColor: colors.gold, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />{t('tab.analyzingShort')}</>
                   ) : (
                     <><Sparkles size={12} />ALIGNER</>
                   )}
@@ -1103,7 +1103,7 @@ export default function ProgressTab({
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, overflowY: 'auto' }}>
           <div style={{ background: colors.surface, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', marginTop: 60, minHeight: 'calc(100vh - 60px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h3 style={{ ...titleStyle, fontSize: 18, margin: 0 }}>MES MENSURATIONS</h3>
+              <h3 style={{ ...titleStyle, fontSize: 18, margin: 0 }}>{t('tab.myMeasurements')}</h3>
               <button onClick={() => { setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }) }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>

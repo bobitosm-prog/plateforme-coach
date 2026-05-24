@@ -1678,7 +1678,29 @@
         "hips": "Hanches",
         "arms": "Biceps",
         "body_fat": "% MG"
-      }
+      },
+      "transformation": "TRANSFORMATION",
+      "aiSection": "ANALYSE IA",
+      "analyzing": "Analyse en cours...",
+      "launchAi": "LANCER L'ANALYSE IA",
+      "analyzingShort": "ANALYSE...",
+      "newAnalysis": "NOUVELLE ANALYSE",
+      "seePro": "VOIR UN PRO",
+      "measurementsSection": "MENSURATIONS",
+      "myWellness": "MON BIEN-ETRE",
+      "mood": "HUMEUR",
+      "moodChart": "Humeur",
+      "sleep": "SOMMEIL",
+      "sleepAvg": "Moy. {avg}h",
+      "sleepChart": "Sommeil (h)",
+      "exportData": "EXPORTER MES DONNÉES (.XLSX)",
+      "myMeasurements": "MES MENSURATIONS",
+      "personalRecords": "RECORDS PERSONNELS",
+      "charts": "GRAPHIQUES",
+      "analysisStep0": "Analyse en cours...",
+      "analysisStep1": "Détection des groupes musculaires...",
+      "analysisStep2": "Calcul des proportions...",
+      "analysisStep3": "Génération du rapport..."
     },
     "bodyAssessment": {
       "title": "BILAN CORPOREL COMPLET",
@@ -1806,7 +1828,13 @@
       "prefsTitle": "Preferences nutrition",
       "futureDate": "Date future indisponible",
       "searchMeal": "Rechercher un repas...",
-      "scanMeal": "SCANNER UN REPAS"
+      "scanMeal": "SCANNER UN REPAS",
+      "shoppingList": "Liste de courses",
+      "recommended": "Recommandé : {kcal} kcal · P:{p}g · G:{c}g · L:{f}g",
+      "takePhoto": "PRENDRE UNE PHOTO",
+      "orGallery": "ou choisir depuis la galerie",
+      "retake": "REPRENDRE",
+      "addAll": "AJOUTER TOUT"
     },
     "macrosShort": {
       "p": "P",
