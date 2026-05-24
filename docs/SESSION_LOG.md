@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : e4f11d5
+- **HEAD** : afc3a96
 - **Working tree** : clean
-- **Tâche en cours** : Sprint 6 i18n — Phase 3a closed (Training small), décision Phase 3b/4/5
+- **Tâche en cours** : Sprint 6 i18n — Phase 3b done (WorkoutSession), en route Phase 3c
 
 ---
 
@@ -54,6 +54,7 @@ Plan 5 phases proposé :
 | 1 | d3713b4 | feat(i18n): badges full coverage FR/EN/DE (64 keys total) |
 | 2 | f3bb247 | feat(i18n): HomeTab full coverage FR/EN/DE (91 keys) |
 | 3 | e4f11d5 | feat(i18n): Training small components FR/EN/DE (63 keys, 5 components) |
+| 4 | afc3a96 | feat(i18n): WorkoutSession 100% FR/EN/DE (91 keys) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -106,6 +107,34 @@ Plan 5 phases proposé :
 **Pattern technique** :
 - buildPhases() déplacée de module-level vers inline dans le composant pour
   accéder au hook useTranslations. À reproduire pour autres helpers similaires.
+
+### Phase 3b — WorkoutSession (cœur de l'app)
+
+**Réalisé** :
+- WorkoutSession.tsx : 1574L, 0% → 100% i18n
+- CustomBuilder (sub-component interne) : wiré séparément
+- 161 t() calls, 91 clés ajoutées sous training_tab.ws.*
+- Sous-namespaces : chrome, exercise, restTimer, dialogs, done, empty, customBuilder
+- ICU plurals : addExercises, deleteModal.withSets, done.setsCount
+- Locale-aware dates (récap fin séance)
+
+**Zones critiques 100% préservées** :
+- Web Audio API : scheduleRestPeriodSounds, cancelScheduledSounds intacts
+  (fix bug audio du 23 mai préservé)
+- skipRest() cancel les sons schedulés (logique métier critique préservée)
+- DB FR comparisons : WORKOUT_MUSCLE_FILTERS (DB muscle_group),
+  difficulty === 'debutant'/'intermediaire', 'Séance libre' (custom_programs.name),
+  equipment === 'Barre' (DB equipment)
+
+**Découverte tech debt** :
+- Incohérence vocab i18n repo-wide : "série" / "SERIE" / "sets" / "SETS" / "Séries"
+  coexistent dans différents namespaces. À harmoniser dans un sprint "i18n vocab
+  consolidation" post-launch (estim 8-10 fichiers).
+- "Sets" et "Volume" laissés hardcodés dans WorkoutSession (anglicismes brand acceptés).
+
+**Pattern technique** :
+- Sub-component interne (CustomBuilder dans WorkoutSession) : useTranslations propre
+  plutôt que t() via props. Plus propre quand sub-comp < 200L.
 
 ---
 
