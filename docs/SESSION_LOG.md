@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : b723df4
+- **HEAD** : b7acd52
 - **Working tree** : clean
-- **Tâche en cours** : Sprint i18n closure — F1b REVERTED (régression boot), F1b-v2 à refaire avec pattern correct, suite F2 + F3
+- **Tâche en cours** : Sprint i18n closure — F1b-v2 done (nav refacto sub-component), suite F2 (format dates + Recharts) puis F3 (migration DB exos)
 
 ---
 
@@ -62,6 +62,7 @@ Plan 5 phases proposé :
 | 9 | 58a5b42 | fix(i18n): NutritionTab + ProgressTab residual FR (28 keys) |
 | 10 | 3ed8fa4 | fix(i18n): bottom nav + headers retour + MeasureModal (8 keys) |
 | 11 | b723df4 | Revert "fix(i18n): bottom nav + headers retour + MeasureModal" |
+| 12 | b7acd52 | fix(i18n): bottom nav + headers retour + MeasureModal v2 (8 keys) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -293,6 +294,34 @@ de ce provider.
 - À reprendre en F1b-v2 : pour le bottom nav et "Compte" hardcodé,
   refacto avec un sous-composant <BottomNav /> qui contient le hook,
   rendu après le provider.
+
+### F1b-v2 — Nav + headers retour + MeasureModal (DONE après revert)
+
+**Approche corrigée** :
+- Extraction d'un sous-composant `<NavAccountLabel />` qui contient le hook
+  useTranslations
+- Rendu DANS le JSX de CoachApp, donc après le <ClientIntlProvider>
+- CoachApp() racine n'appelle PAS useTranslations directement
+
+**Réalisé** :
+- app/page.tsx : nav label "Compte" via <NavAccountLabel /> sub-component
+- MessagesTab.tsx + ProfileTab.tsx : header retour i18n
+- MeasureModal.tsx : 100% i18n + locale-aware dates
+- 8 clés ajoutées
+- Total i18n keys : 1628 → 1636
+
+**Test boot local validé** :
+- npm run dev → ready
+- GET / 200, render OK
+- Logs : "app ok" confirmé par Marco
+
+**Apprentissage senior** :
+- Pour tout composant racine qui monte un Provider : NE PAS appeler les
+  hooks de ce provider DANS ce composant racine. Solution = extraction
+  sous-composant rendu après le mount.
+- Test boot local OBLIGATOIRE avant commit pour tout fichier qui touche
+  app/page.tsx (composant racine). Le compile silent OK ne garantit pas
+  le runtime OK.
 
 ---
 
