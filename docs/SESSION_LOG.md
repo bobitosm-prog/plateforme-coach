@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : f3bb247
+- **HEAD** : e4f11d5
 - **Working tree** : clean
-- **Tâche en cours** : Sprint 6 i18n — Phase 2+2.5 done, en pause/Phase 3
+- **Tâche en cours** : Sprint 6 i18n — Phase 3a closed (Training small), décision Phase 3b/4/5
 
 ---
 
@@ -53,6 +53,7 @@ Plan 5 phases proposé :
 |---|---|---|
 | 1 | d3713b4 | feat(i18n): badges full coverage FR/EN/DE (64 keys total) |
 | 2 | f3bb247 | feat(i18n): HomeTab full coverage FR/EN/DE (91 keys) |
+| 3 | e4f11d5 | feat(i18n): Training small components FR/EN/DE (63 keys, 5 components) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -76,6 +77,35 @@ Plan 5 phases proposé :
 
 **Hors scope reporté** :
 - "Séance libre" L.438 → vient du flow Training, traité Phase 3
+
+### Phase 3a — Training small components (5 composants)
+
+**Réalisé** :
+- TempoModal.tsx + TempoExecutor.tsx : 100% i18n (composants neufs 22-23 mai
+  qui n'avaient pas été i18n-isés à la création, dette corrigée)
+- ExerciseLibrarySection.tsx : 100% i18n (bibliothèque exos + alternatives)
+- SessionDetailModal.tsx : 100% i18n
+- TrainingTab.tsx : calendar widget wired, date-fns locale-aware
+- 63 clés ajoutées sous sous-namespaces training_tab.{tempo,library,sessionDetail,calendar}
+- Convention namespace : "training_tab" pour composants app vs "training" pour landing
+
+**Découverte importante** :
+- Le grep ">[A-Z]" sur JSX ne détecte PAS les strings dans objets JS
+  (const PHASES = [{ label: 'EXCENTRIQUE' }]). Pattern à corriger dans les
+  prompts futurs : ajouter systématiquement grep "label: '[A-Z]" et
+  "description: '[A-Z]" pour les const arrays.
+- 3e fois ce sprint qu'on découvre une dette résiduelle qui demande un
+  micro-batch correctif (Phase 1.5, Phase 2.5, Phase 3a-3) — pattern
+  à anticiper pour Phase 3b/3c/4/5.
+
+**DB FR comparisons préservées intentionnellement** :
+- ws.title === 'Repos' (L.891), day.name === 'Repos' (L.677, 1070) → comparaisons
+  sur valeurs DB stockées en FR, à NE PAS traduire (sinon casse logique métier)
+- 'Séance libre' en day_name = DB value, equipment emojis = DB values
+
+**Pattern technique** :
+- buildPhases() déplacée de module-level vers inline dans le composant pour
+  accéder au hook useTranslations. À reproduire pour autres helpers similaires.
 
 ---
 
