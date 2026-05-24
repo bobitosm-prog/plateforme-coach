@@ -36,6 +36,7 @@ import {
   MEAL_TYPES,
 } from '../lib/design-tokens'
 import { useClientPermissions } from '../lib/use-client-permissions'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
@@ -44,6 +45,7 @@ import { checkAndShowReminder } from '../lib/notifications'
 
 export default function CoachApp() {
   const h = useClientDashboard()
+  const tc = useTranslations('common')
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const [isDesktop, setIsDesktop] = React.useState(false)
   const paymentHandled = React.useRef(false)
@@ -171,7 +173,7 @@ export default function CoachApp() {
             { id: 'training', icon: Dumbbell, label: 'Training' },
             { id: 'nutrition', icon: UtensilsCrossed, label: 'Nutrition' },
             { id: 'progress', icon: TrendingUp, label: 'Analytics' },
-            { id: 'compte', icon: User, label: 'Compte' },
+            { id: 'compte', icon: User, label: tc('navAccount') },
           ] as const).map(({ id, icon: Icon, label }) => {
             const active = h.activeTab === id
             const badge = id === 'compte' && h.unreadCount > 0
@@ -425,7 +427,7 @@ export default function CoachApp() {
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
           { id: 'nutrition' as Tab, Icon: UtensilsCrossed, label: 'Nutrition' },
           { id: 'progress' as Tab, Icon: TrendingUp, label: 'Analytics' },
-          { id: 'compte' as Tab, Icon: User, label: 'Compte' },
+          { id: 'compte' as Tab, Icon: User, label: tc('navAccount') },
         ]).map(({ id, Icon, label }) => {
           const active = h.activeTab === id
           return (

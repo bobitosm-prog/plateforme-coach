@@ -167,7 +167,7 @@ export default function ProfileTab({
 
       {/* Back button */}
       {onBack && (
-        <button onClick={onBack} aria-label="Retour a Compte" style={{ padding: '8px 0', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: colors.gold }}>
+        <button onClick={onBack} aria-label={t('badges.backToAccount')} style={{ padding: '8px 0', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: colors.gold }}>
           <ArrowLeft size={18} />
           <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>{t('badges.backToAccount')}</span>
         </button>
