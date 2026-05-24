@@ -2,6 +2,57 @@
 
 Historique des sessions de developpement marathon.
 
+## ETAT ACTUEL
+
+- **Date** : 2026-05-24
+- **HEAD** : d3713b4
+- **Working tree** : clean
+- **Tâche en cours** : Sprint 6 i18n — Phase 1+1.5 done, en route Phase 2 HomeTab L2
+
+---
+
+## 2026-05-24 — Sprint 6 i18n Phase 1+1.5 (Badges full coverage)
+
+**Durée** : ~1h
+**Branche** : `main`
+
+### Réalisé
+
+- Audit terrain Sprint 6 : 368 clés totales estimées sur ~14 fichiers
+- Phase 1 + 1.5 consolidées en un commit (BadgesModal + BadgeCelebration + lib/check-badges.ts)
+- Refacto architecture Option C : DB stocke keys, libellés via t()
+- 64 clés ajoutées (20 badges × name+desc + 7 levels + 17 chrome modal)
+- Total i18n keys : 1052 → 1116 (+6.1%)
+- Progression i18n globale : ~48% → ~52%
+
+### Décisions architecturales
+
+- DB writes badges/levels stockent désormais les keys (streak_7, beginner), pas les libellés FR
+- Évite la dette rétroactive : pas besoin de migrer la DB le jour où on ajoute une nouvelle langue
+- Le mix FR/EN partiel sur un même écran est pire qu'un écran 100% FR — règle à appliquer pour les phases suivantes (finir un composant d'un coup, jamais "à moitié")
+
+### Tech debt notée
+
+- ProfileTab.tsx utilise encore b.name direct (l.505) → Phase 5
+- Badges déjà attribués au compte test stockent les anciens libellés FR (impact zéro pré-launch, 0 client payant)
+- TempoModal + TempoExecutor créés 22-23 mai sans i18n → Phase 3a
+- 4 tabs en i18n partiel (HomeTab 64%, TrainingTab 68%, NutritionTab 45%, ProgressTab 37%) → cible Phase 2-5
+
+### Stratégie session
+
+Plan 5 phases proposé :
+- Phase 1+1.5 (Badges) : DONE
+- Phase 2 : HomeTab L2 (~33 clés)
+- Phase 3 : Training a/b/c (~195 clés)
+- Phase 4 : Nutrition L2 (~35 clés)
+- Phase 5 : Progress + AccountTab (~90 clés)
+
+### Commits
+
+| # | Hash | Description |
+|---|---|---|
+| 1 | d3713b4 | feat(i18n): badges full coverage FR/EN/DE (64 keys total) |
+
 ---
 
 ## 2026-05-23 — Phase A merge prod + Phase B Tempo Executor + Fix bug audio
