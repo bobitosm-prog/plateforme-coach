@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : b536d38
+- **HEAD** : 0b3bf36
 - **Working tree** : clean
-- **Tâche en cours** : Sprint 6 i18n — cluster Training closed, suite Phase 5
+- **Tâche en cours** : Sprint 6 i18n — Phase 5a done (Progress), suite Phase 5b AccountTab
 
 ---
 
@@ -56,6 +56,7 @@ Plan 5 phases proposé :
 | 3 | e4f11d5 | feat(i18n): Training small components FR/EN/DE (63 keys, 5 components) |
 | 4 | afc3a96 | feat(i18n): WorkoutSession 100% FR/EN/DE (91 keys) |
 | 5 | b536d38 | feat(i18n): ProgramBuilder 100% FR/EN/DE (94 keys) |
+| 6 | 0b3bf36 | feat(i18n): Progress L2/L3 FR/EN/DE (98 keys, 3 components) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -152,6 +153,20 @@ Plan 5 phases proposé :
 **Cluster Training CLOSED** :
 - 6 composants 100% i18n
 - 248 clés totales sur cluster training_tab
+
+### Phase 5a — Progress L2/L3 (3 composants)
+
+**Réalisé** :
+- ProgressTab.tsx : 37% → 100% i18n (107 t() calls)
+- BodyAssessment.tsx : 0% → 100% i18n (23 t() calls)
+- AbsCalculator.tsx : 0% → 100% i18n (31 t() calls)
+- 98 clés sous progress.{tab, bodyAssessment, absCalc}
+
+**Strings préservées intentionnellement** :
+- BodyAssessment SECTIONS L.18-23 : titres utilisés comme regex markers
+  pour parser la réponse AI (VUE D'ENSEMBLE, etc.)
+- AbsCalculator L.96 : objective_mode values ('seche'/'bulk'/'maintien')
+  envoyés au backend API
 
 ---
 
