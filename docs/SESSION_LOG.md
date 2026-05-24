@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : d3713b4
+- **HEAD** : f3bb247
 - **Working tree** : clean
-- **Tâche en cours** : Sprint 6 i18n — Phase 1+1.5 done, en route Phase 2 HomeTab L2
+- **Tâche en cours** : Sprint 6 i18n — Phase 2+2.5 done, en pause/Phase 3
 
 ---
 
@@ -52,6 +52,30 @@ Plan 5 phases proposé :
 | # | Hash | Description |
 |---|---|---|
 | 1 | d3713b4 | feat(i18n): badges full coverage FR/EN/DE (64 keys total) |
+| 2 | f3bb247 | feat(i18n): HomeTab full coverage FR/EN/DE (91 keys) |
+
+### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
+
+**Réalisé** :
+- HomeTab.tsx 100% i18n (auparavant 64% partiel)
+- HomeHeader.tsx, NutritionCard.tsx, RecoveryModal.tsx → 100% i18n
+- QUOTES const supprimée (53 lignes), wirée via t.raw('home.quotes.<cat>')
+- Locale-aware dates (fr-CH / en-US / de-CH)
+- 25 nouvelles quotes ajoutées et traduites pour atteindre parité 15/15/15
+- ICU plurals : streakDays, exerciseCount
+- +91 clés (65 P2 + 26 P2.5)
+
+**Bug latent fixé** :
+- Sprint 5J avait ajouté `home.quotes` EN/DE dans messages/*.json sans
+  wirer getDailyQuote(). 6 jours de prod avec quote FR forcée pour tous
+  les users — corrigé.
+
+**Apprentissage** :
+- Traduction sans wiring = dette latente invisible. Toute clé ajoutée
+  dans messages doit avoir au moins un consommateur dans le même commit.
+
+**Hors scope reporté** :
+- "Séance libre" L.438 → vient du flow Training, traité Phase 3
 
 ---
 
