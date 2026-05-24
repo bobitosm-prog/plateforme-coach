@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { AlertTriangle, CheckCircle, Target, Loader2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { updateProfile } from '../../../lib/profile-service'
 
@@ -26,6 +27,7 @@ interface AbsCalculatorProps {
 }
 
 export default function AbsCalculator({ currentWeight, height, bodyFat, deficit, objective, session, supabase, profile }: AbsCalculatorProps) {
+  const t = useTranslations('progress.absCalc')
   const [estimatedBf, setEstimatedBf] = useState(22)
   const [deficitSlider, setDeficitSlider] = useState(300)
   const [applying, setApplying] = useState(false)
@@ -80,7 +82,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
 
     setApplied(true)
     setApplying(false)
-    toast.success(`Objectif mis à jour → ${newCalories} kcal/jour`)
+    toast.success(t('goalUpdated', { calories: newCalories }))
 
     // Regenerate meal plan
     setRegenerating(true)
@@ -129,10 +131,10 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
           { client_id: session.user.id, plan, created_at: new Date().toISOString() },
           { onConflict: 'client_id' }
         )
-        toast.success('Plan alimentaire mis à jour !')
+        toast.success(t('mealPlanUpdated'))
       }
     } catch {
-      toast.error('Erreur lors de la mise à jour du plan')
+      toast.error(t('mealPlanError'))
     }
     setRegenerating(false)
   }
@@ -142,7 +144,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         <Target size={18} color={GOLD} />
         <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-          ALGORITHME PRÉDICTIF
+          {t('title')}
         </span>
       </div>
 
@@ -150,7 +152,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
       {bodyFat == null && (
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>Estime ton taux de graisse depuis ta photo</span>
+            <span style={{ fontSize: '0.72rem', color: TEXT_MUTED }}>{t('estimateBf')}</span>
             <span style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 700, color: GOLD }}>{estimatedBf}%</span>
           </div>
           <input
@@ -159,8 +161,8 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
             style={{ width: '100%', accentColor: GOLD, height: 6 }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: TEXT_MUTED, marginTop: 4 }}>
-            <span>10% (très sec)</span>
-            <span>25% (moyen)</span>
+            <span>{t('veryLean')}</span>
+            <span>{t('average')}</span>
             <span>40%</span>
           </div>
         </div>
@@ -169,10 +171,10 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
       {/* Metric cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 16 }}>
         {[
-          { label: 'IMC', value: bmi.toFixed(1), unit: '' },
-          { label: 'Masse grasse', value: fatMass.toFixed(1), unit: 'kg' },
-          { label: 'Masse sèche', value: leanMass.toFixed(1), unit: 'kg' },
-          { label: 'Perte/semaine', value: weeklyLoss > 0 ? weeklyLoss.toFixed(2) : '—', unit: weeklyLoss > 0 ? 'kg' : '' },
+          { label: t('bmi'), value: bmi.toFixed(1), unit: '' },
+          { label: t('fatMass'), value: fatMass.toFixed(1), unit: 'kg' },
+          { label: t('leanMass'), value: leanMass.toFixed(1), unit: 'kg' },
+          { label: t('weeklyLoss'), value: weeklyLoss > 0 ? weeklyLoss.toFixed(2) : '—', unit: weeklyLoss > 0 ? 'kg' : '' },
         ].map(({ label, value, unit }) => (
           <div key={label} style={{ background: BG_BASE, borderRadius: 12, padding: '10px 14px', textAlign: 'center' }}>
             <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{label}</div>
@@ -188,7 +190,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
           <CheckCircle size={16} color={GREEN} />
           <span style={{ fontSize: '0.78rem', color: GREEN, fontWeight: 600 }}>
-            Tes abdos sont déjà visibles à {bf}% ! Continue en maintenance ou vise 12% pour plus de définition.
+            {t('alreadyVisible', { bf })}
           </span>
         </div>
       )}
@@ -199,7 +201,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 16 }}>
             <AlertTriangle size={16} color="#FBBF24" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: '0.78rem', color: '#FBBF24', lineHeight: 1.5 }}>
-              Tu es actuellement en {deficit > 0 ? 'surplus' : 'maintenance'} calorique. Pour voir tes abdos, passe en déficit.
+              {t('surplusWarning', { mode: deficit > 0 ? t('surplus') : t('maintenance') })}
             </span>
           </div>
 
@@ -207,7 +209,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
           {canApply && (
             <div style={{ background: BG_BASE, border: `1px solid ${GOLD}20`, borderRadius: 12, padding: 16, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontWeight: 600 }}>Déficit quotidien</span>
+                <span style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontWeight: 600 }}>{t('dailyDeficit')}</span>
                 <span style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', color: GOLD }}>{deficitSlider} kcal</span>
               </div>
               <input
@@ -223,15 +225,15 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', color: TEXT_PRIMARY }}>{sliderCalories}</div>
-                  <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase' }}>kcal/jour</div>
+                  <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase' }}>{t('kcalDay')}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', color: TEXT_PRIMARY }}>{sliderWeeklyLoss.toFixed(1)} kg</div>
-                  <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase' }}>perte/sem</div>
+                  <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase' }}>{t('lossWeek')}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', color: TEXT_PRIMARY }}>{sliderWeeksTo15 ?? '—'} sem</div>
-                  <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase' }}>abdos visibles</div>
+                  <div style={{ fontSize: '0.58rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase' }}>{t('absVisible')}</div>
                 </div>
               </div>
 
@@ -249,13 +251,13 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
                 }}
               >
                 {regenerating ? (
-                  <><Loader2 size={16} className="animate-spin" /> Recalcul du plan alimentaire...</>
+                  <><Loader2 size={16} className="animate-spin" /> {t('recalculating')}</>
                 ) : applying ? (
-                  <><Loader2 size={16} className="animate-spin" /> Mise à jour...</>
+                  <><Loader2 size={16} className="animate-spin" /> {t('updating')}</>
                 ) : applied ? (
-                  'APPLIQUÉ'
+                  t('applied')
                 ) : (
-                  'APPLIQUER CE DÉFICIT'
+                  t('applyDeficit')
                 )}
               </button>
             </div>
@@ -268,7 +270,7 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
           <AlertTriangle size={16} color="#EF4444" style={{ flexShrink: 0, marginTop: 2 }} />
           <span style={{ fontSize: '0.78rem', color: '#EF4444', lineHeight: 1.5 }}>
-            Déficit trop agressif ({weeklyLoss.toFixed(1)} kg/semaine). Risque de perte musculaire. Vise max 0.5-0.7 kg/semaine.
+            {t('aggressiveWarning', { loss: weeklyLoss.toFixed(1) })}
           </span>
         </div>
       )}
@@ -277,8 +279,8 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
       {!alreadyVisible && weeklyLoss > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[
-            { label: 'Abdos visibles', bf: '15%', weeks: weeksTo15!, toLose: fatToLose15 },
-            { label: 'Abdos définis', bf: '12%', weeks: weeksTo12!, toLose: fatToLose12 },
+            { label: t('visibleAbs'), bf: '15%', weeks: weeksTo15!, toLose: fatToLose15 },
+            { label: t('definedAbs'), bf: '12%', weeks: weeksTo12!, toLose: fatToLose12 },
           ].map(({ label, bf: targetBf, weeks, toLose }) => {
             const months = Math.round(weeks / 4.33)
             return (
@@ -289,14 +291,14 @@ export default function AbsCalculator({ currentWeight, height, bodyFat, deficit,
                     <span style={{ fontSize: '0.7rem', color: TEXT_MUTED, marginLeft: 8 }}>({targetBf})</span>
                   </div>
                   <span style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY }}>
-                    {weeks} sem<span style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginLeft: 6 }}>≈ {months} mois</span>
+                    {t('weeks', { count: weeks })}<span style={{ fontSize: '0.72rem', color: TEXT_MUTED, marginLeft: 6 }}>{t('months', { count: months })}</span>
                   </span>
                 </div>
                 <div style={{ height: 4, background: '#222', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${Math.min(100, Math.max(5, ((bf - parseFloat(targetBf)) / bf) * 100))}%`, background: `linear-gradient(90deg, ${GOLD}, #D4AF37)`, borderRadius: 2 }} />
                 </div>
                 <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 4 }}>
-                  {toLose.toFixed(1)} kg de graisse à perdre · Poids cible : {(weight - toLose).toFixed(1)} kg
+                  {t('fatToLose', { fat: toLose.toFixed(1), target: (weight - toLose).toFixed(1) })}
                 </div>
               </div>
             )

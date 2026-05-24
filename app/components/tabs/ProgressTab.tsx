@@ -23,21 +23,21 @@ import AnalysisDisplay from './progress/AnalysisDisplay'
 import ActionBtn from './progress/ActionBtn'
 import { computeAlignment, type Alignment } from '../../../lib/photo-align'
 
-const MEASURE_FIELDS = [
-  { key: 'waist',  label: 'Tour de taille',   unit: 'cm', dbKey: 'waist' },
-  { key: 'hips',   label: 'Tour de hanches',   unit: 'cm', dbKey: 'hips' },
-  { key: 'chest',  label: 'Tour de poitrine',  unit: 'cm', dbKey: 'chest' },
-  { key: 'arms',   label: 'Tour de bras',      unit: 'cm', dbKey: 'left_arm' },
-  { key: 'thighs', label: 'Tour de cuisses',   unit: 'cm', dbKey: 'left_thigh' },
+const MEASURE_FIELDS_KEYS = [
+  { key: 'waist', labelKey: 'waist', unit: 'cm', dbKey: 'waist' },
+  { key: 'hips', labelKey: 'hips', unit: 'cm', dbKey: 'hips' },
+  { key: 'chest', labelKey: 'chest', unit: 'cm', dbKey: 'chest' },
+  { key: 'arms', labelKey: 'arms', unit: 'cm', dbKey: 'left_arm' },
+  { key: 'thighs', labelKey: 'thighs', unit: 'cm', dbKey: 'left_thigh' },
 ]
 
-const EVOLUTION_METRICS = [
-  { key: 'poids', label: 'Poids', unit: 'kg', source: 'weight' },
-  { key: 'waist', label: 'Taille', unit: 'cm', source: 'measure' },
-  { key: 'chest', label: 'Poitrine', unit: 'cm', source: 'measure' },
-  { key: 'hips', label: 'Hanches', unit: 'cm', source: 'measure' },
-  { key: 'left_arm', label: 'Biceps', unit: 'cm', source: 'measure' },
-  { key: 'body_fat', label: '% MG', unit: '%', source: 'measure' },
+const EVOLUTION_METRICS_KEYS = [
+  { key: 'poids', labelKey: 'poids', unit: 'kg', source: 'weight' },
+  { key: 'waist', labelKey: 'waist', unit: 'cm', source: 'measure' },
+  { key: 'chest', labelKey: 'chest', unit: 'cm', source: 'measure' },
+  { key: 'hips', labelKey: 'hips', unit: 'cm', source: 'measure' },
+  { key: 'left_arm', labelKey: 'arms', unit: 'cm', source: 'measure' },
+  { key: 'body_fat', labelKey: 'body_fat', unit: '%', source: 'measure' },
 ]
 
 type PillSection = 'poids' | 'records' | 'photos' | 'mensurations' | 'bienetre' | 'graphiques'
@@ -154,7 +154,7 @@ export default function ProgressTab({
     if (!file || !session?.user?.id) return
     const path = `${session.user.id}/body-${bodyUploadTarget}-${Date.now()}.jpg`
     const { error } = await supabase.storage.from('progress-photos').upload(path, file)
-    if (error) { toast.error('Erreur upload'); return }
+    if (error) { toast.error(t('tab.uploadError')); return }
     const { data: urlData } = await supabase.storage.from('progress-photos').createSignedUrl(path, 3600)
     if (urlData?.signedUrl) {
       setBodyUploadPhotos(prev => ({ ...prev, [bodyUploadTarget]: urlData.signedUrl }))
@@ -175,7 +175,7 @@ export default function ProgressTab({
       const diff = Date.now() - lastTime
       if (diff < 3600000) {
         const mins = Math.ceil((3600000 - diff) / 60000)
-        toast.error(`Tu pourras relancer une analyse dans ${mins} minute${mins > 1 ? 's' : ''}`)
+        toast.error(t('tab.analysisLimitMin', { mins }))
         return
       }
     }
@@ -204,11 +204,11 @@ export default function ProgressTab({
       setBodyAnalysis({ ...row, created_at: new Date().toISOString() })
       setShowBodyUpload(false)
       setBodyUploadPhotos({})
-      toast.success('Analyse terminée !')
+      toast.success(t('tab.analysisDone'))
     } catch (e: any) {
       const msg = e.message?.includes('requêtes') || e.message?.includes('429')
         ? 'L\'analyse est temporairement indisponible. Réessaye dans quelques minutes.'
-        : (e.message || 'Erreur lors de l\'analyse')
+        : (e.message || t('tab.analysisError'))
       toast.error(msg)
     } finally {
       setBodyAnalysisLoading(false)
@@ -265,7 +265,7 @@ export default function ProgressTab({
     try {
       // Use signed URLs for private bucket
       const photoUrl = signedUrls[photo.id]
-      if (!photoUrl) { toast.error('URL de la photo non disponible'); setExpandedAnalysis(null); setAnalyzingId(null); return }
+      if (!photoUrl) { toast.error(t('tab.photoUrlError')); setExpandedAnalysis(null); setAnalyzingId(null); return }
       const prevPhoto = progressPhotos[index + 1]
       const previousPhotoUrl = prevPhoto ? signedUrls[prevPhoto.id] : undefined
 
@@ -313,7 +313,7 @@ export default function ProgressTab({
       // Save to DB
       await supabase.from('progress_photos').update({ ai_analysis: data.analysis, ai_analyzed_at: new Date().toISOString() }).eq('id', photo.id)
     } catch (e: any) {
-      toast.error(e.message || 'Erreur lors de l\'analyse')
+      toast.error(e.message || t('tab.analysisError'))
       setExpandedAnalysis(null)
     } finally {
       setAnalyzingId(null)
@@ -325,8 +325,8 @@ export default function ProgressTab({
     setSharingId(photoId)
     const text = `📸 Analyse IA de ma photo de progression :\n\n${analyses[photoId]}`
     const { error } = await supabase.from('messages').insert({ sender_id: session.user.id, receiver_id: coachId, content: text })
-    if (error) toast.error('Erreur lors de l\'envoi')
-    else toast.success('Analyse partagée avec ton coach !')
+    if (error) toast.error(t('tab.shareError'))
+    else toast.success(t('tab.sharedWithCoach'))
     setSharingId(null)
   }
 
@@ -338,10 +338,10 @@ export default function ProgressTab({
     setSavingWeight(true)
     const poids = parseFloat(weightVal)
     const { error } = await supabase.from('weight_logs').upsert({ user_id: session.user.id, date: weightDate, poids }, { onConflict: 'user_id,date' })
-    if (error) { toast.error('Erreur lors de l\'enregistrement') }
+    if (error) { toast.error(t('tab.saveError')) }
     else {
       setLocalWeights(prev => [...prev, { date: weightDate, poids }])
-      toast.success('Poids enregistré !')
+      toast.success(t('tab.weightSaved'))
       setShowWeight(false); setWeightVal(''); setWeightDate(new Date().toISOString().split('T')[0])
       onRefresh()
     }
@@ -359,9 +359,9 @@ export default function ProgressTab({
     if (Object.keys(payload).length <= 2) return
     setSavingMeasure(true)
     const { error } = await supabase.from('body_measurements').insert(payload)
-    if (error) { toast.error('Erreur lors de l\'enregistrement') }
+    if (error) { toast.error(t('tab.saveError')) }
     else {
-      toast.success('Mensurations enregistrées !')
+      toast.success(t('tab.measureSaved'))
       setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }); setMeasureDate(new Date().toISOString().split('T')[0])
       onRefresh()
     }
@@ -380,7 +380,7 @@ export default function ProgressTab({
 
   // Evolution chart data
   const evoData = useMemo(() => {
-    const metric = EVOLUTION_METRICS.find(m => m.key === evoMetric)
+    const metric = EVOLUTION_METRICS_KEYS.find(m => m.key === evoMetric)
     if (!metric) return []
     if (metric.source === 'weight') {
       return mergedWeights.map(w => ({ date: w.date, value: w.poids }))
@@ -427,9 +427,9 @@ export default function ProgressTab({
       {/* ═══ SECTION 2 — 3 STATS RÉSUMÉ ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
         {[
-          { label: 'SÉANCES', value: wSessions.length },
+          { label: t('tab.sessions'), value: wSessions.length },
           { label: t('stats.volume'), value: totalVolume >= 1000 ? `${(totalVolume / 1000).toFixed(1)}T` : `${Math.round(totalVolume)}kg` },
-          { label: 'STREAK', value: streak },
+          { label: t('tab.streak'), value: streak },
         ].map(s => (
           <div key={s.label} style={{ ...cardStyle, padding: 14, textAlign: 'center' }}>
             <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>{s.value}</div>
@@ -478,7 +478,7 @@ export default function ProgressTab({
               <div style={{ fontFamily: fonts.headline, fontSize: 32, fontWeight: 800, color: colors.text, lineHeight: 1 }}>
                 {currentWeight || displayWeights[displayWeights.length - 1]?.poids || '—'}<span style={{ ...mutedStyle, fontSize: 14, marginLeft: 4 }}>KG</span>
               </div>
-              {goalWeight && <div style={{ ...mutedStyle, fontSize: 10, marginTop: 4 }}>Objectif : {goalWeight} kg</div>}
+              {goalWeight && <div style={{ ...mutedStyle, fontSize: 10, marginTop: 4 }}>{t('tab.goal', { weight: goalWeight })}</div>}
             </div>
             {weightDelta !== 0 && (
               <div style={{ padding: '4px 10px', borderRadius: 999, background: deltaPositive ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${deltaPositive ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}` }}>
@@ -515,7 +515,7 @@ export default function ProgressTab({
             <Scale size={20} color={colors.gold} />
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>Enregistrer mon poids</div>
+            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('tab.logWeight')}</div>
             <div style={{ ...mutedStyle, fontSize: 10 }}>{t('weight.addMeasure')}</div>
           </div>
           <ChevronRight size={16} color={colors.textDim} />
@@ -547,7 +547,7 @@ export default function ProgressTab({
           )) : (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
               <Star size={28} color={colors.textDim} style={{ marginBottom: 6 }} />
-              <p style={{ ...mutedStyle, fontSize: 12, margin: 0 }}>Bats ton premier record !</p>
+              <p style={{ ...mutedStyle, fontSize: 12, margin: 0 }}>{t('tab.firstRecord')}</p>
             </div>
           )}
         </div>
@@ -600,7 +600,7 @@ export default function ProgressTab({
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
             <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('photos.addPhoto')}</div>
-            <div style={{ ...mutedStyle, fontSize: 10 }}>Photo avant/après progression</div>
+            <div style={{ ...mutedStyle, fontSize: 10 }}>{t('tab.photoProgress')}</div>
           </div>
           <ChevronRight size={16} color={colors.textDim} />
         </button>
@@ -622,8 +622,8 @@ export default function ProgressTab({
               <User size={18} color={colors.gold} />
             </div>
             <div>
-              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>Analyse corporelle par IA</div>
-              <div style={{ ...mutedStyle, fontSize: 10 }}>Basée sur tes photos de progression</div>
+              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('tab.aiAnalysis')}</div>
+              <div style={{ ...mutedStyle, fontSize: 10 }}>{t('tab.aiAnalysisDesc')}</div>
             </div>
           </div>
 
@@ -651,12 +651,12 @@ export default function ProgressTab({
                 <div style={{ background: colors.goldDim, borderRadius: 12, padding: 14 }}>
                   <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>MASSE GRASSE</div>
                   <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>~{bodyAnalysis.body_fat_estimate}%</div>
-                  <div style={{ ...mutedStyle, fontSize: 9 }}>Estimation IA</div>
+                  <div style={{ ...mutedStyle, fontSize: 9 }}>{t('tab.aiEstimate')}</div>
                 </div>
                 <div style={{ background: colors.goldDim, borderRadius: 12, padding: 14 }}>
                   <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>MASSE MAIGRE</div>
                   <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>~{Math.round(bodyAnalysis.lean_mass_estimate)} KG</div>
-                  <div style={{ ...mutedStyle, fontSize: 9 }}>Estimation IA</div>
+                  <div style={{ ...mutedStyle, fontSize: 9 }}>{t('tab.aiEstimate')}</div>
                 </div>
               </div>
 
@@ -696,7 +696,7 @@ export default function ProgressTab({
                     </div>
                     <span style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.gold }}>{bodyAnalysis.symmetry_score}%</span>
                   </div>
-                  <div style={{ ...mutedStyle, fontSize: 9, marginTop: 4 }}>Score de symétrie gauche/droite</div>
+                  <div style={{ ...mutedStyle, fontSize: 9, marginTop: 4 }}>{t('tab.symmetryScore')}</div>
                 </div>
               )}
 
@@ -715,7 +715,7 @@ export default function ProgressTab({
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <User size={28} color={colors.textDim} style={{ marginBottom: 6 }} />
               <p style={{ ...mutedStyle, fontSize: 12, margin: '0 0 4px' }}>{t('photos.noAnalysis')}</p>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: 0 }}>Upload 3 photos pour lancer ta première analyse</p>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: 0 }}>{t('tab.upload3Photos')}</p>
             </div>
           )}
         </div>
@@ -759,7 +759,7 @@ export default function ProgressTab({
                 )
               })()}
               {/* d) Disclaimer */}
-              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', textAlign: 'center', margin: '12px 0 0' }}>Estimation IA — peut contenir des erreurs</p>
+              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', textAlign: 'center', margin: '12px 0 0' }}>{t('tab.aiDisclaimer')}</p>
             </div>
           </div>
         )}
@@ -771,14 +771,14 @@ export default function ProgressTab({
               <Camera size={14} color={colors.gold} />
               <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.08em' }}>NOUVELLE ANALYSE</span>
             </div>
-            <div style={{ ...mutedStyle, fontSize: 8 }}>Upload 3 photos</div>
+            <div style={{ ...mutedStyle, fontSize: 8 }}>{t('tab.upload3Short')}</div>
           </button>
           <button onClick={() => setModal('messages')} style={{ ...cardStyle, flex: 1, borderRadius: 14, padding: 14, cursor: 'pointer', textAlign: 'left', border: `1px solid ${colors.goldBorder}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <Send size={14} color='rgba(255,255,255,0.4)' />
               <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em' }}>VOIR UN PRO</span>
             </div>
-            <div style={{ ...mutedStyle, fontSize: 8 }}>Contacte ton coach</div>
+            <div style={{ ...mutedStyle, fontSize: 8 }}>{t('tab.contactCoach')}</div>
           </button>
         </div>
       </div>
@@ -813,7 +813,7 @@ export default function ProgressTab({
           </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
             <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('measurements.title')}</div>
-            <div style={{ ...mutedStyle, fontSize: 10 }}>Taille, hanches, poitrine, bras, cuisses</div>
+            <div style={{ ...mutedStyle, fontSize: 10 }}>{t('tab.measureDesc')}</div>
           </div>
           <ChevronRight size={16} color={colors.textDim} />
         </button>
@@ -870,7 +870,7 @@ export default function ProgressTab({
           return checkinData.length === 0 ? (
             <div style={{ ...cardStyle, padding: 32, textAlign: 'center' }}>
               <p style={{ ...bodyStyle, color: colors.textDim }}>{t('wellness.noCheckins')}</p>
-              <p style={{ ...mutedStyle, marginTop: 4 }}>Fais ton check-in quotidien dans l&apos;onglet Accueil.</p>
+              <p style={{ ...mutedStyle, marginTop: 4 }}>{t('tab.checkinHint')}</p>
             </div>
           ) : (
             <>
@@ -914,10 +914,10 @@ export default function ProgressTab({
               {/* Stats grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                 {[
-                  { label: 'MOOD MOYEN', value: `${moodAvg}/5`, icon: moodEmoji(topMood) },
-                  { label: 'SOMMEIL MOYEN', value: `${sleepAvg}h / 8h`, icon: '🌙' },
-                  { label: 'MOOD DOMINANT', value: topMood, icon: moodEmoji(topMood) },
-                  { label: 'CHECK-INS', value: `${checkinData.length}`, icon: '✓' },
+                  { label: t('tab.avgMood'), value: `${moodAvg}/5`, icon: moodEmoji(topMood) },
+                  { label: t('tab.avgSleep'), value: `${sleepAvg}h / 8h`, icon: '🌙' },
+                  { label: t('tab.topMood'), value: topMood, icon: moodEmoji(topMood) },
+                  { label: t('tab.checkins'), value: `${checkinData.length}`, icon: '✓' },
                 ].map(s => (
                   <div key={s.label} style={{ ...cardStyle, padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 10, background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{s.icon}</div>
@@ -974,7 +974,7 @@ export default function ProgressTab({
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(msData), 'Mensurations')
           }
           XLSX.writeFile(wb, 'MoovX_Mes_Donnees.xlsx')
-          toast.success('Fichier exporté ✓')
+          toast.success(t('tab.exportDone'))
         }} style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           width: '100%', padding: 14, borderRadius: radii.button,
@@ -1003,21 +1003,21 @@ export default function ProgressTab({
           setIsAligning(true); setAlignError(null)
           try {
             const result = await computeAlignment(beforeUrl, afterUrl)
-            if (!result) { setAlignError('Impossible de detecter la silhouette. Assure-toi que le corps est entierement visible.'); return }
+            if (!result) { setAlignError(t('tab.analysisError')); return }
             setAlignment(result)
             // Save to DB
             await supabase.from('progress_photos').update({ adjustments: result.after }).eq('id', afterPhoto.id)
-            toast.success('Photos alignees automatiquement')
+            toast.success(t('tab.photosAligned'))
           } catch (err) {
-            setAlignError('Erreur lors de l\'analyse. Reessaie.')
+            setAlignError(t('tab.analysisError'))
           } finally { setIsAligning(false) }
         }
         return (
           <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #222', flexShrink: 0 }}>
               <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
-                <span style={{ color: colors.error, fontWeight: 600 }}>Avant : {beforeDate}</span>
-                <span style={{ color: colors.success, fontWeight: 600 }}>Apres : {afterDate}</span>
+                <span style={{ color: colors.error, fontWeight: 600 }}>{t('tab.before')} : {beforeDate}</span>
+                <span style={{ color: colors.success, fontWeight: 600 }}>{t('tab.after')} : {afterDate}</span>
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <button onClick={handleAutoAlign} disabled={isAligning}
@@ -1043,7 +1043,7 @@ export default function ProgressTab({
               </div>
             )}
             <div style={{ display: 'flex', gap: 8, padding: '8px 16px', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
-              {[{ label: 'Avant', idx: 0 }, { label: 'Apres', idx: 1 }].map(({ label, idx }) => (
+              {[{ label: t('tab.before'), idx: 0 }, { label: t('tab.after'), idx: 1 }].map(({ label, idx }) => (
                 <div key={idx} style={{ flex: 1 }}>
                   <label style={{ fontSize: 9, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>{label}</label>
                   <select value={compareIdx[idx]} onChange={e => { const n = [...compareIdx] as [number, number]; n[idx] = Number(e.target.value); setCompareIdx(n); setAlignment(null) }}
@@ -1086,9 +1086,9 @@ export default function ProgressTab({
                 style={{ width: '100%', background: colors.background, border: `2px solid ${weightVal ? colors.gold : colors.goldBorder}`, borderRadius: radii.card, padding: '22px 56px 22px 20px', color: colors.text, fontSize: '3.2rem', fontFamily: fonts.headline, textAlign: 'center', outline: 'none', transition: 'border-color 200ms' }} />
               <span style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', color: colors.textMuted, fontSize: 16, fontWeight: 600 }}>kg</span>
             </div>
-            {weightHistory30.length > 0 && <p style={{ textAlign: 'center', ...bodyStyle, fontSize: 12, marginBottom: 20 }}>Précédent : {weightHistory30[weightHistory30.length - 1].poids} kg</p>}
+            {weightHistory30.length > 0 && <p style={{ textAlign: 'center', ...bodyStyle, fontSize: 12, marginBottom: 20 }}>{t('tab.previous', { weight: weightHistory30[weightHistory30.length - 1].poids })}</p>}
             <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', ...subtitleStyle, marginBottom: 8 }}>Date</label>
+              <label style={{ display: 'block', ...subtitleStyle, marginBottom: 8 }}>{t('tab.date')}</label>
               <input type="date" value={weightDate} onChange={e => setWeightDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
             </div>
             <button onClick={handleSaveWeight} disabled={!weightVal || savingWeight} style={{ width: '100%', background: weightVal && !savingWeight ? colors.gold : colors.surfaceHigh, color: weightVal && !savingWeight ? '#000' : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: weightVal && !savingWeight ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56 }}>
@@ -1107,9 +1107,9 @@ export default function ProgressTab({
               <button onClick={() => { setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }) }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-              {MEASURE_FIELDS.map(({ key, label, unit }) => (
+              {MEASURE_FIELDS_KEYS.map(({ key, labelKey, unit }) => (
                 <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.background, border: `1px solid ${measureForm[key] ? colors.gold + '60' : colors.goldBorder}`, borderRadius: radii.card, padding: '0 16px', minHeight: 56, transition: 'border-color 200ms' }}>
-                  <span style={{ ...bodyStyle, fontSize: 14, flex: 1 }}>{label}</span>
+                  <span style={{ ...bodyStyle, fontSize: 14, flex: 1 }}>{t(`tab.measureLabels.${labelKey}`)}</span>
                   <input type="number" inputMode="decimal" step="0.1" min="0" value={measureForm[key]} onChange={e => setMeasureForm(p => ({ ...p, [key]: e.target.value }))} placeholder="—"
                     style={{ background: 'transparent', color: colors.text, fontSize: 18, fontFamily: fonts.headline, textAlign: 'right', width: 72, outline: 'none', border: 'none', padding: '14px 0' }} />
                   <span style={{ ...mutedStyle, fontSize: 12, width: 28 }}>{unit}</span>
@@ -1117,7 +1117,7 @@ export default function ProgressTab({
               ))}
             </div>
             <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', ...subtitleStyle, marginBottom: 8 }}>Date</label>
+              <label style={{ display: 'block', ...subtitleStyle, marginBottom: 8 }}>{t('tab.date')}</label>
               <input type="date" value={measureDate} onChange={e => setMeasureDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
             </div>
             <button onClick={handleSaveMeasure} disabled={Object.values(measureForm).every(v => !v) || savingMeasure}

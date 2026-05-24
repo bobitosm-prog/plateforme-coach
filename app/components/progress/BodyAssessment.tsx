@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { colors, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_BODY } from '../../../lib/design-tokens'
 interface BodyAssessmentProps {
@@ -12,12 +13,7 @@ interface BodyAssessmentProps {
 
 type ViewType = 'front' | 'back' | 'side'
 
-const VIEW_CONFIG: { key: ViewType; label: string; instruction: string }[] = [
-  { key: 'front', label: 'FACE', instruction: 'Bras le long du corps, regard droit' },
-  { key: 'back', label: 'DOS', instruction: 'Même position, de dos' },
-  { key: 'side', label: 'LATÉRAL', instruction: 'Profil gauche, bras légèrement écartés' },
-]
-
+// AI response parsing markers — must stay FR to match AI-generated text
 const SECTIONS = [
   { title: 'VUE D\'ENSEMBLE', color: '#60A5FA', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)' },
   { title: 'GROUPES MUSCULAIRES DÉVELOPPÉS', color: '#34D399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
@@ -27,15 +23,14 @@ const SECTIONS = [
   { title: 'OBJECTIF 12 SEMAINES', color: '#D4A843', bg: colors.goldDim, border: colors.goldRule },
 ]
 
-const ANALYSIS_MESSAGES = [
-  'Analyse de ta posture...',
-  'Évaluation des groupes musculaires...',
-  'Détection des déséquilibres...',
-  'Comparaison avant/après...',
-  'Génération du rapport coach...',
-]
-
 export default function BodyAssessment({ supabase, session, profile, onClose, onRefresh }: BodyAssessmentProps) {
+  const t = useTranslations('progress.bodyAssessment')
+  const VIEW_CONFIG: { key: ViewType; label: string; instruction: string }[] = [
+    { key: 'front', label: t('viewFront'), instruction: t('instrFront') },
+    { key: 'back', label: t('viewBack'), instruction: t('instrBack') },
+    { key: 'side', label: t('viewSide'), instruction: t('instrSide') },
+  ]
+  const ANALYSIS_MESSAGES = [t('msg0'), t('msg1'), t('msg2'), t('msg3'), t('msg4')]
   const [phase, setPhase] = useState<1 | 2 | 3>(1)
   const [photos, setPhotos] = useState<{ front: string | null; back: string | null; side: string | null }>({ front: null, back: null, side: null })
   const [paths, setPaths] = useState<{ front: string | null; back: string | null; side: string | null }>({ front: null, back: null, side: null })
@@ -92,7 +87,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
       setPaths(prev => ({ ...prev, [viewType]: storagePath }))
     } catch (err: any) {
       console.error('Upload error:', err)
-      toast.error('Erreur lors de l\'upload')
+      toast.error(t('uploadError'))
     } finally {
       setUploading(prev => ({ ...prev, [viewType]: false }))
     }
@@ -119,13 +114,13 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur d\'analyse')
+      if (!res.ok) throw new Error(data.error || t('analysisError'))
 
       setAnalysisText(data.analysis)
       setPhase(3)
     } catch (err: any) {
       console.error('Analysis error:', err)
-      toast.error(err.message || 'Erreur lors de l\'analyse')
+      toast.error(err.message || t('analysisError'))
       setPhase(1)
     }
   }
@@ -156,7 +151,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
 
     // If parsing failed, show raw text
     if (results.length === 0) {
-      results.push({ title: 'ANALYSE', color: GOLD, bg: colors.goldDim, border: colors.goldRule, content: text })
+      results.push({ title: t('fallbackTitle'), color: GOLD, bg: colors.goldDim, border: colors.goldRule, content: text })
     }
 
     return results
@@ -174,12 +169,12 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
         ai_assessment: analysisText,
       })
       if (error) throw error
-      toast.success('Bilan sauvegardé !')
+      toast.success(t('savedToast'))
       onRefresh()
       onClose()
     } catch (err: any) {
       console.error('Save error:', err)
-      toast.error('Erreur lors de la sauvegarde')
+      toast.error(t('saveError'))
     } finally {
       setSaving(false)
     }
@@ -194,10 +189,10 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY, letterSpacing: '1px', margin: 0 }}>
-            BILAN CORPOREL COMPLET
+            {t('title')}
           </h2>
           <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, margin: '4px 0 0' }}>
-            3 angles pour une analyse précise comme avec un coach
+            {t('subtitle')}
           </p>
         </div>
         <button onClick={onClose} style={{
@@ -280,7 +275,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
               color: allPhotosReady ? '#000' : TEXT_DIM, fontWeight: 700,
             }}
           >
-            ANALYSER AVEC L&apos;IA
+            {t('analyze')}
           </button>
         </>
       )}
@@ -346,7 +341,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
                 color: '#000', fontWeight: 700,
               }}
             >
-              {saving ? 'SAUVEGARDE...' : 'SAUVEGARDER LE BILAN'}
+              {saving ? t('saving') : t('save')}
             </button>
             <button
               onClick={onClose}
@@ -357,7 +352,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
                 color: TEXT_MUTED,
               }}
             >
-              FERMER
+              {t('close')}
             </button>
           </div>
         </div>
