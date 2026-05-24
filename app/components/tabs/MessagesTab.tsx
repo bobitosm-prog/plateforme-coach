@@ -3,7 +3,6 @@ import { useRef, useEffect, useState } from 'react'
 import { format, isToday, isYesterday } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { MessageCircle, Send, Check, CheckCheck, ImageIcon, X, ArrowLeft } from 'lucide-react'
-import { useTranslations } from 'next-intl'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
@@ -35,7 +34,6 @@ function dateLabel(dateStr: string): string {
 export default function MessagesTab({
   session, coachId, supabase, messages, msgInput, setMsgInput, sendMessage, msgEndRef, isInvited = true, onBack,
 }: MessagesTabProps) {
-  const tc = useTranslations('common')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -102,9 +100,9 @@ export default function MessagesTab({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Back button */}
       {onBack && (
-        <button onClick={onBack} aria-label={tc('backToAccount')} style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: GOLD, flexShrink: 0 }}>
+        <button onClick={onBack} aria-label="Retour a Compte" style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: GOLD, flexShrink: 0 }}>
           <ArrowLeft size={18} />
-          <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>{tc('navAccount')}</span>
+          <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Compte</span>
         </button>
       )}
       {/* Header */}

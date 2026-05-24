@@ -12,9 +12,7 @@
     "delete": "Delete",
     "edit": "Edit",
     "close": "Close",
-    "confirm": "Confirm",
-    "backToAccount": "Back to Account",
-    "navAccount": "Account"
+    "confirm": "Confirm"
   },
   "nav": {
     "login": "Sign in",
@@ -1703,14 +1701,6 @@
       "analysisStep1": "Detecting muscle groups...",
       "analysisStep2": "Calculating proportions...",
       "analysisStep3": "Generating report..."
-    },
-    "measureModal": {
-      "title": "MY MEASUREMENTS",
-      "date": "Date",
-      "cancel": "Cancel",
-      "save": "Save",
-      "history": "History (last 5)",
-      "latest": "Latest"
     },
     "bodyAssessment": {
       "title": "FULL BODY ASSESSMENT",

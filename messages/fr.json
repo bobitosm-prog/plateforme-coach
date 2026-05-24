@@ -12,9 +12,7 @@
     "delete": "Supprimer",
     "edit": "Modifier",
     "close": "Fermer",
-    "confirm": "Confirmer",
-    "backToAccount": "Retour a Compte",
-    "navAccount": "Compte"
+    "confirm": "Confirmer"
   },
   "nav": {
     "login": "Connexion",
@@ -1703,14 +1701,6 @@
       "analysisStep1": "Détection des groupes musculaires...",
       "analysisStep2": "Calcul des proportions...",
       "analysisStep3": "Génération du rapport..."
-    },
-    "measureModal": {
-      "title": "MES MENSURATIONS",
-      "date": "Date",
-      "cancel": "Annuler",
-      "save": "Sauvegarder",
-      "history": "Historique (5 derniers)",
-      "latest": "Dernier"
     },
     "bodyAssessment": {
       "title": "BILAN CORPOREL COMPLET",
