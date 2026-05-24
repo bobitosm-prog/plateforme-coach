@@ -36,11 +36,18 @@ import {
   MEAL_TYPES,
 } from '../lib/design-tokens'
 import { useClientPermissions } from '../lib/use-client-permissions'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
 
 import { checkAndShowReminder } from '../lib/notifications'
+
+/** Micro-component for translated nav label — must be rendered INSIDE ClientIntlProvider */
+function NavAccountLabel() {
+  const tc = useTranslations('common')
+  return <>{tc('navAccount')}</>
+}
 
 export default function CoachApp() {
   const h = useClientDashboard()
@@ -181,7 +188,7 @@ export default function CoachApp() {
                   <Icon size={20} color={active ? GOLD : TEXT_MUTED} strokeWidth={2} />
                   {badge && <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 14, height: 14, background: '#EF4444', borderRadius: 7, fontSize: '0.5rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{h.unreadCount > 9 ? '9+' : h.unreadCount}</span>}
                 </div>
-                <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: active ? GOLD : TEXT_MUTED, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{label}</span>
+                <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: active ? GOLD : TEXT_MUTED, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{id === 'compte' ? <NavAccountLabel /> : label}</span>
               </button>
             )
           })}
@@ -441,7 +448,7 @@ export default function CoachApp() {
                   </span>
                 )}
               </div>
-              <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: active ? GOLD : TEXT_DIM, transition: 'color 0.3s ease' }}>{label}</span>
+              <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: active ? GOLD : TEXT_DIM, transition: 'color 0.3s ease' }}>{id === 'compte' ? <NavAccountLabel /> : label}</span>
               {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: GOLD, boxShadow: '0 0 8px rgba(212,168,67,0.5)' }} />}
             </button>
           )

@@ -12,7 +12,9 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "close": "Schließen",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "backToAccount": "Zurück zum Konto",
+    "navAccount": "Konto"
   },
   "nav": {
     "login": "Anmelden",
@@ -1701,6 +1703,14 @@
       "analysisStep1": "Erkennung der Muskelgruppen...",
       "analysisStep2": "Berechnung der Proportionen...",
       "analysisStep3": "Bericht wird erstellt..."
+    },
+    "measureModal": {
+      "title": "MEINE MESSUNGEN",
+      "date": "Datum",
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "history": "Verlauf (letzte 5)",
+      "latest": "Aktuell"
     },
     "bodyAssessment": {
       "title": "VOLLSTÄNDIGE KÖRPERANALYSE",
