@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../../lib/session-types'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -82,6 +83,30 @@ export { padTo7Days }
 
 /* ─── Component ─── */
 export default function ProgramBuilder({ supabase, session, aiAllowed = true, onClose, onSave, editProgram }: ProgramBuilderProps) {
+  const t = useTranslations('training_tab.builder')
+  // Display-only day names (translated). DAY_NAMES at module-level stays FR for DB/padTo7Days.
+  const dayNamesDisplay = DAY_NAMES // padTo7Days stores FR weekday in DB — display translation happens at render
+  const dayShortDisplay = DAY_SHORT
+  // AI config display labels (keys stay FR for backend API)
+  const AI_OBJECTIVES = [
+    { key: 'masse', label: t('config.objMasse') },
+    { key: 'perte', label: t('config.objPerte') },
+    { key: 'force', label: t('config.objForce') },
+    { key: 'endurance', label: t('config.objEndurance') },
+  ]
+  const AI_LEVELS = [
+    { key: 'debutant', label: t('config.lvlDebutant') },
+    { key: 'intermediaire', label: t('config.lvlIntermediaire') },
+    { key: 'avance', label: t('config.lvlAvance') },
+  ]
+  const AI_EQUIPMENT = [
+    { key: 'salle', label: t('config.eqSalle') },
+    { key: 'halteres', label: t('config.eqHalteres') },
+    { key: 'sans_materiel', label: t('config.eqSansMateriel') },
+  ]
+  const ALL_KEY = '__all__'
+  const muscleFilterDisplay = [{ key: ALL_KEY, label: t('search.allMuscles') }, ...MUSCLE_FILTERS.slice(1).map(m => ({ key: m, label: m }))]
+
   const [mode, setMode] = useState<'select' | 'ai' | 'manual' | 'custom-exercise'>('select')
   const [dbExercises, setDbExercises] = useState<any[]>([])
   const [customExercises, setCustomExercises] = useState<any[]>([])
@@ -153,15 +178,15 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       const data = await res.json()
       if (data.program) {
         setAiResult(data.program)
-        setProgramName(data.program.program_name || 'Programme IA')
+        setProgramName(data.program.program_name || 'Programme IA') // DB value, do not translate
         setProgramDays(padTo7Days(data.program.days || []))
-        toast.success('Programme généré !')
+        toast.success(t('toast.generated'))
       } else {
-        toast.error(data.error || 'Erreur de génération')
+        toast.error(data.error || t('toast.generationError'))
       }
     } catch (e: any) {
       console.error('[ProgramBuilder] Fetch error:', e)
-      toast.error('Erreur réseau: ' + (e.message || 'inconnue'))
+      toast.error(t('toast.networkError') + ': ' + (e.message || ''))
     }
     setAiGenerating(false)
   }
@@ -177,7 +202,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
     }).select().single()
     if (data) {
       setCustomExercises(prev => [...prev, data])
-      toast.success('Exercice créé !')
+      toast.success(t('toast.exerciseCreated'))
       setCeName(''); setCeMuscle(''); setCeEquipment(''); setCeDescription('')
       setMode('manual')
     }
@@ -242,7 +267,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       }
     } catch (e) { console.error('[saveProgram] scheduled_sessions sync error:', e) }
 
-    toast.success('Programme sauvegardé !')
+    toast.success(t('toast.programSaved'))
     setSaving(false)
     onSave()
     onClose()
@@ -329,7 +354,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   const filteredExercises = [...dbExercises, ...customExercises.map(e => ({ ...e, _custom: true }))]
     .filter(e => {
       if (exerciseSearchQuery && !e.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())) return false
-      if (exerciseSearchFilter && exerciseSearchFilter !== 'Tous') {
+      if (exerciseSearchFilter && exerciseSearchFilter !== ALL_KEY) {
         const mg = (e.muscle_group || '').toLowerCase()
         const filter = exerciseSearchFilter.toLowerCase()
         if (mg !== filter) return false
@@ -371,7 +396,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             </div>
 
             <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 36, color: TEXT_PRIMARY, margin: '0 0 24px' }}>
-              CRÉE TON PROGRAMME
+              {t('createTitle')}
             </h1>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -386,17 +411,17 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 }}
               >
                 <div style={{ fontSize: 28, marginBottom: 8 }}>🤖</div>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>GÉNÉRER AVEC L&apos;IA</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>{t('aiCard')}</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, marginTop: 4 }}>
-                  Décris ton objectif et l&apos;IA crée tout
+                  {t('aiCardDesc')}
                 </div>
               </motion.button>
               ) : (
               <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 24, opacity: 0.5, textAlign: 'left', width: '100%' }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_MUTED }}>GÉNÉRER AVEC L&apos;IA</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_MUTED }}>{t('aiCard')}</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_DIM, marginTop: 4 }}>
-                  Ton coach gère ton programme. Contacte-le directement.
+                  {t('aiLocked')}
                 </div>
               </div>
               )}
@@ -411,9 +436,9 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 }}
               >
                 <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>CRÉER MOI-MÊME</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>{t('manualCard')}</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, marginTop: 4 }}>
-                  Sélectionne tes exercices par jour
+                  {t('manualCardDesc')}
                 </div>
               </motion.button>
 
@@ -427,9 +452,9 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 }}
               >
                 <div style={{ fontSize: 28, marginBottom: 8 }}>➕</div>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>EXERCICE PERSONNALISÉ</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>{t('customCard')}</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, marginTop: 4 }}>
-                  Ajoute un exercice qui n&apos;existe pas
+                  {t('customCardDesc')}
                 </div>
               </motion.button>
             </div>
@@ -443,36 +468,36 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               onClick={() => setMode('select')}
               style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, fontFamily: FONT_BODY, fontSize: 14 }}
             >
-              <ChevronLeft size={18} /> Retour
+              <ChevronLeft size={18} /> {t('back')}
             </button>
 
             <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 24px' }}>
-              PROGRAMME IA
+              {t('aiTitle')}
             </h1>
 
             {/* Objectif */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Objectif</div>
+              <div style={labelStyle}>{t('config.objective')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {['masse', 'perte', 'force', 'endurance'].map(o => (
-                  <button key={o} onClick={() => setAiObjective(o)} style={selBtn(aiObjective === o)}>{o}</button>
+                {AI_OBJECTIVES.map(o => (
+                  <button key={o.key} onClick={() => setAiObjective(o.key)} style={selBtn(aiObjective === o.key)}>{o.label}</button>
                 ))}
               </div>
             </div>
 
             {/* Niveau */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Niveau</div>
+              <div style={labelStyle}>{t('config.level')}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                {['debutant', 'intermediaire', 'avance'].map(l => (
-                  <button key={l} onClick={() => setAiLevel(l)} style={{ ...selBtn(aiLevel === l), flex: 1 }}>{l}</button>
+                {AI_LEVELS.map(l => (
+                  <button key={l.key} onClick={() => setAiLevel(l.key)} style={{ ...selBtn(aiLevel === l.key), flex: 1 }}>{l.label}</button>
                 ))}
               </div>
             </div>
 
             {/* Jours/semaine */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Jours / semaine</div>
+              <div style={labelStyle}>{t('config.daysPerWeek')}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <input
                   type="range" min={2} max={6} value={aiDays}
@@ -485,7 +510,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             {/* Durée */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Durée (min)</div>
+              <div style={labelStyle}>{t('config.duration')}</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {[30, 45, 60, 90].map(d => (
                   <button key={d} onClick={() => setAiDuration(d)} style={{ ...selBtn(aiDuration === d), flex: 1 }}>{d}</button>
@@ -495,17 +520,17 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             {/* Équipement */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Équipement</div>
+              <div style={labelStyle}>{t('config.equipment')}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                {['salle', 'halteres', 'sans_materiel'].map(eq => (
-                  <button key={eq} onClick={() => setAiEquipment(eq)} style={{ ...selBtn(aiEquipment === eq), flex: 1 }}>{eq.replace('_', ' ')}</button>
+                {AI_EQUIPMENT.map(eq => (
+                  <button key={eq.key} onClick={() => setAiEquipment(eq.key)} style={{ ...selBtn(aiEquipment === eq.key), flex: 1 }}>{eq.label}</button>
                 ))}
               </div>
             </div>
 
             {/* Zones prioritaires */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Zones prioritaires</div>
+              <div style={labelStyle}>{t('config.priorities')}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {MUSCLE_OPTIONS.map(m => {
                   const selected = aiPriorities.includes(m)
@@ -524,13 +549,13 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             {/* Notes */}
             <div style={{ marginBottom: 24 }}>
-              <div style={labelStyle}>Notes</div>
+              <div style={labelStyle}>{t('config.notes')}</div>
               <textarea
                 value={aiNotes}
                 onChange={e => setAiNotes(e.target.value)}
                 rows={3}
                 style={{ ...inputStyle, resize: 'vertical' }}
-                placeholder="Blessures, préférences..."
+                placeholder={t('config.notesPlaceholder')}
               />
             </div>
 
@@ -544,7 +569,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 cursor: aiGenerating ? 'not-allowed' : 'pointer', opacity: aiGenerating ? 0.6 : 1,
               }}
             >
-              {aiGenerating ? 'GÉNÉRATION EN COURS...' : 'GÉNÉRER MON PROGRAMME'}
+              {aiGenerating ? t('generating') : t('generate')}
             </button>
           </div>
         )}
@@ -556,7 +581,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               onClick={() => setAiResult(null)}
               style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, fontFamily: FONT_BODY, fontSize: 14 }}
             >
-              <ChevronLeft size={18} /> Modifier les paramètres
+              <ChevronLeft size={18} /> {t('editParams')}
             </button>
 
             <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 8px' }}>
@@ -580,7 +605,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
               }}
             >
-              {saving ? 'SAUVEGARDE...' : 'SAUVEGARDER'}
+              {saving ? t('saving') : t('save')}
             </button>
           </div>
         )}
@@ -592,28 +617,28 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               onClick={() => { if (manualStep > 0) { setManualStep(0) } else { setMode('select') } }}
               style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, fontFamily: FONT_BODY, fontSize: 14 }}
             >
-              <ChevronLeft size={18} /> Retour
+              <ChevronLeft size={18} /> {t('back')}
             </button>
 
             {manualStep === 0 && (
               <div>
                 <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 24px' }}>
-                  PROGRAMME MANUEL
+                  {t('manualTitle')}
                 </h1>
 
                 <div style={{ marginBottom: 20 }}>
-                  <div style={labelStyle}>Nom du programme</div>
+                  <div style={labelStyle}>{t('config.programName')}</div>
                   <input
                     value={programName}
                     onChange={e => setProgramName(e.target.value)}
                     style={inputStyle}
-                    placeholder="Ex: Push Pull Legs"
+                    placeholder={t('config.programNamePlaceholder')}
                     required
                   />
                 </div>
 
                 <div style={{ marginBottom: 24 }}>
-                  <div style={labelStyle}>Jours d&apos;entraînement / semaine</div>
+                  <div style={labelStyle}>{t('config.trainingDays')}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <input
                       type="range" min={1} max={7}
@@ -640,7 +665,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
                 <button
                   onClick={() => {
-                    if (!programName.trim()) { toast.error('Donne un nom au programme'); return }
+                    if (!programName.trim()) { toast.error(t('config.nameRequired')); return }
                     if (!programDays.length || programDays.length < 7) {
                       const trainingCount = programDays.filter(d => !d.is_rest).length || 4
                       setProgramDays(DAY_NAMES.map((wd, i) => {
@@ -657,7 +682,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18, cursor: 'pointer',
                   }}
                 >
-                  SUIVANT
+                  {t('next')}
                 </button>
               </div>
             )}
@@ -675,7 +700,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
                   }}
                 >
-                  {saving ? 'SAUVEGARDE...' : 'SAUVEGARDER LE PROGRAMME'}
+                  {saving ? t('saving') : t('saveProgram')}
                 </button>
               </div>
             )}
@@ -689,24 +714,24 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               onClick={() => setMode(previousMode.current)}
               style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, fontFamily: FONT_BODY, fontSize: 14 }}
             >
-              <ChevronLeft size={18} /> Retour
+              <ChevronLeft size={18} /> {t('back')}
             </button>
 
             <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 24px' }}>
-              NOUVEL EXERCICE
+              {t('newExercise')}
             </h1>
 
             {/* Nom */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Nom</div>
-              <input value={ceName} onChange={e => setCeName(e.target.value)} style={inputStyle} placeholder="Nom de l'exercice" required />
+              <div style={labelStyle}>{t('customExercise.name')}</div>
+              <input value={ceName} onChange={e => setCeName(e.target.value)} style={inputStyle} placeholder={t('customExercise.namePlaceholder')} required />
             </div>
 
             {/* Groupe musculaire */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Groupe musculaire</div>
+              <div style={labelStyle}>{t('customExercise.muscleGroup')}</div>
               <select value={ceMuscle} onChange={e => setCeMuscle(e.target.value)} style={{ ...inputStyle, appearance: 'auto' as any }}>
-                <option value="">Sélectionner</option>
+                <option value="">{t('customExercise.select')}</option>
                 {['Poitrine', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Fessiers', 'Abdos', 'Cardio'].map(m => (
                   <option key={m} value={m}>{m}</option>
                 ))}
@@ -715,9 +740,9 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             {/* Équipement */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Équipement</div>
+              <div style={labelStyle}>{t('customExercise.equipment')}</div>
               <select value={ceEquipment} onChange={e => setCeEquipment(e.target.value)} style={{ ...inputStyle, appearance: 'auto' as any }}>
-                <option value="">Sélectionner</option>
+                <option value="">{t('customExercise.select')}</option>
                 {EQUIPMENT_OPTIONS.map(eq => (
                   <option key={eq} value={eq}>{eq}</option>
                 ))}
@@ -726,25 +751,25 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             {/* Description */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Description</div>
-              <textarea value={ceDescription} onChange={e => setCeDescription(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Notes ou instructions..." />
+              <div style={labelStyle}>{t('customExercise.description')}</div>
+              <textarea value={ceDescription} onChange={e => setCeDescription(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder={t('customExercise.descPlaceholder')} />
             </div>
 
             {/* Sets */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Séries</div>
+              <div style={labelStyle}>{t('customExercise.sets')}</div>
               <input type="number" min={1} max={10} value={ceSets} onChange={e => setCeSets(Number(e.target.value))} style={{ ...inputStyle, width: 100 }} />
             </div>
 
             {/* Reps */}
             <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>Répétitions</div>
+              <div style={labelStyle}>{t('customExercise.reps')}</div>
               <input type="number" min={1} max={30} value={ceReps} onChange={e => setCeReps(Number(e.target.value))} style={{ ...inputStyle, width: 100 }} />
             </div>
 
             {/* Rest */}
             <div style={{ marginBottom: 24 }}>
-              <div style={labelStyle}>Repos (secondes)</div>
+              <div style={labelStyle}>{t('customExercise.rest')}</div>
               <select value={ceRest} onChange={e => setCeRest(Number(e.target.value))} style={{ ...inputStyle, width: 140, appearance: 'auto' as any }}>
                 {REST_OPTIONS.map(r => (
                   <option key={r} value={r}>{r}s</option>
@@ -762,7 +787,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 opacity: !ceName.trim() ? 0.5 : 1,
               }}
             >
-              {saving ? 'SAUVEGARDE...' : "SAUVEGARDER L'EXERCICE"}
+              {saving ? t('saving') : t('saveExercise')}
             </button>
           </div>
         )}
@@ -784,7 +809,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             borderBottom: `1px solid ${BORDER}`,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>AJOUTER UN EXERCICE</span>
+              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>{t('search.title')}</span>
               <button onClick={() => { setShowExerciseSearch(false); setExerciseSearchQuery(''); setExerciseSearchFilter('') }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={22} />
               </button>
@@ -803,7 +828,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 value={exerciseSearchQuery}
                 onChange={e => setExerciseSearchQuery(e.target.value)}
                 onFocus={e => { setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300) }}
-                placeholder="Rechercher un exercice..."
+                placeholder={t('search.placeholder')}
                 style={{
                   width: '100%', padding: '14px 44px 14px 40px',
                   background: BG_CARD, border: `1px solid ${BORDER}`,
@@ -825,16 +850,16 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             </div>
 
             <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
-              {MUSCLE_FILTERS.map(f => (
+              {muscleFilterDisplay.map(f => (
                 <button
-                  key={f}
-                  onClick={() => setExerciseSearchFilter(f === 'Tous' ? '' : f)}
+                  key={f.key}
+                  onClick={() => setExerciseSearchFilter(f.key === ALL_KEY ? '' : f.key)}
                   style={{
-                    ...selBtn((f === 'Tous' && !exerciseSearchFilter) || exerciseSearchFilter === f),
+                    ...selBtn((f.key === ALL_KEY && !exerciseSearchFilter) || exerciseSearchFilter === f.key),
                     padding: '6px 12px', fontSize: 11, whiteSpace: 'nowrap', flexShrink: 0,
                   }}
                 >
-                  {f}
+                  {f.label}
                 </button>
               ))}
             </div>
@@ -860,7 +885,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     )}
                     {ex._custom && (
                       <span style={{ fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase', padding: '2px 8px', background: GOLD_DIM, color: GOLD, letterSpacing: '0.05em' }}>
-                        MON EXERCICE
+                        {t('search.myExercise')}
                       </span>
                     )}
                   </div>
@@ -875,7 +900,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             ))}
             {filteredExercises.length === 0 && (
               <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14 }}>
-                Aucun exercice trouvé
+                {t('search.noResults')}
               </div>
             )}
           </div>
@@ -890,7 +915,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer',
               }}
             >
-              CRÉER UN EXERCICE
+              {t('search.createExercise')}
             </button>
           </div>
         </div>
@@ -901,12 +926,12 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
           <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>VARIANTES</span>
-              <button aria-label="Fermer" onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
+              <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>{t('variants.title')}</span>
+              <button aria-label={t('variants.close')} onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
             </div>
             <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px'}}>
               {variantPopup.variants.length === 0 ? (
-                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14,fontFamily:FONT_BODY}}>Aucune variante trouvée</div>
+                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14,fontFamily:FONT_BODY}}>{t('variants.noVariants')}</div>
               ) : variantPopup.variants.map((v: any,i: number)=>(
                 <button key={i} onClick={()=>selectVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:BG_BASE,border:`1px solid ${BORDER}`,cursor:'pointer',textAlign:'left',transition:'all 0.2s'}}>
                   <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
@@ -1012,7 +1037,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               fontWeight: 700, letterSpacing: 2, cursor: 'pointer',
             }}
           >
-            Réorganiser les jours
+            {t('day.reorderDays')}
           </button>
         )}
         {swapMode && (
@@ -1025,7 +1050,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               fontWeight: 700, letterSpacing: 2, cursor: 'pointer',
             }}
           >
-            {swapFirst !== null ? `${DAY_SHORT[swapFirst]} sélectionné — cliquez un 2e jour` : 'Cliquez 2 jours pour les échanger'}
+            {swapFirst !== null ? t('day.swapSelected', { day: DAY_SHORT[swapFirst] }) : t('day.swapHint')}
           </button>
         )}
 
@@ -1056,13 +1081,13 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                   fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1,
                 }}
               >
-                {programDays[editingDayIndex]?.is_rest ? '😴 Repos — Cliquer pour activer' : 'Entraînement ✓'}
+                {programDays[editingDayIndex]?.is_rest ? t('day.restToggleOn') : t('day.trainingToggle')}
               </button>
             </div>
 
             {!programDays[editingDayIndex]?.is_rest && (
             <div style={{ marginBottom: 16 }}>
-              <div style={labelStyle}>Type de séance</div>
+              <div style={labelStyle}>{t('day.sessionType')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                 {SESSION_TYPE_OPTIONS.map(t => {
                   const isSelected = programDays[editingDayIndex]?.name === t.label
@@ -1087,7 +1112,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             {!programDays[editingDayIndex]?.is_rest && (<>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
               {(programDays[editingDayIndex]?.exercises || []).map((ex: any, exIdx: number) => {
-                const exerciseName = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || 'Exercice inconnu'
+                const exerciseName = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || t('day.unknownExercise')
                 const exerciseMuscle = ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group || ''
                 const exCount = programDays[editingDayIndex]?.exercises?.length || 0
                 return (
@@ -1106,16 +1131,16 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button aria-label={`Monter ${exerciseName}`} disabled={exIdx === 0} onClick={() => moveExerciseInDay(exIdx, -1)} title="Monter" style={{ background: exIdx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === 0 ? BORDER : GOLD_RULE}`, color: exIdx === 0 ? TEXT_DIM : GOLD, cursor: exIdx === 0 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↑</button>
-                      <button aria-label={`Descendre ${exerciseName}`} disabled={exIdx === exCount - 1} onClick={() => moveExerciseInDay(exIdx, 1)} title="Descendre" style={{ background: exIdx === exCount - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === exCount - 1 ? BORDER : GOLD_RULE}`, color: exIdx === exCount - 1 ? TEXT_DIM : GOLD, cursor: exIdx === exCount - 1 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↓</button>
-                      <button aria-label={`Voir les variantes de ${exerciseName}`} onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)} title="Variantes" style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}>🔄</button>
-                      <button aria-label={`Supprimer ${exerciseName}`} onClick={() => setExerciseToDelete({ dayIdx: editingDayIndex, exIdx, name: exerciseName })} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
+                      <button aria-label={`${t('day.moveUp')} ${exerciseName}`} disabled={exIdx === 0} onClick={() => moveExerciseInDay(exIdx, -1)} title={t('day.moveUp')} style={{ background: exIdx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === 0 ? BORDER : GOLD_RULE}`, color: exIdx === 0 ? TEXT_DIM : GOLD, cursor: exIdx === 0 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↑</button>
+                      <button aria-label={`${t('day.moveDown')} ${exerciseName}`} disabled={exIdx === exCount - 1} onClick={() => moveExerciseInDay(exIdx, 1)} title={t('day.moveDown')} style={{ background: exIdx === exCount - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === exCount - 1 ? BORDER : GOLD_RULE}`, color: exIdx === exCount - 1 ? TEXT_DIM : GOLD, cursor: exIdx === exCount - 1 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↓</button>
+                      <button aria-label={`${t('day.variants')} ${exerciseName}`} onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)} title={t('day.variants')} style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}>🔄</button>
+                      <button aria-label={`${t('confirm.deleteConfirm')} ${exerciseName}`} onClick={() => setExerciseToDelete({ dayIdx: editingDayIndex, exIdx, name: exerciseName })} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <div>
-                      <div style={{ ...labelStyle, marginBottom: 4 }}>Séries</div>
+                      <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.setsLabel')}</div>
                       <input
                         type="number" min={1} max={10}
                         value={ex.sets || 3}
@@ -1124,7 +1149,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       />
                     </div>
                     <div>
-                      <div style={{ ...labelStyle, marginBottom: 4 }}>Reps</div>
+                      <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.repsLabel')}</div>
                       <input
                         type="number" min={1} max={100}
                         value={ex.reps || 10}
@@ -1133,7 +1158,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       />
                     </div>
                     <div>
-                      <div style={{ ...labelStyle, marginBottom: 4 }}>Repos</div>
+                      <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.restLabel')}</div>
                       <select
                         value={ex.rest || 90}
                         onChange={e => updateExerciseField(editingDayIndex, exIdx, 'rest', Number(e.target.value))}
@@ -1148,7 +1173,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
                   {/* Tempo input */}
                   <div style={{ marginTop: 12 }}>
-                    <div style={{ ...labelStyle, marginBottom: 4 }}>Tempo (excentrique - pause - concentrique)</div>
+                    <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.tempoLabel')}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       {(() => {
                         const parts = (ex.tempo || '2-0-2').split('-')
@@ -1172,7 +1197,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
                   {/* Technique avancée */}
                   <div style={{ marginTop: 12 }}>
-                    <div style={{ ...labelStyle, marginBottom: 4 }}>Technique avancée (optionnel)</div>
+                    <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.techniqueLabel')}</div>
                     <select
                       value={ex.technique || ''}
                       onChange={e => {
@@ -1182,7 +1207,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       }}
                       style={{ ...inputStyle, width: '100%', padding: '8px', appearance: 'auto' as any }}
                     >
-                      <option value="">Aucune</option>
+                      <option value="">{t('day.techniqueNone')}</option>
                       <option value="dropset">Drop Set</option>
                       <option value="restpause">Rest Pause</option>
                       <option value="superset">Superset</option>
@@ -1192,7 +1217,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     {/* Technique details */}
                     {ex.technique === 'dropset' && (
                       <div style={{ marginTop: 8 }}>
-                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Nombre de drops</div>
+                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>{t('day.dropCount')}</div>
                         <div style={{ display: 'flex', gap: 6 }}>
                           {[1, 2, 3].map(n => (
                             <button key={n} onClick={() => updateExerciseField(editingDayIndex, exIdx, 'technique_details', String(n))}
@@ -1205,7 +1230,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     {ex.technique === 'restpause' && (
                       <div style={{ marginTop: 8, display: 'flex', gap: 12 }}>
                         <div>
-                          <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Mini-sets</div>
+                          <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>{t('day.miniSets')}</div>
                           <div style={{ display: 'flex', gap: 4 }}>
                             {[2, 3].map(n => (
                               <button key={n} onClick={() => {
@@ -1218,7 +1243,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                           </div>
                         </div>
                         <div>
-                          <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Repos (s)</div>
+                          <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>{t('day.restSec')}</div>
                           <div style={{ display: 'flex', gap: 4 }}>
                             {[10, 15, 20].map(n => (
                               <button key={n} onClick={() => {
@@ -1234,24 +1259,24 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     )}
                     {ex.technique === 'superset' && (
                       <div style={{ marginTop: 8 }}>
-                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Exercice partenaire</div>
+                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>{t('day.partnerExercise')}</div>
                         <input
                           type="text"
                           value={ex.technique_details || ''}
                           onChange={e => updateExerciseField(editingDayIndex, exIdx, 'technique_details', e.target.value)}
-                          placeholder="Nom de l'exercice"
+                          placeholder={t('day.partnerPlaceholder')}
                           style={{ ...inputStyle, width: '100%', padding: '8px' }}
                         />
                       </div>
                     )}
                     {ex.technique === 'mechanical' && (
                       <div style={{ marginTop: 8 }}>
-                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>Variation (ex: prise large → serrée → marteau)</div>
+                        <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>{t('day.mechanicalDesc')}</div>
                         <input
                           type="text"
                           value={ex.technique_details || ''}
                           onChange={e => updateExerciseField(editingDayIndex, exIdx, 'technique_details', e.target.value)}
-                          placeholder="Description de la variation"
+                          placeholder={t('day.mechanicalPlaceholder')}
                           style={{ ...inputStyle, width: '100%', padding: '8px' }}
                         />
                       </div>
@@ -1271,7 +1296,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              <Plus size={18} /> AJOUTER UN EXERCICE
+              <Plus size={18} /> {t('day.addExercise')}
             </button>
             </>)}
           </div>
@@ -1279,10 +1304,10 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       <ConfirmDialog
         open={!!exerciseToDelete}
         variant="danger"
-        title="Supprimer cet exercice ?"
-        message={`L'exercice "${exerciseToDelete?.name}" sera retire du programme. Cette action ne peut pas etre annulee.`}
-        confirmLabel="Supprimer"
-        cancelLabel="Annuler"
+        title={t('confirm.deleteTitle')}
+        message={t('confirm.deleteMessage', { name: exerciseToDelete?.name || '' })}
+        confirmLabel={t('confirm.deleteConfirm')}
+        cancelLabel={t('confirm.deleteCancel')}
         onConfirm={() => {
           if (exerciseToDelete) {
             removeExerciseFromDay(exerciseToDelete.dayIdx, exerciseToDelete.exIdx);
