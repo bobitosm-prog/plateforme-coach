@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : 0b3bf36
+- **HEAD** : b0f4ecf
 - **Working tree** : clean
-- **Tâche en cours** : Sprint 6 i18n — Phase 5a done (Progress), suite Phase 5b AccountTab
+- **Tâche en cours** : Sprint 6 i18n CLOSED (513 clés ajoutées, ~92% i18n global)
 
 ---
 
@@ -57,6 +57,7 @@ Plan 5 phases proposé :
 | 4 | afc3a96 | feat(i18n): WorkoutSession 100% FR/EN/DE (91 keys) |
 | 5 | b536d38 | feat(i18n): ProgramBuilder 100% FR/EN/DE (94 keys) |
 | 6 | 0b3bf36 | feat(i18n): Progress L2/L3 FR/EN/DE (98 keys, 3 components) |
+| 7 | b0f4ecf | feat(i18n): AccountTab 100% FR/EN/DE (12 keys) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -167,6 +168,36 @@ Plan 5 phases proposé :
   pour parser la réponse AI (VUE D'ENSEMBLE, etc.)
 - AbsCalculator L.96 : objective_mode values ('seche'/'bulk'/'maintien')
   envoyés au backend API
+
+### Phase 5b — AccountTab + Sprint 6 CLOSED
+
+**Réalisé** :
+- AccountTab.tsx : 186L, 0% → 100% i18n (14 t() calls)
+- 12 clés sous namespace account
+- "Athena" préservé comme brand name (non traduit)
+
+### Sprint 6 i18n — BILAN FINAL
+
+Tous les composants app-shell 100% i18n :
+- Badges (BadgesModal, BadgeCelebration)
+- HomeTab + sub (HomeHeader, NutritionCard, RecoveryModal)
+- Training cluster : TempoModal, TempoExecutor, ExerciseLibrarySection,
+  SessionDetailModal, TrainingTab, WorkoutSession + CustomBuilder, ProgramBuilder
+- Progress cluster : ProgressTab, BodyAssessment, AbsCalculator
+- AccountTab
+
+**Stats session** :
+- Total clés : 1052 → 1565 (+513 clés, +48.8%)
+- Progression i18n globale : ~48% → ~92%
+- 14 composants 100% i18n (+ 1 sub-component CustomBuilder)
+- 7 phases : 1+1.5 / 2+2.5 / 3a / 3b / 3c / 5a / 5b
+
+**Tech debt restante post-Sprint 6** :
+- NutritionTab L2 (Phase 4, ~35 clés) — non traitée cette session
+- Migration noms exercices/aliments DB en FR → sprint dédié séparé
+- Client view détaillée coach (~660L) — B2B, défère
+- Incohérence vocab i18n repo-wide : "série/SERIE/sets/SETS/Séries" — sprint
+  consolidation post-launch
 
 ---
 
