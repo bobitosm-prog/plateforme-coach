@@ -156,6 +156,17 @@
     "cta": "Découvrir les plans →",
     "image_alt": "Bowl saumon avocat brocolis quinoa — exemple de plan nutrition MoovX"
   },
+  "startProgramModal": {
+    "title": "QUAND COMMENCER ?",
+    "now": "MAINTENANT",
+    "today": "Aujourd'hui {date}",
+    "nextMonday": "LUNDI PROCHAIN",
+    "chooseDate": "CHOISIR UNE DATE",
+    "mondaysOnly": "Seulement les lundis",
+    "startOn": "DÉMARRER LE {date}",
+    "back": "Retour",
+    "cancel": "ANNULER"
+  },
   "training": {
     "eyebrow": "02 — Entraînement",
     "headline_line1": "Programme",

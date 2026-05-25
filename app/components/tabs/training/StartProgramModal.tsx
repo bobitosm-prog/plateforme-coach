@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
@@ -24,8 +25,8 @@ function getNextMonday(): Date {
   return next
 }
 
-function formatDateFr(d: Date): string {
-  return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+function formatDateLocale(d: Date, locale: string): string {
+  return d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function toDateStr(d: Date): string {
@@ -39,6 +40,8 @@ const btnBase: React.CSSProperties = {
 }
 
 export default function StartProgramModal({ programName, onStart, onClose }: StartProgramModalProps) {
+  const t = useTranslations('startProgramModal')
+  const locale = useLocale()
   const [showPicker, setShowPicker] = useState(false)
   const [pickerMonth, setPickerMonth] = useState(() => {
     const d = new Date()
@@ -79,8 +82,12 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
     return toDateStr(new Date(pickerMonth.year, pickerMonth.month, day))
   }
 
-  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
-  const dayHeaders = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+  const monthNames = Array.from({ length: 12 }, (_, i) =>
+    new Date(2000, i, 1).toLocaleDateString(locale, { month: 'long' }).replace(/^./, c => c.toUpperCase())
+  )
+  const dayHeaders = Array.from({ length: 7 }, (_, i) =>
+    new Date(2024, 0, i + 1).toLocaleDateString(locale, { weekday: 'narrow' }).toUpperCase()
+  )
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
@@ -92,7 +99,7 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
         style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
       >
         <div style={{ padding: '24px 20px 0', flexShrink: 0 }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, letterSpacing: '0.08em' }}>QUAND COMMENCER ?</div>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, letterSpacing: '0.08em' }}>{t('title')}</div>
           <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, marginTop: 4 }}>{programName}</div>
         </div>
 
@@ -102,25 +109,25 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
               <motion.div key="options" initial={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {/* MAINTENANT */}
                 <button onClick={() => onStart('now')} style={{ ...btnBase, background: GOLD, color: '#0D0B08', border: 'none' }}>
-                  <span>MAINTENANT</span>
+                  <span>{t('now')}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, fontFamily: FONT_BODY, opacity: 0.7 }}>
-                    Aujourd'hui {formatDateFr(today)}
+                    {t('today', { date: formatDateLocale(today, locale) })}
                   </span>
                 </button>
 
                 {/* LUNDI PROCHAIN */}
                 <button onClick={() => onStart('monday', nextMondayStr)} style={{ ...btnBase, background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD }}>
-                  <span>LUNDI PROCHAIN</span>
+                  <span>{t('nextMonday')}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, fontFamily: FONT_BODY, color: TEXT_MUTED }}>
-                    {formatDateFr(nextMonday)}
+                    {formatDateLocale(nextMonday, locale)}
                   </span>
                 </button>
 
                 {/* CHOISIR UNE DATE */}
                 <button onClick={() => setShowPicker(true)} style={{ ...btnBase, background: 'transparent', border: `1.5px solid ${BORDER}`, color: TEXT_MUTED }}>
-                  <span>CHOISIR UNE DATE</span>
+                  <span>{t('chooseDate')}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, fontFamily: FONT_BODY, color: TEXT_DIM }}>
-                    Seulement les lundis
+                    {t('mondaysOnly')}
                   </span>
                 </button>
               </motion.div>
@@ -179,13 +186,13 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
                 {/* Confirm selected date */}
                 {selectedDate && (
                   <button onClick={() => onStart('custom', selectedDate)} style={{ width: '100%', padding: 16, marginTop: 16, background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 14, fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 700, letterSpacing: '0.05em', cursor: 'pointer' }}>
-                    DÉMARRER LE {new Date(selectedDate + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }).toUpperCase()}
+                    {t('startOn', { date: new Date(selectedDate + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'long' }).toUpperCase() })}
                   </button>
                 )}
 
                 {/* Back button */}
                 <button onClick={() => { setShowPicker(false); setSelectedDate(null) }} style={{ width: '100%', padding: 12, marginTop: 8, background: 'none', border: 'none', color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 13, cursor: 'pointer' }}>
-                  ← Retour
+                  ← {t('back')}
                 </button>
               </motion.div>
             )}
@@ -194,7 +201,7 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
 
         {/* Cancel */}
         <div style={{ flexShrink: 0, padding: '16px 20px 32px', borderTop: `0.5px solid ${BORDER}` }}>
-          <button onClick={onClose} style={{ width: '100%', padding: 14, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 14, color: TEXT_MUTED, fontFamily: FONT_DISPLAY, fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.05em' }}>ANNULER</button>
+          <button onClick={onClose} style={{ width: '100%', padding: 14, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 14, color: TEXT_MUTED, fontFamily: FONT_DISPLAY, fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.05em' }}>{t('cancel')}</button>
         </div>
       </motion.div>
     </div>

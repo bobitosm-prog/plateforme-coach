@@ -156,6 +156,17 @@
     "cta": "Pläne entdecken →",
     "image_alt": "Lachs-Avocado-Brokkoli-Quinoa-Bowl — MoovX Ernährungsplan Beispiel"
   },
+  "startProgramModal": {
+    "title": "WANN STARTEN?",
+    "now": "JETZT",
+    "today": "Heute {date}",
+    "nextMonday": "NÄCHSTEN MONTAG",
+    "chooseDate": "DATUM WÄHLEN",
+    "mondaysOnly": "Nur Montage",
+    "startOn": "STARTEN AM {date}",
+    "back": "Zurück",
+    "cancel": "ABBRECHEN"
+  },
   "training": {
     "eyebrow": "02 — Training",
     "headline_line1": "Hypertrophie-",

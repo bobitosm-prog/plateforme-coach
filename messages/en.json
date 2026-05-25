@@ -156,6 +156,17 @@
     "cta": "Discover plans →",
     "image_alt": "Salmon avocado broccoli quinoa bowl — MoovX nutrition plan example"
   },
+  "startProgramModal": {
+    "title": "WHEN TO START?",
+    "now": "NOW",
+    "today": "Today {date}",
+    "nextMonday": "NEXT MONDAY",
+    "chooseDate": "CHOOSE A DATE",
+    "mondaysOnly": "Mondays only",
+    "startOn": "START ON {date}",
+    "back": "Back",
+    "cancel": "CANCEL"
+  },
   "training": {
     "eyebrow": "02 — Training",
     "headline_line1": "Hypertrophy",
