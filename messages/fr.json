@@ -578,6 +578,32 @@
       "regenerate": "Régénérer mon plan IA"
     }
   },
+  "recipesSection": {
+    "title": "Recettes fitness",
+    "generateBtn": "Générer",
+    "generateTitle": "GÉNÉRER UNE RECETTE",
+    "generateDesc": "Notre chef crée une recette adaptée à tes macros",
+    "category": "Catégorie",
+    "generating": "Notre chef prépare ta recette...",
+    "generate": "Générer la recette",
+    "backToRecipes": "← Retour aux recettes",
+    "back": "← Retour",
+    "ingredients": "Ingrédients ({count} portion(s))",
+    "preparation": "Préparation",
+    "deleteRecipe": "Supprimer cette recette",
+    "empty": "Aucune recette. Génère-en une !",
+    "generated": "Recette générée !",
+    "genError": "Erreur de génération",
+    "deleted": "Recette supprimée",
+    "categories": {
+      "all": "Tout",
+      "petit-dejeuner": "Petit-déj",
+      "dejeuner": "Déjeuner",
+      "collation": "Collation",
+      "diner": "Dîner",
+      "smoothie": "Smoothie"
+    }
+  },
   "shoppingList": {
     "title": "LISTE DE COURSES",
     "subtitle": "{total} articles — {checked}/{total} cochés",

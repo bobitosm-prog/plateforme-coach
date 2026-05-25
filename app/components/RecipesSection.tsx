@@ -1,17 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { X, Heart, Clock, Sparkles, ChefHat } from 'lucide-react'
 import { toast } from 'sonner'
 import { colors, fonts } from '../../lib/design-tokens'
 
-const CATEGORIES = [
-  { id: 'all', label: 'Tout' },
-  { id: 'petit-dejeuner', label: 'Petit-dej' },
-  { id: 'dejeuner', label: 'Dejeuner' },
-  { id: 'collation', label: 'Collation' },
-  { id: 'diner', label: 'Diner' },
-  { id: 'smoothie', label: 'Smoothie' },
-]
+const CATEGORY_IDS = ['all', 'petit-dejeuner', 'dejeuner', 'collation', 'diner', 'smoothie'] as const
 
 const TAG_COLORS: Record<string, string> = {
   'high-protein': colors.gold, 'low-carb': colors.gold, 'quick': colors.gold,
@@ -25,6 +19,7 @@ interface RecipesSectionProps {
 }
 
 export default function RecipesSection({ supabase, userId, profile }: RecipesSectionProps) {
+  const t = useTranslations('recipesSection')
   const [recipes, setRecipes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -72,9 +67,9 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       setRecipes(prev => [saved, ...prev])
       setSelected(saved)
       setShowGenerate(false)
-      toast.success('Recette generee !')
+      toast.success(t('generated'))
     } catch (e: any) {
-      toast.error(e.message || 'Erreur de generation')
+      toast.error(e.message || t('genError'))
     }
     setGenerating(false)
   }
@@ -90,7 +85,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
     await supabase.from('recipes').delete().eq('id', id)
     setRecipes(prev => prev.filter(r => r.id !== id))
     setSelected(null)
-    toast.success('Recette supprimee')
+    toast.success(t('deleted'))
   }
 
   // -- Recipe detail modal --
@@ -101,7 +96,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Back button */}
-        <button onClick={() => setSelected(null)} style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: colors.text, cursor: 'pointer', fontSize: '0.82rem', fontFamily: fonts.alt, fontWeight: 700, padding: '6px 14px', letterSpacing: '0.15em', transition: 'all 0.15s' }}>← Retour aux recettes</button>
+        <button onClick={() => setSelected(null)} style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: colors.text, cursor: 'pointer', fontSize: '0.82rem', fontFamily: fonts.alt, fontWeight: 700, padding: '6px 14px', letterSpacing: '0.15em', transition: 'all 0.15s' }}>{t('backToRecipes')}</button>
 
         {/* Title + favorite */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -143,7 +138,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
 
         {/* Ingredients */}
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
-          <div style={{ fontFamily: fonts.alt, fontSize: '0.78rem', fontWeight: 800, color: colors.gold, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 12 }}>Ingredients ({selected.servings || 1} portion{(selected.servings || 1) > 1 ? 's' : ''})</div>
+          <div style={{ fontFamily: fonts.alt, fontSize: '0.78rem', fontWeight: 800, color: colors.gold, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 12 }}>{t('ingredients', { count: selected.servings || 1 })}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {ingredients.map((ing: any, i: number) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -156,7 +151,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
 
         {/* Instructions */}
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
-          <div style={{ fontFamily: fonts.alt, fontSize: '0.78rem', fontWeight: 800, color: colors.gold, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 12 }}>Preparation</div>
+          <div style={{ fontFamily: fonts.alt, fontSize: '0.78rem', fontWeight: 800, color: colors.gold, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 12 }}>{t('preparation')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {instructions.map((step: any, i: number) => (
               <div key={i} style={{ display: 'flex', gap: 12 }}>
@@ -169,7 +164,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
 
         {/* Delete */}
         {selected.user_id === userId && (
-          <button onClick={() => deleteRecipe(selected.id)} style={{ background: 'none', border: `1px solid ${colors.error}`, borderRadius: 12, padding: '10px', color: colors.error, fontSize: '0.78rem', fontFamily: fonts.alt, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}>Supprimer cette recette</button>
+          <button onClick={() => deleteRecipe(selected.id)} style={{ background: 'none', border: `1px solid ${colors.error}`, borderRadius: 12, padding: '10px', color: colors.error, fontSize: '0.78rem', fontFamily: fonts.alt, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}>{t('deleteRecipe')}</button>
         )}
       </div>
     )
@@ -179,32 +174,32 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
   if (showGenerate) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <button onClick={() => setShowGenerate(false)} style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: colors.text, cursor: 'pointer', fontSize: '0.82rem', fontFamily: fonts.alt, fontWeight: 700, padding: '6px 14px', letterSpacing: '0.15em', transition: 'all 0.15s' }}>← Retour</button>
+        <button onClick={() => setShowGenerate(false)} style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: colors.text, cursor: 'pointer', fontSize: '0.82rem', fontFamily: fonts.alt, fontWeight: 700, padding: '6px 14px', letterSpacing: '0.15em', transition: 'all 0.15s' }}>{t('back')}</button>
 
         <div style={{ textAlign: 'center', padding: '12px 0' }}>
           <Sparkles size={28} color={colors.gold} style={{ margin: '0 auto 8px' }} />
-          <h3 style={{ fontFamily: fonts.headline, fontSize: '1.2rem', fontWeight: 700, color: colors.text, margin: 0, letterSpacing: '2px' }}>GENERER UNE RECETTE</h3>
-          <p style={{ fontSize: '0.78rem', fontFamily: fonts.body, fontWeight: 300, color: colors.textMuted, margin: '4px 0 0' }}>Notre chef cree une recette adaptee a tes macros</p>
+          <h3 style={{ fontFamily: fonts.headline, fontSize: '1.2rem', fontWeight: 700, color: colors.text, margin: 0, letterSpacing: '2px' }}>{t('generateTitle')}</h3>
+          <p style={{ fontSize: '0.78rem', fontFamily: fonts.body, fontWeight: 300, color: colors.textMuted, margin: '4px 0 0' }}>{t('generateDesc')}</p>
         </div>
 
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
-          <div style={{ fontSize: '0.68rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 8 }}>Categorie</div>
+          <div style={{ fontSize: '0.68rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 8 }}>{t('category')}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {CATEGORIES.filter(c => c.id !== 'all').map(c => (
-              <button key={c.id} onClick={() => setGenCategory(c.id)} style={{
+            {CATEGORY_IDS.filter(id => id !== 'all').map(catId => (
+              <button key={catId} onClick={() => setGenCategory(catId)} style={{
                 padding: '8px 14px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
                 fontSize: 9, fontWeight: 700, fontFamily: fonts.alt, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-                background: genCategory === c.id ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
+                background: genCategory === catId ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
                 backdropFilter: 'blur(8px)',
-                border: `1px solid ${genCategory === c.id ? colors.gold : 'rgba(255,255,255,0.1)'}`,
-                color: genCategory === c.id ? colors.gold : colors.textDim,
-              }}>{c.label}</button>
+                border: `1px solid ${genCategory === catId ? colors.gold : 'rgba(255,255,255,0.1)'}`,
+                color: genCategory === catId ? colors.gold : colors.textDim,
+              }}>{t(`categories.${catId}`)}</button>
             ))}
           </div>
         </div>
 
         <button onClick={generateRecipe} disabled={generating} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, color: '#0D0B08', fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', opacity: generating ? 0.6 : 1 }}>
-          {generating ? 'Notre chef prepare ta recette...' : 'Generer la recette'}
+          {generating ? t('generating') : t('generate')}
         </button>
       </div>
     )
@@ -215,23 +210,23 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ fontFamily: fonts.headline, fontSize: '1.1rem', fontWeight: 700, color: colors.text, margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>Recettes fitness</h2>
+        <h2 style={{ fontFamily: fonts.headline, fontSize: '1.1rem', fontWeight: 700, color: colors.text, margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{t('title')}</h2>
         <button onClick={() => setShowGenerate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, color: '#0D0B08', fontSize: '0.72rem', fontWeight: 800, fontFamily: fonts.alt, letterSpacing: '1px', textTransform: 'uppercase' }}>
-          <Sparkles size={13} /> Generer
+          <Sparkles size={13} /> {t('generateBtn')}
         </button>
       </div>
 
       {/* Category filter */}
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-        {CATEGORIES.map(c => (
-          <button key={c.id} onClick={() => setFilter(c.id)} style={{
+        {CATEGORY_IDS.map(catId => (
+          <button key={catId} onClick={() => setFilter(catId)} style={{
             padding: '8px 14px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
             fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap', fontFamily: fonts.alt, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-            background: filter === c.id ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
+            background: filter === catId ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
             backdropFilter: 'blur(8px)',
-            border: `1px solid ${filter === c.id ? colors.gold : 'rgba(255,255,255,0.1)'}`,
-            color: filter === c.id ? colors.gold : colors.textDim,
-          }}>{c.label}</button>
+            border: `1px solid ${filter === catId ? colors.gold : 'rgba(255,255,255,0.1)'}`,
+            color: filter === catId ? colors.gold : colors.textDim,
+          }}>{t(`categories.${catId}`)}</button>
         ))}
       </div>
 
@@ -243,7 +238,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
           <ChefHat size={32} color={colors.textMuted} style={{ margin: '0 auto 8px' }} />
-          <p style={{ fontSize: '0.85rem', fontFamily: fonts.body, color: colors.textMuted }}>Aucune recette. Genere-en une !</p>
+          <p style={{ fontSize: '0.85rem', fontFamily: fonts.body, color: colors.textMuted }}>{t('empty')}</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

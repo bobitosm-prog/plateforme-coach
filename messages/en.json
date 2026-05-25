@@ -578,6 +578,32 @@
       "regenerate": "Regenerate my AI plan"
     }
   },
+  "recipesSection": {
+    "title": "Fitness recipes",
+    "generateBtn": "Generate",
+    "generateTitle": "GENERATE A RECIPE",
+    "generateDesc": "Our chef creates a recipe matched to your macros",
+    "category": "Category",
+    "generating": "Our chef is preparing your recipe...",
+    "generate": "Generate recipe",
+    "backToRecipes": "← Back to recipes",
+    "back": "← Back",
+    "ingredients": "Ingredients ({count} serving(s))",
+    "preparation": "Preparation",
+    "deleteRecipe": "Delete this recipe",
+    "empty": "No recipes yet. Generate one!",
+    "generated": "Recipe generated!",
+    "genError": "Generation error",
+    "deleted": "Recipe deleted",
+    "categories": {
+      "all": "All",
+      "petit-dejeuner": "Breakfast",
+      "dejeuner": "Lunch",
+      "collation": "Snack",
+      "diner": "Dinner",
+      "smoothie": "Smoothie"
+    }
+  },
   "shoppingList": {
     "title": "SHOPPING LIST",
     "subtitle": "{total} items — {checked}/{total} checked",

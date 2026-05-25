@@ -578,6 +578,32 @@
       "regenerate": "Meinen KI-Plan regenerieren"
     }
   },
+  "recipesSection": {
+    "title": "Fitness-Rezepte",
+    "generateBtn": "Generieren",
+    "generateTitle": "REZEPT GENERIEREN",
+    "generateDesc": "Unser Chef erstellt ein Rezept passend zu deinen Makros",
+    "category": "Kategorie",
+    "generating": "Unser Chef bereitet dein Rezept vor...",
+    "generate": "Rezept generieren",
+    "backToRecipes": "← Zurück zu Rezepten",
+    "back": "← Zurück",
+    "ingredients": "Zutaten ({count} Portion(en))",
+    "preparation": "Zubereitung",
+    "deleteRecipe": "Rezept löschen",
+    "empty": "Keine Rezepte. Generiere eins!",
+    "generated": "Rezept generiert!",
+    "genError": "Generierungsfehler",
+    "deleted": "Rezept gelöscht",
+    "categories": {
+      "all": "Alle",
+      "petit-dejeuner": "Frühstück",
+      "dejeuner": "Mittagessen",
+      "collation": "Snack",
+      "diner": "Abendessen",
+      "smoothie": "Smoothie"
+    }
+  },
   "shoppingList": {
     "title": "EINKAUFSLISTE",
     "subtitle": "{total} Artikel — {checked}/{total} abgehakt",
