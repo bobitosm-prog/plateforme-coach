@@ -4,10 +4,11 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-05-24
-- **HEAD** : 262c5c8
+- **Date** : 2026-05-25
+- **HEAD** : a5749f9
 - **Working tree** : clean
-- **Tâche en cours** : Sprint i18n + DB closure — F1+F2+F3 done + bug "JAMBES" filter fixed (F3.5b), reste dette mineure (3 vocabulaires UI inconsistants encore présents dans HomeTab/TrainingTab principale)
+- **Total i18n keys** : 1916
+- **Tâche en cours** : Sprint i18n marathon CLOSED (Sprint 6 + F1+F2+F3+F4+F5)
 
 ---
 
@@ -71,6 +72,19 @@ Plan 5 phases proposé :
 | 18 | ff2c42b | feat(i18n): exercise i18n backfill script (F3.4) |
 | 19 | 9bd45f3 | feat(i18n): muscle_group display + filters (F3.5a) |
 | 20 | 262c5c8 | fix(i18n): muscle filter 'JAMBES' bug + AI priorities i18n (F3.5b) |
+| 21 | 513ff83 | feat(i18n): TechniquePopup advanced training techniques (F4a) |
+| 22 | 49293d9 | feat(i18n): ExerciseDetailModal residual FR strings (F4b) |
+| 23 | e8781b0 | feat(i18n): StartProgramModal locale-aware date picker (F4c.1) |
+| 24 | e57dde6 | feat(i18n): video feedback components (F4c.2) |
+| 25 | b67fa6e | feat(i18n): ExerciseInfoPopup section labels + DB helpers wiring (F4c.3) |
+| 26 | 9f6dd0f | feat(i18n): ShoppingList full i18n + aisle key/label separation (F4c.4) |
+| 27 | 03a9aa3 | feat(i18n): NutritionPreferences full i18n with key-based arrays (F4c.5) |
+| 28 | 59e500d | feat(i18n): RecipesSection + NutritionTab meal type display (F4c.6) |
+| 29 | 6885966 | feat(i18n): TrainingTab residuals — toasts + buttons + dates (F4c.7) |
+| 30 | cf391c3 | feat(i18n): NutritionTab Journal + Plan locale-aware days/dates (F4c.8) |
+| 31 | 6b4d804 | fix(i18n): HeroSessionCard residual FR strings (F4c.9) |
+| 32 | 4bee9a3 | fix(i18n): wire getExerciseName in Alternatives chips + results (F5b) |
+| 33 | a5749f9 | fix(i18n): MealsTab section header + date locale (F5c) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -497,6 +511,54 @@ LEGS affiche 60 exos (27 quads + 13 isch + 13 fessiers + 7 mollets) ✓
 - Décision senior : completed_sessions.exercise_name reste en FR (legacy
   immutable, pattern Strong/Hevy). Le name d'exercice à la date où l'user
   l'a fait reflète ce qu'il a vu à l'époque.
+
+## F4 — Cluster final composants orphelins (DONE)
+
+### Sous-batches F4
+
+**F4a — TechniquePopup (513ff83)** : 30 clés, 4 techniques avancées, pattern buildTechniqueData(t)
+**F4b — ExerciseDetailModal (49293d9)** : 4 clés, toast + form labels, réutilisation common.*
+**F4c.1 — StartProgramModal (e8781b0)** : 9 clés, formatDateFr → locale, monthNames → Intl natif
+**F4c.2 — VideoFeedback (e57dde6)** : 18 clés, accents restaurés, status labels
+**F4c.3 — ExerciseInfoPopup (b67fa6e)** : 4 clés, BUG LATENT fixé (helpers DB wirés)
+**F4c.4 — ShoppingList (9f6dd0f)** : 22 clés, getAisle key/label separation, 14 aisles
+**F4c.5 — NutritionPreferences (03a9aa3)** : 76 clés, 4 const arrays refacto key-based
+**F4c.6 — RecipesSection + NutritionTab meal types (59e500d)** : 22 clés
+**F4c.7 — TrainingTab residuals (6885966)** : 24 clés, toasts + buttons + dates
+**F4c.8 — NutritionTab Journal/Plan dates (cf391c3)** : 2 clés, NUTRITION_DAYS override Intl
+**F4c.9 — HeroSessionCard (6b4d804)** : 4 clés, badgeLabel mapping + VOIR LA SEANCE
+
+## F5 — Vague ultra-finale
+
+**F5a — RecentSessionsList + freeSession** : 15 clés, HISTORY_FILTERS labels override
+**F5b — Alternatives getExerciseName wiring (4bee9a3)** : 0 clé, 2 display wrappés
+**F5c — MealsTab header + date (a5749f9)** : 1 clé, MES REPAS + fr-FR → locale
+
+### Bilan total marathon (Sprint 6 + F1+F2+F3+F4+F5)
+
+- **1052 → 1916 clés i18n (+864, ~99% couverture)**
+- **178 exos DB en 3 langues (backfill Claude Opus 4.7, ~$3-4)**
+- **6 colonnes DB exercises_db ajoutées**
+- **5 helpers/libs créés** : i18n-exercise, i18n-muscle, matchMuscleFilter,
+  buildTechniqueData, key-based arrays pattern
+- **3 patterns architecturaux établis** :
+  - sub-component extraction (Provider context)
+  - Option B Recharts dataKey refactor
+  - key-based const arrays + t() lookup
+- **33+ commits feature + 1 revert tracé**
+- **2 incidents sécurité gérés** : rotation API keys + reset Postgres password
+- **1 régression critique** : F1b revert + post-mortem + F1b-v2 propre
+
+### Tech debt résiduelle (8 items pour sprints futurs)
+
+1. design-tokens.ts i18n (NUTRITION_DAYS, MEAL_TYPES, ACTIVITY_LEVELS) ~1h
+2. DB i18n nutrition (food_items / community_foods) ~2h
+3. Vocab muscles UI consolidation (4 vocabulaires)
+4. Equipment data quality (43 valeurs, doublons)
+5. Doublon DB Abdos/Abdominaux
+6. Data quality programmes (string libre vs FK exercise_id)
+7. MealsTab noms repas user data (non traduisible)
+8. Tags universaux EN + abréviations (décision brand explicite)
 
 ---
 
