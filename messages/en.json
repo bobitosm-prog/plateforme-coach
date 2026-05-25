@@ -33,6 +33,48 @@
     "arms": "Arms",
     "cardio": "Cardio"
   },
+  "techniques": {
+    "dropset": {
+      "label": "DROP SET",
+      "short": "Do your reps, drop the weight by 20-30%, restart with no rest. Maximum fiber fatigue.",
+      "full": "Do your normal reps, then reduce the weight by 20-30% and immediately restart without rest. Repeat 1-3 times.",
+      "why": "Maximum muscle fiber fatigue → hypertrophy",
+      "example": "Curl 20kg × 10 reps → 14kg × 8 reps → 10kg × 6 reps"
+    },
+    "restpause": {
+      "label": "REST PAUSE",
+      "short": "Do your reps, rest 10-15s, restart for the max. More volume with the same weight.",
+      "full": "Do your normal reps, rack the bar for 10-15 seconds, then go again for max reps. Repeat 2-3 times.",
+      "why": "More volume with the same weight → strength + volume",
+      "example": "Bench 80kg × 8 → 15s rest → 80kg × 3 → 15s rest → 80kg × 2"
+    },
+    "superset": {
+      "label": "SUPERSET",
+      "short": "Chain 2 exercises with no rest between them. Rest only after the 2nd.",
+      "full": "Chain 2 exercises with no rest between them. Rest only after the second exercise.",
+      "why": "Time-efficient + increased intensity + maximum pump",
+      "example": "Bench press × 10 → Rowing × 10 → 90s rest"
+    },
+    "mechanical": {
+      "label": "MECHANICAL",
+      "short": "Switch grip/angle when you fatigue instead of dropping weight.",
+      "full": "Switch grip or angle when you fatigue instead of reducing the weight.",
+      "why": "Exhausts all portions of the muscle in the same set",
+      "example": "Curl wide grip → close grip → hammer grip"
+    },
+    "ui": {
+      "dropsetPrompt": "Drop the weight by 20-30% and restart!",
+      "restpausePrompt": "Short rest… Get ready!",
+      "restpauseGo": "GO FOR THE MAX!",
+      "go": "GO!",
+      "noteDrops": "Log your drops",
+      "notePauses": "Log your pauses",
+      "addEntry": "+ Add",
+      "cancel": "Cancel",
+      "done": "Done",
+      "whyPrefix": "Why: "
+    }
+  },
   "nav": {
     "login": "Sign in",
     "start": "Get started",

@@ -33,6 +33,48 @@
     "arms": "Arme",
     "cardio": "Cardio"
   },
+  "techniques": {
+    "dropset": {
+      "label": "DROP SET",
+      "short": "Mache deine Reps, reduziere das Gewicht um 20-30%, weiter ohne Pause. Maximale Faserermüdung.",
+      "full": "Mache deine normalen Reps, reduziere dann das Gewicht um 20-30% und starte sofort wieder ohne Pause. 1-3 mal wiederholen.",
+      "why": "Maximale Muskelfaserermüdung → Hypertrophie",
+      "example": "Curl 20kg × 10 Wdh → 14kg × 8 Wdh → 10kg × 6 Wdh"
+    },
+    "restpause": {
+      "label": "REST PAUSE",
+      "short": "Mache deine Reps, 10-15s Pause, weiter für das Max. Mehr Volumen mit gleichem Gewicht.",
+      "full": "Mache deine normalen Reps, lege die Stange für 10-15 Sekunden ab, dann weiter für maximale Reps. 2-3 mal wiederholen.",
+      "why": "Mehr Volumen mit gleichem Gewicht → Kraft + Volumen",
+      "example": "Bankdrücken 80kg × 8 → 15s Pause → 80kg × 3 → 15s Pause → 80kg × 2"
+    },
+    "superset": {
+      "label": "SUPERSATZ",
+      "short": "Verknüpfe 2 Übungen ohne Pause dazwischen. Pause erst nach der 2. Übung.",
+      "full": "Verknüpfe 2 Übungen ohne Pause dazwischen. Pause erst nach der zweiten Übung.",
+      "why": "Zeitsparend + erhöhte Intensität + maximaler Pump",
+      "example": "Bankdrücken × 10 → Rudern × 10 → 90s Pause"
+    },
+    "mechanical": {
+      "label": "MECHANICAL",
+      "short": "Wechsle Griff/Winkel bei Ermüdung statt das Gewicht zu reduzieren.",
+      "full": "Wechsle den Griff oder Winkel bei Ermüdung statt das Gewicht zu reduzieren.",
+      "why": "Erschöpft alle Anteile des Muskels in einem Satz",
+      "example": "Curl breiter Griff → enger Griff → Hammergriff"
+    },
+    "ui": {
+      "dropsetPrompt": "Reduziere das Gewicht um 20-30% und starte neu!",
+      "restpausePrompt": "Kurze Pause… Mach dich bereit!",
+      "restpauseGo": "LOS FÜR DAS MAX!",
+      "go": "LOS!",
+      "noteDrops": "Notiere deine Drops",
+      "notePauses": "Notiere deine Pausen",
+      "addEntry": "+ Hinzufügen",
+      "cancel": "Abbrechen",
+      "done": "Fertig",
+      "whyPrefix": "Warum: "
+    }
+  },
   "nav": {
     "login": "Anmelden",
     "start": "Loslegen",

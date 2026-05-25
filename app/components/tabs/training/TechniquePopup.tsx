@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN,
@@ -9,49 +10,29 @@ import {
 } from '../../../../lib/design-tokens'
 
 /* ═══════════════════════════════════════════════════
-   DATA
+   DATA — built from translations, called per-component
    ═══════════════════════════════════════════════════ */
 
-const TECHNIQUE_DATA: Record<string, {
-  emoji: string
-  label: string
-  short: string
-  full: string
-  why: string
-  example: string
-}> = {
-  dropset: {
-    emoji: '🔻',
-    label: 'DROP SET',
-    short: 'Fais tes reps, réduis le poids de 20-30%, repars sans repos. Fatigue maximale des fibres.',
-    full: 'Fais tes reps normales, puis réduis le poids de 20-30% et repars immédiatement sans repos. Répète 1-3 fois.',
-    why: 'Fatigue maximale des fibres musculaires → hypertrophie',
-    example: 'Curl 20kg × 10 reps → 14kg × 8 reps → 10kg × 6 reps',
-  },
-  restpause: {
-    emoji: '⏸️',
-    label: 'REST PAUSE',
-    short: 'Fais tes reps, repos 10-15s, repars pour le max. Plus de volume avec le même poids.',
-    full: 'Fais tes reps normales, pose la barre 10-15 secondes, puis repars pour le max de reps. Répète 2-3 fois.',
-    why: 'Plus de volume avec le même poids → force + volume',
-    example: 'Développé 80kg × 8 → 15s repos → 80kg × 3 → 15s repos → 80kg × 2',
-  },
-  superset: {
-    emoji: '🔗',
-    label: 'SUPERSET',
-    short: 'Enchaîne 2 exercices sans repos entre eux. Repos seulement après le 2ème.',
-    full: 'Enchaîne 2 exercices sans repos entre eux. Repos seulement après le deuxième exercice.',
-    why: 'Gain de temps + intensité accrue + congestion maximale',
-    example: 'Développé couché × 10 → Rowing × 10 → 90s repos',
-  },
-  mechanical: {
-    emoji: '🔄',
-    label: 'MECHANICAL',
-    short: 'Change la prise/angle quand tu fatigues au lieu de réduire le poids.',
-    full: 'Change la prise ou l\'angle quand tu fatigues au lieu de réduire le poids.',
-    why: 'Épuise toutes les portions du muscle dans la même série',
-    example: 'Curl prise large → prise serrée → prise marteau',
-  },
+const TECHNIQUE_EMOJIS: Record<string, string> = {
+  dropset: '🔻', restpause: '⏸️', superset: '🔗', mechanical: '🔄',
+}
+
+type TechniqueRecord = Record<string, { emoji: string; label: string; short: string; full: string; why: string; example: string }>
+
+function buildTechniqueData(t: (key: string) => string): TechniqueRecord {
+  return Object.fromEntries(
+    ['dropset', 'restpause', 'superset', 'mechanical'].map(key => [
+      key,
+      {
+        emoji: TECHNIQUE_EMOJIS[key],
+        label: t(`${key}.label`),
+        short: t(`${key}.short`),
+        full: t(`${key}.full`),
+        why: t(`${key}.why`),
+        example: t(`${key}.example`),
+      },
+    ])
+  )
 }
 
 /* ═══════════════════════════════════════════════════
@@ -64,6 +45,8 @@ interface TechniqueTooltipProps {
 }
 
 export function TechniqueTooltip({ technique, onClose }: TechniqueTooltipProps) {
+  const t = useTranslations('techniques')
+  const TECHNIQUE_DATA = buildTechniqueData(t)
   const data = TECHNIQUE_DATA[technique]
   if (!data) return null
 
@@ -192,6 +175,8 @@ export function TechniqueActivePopup({
   onDone,
   onCancel,
 }: TechniqueActivePopupProps) {
+  const t = useTranslations('techniques')
+  const TECHNIQUE_DATA = buildTechniqueData(t)
   const data = TECHNIQUE_DATA[technique]
 
   // Timer state
@@ -231,10 +216,10 @@ export function TechniqueActivePopup({
   const isRestpause = technique === 'restpause'
 
   const prompt = isDropset
-    ? 'Réduis le poids de 20-30% et repars !'
-    : 'Repos court… Prépare-toi !'
+    ? t('ui.dropsetPrompt')
+    : t('ui.restpausePrompt')
 
-  const goMessage = isRestpause ? 'REPARS POUR LE MAX !' : 'GO !'
+  const goMessage = isRestpause ? t('ui.restpauseGo') : t('ui.go')
 
   return (
     <AnimatePresence>
@@ -356,7 +341,7 @@ export function TechniqueActivePopup({
             color: TEXT_DIM,
             marginBottom: 10,
           }}>
-            {isDropset ? 'Notes tes drops' : 'Notes tes pauses'}
+            {isDropset ? t('ui.noteDrops') : t('ui.notePauses')}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -430,7 +415,7 @@ export function TechniqueActivePopup({
               marginBottom: 20,
             }}
           >
-            + Ajouter
+            {t('ui.addEntry')}
           </button>
 
           {/* Actions */}
@@ -452,7 +437,7 @@ export function TechniqueActivePopup({
                 cursor: 'pointer',
               }}
             >
-              Annuler
+              {t('ui.cancel')}
             </button>
             <button
               onClick={onDone}
@@ -471,7 +456,7 @@ export function TechniqueActivePopup({
                 cursor: 'pointer',
               }}
             >
-              Terminé
+              {t('ui.done')}
             </button>
           </div>
         </motion.div>
@@ -489,6 +474,8 @@ interface TechniqueExplanationCardsProps {
 }
 
 export function TechniqueExplanationCards({ techniques }: TechniqueExplanationCardsProps) {
+  const tt = useTranslations('techniques')
+  const TECHNIQUE_DATA = buildTechniqueData(tt)
   const filtered = techniques.filter((t) => TECHNIQUE_DATA[t])
   if (filtered.length === 0) return null
 
@@ -543,7 +530,7 @@ export function TechniqueExplanationCards({ techniques }: TechniqueExplanationCa
               margin: '0 0 14px',
               fontStyle: 'italic',
             }}>
-              Pourquoi : {d.why}
+              {tt('ui.whyPrefix')}{d.why}
             </p>
 
             {/* Example */}
