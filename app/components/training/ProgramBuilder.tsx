@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { getExerciseName } from '../../../lib/i18n-exercise'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../../lib/session-types'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -84,6 +85,7 @@ export { padTo7Days }
 /* ─── Component ─── */
 export default function ProgramBuilder({ supabase, session, aiAllowed = true, onClose, onSave, editProgram }: ProgramBuilderProps) {
   const t = useTranslations('training_tab.builder')
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   // Display-only day names (translated). DAY_NAMES at module-level stays FR for DB/padTo7Days.
   const dayNamesDisplay = DAY_NAMES // padTo7Days stores FR weekday in DB — display translation happens at render
   const dayShortDisplay = DAY_SHORT
@@ -876,7 +878,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 15, color: TEXT_PRIMARY }}>{ex.name}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 15, color: TEXT_PRIMARY }}>{getExerciseName(ex, locale)}</div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                     {ex.muscle_group && (
                       <span style={{ fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase', padding: '2px 8px', background: GOLD_DIM, color: GOLD, letterSpacing: '0.05em' }}>
@@ -1112,14 +1114,16 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             {!programDays[editingDayIndex]?.is_rest && (<>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
               {(programDays[editingDayIndex]?.exercises || []).map((ex: any, exIdx: number) => {
-                const exerciseName = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || t('day.unknownExercise')
+                const exerciseNameRaw = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || ''
+                const exerciseName = exerciseNameRaw || t('day.unknownExercise') // display fallback
+                const exerciseNameDisplay = getExerciseName(ex, locale) || exerciseName
                 const exerciseMuscle = ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group || ''
                 const exCount = programDays[editingDayIndex]?.exercises?.length || 0
                 return (
                 <div key={exIdx} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
-                      <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY }}>{exerciseName}</div>
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY }}>{exerciseNameDisplay}</div>
                       {exerciseMuscle && (
                         <span style={{
                           fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase',
@@ -1131,10 +1135,10 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button aria-label={`${t('day.moveUp')} ${exerciseName}`} disabled={exIdx === 0} onClick={() => moveExerciseInDay(exIdx, -1)} title={t('day.moveUp')} style={{ background: exIdx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === 0 ? BORDER : GOLD_RULE}`, color: exIdx === 0 ? TEXT_DIM : GOLD, cursor: exIdx === 0 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↑</button>
-                      <button aria-label={`${t('day.moveDown')} ${exerciseName}`} disabled={exIdx === exCount - 1} onClick={() => moveExerciseInDay(exIdx, 1)} title={t('day.moveDown')} style={{ background: exIdx === exCount - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === exCount - 1 ? BORDER : GOLD_RULE}`, color: exIdx === exCount - 1 ? TEXT_DIM : GOLD, cursor: exIdx === exCount - 1 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↓</button>
-                      <button aria-label={`${t('day.variants')} ${exerciseName}`} onClick={() => loadVariants(exerciseName, editingDayIndex, exIdx)} title={t('day.variants')} style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}>🔄</button>
-                      <button aria-label={`${t('confirm.deleteConfirm')} ${exerciseName}`} onClick={() => setExerciseToDelete({ dayIdx: editingDayIndex, exIdx, name: exerciseName })} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
+                      <button aria-label={`${t('day.moveUp')} ${exerciseNameDisplay}`} disabled={exIdx === 0} onClick={() => moveExerciseInDay(exIdx, -1)} title={t('day.moveUp')} style={{ background: exIdx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === 0 ? BORDER : GOLD_RULE}`, color: exIdx === 0 ? TEXT_DIM : GOLD, cursor: exIdx === 0 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↑</button>
+                      <button aria-label={`${t('day.moveDown')} ${exerciseNameDisplay}`} disabled={exIdx === exCount - 1} onClick={() => moveExerciseInDay(exIdx, 1)} title={t('day.moveDown')} style={{ background: exIdx === exCount - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${exIdx === exCount - 1 ? BORDER : GOLD_RULE}`, color: exIdx === exCount - 1 ? TEXT_DIM : GOLD, cursor: exIdx === exCount - 1 ? 'default' : 'pointer', padding: '4px 8px', fontSize: 12 }}>↓</button>
+                      <button aria-label={`${t('day.variants')} ${exerciseNameDisplay}`} onClick={() => loadVariants(exerciseNameRaw, editingDayIndex, exIdx)} title={t('day.variants')} style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }}>🔄</button>
+                      <button aria-label={`${t('confirm.deleteConfirm')} ${exerciseNameDisplay}`} onClick={() => setExerciseToDelete({ dayIdx: editingDayIndex, exIdx, name: exerciseNameDisplay })} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', padding: 4 }}><Trash2 size={16} /></button>
                     </div>
                   </div>
 

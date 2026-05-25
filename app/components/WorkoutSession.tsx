@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef, useMemo, Fragment } from 'react'
 import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { getExerciseName } from '../../lib/i18n-exercise'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
@@ -53,6 +54,7 @@ const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps'
 
 function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: any[]) => void; onCancel: () => void }) {
   const t = useTranslations('training_tab.ws')
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const ALL_KEY = '__all__'
   const muscleFilters = [{ key: ALL_KEY, label: t('allMuscles') }, ...WORKOUT_MUSCLE_FILTERS.slice(1).map(m => ({ key: m, label: m }))]
@@ -108,7 +110,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
                 <span style={{ color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 14 }}>{i + 1}</span>
               </div>
               <div>
-                <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{e.name}</div>
+                <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
                 {e.muscle_group && <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{e.muscle_group}</div>}
               </div>
             </div>
@@ -155,7 +157,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
             {selected.map(e => (
               <span key={e.id} onClick={() => toggle(e)} style={{ padding: '4px 10px', borderRadius: 10, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                {e.name} <X size={9} />
+                {getExerciseName(e, locale)} <X size={9} />
               </span>
             ))}
           </div>
@@ -203,7 +205,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
                 {sel ? <Check size={16} color="#0D0B08" strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{e.name}</div>
+                <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                   {e.muscle_group && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: GOLD_DIM, color: GOLD, letterSpacing: 1, textTransform: 'uppercase' as const }}>{e.muscle_group}</span>}
                   {e.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${dc(e.difficulty)}18`, color: dc(e.difficulty), letterSpacing: 1 }}>{t(`difficulty.${e.difficulty}`)}</span>}
@@ -232,6 +234,7 @@ const AUTO_REDIRECT_SECONDS = 8
 
 export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
   const t = useTranslations('training_tab.ws')
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
   const draftCheckedRef = useRef(false)
@@ -823,7 +826,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     <div className="py-3 flex justify-between items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <div style={{ fontFamily: FONT_ALT, fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.01em' }} className="truncate">
-                          {p.name}
+                          {getExerciseName(p, locale)}
                         </div>
                         <div className="mt-0.5" style={{ ...mutedStyle, fontSize: 11 }}>
                           {t('done.setsCount', { count: p.setsCount })} · {p.muscle}
@@ -996,7 +999,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 >
                   <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.15em', flexShrink: 0, minWidth: 16, fontFamily: FONT_ALT, fontWeight: 700 }}>{idx + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 15, color: TEXT_PRIMARY, fontWeight: 600, lineHeight: 1.2, fontFamily: FONT_BODY }}>{exo.name}</div>
+                    <div style={{ fontSize: 15, color: TEXT_PRIMARY, fontWeight: 600, lineHeight: 1.2, fontFamily: FONT_BODY }}>{getExerciseName(exo, locale)}</div>
                     <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: FONT_BODY }}>{exo.muscle ? `${exo.muscle} · ` : ''}{t('done.setsCount', { count: exo.targetSets })}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: 4, flexShrink: 0 }}>
@@ -1036,7 +1039,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               >
                 {/* Background image */}
                 {exo.imageUrl && (
-                  <img src={exo.imageUrl} alt={exo.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={exo.imageUrl} alt={getExerciseName(exo, locale)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 )}
                 {/* Gradient overlay */}
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(13,11,8,0.85) 100%)', pointerEvents: 'none' }} />
@@ -1055,7 +1058,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14, zIndex: 1 }}>
                   {exo.muscle && <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, opacity: 0.85, textTransform: 'uppercase' as const, marginBottom: 4, fontFamily: FONT_ALT }}>{exo.muscle}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 24, fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '-0.01em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_DISPLAY }}>{exo.name}</span>
+                    <span style={{ fontSize: 24, fontWeight: 800, color: TEXT_PRIMARY, letterSpacing: '-0.01em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_DISPLAY }}>{getExerciseName(exo, locale)}</span>
                     {progressBadge !== null && (
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.20)' : progressBadge < 0 ? 'rgba(239,68,68,0.20)' : 'rgba(255,255,255,0.12)', color: progressBadge > 0 ? colors.success : progressBadge < 0 ? colors.error : 'rgba(255,255,255,0.5)' }}>
                         {progressBadge > 0 ? '+' : ''}{progressBadge}%
@@ -1448,7 +1451,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           <div onClick={e=>e.stopPropagation()} style={{background:colors.surface2,border:`1px solid ${colors.divider}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.divider}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
               <div>
-                <div style={{fontFamily:FONT_DISPLAY,fontSize:22,letterSpacing:2,color:TEXT_PRIMARY}}>{exerciseInfo.name}</div>
+                <div style={{fontFamily:FONT_DISPLAY,fontSize:22,letterSpacing:2,color:TEXT_PRIMARY}}>{getExerciseName(exerciseInfo, locale)}</div>
                 <div style={{display:'flex',gap:6,marginTop:4,flexWrap:'wrap'}}>
                   {exerciseInfo.muscle_group&&<span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:GOLD_DIM,color:GOLD,letterSpacing:1,textTransform:'uppercase' as const}}>{exerciseInfo.muscle_group}</span>}
                   {exerciseInfo.equipment&&<span style={{fontFamily:FONT_BODY,fontSize:10,padding:'2px 8px',borderRadius:6,background:BG_CARD_2,color:TEXT_MUTED}}>{exerciseInfo.equipment}</span>}
@@ -1464,7 +1467,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 </div>
               ):exerciseInfo.gif_url?(
                 <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
-                  <img src={exerciseInfo.gif_url} alt={exerciseInfo.name} style={{width:'100%',height:'auto',display:'block'}}/>
+                  <img src={exerciseInfo.gif_url} alt={getExerciseName(exerciseInfo, locale)} style={{width:'100%',height:'auto',display:'block'}}/>
                 </div>
               ):(
                 <div style={{marginBottom:20,borderRadius:14,border:`1px dashed ${BORDER}`,padding:'40px 20px',textAlign:'center',background:GOLD_DIM}}>
@@ -1515,7 +1518,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
                   </div>
                   <div>
-                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{v.name}</div>
+                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{getExerciseName(v, locale)}</div>
                     <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
                   </div>
                 </button>

@@ -1,6 +1,8 @@
 'use client'
 import { useState } from 'react'
+import { useLocale } from 'next-intl'
 import { X } from 'lucide-react'
+import { getExerciseName } from '../../../lib/i18n-exercise'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
 import {
@@ -19,6 +21,7 @@ interface ExerciseDetailModalProps {
 }
 
 export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClose, onAdd }: ExerciseDetailModalProps) {
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   const [editSets, setEditSets] = useState(sets || 3)
   const [editReps, setEditReps] = useState(reps || 10)
   const [editRest, setEditRest] = useState(rest || '90')
@@ -71,7 +74,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
                   </span>
                 )}
                 <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '2px', margin: '8px 0 0', textTransform: 'uppercase', color: TEXT_PRIMARY }}>
-                  {exercise.name}
+                  {getExerciseName(exercise, locale)}
                 </h3>
               </div>
               <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -86,7 +89,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
               </div>
             ) : exercise.gif_url ? (
               <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}` }}>
-                <img src={exercise.gif_url} alt={exercise.name} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                <img src={exercise.gif_url} alt={getExerciseName(exercise, locale)} style={{ width: '100%', height: 'auto', display: 'block' }} />
               </div>
             ) : (
               <div style={{ borderRadius: RADIUS_CARD, border: `1px dashed ${BORDER}`, padding: '40px 20px', textAlign: 'center', background: GOLD_DIM, marginBottom: 18 }}>

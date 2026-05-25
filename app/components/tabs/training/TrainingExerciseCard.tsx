@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getExerciseName } from '../../../../lib/i18n-exercise'
 import { Check, Plus, MoreHorizontal, Timer, Video, RefreshCw, Info, BarChart2 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -44,6 +46,7 @@ export default function TrainingExerciseCard({
   onToggleSet, onAddSet, onUpdateInput, onExerciseInfo, fmtRest, onCancelRest, onVideoFeedback, onTechniqueInfo,
   supabase, userId,
 }: TrainingExerciseCardProps) {
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   const restSecs   = getRestSeconds(ex)
   const numSets    = setsArr.length
   const doneCount  = setsArr.filter(Boolean).length
@@ -134,7 +137,7 @@ export default function TrainingExerciseCard({
       <div style={{ padding: '14px 14px 10px', borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           {/* Exercise image — gif_url takes priority over GitHub images */}
-          <ExercisePreview name={ex.name} size={48} animate={false} imageUrl={ex.gif_url} />
+          <ExercisePreview name={getExerciseName(ex, locale)} size={48} animate={false} imageUrl={ex.gif_url} />
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Exercise name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -144,7 +147,7 @@ export default function TrainingExerciseCard({
                 color: allDone ? GREEN : BLUE,
                 letterSpacing: '0.02em',
                 transition: 'color 0.3s', cursor: 'pointer',
-              }}>{ex.name}</span>
+              }}>{getExerciseName(ex, locale)}</span>
 
               {/* Muscle group badge */}
               {ex.muscle_group && (
@@ -209,7 +212,7 @@ export default function TrainingExerciseCard({
           {/* ⋯ menu button */}
           <div style={{ position: 'relative' }} ref={menuRef}>
             <button
-              aria-label={`Plus d'options pour ${ex.name || "l'exercice"}`}
+              aria-label={`${getExerciseName(ex, locale)}`}
               onClick={() => setMenuOpen(!menuOpen)}
               style={{
                 background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px',

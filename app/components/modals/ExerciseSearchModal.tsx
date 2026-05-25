@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { useLocale } from 'next-intl'
 import { X, Search, Dumbbell } from 'lucide-react'
+import { getExerciseName } from '../../../lib/i18n-exercise'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -17,6 +19,7 @@ interface ExerciseSearchModalProps {
 }
 
 export default function ExerciseSearchModal({ supabase, onClose, onAdd }: ExerciseSearchModalProps) {
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   const [exSearch, setExSearch] = useState('')
   const [exResults, setExResults] = useState<any[]>([])
   const [exDbAllResults, setExDbAllResults] = useState<any[]>([])
@@ -152,7 +155,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                       })()}
                       <div style={{ padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
                         <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.88rem', color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '1px', lineHeight: 1.2 }}>
-                          {ex.name}
+                          {getExerciseName(ex, locale)}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                           {ex.muscle_group && (
@@ -210,7 +213,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                     </span>
                   )}
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '2px', margin: '8px 0 0', textTransform: 'uppercase', color: TEXT_PRIMARY }}>
-                    {selectedExDb.name}
+                    {getExerciseName(selectedExDb, locale)}
                   </h3>
                 </div>
                 <button onClick={() => setSelectedExDb(null)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

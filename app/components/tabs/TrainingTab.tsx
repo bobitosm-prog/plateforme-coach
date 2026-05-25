@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
+import { getExerciseName } from '../../../lib/i18n-exercise'
 import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
@@ -72,7 +73,7 @@ export default function TrainingTab({
   lastCompletedByIndex,
 }: TrainingTabProps) {
   const t = useTranslations('training_tab')
-  const locale = useLocale()
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const T = titleStyle
   // Source de vérité : profiles.subscription_type (pas coach_clients.invited_by_coach)
@@ -1021,7 +1022,7 @@ export default function TrainingTab({
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {exercises.slice(0, 4).map((ex: any, i: number) => (
                       <span key={i} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, background: colors.goldDim, padding: '2px 8px', borderRadius: 6 }}>
-                        {ex.name || ex.exercise_name || t('calendar.exercise')}
+                        {getExerciseName(ex, locale) || t('calendar.exercise')}
                       </span>
                     ))}
                     {exercises.length > 4 && (

@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { Dumbbell, Search, ChevronRight, ArrowRightLeft, X } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { getExerciseName } from '../../../lib/i18n-exercise'
 import { toast } from 'sonner'
 import { fonts, colors, btnPrimary } from '../../../lib/design-tokens'
 
@@ -48,6 +49,7 @@ interface ExerciseLibrarySectionProps {
 
 export default function ExerciseLibrarySection({ exercisesCache, activeCustomProgram, supabase, onProgramUpdate, onStartWorkout }: ExerciseLibrarySectionProps) {
   const t = useTranslations('training_tab.library')
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   const ALL_KEY = '__all__'
   const muscleFilters = [{ key: ALL_KEY, label: t('allMuscles') }, ...DB_MUSCLES.map(m => ({ key: m, label: m }))]
   const [libSearch, setLibSearch] = useState('')
@@ -94,7 +96,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
                       {ex.gif_url ? <img src={ex.gif_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Dumbbell size={20} color={colors.textDim} />}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getExerciseName(ex, locale)}</div>
                       <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
                         {ex.muscle_group && <span style={{ fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{ex.muscle_group}</span>}
                       </div>
@@ -161,7 +163,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
                   {ex.gif_url ? <img src={ex.gif_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Dumbbell size={20} color={colors.textDim} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body }}>{ex.name}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body }}>{getExerciseName(ex, locale)}</div>
                   <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>{ex.muscle_group && <span style={{ fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{ex.muscle_group}</span>}</div>
                   {ex.equipment && <div style={{ fontSize: 10, color: colors.textDim, fontFamily: fonts.body, marginTop: 2 }}>{ex.equipment}</div>}
                 </div>
@@ -188,7 +190,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
             <div style={{ maxHeight: 160, overflowY: 'auto', marginBottom: 8, borderRadius: 12, border: `1px solid ${colors.divider}`, background: colors.surface2 }}>
               {exercisesCache.filter((e: any) => e.name?.toLowerCase().includes(altSearch.toLowerCase())).slice(0, 8).map((ex: any) => (
                 <button key={ex.id} onClick={async () => { setAltSelected(ex); setAltSearch(ex.name); const alts = exercisesCache.filter((a: any) => a.id !== ex.id && a.muscle_group?.toLowerCase() === ex.muscle_group?.toLowerCase() && a.name !== ex.name).slice(0, 3); setAltResults(alts) }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.divider}`, cursor: 'pointer', textAlign: 'left' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{ex.name}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{getExerciseName(ex, locale)}</div>
                   <div style={{ fontSize: 9, color: colors.textDim, fontFamily: fonts.body }}>{ex.muscle_group} &middot; {ex.equipment || 'N/A'}</div>
                 </button>
               ))}
@@ -219,7 +221,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
                       {alt.equipment && <span style={{ fontSize: 9, fontFamily: fonts.alt, color: colors.textDim, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 999, letterSpacing: '0.1em' }}>{alt.equipment}</span>}
                     </div>
                   </div>
-                  <button onClick={async () => { if (!activeCustomProgram?.id) return; const updated = activeCustomProgram.days.map((d: any) => ({ ...d, exercises: (d.exercises || []).map((e: any) => { const n = e.exercise_name || e.name; if (n === altSelected.name) return { ...e, exercise_name: alt.name, name: alt.name, muscle_group: alt.muscle_group }; return e }) })); await supabase.from('custom_programs').update({ days: updated }).eq('id', activeCustomProgram.id); onProgramUpdate({ ...activeCustomProgram, days: updated }); setAltSelected(null); setAltSearch(''); setAltResults([]); toast.success(`${altSelected.name} \u2192 ${alt.name}`) }} style={{ ...btnPrimary, padding: '8px 14px', fontSize: 10, flexShrink: 0 }}>{t('replace')}</button>
+                  <button onClick={async () => { if (!activeCustomProgram?.id) return; const updated = activeCustomProgram.days.map((d: any) => ({ ...d, exercises: (d.exercises || []).map((e: any) => { const n = e.exercise_name || e.name; if (n === altSelected.name) return { ...e, exercise_name: alt.name, name: alt.name, muscle_group: alt.muscle_group }; return e }) })); await supabase.from('custom_programs').update({ days: updated }).eq('id', activeCustomProgram.id); onProgramUpdate({ ...activeCustomProgram, days: updated }); setAltSelected(null); setAltSearch(''); setAltResults([]); toast.success(`${getExerciseName(altSelected, locale)} \u2192 ${getExerciseName(alt, locale)}`) }} style={{ ...btnPrimary, padding: '8px 14px', fontSize: 10, flexShrink: 0 }}>{t('replace')}</button>
                 </div>
               ))}
             </div>
