@@ -14,7 +14,11 @@
     "close": "Schließen",
     "confirm": "Bestätigen",
     "backToAccount": "Zurück zum Konto",
-    "navAccount": "Konto"
+    "navAccount": "Konto",
+    "exerciseAdded": "Übung hinzugefügt ✓",
+    "sets": "Sätze",
+    "reps": "Wdh.",
+    "restSec": "Pause (s)"
   },
   "muscles": {
     "all": "Alle",

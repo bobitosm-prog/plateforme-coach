@@ -14,7 +14,11 @@
     "close": "Fermer",
     "confirm": "Confirmer",
     "backToAccount": "Retour a Compte",
-    "navAccount": "Compte"
+    "navAccount": "Compte",
+    "exerciseAdded": "Exercice ajouté ✓",
+    "sets": "Séries",
+    "reps": "Reps",
+    "restSec": "Repos (s)"
   },
   "muscles": {
     "all": "Tous",

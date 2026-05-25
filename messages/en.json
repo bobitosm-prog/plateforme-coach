@@ -14,7 +14,11 @@
     "close": "Close",
     "confirm": "Confirm",
     "backToAccount": "Back to Account",
-    "navAccount": "Account"
+    "navAccount": "Account",
+    "exerciseAdded": "Exercise added ✓",
+    "sets": "Sets",
+    "reps": "Reps",
+    "restSec": "Rest (s)"
   },
   "muscles": {
     "all": "All",

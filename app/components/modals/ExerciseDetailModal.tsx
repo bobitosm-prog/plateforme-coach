@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -22,6 +22,7 @@ interface ExerciseDetailModalProps {
 
 export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClose, onAdd }: ExerciseDetailModalProps) {
   const locale = useLocale() as 'fr' | 'en' | 'de'
+  const tc = useTranslations('common')
   const [editSets, setEditSets] = useState(sets || 3)
   const [editReps, setEditReps] = useState(reps || 10)
   const [editRest, setEditRest] = useState(rest || '90')
@@ -40,7 +41,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
       reps: editReps,
       rest_seconds: parseInt(String(editRest)) || 90,
     })
-    toast.success('Exercice ajouté ✓')
+    toast.success(tc('exerciseAdded'))
     onClose()
   }
 
@@ -138,9 +139,9 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
             {/* Editable Sets / Reps / Rest */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
               {[
-                { label: 'Séries', value: editSets, onChange: (v: number) => setEditSets(v) },
-                { label: 'Reps', value: editReps, onChange: (v: number) => setEditReps(v) },
-                { label: 'Repos (s)', value: editRest, onChange: (v: any) => setEditRest(v) },
+                { label: tc('sets'), value: editSets, onChange: (v: number) => setEditSets(v) },
+                { label: tc('reps'), value: editReps, onChange: (v: number) => setEditReps(v) },
+                { label: tc('restSec'), value: editRest, onChange: (v: any) => setEditRest(v) },
               ].map(({ label, value, onChange }) => (
                 <div key={label} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '10px 12px', textAlign: 'center' }}>
                   <div style={{ fontSize: '0.6rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, fontFamily: FONT_ALT, letterSpacing: '2px' }}>{label}</div>
