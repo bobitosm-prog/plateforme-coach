@@ -496,6 +496,88 @@
     "proof_made": "Made in Geneva",
     "image_alt": "MoovX-Athlet schreit vor Freude nach vollbrachter Transformation"
   },
+  "nutritionPrefs": {
+    "objectives": {
+      "cut": { "label": "DEFINITION", "desc": "Fett verlieren", "sub": "-300 bis -500 kcal" },
+      "maintain": { "label": "ERHALTUNG", "desc": "Gewicht halten", "sub": "Exakter TDEE" },
+      "bulk": { "label": "AUFBAU", "desc": "Muskeln aufbauen", "sub": "+200 bis +400 kcal" }
+    },
+    "diets": {
+      "omnivore": { "label": "Omnivor", "desc": "Alles" },
+      "vegetarian": { "label": "Vegetarisch", "desc": "Ohne Fleisch" },
+      "vegan": { "label": "Vegan", "desc": "Ohne tierische Produkte" },
+      "gluten_free": { "label": "Glutenfrei" },
+      "lactose_free": { "label": "Laktosefrei" },
+      "keto": { "label": "Keto / Low-Carb", "desc": "Kohlenhydrate < 50g/Tag" },
+      "paleo": { "label": "Paleo" },
+      "mediterranean": { "label": "Mediterran" },
+      "halal": { "label": "Halal" },
+      "kosher": { "label": "Koscher" }
+    },
+    "allergies": {
+      "gluten": "Gluten",
+      "lactose": "Laktose",
+      "eggs": "Eier",
+      "tree_nuts": "Schalenfrüchte",
+      "peanuts": "Erdnüsse",
+      "soy": "Soja",
+      "fish": "Fisch",
+      "shellfish": "Krustentiere",
+      "sesame": "Sesam"
+    },
+    "meals": {
+      "breakfast": "Frühstück",
+      "snack": "Snack",
+      "lunch": "Mittagessen",
+      "dinner": "Abendessen"
+    },
+    "sections": {
+      "metabolism": "Stoffwechsel & Ziel",
+      "bmr": "Grundumsatz (BMR)",
+      "tdee": "Gesamtumsatz (TDEE)",
+      "basedOn": "Basierend auf: {activity}",
+      "fillData": "Gib deine Körperdaten ein, um deinen Stoffwechsel zu berechnen.",
+      "objective": "Ziel",
+      "macros": "Makroverteilung",
+      "diet": "Meine Ernährung",
+      "activity": "Aktivitätsniveau",
+      "myData": "Meine Daten",
+      "favFoods": "Meine bevorzugten Lebensmittel pro Mahlzeit"
+    },
+    "labels": {
+      "deficit": "DEFIZIT",
+      "surplus": "ÜBERSCHUSS",
+      "muscleLossRisk": "Risiko von Muskelverlust",
+      "fatGainRisk": "Erhöhte Fettzunahme",
+      "calorieGoal": "Kalorienziel",
+      "auto": "AUTO",
+      "manual": "MANUELL",
+      "ratio": "NACH VERHÄLTNIS",
+      "autoCalc": "Automatisch berechnet basierend auf deinem Ziel ({mode}).",
+      "currentWeight": "Aktuelles Gewicht (kg)",
+      "targetWeight": "Zielgewicht (kg)",
+      "height": "Grösse (cm)",
+      "age": "Alter",
+      "gender": "Geschlecht",
+      "male": "Mann",
+      "female": "Frau",
+      "dislikedPlaceholder": "Lebensmittel eingeben + Enter",
+      "addFoodPlaceholder": "Lebensmittel hinzufügen...",
+      "total": "Gesamt: {kcal} kcal",
+      "aligned": "ausgerichtet",
+      "protein": "Eiweiß",
+      "carbs": "Kohlenhydrate",
+      "fat": "Fett"
+    },
+    "save": {
+      "saving": "Speichern...",
+      "saveButton": "Speichern & neu berechnen",
+      "regenPrompt": "Dein Ziel hat sich geändert. Möchtest du deinen Ernährungsplan mit diesen neuen Parametern regenerieren?",
+      "noThanks": "Nein danke",
+      "regenerating": "Generierung...",
+      "regenerate": "Meinen KI-Plan regenerieren"
+    }
+  },
   "shoppingList": {
     "title": "EINKAUFSLISTE",
     "subtitle": "{total} Artikel — {checked}/{total} abgehakt",

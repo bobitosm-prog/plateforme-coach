@@ -496,6 +496,88 @@
     "proof_made": "Made in Geneva",
     "image_alt": "MoovX athlete shouting in victory after accomplished transformation"
   },
+  "nutritionPrefs": {
+    "objectives": {
+      "cut": { "label": "CUT", "desc": "Lose fat", "sub": "-300 to -500 kcal" },
+      "maintain": { "label": "MAINTAIN", "desc": "Maintain weight", "sub": "Exact TDEE" },
+      "bulk": { "label": "BULK", "desc": "Gain muscle", "sub": "+200 to +400 kcal" }
+    },
+    "diets": {
+      "omnivore": { "label": "Omnivore", "desc": "Everything" },
+      "vegetarian": { "label": "Vegetarian", "desc": "No meat" },
+      "vegan": { "label": "Vegan", "desc": "No animal products" },
+      "gluten_free": { "label": "Gluten-free" },
+      "lactose_free": { "label": "Lactose-free" },
+      "keto": { "label": "Keto / Low-carb", "desc": "Carbs < 50g/day" },
+      "paleo": { "label": "Paleo" },
+      "mediterranean": { "label": "Mediterranean" },
+      "halal": { "label": "Halal" },
+      "kosher": { "label": "Kosher" }
+    },
+    "allergies": {
+      "gluten": "Gluten",
+      "lactose": "Lactose",
+      "eggs": "Eggs",
+      "tree_nuts": "Tree nuts",
+      "peanuts": "Peanuts",
+      "soy": "Soy",
+      "fish": "Fish",
+      "shellfish": "Shellfish",
+      "sesame": "Sesame"
+    },
+    "meals": {
+      "breakfast": "Breakfast",
+      "snack": "Snack",
+      "lunch": "Lunch",
+      "dinner": "Dinner"
+    },
+    "sections": {
+      "metabolism": "Metabolism & Goal",
+      "bmr": "Basal metabolic rate (BMR)",
+      "tdee": "Total daily expenditure (TDEE)",
+      "basedOn": "Based on: {activity}",
+      "fillData": "Fill in your body data to calculate your metabolism.",
+      "objective": "Goal",
+      "macros": "Macro distribution",
+      "diet": "My diet",
+      "activity": "Activity level",
+      "myData": "My data",
+      "favFoods": "My preferred foods by meal"
+    },
+    "labels": {
+      "deficit": "DEFICIT",
+      "surplus": "SURPLUS",
+      "muscleLossRisk": "Risk of muscle loss",
+      "fatGainRisk": "Increased fat gain",
+      "calorieGoal": "Calorie goal",
+      "auto": "AUTO",
+      "manual": "MANUAL",
+      "ratio": "BY RATIO",
+      "autoCalc": "Auto-calculated based on your goal ({mode}).",
+      "currentWeight": "Current weight (kg)",
+      "targetWeight": "Target weight (kg)",
+      "height": "Height (cm)",
+      "age": "Age",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "dislikedPlaceholder": "Type a food + Enter",
+      "addFoodPlaceholder": "Add a food...",
+      "total": "Total: {kcal} kcal",
+      "aligned": "aligned",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat"
+    },
+    "save": {
+      "saving": "Saving...",
+      "saveButton": "Save & recalculate",
+      "regenPrompt": "Your goal has changed. Do you want to regenerate your meal plan with these new parameters?",
+      "noThanks": "No thanks",
+      "regenerating": "Generating...",
+      "regenerate": "Regenerate my AI plan"
+    }
+  },
   "shoppingList": {
     "title": "SHOPPING LIST",
     "subtitle": "{total} items — {checked}/{total} checked",

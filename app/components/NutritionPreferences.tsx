@@ -1,47 +1,26 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus } from 'lucide-react'
 import { ACTIVITY_LEVELS, calcMifflinStJeor, colors, fonts } from '../../lib/design-tokens'
 import { updateProfile } from '../../lib/profile-service'
 
 // ─── Constants ───
 
-const OBJECTIVES = [
-  { id: 'cut', label: 'SECHE', emoji: '\u{1F525}', desc: 'Perdre du gras', sub: '-300 a -500 kcal' },
-  { id: 'maintain', label: 'MAINTIEN', emoji: '\u2696\uFE0F', desc: 'Maintenir le poids', sub: 'TDEE exact' },
-  { id: 'bulk', label: 'BULK', emoji: '\u{1F4AA}', desc: 'Prendre du muscle', sub: '+200 a +400 kcal' },
-] as const
+const OBJECTIVE_IDS = ['cut', 'maintain', 'bulk'] as const
+const OBJECTIVE_EMOJIS: Record<string, string> = { cut: '🔥', maintain: '⚖️', bulk: '💪' }
 
-const DIET_OPTIONS = [
-  { id: 'omnivore', label: 'Omnivore', desc: 'Tout' },
-  { id: 'vegetarian', label: 'Vegetarien', desc: 'Sans viande' },
-  { id: 'vegan', label: 'Vegan', desc: 'Sans produits animaux' },
-  { id: 'gluten_free', label: 'Sans gluten', desc: '' },
-  { id: 'lactose_free', label: 'Sans lactose', desc: '' },
-  { id: 'keto', label: 'Keto / Low-carb', desc: 'Glucides < 50g/jour' },
-  { id: 'paleo', label: 'Paleo', desc: '' },
-  { id: 'mediterranean', label: 'Mediterraneen', desc: '' },
-  { id: 'halal', label: 'Halal', desc: '' },
-  { id: 'kosher', label: 'Kosher', desc: '' },
-] as const
+const DIET_IDS = ['omnivore', 'vegetarian', 'vegan', 'gluten_free', 'lactose_free', 'keto', 'paleo', 'mediterranean', 'halal', 'kosher'] as const
 
-const ALLERGY_OPTIONS = [
-  { id: 'gluten', label: 'Gluten' },
-  { id: 'lactose', label: 'Lactose' },
-  { id: 'eggs', label: 'Oeufs' },
-  { id: 'tree_nuts', label: 'Fruits a coque' },
-  { id: 'peanuts', label: 'Arachides' },
-  { id: 'soy', label: 'Soja' },
-  { id: 'fish', label: 'Poisson' },
-  { id: 'shellfish', label: 'Crustaces' },
-  { id: 'sesame', label: 'Sesame' },
-] as const
+const ALLERGY_IDS = ['gluten', 'lactose', 'eggs', 'tree_nuts', 'peanuts', 'soy', 'fish', 'shellfish', 'sesame'] as const
 
-const MEAL_PRESETS: Record<string, { label: string; emoji: string; defaults: string[] }> = {
-  breakfast: { label: 'Petit-dejeuner', emoji: '\u{1F305}', defaults: ["Flocons d'avoine", 'Skyr nature', 'Yaourt grec', 'Banane', 'Oeufs', 'Pain complet', 'Fromage blanc', 'Myrtilles', 'Whey proteine', 'Beurre de cacahuete', 'Lait', 'Miel'] },
-  snack: { label: 'Collation', emoji: '\u{1F34E}', defaults: ['Pomme', 'Amandes', 'Yaourt grec', 'Fromage blanc', 'Whey proteine', 'Banane', 'Barre proteinee', 'Cottage cheese', 'Fruits secs', 'Noix'] },
-  lunch: { label: 'Dejeuner', emoji: '\u2600\uFE0F', defaults: ['Blanc de poulet', 'Riz basmati', 'Pates completes', 'Patate douce', 'Saumon', 'Brocoli', 'Quinoa', 'Lentilles', 'Thon', 'Epinards', 'Boeuf hache', 'Legumes verts'] },
-  dinner: { label: 'Diner', emoji: '\u{1F319}', defaults: ['Blanc de poulet', 'Poisson blanc', 'Dinde', 'Legumes vapeur', 'Oeufs', 'Riz basmati', 'Saumon', 'Brocoli', 'Boeuf', 'Patate douce', 'Crevettes', 'Salade verte'] },
+const MEAL_EMOJIS: Record<string, string> = { breakfast: '🌅', snack: '🍎', lunch: '☀️', dinner: '🌙' }
+// Food defaults are FR nutrition data — separate i18n sprint
+const MEAL_DEFAULTS: Record<string, string[]> = {
+  breakfast: ["Flocons d'avoine", 'Skyr nature', 'Yaourt grec', 'Banane', 'Oeufs', 'Pain complet', 'Fromage blanc', 'Myrtilles', 'Whey proteine', 'Beurre de cacahuete', 'Lait', 'Miel'],
+  snack: ['Pomme', 'Amandes', 'Yaourt grec', 'Fromage blanc', 'Whey proteine', 'Banane', 'Barre proteinee', 'Cottage cheese', 'Fruits secs', 'Noix'],
+  lunch: ['Blanc de poulet', 'Riz basmati', 'Pates completes', 'Patate douce', 'Saumon', 'Brocoli', 'Quinoa', 'Lentilles', 'Thon', 'Epinards', 'Boeuf hache', 'Legumes verts'],
+  dinner: ['Blanc de poulet', 'Poisson blanc', 'Dinde', 'Legumes vapeur', 'Oeufs', 'Riz basmati', 'Saumon', 'Brocoli', 'Boeuf', 'Patate douce', 'Crevettes', 'Salade verte'],
 }
 const MEAL_KEYS = ['breakfast', 'snack', 'lunch', 'dinner'] as const
 
@@ -57,7 +36,7 @@ function normalizeObjective(obj: string | undefined): ObjectiveType {
   return 'maintain'
 }
 
-function fmtNum(n: number) { return n.toLocaleString('fr-CH') }
+function fmtNum(n: number) { return n.toLocaleString() }
 
 // ─── Component ───
 
@@ -70,6 +49,7 @@ interface NutritionPreferencesProps {
 }
 
 export default function NutritionPreferences({ profile, supabase, userId, onSaved, onPlanRegenerated }: NutritionPreferencesProps) {
+  const t = useTranslations('nutritionPrefs')
   // ─── Body Data ───
   const [weight, setWeight] = useState<number>(profile?.current_weight || 0)
   const [targetWeight, setTargetWeight] = useState<number>(profile?.target_weight || 0)
@@ -395,35 +375,35 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* ═══ SECTION 1 — METABOLISME & OBJECTIF ═══ */}
       <div style={cardStyle}>
-        <div style={sectionTitle}>Metabolisme & Objectif</div>
+        <div style={sectionTitle}>{t('sections.metabolism')}</div>
 
         {canCalc ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
             <div style={{ background: colors.background, border: `1px solid ${colors.divider}`, padding: 14 }}>
-              <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 4 }}>Metabolisme de base (BMR)</div>
+              <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 4 }}>{t('sections.bmr')}</div>
               <div style={{ fontFamily: fonts.headline, fontSize: '1.5rem', color: colors.text, lineHeight: 1 }}>{fmtNum(bmr)} <span style={{ fontSize: '0.7rem', color: colors.textMuted }}>kcal/jour</span></div>
             </div>
             <div style={{ background: colors.goldDim, border: `1.5px solid ${colors.goldRule}`, padding: 14 }}>
-              <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.gold, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 4 }}>Depense totale (TDEE)</div>
+              <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.gold, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 4 }}>{t('sections.tdee')}</div>
               <div style={{ fontFamily: fonts.headline, fontSize: '1.5rem', color: colors.text, lineHeight: 1 }}>{fmtNum(tdee)} <span style={{ fontSize: '0.7rem', color: colors.textMuted }}>kcal/jour</span></div>
-              <div style={{ fontSize: '0.62rem', fontFamily: fonts.body, color: colors.textMuted, marginTop: 4 }}>Base sur : {ACTIVITY_LEVELS.find(l => l.id === activityLevel)?.label}</div>
+              <div style={{ fontSize: '0.62rem', fontFamily: fonts.body, color: colors.textMuted, marginTop: 4 }}>{t('sections.basedOn', { activity: ACTIVITY_LEVELS.find(l => l.id === activityLevel)?.label || '' })}</div>
             </div>
           </div>
         ) : (
-          <p style={{ fontSize: '0.82rem', fontFamily: fonts.body, color: colors.textMuted, textAlign: 'center', marginBottom: 16 }}>Remplis tes donnees corporelles pour calculer ton metabolisme.</p>
+          <p style={{ fontSize: '0.82rem', fontFamily: fonts.body, color: colors.textMuted, textAlign: 'center', marginBottom: 16 }}>{t('sections.fillData')}</p>
         )}
 
         {/* Objective Cards */}
-        <div style={{ fontSize: '0.65rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 10 }}>Objectif</div>
+        <div style={{ fontSize: '0.65rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 10 }}>{t('sections.objective')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
-          {OBJECTIVES.map(obj => {
-            const active = objective === obj.id
+          {OBJECTIVE_IDS.map(objId => {
+            const active = objective === objId
             return (
-              <button key={obj.id} onClick={() => handleObjectiveChange(obj.id)} style={{ padding: '14px 8px', background: active ? colors.goldDim : colors.background, border: `2px solid ${active ? colors.gold : colors.divider}`, borderRadius: 12, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 150ms' }}>
-                <span style={{ fontSize: '1.6rem' }}>{obj.emoji}</span>
-                <span style={{ fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: active ? colors.gold : colors.text, letterSpacing: '1px' }}>{obj.label}</span>
-                <span style={{ fontSize: '0.65rem', fontFamily: fonts.body, color: colors.textMuted, textAlign: 'center', lineHeight: 1.2 }}>{obj.desc}</span>
-                <span style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: active ? colors.gold : colors.textDim, fontWeight: 700, letterSpacing: '0.5px' }}>{obj.sub}</span>
+              <button key={objId} onClick={() => handleObjectiveChange(objId)} style={{ padding: '14px 8px', background: active ? colors.goldDim : colors.background, border: `2px solid ${active ? colors.gold : colors.divider}`, borderRadius: 12, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 150ms' }}>
+                <span style={{ fontSize: '1.6rem' }}>{OBJECTIVE_EMOJIS[objId]}</span>
+                <span style={{ fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: active ? colors.gold : colors.text, letterSpacing: '1px' }}>{t(`objectives.${objId}.label`)}</span>
+                <span style={{ fontSize: '0.65rem', fontFamily: fonts.body, color: colors.textMuted, textAlign: 'center', lineHeight: 1.2 }}>{t(`objectives.${objId}.desc`)}</span>
+                <span style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: active ? colors.gold : colors.textDim, fontWeight: 700, letterSpacing: '0.5px' }}>{t(`objectives.${objId}.sub`)}</span>
               </button>
             )
           })}
@@ -433,7 +413,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         {objective === 'cut' && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: '0.68rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 700, letterSpacing: '1px' }}>DEFICIT</span>
+              <span style={{ fontSize: '0.68rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 700, letterSpacing: '1px' }}>{t('labels.deficit')}</span>
               <span style={{ fontSize: '0.8rem', fontFamily: fonts.headline, color: colors.gold }}>{adjustment} kcal</span>
             </div>
             <input type="range" min={-700} max={-200} step={50} value={adjustment} onChange={e => setAdjustment(Number(e.target.value))} style={{ width: '100%' }} />
@@ -444,7 +424,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             {adjustment < -500 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '8px 10px', background: `${colors.error}12`, border: `1px solid ${colors.error}30` }}>
                 <AlertTriangle size={14} color={colors.error} />
-                <span style={{ fontSize: '0.72rem', fontFamily: fonts.body, color: colors.error }}>Risque de perte musculaire</span>
+                <span style={{ fontSize: '0.72rem', fontFamily: fonts.body, color: colors.error }}>{t('labels.muscleLossRisk')}</span>
               </div>
             )}
           </div>
@@ -453,7 +433,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         {objective === 'bulk' && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: '0.68rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 700, letterSpacing: '1px' }}>SURPLUS</span>
+              <span style={{ fontSize: '0.68rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 700, letterSpacing: '1px' }}>{t('labels.surplus')}</span>
               <span style={{ fontSize: '0.8rem', fontFamily: fonts.headline, color: colors.gold }}>+{adjustment} kcal</span>
             </div>
             <input type="range" min={150} max={500} step={50} value={adjustment} onChange={e => setAdjustment(Number(e.target.value))} style={{ width: '100%' }} />
@@ -464,7 +444,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             {adjustment > 400 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '8px 10px', background: `${colors.error}12`, border: `1px solid ${colors.error}30` }}>
                 <AlertTriangle size={14} color={colors.error} />
-                <span style={{ fontSize: '0.72rem', fontFamily: fonts.body, color: colors.error }}>Prise de gras accrue</span>
+                <span style={{ fontSize: '0.72rem', fontFamily: fonts.body, color: colors.error }}>{t('labels.fatGainRisk')}</span>
               </div>
             )}
           </div>
@@ -475,7 +455,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           <div style={{ background: colors.goldDim, border: `1.5px solid ${colors.goldRule}`, padding: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <Zap size={16} color={colors.gold} />
-              <span style={{ fontFamily: fonts.alt, fontSize: '0.75rem', fontWeight: 800, color: colors.gold, letterSpacing: '1px', textTransform: 'uppercase' }}>Objectif calorique</span>
+              <span style={{ fontFamily: fonts.alt, fontSize: '0.75rem', fontWeight: 800, color: colors.gold, letterSpacing: '1px', textTransform: 'uppercase' }}>{t('labels.calorieGoal')}</span>
             </div>
             <div style={{ fontFamily: fonts.headline, fontSize: '1.8rem', color: colors.text, lineHeight: 1 }}>{fmtNum(objectiveKcal)} <span style={{ fontSize: '0.8rem', color: colors.textMuted }}>kcal/jour</span></div>
             {objective !== 'maintain' && weeklyChange !== null && (
@@ -489,11 +469,11 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* ═══ SECTION 2 — REPARTITION DES MACROS ═══ */}
       <div style={cardStyle}>
-        <div style={sectionTitle}>Repartition des macros</div>
+        <div style={sectionTitle}>{t('sections.macros')}</div>
 
         {/* Mode Tabs */}
         <div style={{ display: 'flex', gap: 0, marginBottom: 16, border: `1px solid ${colors.divider}` }}>
-          {([['auto', 'AUTO'], ['manual', 'MANUEL'], ['ratio', 'PAR RATIO']] as const).map(([id, label]) => {
+          {([['auto', t('labels.auto')], ['manual', t('labels.manual')], ['ratio', t('labels.ratio')]] as [string, string][]).map(([id, label]) => {
             const active = macroMode === id
             return (
               <button key={id} onClick={() => setMacroMode(id as MacroMode)} style={{ flex: 1, padding: '10px 8px', background: active ? colors.gold : colors.background, border: 'none', cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '1px', color: active ? '#0D0B08' : colors.textMuted, transition: 'all 150ms' }}>
@@ -507,7 +487,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         {macroMode === 'auto' && (
           <div>
             <p style={{ fontSize: '0.72rem', fontFamily: fonts.body, color: colors.textMuted, margin: '0 0 14px', lineHeight: 1.4 }}>
-              Calcul automatique selon ton objectif ({objective === 'cut' ? 'Seche' : objective === 'bulk' ? 'Bulk' : 'Maintien'}).
+              {t('labels.autoCalc', { mode: t(`objectives.${objective}.label`) })}
             </p>
             <MacroDisplay protein={autoMacros.protein} carbs={autoMacros.carbs} fat={autoMacros.fat} targetKcal={objectiveKcal} />
           </div>
@@ -549,9 +529,10 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* ═══ SECTION 3 — REGIME ALIMENTAIRE ═══ */}
       <div style={cardStyle}>
-        <div style={sectionTitle}>Mon regime</div>
+        <div style={sectionTitle}>{t('sections.diet')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {DIET_OPTIONS.map(opt => {
+          {DIET_IDS.map(dietId => {
+            const opt = { id: dietId }
             const active = dietaryType === opt.id
             return (
               <button key={opt.id} onClick={() => setDietaryType(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: active ? colors.goldDim : colors.background, border: `1.5px solid ${active ? colors.gold : colors.divider}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
@@ -559,8 +540,8 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
                   {active && <div style={{ width: 10, height: 10, borderRadius: '50%', background: colors.gold }} />}
                 </div>
                 <div style={{ flex: 1, textAlign: 'left' }}>
-                  <span style={{ fontSize: '0.82rem', fontFamily: fonts.body, fontWeight: 500, color: active ? colors.gold : colors.text }}>{opt.label}</span>
-                  {opt.desc && <span style={{ fontSize: '0.68rem', fontFamily: fonts.body, color: colors.textMuted, marginLeft: 8 }}>{opt.desc}</span>}
+                  <span style={{ fontSize: '0.82rem', fontFamily: fonts.body, fontWeight: 500, color: active ? colors.gold : colors.text }}>{t(`diets.${opt.id}.label`)}</span>
+                  {(['omnivore', 'vegetarian', 'vegan', 'keto'] as string[]).includes(opt.id) && <span style={{ fontSize: '0.68rem', fontFamily: fonts.body, color: colors.textMuted, marginLeft: 8 }}>{t(`diets.${opt.id}.desc`)}</span>}
                 </div>
                 {active && <Check size={14} color={colors.gold} strokeWidth={3} />}
               </button>
@@ -571,17 +552,17 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* ═══ SECTION 4 — ALLERGIES & EXCLUSIONS ═══ */}
       <div style={cardStyle}>
-        <div style={sectionTitle}>Allergies & aliments exclus</div>
+        <div style={sectionTitle}>{t('sections.diet')}</div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 16 }}>
-          {ALLERGY_OPTIONS.map(opt => {
-            const active = allergies.includes(opt.id)
+          {ALLERGY_IDS.map(allergyId => {
+            const active = allergies.includes(allergyId)
             return (
-              <button key={opt.id} onClick={() => setAllergies(prev => prev.includes(opt.id) ? prev.filter(a => a !== opt.id) : [...prev, opt.id])} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', background: active ? `${colors.error}15` : colors.background, border: `1.5px solid ${active ? colors.error : colors.divider}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
+              <button key={allergyId} onClick={() => setAllergies(prev => prev.includes(allergyId) ? prev.filter(a => a !== allergyId) : [...prev, allergyId])} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', background: active ? `${colors.error}15` : colors.background, border: `1.5px solid ${active ? colors.error : colors.divider}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
                 <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? colors.error : colors.textDim}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? colors.error : 'transparent' }}>
                   {active && <Check size={10} color="#fff" strokeWidth={3} />}
                 </div>
-                <span style={{ fontSize: '0.7rem', fontFamily: fonts.body, fontWeight: 400, color: active ? colors.error : colors.text }}>{opt.label}</span>
+                <span style={{ fontSize: '0.7rem', fontFamily: fonts.body, fontWeight: 400, color: active ? colors.error : colors.text }}>{t(`allergies.${allergyId}`)}</span>
               </button>
             )
           })}
@@ -600,14 +581,14 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           value={dislikedInput}
           onChange={e => setDislikedInput(e.target.value)}
           onKeyDown={addDislikedFood}
-          placeholder="Tape un aliment + Entree"
+          placeholder={t('labels.dislikedPlaceholder')}
           style={inputStyle}
         />
       </div>
 
       {/* ═══ SECTION 5 — ACTIVITE PHYSIQUE ═══ */}
       <div style={cardStyle}>
-        <div style={sectionTitle}>Niveau d&apos;activite</div>
+        <div style={sectionTitle}>{t('sections.activity')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {ACTIVITY_LEVELS.map(lvl => {
             const active = activityLevel === lvl.id
@@ -629,30 +610,30 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* ═══ SECTION 6 — DONNEES CORPORELLES ═══ */}
       <div style={cardStyle}>
-        <div style={sectionTitle}>Mes donnees</div>
+        <div style={sectionTitle}>{t('sections.myData')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
-            <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Poids actuel (kg)</label>
+            <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{t('labels.currentWeight')}</label>
             <input type="number" value={weight || ''} onChange={e => setWeight(Number(e.target.value))} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Poids cible (kg)</label>
+            <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{t('labels.targetWeight')}</label>
             <input type="number" value={targetWeight || ''} onChange={e => setTargetWeight(Number(e.target.value))} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Taille (cm)</label>
+            <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{t('labels.height')}</label>
             <input type="number" value={height || ''} onChange={e => setHeight(Number(e.target.value))} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Age</label>
+            <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{t('labels.age')}</label>
             <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', color: colors.textMuted }}>{age > 0 ? `${age} ans` : '---'}</div>
           </div>
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Genre</label>
+          <label style={{ fontSize: '0.62rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>{t('labels.gender')}</label>
           <div style={{ display: 'flex', gap: 8 }}>
-            {[{ id: 'male', label: 'Homme' }, { id: 'female', label: 'Femme' }].map(g => {
+            {[{ id: 'male', label: t('labels.male') }, { id: 'female', label: t('labels.female') }].map(g => {
               const active = gender === g.id
               return (
                 <button key={g.id} onClick={() => setGender(g.id)} style={{ flex: 1, padding: '10px', background: active ? colors.goldDim : colors.background, border: `2px solid ${active ? colors.gold : colors.divider}`, borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: active ? colors.gold : colors.text, letterSpacing: '1px', transition: 'all 150ms' }}>
@@ -666,18 +647,18 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* ═══ SECTION 7 — ALIMENTS PAR REPAS ═══ */}
       <div style={cardStyle}>
-        <div style={sectionTitle}>Mes aliments preferes par repas</div>
+        <div style={sectionTitle}>{t('sections.favFoods')}</div>
 
         {/* Meal tabs */}
         <div style={{ display: 'flex', gap: 0, marginBottom: 14, border: `1px solid ${colors.divider}` }}>
           {MEAL_KEYS.map(key => {
-            const m = MEAL_PRESETS[key]
+            const mEmoji = MEAL_EMOJIS[key]
             const active = activeMealTab === key
             const count = (mealPrefs[key] || []).length
             return (
               <button key={key} onClick={() => { setActiveMealTab(key); setMealSearchQuery(''); setMealSearchResults([]) }} style={{ flex: 1, padding: '8px 4px', background: active ? colors.gold : colors.background, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, transition: 'all 150ms' }}>
-                <span style={{ fontSize: '1rem' }}>{m.emoji}</span>
-                <span style={{ fontFamily: fonts.alt, fontSize: '0.58rem', fontWeight: 800, color: active ? '#0D0B08' : colors.textMuted, letterSpacing: '0.5px' }}>{m.label}</span>
+                <span style={{ fontSize: '1rem' }}>{mEmoji}</span>
+                <span style={{ fontFamily: fonts.alt, fontSize: '0.58rem', fontWeight: 800, color: active ? '#0D0B08' : colors.textMuted, letterSpacing: '0.5px' }}>{t(`meals.${key}`)}</span>
                 {count > 0 && <span style={{ fontSize: '0.52rem', fontFamily: fonts.headline, color: active ? '#0D0B08' : colors.gold, fontWeight: 700 }}>{count}</span>}
               </button>
             )
@@ -687,7 +668,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         {/* Selected foods for active meal */}
         {(mealPrefs[activeMealTab] || []).length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-            {(mealPrefs[activeMealTab] || []).filter(f => !MEAL_PRESETS[activeMealTab].defaults.includes(f)).map(food => (
+            {(mealPrefs[activeMealTab] || []).filter(f => !MEAL_DEFAULTS[activeMealTab].includes(f)).map(food => (
               <span key={food} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: colors.goldDim, border: `1px solid ${colors.goldRule}`, fontSize: '0.72rem', fontFamily: fonts.body, color: colors.gold }}>
                 {food}
                 <button onClick={() => toggleMealFood(activeMealTab, food)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex' }}><X size={11} color={colors.gold} /></button>
@@ -698,7 +679,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
         {/* Preset checkboxes */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
-          {MEAL_PRESETS[activeMealTab].defaults.map(food => {
+          {MEAL_DEFAULTS[activeMealTab].map(food => {
             const active = (mealPrefs[activeMealTab] || []).includes(food)
             return (
               <button key={food} onClick={() => toggleMealFood(activeMealTab, food)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: active ? colors.goldDim : colors.background, border: `1.5px solid ${active ? colors.gold : colors.divider}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
@@ -718,7 +699,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             <input
               value={mealSearchQuery}
               onChange={e => setMealSearchQuery(e.target.value)}
-              placeholder="Ajouter un aliment..."
+              placeholder={t('labels.addFoodPlaceholder')}
               style={{ flex: 1, padding: '10px 14px 10px 0', background: 'transparent', border: 'none', color: colors.text, fontSize: '0.82rem', fontFamily: fonts.body, outline: 'none' }}
             />
           </div>
@@ -738,21 +719,21 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* ═══ SAVE BUTTON ═══ */}
       <button onClick={save} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, marginBottom: 8 }}>
-        {saving ? 'Enregistrement...' : 'Sauvegarder & recalculer'}
+        {saving ? t('save.saving') : t('save.saveButton')}
       </button>
 
       {/* ═══ REGEN CARD ═══ */}
       {showRegenCard && (
         <div style={{ background: colors.surface2, border: `1.5px solid ${colors.goldRule}`, padding: 16, marginTop: 8 }}>
           <p style={{ fontFamily: fonts.body, fontSize: '0.82rem', color: colors.text, margin: '0 0 14px', lineHeight: 1.5 }}>
-            Ton objectif a change. Veux-tu regenerer ton plan alimentaire avec ces nouveaux parametres ?
+            {t('save.regenPrompt')}
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setShowRegenCard(false)} style={{ flex: 1, padding: '12px', background: colors.background, border: `1px solid ${colors.divider}`, borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 700, color: colors.textMuted, letterSpacing: '1px' }}>
-              Non merci
+              {t('save.noThanks')}
             </button>
             <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: colors.gold, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
-              {regenerating ? 'Generation...' : 'Regenerer mon plan IA'}
+              {regenerating ? t('save.regenerating') : t('save.regenerate')}
             </button>
           </div>
         </div>
@@ -770,6 +751,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
 // ─── Macro Display Card ───
 function MacroDisplay({ protein, carbs, fat, targetKcal }: { protein: number; carbs: number; fat: number; targetKcal: number }) {
+  const t = useTranslations('nutritionPrefs')
   const total = protein * 4 + carbs * 4 + fat * 9
   const pPct = total > 0 ? Math.round(protein * 4 / total * 100) : 0
   const cPct = total > 0 ? Math.round(carbs * 4 / total * 100) : 0
@@ -785,14 +767,14 @@ function MacroDisplay({ protein, carbs, fat, targetKcal }: { protein: number; ca
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-        <MacroItem icon={Beef} label="Proteines" grams={protein} pct={pPct} color={colors.gold} />
-        <MacroItem icon={Wheat} label="Glucides" grams={carbs} pct={cPct} color={colors.blue} />
-        <MacroItem icon={Droplets} label="Lipides" grams={fat} pct={fPct} color={colors.orange} />
+        <MacroItem icon={Beef} label={t('labels.protein')} grams={protein} pct={pPct} color={colors.gold} />
+        <MacroItem icon={Wheat} label={t('labels.carbs')} grams={carbs} pct={cPct} color={colors.blue} />
+        <MacroItem icon={Droplets} label={t('labels.fat')} grams={fat} pct={fPct} color={colors.orange} />
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 10, fontFamily: fonts.body, fontSize: '0.68rem', color: colors.textMuted }}>
-        Total : {fmtNum(total)} kcal
-        {targetKcal > 0 && Math.abs(total - targetKcal) <= 50 && <span style={{ color: colors.success, marginLeft: 6 }}>&#10003; aligne</span>}
+        {fmtNum(total)} kcal
+        {targetKcal > 0 && Math.abs(total - targetKcal) <= 50 && <span style={{ color: colors.success, marginLeft: 6 }}>✓</span>}
       </div>
     </div>
   )

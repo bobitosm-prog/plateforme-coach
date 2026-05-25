@@ -496,6 +496,88 @@
     "proof_made": "Made in Geneva",
     "image_alt": "Athlète MoovX hurlant de victoire après transformation accomplie"
   },
+  "nutritionPrefs": {
+    "objectives": {
+      "cut": { "label": "SÈCHE", "desc": "Perdre du gras", "sub": "-300 à -500 kcal" },
+      "maintain": { "label": "MAINTIEN", "desc": "Maintenir le poids", "sub": "TDEE exact" },
+      "bulk": { "label": "BULK", "desc": "Prendre du muscle", "sub": "+200 à +400 kcal" }
+    },
+    "diets": {
+      "omnivore": { "label": "Omnivore", "desc": "Tout" },
+      "vegetarian": { "label": "Végétarien", "desc": "Sans viande" },
+      "vegan": { "label": "Vegan", "desc": "Sans produits animaux" },
+      "gluten_free": { "label": "Sans gluten" },
+      "lactose_free": { "label": "Sans lactose" },
+      "keto": { "label": "Keto / Low-carb", "desc": "Glucides < 50g/jour" },
+      "paleo": { "label": "Paleo" },
+      "mediterranean": { "label": "Méditerranéen" },
+      "halal": { "label": "Halal" },
+      "kosher": { "label": "Kosher" }
+    },
+    "allergies": {
+      "gluten": "Gluten",
+      "lactose": "Lactose",
+      "eggs": "Œufs",
+      "tree_nuts": "Fruits à coque",
+      "peanuts": "Arachides",
+      "soy": "Soja",
+      "fish": "Poisson",
+      "shellfish": "Crustacés",
+      "sesame": "Sésame"
+    },
+    "meals": {
+      "breakfast": "Petit-déjeuner",
+      "snack": "Collation",
+      "lunch": "Déjeuner",
+      "dinner": "Dîner"
+    },
+    "sections": {
+      "metabolism": "Métabolisme & Objectif",
+      "bmr": "Métabolisme de base (BMR)",
+      "tdee": "Dépense totale (TDEE)",
+      "basedOn": "Basé sur : {activity}",
+      "fillData": "Remplis tes données corporelles pour calculer ton métabolisme.",
+      "objective": "Objectif",
+      "macros": "Répartition des macros",
+      "diet": "Mon régime",
+      "activity": "Niveau d'activité",
+      "myData": "Mes données",
+      "favFoods": "Mes aliments préférés par repas"
+    },
+    "labels": {
+      "deficit": "DEFICIT",
+      "surplus": "SURPLUS",
+      "muscleLossRisk": "Risque de perte musculaire",
+      "fatGainRisk": "Prise de gras accrue",
+      "calorieGoal": "Objectif calorique",
+      "auto": "AUTO",
+      "manual": "MANUEL",
+      "ratio": "PAR RATIO",
+      "autoCalc": "Calcul automatique selon ton objectif ({mode}).",
+      "currentWeight": "Poids actuel (kg)",
+      "targetWeight": "Poids cible (kg)",
+      "height": "Taille (cm)",
+      "age": "Age",
+      "gender": "Genre",
+      "male": "Homme",
+      "female": "Femme",
+      "dislikedPlaceholder": "Tape un aliment + Entrée",
+      "addFoodPlaceholder": "Ajouter un aliment...",
+      "total": "Total : {kcal} kcal",
+      "aligned": "aligné",
+      "protein": "Protéines",
+      "carbs": "Glucides",
+      "fat": "Lipides"
+    },
+    "save": {
+      "saving": "Enregistrement...",
+      "saveButton": "Sauvegarder & recalculer",
+      "regenPrompt": "Ton objectif a changé. Veux-tu régénérer ton plan alimentaire avec ces nouveaux paramètres ?",
+      "noThanks": "Non merci",
+      "regenerating": "Génération...",
+      "regenerate": "Régénérer mon plan IA"
+    }
+  },
   "shoppingList": {
     "title": "LISTE DE COURSES",
     "subtitle": "{total} articles — {checked}/{total} cochés",
