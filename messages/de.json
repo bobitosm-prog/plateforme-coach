@@ -156,6 +156,28 @@
     "cta": "Pläne entdecken →",
     "image_alt": "Lachs-Avocado-Brokkoli-Quinoa-Bowl — MoovX Ernährungsplan Beispiel"
   },
+  "videoFeedback": {
+    "title": "VIDEO SENDEN",
+    "exercise": "Übung: ",
+    "tapToRecord": "Tippen zum Aufnehmen oder Auswählen",
+    "maxSpec": "Max 30s · MP4, MOV, WebM · 50 MB",
+    "deleteRetry": "Löschen und erneut versuchen",
+    "notePlaceholder": "Notiz für deinen Coach (optional)...",
+    "cancel": "Abbrechen",
+    "sending": "Senden...",
+    "sendToCoach": "An Coach senden",
+    "tooHeavy": "Video zu gross (max 50 MB)",
+    "sent": "Video an deinen Coach gesendet!",
+    "error": "Fehler",
+    "myVideos": "MEINE VIDEOS ({count})",
+    "yourNote": "Du: \"{note}\"",
+    "coachFeedback": "Coach-Feedback",
+    "status": {
+      "pending": "Ausstehend",
+      "reviewed": "Feedback erhalten",
+      "approved": "Genehmigt"
+    }
+  },
   "startProgramModal": {
     "title": "WANN STARTEN?",
     "now": "JETZT",

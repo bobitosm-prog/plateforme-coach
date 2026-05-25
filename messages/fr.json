@@ -156,6 +156,28 @@
     "cta": "Découvrir les plans →",
     "image_alt": "Bowl saumon avocat brocolis quinoa — exemple de plan nutrition MoovX"
   },
+  "videoFeedback": {
+    "title": "ENVOYER UNE VIDEO",
+    "exercise": "Exercice : ",
+    "tapToRecord": "Appuie pour filmer ou choisir",
+    "maxSpec": "Max 30s · MP4, MOV, WebM · 50 MB",
+    "deleteRetry": "Supprimer et recommencer",
+    "notePlaceholder": "Note pour ton coach (optionnel)...",
+    "cancel": "Annuler",
+    "sending": "Envoi...",
+    "sendToCoach": "Envoyer au coach",
+    "tooHeavy": "Vidéo trop lourde (max 50 MB)",
+    "sent": "Vidéo envoyée à ton coach !",
+    "error": "Erreur",
+    "myVideos": "MES VIDEOS ({count})",
+    "yourNote": "Toi : \"{note}\"",
+    "coachFeedback": "Feedback coach",
+    "status": {
+      "pending": "En attente",
+      "reviewed": "Feedback reçu",
+      "approved": "Approuvé"
+    }
+  },
   "startProgramModal": {
     "title": "QUAND COMMENCER ?",
     "now": "MAINTENANT",

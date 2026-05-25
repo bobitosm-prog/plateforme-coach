@@ -156,6 +156,28 @@
     "cta": "Discover plans →",
     "image_alt": "Salmon avocado broccoli quinoa bowl — MoovX nutrition plan example"
   },
+  "videoFeedback": {
+    "title": "SEND A VIDEO",
+    "exercise": "Exercise: ",
+    "tapToRecord": "Tap to record or choose",
+    "maxSpec": "Max 30s · MP4, MOV, WebM · 50 MB",
+    "deleteRetry": "Delete and retry",
+    "notePlaceholder": "Note for your coach (optional)...",
+    "cancel": "Cancel",
+    "sending": "Sending...",
+    "sendToCoach": "Send to coach",
+    "tooHeavy": "Video too large (max 50 MB)",
+    "sent": "Video sent to your coach!",
+    "error": "Error",
+    "myVideos": "MY VIDEOS ({count})",
+    "yourNote": "You: \"{note}\"",
+    "coachFeedback": "Coach feedback",
+    "status": {
+      "pending": "Pending",
+      "reviewed": "Feedback received",
+      "approved": "Approved"
+    }
+  },
   "startProgramModal": {
     "title": "WHEN TO START?",
     "now": "NOW",
