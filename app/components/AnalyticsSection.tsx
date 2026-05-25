@@ -5,6 +5,7 @@ import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
+import { getExerciseName } from '../../lib/i18n-exercise'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, Cell,
@@ -52,7 +53,7 @@ export default function AnalyticsSection({
   calorieGoal, goalWeight, waterGoal, streak, currentWeight,
 }: AnalyticsSectionProps) {
   const t = useTranslations('progress.analytics')
-  const locale = useLocale()
+  const locale = useLocale() as 'fr' | 'en' | 'de'
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const PERIOD_LABELS: Record<WeightPeriod, string> = { '30j': t('period30'), '60j': t('period60'), '90j': t('period90'), 'tout': t('periodAll') }
@@ -347,7 +348,7 @@ export default function AnalyticsSection({
                   padding: '14px 12px', borderLeft: `3px solid ${colors.gold}`,
                 }}>
                   <div style={{ fontSize: '0.65rem', fontFamily: fonts.body, color: colors.textMuted, fontWeight: 400, marginBottom: 4, lineHeight: 1.3 }}>
-                    {pr.exercise_name}
+                    {getExerciseName({ name: pr.exercise_name }, locale)}
                   </div>
                   <div style={{ fontFamily: fonts.headline, fontSize: '1.4rem', fontWeight: 700, color: colors.gold, lineHeight: 1 }}>
                     {pr.value} <span style={{ fontSize: '0.7rem', fontWeight: 600 }}>{pr.unit}</span>
