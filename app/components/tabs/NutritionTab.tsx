@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays, Beef, Wheat, Droplet, X } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
@@ -37,6 +37,7 @@ interface NutritionTabProps {
 
 export default function NutritionTab({ coachMealPlan, todayKey, setModal, profile, supabase, userId, fetchAll }: NutritionTabProps) {
   const nt = useTranslations('nutrition_tab')
+  const locale = useLocale()
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
@@ -402,7 +403,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         </div>
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16, scrollbarWidth: 'none' }}>
-          {NUTRITION_DAYS.map(({ key, label }) => {
+          {NUTRITION_DAYS.map(({ key }) => {
+            const label = new Date(2024, 0, ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(key) + 1).toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()
             const isActive = nutritionDay === key
             const isToday = key === todayKey
             const dp = parsed[key as Day]
@@ -503,7 +505,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         </div>
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16, scrollbarWidth: 'none' }}>
-          {NUTRITION_DAYS.map(({ key, label }) => {
+          {NUTRITION_DAYS.map(({ key }) => {
+            const label = new Date(2024, 0, ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(key) + 1).toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()
             const isActive = nutritionDay === key
             const isToday = key === todayKey
             const dp = parsed[key as Day]
@@ -672,8 +675,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {/* ═══ CALENDAR STRIP ═══ */}
             <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { month: 'long', year: 'numeric' }).toUpperCase()}</span>
-                {selectedDate !== today && <button onClick={() => setSelectedDate(today)} style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>AUJOURD&apos;HUI</button>}
+                <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()}</span>
+                {selectedDate !== today && <button onClick={() => setSelectedDate(today)} style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>{nt('chrome.today')}</button>}
               </div>
               <div ref={calScrollRef} style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
                 {calendarDays.map(dt => {
@@ -681,7 +684,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                   const sel = dt === selectedDate, isTd = dt === today, hasMl = daysWithMeals.has(dt), fut = dt > today
                   return (
                     <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? nt('chrome.futureDate') : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 8px', minWidth: 44, borderRadius: 12, border: sel ? `2px solid ${colors.gold}` : isTd ? `1px solid ${colors.goldRule}` : `1px solid ${colors.divider}`, background: sel ? `${colors.gold}12` : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
-                      <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: sel ? colors.gold : colors.textDim }}>{d.toLocaleDateString('fr-CH', { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
+                      <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: sel ? colors.gold : colors.textDim }}>{d.toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
                       <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: sel ? colors.gold : isTd ? colors.gold : colors.text }}>{d.getDate()}</span>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: hasMl ? colors.gold : 'transparent' }} />
                     </button>
@@ -692,7 +695,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {isViewingPast && (
               <div style={{ background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 12, padding: '10px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <CalendarDays size={16} color={colors.orange} />
-                <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               </div>
             )}
             {/* Ring */}
@@ -711,7 +714,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ ...statStyle, fontSize: 40, color: colors.gold, lineHeight: 1 }}>{consumed.kcal}</span>
                   <span style={{ ...mutedStyle, fontSize: 11 }}>/ {targetKcal} kcal</span>
-                  <span style={{ ...mutedStyle, fontSize: 10, marginTop: 2 }}>restantes : {remaining}</span>
+                  <span style={{ ...mutedStyle, fontSize: 10, marginTop: 2 }}>{nt('chrome.remaining', { count: remaining })}</span>
                 </div>
               </div>
             </div>

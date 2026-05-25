@@ -2146,7 +2146,9 @@
       "takePhoto": "FOTO AUFNEHMEN",
       "orGallery": "oder aus Galerie wählen",
       "retake": "ERNEUT",
-      "addAll": "ALLE HINZUFÜGEN"
+      "addAll": "ALLE HINZUFÜGEN",
+      "today": "HEUTE",
+      "remaining": "verbleibend: {count}"
     },
     "macrosShort": {
       "p": "E",

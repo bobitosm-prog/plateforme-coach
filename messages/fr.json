@@ -2146,7 +2146,9 @@
       "takePhoto": "PRENDRE UNE PHOTO",
       "orGallery": "ou choisir depuis la galerie",
       "retake": "REPRENDRE",
-      "addAll": "AJOUTER TOUT"
+      "addAll": "AJOUTER TOUT",
+      "today": "AUJOURD'HUI",
+      "remaining": "restantes : {count}"
     },
     "macrosShort": {
       "p": "P",

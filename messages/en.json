@@ -2146,7 +2146,9 @@
       "takePhoto": "TAKE A PHOTO",
       "orGallery": "or choose from gallery",
       "retake": "RETAKE",
-      "addAll": "ADD ALL"
+      "addAll": "ADD ALL",
+      "today": "TODAY",
+      "remaining": "remaining: {count}"
     },
     "macrosShort": {
       "p": "P",
