@@ -1,7 +1,10 @@
 'use client'
 import { useState, useMemo } from 'react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { format, type Locale } from 'date-fns'
+import { fr as frLocale } from 'date-fns/locale/fr'
+import { enUS } from 'date-fns/locale/en-US'
+import { de as deLocale } from 'date-fns/locale/de'
+import { useTranslations, useLocale } from 'next-intl'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, Cell,
@@ -36,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div style={{ color: colors.textMuted, marginBottom: 4 }}>{label}</div>
       {payload.map((p: any, i: number) => (
         <div key={i} style={{ color: p.color || colors.text, fontWeight: 600 }}>
-          {p.name}: {typeof p.value === 'number' ? p.value.toLocaleString('fr-FR') : p.value} {p.unit || ''}
+          {p.name}: {typeof p.value === 'number' ? p.value.toLocaleString() : p.value} {p.unit || ''}
         </div>
       ))}
     </div>
@@ -48,6 +51,11 @@ export default function AnalyticsSection({
   weightHistoryFull, weightHistory30, wSessions,
   calorieGoal, goalWeight, waterGoal, streak, currentWeight,
 }: AnalyticsSectionProps) {
+  const t = useTranslations('progress.analytics')
+  const locale = useLocale()
+  const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
+  const dateLocale = DATE_LOCALES[locale] || frLocale
+  const PERIOD_LABELS: Record<WeightPeriod, string> = { '30j': t('period30'), '60j': t('period60'), '90j': t('period90'), 'tout': t('periodAll') }
   const [weightPeriod, setWeightPeriod] = useState<WeightPeriod>('30j')
 
   // -- Weight chart data --
@@ -62,7 +70,7 @@ export default function AnalyticsSection({
       const window = filtered.slice(Math.max(0, i - 6), i + 1)
       const avg = window.reduce((s, v) => s + v.poids, 0) / window.length
       return {
-        date: format(new Date(w.date), 'd MMM', { locale: fr }),
+        date: format(new Date(w.date), 'd MMM', { locale: dateLocale }),
         poids: w.poids,
         tendance: Math.round(avg * 10) / 10,
       }
@@ -72,7 +80,7 @@ export default function AnalyticsSection({
   // -- Calories chart data --
   const calData = useMemo(() =>
     weeklyCalories.map(c => ({
-      date: format(new Date(c.date), 'EEE', { locale: fr }),
+      date: format(new Date(c.date), 'EEE', { locale: dateLocale }),
       calories: Math.round(c.calories),
       inTarget: Math.abs(c.calories - calorieGoal) <= 100,
     })),
@@ -82,10 +90,10 @@ export default function AnalyticsSection({
   // -- Macros chart data --
   const macroData = useMemo(() =>
     weeklyCalories.map(c => ({
-      date: format(new Date(c.date), 'EEE', { locale: fr }),
-      Proteines: Math.round(c.protein),
-      Glucides: Math.round(c.carbs),
-      Lipides: Math.round(c.fat),
+      date: format(new Date(c.date), 'EEE', { locale: dateLocale }),
+      protein: Math.round(c.protein),
+      carbs: Math.round(c.carbs),
+      fat: Math.round(c.fat),
     })),
     [weeklyCalories]
   )
@@ -93,7 +101,7 @@ export default function AnalyticsSection({
   // -- Water chart data --
   const waterData = useMemo(() =>
     weeklyWater.map(w => ({
-      date: format(new Date(w.date), 'EEE', { locale: fr }),
+      date: format(new Date(w.date), 'EEE', { locale: dateLocale }),
       litres: Math.round(w.ml) / 1000,
     })),
     [weeklyWater]
@@ -102,7 +110,7 @@ export default function AnalyticsSection({
   // -- Volume chart data --
   const volumeData = useMemo(() =>
     weeklyVolume.map(v => ({
-      week: `S${format(new Date(v.week), 'w', { locale: fr })}`,
+      week: `S${format(new Date(v.week), 'w', { locale: dateLocale })}`,
       volume: v.volume,
     })),
     [weeklyVolume]
@@ -172,7 +180,7 @@ export default function AnalyticsSection({
 
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
     downloadCsv(`moovx_analytics_${today}.csv`,
-      ['Date', 'Poids (kg)', 'Calories', 'Proteines (g)', 'Glucides (g)', 'Lipides (g)', 'Eau (L)'],
+      [t('csvDate'), t('csvWeight'), t('csvCalories'), t('csvProtein'), t('csvCarbs'), t('csvFat'), t('csvWater')],
       rows
     )
   }
@@ -186,10 +194,10 @@ export default function AnalyticsSection({
       {/* STATS SUMMARY */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
         {[
-          { icon: Flame, label: 'Streak', value: `${streak} jours`, color: streak > 0 ? colors.gold : colors.textMuted },
-          { icon: TrendingUp, label: 'Poids', value: monthWeightDiff !== null ? `${monthWeightDiff > 0 ? '+' : ''}${monthWeightDiff} kg` : '---', color: monthWeightDiff !== null ? (monthWeightDiff <= 0 ? colors.success : colors.error) : colors.textMuted },
-          { icon: Dumbbell, label: 'Volume', value: volumeChange !== null ? `${volumeChange > 0 ? '+' : ''}${volumeChange}%` : '---', color: volumeChange !== null ? (volumeChange >= 0 ? colors.success : colors.error) : colors.textMuted },
-          { icon: Trophy, label: 'Records', value: `${monthPRs} PR`, color: monthPRs > 0 ? colors.gold : colors.textMuted },
+          { icon: Flame, label: t('streak'), value: `${streak} ${t('days')}`, color: streak > 0 ? colors.gold : colors.textMuted },
+          { icon: TrendingUp, label: t('weight'), value: monthWeightDiff !== null ? `${monthWeightDiff > 0 ? '+' : ''}${monthWeightDiff} kg` : '---', color: monthWeightDiff !== null ? (monthWeightDiff <= 0 ? colors.success : colors.error) : colors.textMuted },
+          { icon: Dumbbell, label: t('volume'), value: volumeChange !== null ? `${volumeChange > 0 ? '+' : ''}${volumeChange}%` : '---', color: volumeChange !== null ? (volumeChange >= 0 ? colors.success : colors.error) : colors.textMuted },
+          { icon: Trophy, label: t('records'), value: `${monthPRs} PR`, color: monthPRs > 0 ? colors.gold : colors.textMuted },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} style={{
             background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16,
@@ -208,7 +216,7 @@ export default function AnalyticsSection({
       {weightHistoryFull.length > 1 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>Poids</span>
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('weight')}</span>
             <div style={{ display: 'flex', gap: 4 }}>
               {(['30j', '60j', '90j', 'tout'] as WeightPeriod[]).map(p => (
                 <button key={p} onClick={() => setWeightPeriod(p)} style={{
@@ -219,7 +227,7 @@ export default function AnalyticsSection({
                   border: `1px solid ${weightPeriod === p ? colors.gold : 'rgba(255,255,255,0.1)'}`,
                   color: weightPeriod === p ? colors.gold : colors.textDim,
                 }}>
-                  {p}
+                  {PERIOD_LABELS[p]}
                 </button>
               ))}
             </div>
@@ -231,9 +239,9 @@ export default function AnalyticsSection({
                 <XAxis dataKey="date" tick={axisStyle} interval="preserveStartEnd" />
                 <YAxis tick={axisStyle} domain={['dataMin - 1', 'dataMax + 1']} />
                 <Tooltip content={<CustomTooltip />} />
-                {goalWeight && <ReferenceLine y={goalWeight} stroke={colors.success} strokeDasharray="6 4" label={{ value: 'Objectif', fill: colors.success, fontSize: 10, position: 'right' }} />}
-                <Line type="monotone" dataKey="tendance" stroke={`${colors.gold}50`} strokeDasharray="4 4" strokeWidth={1.5} dot={false} name="Tendance" />
-                <Line type="monotone" dataKey="poids" stroke={colors.gold} strokeWidth={2} dot={{ r: 2, fill: colors.gold }} activeDot={{ r: 4, fill: colors.gold }} name="Poids" />
+                {goalWeight && <ReferenceLine y={goalWeight} stroke={colors.success} strokeDasharray="6 4" label={{ value: t('goal'), fill: colors.success, fontSize: 10, position: 'right' }} />}
+                <Line type="monotone" dataKey="tendance" stroke={`${colors.gold}50`} strokeDasharray="4 4" strokeWidth={1.5} dot={false} name={t('trend')} />
+                <Line type="monotone" dataKey="poids" stroke={colors.gold} strokeWidth={2} dot={{ r: 2, fill: colors.gold }} activeDot={{ r: 4, fill: colors.gold }} name={t('weight')} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -243,7 +251,7 @@ export default function AnalyticsSection({
       {/* CALORIES CHART */}
       {calData.length > 0 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
-          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>Calories (7 jours)</span>
+          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>{t('calories7d')}</span>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={calData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
@@ -251,7 +259,7 @@ export default function AnalyticsSection({
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={calorieGoal} stroke={colors.success} strokeDasharray="6 4" label={{ value: `${calorieGoal}`, fill: colors.success, fontSize: 10, position: 'right' }} />
-              <Bar dataKey="calories" radius={[2, 2, 0, 0]} name="Calories">
+              <Bar dataKey="calories" radius={[2, 2, 0, 0]} name={t('caloriesName')}>
                 {calData.map((entry, i) => (
                   <Cell key={i} fill={entry.inTarget ? colors.success : colors.error} fillOpacity={0.7} />
                 ))}
@@ -264,20 +272,20 @@ export default function AnalyticsSection({
       {/* MACROS CHART */}
       {macroData.length > 0 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
-          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>Macros (7 jours)</span>
+          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>{t('macros7d')}</span>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={macroData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="Proteines" stackId="macro" fill={colors.gold} radius={[0, 0, 0, 0]} />
-              <Bar dataKey="Glucides" stackId="macro" fill={colors.blue} radius={[0, 0, 0, 0]} />
-              <Bar dataKey="Lipides" stackId="macro" fill={colors.orange} radius={[2, 2, 0, 0]} />
+              <Bar dataKey="protein" stackId="macro" fill={colors.gold} radius={[0, 0, 0, 0]} name={t('protein')} />
+              <Bar dataKey="carbs" stackId="macro" fill={colors.blue} radius={[0, 0, 0, 0]} name={t('carbs')} />
+              <Bar dataKey="fat" stackId="macro" fill={colors.orange} radius={[2, 2, 0, 0]} name={t('fat')} />
             </BarChart>
           </ResponsiveContainer>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8 }}>
-            {[{ label: 'Proteines', color: colors.gold }, { label: 'Glucides', color: colors.blue }, { label: 'Lipides', color: colors.orange }].map(l => (
+            {[{ label: t('protein'), color: colors.gold }, { label: t('carbs'), color: colors.blue }, { label: t('fat'), color: colors.orange }].map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <div style={{ width: 8, height: 8, borderRadius: 12, background: l.color }} />
                 <span style={{ fontSize: '0.55rem', fontFamily: fonts.body, color: colors.textMuted }}>{l.label}</span>
@@ -290,14 +298,14 @@ export default function AnalyticsSection({
       {/* VOLUME CHART */}
       {volumeData.length > 0 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
-          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>Volume d&apos;entrainement</span>
+          <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>{t('trainingVolume')}</span>
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={volumeData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="week" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="volume" stroke={colors.gold} strokeWidth={2.5} dot={{ r: 4, fill: colors.gold }} name="Volume (kg)" />
+              <Line type="monotone" dataKey="volume" stroke={colors.gold} strokeWidth={2.5} dot={{ r: 4, fill: colors.gold }} name={t('volumeKg')} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -308,7 +316,7 @@ export default function AnalyticsSection({
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <Droplets size={14} color={LIGHT_BLUE} />
-            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>Hydratation (7 jours)</span>
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('hydration7d')}</span>
           </div>
           <ResponsiveContainer width="100%" height={120}>
             <BarChart data={waterData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
@@ -317,7 +325,7 @@ export default function AnalyticsSection({
               <YAxis tick={axisStyle} unit="L" />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={waterGoal / 1000} stroke={LIGHT_BLUE} strokeDasharray="6 4" />
-              <Bar dataKey="litres" fill={LIGHT_BLUE} fillOpacity={0.6} radius={[2, 2, 0, 0]} name="Eau (L)" />
+              <Bar dataKey="litres" fill={LIGHT_BLUE} fillOpacity={0.6} radius={[2, 2, 0, 0]} name={t('waterL')} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -328,7 +336,7 @@ export default function AnalyticsSection({
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <Trophy size={16} color={colors.gold} />
-            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>Mes records</span>
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('myRecords')}</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
             {prRecords.map(pr => {
@@ -345,19 +353,19 @@ export default function AnalyticsSection({
                     {pr.value} <span style={{ fontSize: '0.7rem', fontWeight: 600 }}>{pr.unit}</span>
                   </div>
                   <div style={{ fontSize: '0.55rem', fontFamily: fonts.alt, color: colors.textMuted, marginTop: 2 }}>
-                    1RM estime
+                    {t('estimated1rm')}
                   </div>
                   {diff !== null && diff > 0 ? (
                     <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.success, fontWeight: 700, marginTop: 4 }}>
-                      +{diff} {pr.unit} vs precedent
+                      +{diff} {pr.unit} {t('vsPrevious')}
                     </div>
                   ) : diff === null ? (
                     <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.gold, fontWeight: 700, marginTop: 4 }}>
-                      Premier record
+                      {t('firstRecord')}
                     </div>
                   ) : null}
                   <div style={{ fontSize: '0.5rem', fontFamily: fonts.body, color: colors.textDim, marginTop: 4 }}>
-                    Atteint le {format(new Date(pr.achieved_at), 'd MMM yyyy', { locale: fr })}
+                    {t('achievedOn', { date: format(new Date(pr.achieved_at), 'd MMM yyyy', { locale: dateLocale }) })}
                   </div>
                 </div>
               )
@@ -377,7 +385,7 @@ export default function AnalyticsSection({
         }}
       >
         <Download size={16} color={colors.textMuted} />
-        <span style={{ fontSize: '0.85rem', fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, letterSpacing: '1px', textTransform: 'uppercase' }}>Exporter mes donnees</span>
+        <span style={{ fontSize: '0.85rem', fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, letterSpacing: '1px', textTransform: 'uppercase' }}>{t('exportData')}</span>
       </button>
     </div>
   )
