@@ -1595,7 +1595,37 @@
       "reps": "Reps",
       "restLabel": "Rest",
       "tempoLabel": "Tempo",
-      "exerciseNum": "Exercise {num}"
+      "exerciseNum": "Exercise {num}",
+      "toasts": {
+        "error": "Error",
+        "activated": "Program activated!",
+        "scheduled": "Program scheduled for {date}",
+        "importedActive": "Program imported and activated!",
+        "importedScheduled": "Program imported — starts on {date}",
+        "deactivated": "Program deactivated",
+        "phaseChange": "Moving to {phase}!",
+        "deleted": "Program deleted",
+        "updated": "Program updated",
+        "newPR": "🏆 NEW PR! {exercise} — {value} kg (1RM)"
+      },
+      "buttons": {
+        "editMode": "EDIT MODE",
+        "save": "SAVE",
+        "cancel": "CANCEL",
+        "importXlsx": "IMPORT (.XLSX)",
+        "deactivate": "DEACTIVATE",
+        "activate": "ACTIVATE",
+        "confirmDelete": "CONFIRM DELETE",
+        "import": "IMPORT"
+      },
+      "import": {
+        "days": "{count} days",
+        "ai": "🤖 AI",
+        "importSource": "📥 Import",
+        "manual": "📋 Manual",
+        "skipped": "skipped",
+        "result": "{imported} day(s) imported from {total} sheets ({skipped} skipped)"
+      }
     },
     "ws": {
       "back": "Back",

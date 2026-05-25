@@ -1595,7 +1595,37 @@
       "reps": "Wdh.",
       "restLabel": "Pause",
       "tempoLabel": "Tempo",
-      "exerciseNum": "Übung {num}"
+      "exerciseNum": "Übung {num}",
+      "toasts": {
+        "error": "Fehler",
+        "activated": "Programm aktiviert!",
+        "scheduled": "Programm geplant für {date}",
+        "importedActive": "Programm importiert und aktiviert!",
+        "importedScheduled": "Programm importiert — startet am {date}",
+        "deactivated": "Programm deaktiviert",
+        "phaseChange": "Wechsel zu {phase}!",
+        "deleted": "Programm gelöscht",
+        "updated": "Programm aktualisiert",
+        "newPR": "🏆 NEUER REKORD! {exercise} — {value} kg (1RM)"
+      },
+      "buttons": {
+        "editMode": "BEARBEITUNGSMODUS",
+        "save": "SPEICHERN",
+        "cancel": "ABBRECHEN",
+        "importXlsx": "IMPORTIEREN (.XLSX)",
+        "deactivate": "DEAKTIVIEREN",
+        "activate": "AKTIVIEREN",
+        "confirmDelete": "LÖSCHEN BESTÄTIGEN",
+        "import": "IMPORTIEREN"
+      },
+      "import": {
+        "days": "{count} Tage",
+        "ai": "🤖 KI",
+        "importSource": "📥 Import",
+        "manual": "📋 Manuell",
+        "skipped": "übersprungen",
+        "result": "{imported} Tag(e) importiert aus {total} Blättern ({skipped} übersprungen)"
+      }
     },
     "ws": {
       "back": "Zurück",

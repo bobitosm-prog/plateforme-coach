@@ -334,7 +334,7 @@ export default function TrainingTab({
   async function doActivateProgram(programId: string) {
     await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).neq('id', programId)
     const { error } = await supabase.from('custom_programs').update({ is_active: true, scheduled: false, current_week: 1 }).eq('id', programId).eq('user_id', session.user.id)
-    if (error) { toast.error('Erreur: ' + error.message); return }
+    if (error) { toast.error(t('calendar.toasts.error') + ': ' + error.message); return }
     const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId, scheduled: p.id === programId ? false : p.scheduled }))
     setCustomPrograms(updated)
     const activeProg = updated.find(p => p.id === programId) || null
@@ -362,14 +362,14 @@ export default function TrainingTab({
         if (newSessions.length > 0) await supabase.from('scheduled_sessions').insert(newSessions)
       } catch (e) { console.error('[activateProgram] sync error:', e) }
     }
-    toast.success('Programme activé !')
+    toast.success(t('calendar.toasts.activated'))
   }
 
   async function scheduleProgram(programId: string, startDate: string) {
     await supabase.from('custom_programs').update({ scheduled: true, start_date: startDate, current_week: 1 }).eq('id', programId)
     const updated = customPrograms.map(p => p.id === programId ? { ...p, scheduled: true, start_date: startDate } : p)
     setCustomPrograms(updated)
-    toast.success(`Programme planifié pour le ${new Date(startDate + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`)
+    toast.success(t('calendar.toasts.scheduled', { date: new Date(startDate + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'long' }) }))
   }
 
   async function handleStartProgram(option: 'now' | 'monday' | 'custom', date?: string) {
@@ -390,9 +390,9 @@ export default function TrainingTab({
       }
 
       const { error } = await supabase.from('custom_programs').insert(insertData)
-      if (error) { toast.error('Erreur: ' + error.message); return }
-      if (option === 'now') toast.success('Programme importé et activé !')
-      else toast.success(`Programme importé — démarre le ${new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`)
+      if (error) { toast.error(t('calendar.toasts.error') + ': ' + error.message); return }
+      if (option === 'now') toast.success(t('calendar.toasts.importedActive'))
+      else toast.success(t('calendar.toasts.importedScheduled', { date: new Date(date + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'long' }) }))
       refreshPrograms()
       return
     }
@@ -410,7 +410,7 @@ export default function TrainingTab({
     const updated = customPrograms.map(p => p.id === programId ? { ...p, is_active: false } : p)
     setCustomPrograms(updated)
     setActiveCustomProgram(null)
-    toast.success('Programme désactivé')
+    toast.success(t('calendar.toasts.deactivated'))
   }
 
   async function advanceWeek() {
@@ -431,7 +431,7 @@ export default function TrainingTab({
     const newPhase = newWeek <= 4 ? 1 : newWeek <= 8 ? 2 : 3
     if (newPhase > oldPhase) {
       const phaseName = activeCustomProgram.phases?.[newPhase - 1]?.name || `Phase ${newPhase}`
-      toast.success(`Tu passes en ${phaseName} !`)
+      toast.success(t('calendar.toasts.phaseChange', { phase: phaseName }))
     }
   }
 
@@ -439,7 +439,7 @@ export default function TrainingTab({
     await supabase.from('custom_programs').delete().eq('id', programId).eq('user_id', session.user.id)
     setCustomPrograms(prev => prev.filter(p => p.id !== programId))
     if (activeCustomProgram?.id === programId) setActiveCustomProgram(null)
-    toast.success('Programme supprimé')
+    toast.success(t('calendar.toasts.deleted'))
   }
 
   function refreshPrograms() {
@@ -610,7 +610,7 @@ export default function TrainingTab({
     setActiveCustomProgram({ ...activeCustomProgram, days: editedDays })
     setEditMode(false)
     setEditedDays(null)
-    toast.success('Programme mis a jour')
+    toast.success(t('calendar.toasts.updated'))
   }
 
   function addExerciseToSession(ex: any) {
@@ -700,7 +700,7 @@ export default function TrainingTab({
         if (weight > 0 && reps > 0) {
           const result = await checkForPR(ex.name, weight, reps)
           if (result.newPR) {
-            toast.success(`🏆 NOUVEAU RECORD ! ${result.exercise} — ${result.value?.toLocaleString('fr-FR')} kg (1RM)`, { duration: 5000 })
+            toast.success(t('calendar.toasts.newPR', { exercise: result.exercise || '', value: result.value?.toLocaleString(locale) || '' }), { duration: 5000 })
           }
         }
       }
@@ -842,7 +842,7 @@ export default function TrainingTab({
           return { date: d, dateStr, ws, isProgRest }
         })
 
-        const monthLabel = displayDays[3].date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()
+        const monthLabel = displayDays[3].date.toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()
 
         const glassBtn: React.CSSProperties = {
           width: 32, height: 32, borderRadius: 10,
@@ -1167,7 +1167,7 @@ export default function TrainingTab({
                       if (!day?.exercises) return null
                       return (
                         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                          <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>MODE EDITION</div>
+                          <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>{t('calendar.buttons.editMode')}</div>
                           {day.exercises.map((ex: any, i: number) => (
                             <div key={i} style={{ padding: '12px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -1217,8 +1217,8 @@ export default function TrainingTab({
                           ))}
                           <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${colors.goldRule}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>{t('session.addExercise')}</button>
                           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                            <button onClick={saveEditedProgram} style={{ ...btnPrimary, flex: 1, padding: 12, borderRadius: 12 }}>SAUVEGARDER</button>
-                            <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ ...btnSecondary, flex: 1, padding: 12, borderRadius: 12 }}>ANNULER</button>
+                            <button onClick={saveEditedProgram} style={{ ...btnPrimary, flex: 1, padding: 12, borderRadius: 12 }}>{t('calendar.buttons.save')}</button>
+                            <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ ...btnSecondary, flex: 1, padding: 12, borderRadius: 12 }}>{t('calendar.buttons.cancel')}</button>
                           </div>
                         </div>
                       )
@@ -1363,7 +1363,7 @@ export default function TrainingTab({
             const file = e.target.files?.[0]
             if (!file) return
             const result = await parseProgramFromXlsx(file)
-            if (!result.success) { toast.error(result.error || 'Erreur'); return }
+            if (!result.success) { toast.error(result.error || t('calendar.toasts.error')); return }
             if (result.program) {
               setImportPreview(result.program)
               setImportName(result.program.name)
@@ -1380,7 +1380,7 @@ export default function TrainingTab({
                 + CRÉER
               </button>
               <button onClick={() => importFileRef.current?.click()} style={{ ...btnSecondary, flex: 1, padding: 16 }}>
-                IMPORTER (.XLSX)
+                {t('calendar.buttons.importXlsx')}
               </button>
             </div>
 
@@ -1406,7 +1406,7 @@ export default function TrainingTab({
                         <div>
                           <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '0.05em' }}>{prog.name}</div>
                           <div style={{ ...mutedStyle, marginTop: 4 }}>
-                            {days.length} jours · {prog.source === 'ai' ? '🤖 IA' : prog.source === 'import' ? '📥 Import' : '📋 Manuel'}
+                            {t('calendar.import.days', { count: days.length })} · {prog.source === 'ai' ? t('calendar.import.ai') : prog.source === 'import' ? t('calendar.import.importSource') : t('calendar.import.manual')}
                             {prog.total_weeks && ` · ${prog.total_weeks} sem.`}
                           </div>
                         </div>
@@ -1419,7 +1419,7 @@ export default function TrainingTab({
                           {prog.is_active ? (
                             <span style={{ fontSize: 10, fontWeight: 700, color: colors.success, background: 'rgba(74,222,128,0.1)', padding: '3px 10px', borderRadius: 999 }}>● Actif</span>
                           ) : prog.scheduled ? (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 10px', borderRadius: 999 }}>📅 {new Date(prog.start_date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 10px', borderRadius: 999 }}>📅 {new Date(prog.start_date + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short' }).toUpperCase()}</span>
                           ) : (
                             <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: 999 }}>○ Inactif</span>
                           )}
@@ -1433,9 +1433,9 @@ export default function TrainingTab({
                           {/* Action buttons */}
                           <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 16 }}>
                             {prog.is_active ? (
-                              <button onClick={() => deactivateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: 'rgba(74,222,128,0.08)', border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 12, color: colors.success, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>DÉSACTIVER</button>
+                              <button onClick={() => deactivateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: 'rgba(74,222,128,0.08)', border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 12, color: colors.success, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('calendar.buttons.deactivate')}</button>
                             ) : (
-                              <button onClick={() => activateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: colors.goldDim, border: `1px solid ${colors.gold}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ACTIVER</button>
+                              <button onClick={() => activateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: colors.goldDim, border: `1px solid ${colors.gold}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('calendar.buttons.activate')}</button>
                             )}
                             <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ flex: 1, padding: '10px 0', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>✏️ ÉDITER</button>
                             <button onClick={() => exportProgramToXlsx(prog)} style={{ padding: '10px 14px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>⬇️</button>
@@ -1487,8 +1487,8 @@ export default function TrainingTab({
                           <div style={{ marginTop: 16, borderTop: `1px solid ${colors.goldBorder}`, paddingTop: 16 }}>
                             {confirmDelete === prog.id ? (
                               <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={() => { deleteProgram(prog.id); setConfirmDelete(null); setExpandedProgram(null) }} style={{ flex: 1, padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>CONFIRMER SUPPRESSION</button>
-                                <button onClick={() => setConfirmDelete(null)} style={{ padding: '12px 20px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>ANNULER</button>
+                                <button onClick={() => { deleteProgram(prog.id); setConfirmDelete(null); setExpandedProgram(null) }} style={{ flex: 1, padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>{t('calendar.buttons.confirmDelete')}</button>
+                                <button onClick={() => setConfirmDelete(null)} style={{ padding: '12px 20px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{t('calendar.buttons.cancel')}</button>
                               </div>
                             ) : (
                               <button onClick={() => setConfirmDelete(prog.id)} style={{ width: '100%', padding: 12, background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('programs.deleteProgram')}</button>
@@ -1558,12 +1558,12 @@ export default function TrainingTab({
                 {importSkipped.map((name, i) => (
                   <div key={`skip-${i}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid rgba(239,68,68,0.2)`, opacity: 0.6 }}>
                     <span style={{ ...bodyStyle, fontSize: 13 }}>{name}</span>
-                    <span style={{ ...mutedStyle, fontSize: 12 }}>ignorée</span>
+                    <span style={{ ...mutedStyle, fontSize: 12 }}>{t('calendar.import.skipped')}</span>
                   </div>
                 ))}
                 {importSkipped.length > 0 && (
                   <div style={{ ...mutedStyle, fontSize: 11, marginTop: 4 }}>
-                    {importPreview.days.length} jour{importPreview.days.length > 1 ? 's' : ''} importé{importPreview.days.length > 1 ? 's' : ''} sur {importPreview.days.length + importSkipped.length} feuilles ({importSkipped.length} ignorée{importSkipped.length > 1 ? 's' : ''})
+                    {t('calendar.import.result', { imported: importPreview.days.length, total: importPreview.days.length + importSkipped.length, skipped: importSkipped.length })}
                   </div>
                 )}
               </div>
@@ -1586,8 +1586,8 @@ export default function TrainingTab({
                 setStartModalImportData(insertData)
                 setStartModalProgram({ name: importName.trim() || 'Programme importé' })
                 setImportPreview(null)
-              }} style={{ ...btnPrimary, padding: 14 }}>IMPORTER</button>
-              <button onClick={() => setImportPreview(null)} style={{ ...btnSecondary, padding: 14 }}>ANNULER</button>
+              }} style={{ ...btnPrimary, padding: 14 }}>{t('calendar.buttons.import')}</button>
+              <button onClick={() => setImportPreview(null)} style={{ ...btnSecondary, padding: 14 }}>{t('calendar.buttons.cancel')}</button>
             </div>
           </div>
         </div>
@@ -1730,9 +1730,9 @@ export default function TrainingTab({
                     {ex.sets.map((set:any,si:number)=>(
                       <div key={si} style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'6px 0',borderBottom:`1px solid ${colors.goldBorder}`}}>
                         <span style={{fontFamily:fonts.headline,fontSize:16,color:colors.gold,width:28,height:28,borderRadius:8,background:colors.goldDim,display:'flex',alignItems:'center',justifyContent:'center'}}>{si+1}</span>
-                        <span style={{fontFamily:fonts.headline,fontSize:18,color:colors.text}}>{(set.weight||0).toLocaleString('fr-FR')}</span>
+                        <span style={{fontFamily:fonts.headline,fontSize:18,color:colors.text}}>{(set.weight||0).toLocaleString(locale)}</span>
                         <span style={{fontFamily:fonts.headline,fontSize:18,color:colors.text}}>{set.reps||0}</span>
-                        <span style={{fontFamily:fonts.body,fontSize:13,color:colors.textMuted}}>{((set.weight||0)*(set.reps||0)).toLocaleString('fr-FR')} kg</span>
+                        <span style={{fontFamily:fonts.body,fontSize:13,color:colors.textMuted}}>{((set.weight||0)*(set.reps||0)).toLocaleString(locale)} kg</span>
                       </div>
                     ))}
                   </div>
