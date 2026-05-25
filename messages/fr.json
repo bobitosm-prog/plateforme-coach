@@ -1479,7 +1479,11 @@
       "noProgram": "AUCUN PROGRAMME",
       "noExercises": "AUCUN EXERCICE",
       "sessionDone": "SÉANCE TERMINÉE",
-      "sessionToday": "SÉANCE DU JOUR"
+      "sessionToday": "SÉANCE DU JOUR",
+    "badgeDone": "TERMINÉE",
+    "badgeUpcoming": "À VENIR",
+    "badgeMissed": "MANQUÉE",
+    "viewSession": "VOIR LA SÉANCE"
     },
     "activeBar": {
       "series": "{done}/{total} séries"

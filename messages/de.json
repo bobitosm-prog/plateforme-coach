@@ -1479,7 +1479,11 @@
       "noProgram": "KEIN PROGRAMM",
       "noExercises": "KEINE ÜBUNGEN",
       "sessionDone": "EINHEIT BEENDET",
-      "sessionToday": "HEUTIGE EINHEIT"
+      "sessionToday": "HEUTIGE EINHEIT",
+      "badgeDone": "BEENDET",
+      "badgeUpcoming": "BEVORSTEHEND",
+      "badgeMissed": "VERPASST",
+      "viewSession": "TRAINING ANSEHEN"
     },
     "activeBar": {
       "series": "{done}/{total} Sätze"

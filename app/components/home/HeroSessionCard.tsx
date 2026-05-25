@@ -46,6 +46,7 @@ export default function HeroSessionCard({
   const t = useTranslations('training_tab.hero')
   const locale = useLocale()
   const dateLocale = DATE_LOCALES[locale] || frLocale
+  const badgeLabel: Record<string, string> = { 'TERMINEE': t('badgeDone'), 'A VENIR': t('badgeUpcoming'), 'MANQUEE': t('badgeMissed') }
 
   function getHeroTitle(state: HeroState, sessionTitle: string): string {
     switch (state) {
@@ -150,7 +151,7 @@ export default function HeroSessionCard({
               textTransform: 'uppercase', marginBottom: 8,
               display: 'inline-block',
             }}>
-              {dayBadge.text}
+              {badgeLabel[dayBadge.text] ?? dayBadge.text}
             </span>
           )}
 
@@ -174,7 +175,7 @@ export default function HeroSessionCard({
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
               <CheckCircle size={14} color={colors.success} />
-              TERMINEE &bull; {format(new Date(todaySession.created_at), 'HH:mm', { locale: dateLocale })}
+              {t('badgeDone')} &bull; {format(new Date(todaySession.created_at), 'HH:mm', { locale: dateLocale })}
             </div>
           )}
           {state === 'rest' && (
@@ -226,7 +227,7 @@ export default function HeroSessionCard({
                 borderRadius: 10, cursor: 'pointer',
               }}
             >
-              VOIR LA SEANCE
+              {t('viewSession')}
             </button>
           )}
           {state === 'rest' && (

@@ -1479,7 +1479,11 @@
       "noProgram": "NO PROGRAM",
       "noExercises": "NO EXERCISES",
       "sessionDone": "SESSION DONE",
-      "sessionToday": "TODAY'S SESSION"
+      "sessionToday": "TODAY'S SESSION",
+      "badgeDone": "COMPLETED",
+      "badgeUpcoming": "UPCOMING",
+      "badgeMissed": "MISSED",
+      "viewSession": "VIEW WORKOUT"
     },
     "activeBar": {
       "series": "{done}/{total} sets"
