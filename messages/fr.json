@@ -496,6 +496,32 @@
     "proof_made": "Made in Geneva",
     "image_alt": "Athlète MoovX hurlant de victoire après transformation accomplie"
   },
+  "shoppingList": {
+    "title": "LISTE DE COURSES",
+    "subtitle": "{total} articles — {checked}/{total} cochés",
+    "copy": "Copier",
+    "copySuccess": "Liste copiée !",
+    "copyError": "Erreur de copie",
+    "uncheckAll": "Tout décocher",
+    "emptyState": "Aucun plan alimentaire pour générer la liste.",
+    "clipboardHeader": "LISTE DE COURSES",
+    "aisles": {
+      "butcher": "Boucherie",
+      "fish": "Poissonnerie",
+      "eggs": "Oeufs",
+      "dairy": "Produits laitiers",
+      "vegetables": "Légumes",
+      "fruits": "Fruits",
+      "starches": "Féculents",
+      "nutsSeeds": "Fruits secs",
+      "oils": "Huiles",
+      "supplements": "Suppléments",
+      "condiments": "Condiments",
+      "drinks": "Boissons",
+      "plantBased": "Végétal",
+      "others": "Autres"
+    }
+  },
   "exerciseInfo": {
     "comingSoon": "VIDÉO À VENIR",
     "description": "DESCRIPTION",

@@ -1,26 +1,29 @@
 'use client'
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { X, Copy, Check, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { colors, fonts } from '../../lib/design-tokens'
 import { parseMealPlan } from '../../lib/meal-plan'
 
-function getAisle(name: string): { aisle: string; order: number } {
+interface AisleInfo { aisleKey: string; emoji: string; order: number }
+
+function getAisle(name: string): AisleInfo {
   const n = name.toLowerCase()
-  if (/poulet|dinde|boeuf|bœuf|steak|filet|bavette|porc|jambon|bacon|viande|escalope|agneau|veau/.test(n)) return { aisle: '🥩 Boucherie', order: 1 }
-  if (/saumon|thon|cabillaud|crevette|sardine|maquereau|truite|colin|dorade|bar|poisson/.test(n)) return { aisle: '🐟 Poissonnerie', order: 2 }
-  if (/oeuf|œuf/.test(n)) return { aisle: '🥚 Oeufs', order: 3 }
-  if (/yaourt|fromage|skyr|cottage|mozzarella|emmental|gruyère|parmesan|ricotta|feta|lait(?!.*amande|.*avoine|.*soja|.*coco)|crème/.test(n)) return { aisle: '🧀 Produits laitiers', order: 4 }
-  if (/patate|pomme.*de.*terre|brocoli|épinard|haricot.*vert|courgette|asperge|poivron|tomate|concombre|carotte|chou|champignon|salade|avocat|oignon|ail|aubergine|betterave|laitue|légume/.test(n)) return { aisle: '🥬 Legumes', order: 5 }
-  if (/banane|pomme(?!.*terre)|orange|fraise|myrtille|framboise|kiwi|mangue|ananas|poire|raisin|melon|pêche|abricot|citron/.test(n)) return { aisle: '🍎 Fruits', order: 6 }
-  if (/riz|pâte|quinoa|boulgour|semoule|pain|flocon|muesli|galette|tortilla|wrap|lentille|pois.*chiche|haricot.*rouge|haricot.*blanc|avoine|céréale|granola/.test(n)) return { aisle: '🌾 Feculents', order: 7 }
-  if (/amande|noix|cacahuète|noisette|graine|beurre.*cacahuète|beurre.*amande|chia|lin/.test(n)) return { aisle: '🥜 Fruits secs', order: 8 }
-  if (/huile|beurre(?!.*cacahuète|.*amande)|ghee|coco/.test(n)) return { aisle: '🫒 Huiles', order: 9 }
-  if (/whey|caséine|protéine|bcaa|créatine|barre.*protéin/.test(n)) return { aisle: '💪 Supplements', order: 10 }
-  if (/sauce|vinaigre|moutarde|miel|sirop|soja/.test(n)) return { aisle: '🍯 Condiments', order: 11 }
-  if (/lait.*amande|lait.*avoine|lait.*soja|lait.*coco|jus|eau.*coco/.test(n)) return { aisle: '🥤 Boissons', order: 12 }
-  if (/tofu|tempeh|seitan/.test(n)) return { aisle: '🌿 Vegetal', order: 14 }
-  return { aisle: '🛒 Autres', order: 99 }
+  if (/poulet|dinde|boeuf|bœuf|steak|filet|bavette|porc|jambon|bacon|viande|escalope|agneau|veau/.test(n)) return { aisleKey: 'butcher', emoji: '🥩', order: 1 }
+  if (/saumon|thon|cabillaud|crevette|sardine|maquereau|truite|colin|dorade|bar|poisson/.test(n)) return { aisleKey: 'fish', emoji: '🐟', order: 2 }
+  if (/oeuf|œuf/.test(n)) return { aisleKey: 'eggs', emoji: '🥚', order: 3 }
+  if (/yaourt|fromage|skyr|cottage|mozzarella|emmental|gruyère|parmesan|ricotta|feta|lait(?!.*amande|.*avoine|.*soja|.*coco)|crème/.test(n)) return { aisleKey: 'dairy', emoji: '🧀', order: 4 }
+  if (/patate|pomme.*de.*terre|brocoli|épinard|haricot.*vert|courgette|asperge|poivron|tomate|concombre|carotte|chou|champignon|salade|avocat|oignon|ail|aubergine|betterave|laitue|légume/.test(n)) return { aisleKey: 'vegetables', emoji: '🥬', order: 5 }
+  if (/banane|pomme(?!.*terre)|orange|fraise|myrtille|framboise|kiwi|mangue|ananas|poire|raisin|melon|pêche|abricot|citron/.test(n)) return { aisleKey: 'fruits', emoji: '🍎', order: 6 }
+  if (/riz|pâte|quinoa|boulgour|semoule|pain|flocon|muesli|galette|tortilla|wrap|lentille|pois.*chiche|haricot.*rouge|haricot.*blanc|avoine|céréale|granola/.test(n)) return { aisleKey: 'starches', emoji: '🌾', order: 7 }
+  if (/amande|noix|cacahuète|noisette|graine|beurre.*cacahuète|beurre.*amande|chia|lin/.test(n)) return { aisleKey: 'nutsSeeds', emoji: '🥜', order: 8 }
+  if (/huile|beurre(?!.*cacahuète|.*amande)|ghee|coco/.test(n)) return { aisleKey: 'oils', emoji: '🫒', order: 9 }
+  if (/whey|caséine|protéine|bcaa|créatine|barre.*protéin/.test(n)) return { aisleKey: 'supplements', emoji: '💪', order: 10 }
+  if (/sauce|vinaigre|moutarde|miel|sirop|soja/.test(n)) return { aisleKey: 'condiments', emoji: '🍯', order: 11 }
+  if (/lait.*amande|lait.*avoine|lait.*soja|lait.*coco|jus|eau.*coco/.test(n)) return { aisleKey: 'drinks', emoji: '🥤', order: 12 }
+  if (/tofu|tempeh|seitan/.test(n)) return { aisleKey: 'plantBased', emoji: '🌿', order: 14 }
+  return { aisleKey: 'others', emoji: '🛒', order: 99 }
 }
 
 function roundUp(g: number): string {
@@ -35,6 +38,8 @@ interface ShoppingListProps {
 }
 
 export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
+  const t = useTranslations('shoppingList')
+  const tAisle = useTranslations('shoppingList.aisles')
   const storageKey = `moovx-shopping-${new Date().toISOString().split('T')[0]}`
   const [checked, setChecked] = useState<Record<string, boolean>>(() => {
     try { return JSON.parse(localStorage.getItem(storageKey) || '{}') } catch { return {} }
@@ -56,11 +61,11 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
     }
 
     // Group by aisle
-    const grouped: Record<string, { items: { name: string; qty: number; display: string }[]; order: number }> = {}
+    const grouped: Record<string, { items: { name: string; qty: number; display: string }[]; order: number; emoji: string }> = {}
     for (const [name, qty] of Object.entries(agg)) {
-      const { aisle, order } = getAisle(name)
-      if (!grouped[aisle]) grouped[aisle] = { items: [], order }
-      grouped[aisle].items.push({ name, qty, display: roundUp(qty) })
+      const { aisleKey, emoji, order } = getAisle(name)
+      if (!grouped[aisleKey]) grouped[aisleKey] = { items: [], order, emoji }
+      grouped[aisleKey].items.push({ name, qty, display: roundUp(qty) })
     }
 
     // Sort aisles by order, items by name
@@ -84,15 +89,15 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
   }
 
   function copyToClipboard() {
-    const lines = ['🛒 LISTE DE COURSES -- MoovX', '']
-    for (const [aisle, { items }] of aisles) {
-      lines.push(aisle.toUpperCase())
+    const lines = [`🛒 ${t('clipboardHeader')} -- MoovX`, '']
+    for (const [aisleKey, { items, emoji }] of aisles) {
+      lines.push(`${emoji} ${tAisle(aisleKey)}`.toUpperCase())
       for (const item of items) {
         lines.push(`☐ ${item.name} -- ${item.display}`)
       }
       lines.push('')
     }
-    navigator.clipboard.writeText(lines.join('\n')).then(() => toast.success('Liste copiee !')).catch(() => toast.error('Erreur de copie'))
+    navigator.clipboard.writeText(lines.join('\n')).then(() => toast.success(t('copySuccess'))).catch(() => toast.error(t('copyError')))
   }
 
   return (
@@ -100,12 +105,12 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
         <div>
-          <div style={{ fontFamily: fonts.alt, fontSize: '1.1rem', fontWeight: 800, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase' }}>LISTE DE COURSES</div>
-          <div style={{ fontSize: '0.65rem', fontFamily: fonts.body, fontWeight: 300, color: colors.textMuted }}>{totalItems} articles -- {checkedCount}/{totalItems} coches</div>
+          <div style={{ fontFamily: fonts.alt, fontSize: '1.1rem', fontWeight: 800, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('title')}</div>
+          <div style={{ fontSize: '0.65rem', fontFamily: fonts.body, fontWeight: 300, color: colors.textMuted }}>{t('subtitle', { total: totalItems, checked: checkedCount })}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={copyToClipboard} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const }}>
-            <Copy size={13} /> Copier
+            <Copy size={13} /> {t('copy')}
           </button>
           <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={colors.textMuted} />
@@ -116,12 +121,12 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
       {/* List */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 80px' }}>
         {aisles.length === 0 ? (
-          <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, padding: '40px 0' }}>Aucun plan alimentaire pour generer la liste.</p>
+          <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, padding: '40px 0' }}>{t('emptyState')}</p>
         ) : (
-          aisles.map(([aisle, { items }]) => (
-            <div key={aisle} style={{ marginBottom: 20 }}>
+          aisles.map(([aisleKey, { items, emoji }]) => (
+            <div key={aisleKey} style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: colors.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8, position: 'sticky', top: 0, background: colors.background, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
-                {aisle}
+                {emoji} {tAisle(aisleKey)}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {items.map(item => {
@@ -146,7 +151,7 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
       {checkedCount > 0 && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))', background: 'rgba(5,5,5,0.95)', borderTop: `1px solid ${colors.divider}`, display: 'flex', justifyContent: 'center' }}>
           <button onClick={resetAll} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const }}>
-            <RotateCcw size={14} /> Tout decocher
+            <RotateCcw size={14} /> {t('uncheckAll')}
           </button>
         </div>
       )}

@@ -496,6 +496,32 @@
     "proof_made": "Made in Geneva",
     "image_alt": "MoovX athlete shouting in victory after accomplished transformation"
   },
+  "shoppingList": {
+    "title": "SHOPPING LIST",
+    "subtitle": "{total} items — {checked}/{total} checked",
+    "copy": "Copy",
+    "copySuccess": "List copied!",
+    "copyError": "Copy error",
+    "uncheckAll": "Uncheck all",
+    "emptyState": "No meal plan to generate the list.",
+    "clipboardHeader": "SHOPPING LIST",
+    "aisles": {
+      "butcher": "Butcher",
+      "fish": "Fish counter",
+      "eggs": "Eggs",
+      "dairy": "Dairy",
+      "vegetables": "Vegetables",
+      "fruits": "Fruits",
+      "starches": "Starches",
+      "nutsSeeds": "Nuts & seeds",
+      "oils": "Oils",
+      "supplements": "Supplements",
+      "condiments": "Condiments",
+      "drinks": "Drinks",
+      "plantBased": "Plant-based",
+      "others": "Other"
+    }
+  },
   "exerciseInfo": {
     "comingSoon": "VIDEO COMING SOON",
     "description": "DESCRIPTION",

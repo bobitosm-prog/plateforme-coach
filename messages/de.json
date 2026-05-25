@@ -496,6 +496,32 @@
     "proof_made": "Made in Geneva",
     "image_alt": "MoovX-Athlet schreit vor Freude nach vollbrachter Transformation"
   },
+  "shoppingList": {
+    "title": "EINKAUFSLISTE",
+    "subtitle": "{total} Artikel — {checked}/{total} abgehakt",
+    "copy": "Kopieren",
+    "copySuccess": "Liste kopiert!",
+    "copyError": "Kopierfehler",
+    "uncheckAll": "Alle abwählen",
+    "emptyState": "Kein Ernährungsplan zur Listenerstellung.",
+    "clipboardHeader": "EINKAUFSLISTE",
+    "aisles": {
+      "butcher": "Metzgerei",
+      "fish": "Fischtheke",
+      "eggs": "Eier",
+      "dairy": "Milchprodukte",
+      "vegetables": "Gemüse",
+      "fruits": "Obst",
+      "starches": "Sättigungsbeilagen",
+      "nutsSeeds": "Nüsse & Samen",
+      "oils": "Öle",
+      "supplements": "Nahrungsergänzung",
+      "condiments": "Gewürze",
+      "drinks": "Getränke",
+      "plantBased": "Pflanzlich",
+      "others": "Andere"
+    }
+  },
   "exerciseInfo": {
     "comingSoon": "VIDEO KOMMT BALD",
     "description": "BESCHREIBUNG",
