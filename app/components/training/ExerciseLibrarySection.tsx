@@ -206,7 +206,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
                 return exNames.slice(0, 6).map((n: string) => {
                   const match = exercisesCache.find((e: any) => e.name === n)
                   return (
-                    <button key={n} onClick={() => { if (match) { setAltSelected(match); setAltSearch(match.name); const alts = exercisesCache.filter((a: any) => a.id !== match.id && a.muscle_group?.toLowerCase() === match.muscle_group?.toLowerCase() && a.name !== match.name).slice(0, 3); setAltResults(alts) } }} style={chipStyle(false)}>{n}</button>
+                    <button key={n} onClick={() => { if (match) { setAltSelected(match); setAltSearch(match.name); const alts = exercisesCache.filter((a: any) => a.id !== match.id && a.muscle_group?.toLowerCase() === match.muscle_group?.toLowerCase() && a.name !== match.name).slice(0, 3); setAltResults(alts) } }} style={chipStyle(false)}>{match ? getExerciseName(match, locale) : n}</button>
                   )
                 })
               })()}
@@ -217,7 +217,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
               {altResults.map((alt: any) => (
                 <div key={alt.id} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body }}>{alt.name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body }}>{getExerciseName(alt, locale)}</div>
                     <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
                       <span style={{ fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, color: colors.success, background: 'rgba(74,222,128,0.1)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('sameTarget')}</span>
                       {alt.equipment && <span style={{ fontSize: 9, fontFamily: fonts.alt, color: colors.textDim, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 999, letterSpacing: '0.1em' }}>{alt.equipment}</span>}
