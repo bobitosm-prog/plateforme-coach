@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : 9bd45f3
+- **HEAD** : 262c5c8
 - **Working tree** : clean
-- **Tâche en cours** : Sprint i18n + DB closure — F1+F2+F3 done (sauf tech debt résiduelle alias muscles + equipment + bug filtres)
+- **Tâche en cours** : Sprint i18n + DB closure — F1+F2+F3 done + bug "JAMBES" filter fixed (F3.5b), reste dette mineure (3 vocabulaires UI inconsistants encore présents dans HomeTab/TrainingTab principale)
 
 ---
 
@@ -70,6 +70,7 @@ Plan 5 phases proposé :
 | 17 | 578e237 | feat(i18n): consume getExerciseName in AnalyticsSection (F3.3.3) |
 | 18 | ff2c42b | feat(i18n): exercise i18n backfill script (F3.4) |
 | 19 | 9bd45f3 | feat(i18n): muscle_group display + filters (F3.5a) |
+| 20 | 262c5c8 | fix(i18n): muscle filter 'JAMBES' bug + AI priorities i18n (F3.5b) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -404,6 +405,36 @@ nécessité de soit traduire en DB, soit dans des dicts front.
 - 19 display wrappés (5 fichiers Training)
 - Filtres : label traduit, state reste FR pour DB compare
 - MUSCLE_COLORS lookup préservé (key FR DB)
+
+**F3.5b — Fix bug filtre "JAMBES" + AI priorities i18n (DONE)**
+
+**Bug critique corrigé** :
+ExerciseLibrarySection.tsx avait `DB_MUSCLES` (L.10) avec alias "Jambes"
+mais le filter (L.67) faisait `e.muscle_group === muscle` strict. Donc
+clic "Jambes" → 0 résultat → "No exercise found" alors qu'il y avait 60 exos.
+
+**Architecture** :
+- lib/i18n-muscle.ts étendu avec MUSCLE_ALIAS_TO_DB + matchMuscleFilter helper
+- Aliases UI (Jambes/Bras/Poitrine) mappés vers muscle_group DB[] :
+  - Jambes = [Quadriceps, Ischio-jambiers, Fessiers, Mollets]
+  - Bras = [Biceps, Triceps]
+  - Poitrine = [Pectoraux]
+- ExerciseLibrarySection : DB_MUSCLES → MUSCLE_FILTER_VALUES,
+  filter refactoré via matchMuscleFilter
+- ProgramBuilder MUSCLE_OPTIONS (AI priorities) : affichage traduit
+  via getMuscleLabel, state FR préservé pour payload AI backend
+- +2 clés muscles.* (legs, arms) sous fr/en/de
+- Total i18n keys : 1683 → 1685
+
+**Test runtime validé** :
+LEGS affiche 60 exos (27 quads + 13 isch + 13 fessiers + 7 mollets) ✓
+
+**Apprentissage senior** :
+- Pattern alias UI → DB[] : approche pragmatique pour gérer un vocabulaire
+  user-friendly (Jambes) en gardant une DB normalisée (Quadriceps, etc.).
+  Helper centralisé matchMuscleFilter évite la duplication de logique.
+- "Storage normalisé, display agrégé" est le bon pattern pour cette
+  situation (vs migration DB d'aliases qui aurait été du sur-engineering).
 
 ### Apprentissages senior F3
 
