@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : 0fe1566
+- **HEAD** : 9bd45f3
 - **Working tree** : clean
-- **Tâche en cours** : Sprint i18n closure — F2 done (AnalyticsSection + Recharts), suite F3 migration DB exos
+- **Tâche en cours** : Sprint i18n + DB closure — F1+F2+F3 done (sauf tech debt résiduelle alias muscles + equipment + bug filtres)
 
 ---
 
@@ -64,6 +64,12 @@ Plan 5 phases proposé :
 | 11 | b723df4 | Revert "fix(i18n): bottom nav + headers retour + MeasureModal" |
 | 12 | b7acd52 | fix(i18n): bottom nav + headers retour + MeasureModal v2 (8 keys) |
 | 13 | 0fe1566 | fix(i18n): AnalyticsSection 100% FR/EN/DE (34 keys) |
+| 14 | be3540a | feat(db): add i18n columns to exercises_db (F3.2) |
+| 15 | a7f2faa | feat(i18n): add exercise i18n helper with FR fallback (F3.3.1) |
+| 16 | 43c83a6 | feat(i18n): consume getExerciseName in Training cluster (F3.3.2) |
+| 17 | 578e237 | feat(i18n): consume getExerciseName in AnalyticsSection (F3.3.3) |
+| 18 | ff2c42b | feat(i18n): exercise i18n backfill script (F3.4) |
+| 19 | 9bd45f3 | feat(i18n): muscle_group display + filters (F3.5a) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -347,6 +353,119 @@ de ce provider.
   techniques + name traduit via t() (Option B) — préférer quand possible.
 - Pour AnalyticsSection : data transformation INTERNE au composant donc
   Option B propre et auto-contenue.
+
+## F3 — Migration DB exercises_db + helpers i18n (DONE)
+
+### Contexte initial
+178 exercices stockés en FR uniquement dans exercises_db. Pour app EN/DE,
+nécessité de soit traduire en DB, soit dans des dicts front.
+
+### Découpe F3 en 6 sous-phases
+
+**F3.1 — Audit DB**
+- 178 exos, 12 muscle_group distincts, 7 categories, 43 equipment (chaos)
+- 155 exos ont description, 66 ont tips, 0 ont instructions/execution_tips
+- Décision : traduire name + description + tips via DB columns ; muscles/category/difficulty
+  via mapping front ; equipment skip (chaos, sprint dédié)
+
+**F3.2 — Migration SQL (be3540a)**
+- ALTER TABLE additif : name_en/de, description_en/de, tips_en/de
+- Migration file : supabase/migrations/20260525094500_add_exercise_i18n_columns.sql
+- Appliqué en prod via SQL Editor Supabase
+
+**F3.3.1 — Helper getExerciseName (a7f2faa)**
+- lib/i18n-exercise.ts : duck-typed sur ExerciseI18nFields
+- Fallback FR systématique si traduction null/empty
+- 3 helpers : getExerciseName, getExerciseDescription, getExerciseTips
+- Réutilise Locale de lib/seo.ts
+
+**F3.3.2 — Adoption Training cluster (43c83a6)**
+- 7 fichiers adaptés (WorkoutSession, ExerciseDetail/SearchModal, TrainingTab,
+  TrainingExerciseCard, ExerciseLibrarySection, ProgramBuilder)
+- 25 display wrappés, 49 DB/comparison préservés
+- Pattern exerciseNameRaw vs exerciseNameDisplay pour cas mixtes
+
+**F3.3.3 — Reste (578e237)**
+- 1 fichier touché (AnalyticsSection PR cards)
+- HomeTab/ProgressTab/CardioSection : aucun display name → skip
+
+**F3.4 — Backfill IA (ff2c42b)**
+- Script Node + Claude Opus 4.7 : scripts/backfill-exercise-i18n.mjs
+- Modes : dry-run / --from-file / --apply / --resume
+- 8 batches de 25 exos, ~$5 estimé (réel ~$3-4)
+- Validation qualité sur 10 samples : "Barre au front" → "Skull crusher"
+  + "Stirndrücken" (traduction métier, pas littérale) confirmée
+- 178/178 noms EN/DE en DB, 155/155 desc, 66/66 tips
+- translations-backfill.json gitignored (regenerable)
+
+**F3.5a — muscle_group i18n (9bd45f3)**
+- lib/i18n-muscle.ts : helper getMuscleLabel + MUSCLE_KEY_MAP (13 valeurs)
+- namespace muscles.* (12 clés + cardio = 13)
+- 19 display wrappés (5 fichiers Training)
+- Filtres : label traduit, state reste FR pour DB compare
+- MUSCLE_COLORS lookup préservé (key FR DB)
+
+### Apprentissages senior F3
+
+**Architecture i18n DB-stored content**
+- Pour textes libres (name/description/tips) : colonnes DB EN/DE additives
+  avec fallback FR systématique côté helper
+- Pour enums fermés (muscle_group 12 valeurs) : mapping front via helper
+  + namespace JSON dédié. NE PAS migrer en DB (sur-engineering)
+- Pour data chaos (equipment 43 valeurs) : DETTE DB d'abord, i18n ensuite
+
+**Distinction critique DISPLAY vs DB/LOGIC**
+- Wrapper helper UNIQUEMENT sur les affichages user
+- Préserver FR sur : state setters, DB writes, payloads backend, React keys,
+  comparisons (filter, sort), lookup maps (MUSCLE_COLORS), logique métier
+  (MuscleHeatMap)
+
+**Sécurité opérationnelle**
+- Free plan Supabase = pas de backups managed. Mitigation : pg_dump local
+  (1.6 MB en l'occurrence). Postgres client version doit MATCH la prod
+  (17.6 → install postgresql@17 via Homebrew).
+- dotenv ne lit pas .env.local par défaut. Fix : import dotenv from 'dotenv';
+  dotenv.config({ path: '.env.local' })
+- API key Anthropic exposée partiellement dans chat → rotated immédiatement.
+  Pattern safe : echo "${#PG_URL}" affiche la longueur, jamais le contenu.
+
+**Workflow backfill optimal**
+- Batch JSON 25 par appel : sweet spot qualité × throughput
+- Dry-run d'abord (JSON local), review qualité 10 samples, puis --apply
+- --from-file pour rejouer sans re-consommer API
+- Qualité Opus 4.7 sur fitness/musculation : excellente, traduit
+  intention métier (pas littéral)
+
+### Bugs identifiés mais NON résolus (tech debt sprint dédié)
+
+1. **Alias muscles UI inconsistants**
+   - DB_MUSCLES (ExerciseLibrarySection L.10) — alias "Jambes" qui n'existe pas en DB
+   - MUSCLE_OPTIONS (ProgramBuilder L.28, 737) — vocabulaire UI parallèle ("Poitrine" vs "Pectoraux")
+   - TrainingTab.tsx : 3e vocabulaire UI ("TOUT", "JAMBES", "FULL BODY")
+   - 4 vocabulaires différents pour muscles dans le repo
+
+2. **Bug "No exercise found" sur filtre "JAMBES"**
+   - L'alias UI "Jambes" ne matche aucun muscle_group DB (qui sont Quadriceps,
+     Ischio-jambiers, Fessiers, Mollets séparés)
+   - Logique de filtrage cassée
+   - Solution future : refacto vers une vraie taxonomie hiérarchique
+
+3. **Doublon DB**
+   - "Abdominaux" (1 ligne) vs "Abdos" (11 lignes) - dette DB normalisation
+
+4. **Equipment data quality**
+   - 43 valeurs distinctes, doublons casse ("Haltères" 27 + "haltères" 6 + "Haltère" 2)
+   - Compositions floues ("Aucun ou Haltère", "Barre, Banc")
+   - Postures confondues avec équipement ("Debout", "Assis")
+
+5. **difficulty + category i18n**
+   - Faible visibilité (1 occurrence display difficulty trouvée, 0 category)
+   - Report en sprint vocab consolidation
+
+### Compte test prod
+- Décision senior : completed_sessions.exercise_name reste en FR (legacy
+  immutable, pattern Strong/Hevy). Le name d'exercice à la date où l'user
+  l'a fait reflète ce qu'il a vu à l'époque.
 
 ---
 
