@@ -5,9 +5,9 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-24
-- **HEAD** : b7acd52
+- **HEAD** : 0fe1566
 - **Working tree** : clean
-- **Tâche en cours** : Sprint i18n closure — F1b-v2 done (nav refacto sub-component), suite F2 (format dates + Recharts) puis F3 (migration DB exos)
+- **Tâche en cours** : Sprint i18n closure — F2 done (AnalyticsSection + Recharts), suite F3 migration DB exos
 
 ---
 
@@ -63,6 +63,7 @@ Plan 5 phases proposé :
 | 10 | 3ed8fa4 | fix(i18n): bottom nav + headers retour + MeasureModal (8 keys) |
 | 11 | b723df4 | Revert "fix(i18n): bottom nav + headers retour + MeasureModal" |
 | 12 | b7acd52 | fix(i18n): bottom nav + headers retour + MeasureModal v2 (8 keys) |
+| 13 | 0fe1566 | fix(i18n): AnalyticsSection 100% FR/EN/DE (34 keys) |
 
 ### Phase 2+2.5 — HomeTab full coverage (HomeTab L2)
 
@@ -322,6 +323,30 @@ de ce provider.
 - Test boot local OBLIGATOIRE avant commit pour tout fichier qui touche
   app/page.tsx (composant racine). Le compile silent OK ne garantit pas
   le runtime OK.
+
+### F2 — AnalyticsSection (Recharts + dataKey refactor)
+
+**Réalisé** :
+- AnalyticsSection.tsx : 384L, 0% → 100% i18n (34 clés sous progress.analytics)
+- Option B retenue : refactor data keys FR → EN (Proteines→protein, etc.)
+- Recharts names traduits via t() pour legends/tooltips
+- CustomTooltip locale-aware (toLocaleString sans fr-FR hardcoded)
+- Date formats : { locale: fr } → { locale: dateLocale } (6 occurrences)
+- Export CSV headers locale-aware
+- ReferenceLine "Objectif" → t()
+- Total i18n keys : 1636 → 1670
+
+**Test runtime validé** :
+- Graphe Macros affiche correctement après refactor dataKey (Option B)
+- Validation visuelle : barres protein/carbs/fat alignées sur la data
+
+**Apprentissage senior — Recharts** :
+- dataKey doit MATCHER une propriété de l'objet data. Refactor minimal :
+  garder dataKey FR + traduire seulement name (Option A) si data shape FR
+  imposé par parent. Refactor propre : data shape + dataKey en EN keys
+  techniques + name traduit via t() (Option B) — préférer quand possible.
+- Pour AnalyticsSection : data transformation INTERNE au composant donc
+  Option B propre et auto-contenue.
 
 ---
 
