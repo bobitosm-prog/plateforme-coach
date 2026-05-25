@@ -1,9 +1,12 @@
 'use client'
+import { useTranslations, useLocale } from 'next-intl'
 import {
   BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
+import { getExerciseName, getExerciseDescription, getExerciseTips } from '../../lib/i18n-exercise'
+import { getMuscleLabel } from '../../lib/i18n-muscle'
 
 interface ExerciseInfo {
   name: string
@@ -14,6 +17,12 @@ interface ExerciseInfo {
   description?: string
   video_url?: string
   gif_url?: string
+  name_en?: string | null
+  name_de?: string | null
+  description_en?: string | null
+  description_de?: string | null
+  tips_en?: string | null
+  tips_de?: string | null
 }
 
 interface ExerciseInfoPopupProps {
@@ -22,6 +31,13 @@ interface ExerciseInfoPopupProps {
 }
 
 export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupProps) {
+  const t = useTranslations('exerciseInfo')
+  const locale = useLocale() as 'fr' | 'en' | 'de'
+  const tMuscle = useTranslations('muscles')
+  const displayName = getExerciseName(info, locale)
+  const displayDesc = getExerciseDescription(info, locale)
+  const displayTips = getExerciseTips(info, locale)
+
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
@@ -43,7 +59,7 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
             <div style={{
               fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2,
               color: TEXT_PRIMARY,
-            }}>{info.name}</div>
+            }}>{displayName}</div>
             <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
               {info.muscle_group && (
                 <span style={{
@@ -51,7 +67,7 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
                   padding: '2px 8px', borderRadius: 6,
                   background: GOLD_DIM, color: GOLD,
                   letterSpacing: 1, textTransform: 'uppercase',
-                }}>{info.muscle_group}</span>
+                }}>{getMuscleLabel(info.muscle_group, locale, tMuscle)}</span>
               )}
               {info.equipment && (
                 <span style={{
@@ -79,36 +95,36 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
             </div>
           ) : info.gif_url ? (
             <div style={{ marginBottom: 20, borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
-              <img src={info.gif_url} alt={info.name} style={{ width: '100%', height: 'auto', display: 'block' }} />
+              <img src={info.gif_url} alt={displayName} style={{ width: '100%', height: 'auto', display: 'block' }} />
             </div>
           ) : (
             <div style={{ marginBottom: 20, borderRadius: 14, border: `1px dashed ${BORDER}`, padding: '40px 20px', textAlign: 'center', background: GOLD_DIM }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>🎬</div>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, color: TEXT_DIM, letterSpacing: 1 }}>VIDÉO À VENIR</div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, color: TEXT_DIM, letterSpacing: 1 }}>{t('comingSoon')}</div>
             </div>
           )}
 
           {/* Description */}
-          {info.description && (
+          {displayDesc && (
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>DESCRIPTION</div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6 }}>{info.description}</div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>{t('description')}</div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6 }}>{displayDesc}</div>
             </div>
           )}
 
           {/* Instructions */}
           {info.instructions && (
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>EXÉCUTION</div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>{t('execution')}</div>
               <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, lineHeight: 1.6 }}>{info.instructions}</div>
             </div>
           )}
 
           {/* Tips */}
-          {info.tips && (
+          {displayTips && (
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>CONSEILS</div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, padding: '12px 14px', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12 }}>{info.tips}</div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>{t('tips')}</div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, padding: '12px 14px', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12 }}>{displayTips}</div>
             </div>
           )}
         </div>

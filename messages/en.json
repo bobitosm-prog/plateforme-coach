@@ -496,6 +496,12 @@
     "proof_made": "Made in Geneva",
     "image_alt": "MoovX athlete shouting in victory after accomplished transformation"
   },
+  "exerciseInfo": {
+    "comingSoon": "VIDEO COMING SOON",
+    "description": "DESCRIPTION",
+    "execution": "EXECUTION",
+    "tips": "TIPS"
+  },
   "cookieConsent": {
     "title": "Cookies",
     "description": "We use cookies to operate the platform and improve your experience. Your data is never sold.",

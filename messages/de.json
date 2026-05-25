@@ -496,6 +496,12 @@
     "proof_made": "Made in Geneva",
     "image_alt": "MoovX-Athlet schreit vor Freude nach vollbrachter Transformation"
   },
+  "exerciseInfo": {
+    "comingSoon": "VIDEO KOMMT BALD",
+    "description": "BESCHREIBUNG",
+    "execution": "AUSFÜHRUNG",
+    "tips": "TIPPS"
+  },
   "cookieConsent": {
     "title": "Cookies",
     "description": "Wir verwenden Cookies, um die Plattform zu betreiben und Ihre Erfahrung zu verbessern. Ihre Daten werden nie verkauft.",
