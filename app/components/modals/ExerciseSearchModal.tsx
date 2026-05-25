@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { X, Search, Dumbbell } from 'lucide-react'
 import { getExerciseName } from '../../../lib/i18n-exercise'
+import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -20,6 +21,7 @@ interface ExerciseSearchModalProps {
 
 export default function ExerciseSearchModal({ supabase, onClose, onAdd }: ExerciseSearchModalProps) {
   const locale = useLocale() as 'fr' | 'en' | 'de'
+  const tMuscle = useTranslations('muscles')
   const [exSearch, setExSearch] = useState('')
   const [exResults, setExResults] = useState<any[]>([])
   const [exDbAllResults, setExDbAllResults] = useState<any[]>([])
@@ -101,7 +103,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                     fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 180ms',
                     fontFamily: FONT_ALT, letterSpacing: '2px', textTransform: 'uppercase',
                   }}>
-                    {mg}
+                    {getMuscleLabel(mg, locale, tMuscle)}
                   </button>
                 )
               })}
@@ -160,7 +162,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                           {ex.muscle_group && (
                             <span style={{ fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: mgColor, background: `${mgColor}20`, borderRadius: 12, padding: '2px 6px', display: 'inline-block', width: 'fit-content', fontFamily: FONT_ALT, letterSpacing: '1px' }}>
-                              {ex.muscle_group}
+                              {getMuscleLabel(ex.muscle_group, locale, tMuscle)}
                             </span>
                           )}
                           {ex.equipment && (
@@ -209,7 +211,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                 <div style={{ flex: 1, paddingRight: 12 }}>
                   {selectedExDb.muscle_group && (
                     <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: MUSCLE_COLORS[selectedExDb.muscle_group] || GOLD, background: `${MUSCLE_COLORS[selectedExDb.muscle_group] || GOLD}20`, borderRadius: 12, padding: '2px 8px', display: 'inline-block', fontFamily: FONT_ALT, letterSpacing: '2px' }}>
-                      {selectedExDb.muscle_group}
+                      {getMuscleLabel(selectedExDb.muscle_group, locale, tMuscle)}
                     </span>
                   )}
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '2px', margin: '8px 0 0', textTransform: 'uppercase', color: TEXT_PRIMARY }}>

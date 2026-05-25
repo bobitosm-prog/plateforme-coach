@@ -16,6 +16,21 @@
     "backToAccount": "Retour a Compte",
     "navAccount": "Compte"
   },
+  "muscles": {
+    "all": "Tous",
+    "quads": "Quadriceps",
+    "back": "Dos",
+    "chest": "Pectoraux",
+    "shoulders": "Épaules",
+    "triceps": "Triceps",
+    "biceps": "Biceps",
+    "glutes": "Fessiers",
+    "hamstrings": "Ischio-jambiers",
+    "abs": "Abdos",
+    "calves": "Mollets",
+    "fullBody": "Corps entier",
+    "cardio": "Cardio"
+  },
   "nav": {
     "login": "Connexion",
     "start": "Commencer",

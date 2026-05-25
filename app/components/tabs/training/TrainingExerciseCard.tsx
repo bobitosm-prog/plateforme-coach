@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getExerciseName } from '../../../../lib/i18n-exercise'
+import { getMuscleLabel } from '../../../../lib/i18n-muscle'
 import { Check, Plus, MoreHorizontal, Timer, Video, RefreshCw, Info, BarChart2 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -47,6 +48,7 @@ export default function TrainingExerciseCard({
   supabase, userId,
 }: TrainingExerciseCardProps) {
   const locale = useLocale() as 'fr' | 'en' | 'de'
+  const tMuscle = useTranslations('muscles')
   const restSecs   = getRestSeconds(ex)
   const numSets    = setsArr.length
   const doneCount  = setsArr.filter(Boolean).length
@@ -156,7 +158,7 @@ export default function TrainingExerciseCard({
                   color: MUSCLE_COLORS[ex.muscle_group] || GOLD,
                   background: `${MUSCLE_COLORS[ex.muscle_group] || GOLD}20`,
                   borderRadius: 12, padding: '2px 7px', flexShrink: 0,
-                }}>{ex.muscle_group}</span>
+                }}>{getMuscleLabel(ex.muscle_group, locale, tMuscle)}</span>
               )}
 
               {/* Done badge */}

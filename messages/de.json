@@ -16,6 +16,21 @@
     "backToAccount": "Zurück zum Konto",
     "navAccount": "Konto"
   },
+  "muscles": {
+    "all": "Alle",
+    "quads": "Quadrizeps",
+    "back": "Rücken",
+    "chest": "Brust",
+    "shoulders": "Schultern",
+    "triceps": "Trizeps",
+    "biceps": "Bizeps",
+    "glutes": "Gesäß",
+    "hamstrings": "Beinbeuger",
+    "abs": "Bauch",
+    "calves": "Waden",
+    "fullBody": "Ganzkörper",
+    "cardio": "Cardio"
+  },
   "nav": {
     "login": "Anmelden",
     "start": "Loslegen",

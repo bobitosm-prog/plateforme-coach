@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Dumbbell, Search, ChevronRight, ArrowRightLeft, X } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../../lib/i18n-exercise'
+import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { fonts, colors, btnPrimary } from '../../../lib/design-tokens'
 
@@ -50,8 +51,9 @@ interface ExerciseLibrarySectionProps {
 export default function ExerciseLibrarySection({ exercisesCache, activeCustomProgram, supabase, onProgramUpdate, onStartWorkout }: ExerciseLibrarySectionProps) {
   const t = useTranslations('training_tab.library')
   const locale = useLocale() as 'fr' | 'en' | 'de'
+  const tMuscle = useTranslations('muscles')
   const ALL_KEY = '__all__'
-  const muscleFilters = [{ key: ALL_KEY, label: t('allMuscles') }, ...DB_MUSCLES.map(m => ({ key: m, label: m }))]
+  const muscleFilters = [{ key: ALL_KEY, label: tMuscle('all') }, ...DB_MUSCLES.map(m => ({ key: m, label: getMuscleLabel(m, locale, tMuscle) }))]
   const [libSearch, setLibSearch] = useState('')
   const [libMuscle, setLibMuscle] = useState(ALL_KEY)
   const [libShowAll, setLibShowAll] = useState(false)
@@ -98,7 +100,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getExerciseName(ex, locale)}</div>
                       <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
-                        {ex.muscle_group && <span style={{ fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{ex.muscle_group}</span>}
+                        {ex.muscle_group && <span style={{ fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{getMuscleLabel(ex.muscle_group, locale, tMuscle)}</span>}
                       </div>
                       {ex.equipment && <div style={{ fontSize: 10, color: colors.textDim, fontFamily: fonts.body, marginTop: 2 }}>{ex.equipment}</div>}
                     </div>
@@ -127,7 +129,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
             {libDetail.video_url && <video src={libDetail.video_url} controls autoPlay loop muted playsInline style={{ width: '100%', borderRadius: 12, marginBottom: 16, maxHeight: 240, objectFit: 'cover' }} />}
             {!libDetail.video_url && libDetail.gif_url && <img src={libDetail.gif_url} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 16, maxHeight: 240, objectFit: 'cover' }} />}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-              {libDetail.muscle_group && <span style={{ fontSize: 10, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{libDetail.muscle_group}</span>}
+              {libDetail.muscle_group && <span style={{ fontSize: 10, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{getMuscleLabel(libDetail.muscle_group, locale, tMuscle)}</span>}
               {libDetail.difficulty && <span style={{ fontSize: 10, fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, background: 'rgba(255,255,255,0.06)', padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{libDetail.difficulty}</span>}
               {libDetail.equipment && <span style={{ fontSize: 10, fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, background: 'rgba(255,255,255,0.06)', padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{libDetail.equipment}</span>}
             </div>
@@ -164,7 +166,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body }}>{getExerciseName(ex, locale)}</div>
-                  <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>{ex.muscle_group && <span style={{ fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{ex.muscle_group}</span>}</div>
+                  <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>{ex.muscle_group && <span style={{ fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{getMuscleLabel(ex.muscle_group, locale, tMuscle)}</span>}</div>
                   {ex.equipment && <div style={{ fontSize: 10, color: colors.textDim, fontFamily: fonts.body, marginTop: 2 }}>{ex.equipment}</div>}
                 </div>
                 <ChevronRight size={16} color={colors.textDim} />
@@ -191,7 +193,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
               {exercisesCache.filter((e: any) => e.name?.toLowerCase().includes(altSearch.toLowerCase())).slice(0, 8).map((ex: any) => (
                 <button key={ex.id} onClick={async () => { setAltSelected(ex); setAltSearch(ex.name); const alts = exercisesCache.filter((a: any) => a.id !== ex.id && a.muscle_group?.toLowerCase() === ex.muscle_group?.toLowerCase() && a.name !== ex.name).slice(0, 3); setAltResults(alts) }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.divider}`, cursor: 'pointer', textAlign: 'left' }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{getExerciseName(ex, locale)}</div>
-                  <div style={{ fontSize: 9, color: colors.textDim, fontFamily: fonts.body }}>{ex.muscle_group} &middot; {ex.equipment || 'N/A'}</div>
+                  <div style={{ fontSize: 9, color: colors.textDim, fontFamily: fonts.body }}>{getMuscleLabel(ex.muscle_group, locale, tMuscle)} &middot; {ex.equipment || 'N/A'}</div>
                 </button>
               ))}
             </div>

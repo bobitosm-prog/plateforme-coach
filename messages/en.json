@@ -16,6 +16,21 @@
     "backToAccount": "Back to Account",
     "navAccount": "Account"
   },
+  "muscles": {
+    "all": "All",
+    "quads": "Quads",
+    "back": "Back",
+    "chest": "Chest",
+    "shoulders": "Shoulders",
+    "triceps": "Triceps",
+    "biceps": "Biceps",
+    "glutes": "Glutes",
+    "hamstrings": "Hamstrings",
+    "abs": "Abs",
+    "calves": "Calves",
+    "fullBody": "Full body",
+    "cardio": "Cardio"
+  },
   "nav": {
     "login": "Sign in",
     "start": "Get started",

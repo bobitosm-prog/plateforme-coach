@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../../lib/i18n-exercise'
+import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../../lib/session-types'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -86,6 +87,7 @@ export { padTo7Days }
 export default function ProgramBuilder({ supabase, session, aiAllowed = true, onClose, onSave, editProgram }: ProgramBuilderProps) {
   const t = useTranslations('training_tab.builder')
   const locale = useLocale() as 'fr' | 'en' | 'de'
+  const tMuscle = useTranslations('muscles')
   // Display-only day names (translated). DAY_NAMES at module-level stays FR for DB/padTo7Days.
   const dayNamesDisplay = DAY_NAMES // padTo7Days stores FR weekday in DB — display translation happens at render
   const dayShortDisplay = DAY_SHORT
@@ -107,7 +109,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
     { key: 'sans_materiel', label: t('config.eqSansMateriel') },
   ]
   const ALL_KEY = '__all__'
-  const muscleFilterDisplay = [{ key: ALL_KEY, label: t('search.allMuscles') }, ...MUSCLE_FILTERS.slice(1).map(m => ({ key: m, label: m }))]
+  const muscleFilterDisplay = [{ key: ALL_KEY, label: tMuscle('all') }, ...MUSCLE_FILTERS.slice(1).map(m => ({ key: m, label: getMuscleLabel(m, locale, tMuscle) }))]
 
   const [mode, setMode] = useState<'select' | 'ai' | 'manual' | 'custom-exercise'>('select')
   const [dbExercises, setDbExercises] = useState<any[]>([])
@@ -882,7 +884,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                   <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                     {ex.muscle_group && (
                       <span style={{ fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase', padding: '2px 8px', background: GOLD_DIM, color: GOLD, letterSpacing: '0.05em' }}>
-                        {ex.muscle_group}
+                        {getMuscleLabel(ex.muscle_group, locale, tMuscle)}
                       </span>
                     )}
                     {ex._custom && (
@@ -941,7 +943,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                   </div>
                   <div>
                     <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{v.name}</div>
-                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
+                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${getMuscleLabel(v.muscle_group, locale, tMuscle)}`:''}</div>
                   </div>
                 </button>
               ))}
