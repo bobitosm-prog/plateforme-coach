@@ -66,3 +66,6 @@ exercise-media/
 # Claude Code local settings
 .claude/settings.local.json
 tmp-legal/
+
+# i18n backfill artifact (regenerated via scripts/backfill-exercise-i18n.mjs)
+translations-backfill.json
