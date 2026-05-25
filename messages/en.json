@@ -1483,7 +1483,8 @@
       "badgeDone": "COMPLETED",
       "badgeUpcoming": "UPCOMING",
       "badgeMissed": "MISSED",
-      "viewSession": "VIEW WORKOUT"
+      "viewSession": "VIEW WORKOUT",
+      "freeSession": "FREE WORKOUT"
     },
     "activeBar": {
       "series": "{done}/{total} sets"
@@ -1493,7 +1494,23 @@
       "nextWeek": "Next week →"
     },
     "recent": {
-      "noSessions": "No sessions"
+      "noSessions": "No sessions",
+      "lastSessions": "Recent sessions",
+      "sessionsCount": "{count} sessions",
+      "viewAll": "View all ›",
+      "reduce": "Reduce",
+      "sessionFallback": "Session",
+      "filters": {
+        "all": "All",
+        "pectoraux": "Chest",
+        "dos": "Back",
+        "epaules": "Shoulders",
+        "jambes": "Legs",
+        "full_body": "Full Body",
+        "haut": "Upper",
+        "bas": "Lower",
+        "cardio": "Cardio"
+      }
     },
     "session": {
       "exercises": "EXERCISES",
@@ -2152,7 +2169,8 @@
       "retake": "RETAKE",
       "addAll": "ADD ALL",
       "today": "TODAY",
-      "remaining": "remaining: {count}"
+      "remaining": "remaining: {count}",
+      "myMeals": "My meals"
     },
     "macrosShort": {
       "p": "P",

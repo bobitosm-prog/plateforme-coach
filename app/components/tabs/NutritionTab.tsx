@@ -910,7 +910,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {subTab === 'meals' && (
         <div style={{ padding: '0 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={T}>MES REPAS</span>
+            <span style={T}>{nt('chrome.myMeals')}</span>
             <div style={titleLineStyle} />
           </div>
           <div style={{ ...cardStyle, padding: 16 }}>
@@ -953,7 +953,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                               {meal.meal_type && <span style={{ fontSize: 9, fontFamily: fonts.body, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase' }}>{MEAL_LABELS[meal.meal_type] || meal.meal_type}</span>}
                             </div>
                             <div style={{ ...bodyStyle, marginTop: 4, fontSize: 11 }}>{Math.round(kcal)} kcal · {Math.round(prot)}g P · {Math.round(carbs)}g G · {Math.round(fat)}g L</div>
-                            <div style={{ ...mutedStyle, marginTop: 2 }}>{meal.created_at ? new Date(meal.created_at).toLocaleDateString('fr-FR') : ''}</div>
+                            <div style={{ ...mutedStyle, marginTop: 2 }}>{meal.created_at ? new Date(meal.created_at).toLocaleDateString(locale) : ''}</div>
                           </div>
                           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                             <button onClick={() => setEditingMeal(meal)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}><Pencil size={14} color={colors.textMuted} /></button>

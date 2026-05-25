@@ -1483,7 +1483,8 @@
       "badgeDone": "BEENDET",
       "badgeUpcoming": "BEVORSTEHEND",
       "badgeMissed": "VERPASST",
-      "viewSession": "TRAINING ANSEHEN"
+      "viewSession": "TRAINING ANSEHEN",
+      "freeSession": "FREIES TRAINING"
     },
     "activeBar": {
       "series": "{done}/{total} Sätze"
@@ -1493,7 +1494,23 @@
       "nextWeek": "Nächste Woche →"
     },
     "recent": {
-      "noSessions": "Keine Einheiten"
+      "noSessions": "Keine Einheiten",
+      "lastSessions": "Letzte Einheiten",
+      "sessionsCount": "{count} Einheiten",
+      "viewAll": "Alle anzeigen ›",
+      "reduce": "Reduzieren",
+      "sessionFallback": "Einheit",
+      "filters": {
+        "all": "Alle",
+        "pectoraux": "Brust",
+        "dos": "Rücken",
+        "epaules": "Schultern",
+        "jambes": "Beine",
+        "full_body": "Ganzkörper",
+        "haut": "Oberkörper",
+        "bas": "Unterkörper",
+        "cardio": "Cardio"
+      }
     },
     "session": {
       "exercises": "ÜBUNGEN",
@@ -2152,7 +2169,8 @@
       "retake": "ERNEUT",
       "addAll": "ALLE HINZUFÜGEN",
       "today": "HEUTE",
-      "remaining": "verbleibend: {count}"
+      "remaining": "verbleibend: {count}",
+      "myMeals": "Meine Mahlzeiten"
     },
     "macrosShort": {
       "p": "E",

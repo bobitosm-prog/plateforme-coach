@@ -1483,7 +1483,8 @@
     "badgeDone": "TERMINÉE",
     "badgeUpcoming": "À VENIR",
     "badgeMissed": "MANQUÉE",
-    "viewSession": "VOIR LA SÉANCE"
+    "viewSession": "VOIR LA SÉANCE",
+    "freeSession": "SÉANCE LIBRE"
     },
     "activeBar": {
       "series": "{done}/{total} séries"
@@ -1493,7 +1494,23 @@
       "nextWeek": "Semaine suivante →"
     },
     "recent": {
-      "noSessions": "Aucune seance"
+      "noSessions": "Aucune seance",
+      "lastSessions": "Dernières séances",
+      "sessionsCount": "{count} séances",
+      "viewAll": "Voir tout ›",
+      "reduce": "Réduire",
+      "sessionFallback": "Séance",
+      "filters": {
+        "all": "Tout",
+        "pectoraux": "Pectoraux",
+        "dos": "Dos",
+        "epaules": "Épaules",
+        "jambes": "Jambes",
+        "full_body": "Full Body",
+        "haut": "Haut",
+        "bas": "Bas",
+        "cardio": "Cardio"
+      }
     },
     "session": {
       "exercises": "EXERCICES",
@@ -2152,7 +2169,8 @@
       "retake": "REPRENDRE",
       "addAll": "AJOUTER TOUT",
       "today": "AUJOURD'HUI",
-      "remaining": "restantes : {count}"
+      "remaining": "restantes : {count}",
+      "myMeals": "Mes repas"
     },
     "macrosShort": {
       "p": "P",
