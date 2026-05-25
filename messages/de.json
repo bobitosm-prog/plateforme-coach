@@ -29,6 +29,8 @@
     "abs": "Bauch",
     "calves": "Waden",
     "fullBody": "Ganzkörper",
+    "legs": "Beine",
+    "arms": "Arme",
     "cardio": "Cardio"
   },
   "nav": {

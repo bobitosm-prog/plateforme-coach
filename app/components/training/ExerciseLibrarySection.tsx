@@ -3,12 +3,12 @@ import { useState } from 'react'
 import { Dumbbell, Search, ChevronRight, ArrowRightLeft, X } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../../lib/i18n-exercise'
-import { getMuscleLabel } from '../../../lib/i18n-muscle'
+import { getMuscleLabel, matchMuscleFilter } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { fonts, colors, btnPrimary } from '../../../lib/design-tokens'
 
-// Muscle names match DB values (exercises_db.muscle_group) — do NOT translate
-const DB_MUSCLES = ['Pectoraux', 'Dos', '\u00c9paules', 'Biceps', 'Triceps', 'Jambes', 'Abdos', 'Fessiers', 'Mollets']
+// Mix of DB values + UI aliases (Jambes aggregates quads/hamstrings/glutes/calves)
+const MUSCLE_FILTER_VALUES = ['Pectoraux', 'Dos', '\u00c9paules', 'Biceps', 'Triceps', 'Jambes', 'Abdos', 'Fessiers', 'Mollets']
 
 const sectionHeader: React.CSSProperties = {
   fontFamily: fonts.alt, fontSize: 11, fontWeight: 700,
@@ -53,7 +53,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
   const ALL_KEY = '__all__'
-  const muscleFilters = [{ key: ALL_KEY, label: tMuscle('all') }, ...DB_MUSCLES.map(m => ({ key: m, label: getMuscleLabel(m, locale, tMuscle) }))]
+  const muscleFilters = [{ key: ALL_KEY, label: tMuscle('all') }, ...MUSCLE_FILTER_VALUES.map(m => ({ key: m, label: getMuscleLabel(m, locale, tMuscle) }))]
   const [libSearch, setLibSearch] = useState('')
   const [libMuscle, setLibMuscle] = useState(ALL_KEY)
   const [libShowAll, setLibShowAll] = useState(false)
@@ -64,7 +64,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
 
   const filterExercises = (search: string, muscle: string) =>
     exercisesCache.filter((e: any) => {
-      if (muscle !== ALL_KEY && e.muscle_group?.toLowerCase() !== muscle.toLowerCase()) return false
+      if (muscle !== ALL_KEY && !matchMuscleFilter(e.muscle_group, muscle)) return false
       if (search && !e.name?.toLowerCase().includes(search.toLowerCase())) return false
       return true
     })

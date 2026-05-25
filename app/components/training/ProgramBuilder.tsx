@@ -544,7 +544,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       onClick={() => setAiPriorities(prev => selected ? prev.filter(p => p !== m) : [...prev, m])}
                       style={selBtn(selected)}
                     >
-                      {m}
+                      {getMuscleLabel(m, locale, tMuscle)}
                     </button>
                   )
                 })}

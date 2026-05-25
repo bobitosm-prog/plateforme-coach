@@ -20,7 +20,9 @@ const MUSCLE_KEY_MAP: Record<string, string> = {
   'Abdominaux': 'abs',
   'Mollets': 'calves',
   'Corps Entier': 'fullBody',
-  'Jambes': 'quads',
+  'Jambes': 'legs',
+  'Bras': 'arms',
+  'Poitrine': 'chest', // UI alias for Pectoraux
   'Cardio': 'cardio',
 }
 
@@ -40,6 +42,36 @@ export function getMuscleLabel(
   const i18nKey = MUSCLE_KEY_MAP[dbValue]
   if (!i18nKey) return dbValue // fallback for unknown DB values
   return t(i18nKey)
+}
+
+/**
+ * Map UI alias → list of DB muscle_group values it aggregates.
+ * Non-alias muscles (Dos, Pectoraux, etc.) are NOT in this map —
+ * they match directly via case-insensitive compare.
+ */
+export const MUSCLE_ALIAS_TO_DB: Record<string, string[]> = {
+  'Jambes':   ['Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets'],
+  'Bras':     ['Biceps', 'Triceps'],
+  'Poitrine': ['Pectoraux'],
+}
+
+/**
+ * Returns true if exercise muscle_group matches the UI filter.
+ * Handles both direct matches and alias aggregation.
+ */
+export function matchMuscleFilter(
+  exoMuscleGroup: string | null | undefined,
+  filter: string | null | undefined
+): boolean {
+  if (!filter) return true
+  if (!exoMuscleGroup) return false
+
+  const aliasGroup = MUSCLE_ALIAS_TO_DB[filter]
+  if (aliasGroup) {
+    return aliasGroup.some(m => m.toLowerCase() === exoMuscleGroup.toLowerCase())
+  }
+
+  return filter.toLowerCase() === exoMuscleGroup.toLowerCase()
 }
 
 export { MUSCLE_KEY_MAP }
