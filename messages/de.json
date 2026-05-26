@@ -2376,5 +2376,35 @@
       "legendRecovered": "Erholt",
       "legendFatigued": "Ermüdet"
     }
+  },
+  "onboarding_v2": {
+    "nav": {
+      "continue": "Weiter",
+      "skip": "Überspringen",
+      "finish": "Los geht's!",
+      "saving": "Speichern..."
+    },
+    "profile": {
+      "title": "Wer bist du?",
+      "subtitle": "Ein paar Angaben, um dein Erlebnis zu personalisieren",
+      "firstNameLabel": "Vorname *",
+      "firstNamePlaceholder": "Max",
+      "birthDateLabel": "Geburtsdatum",
+      "genderLabel": "Geschlecht",
+      "male": "Mann",
+      "female": "Frau"
+    },
+    "avatar": {
+      "title": "Dein Foto",
+      "subtitle": "Füge ein Profilbild hinzu, damit dein Coach dich erkennt",
+      "choosePhoto": "Foto auswählen",
+      "uploading": "Wird hochgeladen...",
+      "hint": "Optional — du kannst es später hinzufügen"
+    },
+    "welcome": {
+      "title": "Willkommen, {firstName}!",
+      "subtitle": "Dein Profil ist bereit. Entdecke deinen Bereich.",
+      "subtitleWithCoach": "Dein Coach {coachName} wartet auf dich. Entdecke deinen Bereich."
+    }
   }
 }

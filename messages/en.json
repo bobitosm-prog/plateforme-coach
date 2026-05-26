@@ -2376,5 +2376,35 @@
       "legendRecovered": "Recovered",
       "legendFatigued": "Fatigued"
     }
+  },
+  "onboarding_v2": {
+    "nav": {
+      "continue": "Continue",
+      "skip": "Skip",
+      "finish": "Let's go!",
+      "saving": "Saving..."
+    },
+    "profile": {
+      "title": "Who are you?",
+      "subtitle": "A few details to personalize your experience",
+      "firstNameLabel": "First name *",
+      "firstNamePlaceholder": "John",
+      "birthDateLabel": "Date of birth",
+      "genderLabel": "Gender",
+      "male": "Male",
+      "female": "Female"
+    },
+    "avatar": {
+      "title": "Your photo",
+      "subtitle": "Add a profile picture so your coach can recognize you",
+      "choosePhoto": "Choose a photo",
+      "uploading": "Uploading...",
+      "hint": "Optional — you can add it later"
+    },
+    "welcome": {
+      "title": "Welcome, {firstName}!",
+      "subtitle": "Your profile is ready. Discover your space.",
+      "subtitleWithCoach": "Your coach {coachName} is waiting for you. Discover your space."
+    }
   }
 }

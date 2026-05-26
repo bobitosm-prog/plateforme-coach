@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
 import { resolveSessionType, HISTORY_FILTERS, getHeroImage } from '../../../lib/session-types'
 import { colors, fonts } from '../../../lib/design-tokens'
@@ -12,6 +12,8 @@ interface RecentSessionsListProps {
 
 export default function RecentSessionsList({ workoutHistory, onOpenDetail }: RecentSessionsListProps) {
   const t = useTranslations('training_tab.recent')
+  const locale = useLocale()
+  const filterLabels: Record<string, string> = Object.fromEntries(HISTORY_FILTERS.map(f => [f.key, t(`filters.${f.key}`)]))
   const [showFullHistory, setShowFullHistory] = useState(false)
   const [historyFilter, setHistoryFilter] = useState('all')
 
@@ -29,10 +31,10 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingLeft: 4 }}>
         <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' }}>
-          Dernieres seances
+          {t('lastSessions')}
         </span>
         <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textDim }}>
-          {workoutHistory.length} seances
+          {t('sessionsCount', { count: workoutHistory.length })}
         </span>
       </div>
 
@@ -55,7 +57,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
                 transition: 'all 0.15s',
               }}
             >
-              {f.label}
+              {filterLabels[f.key]}
             </button>
           )
         })}
@@ -71,7 +73,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
           {visible.map((s: any) => {
             const heroImg = getHeroImage(s.name)
             const d = new Date(s.created_at)
-            const dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+            const dateStr = d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })
 
             return (
               <button
@@ -104,7 +106,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
                     letterSpacing: '0.02em', lineHeight: 1.1,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
-                    {s.name || 'Seance'}
+                    {s.name || t('sessionFallback')}
                   </div>
                   <div style={{
                     fontFamily: fonts.body, fontSize: 12, color: colors.textDim,
@@ -136,7 +138,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
                 textAlign: 'center',
               }}
             >
-              Voir tout &rsaquo;
+              {t('viewAll')}
             </button>
           )}
           {showFullHistory && filtered.length > 3 && (
@@ -152,7 +154,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
                 textAlign: 'center',
               }}
             >
-              Reduire
+              {t('reduce')}
             </button>
           )}
         </>

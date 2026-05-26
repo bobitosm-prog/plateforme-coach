@@ -2376,5 +2376,35 @@
       "legendRecovered": "Recupere",
       "legendFatigued": "Fatigue"
     }
+  },
+  "onboarding_v2": {
+    "nav": {
+      "continue": "Continuer",
+      "skip": "Passer",
+      "finish": "C'est parti !",
+      "saving": "Enregistrement..."
+    },
+    "profile": {
+      "title": "Qui es-tu ?",
+      "subtitle": "Quelques infos pour personnaliser ton experience",
+      "firstNameLabel": "Prenom *",
+      "firstNamePlaceholder": "Jean",
+      "birthDateLabel": "Date de naissance",
+      "genderLabel": "Genre",
+      "male": "Homme",
+      "female": "Femme"
+    },
+    "avatar": {
+      "title": "Ta photo",
+      "subtitle": "Ajoute une photo de profil pour que ton coach te reconnaisse",
+      "choosePhoto": "Choisir une photo",
+      "uploading": "Envoi en cours...",
+      "hint": "Facultatif — tu pourras l'ajouter plus tard"
+    },
+    "welcome": {
+      "title": "Bienvenue, {firstName} !",
+      "subtitle": "Ton profil est pret. Decouvre ton espace.",
+      "subtitleWithCoach": "Ton coach {coachName} t'attend. Decouvre ton espace."
+    }
   }
 }

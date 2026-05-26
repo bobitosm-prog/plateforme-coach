@@ -251,7 +251,7 @@ export default function HeroSessionCard({
                 display: 'flex', alignItems: 'center', gap: 8,
               }}
             >
-              SEANCE LIBRE <ArrowRight size={16} strokeWidth={2.5} />
+              {t('freeSession')} <ArrowRight size={16} strokeWidth={2.5} />
             </button>
           )}
         </div>
