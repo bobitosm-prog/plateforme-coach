@@ -2382,7 +2382,8 @@
       "continue": "Continue",
       "skip": "Skip",
       "finish": "Let's go!",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "letsGo": "Let's go"
     },
     "profile": {
       "title": "Who are you?",
@@ -2405,6 +2406,20 @@
       "title": "Welcome, {firstName}!",
       "subtitle": "Your profile is ready. Discover your space.",
       "subtitleWithCoach": "Your coach {coachName} is waiting for you. Discover your space."
+    },
+    "solo": {
+      "step1": {
+        "title": "Welcome to MoovX",
+        "subtitle": "10-day free trial. We set up your app in 6-8 minutes.",
+        "trialBadge": "10 days free"
+      },
+      "step3": {
+        "title": "Your measurements",
+        "subtitle": "We calculate your caloric needs.",
+        "weightLabel": "Current weight",
+        "heightLabel": "Height",
+        "goalWeightLabel": "Goal weight"
+      }
     }
   }
 }

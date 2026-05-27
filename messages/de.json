@@ -2382,7 +2382,8 @@
       "continue": "Weiter",
       "skip": "Überspringen",
       "finish": "Los geht's!",
-      "saving": "Speichern..."
+      "saving": "Speichern...",
+      "letsGo": "Los geht's"
     },
     "profile": {
       "title": "Wer bist du?",
@@ -2405,6 +2406,20 @@
       "title": "Willkommen, {firstName}!",
       "subtitle": "Dein Profil ist bereit. Entdecke deinen Bereich.",
       "subtitleWithCoach": "Dein Coach {coachName} wartet auf dich. Entdecke deinen Bereich."
+    },
+    "solo": {
+      "step1": {
+        "title": "Willkommen bei MoovX",
+        "subtitle": "10 Tage kostenlose Testversion. Wir richten deine App in 6-8 Minuten ein.",
+        "trialBadge": "10 Tage gratis"
+      },
+      "step3": {
+        "title": "Deine Masse",
+        "subtitle": "Wir berechnen deinen Kalorienbedarf.",
+        "weightLabel": "Aktuelles Gewicht",
+        "heightLabel": "Grosse",
+        "goalWeightLabel": "Zielgewicht"
+      }
     }
   }
 }

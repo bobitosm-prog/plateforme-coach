@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, radii, cardStyle, titleStyle, bodyStyle, mutedStyle, btnPrimary, btnSecondary, statStyle } from '../../lib/design-tokens'
 import { Zap, Dumbbell, Target, Clock, ChevronLeft, Flame, Activity, TrendingUp, Award, UtensilsCrossed, BarChart3, Leaf, GraduationCap, Medal, Trophy, Armchair, PersonStanding, CheckCircle2 } from 'lucide-react'
+import { GOALS, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS, type OnboardingOption } from '@/lib/onboarding-options'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -18,38 +19,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: stri
   restaurant: UtensilsCrossed, analytics: BarChart3, eco: Leaf, school: GraduationCap,
   trending_up: TrendingUp, military_tech: Medal, emoji_events: Trophy,
 }
-
-type Option = { dbLabel: string; pts: number; icon: string }
-
-// dbLabel = FR label saved to DB (used by mapGoalToObjective in onboarding/page.tsx)
-// Display uses t() from i18n
-const GOALS: Option[] = [
-  { dbLabel: 'Perdre du poids', pts: 3, icon: 'local_fire_department' },
-  { dbLabel: 'Prendre du muscle', pts: 4, icon: 'fitness_center' },
-  { dbLabel: 'Ameliorer ma condition', pts: 2, icon: 'directions_run' },
-  { dbLabel: 'Me remettre en forme', pts: 3, icon: 'refresh' },
-]
-
-const ACTIVITY_OPTS: Option[] = [
-  { dbLabel: 'Sedentaire <1x/sem', pts: 1, icon: 'weekend' },
-  { dbLabel: 'Actif 1-2x/sem', pts: 3, icon: 'directions_walk' },
-  { dbLabel: 'Regulier 3-4x/sem', pts: 5, icon: 'directions_run' },
-  { dbLabel: 'Avance 5x+/sem', pts: 7, icon: 'bolt' },
-]
-
-const NUTRITION_OPTS: Option[] = [
-  { dbLabel: 'Sans faire attention', pts: 1, icon: 'fastfood' },
-  { dbLabel: "J'essaie de bien manger", pts: 3, icon: 'restaurant' },
-  { dbLabel: 'Je suis mes macros', pts: 5, icon: 'analytics' },
-  { dbLabel: 'Regime specifique', pts: 4, icon: 'eco' },
-]
-
-const EXPERIENCE_OPTS: Option[] = [
-  { dbLabel: 'Debutant <6 mois', pts: 1, icon: 'school' },
-  { dbLabel: 'Intermediaire 6m-2ans', pts: 3, icon: 'trending_up' },
-  { dbLabel: 'Experimente 2-5ans', pts: 6, icon: 'military_tech' },
-  { dbLabel: 'Veteran 5ans+', pts: 8, icon: 'emoji_events' },
-]
 
 const METRIC_ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>> = {
   local_fire_department: Flame, military_tech: Medal, fitness_center: Dumbbell, bolt: Zap,

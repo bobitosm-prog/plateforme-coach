@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
-import { colors } from '@/lib/design-tokens'
+import { colors, fonts } from '@/lib/design-tokens'
 
 import OnboardingHeader from './steps/shared/OnboardingHeader'
 import OnboardingNav from './steps/shared/OnboardingNav'
@@ -13,6 +13,9 @@ import OnboardingScreen from './steps/shared/OnboardingScreen'
 import InvitedStep1Profile from './steps/invited/InvitedStep1Profile'
 import InvitedStep2Avatar from './steps/invited/InvitedStep2Avatar'
 import InvitedStep3Welcome from './steps/invited/InvitedStep3Welcome'
+import SoloStep1Welcome from './steps/solo/SoloStep1Welcome'
+import SoloStep2Profile from './steps/solo/SoloStep2Profile'
+import SoloStep3Body from './steps/solo/SoloStep3Body'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -21,7 +24,7 @@ const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 type Flow = 'invited' | 'solo' | null
 type InvitedStep = 1 | 2 | 3
-type SoloStep = 1 // placeholder
+type SoloStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
 
 interface State {
   flow: Flow
@@ -48,6 +51,7 @@ function reducer(state: State, action: Action): State {
 }
 
 const INVITED_TOTAL_STEPS = 3
+const SOLO_TOTAL_STEPS = 10
 
 export default function OnboardingV2Content() {
   const t = useTranslations('onboarding_v2')
@@ -71,6 +75,11 @@ export default function OnboardingV2Content() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [coachName, setCoachName] = useState<string | null>(null)
 
+  // ─── SOLO body state ───
+  const [weight, setWeight] = useState('')
+  const [height, setHeight] = useState('')
+  const [goalWeight, setGoalWeight] = useState('')
+
   // ─── Flow detection on mount ───
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -89,7 +98,7 @@ export default function OnboardingV2Content() {
       // Fetch profile to detect flow
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_type, full_name, birth_date, gender, avatar_url')
+        .select('subscription_type, full_name, birth_date, gender, avatar_url, current_weight, height, target_weight')
         .eq('id', uid)
         .single()
 
@@ -99,6 +108,9 @@ export default function OnboardingV2Content() {
         if (profile.birth_date) setBirthDate(profile.birth_date)
         if (profile.gender) setGender(profile.gender as 'male' | 'female')
         if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
+        if (profile.current_weight) setWeight(String(profile.current_weight))
+        if (profile.height) setHeight(String(profile.height))
+        if (profile.target_weight) setGoalWeight(String(profile.target_weight))
 
         // Flow detection: subscription_type === 'invited' → invited flow
         if (profile.subscription_type === 'invited') {
@@ -160,6 +172,43 @@ export default function OnboardingV2Content() {
           }
         }
       }
+
+      if (state.flow === 'solo') {
+        switch (state.step) {
+          case 1:
+            // Welcome screen — nothing to save
+            break
+          case 2: {
+            const { error } = await updateProfile(userId, {
+              full_name: firstName,
+              birth_date: birthDate || null,
+              gender: gender || null,
+            }, supabase)
+            if (error) { console.error('Save solo step 2:', error); return false }
+            break
+          }
+          case 3: {
+            const w = parseFloat(weight)
+            const h = parseFloat(height)
+            const gw = parseFloat(goalWeight)
+            if (!w || !h || !gw) return false
+            const { error } = await updateProfile(userId, {
+              current_weight: w,
+              start_weight: w,
+              height: h,
+              target_weight: gw,
+            }, supabase)
+            if (error) { console.error('Save solo step 3:', error); return false }
+            // Upsert weight_logs
+            const today = new Date().toISOString().slice(0, 10)
+            await supabase
+              .from('weight_logs')
+              .upsert({ user_id: userId, date: today, poids: w }, { onConflict: 'user_id,date' })
+            break
+          }
+        }
+      }
+
       return true
     } finally {
       setSaving(false)
@@ -192,7 +241,8 @@ export default function OnboardingV2Content() {
     const saved = await saveCurrentStep()
     if (!saved) return
 
-    if (state.flow === 'invited' && state.step >= INVITED_TOTAL_STEPS) {
+    const totalSteps = state.flow === 'invited' ? INVITED_TOTAL_STEPS : SOLO_TOTAL_STEPS
+    if (state.step >= totalSteps) {
       // Final step → redirect to app
       router.replace('/')
       return
@@ -232,16 +282,68 @@ export default function OnboardingV2Content() {
     )
   }
 
-  // ─── SOLO flow (placeholder) ───
-  if (state.flow === 'solo') {
-    // Redirect to v1 onboarding for now
-    router.replace('/onboarding')
-    return null
+  // ─── Validation helpers ───
+  const isInvited = state.flow === 'invited'
+  const totalSteps = isInvited ? INVITED_TOTAL_STEPS : SOLO_TOTAL_STEPS
+
+  // INVITED validations
+  const canProceedInvitedStep1 = firstName.trim().length >= 2
+
+  // SOLO validations
+  const canProceedSoloStep2 = firstName.trim().length >= 2 && !!birthDate && !!gender
+  const canProceedSoloStep3 =
+    !!weight && !!height && !!goalWeight &&
+    parseFloat(weight) > 0 && parseFloat(height) > 0 && parseFloat(goalWeight) > 0
+
+  function getNextDisabled(): boolean {
+    if (isInvited) {
+      return state.step === 1 && !canProceedInvitedStep1
+    }
+    // SOLO
+    switch (state.step) {
+      case 1: return false // welcome, always OK
+      case 2: return !canProceedSoloStep2
+      case 3: return !canProceedSoloStep3
+      default: return false
+    }
   }
 
-  // ─── INVITED flow ───
-  const canProceedStep1 = firstName.trim().length >= 2
+  function getNextLabel(): string | undefined {
+    if (isInvited) {
+      if (state.step === INVITED_TOTAL_STEPS) return t('nav.finish')
+      if (state.step === 2) return avatarUrl ? t('nav.continue') : t('nav.skip')
+      return undefined
+    }
+    // SOLO
+    if (state.step === 1) return t('nav.letsGo')
+    return undefined
+  }
 
+  // ─── SOLO flow — Steps 4-10 placeholder ───
+  function renderSoloPlaceholder() {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          gap: 16,
+          paddingTop: 48,
+        }}
+      >
+        <p style={{ fontFamily: fonts.headline, fontSize: 20, color: colors.text }}>
+          Step {state.step}/10
+        </p>
+        <p style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
+          Coming soon (F4c.10d)
+        </p>
+      </div>
+    )
+  }
+
+  // ─── Render ───
   return (
     <div
       style={{
@@ -256,15 +358,16 @@ export default function OnboardingV2Content() {
     >
       <OnboardingHeader
         currentStep={state.step}
-        totalSteps={INVITED_TOTAL_STEPS}
+        totalSteps={totalSteps}
       />
 
       {/* Step content */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <AnimatePresence mode="wait" custom={state.direction}>
-          {state.step === 1 && (
+          {/* ─── INVITED steps ─── */}
+          {isInvited && state.step === 1 && (
             <OnboardingScreen
-              stepKey="profile"
+              stepKey="invited-profile"
               title={t('profile.title')}
               subtitle={t('profile.subtitle')}
               direction={state.direction}
@@ -280,9 +383,9 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {state.step === 2 && (
+          {isInvited && state.step === 2 && (
             <OnboardingScreen
-              stepKey="avatar"
+              stepKey="invited-avatar"
               title={t('avatar.title')}
               subtitle={t('avatar.subtitle')}
               direction={state.direction}
@@ -294,9 +397,9 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {state.step === 3 && (
+          {isInvited && state.step === 3 && (
             <OnboardingScreen
-              stepKey="welcome"
+              stepKey="invited-welcome"
               title=""
               direction={state.direction}
             >
@@ -306,6 +409,63 @@ export default function OnboardingV2Content() {
               />
             </OnboardingScreen>
           )}
+
+          {/* ─── SOLO steps ─── */}
+          {!isInvited && state.step === 1 && (
+            <OnboardingScreen
+              stepKey="solo-welcome"
+              title=""
+              direction={state.direction}
+            >
+              <SoloStep1Welcome />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step === 2 && (
+            <OnboardingScreen
+              stepKey="solo-profile"
+              title={t('profile.title')}
+              subtitle={t('profile.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep2Profile
+                firstName={firstName}
+                setFirstName={setFirstName}
+                birthDate={birthDate}
+                setBirthDate={setBirthDate}
+                gender={gender}
+                setGender={setGender}
+              />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step === 3 && (
+            <OnboardingScreen
+              stepKey="solo-body"
+              title={t('solo.step3.title')}
+              subtitle={t('solo.step3.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep3Body
+                weight={weight}
+                setWeight={setWeight}
+                height={height}
+                setHeight={setHeight}
+                goalWeight={goalWeight}
+                setGoalWeight={setGoalWeight}
+              />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step >= 4 && (
+            <OnboardingScreen
+              stepKey={`solo-placeholder-${state.step}`}
+              title=""
+              direction={state.direction}
+            >
+              {renderSoloPlaceholder()}
+            </OnboardingScreen>
+          )}
         </AnimatePresence>
       </div>
 
@@ -313,15 +473,9 @@ export default function OnboardingV2Content() {
         onBack={state.step > 1 ? handleBack : undefined}
         onNext={handleNext}
         showBack={state.step > 1}
-        nextDisabled={state.step === 1 && !canProceedStep1}
+        nextDisabled={getNextDisabled()}
         loading={saving}
-        nextLabel={
-          state.step === INVITED_TOTAL_STEPS
-            ? t('nav.finish')
-            : state.step === 2
-              ? (avatarUrl ? t('nav.continue') : t('nav.skip'))
-              : undefined
-        }
+        nextLabel={getNextLabel()}
       />
     </div>
   )
