@@ -89,7 +89,7 @@ export default function OnboardingV2Content() {
       // Fetch profile to detect flow
       const { data: profile } = await supabase
         .from('profiles')
-        .select('coach_id, full_name, birth_date, gender, avatar_url')
+        .select('subscription_type, full_name, birth_date, gender, avatar_url')
         .eq('id', uid)
         .single()
 
@@ -100,17 +100,25 @@ export default function OnboardingV2Content() {
         if (profile.gender) setGender(profile.gender as 'male' | 'female')
         if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
 
-        // Flow detection: has coach_id → invited, otherwise → solo
-        if (profile.coach_id) {
+        // Flow detection: subscription_type === 'invited' → invited flow
+        if (profile.subscription_type === 'invited') {
           dispatch({ type: 'SET_FLOW', flow: 'invited' })
 
-          // Fetch coach name for welcome screen
-          const { data: coach } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', profile.coach_id)
+          // Fetch coach via coach_clients junction table
+          const { data: link } = await supabase
+            .from('coach_clients')
+            .select('coach_id')
+            .eq('client_id', uid)
             .single()
-          if (coach?.full_name) setCoachName(coach.full_name)
+
+          if (link?.coach_id) {
+            const { data: coach } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', link.coach_id)
+              .single()
+            if (coach?.full_name) setCoachName(coach.full_name)
+          }
         } else {
           dispatch({ type: 'SET_FLOW', flow: 'solo' })
         }
