@@ -2419,6 +2419,51 @@
         "weightLabel": "Aktuelles Gewicht",
         "heightLabel": "Grosse",
         "goalWeightLabel": "Zielgewicht"
+      },
+      "step4": {
+        "title": "Dein Ziel",
+        "subtitle": "Wir passen deinen Plan entsprechend an.",
+        "options": {
+          "lose_weight": "Gewicht verlieren",
+          "gain_muscle": "Muskeln aufbauen",
+          "improve_condition": "Meine Kondition verbessern",
+          "get_back_shape": "Wieder in Form kommen"
+        }
+      },
+      "step5": {
+        "title": "Dein Aktivitatsniveau",
+        "subtitle": "Um deinen Energieverbrauch zu berechnen.",
+        "options": {
+          "sedentary": "Sitzend (<1x/Woche)",
+          "active": "Aktiv (1-2x/Woche)",
+          "regular": "Regelmassig (3-4x/Woche)",
+          "advanced": "Fortgeschritten (5+/Woche)"
+        }
+      },
+      "step6": {
+        "title": "Wie viele Trainingseinheiten?",
+        "subtitle": "Du kannst spater anpassen.",
+        "unit": "Trainingseinheiten / Woche"
+      },
+      "step7": {
+        "title": "Dein Ernahrungsansatz",
+        "subtitle": "Welcher Ernahrungsstil passt zu dir?",
+        "options": {
+          "no_attention": "Ohne darauf zu achten",
+          "try_well": "Ich versuche, gut zu essen",
+          "macros": "Ich verfolge meine Makros",
+          "specific_diet": "Spezifische Diat"
+        }
+      },
+      "step8": {
+        "title": "Deine Erfahrung",
+        "subtitle": "Wir passen Lasten und Techniken an.",
+        "options": {
+          "beginner": "Anfanger (<6 Monate)",
+          "intermediate": "Fortgeschritten (6m-2J)",
+          "experienced": "Erfahren (2-5J)",
+          "veteran": "Veteran (5+ Jahre)"
+        }
       }
     }
   }

@@ -2419,6 +2419,51 @@
         "weightLabel": "Poids actuel",
         "heightLabel": "Taille",
         "goalWeightLabel": "Poids objectif"
+      },
+      "step4": {
+        "title": "Ton objectif",
+        "subtitle": "On adapte ton plan en fonction.",
+        "options": {
+          "lose_weight": "Perdre du poids",
+          "gain_muscle": "Prendre du muscle",
+          "improve_condition": "Ameliorer ma condition",
+          "get_back_shape": "Me remettre en forme"
+        }
+      },
+      "step5": {
+        "title": "Ton niveau d'activite",
+        "subtitle": "Pour calculer ta depense energetique.",
+        "options": {
+          "sedentary": "Sedentaire (<1x/sem)",
+          "active": "Actif (1-2x/sem)",
+          "regular": "Regulier (3-4x/sem)",
+          "advanced": "Avance (5x+/sem)"
+        }
+      },
+      "step6": {
+        "title": "Combien de seances ?",
+        "subtitle": "Tu pourras ajuster plus tard.",
+        "unit": "seances / semaine"
+      },
+      "step7": {
+        "title": "Ton approche nutrition",
+        "subtitle": "Quel style alimentaire te convient ?",
+        "options": {
+          "no_attention": "Sans faire attention",
+          "try_well": "J'essaie de bien manger",
+          "macros": "Je suis mes macros",
+          "specific_diet": "Regime specifique"
+        }
+      },
+      "step8": {
+        "title": "Ton experience",
+        "subtitle": "On adapte les charges et techniques.",
+        "options": {
+          "beginner": "Debutant (<6 mois)",
+          "intermediate": "Intermediaire (6m-2ans)",
+          "experienced": "Experimente (2-5ans)",
+          "veteran": "Veteran (5ans+)"
+        }
       }
     }
   }

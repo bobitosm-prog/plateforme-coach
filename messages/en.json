@@ -2419,6 +2419,51 @@
         "weightLabel": "Current weight",
         "heightLabel": "Height",
         "goalWeightLabel": "Goal weight"
+      },
+      "step4": {
+        "title": "Your goal",
+        "subtitle": "We adapt your plan accordingly.",
+        "options": {
+          "lose_weight": "Lose weight",
+          "gain_muscle": "Build muscle",
+          "improve_condition": "Improve my fitness",
+          "get_back_shape": "Get back in shape"
+        }
+      },
+      "step5": {
+        "title": "Your activity level",
+        "subtitle": "To calculate your energy expenditure.",
+        "options": {
+          "sedentary": "Sedentary (<1x/week)",
+          "active": "Active (1-2x/week)",
+          "regular": "Regular (3-4x/week)",
+          "advanced": "Advanced (5+/week)"
+        }
+      },
+      "step6": {
+        "title": "How many sessions?",
+        "subtitle": "You can adjust later.",
+        "unit": "sessions / week"
+      },
+      "step7": {
+        "title": "Your nutrition approach",
+        "subtitle": "What food style suits you?",
+        "options": {
+          "no_attention": "Without paying attention",
+          "try_well": "I try to eat well",
+          "macros": "I track my macros",
+          "specific_diet": "Specific diet"
+        }
+      },
+      "step8": {
+        "title": "Your experience",
+        "subtitle": "We adapt loads and techniques.",
+        "options": {
+          "beginner": "Beginner (<6 months)",
+          "intermediate": "Intermediate (6m-2y)",
+          "experienced": "Experienced (2-5y)",
+          "veteran": "Veteran (5+ years)"
+        }
       }
     }
   }

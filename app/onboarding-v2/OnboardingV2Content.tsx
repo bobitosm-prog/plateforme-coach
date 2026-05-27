@@ -16,6 +16,12 @@ import InvitedStep3Welcome from './steps/invited/InvitedStep3Welcome'
 import SoloStep1Welcome from './steps/solo/SoloStep1Welcome'
 import SoloStep2Profile from './steps/solo/SoloStep2Profile'
 import SoloStep3Body from './steps/solo/SoloStep3Body'
+import SoloStep4Goal from './steps/solo/SoloStep4Goal'
+import SoloStep5Activity from './steps/solo/SoloStep5Activity'
+import SoloStep6Sessions from './steps/solo/SoloStep6Sessions'
+import SoloStep7Nutrition from './steps/solo/SoloStep7Nutrition'
+import SoloStep8Experience from './steps/solo/SoloStep8Experience'
+import { GOALS, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS } from '@/lib/onboarding-options'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -79,6 +85,13 @@ export default function OnboardingV2Content() {
   const [weight, setWeight] = useState('')
   const [height, setHeight] = useState('')
   const [goalWeight, setGoalWeight] = useState('')
+
+  // ─── SOLO steps 4-8 state ───
+  const [goal, setGoal] = useState<number | null>(null)
+  const [activityLevel, setActivityLevel] = useState<number | null>(null)
+  const [sessionsPerWeek, setSessionsPerWeek] = useState(3)
+  const [nutrition, setNutrition] = useState<number | null>(null)
+  const [experience, setExperience] = useState<number | null>(null)
 
   // ─── Flow detection on mount ───
   useEffect(() => {
@@ -206,6 +219,58 @@ export default function OnboardingV2Content() {
               .upsert({ user_id: userId, date: today, poids: w }, { onConflict: 'user_id,date' })
             break
           }
+          case 4: {
+            if (goal === null) return false
+            const { error } = await updateProfile(userId, {
+              objective: GOALS[goal].dbLabel,
+            }, supabase)
+            if (error) { console.error('Save solo step 4:', error); return false }
+            break
+          }
+          case 5: {
+            if (activityLevel === null) return false
+            const { error } = await updateProfile(userId, {
+              activity_level: ACTIVITY_OPTS[activityLevel].dbLabel,
+            }, supabase)
+            if (error) { console.error('Save solo step 5:', error); return false }
+            break
+          }
+          case 6: {
+            // Save sessions_per_week into onboarding_answers
+            const { data: current } = await supabase
+              .from('profiles')
+              .select('onboarding_answers')
+              .eq('id', userId)
+              .single()
+            const existing = (current?.onboarding_answers as Record<string, unknown>) || {}
+            const { error } = await updateProfile(userId, {
+              onboarding_answers: { ...existing, sessions_per_week: sessionsPerWeek },
+            }, supabase)
+            if (error) { console.error('Save solo step 6:', error); return false }
+            break
+          }
+          case 7: {
+            if (nutrition === null) return false
+            const { error } = await updateProfile(userId, {
+              dietary_type: NUTRITION_OPTS[nutrition].dbLabel,
+            }, supabase)
+            if (error) { console.error('Save solo step 7:', error); return false }
+            break
+          }
+          case 8: {
+            if (experience === null) return false
+            const { data: current } = await supabase
+              .from('profiles')
+              .select('onboarding_answers')
+              .eq('id', userId)
+              .single()
+            const existing = (current?.onboarding_answers as Record<string, unknown>) || {}
+            const { error } = await updateProfile(userId, {
+              onboarding_answers: { ...existing, experience_level: EXPERIENCE_OPTS[experience].dbLabel },
+            }, supabase)
+            if (error) { console.error('Save solo step 8:', error); return false }
+            break
+          }
         }
       }
 
@@ -304,6 +369,11 @@ export default function OnboardingV2Content() {
       case 1: return false // welcome, always OK
       case 2: return !canProceedSoloStep2
       case 3: return !canProceedSoloStep3
+      case 4: return goal === null
+      case 5: return activityLevel === null
+      case 6: return false // slider always has a value
+      case 7: return nutrition === null
+      case 8: return experience === null
       default: return false
     }
   }
@@ -319,7 +389,7 @@ export default function OnboardingV2Content() {
     return undefined
   }
 
-  // ─── SOLO flow — Steps 4-10 placeholder ───
+  // ─── SOLO flow — Steps 9-10 placeholder ───
   function renderSoloPlaceholder() {
     return (
       <div
@@ -337,7 +407,7 @@ export default function OnboardingV2Content() {
           Step {state.step}/10
         </p>
         <p style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
-          Coming soon (F4c.10d)
+          Coming soon (F4c.10e)
         </p>
       </div>
     )
@@ -457,7 +527,62 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step >= 4 && (
+          {!isInvited && state.step === 4 && (
+            <OnboardingScreen
+              stepKey="solo-goal"
+              title={t('solo.step4.title')}
+              subtitle={t('solo.step4.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep4Goal selected={goal} onSelect={setGoal} />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step === 5 && (
+            <OnboardingScreen
+              stepKey="solo-activity"
+              title={t('solo.step5.title')}
+              subtitle={t('solo.step5.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep5Activity selected={activityLevel} onSelect={setActivityLevel} />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step === 6 && (
+            <OnboardingScreen
+              stepKey="solo-sessions"
+              title={t('solo.step6.title')}
+              subtitle={t('solo.step6.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep6Sessions sessions={sessionsPerWeek} setSessions={setSessionsPerWeek} />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step === 7 && (
+            <OnboardingScreen
+              stepKey="solo-nutrition"
+              title={t('solo.step7.title')}
+              subtitle={t('solo.step7.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep7Nutrition selected={nutrition} onSelect={setNutrition} />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step === 8 && (
+            <OnboardingScreen
+              stepKey="solo-experience"
+              title={t('solo.step8.title')}
+              subtitle={t('solo.step8.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep8Experience selected={experience} onSelect={setExperience} />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step >= 9 && (
             <OnboardingScreen
               stepKey={`solo-placeholder-${state.step}`}
               title=""
