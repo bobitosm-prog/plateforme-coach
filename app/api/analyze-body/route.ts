@@ -64,7 +64,7 @@ IMPORTANT : estimations visuelles, pas des mesures exactes.`
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-opus-4-7',
         max_tokens: 1024,
         system: 'Tu es un expert fitness. Réponds uniquement en JSON valide, sans backticks ni markdown.',
         messages: [{

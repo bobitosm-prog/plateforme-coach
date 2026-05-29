@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 800,
         system: PROGRAM_GENERATION_PROMPT,
         messages: [{
