@@ -124,19 +124,34 @@ export async function proxy(request: NextRequest) {
   if (session && pathname === '/') {
     const { data: prof } = await supabase
       .from('profiles')
-      .select('role, onboarding_completed_at, full_name, onboarding_photo_completed_at')
+      .select('role, onboarding_completed, onboarding_completed_at, full_name, onboarding_photo_completed_at, objective, created_at')
       .eq('id', session.user.id)
       .single()
     if (prof?.role === 'client') {
-      if (!prof.onboarding_completed_at) {
-        return NextResponse.redirect(new URL('/onboarding-fitness', request.url))
-      }
-      const fn = prof.full_name?.trim()
-      if (!fn || fn === 'Athlete') {
-        return NextResponse.redirect(new URL('/onboarding', request.url))
-      }
-      if (!prof.onboarding_photo_completed_at) {
-        return NextResponse.redirect(new URL('/onboarding-photo', request.url))
+      // onboarding_completed = true → authoritative flag, proceed to dashboard
+      if (prof.onboarding_completed) {
+        // Pass through
+      } else {
+        const V2_MIGRATION_DATE = new Date('2026-05-27')
+        const createdAt = prof.created_at ? new Date(prof.created_at) : null
+        const isLegacyUser = createdAt && createdAt < V2_MIGRATION_DATE
+
+        if (isLegacyUser) {
+          // Legacy v1 chained checks preserved
+          if (!prof.onboarding_completed_at && !prof.objective) {
+            return NextResponse.redirect(new URL('/onboarding-fitness', request.url))
+          }
+          const fn = prof.full_name?.trim()
+          if (!fn || fn === 'Athlete') {
+            return NextResponse.redirect(new URL('/onboarding', request.url))
+          }
+          if (!prof.onboarding_photo_completed_at) {
+            return NextResponse.redirect(new URL('/onboarding-photo', request.url))
+          }
+        } else {
+          // New users → unified v2 onboarding
+          return NextResponse.redirect(new URL('/onboarding-v2', request.url))
+        }
       }
     }
   }

@@ -142,7 +142,7 @@ export default function useClientDashboard() {
       supabase.from('completed_sessions').select('session_index, session_name, completed_at').eq('client_id', uid).order('completed_at', { ascending: false }).limit(50),
     ])
 
-    if (!profRes.data) { router.replace('/onboarding'); return }
+    if (!profRes.data) { router.replace('/onboarding-v2'); return }
     // If role is missing but user_metadata has it (RLS blocked the UPDATE at signup), fix it now
     const metaRole = session?.user?.user_metadata?.role
     if (!profRes.data.role && metaRole) {
@@ -155,26 +155,34 @@ export default function useClientDashboard() {
       if (!profRes.data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
       // Coach with completed onboarding → proceed to dashboard
     } else {
-      // Étape 1 : onboarding fitness pas encore fait ?
-      // Check both onboarding_completed_at AND objective (for users created before the column existed)
-      if (!profRes.data.onboarding_completed_at && !profRes.data.objective) {
-        router.replace('/onboarding-fitness'); return
-      }
-      // Étape 2 : onboarding repas/profil pas encore fait ?
-      const fn = profRes.data.full_name?.trim()
-      if (!fn || fn === 'Athlete') {
-        router.replace('/onboarding'); return
-      }
-      // Étape 3 : photo onboarding — only for NEW users (skip if profile was created before the feature)
-      // Users who completed steps 1+2 before onboarding-photo existed should not be blocked
-      if (!profRes.data.onboarding_photo_completed_at) {
+      // onboarding_completed = true → authoritative flag, skip all checks
+      if (profRes.data.onboarding_completed) {
+        // Proceed to dashboard
+      } else {
+        const V2_MIGRATION_DATE = new Date('2026-05-27')
         const createdAt = profRes.data.created_at ? new Date(profRes.data.created_at) : null
-        const photoFeatureDate = new Date('2026-04-03')
-        if (createdAt && createdAt >= photoFeatureDate) {
-          router.replace('/onboarding-photo'); return
+        const isLegacyUser = createdAt && createdAt < V2_MIGRATION_DATE
+
+        if (isLegacyUser) {
+          // Legacy users (pre-v2) → preserve v1 onboarding checks
+          if (!profRes.data.onboarding_completed_at && !profRes.data.objective) {
+            router.replace('/onboarding-fitness'); return
+          }
+          const fn = profRes.data.full_name?.trim()
+          if (!fn || fn === 'Athlete') {
+            router.replace('/onboarding'); return
+          }
+          if (!profRes.data.onboarding_photo_completed_at) {
+            const photoFeatureDate = new Date('2026-04-03')
+            if (createdAt && createdAt >= photoFeatureDate) {
+              router.replace('/onboarding-photo'); return
+            }
+          }
+        } else {
+          // New users (post-v2) → unified v2 onboarding
+          router.replace('/onboarding-v2'); return
         }
       }
-      // All onboarding steps completed (or grandfathered) → proceed
     }
 
     const profileData = profRes.data

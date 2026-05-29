@@ -2383,12 +2383,13 @@
       "skip": "Passer",
       "finish": "C'est parti !",
       "saving": "Enregistrement...",
-      "letsGo": "C'est parti"
+      "letsGo": "C'est parti",
+      "start": "Démarrer"
     },
     "profile": {
       "title": "Qui es-tu ?",
-      "subtitle": "Quelques infos pour personnaliser ton experience",
-      "firstNameLabel": "Prenom *",
+      "subtitle": "Quelques infos pour personnaliser ton expérience",
+      "firstNameLabel": "Prénom *",
       "firstNamePlaceholder": "Jean",
       "birthDateLabel": "Date de naissance",
       "genderLabel": "Genre",
@@ -2404,8 +2405,8 @@
     },
     "welcome": {
       "title": "Bienvenue, {firstName} !",
-      "subtitle": "Ton profil est pret. Decouvre ton espace.",
-      "subtitleWithCoach": "Ton coach {coachName} t'attend. Decouvre ton espace."
+      "subtitle": "Ton profil est prêt. Découvre ton espace.",
+      "subtitleWithCoach": "Ton coach {coachName} t'attend. Découvre ton espace."
     },
     "solo": {
       "step1": {
@@ -2426,24 +2427,24 @@
         "options": {
           "lose_weight": "Perdre du poids",
           "gain_muscle": "Prendre du muscle",
-          "improve_condition": "Ameliorer ma condition",
+          "improve_condition": "Améliorer ma condition",
           "get_back_shape": "Me remettre en forme"
         }
       },
       "step5": {
-        "title": "Ton niveau d'activite",
-        "subtitle": "Pour calculer ta depense energetique.",
+        "title": "Ton niveau d'activité",
+        "subtitle": "Pour calculer ta dépense énergétique.",
         "options": {
-          "sedentary": "Sedentaire (<1x/sem)",
+          "sedentary": "Sédentaire (<1x/sem)",
           "active": "Actif (1-2x/sem)",
-          "regular": "Regulier (3-4x/sem)",
-          "advanced": "Avance (5x+/sem)"
+          "regular": "Régulier (3-4x/sem)",
+          "advanced": "Avancé (5x+/sem)"
         }
       },
       "step6": {
-        "title": "Combien de seances ?",
+        "title": "Combien de séances ?",
         "subtitle": "Tu pourras ajuster plus tard.",
-        "unit": "seances / semaine"
+        "unit": "séances / semaine"
       },
       "step7": {
         "title": "Ton approche nutrition",
@@ -2452,18 +2453,35 @@
           "no_attention": "Sans faire attention",
           "try_well": "J'essaie de bien manger",
           "macros": "Je suis mes macros",
-          "specific_diet": "Regime specifique"
+          "specific_diet": "Régime spécifique"
         }
       },
       "step8": {
-        "title": "Ton experience",
+        "title": "Ton expérience",
         "subtitle": "On adapte les charges et techniques.",
         "options": {
-          "beginner": "Debutant (<6 mois)",
-          "intermediate": "Intermediaire (6m-2ans)",
-          "experienced": "Experimente (2-5ans)",
-          "veteran": "Veteran (5ans+)"
+          "beginner": "Débutant (<6 mois)",
+          "intermediate": "Intermédiaire (6m-2ans)",
+          "experienced": "Expérimenté (2-5ans)",
+          "veteran": "Vétéran (5ans+)"
         }
+      },
+      "step9": {
+        "title": "Photo de progression (optionnel)",
+        "subtitle": "Pour tracker ton évolution visuellement.",
+        "warning": "Sans photo, ton plan sera moins précis",
+        "choosePhoto": "Choisir une photo",
+        "change": "Changer"
+      },
+      "step10": {
+        "title": "On est prêt",
+        "subtitle": "Voici ton plan personnalisé",
+        "tdee": "Dépense totale",
+        "calorieGoal": "Objectif calorique",
+        "protein": "Protéines",
+        "carbs": "Glucides",
+        "fat": "Lipides",
+        "trialBadge": "10 jours d'essai démarrés"
       }
     }
   }

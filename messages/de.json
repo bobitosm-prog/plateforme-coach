@@ -2383,7 +2383,8 @@
       "skip": "Überspringen",
       "finish": "Los geht's!",
       "saving": "Speichern...",
-      "letsGo": "Los geht's"
+      "letsGo": "Los geht's",
+      "start": "Starten"
     },
     "profile": {
       "title": "Wer bist du?",
@@ -2464,6 +2465,23 @@
           "experienced": "Erfahren (2-5J)",
           "veteran": "Veteran (5+ Jahre)"
         }
+      },
+      "step9": {
+        "title": "Fortschrittsfoto (optional)",
+        "subtitle": "Um deinen Fortschritt visuell zu verfolgen.",
+        "warning": "Ohne Foto wird dein Plan weniger prazise sein",
+        "choosePhoto": "Foto auswahlen",
+        "change": "Andern"
+      },
+      "step10": {
+        "title": "Wir sind bereit",
+        "subtitle": "Dein personalisierter Plan",
+        "tdee": "Gesamtverbrauch",
+        "calorieGoal": "Kalorienziel",
+        "protein": "Protein",
+        "carbs": "Kohlenhydrate",
+        "fat": "Fett",
+        "trialBadge": "10-tagige Testversion gestartet"
       }
     }
   }

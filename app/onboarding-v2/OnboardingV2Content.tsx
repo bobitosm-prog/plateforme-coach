@@ -1,11 +1,12 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
-import { colors, fonts } from '@/lib/design-tokens'
+import { cache } from '@/lib/cache'
+import { colors, fonts, calcMifflinStJeor } from '@/lib/design-tokens'
 
 import OnboardingHeader from './steps/shared/OnboardingHeader'
 import OnboardingNav from './steps/shared/OnboardingNav'
@@ -21,6 +22,8 @@ import SoloStep5Activity from './steps/solo/SoloStep5Activity'
 import SoloStep6Sessions from './steps/solo/SoloStep6Sessions'
 import SoloStep7Nutrition from './steps/solo/SoloStep7Nutrition'
 import SoloStep8Experience from './steps/solo/SoloStep8Experience'
+import SoloStep9PhotoBody from './steps/solo/SoloStep9PhotoBody'
+import SoloStep10Recap from './steps/solo/SoloStep10Recap'
 import { GOALS, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS } from '@/lib/onboarding-options'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -93,6 +96,10 @@ export default function OnboardingV2Content() {
   const [nutrition, setNutrition] = useState<number | null>(null)
   const [experience, setExperience] = useState<number | null>(null)
 
+  // ─── SOLO steps 9-10 state ───
+  const [photoBodyUrl, setPhotoBodyUrl] = useState<string | null>(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+
   // ─── Flow detection on mount ───
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -155,6 +162,41 @@ export default function OnboardingV2Content() {
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Macros calculation (Step 10) ───
+  const macrosCalc = useMemo(() => {
+    if (!weight || !height || !birthDate || !gender) return null
+    if (activityLevel === null || goal === null) return null
+
+    const age = Math.floor(
+      (Date.now() - new Date(birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+    )
+    const w = parseFloat(weight)
+    const h = parseFloat(height)
+    if (!w || !h || age <= 0) return null
+
+    const bmr = calcMifflinStJeor(w, h, age, gender)
+
+    const ACTIVITY_MULT: Record<string, number> = {
+      sedentary: 1.2,
+      active: 1.375,
+      regular: 1.55,
+      advanced: 1.725,
+    }
+    const mult = ACTIVITY_MULT[ACTIVITY_OPTS[activityLevel].id] || 1.55
+    const tdee = Math.round(bmr * mult)
+
+    const goalLabel = GOALS[goal].dbLabel
+    let calorieGoal = tdee
+    if (goalLabel === 'Perdre du poids') calorieGoal = tdee - 400
+    else if (goalLabel === 'Prendre du muscle') calorieGoal = tdee + 300
+
+    const protein = Math.round(w * 2)
+    const fat = Math.round((calorieGoal * 0.25) / 9)
+    const carbs = Math.round((calorieGoal - protein * 4 - fat * 9) / 4)
+
+    return { tdee, calorieGoal, protein, fat, carbs, goalLabel }
+  }, [weight, height, birthDate, gender, activityLevel, goal])
+
   // ─── Auto-save per step ───
   async function saveCurrentStep(): Promise<boolean> {
     if (!userId) return false
@@ -178,9 +220,11 @@ export default function OnboardingV2Content() {
             // Mark onboarding complete
             const { error } = await updateProfile(userId, {
               onboarding_completed: true,
+              onboarding_completed_at: new Date().toISOString(),
             }, supabase)
             if (error) { console.error('Save step 3:', error); return false }
             invalidateProfileCache()
+            cache.remove(`dashboard_${userId}`)
             break
           }
         }
@@ -271,6 +315,30 @@ export default function OnboardingV2Content() {
             if (error) { console.error('Save solo step 8:', error); return false }
             break
           }
+          case 9:
+            // Photo already uploaded in handlePhotoBodyUpload — nothing extra to save
+            break
+          case 10: {
+            if (!macrosCalc) {
+              console.error('Save solo step 10: macros calc null')
+              return false
+            }
+            const trialEndsAt = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+            const { error } = await updateProfile(userId, {
+              tdee: macrosCalc.tdee,
+              calorie_goal: macrosCalc.calorieGoal,
+              protein_goal: macrosCalc.protein,
+              carbs_goal: macrosCalc.carbs,
+              fat_goal: macrosCalc.fat,
+              trial_ends_at: trialEndsAt,
+              onboarding_completed: true,
+              onboarding_completed_at: new Date().toISOString(),
+            }, supabase)
+            if (error) { console.error('Save solo step 10:', error); return false }
+            invalidateProfileCache()
+            cache.remove(`dashboard_${userId}`)
+            break
+          }
         }
       }
 
@@ -299,6 +367,63 @@ export default function OnboardingV2Content() {
 
     await updateProfile(userId, { avatar_url: publicUrl }, supabase)
     setAvatarUrl(publicUrl)
+  }
+
+  // ─── Photo body upload handler (Step 9) ───
+  async function handlePhotoBodyUpload(file: File) {
+    if (!userId) return
+    setUploadingPhoto(true)
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `${userId}/onboarding-${Date.now()}.${ext}`
+
+      const { error: upErr } = await supabase.storage
+        .from('progress-photos')
+        .upload(path, file, { upsert: false })
+      if (upErr) { console.error('Photo body upload:', upErr); return }
+
+      const today = new Date().toISOString().slice(0, 10)
+      const { data: photoRow } = await supabase
+        .from('progress_photos')
+        .insert({ user_id: userId, date: today, photo_url: path, view_type: 'front' })
+        .select()
+        .single()
+
+      const { data: signed } = await supabase.storage
+        .from('progress-photos')
+        .createSignedUrl(path, 3600)
+      setPhotoBodyUrl(signed?.signedUrl || '')
+
+      // AI analysis (best-effort, non-blocking)
+      if (signed?.signedUrl && goal !== null) {
+        try {
+          const profileData = {
+            weight: parseFloat(weight),
+            height: parseFloat(height),
+            gender,
+            objective: GOALS[goal].dbLabel,
+          }
+          const res = await fetch('/api/analyze-progress-photo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ photoUrl: signed.signedUrl, profileData }),
+          })
+          if (res.ok) {
+            const { analysis } = await res.json()
+            if (analysis && photoRow?.id) {
+              await supabase.from('progress_photos').update({
+                ai_analysis: analysis,
+                ai_analyzed_at: new Date().toISOString(),
+              }).eq('id', photoRow.id)
+            }
+          }
+        } catch (aiErr) {
+          console.warn('AI analysis failed (non-blocking):', aiErr)
+        }
+      }
+    } finally {
+      setUploadingPhoto(false)
+    }
   }
 
   // ─── Navigation handlers ───
@@ -374,6 +499,8 @@ export default function OnboardingV2Content() {
       case 6: return false // slider always has a value
       case 7: return nutrition === null
       case 8: return experience === null
+      case 9: return false // photo is skippable
+      case 10: return !macrosCalc
       default: return false
     }
   }
@@ -386,31 +513,9 @@ export default function OnboardingV2Content() {
     }
     // SOLO
     if (state.step === 1) return t('nav.letsGo')
+    if (state.step === 9 && !photoBodyUrl) return t('nav.skip')
+    if (state.step === 10) return t('nav.start')
     return undefined
-  }
-
-  // ─── SOLO flow — Steps 9-10 placeholder ───
-  function renderSoloPlaceholder() {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          gap: 16,
-          paddingTop: 48,
-        }}
-      >
-        <p style={{ fontFamily: fonts.headline, fontSize: 20, color: colors.text }}>
-          Step {state.step}/10
-        </p>
-        <p style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
-          Coming soon (F4c.10e)
-        </p>
-      </div>
-    )
   }
 
   // ─── Render ───
@@ -582,13 +687,29 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step >= 9 && (
+          {!isInvited && state.step === 9 && (
             <OnboardingScreen
-              stepKey={`solo-placeholder-${state.step}`}
-              title=""
+              stepKey="solo-photo-body"
+              title={t('solo.step9.title')}
+              subtitle={t('solo.step9.subtitle')}
               direction={state.direction}
             >
-              {renderSoloPlaceholder()}
+              <SoloStep9PhotoBody
+                photoUrl={photoBodyUrl}
+                onUpload={handlePhotoBodyUpload}
+                uploading={uploadingPhoto}
+              />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step === 10 && macrosCalc && (
+            <OnboardingScreen
+              stepKey="solo-recap"
+              title={t('solo.step10.title')}
+              subtitle={t('solo.step10.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep10Recap {...macrosCalc} />
             </OnboardingScreen>
           )}
         </AnimatePresence>
