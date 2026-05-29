@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale/fr'
@@ -83,6 +84,7 @@ export default function HomeTab({
 }: HomeTabProps) {
   const ht = useTranslations('home')
   const locale = useLocale()
+  const router = useRouter()
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const [showLevelModal, setShowLevelModal] = useState(false)
@@ -434,7 +436,7 @@ export default function HomeTab({
         {/* ═══ MA SEMAINE — Weekly AI Diagnostic ═══ */}
         <WeeklyDiagnosticCard
           diagnostic={latestDiagnostic}
-          onViewDetails={() => console.log('View details:', latestDiagnostic?.id)}
+          onViewDetails={() => latestDiagnostic && router.push(`/weekly-diagnostic/${latestDiagnostic.id}`)}
           onGenerate={handleGenerateDiagnostic}
           generating={generatingDiag}
         />

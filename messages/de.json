@@ -2388,6 +2388,27 @@
       "view_details": "Details ansehen"
     }
   },
+  "weekly_diagnostic_detail": {
+    "back": "Zurück",
+    "title": "Meine Woche",
+    "metrics_heading": "Meine Kennzahlen",
+    "metric_adherence": "Einhaltung",
+    "metric_weight_delta": "Gewichtsänderung",
+    "metric_calories": "Durchschn. Kalorien",
+    "metric_protein_compliance": "Protein",
+    "points_forts_heading": "Stärken",
+    "points_alerte_heading": "Warnungen",
+    "adjustments_heading": "Empfohlene Anpassungen",
+    "adjustments_none": "Keine Anpassung nötig, weiter so!",
+    "apply_button": "Anpassungen anwenden",
+    "apply_loading": "Wird angewendet...",
+    "already_applied": "Bereits angewendet am {date}",
+    "exercise_to_add": "Übung hinzufügen",
+    "next_week_objective": "Ziel nächste Woche",
+    "ai_reasoning": "KI-Begründung",
+    "ai_footer": "Diagnose von Claude Opus 4.7",
+    "tokens_used": "Tokens verwendet"
+  },
   "onboarding_v2": {
     "nav": {
       "continue": "Weiter",

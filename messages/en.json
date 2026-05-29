@@ -2388,6 +2388,27 @@
       "view_details": "View details"
     }
   },
+  "weekly_diagnostic_detail": {
+    "back": "Back",
+    "title": "My week",
+    "metrics_heading": "My metrics",
+    "metric_adherence": "Adherence",
+    "metric_weight_delta": "Weight change",
+    "metric_calories": "Avg calories",
+    "metric_protein_compliance": "Protein",
+    "points_forts_heading": "Strengths",
+    "points_alerte_heading": "Warnings",
+    "adjustments_heading": "Recommended adjustments",
+    "adjustments_none": "No adjustment needed, keep going!",
+    "apply_button": "Apply adjustments",
+    "apply_loading": "Applying...",
+    "already_applied": "Already applied on {date}",
+    "exercise_to_add": "Exercise to add",
+    "next_week_objective": "Next week's goal",
+    "ai_reasoning": "AI reasoning",
+    "ai_footer": "Diagnostic by Claude Opus 4.7",
+    "tokens_used": "Tokens used"
+  },
   "onboarding_v2": {
     "nav": {
       "continue": "Continue",
