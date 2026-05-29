@@ -2375,6 +2375,17 @@
       "legendFresh": "Fresh",
       "legendRecovered": "Recovered",
       "legendFatigued": "Fatigued"
+    },
+    "weekly_diagnostic": {
+      "title": "My week",
+      "empty_state_title": "Your weekly AI diagnostic is ready",
+      "empty_state_subtitle": "Discover the complete analysis of your week",
+      "generate_cta": "Generate now",
+      "generating": "AI analysis in progress...",
+      "generating_time": "(15-25s)",
+      "points_forts_heading": "Strengths",
+      "points_alerte_heading": "Warnings",
+      "view_details": "View details"
     }
   },
   "onboarding_v2": {

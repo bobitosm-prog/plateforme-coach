@@ -41,6 +41,7 @@ export default function useClientDashboard() {
     try { const s = localStorage.getItem('moovx_active_workout'); return s ? JSON.parse(s) : null } catch { return null }
   })
   const [modal, setModal] = useState<string | null>(null)
+  const [latestDiagnostic, setLatestDiagnostic] = useState<any>(null)
 
   // BMR form state
   const [bmrForm, setBmrForm] = useState({ weight: '', height: '', age: '', gender: 'male', activity: 'moderate', body_fat: '' })
@@ -128,7 +129,7 @@ export default function useClientDashboard() {
       }
     }
 
-    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes] = await Promise.all([
+    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
@@ -140,6 +141,7 @@ export default function useClientDashboard() {
       supabase.from('client_programs').select('id, program, coach_id').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('completed_sessions').select('session_index, session_name, completed_at').eq('client_id', uid).order('completed_at', { ascending: false }).limit(50),
+      supabase.from('weekly_diagnostics').select('*').eq('user_id', uid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
     ])
 
     if (!profRes.data) { router.replace('/onboarding-v2'); return }
@@ -213,6 +215,7 @@ export default function useClientDashboard() {
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
+    if (diagRes.data) setLatestDiagnostic(diagRes.data)
     await scheduledHook.fetchScheduledSessions(uid, profileData, !!coachProgData)
     analyticsHook.fetchAnalyticsData(uid)
     await resolveCoachLink(uid)
@@ -534,6 +537,8 @@ export default function useClientDashboard() {
     weeklyVolume: analyticsHook.weeklyVolume,
     weightHistoryFull: analyticsHook.weightHistoryFull,
     checkForPR,
+    // Weekly diagnostic
+    latestDiagnostic, setLatestDiagnostic,
     // Refs
     mainRef,
   }

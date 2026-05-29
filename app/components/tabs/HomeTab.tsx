@@ -29,6 +29,7 @@ import HeroSessionCard, { type HeroState } from '../home/HeroSessionCard'
 import EnergyCard from '../home/cards/EnergyCard'
 import RecoveryCard from '../home/cards/RecoveryCard'
 import NutritionCard from '../home/cards/NutritionCard'
+import WeeklyDiagnosticCard from '../home/cards/WeeklyDiagnosticCard'
 import RecoveryModal from '../home/modals/RecoveryModal'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 
@@ -67,6 +68,8 @@ interface HomeTabProps {
   completedThisWeek?: Map<number, string>
   aiAllowed?: boolean
   nextSession?: { sessionIndex: number; weekday: string; day: any; reason: string } | null
+  latestDiagnostic?: any
+  setLatestDiagnostic?: (d: any) => void
 }
 
 export default function HomeTab({
@@ -76,6 +79,7 @@ export default function HomeTab({
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
+  latestDiagnostic, setLatestDiagnostic,
 }: HomeTabProps) {
   const ht = useTranslations('home')
   const locale = useLocale()
@@ -95,6 +99,22 @@ export default function HomeTab({
   const [weekSessions, setWeekSessions] = useState(0)
   const [xpData, setXpData] = useState<{ total_xp: number; current_streak: number } | null>(null)
   const [muscleStatus, setMuscleStatus] = useState<Record<string, number>>({})
+  const [generatingDiag, setGeneratingDiag] = useState(false)
+
+  async function handleGenerateDiagnostic() {
+    setGeneratingDiag(true)
+    try {
+      const res = await fetch('/api/weekly-diagnostic', { method: 'POST' })
+      const data = await res.json()
+      if (data.diagnostic && setLatestDiagnostic) {
+        setLatestDiagnostic(data.diagnostic)
+      }
+    } catch (e) {
+      console.error('Generate diagnostic failed:', e)
+    } finally {
+      setGeneratingDiag(false)
+    }
+  }
   const [todayHabit, setTodayHabit] = useState<any>(null)
   const [habitValues, setHabitValues] = useState<Record<string, number>>({})
   const [checkinMood, setCheckinMood] = useState<string | null>(null)
@@ -410,6 +430,14 @@ export default function HomeTab({
           <RecoveryCard muscleStatus={muscleStatus} onCardClick={() => setShowRecoveryModal(true)} />
           <NutritionCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal} carbsGoal={profile?.carbs_goal} fatGoal={profile?.fat_goal} />
         </div>
+
+        {/* ═══ MA SEMAINE — Weekly AI Diagnostic ═══ */}
+        <WeeklyDiagnosticCard
+          diagnostic={latestDiagnostic}
+          onViewDetails={() => console.log('View details:', latestDiagnostic?.id)}
+          onGenerate={handleGenerateDiagnostic}
+          generating={generatingDiag}
+        />
 
         {/* ═══ HYDRATATION ═══ */}
         <div style={{ marginTop: 12, background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>

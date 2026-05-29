@@ -2375,6 +2375,17 @@
       "legendFresh": "Frisch",
       "legendRecovered": "Erholt",
       "legendFatigued": "Ermüdet"
+    },
+    "weekly_diagnostic": {
+      "title": "Meine Woche",
+      "empty_state_title": "Deine wöchentliche KI-Diagnose wartet",
+      "empty_state_subtitle": "Entdecke die vollständige Analyse deiner Woche",
+      "generate_cta": "Jetzt generieren",
+      "generating": "KI-Analyse läuft...",
+      "generating_time": "(15-25s)",
+      "points_forts_heading": "Stärken",
+      "points_alerte_heading": "Warnungen",
+      "view_details": "Details ansehen"
     }
   },
   "onboarding_v2": {
