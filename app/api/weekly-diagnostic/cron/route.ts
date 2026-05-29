@@ -21,11 +21,16 @@ export async function POST(req: NextRequest) {
   )
 
   // 3. FETCH ACTIVE CLIENT USERS
+  // Filter users whose diagnostic is due (next_diagnostic_at <= NOW or NULL)
+  const nowIso = new Date().toISOString()
+  console.log(`[cron weekly-diagnostic] Filtering users due (now=${nowIso})`)
+
   const { data: users, error: usersErr } = await supabaseAdmin
     .from('profiles')
-    .select('id, full_name')
+    .select('id, full_name, next_diagnostic_at')
     .eq('role', 'client')
     .eq('onboarding_completed', true)
+    .or(`next_diagnostic_at.is.null,next_diagnostic_at.lte.${nowIso}`)
 
   if (usersErr) {
     console.error('[cron weekly-diagnostic] Error fetching users:', usersErr)

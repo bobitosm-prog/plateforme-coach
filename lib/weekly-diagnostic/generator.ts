@@ -306,6 +306,14 @@ Pense étape par étape avant de répondre :
       return { error: 'Erreur sauvegarde' }
     }
 
+    // Schedule next diagnostic in 7 days (Architecture B: strict per-user rhythm)
+    const nextDiagAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    const { error: nextErr } = await supabase
+      .from('profiles')
+      .update({ next_diagnostic_at: nextDiagAt })
+      .eq('id', userId)
+    if (nextErr) console.warn('[generator] next_diagnostic_at update failed:', nextErr.message)
+
     // Push notification (non-blocking, best effort)
     sendDiagnosticPush(userId, saved.id, saved.score_semaine, supabase)
       .catch(err => console.error('[generator] push failed:', err.message))
