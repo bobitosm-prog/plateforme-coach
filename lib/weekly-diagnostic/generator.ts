@@ -4,6 +4,7 @@
  *   - /api/weekly-diagnostic (session user, rate-limited)
  *   - /api/weekly-diagnostic/cron (service_role, scheduled)
  */
+import webpush from 'web-push'
 
 export interface DiagnosticResult {
   diagnostic_id?: string
@@ -305,10 +306,84 @@ Pense étape par étape avant de répondre :
       return { error: 'Erreur sauvegarde' }
     }
 
+    // Push notification (non-blocking, best effort)
+    sendDiagnosticPush(userId, saved.id, saved.score_semaine, supabase)
+      .catch(err => console.error('[generator] push failed:', err.message))
+
     return { diagnostic_id: saved.id, diagnostic: saved }
 
   } catch (e: any) {
     console.error('[generateWeeklyDiagnostic] Error:', e.message)
     return { error: e.message || 'Erreur interne' }
+  }
+}
+
+// ─── Push notification helper (private) ───
+
+async function sendDiagnosticPush(
+  userId: string,
+  diagnosticId: string,
+  score: number,
+  supabase: any
+): Promise<{ sent: number; cleaned: number }> {
+  try {
+    const vapidPublic = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').replace(/=/g, '').trim()
+    const vapidPrivate = (process.env.VAPID_PRIVATE_KEY || '').replace(/=/g, '').trim()
+    const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:support@moovx.ch'
+
+    if (!vapidPublic || !vapidPrivate) {
+      console.warn('[push diagnostic] VAPID keys missing — skip')
+      return { sent: 0, cleaned: 0 }
+    }
+
+    webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate)
+
+    const { data: subs } = await supabase
+      .from('push_subscriptions')
+      .select('id, subscription')
+      .eq('user_id', userId)
+      .limit(10)
+
+    if (!subs || subs.length === 0) {
+      return { sent: 0, cleaned: 0 }
+    }
+
+    const payload = JSON.stringify({
+      title: 'Ton diagnostic hebdomadaire est prêt',
+      body: `Score : ${score}/100 — découvre tes ajustements pour cette semaine`,
+      url: `/weekly-diagnostic/${diagnosticId}`,
+      tag: 'moovx-weekly-diagnostic',
+    })
+
+    let sent = 0
+    const toDelete: string[] = []
+
+    await Promise.all(subs.map(async (sub: any) => {
+      try {
+        await webpush.sendNotification(sub.subscription, payload)
+        sent++
+      } catch (err: any) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          toDelete.push(sub.id)
+        } else {
+          console.error('[push diagnostic] failed:', err.statusCode, err.message)
+        }
+      }
+    }))
+
+    let cleaned = 0
+    if (toDelete.length > 0) {
+      const { error } = await supabase
+        .from('push_subscriptions')
+        .delete()
+        .in('id', toDelete)
+      if (!error) cleaned = toDelete.length
+    }
+
+    console.log(`[push diagnostic] user=${userId.slice(0, 8)} sent=${sent} cleaned=${cleaned}`)
+    return { sent, cleaned }
+  } catch (e: any) {
+    console.error('[push diagnostic] unhandled:', e.message)
+    return { sent: 0, cleaned: 0 }
   }
 }
