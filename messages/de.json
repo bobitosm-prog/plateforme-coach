@@ -2407,7 +2407,12 @@
     "next_week_objective": "Ziel nächste Woche",
     "ai_reasoning": "KI-Begründung",
     "ai_footer": "Diagnose von Claude Opus 4.7",
-    "tokens_used": "Tokens verwendet"
+    "tokens_used": "Tokens verwendet",
+    "apply_success_no_regen": "Anpassungen übernommen ✓",
+    "regen_starting": "Dein Mahlzeitenplan wird neu erstellt...",
+    "regen_progress": "Generierung... (Tag {day}/7)",
+    "regen_success": "Mahlzeitenplan aktualisiert ✓",
+    "regen_error": "Mahlzeitenplan nicht aktualisiert (manuell wiederholen)"
   },
   "onboarding_v2": {
     "nav": {

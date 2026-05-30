@@ -2407,7 +2407,12 @@
     "next_week_objective": "Objectif semaine prochaine",
     "ai_reasoning": "Raisonnement IA",
     "ai_footer": "Diagnostic généré par Claude Opus 4.7",
-    "tokens_used": "Tokens utilisés"
+    "tokens_used": "Tokens utilisés",
+    "apply_success_no_regen": "Ajustements appliqués ✓",
+    "regen_starting": "Régénération de ton plan repas...",
+    "regen_progress": "Génération... (jour {day}/7)",
+    "regen_success": "Plan repas mis à jour ✓",
+    "regen_error": "Plan repas non régénéré (réessayer manuellement)"
   },
   "onboarding_v2": {
     "nav": {

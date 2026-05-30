@@ -2407,7 +2407,12 @@
     "next_week_objective": "Next week's goal",
     "ai_reasoning": "AI reasoning",
     "ai_footer": "Diagnostic by Claude Opus 4.7",
-    "tokens_used": "Tokens used"
+    "tokens_used": "Tokens used",
+    "apply_success_no_regen": "Adjustments applied ✓",
+    "regen_starting": "Regenerating your meal plan...",
+    "regen_progress": "Generating... (day {day}/7)",
+    "regen_success": "Meal plan updated ✓",
+    "regen_error": "Meal plan not regenerated (retry manually)"
   },
   "onboarding_v2": {
     "nav": {
