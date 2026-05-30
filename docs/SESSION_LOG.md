@@ -5,17 +5,17 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-30
-- **HEAD** : a16d76a
+- **HEAD** : 6c68a74
 - **Working tree** : clean (sauf docs en cours d'update)
-- **Total commits session 30 mai** : 10 (8 commits TD-1..5 + 2 commits F6.A.1/A.2)
+- **Total commits session 30 mai** : 12 (8 TD + 2 F6.A + 1 docs C11 + 1 F6.B.0 C12)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
 - **Phase 6B** : VISION DOCUMENTÉE (voir docs/PHASE_6B_TRAINING_VISION.md)
-- **Tâche en cours** : démarrer F6.B.0 (normalisation exercises_db.equipment)
+- **Tâche en cours** : F6.B.0 DONE, démarrer F6.B.1 (profile équipement + onboarding)
 
 ---
 
-## 2026-05-30 — Marathon Tech Debt + Phase 6A + Vision 6B (~5h)
+## 2026-05-30 — Marathon Tech Debt + Phase 6A + Vision 6B + F6.B.0 (~6h)
 
 **Branche** : `main`
 
@@ -37,6 +37,8 @@ Session marathon en 2 phases : matin = consolidation tech debt accumulée (TD-1 
 | 8 | 2d46b02 | TD-4 | perf(cron): batch parallel concurrency=5 + maxDuration=300 |
 | 9 | 8325f09 | F6.A.1 | feat(meal-plan): helper buildMealPlanParams |
 | 10 | a16d76a | F6.A.2 | feat(weekly-diagnostic): auto-regen meal plan après Apply |
+| 11 | 8a57f31 | C11 docs | docs: session 30 mai + Phase 6B Training vision |
+| 12 | 6c68a74 | F6.B.0 | feat(training): normaliser exercises_db.equipment 43->6 enums |
 
 ### Tech Debt résolus
 
@@ -55,6 +57,15 @@ Helper `lib/meal-plan/build-generation-params.ts` (89 lignes) + auto-regen meal 
 ### Phase 6B — Vision Training documentée
 
 `docs/PHASE_6B_TRAINING_VISION.md` (~600 lignes, 26K). Découpage en 7 sous-features F6.B.0 à F6.B.6, ~20-25h sur 5-7 sessions. Décisions structurantes prises : équipement maison standard (dumbbell + KB + band + bodyweight), 2 questions onboarding training_location + home_equipment[], périodisation 8 sem en 4 phases de 2 sem.
+
+### Phase 6B — F6.B.0 livré en fin de session
+
+Fondation Phase 6B Training : normalisation `exercises_db.equipment`.
+- Helper `lib/training/equipment-normalize.ts` (Equipment type + EQUIPMENT_LEGACY_MAP 43 entrées)
+- Migration SQL idempotente avec backup `equipment_legacy` + UPDATE CASE WHEN + CHECK constraint
+- Appliquée en prod via Supabase SQL Editor, runtime validé
+- Distribution finale : machine_gym 61 + barbell 41 + dumbbell 40 + bodyweight 32 + kettlebell 2 + band 2 (total 178)
+- Capacité home_friendly : 76/178 = 43% du catalogue (à enrichir kettlebell+band en future itération)
 
 ### Validations runtime
 

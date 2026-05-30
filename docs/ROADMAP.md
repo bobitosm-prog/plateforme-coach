@@ -1,7 +1,7 @@
 # MoovX Roadmap
 
 > Document vivant — état au 2026-05-30
-> Branche : `main` (clean, HEAD a16d76a)
+> Branche : `main` (clean, HEAD 6c68a74)
 
 ## Sprint Phase 5 — Weekly AI Diagnostic — DONE
 
@@ -32,6 +32,25 @@ Voir `docs/PHASE_6B_TRAINING_VISION.md` (~600L, 26K) — vision complète avec :
 - Auto-regen tous les 14 jours via pg_cron
 
 Découpage 7 sous-features F6.B.0 à F6.B.6, ~20-25h sur 5-7 sessions.
+
+#### F6.B.0 — Normalisation equipment — DONE
+
+Livré 30 mai 2026 (commit 6c68a74) :
+- Helper `lib/training/equipment-normalize.ts` (mapping 43→6 enum + isHomeFriendly)
+- Migration SQL idempotente + CHECK constraint
+- 178 exos / 6 enum / 0 invalid / backup `equipment_legacy` préservé
+
+Distribution finale :
+| Equipment | Nb | % | Home-friendly |
+|-----------|-----|---|---------------|
+| machine_gym | 61 | 34.3% | non |
+| barbell | 41 | 23.0% | non |
+| dumbbell | 40 | 22.5% | oui |
+| bodyweight | 32 | 18.0% | oui |
+| kettlebell | 2 | 1.1% | oui |
+| band | 2 | 1.1% | oui |
+
+Total home_friendly : 76/178 = 43% — à enrichir kettlebell+band dans future itération.
 
 ### F6.C — Notification combinée — TODO après F6.B
 
