@@ -1,7 +1,79 @@
 # MoovX Roadmap
 
-> Document vivant — état au 2026-05-23 22:00
-> Branche : `main` (clean, à jour avec origin)
+> Document vivant — état au 2026-05-30
+> Branche : `main` (clean, HEAD a16d76a)
+
+## Sprint Phase 5 — Weekly AI Diagnostic — DONE
+
+Killer feature livrée, concurrente directe KAI Swiss. 7 commits prod, 0 régression.
+Voir SESSION_LOG.md "29 mai 2026" pour détail complet.
+
+Architecture : generator.ts réutilisable + cron quotidien pg_cron + push web-push + drill-down /weekly-diagnostic/[id] + Apply 1-click.
+
+## Sprint Phase 6 — Closed Loop AI
+
+Vision : transformer le diagnostic PASSIF (lecture) en boucle ACTIVE.
+Quand l'user clique "Appliquer", l'app regénère AUTOMATIQUEMENT son meal plan et son programme.
+
+### F6.A — Auto-regénération meal plan après Apply — DONE
+
+Livré 30 mai 2026 (2 commits) :
+- 8325f09 — Helper `lib/meal-plan/build-generation-params.ts` (mapping FR/EN, defaults safe)
+- a16d76a — Auto-regen dans handleApply diagnostic + toast progress SSE + i18n FR/EN/DE
+
+Test E2E validé runtime : meal plan régénéré en 1m30 sur Jean (compte test), DB cohérente.
+
+### F6.B — Training Closed Loop — VISION DOCUMENTÉE
+
+Voir `docs/PHASE_6B_TRAINING_VISION.md` (~600L, 26K) — vision complète avec :
+- Personnalisation équipement (home/gym/both + home_equipment[])
+- Substitution intelligente d'exercices (via exercises_db.variant_group)
+- Périodisation 8 semaines (4 phases de 2 sem, progression + variation alternées)
+- Auto-regen tous les 14 jours via pg_cron
+
+Découpage 7 sous-features F6.B.0 à F6.B.6, ~20-25h sur 5-7 sessions.
+
+### F6.C — Notification combinée — TODO après F6.B
+
+- Push : "Ton plan adapté est prêt : 21 repas + 2 séances ajustées"
+- Estim : 30 min après F6.B livré
+
+### Economie projetée Phase 6 complète
+
+- Diag $0.10 + Meal $0.08 + Programme $0.10 = $0.28/semaine/user = ~$1.20/mois
+- Sur 10 CHF/mois → margin brute ~90%
+
+## Sprint Onboarding v2 — DONE
+
+Route unifiée /onboarding-v2 (SOLO 10 steps + INVITED 3 steps).
+Migration v1→v2 proxy + useClientDashboard. 5 commits prod.
+
+## Sprint i18n — DONE
+
+Couverture 48% → ~99%. 864 clés. 178 exercices traduits. Voir SESSION_LOG.
+
+## Sprint Tech Debt Marathon — 30 mai 2026 — DONE
+
+Session marathon 30 mai 2026, 5 tech debts résolus en prod :
+
+| TD | Description | Commits |
+|----|-------------|---------|
+| TD-1 | Bug timezone week_start (dim au lieu de lun en TZ Geneva) | faf0a23 + 15cb5cb |
+| TD-2 | next_diagnostic_at init nouveaux users (4 orphelins backfillés) | 935afa6 + bb45291 |
+| TD-3 | Bug capitalize full_name (helper unifié + 2 backfills) | 8b01e34 + 3524ece |
+| TD-4 | Vercel timeout cron (batch parallel concurrency=5) | 2d46b02 |
+| TD-5 | analyze-body regex JSON fragile (refacto tool_use Anthropic) | 04430a2 |
+
+## Sprint Tech Debt — backlog résiduel
+
+1. **Anomalie next_diagnostic_at résiduelle** (cosmétique) — 3 users avec ancien calcul = 2026-05-31 18h. Inerte grâce idempotency. À corriger si visible UX.
+2. **currentMonday() useClientDetail.ts** — Même bug TZ que TD-1, feature dormante (0 rows). TODO posé dans le code.
+3. **Image qualities Next.js 16** — `quality 88/85/90 not configured in images.qualities [75]` warnings console. Update next.config.
+4. **web-push DEP0169** — url.parse() deprecated Node 22+. Migration vers WHATWG URL.
+5. **OnboardingV2Content.tsx 723L** — Refacto SoloFlowRenderer/InvitedFlowRenderer.
+6. **design-tokens.ts i18n** — NUTRITION_DAYS/MEAL_TYPES en FR uniquement.
+7. **F6.A.3** — Refacto NutritionPreferences pour utiliser buildMealPlanParams (élimine duplication).
+8. **Upgrade Vercel Pro** — À 10 clients payants (ToS Hobby = non-commercial only).
 
 ## Sprint Launch Prep — STATUS
 

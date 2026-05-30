@@ -2,14 +2,18 @@
 
 ## Contexte rapide
 
-Dernière session : 2026-05-23 (~6h). Voir `docs/SESSION_LOG.md` pour le détail.
+Dernière session : 30 mai 2026 (marathon ~5h tech debt + Phase 6A + vision 6B).
+Voir docs/SESSION_LOG.md "2026-05-30" pour détail complet.
 
-État au démarrage :
-- `main` clean, Phase A + Phase B en production
-- Toutes les branches `feat/*` mergées et supprimées
-- Working tree clean
+Etat au démarrage :
+- main clean, 10 commits du jour en prod sur app.moovx.ch
+- HEAD a16d76a
+- Phase 5 Weekly Diagnostic : DONE
+- Phase 6A Closed Loop nutrition : DONE (validé E2E)
+- Phase 6B Training : vision documentée dans docs/PHASE_6B_TRAINING_VISION.md
+- 0 user orphelin (next_diagnostic_at backfillé), 0 diag mal capitalisé, 0 profile mal capitalisé
 
-## ÉTAPE 1 — Commandes de démarrage
+## ETAPE 1 — Commandes de démarrage
 
 ```bash
 cd /Users/marcoferreira/plateforme-coach
@@ -18,60 +22,57 @@ git status
 git --no-pager log --oneline -10
 ```
 
-Doit afficher main clean, dernier commit `Merge feat/tempo-executor-phase-b`.
+Doit afficher main clean, dernier commit a16d76a "feat(weekly-diagnostic): auto-regen meal plan apres Apply (F6.A.2)".
 
-## ÉTAPE 2 — Choisir le sujet de la session
+## ETAPE 2 — Choisir le sujet
 
-### Sujet le plus prioritaire — Feedback usage réel Phase A + B
+### Priorité 1 — F6.B.0 Normalisation exercises_db.equipment (~2h)
 
-Marco a maintenant en prod le tempo executor. Avant de coder du polish, observer :
-- Est-ce que le countdown 3-2-1 manque ?
-- Est-ce que l'user clique PLAY systématiquement ?
-- Est-ce que la modal "TEMPO INTERROMPU" se déclenche en usage normal ?
-- Est-ce que les vibrations sont perceptibles (Android user) ?
+Fondation de toute la Phase 6B Training. Audit du 30 mai a révélé :
+- 43 valeurs distinctes (chaos) pour 178 exos
+- Casing inconsistant (`Haltères` 27 + `haltères` 6)
+- Combinaisons libres (`Barre, Banc`, `Aucun ou Sol`)
+- Position vs équipement (`Debout`, `Assis` = positions, pas equipment)
 
-Si rien à signaler en usage, passer aux sujets ci-dessous.
+Objectif : enum 6 valeurs propre + CHECK constraint + flag home_friendly dérivable.
 
-### Backlog bugs (priorité)
+Voir docs/PHASE_6B_TRAINING_VISION.md section "F6.B.0" pour spec complète et annexe 8.1 pour le mapping 43→6.
 
-1. **Dashboard "VOIR LA SEANCE" → Analytics** (1h)
-   - Bug actuel : le bouton ne va pas vers le détail session
-   - Investiguer la route + le composant qui redirige
+### Priorité 2 — F6.B.1 Profile équipement utilisateur (~2h)
 
-2. **CustomBuilder saisie tempo** (30 min)
-   - Pendant une séance libre, l'user devrait pouvoir prescrire un tempo
-   - Reproduire le pattern 3 inputs number existant dans TrainingTab/ProgramBuilder
+Migration 2 colonnes profile + 2 questions onboarding (training_location + home_equipment[]).
 
-3. **`addRestTime` ne re-schedule pas les sons** (15 min)
-   - Bug mineur découvert dans le fix audio
-   - Re-schedule les bips quand on ajoute du temps au rest timer
+Dépend de F6.B.0 (les valeurs home_equipment doivent matcher l'enum normalisé).
 
-### Phases C — Swipe navigation (3-4h)
+### Priorité 3 — F6.B.2 Peupler variant_group (~3h)
 
-Reco senior : préférer un stepper "Exo 2/6 ← →" en header plutôt que swipe horizontal (conflit avec scroll vertical iOS).
+Tagging des 178 exos via batch IA (Opus 4.7). 30 variant_groups définis en annexe 8.2 du doc vision.
 
-### Templates email restants (1-2h)
+Dépend de F6.B.0.
 
-3 templates à premiumiser : invite user, change email, reauthentication
+## Si tu veux faire autre chose
 
-## ÉTAPE 3 — Workflow standard
+### Tech debt résiduel (cosmétique ou non urgent)
 
-Pour chaque sujet :
-1. Créer branche `feat/<nom>` ou `fix/<nom>`
-2. Coder avec Claude Code (toujours avec `tsc --noEmit` 0 erreur avant commit)
-3. Tester en local (`npm run dev`)
-4. Si feature critique (modif WorkoutSession), tester aussi sur iPhone via IP locale
-5. Commit avec message descriptif
-6. Push branche, créer PR ou merge direct avec `--no-ff`
-7. Cleanup branche
+Voir ROADMAP.md "Sprint Tech Debt — backlog résiduel". 8 items listés, certains <30 min.
 
-## Si bug critique en prod
+### Polish UX
 
-Diagnostic rapide :
-```js
-// Console Chrome sur l'écran de séance
-const ws = JSON.parse(localStorage.getItem('moovx_active_workout'));
-console.log('Exo first full:', JSON.stringify(ws?.exercises?.[0], null, 2));
+Aucun feedback usage spécifique pour l'instant. À surveiller si users actifs > 4.
+
+## Pour démarrer F6.B.0 directement
+
+```bash
+# Vérif état current
+cd /Users/marcoferreira/plateforme-coach && \
+git status && \
+git --no-pager log --oneline -3
+
+# Lecture spec
+cat docs/PHASE_6B_TRAINING_VISION.md | grep -A 30 "### F6.B.0"
+
+# Audit equipment actuel (dans Supabase SQL Editor)
+SELECT equipment, COUNT(*) FROM exercises_db GROUP BY equipment ORDER BY COUNT(*) DESC;
 ```
 
-Tous les champs avancés (tempo, rir, video_url, etc.) doivent être présents grâce au fix `get-today-session.ts` de la session 2026-05-22.
+Puis prompt CC pour créer lib/training/equipment-normalize.ts + migration SQL.

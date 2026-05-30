@@ -4,11 +4,182 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-05-25
-- **HEAD** : a5749f9
-- **Working tree** : clean
-- **Total i18n keys** : 1916
-- **Tâche en cours** : Sprint i18n marathon CLOSED (Sprint 6 + F1+F2+F3+F4+F5)
+- **Date** : 2026-05-30
+- **HEAD** : a16d76a
+- **Working tree** : clean (sauf docs en cours d'update)
+- **Total commits session 30 mai** : 10 (8 commits TD-1..5 + 2 commits F6.A.1/A.2)
+- **Phase 5** : DONE (Weekly Diagnostic en prod)
+- **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
+- **Phase 6B** : VISION DOCUMENTÉE (voir docs/PHASE_6B_TRAINING_VISION.md)
+- **Tâche en cours** : démarrer F6.B.0 (normalisation exercises_db.equipment)
+
+---
+
+## 2026-05-30 — Marathon Tech Debt + Phase 6A + Vision 6B (~5h)
+
+**Branche** : `main`
+
+### Contexte
+
+Session marathon en 2 phases : matin = consolidation tech debt accumulée (TD-1 à TD-5), après-midi = livraison Phase 6A complète (Closed Loop AI nutrition) + écriture vision Phase 6B Training.
+
+### Commits (ordre chronologique)
+
+| # | Hash | Sous-batch | Description |
+|---|---|---|---|
+| 1 | 935afa6 | TD-2 code | fix(onboarding): init next_diagnostic_at to onboarding_completed_at + 7d |
+| 2 | bb45291 | TD-2 data | chore(db): backfill next_diagnostic_at for 4 orphan users |
+| 3 | faf0a23 | TD-1 code | fix(weekly-diagnostic): calcul week_start en TZ Europe/Zurich |
+| 4 | 15cb5cb | TD-1 data | chore(db): backfill week_start dim→lun pour 4 diags |
+| 5 | 8b01e34 | TD-3 code | fix(onboarding): capitalize full_name via helper unifié |
+| 6 | 3524ece | TD-3 data | chore(db): backfill full_name capitalize via INITCAP |
+| 7 | 04430a2 | TD-5 | refactor(analyze-body): pattern tool_use Anthropic |
+| 8 | 2d46b02 | TD-4 | perf(cron): batch parallel concurrency=5 + maxDuration=300 |
+| 9 | 8325f09 | F6.A.1 | feat(meal-plan): helper buildMealPlanParams |
+| 10 | a16d76a | F6.A.2 | feat(weekly-diagnostic): auto-regen meal plan après Apply |
+
+### Tech Debt résolus
+
+| TD | Bug | Fix |
+|----|-----|-----|
+| TD-1 | week_start = dim au lieu de lun (calcul JS getDay+toISOString en TZ Geneva) | Intl.DateTimeFormat + Europe/Zurich + offset dynamique |
+| TD-2 | 4 users orphelins sans next_diagnostic_at, invisibles du cron | Helper inline +7j dans 3 endpoints onboarding + backfill SQL |
+| TD-3 | 2 users avec full_name mal capitalisé (`raki`, `JEan`) | Helper capitalizeFullName (Unicode \p{L} + accents) + backfill INITCAP |
+| TD-4 | Cron timeout au-delà de 4 users (séquentiel) | Batch parallel concurrency=5 + maxDuration=300 (clamp 60s Hobby) |
+| TD-5 | analyze-body regex JSON fragile + 2 system prompts contradictoires | Refacto tool_use Anthropic schema strict (unités explicites) |
+
+### Phase 6A — Closed Loop AI Nutrition (F6.A.1 + F6.A.2)
+
+Helper `lib/meal-plan/build-generation-params.ts` (89 lignes) + auto-regen meal plan dans handleApply du diagnostic. Test E2E validé sur compte test Jean : Apply → macros updatées → meal plan régénéré en 1m30 (SSE Opus 4.7 x 7 jours).
+
+### Phase 6B — Vision Training documentée
+
+`docs/PHASE_6B_TRAINING_VISION.md` (~600 lignes, 26K). Découpage en 7 sous-features F6.B.0 à F6.B.6, ~20-25h sur 5-7 sessions. Décisions structurantes prises : équipement maison standard (dumbbell + KB + band + bodyweight), 2 questions onboarding training_location + home_equipment[], périodisation 8 sem en 4 phases de 2 sem.
+
+### Validations runtime
+
+- TD-1 : test reproduction Node 8/8 cas pass
+- TD-3 : test runtime 16/16 cas pass (FR, EN, accents, tirets, apostrophes)
+- TD-5 : E2E UI manuel localhost analyse photo 6/6 champs cohérents
+- TD-4 : E2E curl cron en 16.6s sur 1 user
+- F6.A.1 : runtime Node 5/5 tests pass
+- F6.A.2 : E2E réel sur Jean, meal plan régénéré 1m30, DB cohérente
+
+### Anomalies découvertes mais NON corrigées
+
+- 3 users (Marco/Maria/Raki) ont next_diagnostic_at = 2026-05-31 18h (ancien code F4d.10) au lieu de +7j strict. Inerte grâce à l'idempotency check du generator. À corriger si comportement visible.
+- `currentMonday()` dans useClientDetail.ts a même bug TZ que TD-1 mais feature dormante (0 rows en prod). TODO documenté.
+- Vercel sur plan Hobby = non-conforme ToS (commercial use). Décision : upgrade Pro à 10 clients payants.
+- 7 nouveaux tech debts identifiés : voir ROADMAP "Sprint Tech Debt — backlog".
+
+---
+
+## 2026-05-29 — Sprint Phase 5 : Weekly AI Diagnostic (~7h)
+
+**Branche** : `main`
+
+### Contexte
+
+Concurrent direct vs KAI Swiss "diagnostic hebdomadaire intelligent".
+Sprint intense : 7 commits livrés en une session, 0 régression, validé runtime end-to-end.
+
+### Commits
+
+| # | Hash | Sous-batch | Description |
+|---|---|---|---|
+| 1 | b0eae0e | F4d.1 | Migration 5 endpoints vers Opus 4.7 (sonnet-4 obsolète) |
+| 2 | 0432866 | F4d.2/3/4 | Table weekly_diagnostics (24 col) + endpoint + Opus 4.7 tool_use |
+| 3 | 44009a3 | F4d.5 | UI WeeklyDiagnosticCard HomeTab (199L) |
+| 4 | c253ba0 | F4d.6 | Page drill-down /weekly-diagnostic/[id] + Apply 1-click |
+| 5 | 224f2d4 | F4d.7 | Refacto generator.ts + endpoint cron Bearer auth |
+| 6 | 06ab1f1 | F4d.8 | Push notification web-push après INSERT |
+| 7 | 9e8bd5a | F4d.10 | Architecture B cron individualise (next_diagnostic_at) |
+
+### Architecture finale
+
+- Table weekly_diagnostics (24 colonnes + 4 RLS policies + index)
+- /api/weekly-diagnostic (session user) → délègue generator
+- /api/weekly-diagnostic/cron (Bearer CRON_SECRET) → batch tous users due
+- lib/weekly-diagnostic/generator.ts (logique métier réutilisable)
+- pg_cron QUOTIDIEN 18h UTC + filter next_diagnostic_at <= NOW
+- Push notification web-push réutilise infra existante (VAPID + push_subscriptions)
+- Apply 1-click : updateProfile + invalidateProfileCache + cache.remove
+
+### Différenciateurs vs KAI Swiss
+
+- Score 0-100 calibré, data RÉELLE (vs estimations)
+- Coherence flags pré-calculés serveur
+- Tool_use Opus 4.7 (JSON garanti, pas regex fragile)
+- Bouton "Appliquer ajustements" 1-click (vs prose vague)
+- Rythme 7 jours STRICT par user (Architecture B)
+- Multi-langue FR/EN/DE
+- Honnêteté scientifique (reconnaît incertitudes data partielle)
+
+### Economie validée
+
+- $0.10 par diagnostic (3289 tokens Opus 4.7 tool_use)
+- 1 diag/semaine/user = $0.43/user/mois
+- Abonnement 10 CHF/mois = ratio 4% en IA (excellent)
+
+---
+
+## 2026-05-26 → 2026-05-29 — Sprint Onboarding v2 (~10h)
+
+**Branche** : `main`
+
+### Contexte
+
+Route unifiée /onboarding-v2 avec branching intelligent SOLO (10 steps) vs INVITED (3 steps).
+Migration legacy users, flag autoritatif onboarding_completed, calcul macros Mifflin-St Jeor.
+
+### Commits
+
+| # | Hash | Sous-batch | Description |
+|---|---|---|---|
+| 1 | ef9a48c | F4c.10 | Scaffold onboarding v2 (page + shared components + INVITED 3 steps) |
+| 2 | 22b9442 | F4c.10b | Fix flow detection (subscription_type + coach_clients + RLS) |
+| 3 | b58b3bc | F4c.10c | SOLO Steps 1-3 (Welcome, Profile, Body) |
+| 4 | 9d02a90 | F4c.10d | SOLO Steps 4-8 + OptionCard factorisé |
+| 5 | 1b73798 | F4c.10e-i | SOLO Steps 9-10 + accents FR + migration v1→v2 (proxy + hook) |
+
+### Architecture
+
+- State machine useReducer + auto-save par step
+- Flow detection via profiles.subscription_type
+- SOLO 10 steps : Welcome → Profile → Body → Goal → Activity → Sessions → Nutrition → Experience → Photo IA → Recap macros
+- INVITED 3 steps : Profile → Avatar → Welcome
+- proxy.ts + useClientDashboard : onboarding_completed flag autoritatif
+- Legacy users (pre-2026-05-27) gardent checks v1
+- lib/onboarding-options.ts : const arrays partagés v1/v2 avec id stable i18n
+- +70 clés i18n (onboarding_v2.*)
+
+---
+
+## 2026-05-24 → 2026-05-25 — Sprint i18n marathon complet (~14h)
+
+**Branche** : `main`
+
+### Contexte
+
+Couverture i18n app 48% → ~99%. 33 commits, 864 clés ajoutées, 178 exercices traduits EN/DE.
+
+### Réalisé
+
+- Sprint 6 : 5 phases (Badges, HomeTab, Training, Nutrition, Progress/Account)
+- Closure fixes F1-F5 : résidus FR, Nav, AnalyticsSection Recharts, DB exercises, muscle_group
+- F4a-F4c : 9 composants restants (TechniquePopup, ExerciseDetail, StartProgram, etc.)
+- F5 : HeroSessionCard, Alternatives, MealsTab
+- lib/i18n-exercise.ts + lib/i18n-muscle.ts helpers créés
+- scripts/backfill-exercise-i18n.mjs : traduction IA batch 178 exercices
+
+### Patterns architecturaux établis
+
+- Sub-component extraction pour Provider context (NavAccountLabel pattern)
+- Recharts Option B (data shape + dataKey EN, name prop traduit)
+- Key-based const arrays ({ id, emoji } + t())
+- Duck-typed helpers avec FR fallback
+
+### Total clés : 1052 → 1916 (+864)
 
 ---
 
