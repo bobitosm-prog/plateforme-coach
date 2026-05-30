@@ -123,6 +123,8 @@ export default function OnboardingFitnessContent() {
         },
         fitness_objectives: objectives,
         onboarding_completed_at: new Date().toISOString(),
+        // Premier diagnostic hebdomadaire dans 7 jours
+        next_diagnostic_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       })
       .eq('id', userId)
 

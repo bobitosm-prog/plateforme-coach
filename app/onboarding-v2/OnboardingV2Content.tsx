@@ -221,6 +221,8 @@ export default function OnboardingV2Content() {
             const { error } = await updateProfile(userId, {
               onboarding_completed: true,
               onboarding_completed_at: new Date().toISOString(),
+              // Premier diagnostic hebdomadaire dans 7 jours
+              next_diagnostic_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
             }, supabase)
             if (error) { console.error('Save step 3:', error); return false }
             invalidateProfileCache()
@@ -333,6 +335,8 @@ export default function OnboardingV2Content() {
               trial_ends_at: trialEndsAt,
               onboarding_completed: true,
               onboarding_completed_at: new Date().toISOString(),
+              // Premier diagnostic hebdomadaire dans 7 jours
+              next_diagnostic_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
             }, supabase)
             if (error) { console.error('Save solo step 10:', error); return false }
             invalidateProfileCache()
