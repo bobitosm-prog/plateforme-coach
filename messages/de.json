@@ -2503,6 +2503,24 @@
           "veteran": "Veteran (5+ Jahre)"
         }
       },
+      "stepEquipment": {
+        "title": "Wo trainierst du?",
+        "subtitle": "Wir passen dein Programm an deine Ausrüstung an.",
+        "location": {
+          "options": {
+            "home": "Zu Hause",
+            "gym": "Im Fitnessstudio",
+            "both": "Beides (abwechselnd)"
+          }
+        },
+        "homeEquipmentLabel": "Welche Ausrüstung hast du zu Hause?",
+        "homeEquipmentHint": "Körpergewicht ist immer verfügbar. Wähle aus, was du sonst noch hast.",
+        "homeEquipment": {
+          "dumbbell": "Kurzhanteln",
+          "kettlebell": "Kettlebell",
+          "band": "Widerstandsbänder"
+        }
+      },
       "step9": {
         "title": "Fortschrittsfoto (optional)",
         "subtitle": "Um deinen Fortschritt visuell zu verfolgen.",

@@ -33,3 +33,23 @@ export const EXPERIENCE_OPTS: OnboardingOption[] = [
   { id: 'experienced', dbLabel: 'Experimente 2-5ans', pts: 6, icon: 'military_tech' },
   { id: 'veteran', dbLabel: 'Veteran 5ans+', pts: 8, icon: 'emoji_events' },
 ]
+
+// Phase 6B Training equipment (F6.B.1)
+// dbLabel = valeur persistée dans profiles.training_location (enum CHECK constraint)
+// pts = 0 (pas d'impact algo Mifflin-St Jeor)
+
+export const LOCATION_OPTS: OnboardingOption[] = [
+  { id: 'home', dbLabel: 'home', pts: 0, icon: 'home' },
+  { id: 'gym', dbLabel: 'gym', pts: 0, icon: 'fitness_center' },
+  { id: 'both', dbLabel: 'both', pts: 0, icon: 'swap_horiz' },
+]
+
+// Sous-options conditionnelles si LOCATION_OPTS = home ou both
+// dbLabel = valeur persistée dans profiles.home_equipment[] (array element)
+// Bodyweight assumé toujours dispo (pas dans la liste)
+
+export const HOME_EQUIPMENT_OPTS: OnboardingOption[] = [
+  { id: 'dumbbell', dbLabel: 'dumbbell', pts: 0, icon: 'fitness_center' },
+  { id: 'kettlebell', dbLabel: 'kettlebell', pts: 0, icon: 'sports_handball' },
+  { id: 'band', dbLabel: 'band', pts: 0, icon: 'all_inclusive' },
+]

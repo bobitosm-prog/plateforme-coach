@@ -2503,6 +2503,24 @@
           "veteran": "Veteran (5+ years)"
         }
       },
+      "stepEquipment": {
+        "title": "Where do you train?",
+        "subtitle": "We adapt your program to your equipment.",
+        "location": {
+          "options": {
+            "home": "At home",
+            "gym": "At the gym",
+            "both": "Both (alternating)"
+          }
+        },
+        "homeEquipmentLabel": "What equipment do you have at home?",
+        "homeEquipmentHint": "Bodyweight is always available. Select what you have on top.",
+        "homeEquipment": {
+          "dumbbell": "Dumbbells",
+          "kettlebell": "Kettlebell",
+          "band": "Resistance bands"
+        }
+      },
       "step9": {
         "title": "Progress photo (optional)",
         "subtitle": "To track your progress visually.",
