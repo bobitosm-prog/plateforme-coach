@@ -24,7 +24,8 @@ import SoloStep6Sessions from './steps/solo/SoloStep6Sessions'
 import SoloStep7Nutrition from './steps/solo/SoloStep7Nutrition'
 import SoloStep8Experience from './steps/solo/SoloStep8Experience'
 import SoloStep9PhotoBody from './steps/solo/SoloStep9PhotoBody'
-import SoloStep10Recap from './steps/solo/SoloStep10Recap'
+import SoloStep7Equipment from './steps/solo/SoloStep7Equipment'
+import SoloStep11Recap from './steps/solo/SoloStep11Recap'
 import { GOALS, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS } from '@/lib/onboarding-options'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -34,7 +35,7 @@ const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 type Flow = 'invited' | 'solo' | null
 type InvitedStep = 1 | 2 | 3
-type SoloStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
+type SoloStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
 
 interface State {
   flow: Flow
@@ -61,7 +62,7 @@ function reducer(state: State, action: Action): State {
 }
 
 const INVITED_TOTAL_STEPS = 3
-const SOLO_TOTAL_STEPS = 10
+const SOLO_TOTAL_STEPS = 11
 
 export default function OnboardingV2Content() {
   const t = useTranslations('onboarding_v2')
@@ -97,9 +98,13 @@ export default function OnboardingV2Content() {
   const [nutrition, setNutrition] = useState<number | null>(null)
   const [experience, setExperience] = useState<number | null>(null)
 
-  // ─── SOLO steps 9-10 state ───
+  // ─── SOLO steps 9-11 state ───
   const [photoBodyUrl, setPhotoBodyUrl] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+
+  // ─── SOLO step 10 equipment state (F6.B.1) ───
+  const [locationIndex, setLocationIndex] = useState<number | null>(null)
+  const [homeEquipment, setHomeEquipment] = useState<string[]>([])
 
   // ─── Flow detection on mount ───
   useEffect(() => {
@@ -119,7 +124,7 @@ export default function OnboardingV2Content() {
       // Fetch profile to detect flow
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_type, full_name, birth_date, gender, avatar_url, current_weight, height, target_weight')
+        .select('subscription_type, full_name, birth_date, gender, avatar_url, current_weight, height, target_weight, training_location, home_equipment')
         .eq('id', uid)
         .single()
 
@@ -132,6 +137,11 @@ export default function OnboardingV2Content() {
         if (profile.current_weight) setWeight(String(profile.current_weight))
         if (profile.height) setHeight(String(profile.height))
         if (profile.target_weight) setGoalWeight(String(profile.target_weight))
+        if (profile.training_location) {
+          const loc = profile.training_location as 'home' | 'gym' | 'both'
+          setLocationIndex(['home', 'gym', 'both'].indexOf(loc))
+        }
+        if (profile.home_equipment) setHomeEquipment(profile.home_equipment as string[])
 
         // Flow detection: subscription_type === 'invited' → invited flow
         if (profile.subscription_type === 'invited') {
@@ -322,12 +332,23 @@ export default function OnboardingV2Content() {
             // Photo already uploaded in handlePhotoBodyUpload — nothing extra to save
             break
           case 10: {
+            // F6.B.1 — save equipment selections
+            if (locationIndex === null) return false
+            const trainingLocation = ['home', 'gym', 'both'][locationIndex] as 'home' | 'gym' | 'both'
+            const { error } = await updateProfile(userId, {
+              training_location: trainingLocation,
+              home_equipment: homeEquipment,
+            }, supabase)
+            if (error) { console.error('Save solo step 10 equipment:', error); return false }
+            break
+          }
+          case 11: {
             if (!macrosCalc) {
-              console.error('Save solo step 10: macros calc null')
+              console.error('Save solo step 11: macros calc null')
               return false
             }
             const trialEndsAt = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
-            const { error } = await updateProfile(userId, {
+            const { error: err11 } = await updateProfile(userId, {
               tdee: macrosCalc.tdee,
               calorie_goal: macrosCalc.calorieGoal,
               protein_goal: macrosCalc.protein,
@@ -339,7 +360,7 @@ export default function OnboardingV2Content() {
               // Premier diagnostic hebdomadaire dans 7 jours
               next_diagnostic_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
             }, supabase)
-            if (error) { console.error('Save solo step 10:', error); return false }
+            if (err11) { console.error('Save solo step 11:', err11); return false }
             invalidateProfileCache()
             cache.remove(`dashboard_${userId}`)
             break
@@ -431,6 +452,15 @@ export default function OnboardingV2Content() {
     }
   }
 
+  // Handler for multi-select home equipment (F6.B.1)
+  function toggleHomeEquipment(equipmentId: string) {
+    setHomeEquipment((prev) =>
+      prev.includes(equipmentId)
+        ? prev.filter((id) => id !== equipmentId)
+        : [...prev, equipmentId]
+    )
+  }
+
   // ─── Navigation handlers ───
   async function handleNext() {
     const saved = await saveCurrentStep()
@@ -505,7 +535,8 @@ export default function OnboardingV2Content() {
       case 7: return nutrition === null
       case 8: return experience === null
       case 9: return false // photo is skippable
-      case 10: return !macrosCalc
+      case 10: return locationIndex === null
+      case 11: return !macrosCalc
       default: return false
     }
   }
@@ -519,7 +550,7 @@ export default function OnboardingV2Content() {
     // SOLO
     if (state.step === 1) return t('nav.letsGo')
     if (state.step === 9 && !photoBodyUrl) return t('nav.skip')
-    if (state.step === 10) return t('nav.start')
+    if (state.step === 11) return t('nav.start')
     return undefined
   }
 
@@ -707,14 +738,30 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 10 && macrosCalc && (
+          {!isInvited && state.step === 10 && (
+            <OnboardingScreen
+              stepKey="solo-equipment"
+              title={t('solo.stepEquipment.title')}
+              subtitle={t('solo.stepEquipment.subtitle')}
+              direction={state.direction}
+            >
+              <SoloStep7Equipment
+                locationIndex={locationIndex}
+                homeEquipment={homeEquipment}
+                onLocationSelect={setLocationIndex}
+                onHomeEquipmentToggle={toggleHomeEquipment}
+              />
+            </OnboardingScreen>
+          )}
+
+          {!isInvited && state.step === 11 && macrosCalc && (
             <OnboardingScreen
               stepKey="solo-recap"
               title={t('solo.step10.title')}
               subtitle={t('solo.step10.subtitle')}
               direction={state.direction}
             >
-              <SoloStep10Recap {...macrosCalc} />
+              <SoloStep11Recap {...macrosCalc} />
             </OnboardingScreen>
           )}
         </AnimatePresence>
