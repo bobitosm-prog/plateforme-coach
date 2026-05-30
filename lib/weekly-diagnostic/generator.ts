@@ -21,17 +21,45 @@ export async function generateWeeklyDiagnostic(
   if (!apiKey) return { error: 'API key manquante' }
 
   try {
-    // 1. WEEK BOUNDARIES (lundi 00:00 → dimanche 23:59)
+    // 1. WEEK BOUNDARIES — calcul en TZ Europe/Zurich (lundi 00:00 → dimanche 23:59)
+    // Fix bug : les anciens calculs getDay()/setHours() + toISOString() ramenaient au dimanche
+    // car minuit local en TZ positive = 22h/23h UTC du jour précédent.
     const now = new Date()
-    const dayOfWeek = now.getDay()
+
+    // Extraire les composants calendaires en TZ Geneva (gère été/hiver automatiquement)
+    const tzFmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Zurich',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      weekday: 'short',
+    })
+    const tzParts = tzFmt.formatToParts(now)
+    const tzYear = parseInt(tzParts.find(p => p.type === 'year')!.value)
+    const tzMonth = parseInt(tzParts.find(p => p.type === 'month')!.value)
+    const tzDay = parseInt(tzParts.find(p => p.type === 'day')!.value)
+    const tzWeekday = tzParts.find(p => p.type === 'weekday')!.value
+    const weekdayMap: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 }
+    const dayOfWeek = weekdayMap[tzWeekday]
     const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-    const weekStart = new Date(now)
-    weekStart.setDate(now.getDate() - daysSinceMonday)
-    weekStart.setHours(0, 0, 0, 0)
-    const weekStartStr = weekStart.toISOString().slice(0, 10)
+
+    // weekStartStr : string YYYY-MM-DD du lundi Geneva (pour colonne `date`)
+    const monday = new Date(Date.UTC(tzYear, tzMonth - 1, tzDay))
+    monday.setUTCDate(monday.getUTCDate() - daysSinceMonday)
+    const weekStartStr = monday.toISOString().slice(0, 10)
+
+    // weekStart : instant absolu du lundi 00:00 Geneva (pour filter completed_at timestamptz)
+    const offsetFmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Europe/Zurich',
+      timeZoneName: 'longOffset',
+    })
+    const offsetStr = offsetFmt.formatToParts(now).find(p => p.type === 'timeZoneName')!.value
+    const offsetMatch = offsetStr.match(/GMT([+-]\d{2}:\d{2})/)
+    const offset = offsetMatch ? offsetMatch[1] : '+00:00'
+    const weekStart = new Date(`${weekStartStr}T00:00:00.000${offset}`)
 
     const weekEnd = new Date(weekStart)
-    weekEnd.setDate(weekStart.getDate() + 7)
+    weekEnd.setUTCDate(weekStart.getUTCDate() + 7)
     const weekEndStr = weekEnd.toISOString().slice(0, 10)
 
     // 2. IDEMPOTENCY

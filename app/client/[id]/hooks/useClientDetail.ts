@@ -83,6 +83,9 @@ function defaultMealPlan(): WeekMealPlan {
 function defaultFood(): FoodItem {
   return { name: '', qty: '', kcal: 0, prot: 0, carb: 0, fat: 0 }
 }
+// TODO [TD-1 followup] Même bug timezone que generator.ts (dim au lieu de lun en TZ Geneva).
+// Feature dormante en prod (0 rows dans client_programs), fix reporté.
+// Quand on réactivera client_programs / meal_plan_template, refactorer avec lib/weekly-diagnostic/generator.ts
 function currentMonday(): string {
   const d = new Date()
   const diff = d.getDay() === 0 ? -6 : 1 - d.getDay()
