@@ -5,17 +5,17 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-30
-- **HEAD** : 6c68a74
+- **HEAD** : 0dfe488
 - **Working tree** : clean (sauf docs en cours d'update)
-- **Total commits session 30 mai** : 12 (8 TD + 2 F6.A + 1 docs C11 + 1 F6.B.0 C12)
+- **Total commits session 30 mai** : 17 (8 TD + 2 F6.A + 1 docs C11 + 1 F6.B.0 + 1 docs F6.B.0 + 3 F6.B.1 + 1 docs F6.B.1)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
 - **Phase 6B** : VISION DOCUMENTÉE (voir docs/PHASE_6B_TRAINING_VISION.md)
-- **Tâche en cours** : F6.B.0 DONE, démarrer F6.B.1 (profile équipement + onboarding)
+- **Tâche en cours** : F6.B.1 DONE (profile équipement + onboarding step 10), démarrer F6.B.2 (peupler variant_group) ou F6.B.5 (auto-gen post-onboarding gap UX découvert)
 
 ---
 
-## 2026-05-30 — Marathon Tech Debt + Phase 6A + Vision 6B + F6.B.0 (~6h)
+## 2026-05-30 — Marathon Tech Debt + Phase 6A + Vision 6B + F6.B.0 + F6.B.1 (~8h)
 
 **Branche** : `main`
 
@@ -39,6 +39,10 @@ Session marathon en 2 phases : matin = consolidation tech debt accumulée (TD-1 
 | 10 | a16d76a | F6.A.2 | feat(weekly-diagnostic): auto-regen meal plan après Apply |
 | 11 | 8a57f31 | C11 docs | docs: session 30 mai + Phase 6B Training vision |
 | 12 | 6c68a74 | F6.B.0 | feat(training): normaliser exercises_db.equipment 43->6 enums |
+| 13 | cfa48b7 | C13 docs F6.B.0 | docs: F6.B.0 livré (mise à jour 3 docs) |
+| 14 | 1d77887 | F6.B.1a | feat(profile): ajouter colonnes equipment (training_location + home_equipment[]) |
+| 15 | 51df602 | F6.B.1b | feat(onboarding): composant SoloStep7Equipment isolé |
+| 16 | 0dfe488 | F6.B.1c | feat(onboarding): intégrer SoloStep7Equipment + renumber Recap 10->11 |
 
 ### Tech Debt résolus
 
@@ -66,6 +70,31 @@ Fondation Phase 6B Training : normalisation `exercises_db.equipment`.
 - Appliquée en prod via Supabase SQL Editor, runtime validé
 - Distribution finale : machine_gym 61 + barbell 41 + dumbbell 40 + bodyweight 32 + kettlebell 2 + band 2 (total 178)
 - Capacité home_friendly : 76/178 = 43% du catalogue (à enrichir kettlebell+band en future itération)
+
+### Phase 6B — F6.B.1 livré en fin de session (3 sous-batches)
+
+Sous-feature F6.B.1 : profile équipement + onboarding step Equipment.
+Découpée en 3 sous-batches bisect-friendly :
+
+- **F6.B.1a** (C14) : migration `profiles.training_location` enum (home/gym/both) + `home_equipment text[]`. CHECK constraint + NOT NULL après backfill. 10 users existants backfillés avec `gym` + `[]`.
+- **F6.B.1b** (C15) : composant `SoloStep7Equipment.tsx` isolé (Q1 radio location + Q2 multi-select home_equipment conditionnel). +4 icônes Lucide dans iconMap. PAS wiré dans OnboardingV2Content.
+- **F6.B.1c** (C16) : intégration via Option C' (insertion step 10 Equipment AVANT Recap, Recap devient step 11). `git mv SoloStep10Recap -> SoloStep11Recap`. Save case 10 nouveau (training_location + home_equipment).
+
+Test E2E validé runtime sur compte test Jean :
+- Reset `onboarding_completed=false`, rejoue les 11 steps
+- Step 10 Equipment affiche bien Q1 (radio) + Q2 dynamique (multi-select)
+- Pre-fill OK (gym pré-sélectionné depuis DB)
+- Save OK : `training_location='home', home_equipment=['dumbbell']`
+- Step 11 Recap calcule macros + finalise (`onboarding_completed=true`)
+
+### Gap UX découvert pendant test E2E
+
+L'onboarding NE déclenche PAS automatiquement `/api/generate-meal-plan` ni `/api/generate-custom-program`. L'user finit ses 11 steps et arrive sur un dashboard vide. Doit cliquer manuellement "Générer mon plan" / "Générer mon programme".
+
+C'est incohérent avec la vision Closed Loop AI Phase 6. Nouveau tech debt #9 :
+- Trigger auto-gen meal_plan + programme à la fin de l'onboarding (case 11 save)
+- Toast progress "On prépare ton plan personnalisé..."
+- Sera adressé dans F6.B.5 (logique auto-gen, dépend de F6.B.4 refacto generate-custom-program pour equipment)
 
 ### Validations runtime
 

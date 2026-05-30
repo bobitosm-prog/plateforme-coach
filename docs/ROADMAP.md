@@ -52,6 +52,15 @@ Distribution finale :
 
 Total home_friendly : 76/178 = 43% — à enrichir kettlebell+band dans future itération.
 
+#### F6.B.1 — Profile équipement + onboarding — DONE
+
+Livré 30 mai 2026 (3 commits bisect-friendly) :
+- **F6.B.1a** (1d77887) : migration `profiles.training_location` + `home_equipment[]` + CHECK constraint + NOT NULL après backfill 10 users
+- **F6.B.1b** (51df602) : composant `SoloStep7Equipment.tsx` isolé avec Q1 radio location + Q2 multi-select conditionnel home_equipment + i18n FR/EN/DE
+- **F6.B.1c** (0dfe488) : intégration via Option C' (insertion step 10 Equipment avant Recap, Recap devient step 11), refacto type SoloStep + SOLO_TOTAL_STEPS + state + save logic
+
+Test E2E validé runtime sur Jean (compte test). 10 users existants en prod avec `training_location='gym'` (assomption majoritaire, à mettre à jour si user change via re-onboarding).
+
 ### F6.C — Notification combinée — TODO après F6.B
 
 - Push : "Ton plan adapté est prêt : 21 repas + 2 séances ajustées"
@@ -93,6 +102,7 @@ Session marathon 30 mai 2026, 5 tech debts résolus en prod :
 6. **design-tokens.ts i18n** — NUTRITION_DAYS/MEAL_TYPES en FR uniquement.
 7. **F6.A.3** — Refacto NutritionPreferences pour utiliser buildMealPlanParams (élimine duplication).
 8. **Upgrade Vercel Pro** — À 10 clients payants (ToS Hobby = non-commercial only).
+9. **F6.B.5 auto-gen post-onboarding** — Gap UX découvert : onboarding ne déclenche pas auto generate-meal-plan ni generate-custom-program. User arrive sur dashboard vide post-onboarding. À traiter dans F6.B.5 (dépend de F6.B.4 refacto generate-custom-program pour equipment).
 
 ## Sprint Launch Prep — STATUS
 
