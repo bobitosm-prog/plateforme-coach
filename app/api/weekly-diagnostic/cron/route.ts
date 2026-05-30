@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { generateWeeklyDiagnostic } from '@/lib/weekly-diagnostic/generator'
 
+// Vercel : Hobby clamp à 60s, Pro à 300s. La valeur 300 est posée
+// en prévision de l'upgrade Pro (clampée silencieusement sur Hobby).
+// Capacité réelle : ~14 users/run sur Hobby, ~75 users/run sur Pro.
+// TODO upgrade Vercel Pro quand on atteint 10 clients payants.
+export const maxDuration = 300
+
 export async function POST(req: NextRequest) {
   // 1. AUTH via CRON_SECRET
   const auth = req.headers.get('authorization') || ''
@@ -37,7 +43,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 
-  // 4. GENERATE FOR EACH USER (sequential to avoid API rate limits)
+  // 4. GENERATE FOR EACH USER (batch parallel, concurrency=5)
+  // Concurrency 5 = compromis vitesse / rate limit Anthropic
+  // 1 user ≈ 17s → batch de 5 ≈ 20s
+  // Capacité : ~14 users sur Hobby (60s), ~75 users sur Pro (300s)
+  const CONCURRENCY = 5
+  const startTime = Date.now()
+
   const results = {
     total: users?.length || 0,
     success: 0,
@@ -46,31 +58,39 @@ export async function POST(req: NextRequest) {
     details: [] as { user_id: string; status: string; error?: string; diagnostic_id?: string }[],
   }
 
-  for (const u of users || []) {
-    try {
-      const result = await generateWeeklyDiagnostic(u.id, supabaseAdmin)
+  const allUsers = users || []
+  for (let i = 0; i < allUsers.length; i += CONCURRENCY) {
+    const batch = allUsers.slice(i, i + CONCURRENCY)
+    await Promise.all(batch.map(async (u) => {
+      try {
+        const result = await generateWeeklyDiagnostic(u.id, supabaseAdmin)
 
-      if (result.already_exists) {
-        results.skipped++
-        results.details.push({ user_id: u.id, status: 'skipped' })
-      } else if (result.error) {
+        if (result.already_exists) {
+          results.skipped++
+          results.details.push({ user_id: u.id, status: 'skipped' })
+        } else if (result.error) {
+          results.errors++
+          results.details.push({ user_id: u.id, status: 'error', error: result.error })
+        } else {
+          results.success++
+          results.details.push({ user_id: u.id, status: 'success', diagnostic_id: result.diagnostic_id })
+        }
+      } catch (e: any) {
         results.errors++
-        results.details.push({ user_id: u.id, status: 'error', error: result.error })
-      } else {
-        results.success++
-        results.details.push({ user_id: u.id, status: 'success', diagnostic_id: result.diagnostic_id })
+        results.details.push({ user_id: u.id, status: 'error', error: e.message })
       }
-    } catch (e: any) {
-      results.errors++
-      results.details.push({ user_id: u.id, status: 'error', error: e.message })
-    }
+    }))
   }
+
+  const durationMs = Date.now() - startTime
 
   console.log('[cron weekly-diagnostic]', JSON.stringify({
     total: results.total,
     success: results.success,
     skipped: results.skipped,
     errors: results.errors,
+    duration_ms: durationMs,
+    concurrency: CONCURRENCY,
   }))
 
   return NextResponse.json(results)
