@@ -44,17 +44,8 @@ export async function POST(req: NextRequest) {
       fetchImage(photoSideUrl),
     ])
 
-    const systemPrompt = `Tu es un expert en analyse corporelle fitness. Analyse les 3 photos (face, dos, profil) et retourne UNIQUEMENT un JSON valide (sans markdown, sans backticks) avec cette structure exacte :
-{
-  "body_fat_estimate": <number>,
-  "lean_mass_estimate": <number>,
-  "strengths": ["string", "string"],
-  "improvements": ["string", "string"],
-  "symmetry_score": <number 0-100>,
-  "summary": "string"
-}
-Poids : ${weight || '?'} kg. Taille : ${height || '?'} cm.
-IMPORTANT : estimations visuelles, pas des mesures exactes.`
+    // System prompt unique (structure définie par le tool schema, pas dans le texte)
+    const systemPrompt = `Tu es un expert en analyse corporelle fitness. Tu analyses 3 photos (face, dos, profil) pour estimer la composition corporelle visuellement. Tes estimations sont visuelles et non médicales.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -66,14 +57,31 @@ IMPORTANT : estimations visuelles, pas des mesures exactes.`
       body: JSON.stringify({
         model: 'claude-opus-4-7',
         max_tokens: 1024,
-        system: 'Tu es un expert fitness. Réponds uniquement en JSON valide, sans backticks ni markdown.',
+        system: systemPrompt,
+        tool_choice: { type: 'tool', name: 'body_analysis_output' },
+        tools: [{
+          name: 'body_analysis_output',
+          description: 'Structure l\'analyse corporelle en JSON exploitable',
+          input_schema: {
+            type: 'object',
+            required: ['body_fat_estimate', 'lean_mass_estimate', 'strengths', 'improvements', 'symmetry_score', 'summary'],
+            properties: {
+              body_fat_estimate: { type: 'number', description: 'Taux de masse grasse estimé en pourcentage (ex: 18.5 pour 18.5%)' },
+              lean_mass_estimate: { type: 'number', description: 'Masse maigre estimée en kg (ex: 65.2 pour 65.2 kg)' },
+              strengths: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 3, description: 'Points forts visibles (musculature développée, posture, etc.)' },
+              improvements: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 3, description: 'Axes d\'amélioration recommandés' },
+              symmetry_score: { type: 'integer', minimum: 0, maximum: 100, description: 'Score de symétrie gauche/droite et haut/bas, 0=très asymétrique, 100=parfaitement symétrique' },
+              summary: { type: 'string', description: 'Synthèse en 2-3 phrases du physique global et des recommandations principales' },
+            },
+          },
+        }],
         messages: [{
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: front.mediaType, data: front.base64 } },
             { type: 'image', source: { type: 'base64', media_type: back.mediaType, data: back.base64 } },
             { type: 'image', source: { type: 'base64', media_type: side.mediaType, data: side.base64 } },
-            { type: 'text', text: systemPrompt },
+            { type: 'text', text: `Données utilisateur : poids ${weight || '?'} kg, taille ${height || '?'} cm. Analyse les 3 photos (face, dos, profil) et appelle le tool body_analysis_output avec ton analyse.` },
           ],
         }],
       }),
@@ -86,13 +94,13 @@ IMPORTANT : estimations visuelles, pas des mesures exactes.`
     }
 
     const data = await response.json()
-    const text = data.content?.[0]?.text || ''
+    const toolUseBlock = data.content?.find((c: any) => c.type === 'tool_use')
+    if (!toolUseBlock) {
+      console.error('[analyze-body] No tool_use in response:', JSON.stringify(data).slice(0, 500))
+      return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
+    }
 
-    // Parse JSON from response (handle potential markdown wrapping)
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) return NextResponse.json({ error: 'Réponse invalide de l\'IA' }, { status: 500 })
-
-    const result = JSON.parse(jsonMatch[0])
+    const result = toolUseBlock.input
     return NextResponse.json(result)
   } catch (e: any) {
     console.error('[analyze-body] Error:', e.message)
