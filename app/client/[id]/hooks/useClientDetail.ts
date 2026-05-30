@@ -3,6 +3,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useExerciseInfo } from '../../../hooks/useExerciseInfo'
+import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -722,7 +723,7 @@ export default function useClientDetail() {
   /* ── Edit profile save ──────────────────────────────────────── */
   const saveEdit = async () => {
     const updates: Record<string, unknown> = {
-      full_name: editName || null, phone: editPhone || null, birth_date: editBirth || null, gender: editGender || null,
+      full_name: editName ? capitalizeFullName(editName) : null, phone: editPhone || null, birth_date: editBirth || null, gender: editGender || null,
       current_weight: editWeight ? parseFloat(editWeight) : null, height: editHeight ? parseFloat(editHeight) : null,
       target_weight: editTargetW ? parseFloat(editTargetW) : null, body_fat_pct: editBodyFat ? parseFloat(editBodyFat) : null,
       status: editStatus, objective: editObj || null,

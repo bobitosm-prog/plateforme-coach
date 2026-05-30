@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
 import { colors, fonts, calcMifflinStJeor } from '@/lib/design-tokens'
+import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 
 import OnboardingHeader from './steps/shared/OnboardingHeader'
 import OnboardingNav from './steps/shared/OnboardingNav'
@@ -206,7 +207,7 @@ export default function OnboardingV2Content() {
         switch (state.step) {
           case 1: {
             const { error } = await updateProfile(userId, {
-              full_name: firstName,
+              full_name: capitalizeFullName(firstName),
               birth_date: birthDate || null,
               gender: gender || null,
             }, supabase)
@@ -239,7 +240,7 @@ export default function OnboardingV2Content() {
             break
           case 2: {
             const { error } = await updateProfile(userId, {
-              full_name: firstName,
+              full_name: capitalizeFullName(firstName),
               birth_date: birthDate || null,
               gender: gender || null,
             }, supabase)

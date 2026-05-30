@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, ChevronLeft, Check, Camera, CreditCard, Upload, Copy, Sparkles, LayoutDashboard } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, GREEN } from '../../lib/design-tokens'
+import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -162,7 +163,7 @@ export default function OnboardingCoachContent() {
     const update: Record<string, any> = {
       id: uid,
       role: 'coach',
-      full_name: fullName.trim(),
+      full_name: capitalizeFullName(fullName),
       coach_bio: bio.trim() || null,
       coach_speciality: speciality || null,
       coach_certifications: certifications.trim() || null,

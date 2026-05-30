@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, User, ChevronDown } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../lib/design-tokens'
+import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 
 const supabase = createBrowserClient((process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(), (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim())
 
@@ -118,7 +119,7 @@ function RegisterContent() {
         email: email.trim(),
       }
       if (selectedRole === 'coach') {
-        profileData.full_name = fullName.trim()
+        profileData.full_name = capitalizeFullName(fullName)
         profileData.coach_speciality = speciality
         profileData.coach_experience_years = experience
       }
