@@ -137,7 +137,11 @@ export default function useInitialGeneration(
       // If either failed, the flag stays true so the next home load retries.
       if (mealOk && programOk) {
         try {
-          await updateProfile(userId as string, { needs_initial_generation: false }, supabase)
+          await updateProfile(userId as string, {
+            needs_initial_generation: false,
+            // F6.B.6 : programme genere -> prochain regen auto dans 14j
+            next_program_regen_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          }, supabase)
           invalidateProfileCache()
           cache.remove(`dashboard_${userId}`)
         } catch (e) {

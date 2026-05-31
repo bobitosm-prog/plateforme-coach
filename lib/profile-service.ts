@@ -43,6 +43,7 @@ export type Profile = {
   training_location?: string | null
   home_equipment?: string[] | null
   needs_initial_generation?: boolean
+  next_program_regen_at?: string | null
   [key: string]: any // Allow additional fields
 }
 

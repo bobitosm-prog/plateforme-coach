@@ -262,6 +262,10 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
         })
       if (insertErr) throw insertErr
 
+      // F6.B.6 : programme regenere -> repousse le prochain regen auto de 14j (evite double regen avec le cron)
+      await updateProfile(userId, {
+        next_program_regen_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      }, supabase)
       invalidateProfileCache()
       cache.remove(`dashboard_${userId}`)
       setRegenMsg(t('regen_program_success'))
