@@ -4,14 +4,40 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-05-30
-- **HEAD** : 0dfe488
-- **Working tree** : clean (sauf docs en cours d'update)
-- **Total commits session 30 mai** : 17 (8 TD + 2 F6.A + 1 docs C11 + 1 F6.B.0 + 1 docs F6.B.0 + 3 F6.B.1 + 1 docs F6.B.1)
+- **Date** : 2026-05-31
+- **HEAD** : f71b88a
+- **Working tree** : clean
+- **Total commits Phase 6** : 18 (17 session 30 mai + 1 F6.B.2 31 mai)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
-- **Phase 6B** : VISION DOCUMENTÉE (voir docs/PHASE_6B_TRAINING_VISION.md)
-- **Tâche en cours** : F6.B.1 DONE (profile équipement + onboarding step 10), démarrer F6.B.2 (peupler variant_group) ou F6.B.5 (auto-gen post-onboarding gap UX découvert)
+- **Phase 6B** : F6.B.0 DONE, F6.B.1 DONE, F6.B.2 DONE (variant_group 100% couverture)
+- **Tâche en cours** : démarrer F6.B.3 (helper buildProgramParams ~1h)
+
+---
+
+## 2026-05-31 — Marathon Phase 6B (suite) — F6.B.2
+
+**Branche** : `main`
+
+### Contexte
+
+Session 2 marathon Phase 6B. Plan : F6.B.2 + F6.B.3 + F6.B.5 (auto-gen post-onboarding). F6.B.4 (refacto core IA) gardé pour demain frais.
+
+### Commits livrés (ordre chronologique)
+
+| # | Hash | Sous-batch | Description |
+|---|---|---|---|
+| 1 | f71b88a | F6.B.2 | feat(training): compléter variant_group sur 23 exos restants |
+
+### Phase 6B — F6.B.2 livré
+
+Audit en profondeur révèle 46 variant_groups existants (vs ~20 visibles au Top 20 LIMIT hier). Tous les groupes envisagés (`glute_bridge`, `chest_press`, `gainage`, `leg_curl`, `kickback_fessiers`) existaient DÉJÀ. Migration finale : 23 UPDATE par ID idempotents vers groupes existants uniquement, 0 nouveau groupe créé.
+
+**Couverture finale** : 178/178 exos taggués (100%).
+
+### Tech debt #10 découvert
+
+Fragmentation des variant_groups : `good_morning` + `stiff` + `rdl` + `deadlift` = même pattern hip hinge en 4 groupes distincts. Idem pour fessiers (3 groupes) et chest (6 groupes). Cette fragmentation limitera la qualité de substitution intelligente en F6.B.4. À consolider post F6.B.4.
 
 ---
 

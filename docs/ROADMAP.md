@@ -61,6 +61,14 @@ Livré 30 mai 2026 (3 commits bisect-friendly) :
 
 Test E2E validé runtime sur Jean (compte test). 10 users existants en prod avec `training_location='gym'` (assomption majoritaire, à mettre à jour si user change via re-onboarding).
 
+#### F6.B.2 — Peupler variant_group — ✅ DONE
+
+Livré 31 mai 2026 (commit f71b88a).
+
+Audit complet 46 variant_groups existants. Tous les "nouveaux groupes" envisagés existaient déjà. Migration 23 UPDATE par ID vers groupes existants. Couverture finale 178/178 = 100%.
+
+Tech debt #10 : fragmentation variant_groups (4 groupes hip hinge distincts au lieu d'un) à consolider post F6.B.4.
+
 ### F6.C — Notification combinée — TODO après F6.B
 
 - Push : "Ton plan adapté est prêt : 21 repas + 2 séances ajustées"
@@ -103,6 +111,7 @@ Session marathon 30 mai 2026, 5 tech debts résolus en prod :
 7. **F6.A.3** — Refacto NutritionPreferences pour utiliser buildMealPlanParams (élimine duplication).
 8. **Upgrade Vercel Pro** — À 10 clients payants (ToS Hobby = non-commercial only).
 9. **F6.B.5 auto-gen post-onboarding** — Gap UX découvert : onboarding ne déclenche pas auto generate-meal-plan ni generate-custom-program. User arrive sur dashboard vide post-onboarding. À traiter dans F6.B.5 (dépend de F6.B.4 refacto generate-custom-program pour equipment).
+10. **Consolidation variant_groups fragmentés** — `good_morning` + `stiff` + `rdl` + `deadlift` = 4 groupes hip hinge distincts. Idem fessiers (3 groupes), chest (6 groupes). Limite qualité substitution F6.B.4. À consolider post F6.B.4.
 
 ## Sprint Launch Prep — STATUS
 
