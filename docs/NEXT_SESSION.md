@@ -2,12 +2,12 @@
 
 ## Contexte rapide
 
-Dernière session : 31 mai 2026 (session 2 Phase 6B, 6 commits : F6.B.2 + F6.B.3 + F6.B.4 + F6.B.5a).
+Dernière session : 31 mai 2026 (session 2 Phase 6B, 8 commits : F6.B.2 + F6.B.3 + F6.B.4 + F6.B.5a + F6.B.5b + docs).
 Voir docs/SESSION_LOG.md "2026-05-31" pour détail complet.
 
 Etat au démarrage :
-- main clean, 17 commits 30 mai + 6 commits 31 mai = 23 commits total Phase 6 en prod sur app.moovx.ch
-- HEAD 74a4481
+- main clean, 17 commits 30 mai + 8 commits 31 mai = 25 commits total Phase 6 en prod sur app.moovx.ch
+- HEAD d7b9a6b
 - Phase 5 Weekly Diagnostic : DONE
 - Phase 6A Closed Loop nutrition : DONE (validé E2E)
 - Phase 6B F6.B.0 (normalisation equipment) : DONE
@@ -16,7 +16,8 @@ Etat au démarrage :
 - Phase 6B F6.B.3 (helper buildProgramParams) : DONE
 - Phase 6B F6.B.4 (refacto generate-custom-program tool_use) : DONE
 - Phase 6B F6.B.5a (auto-gen post-onboarding) : DONE
-- F6.B.3/4/5a DONE — chaîne core Training opérationnelle, auto-gen post-onboarding live
+- Phase 6B F6.B.5b (auto-regen post-Apply diagnostic) : DONE
+- F6.B.5b DONE — closed-loop training quasi complet (génération onboarding + regen diagnostic)
 - 0 user orphelin, 0 diag mal capitalisé, 0 profile mal capitalisé
 
 ## ETAPE 1 — Commandes de démarrage
@@ -28,29 +29,23 @@ git status
 git --no-pager log --oneline -10
 ```
 
-Doit afficher main clean, dernier commit 74a4481 F6.B.5a-2.
+Doit afficher main clean, dernier commit d7b9a6b F6.B.5b.
 
 ## ETAPE 2 — Choisir le sujet
 
-### Priorité 1 — F6.B.5b auto-regen programme post-Apply diagnostic (~1h)
+### Priorité 1 — F6.B.6 cron auto-regen 14j (dernier morceau Phase 6B Training)
 
-Équivalent F6.A.2 pour le training. Quand un user clique "Appliquer" sur un diagnostic hebdomadaire, auto-regénérer le programme training en plus du meal plan (déjà fait en F6.A.2). Utilise buildProgramParams avec ProgramOverrides (ex: training_volume_delta_pct du diagnostic).
+Cron pg_cron qui régénère automatiquement le programme training tous les 14 jours (périodisation). Pattern similaire au cron weekly diagnostic. Dernier morceau pour boucler Phase 6B.
 
-Dépend de F6.B.3 (DONE) + F6.B.4 (DONE).
-
-### Priorité 2 — F6.B.6 cron auto-regen 14j
-
-Cron pg_cron qui régénère automatiquement le programme training tous les 14 jours (périodisation). Pattern similaire au cron weekly diagnostic.
-
-### Priorité 3 — Consolidation variant_groups fragmentés (tech debt #10)
+### Priorité 2 — Consolidation variant_groups fragmentés (tech debt #10)
 
 `good_morning` + `stiff` + `rdl` + `deadlift` = 4 groupes hip hinge distincts au lieu d'un. Idem fessiers (3 groupes), chest (6 groupes). Limite qualité substitution. À consolider.
 
-## Si tu veux faire autre chose
-
-### Tech debt résiduel (cosmétique ou non urgent)
+### Priorité 3 — Tech debt résiduels
 
 Voir ROADMAP.md "Sprint Tech Debt — backlog résiduel". 11 items listés, certains <30 min.
+
+## Si tu veux faire autre chose
 
 ### Polish UX
 

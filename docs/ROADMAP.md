@@ -79,6 +79,10 @@ Anticipé (prévu plus tard). 2 bugs latents corrigés : temperature déprécié
 
 Solution D (flag + home hook). Meal + programme auto-générés en fin d'onboarding.
 
+#### F6.B.5b — Auto-regen programme post-Apply — ✅ DONE (d7b9a6b)
+
+Équivalent F6.A.2 pour training. Apply diagnostic avec volume delta → regen programme source diagnostic_auto. Chaîne séquentielle meal puis program.
+
 ### F6.C — Notification combinée — TODO après F6.B
 
 - Push : "Ton plan adapté est prêt : 21 repas + 2 séances ajustées"

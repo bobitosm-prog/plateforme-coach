@@ -5,13 +5,13 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-31
-- **HEAD** : 74a4481
+- **HEAD** : d7b9a6b
 - **Working tree** : clean
-- **Total commits Phase 6** : 23 (17 session 30 mai + 6 session 31 mai)
+- **Total commits Phase 6** : 25 (17 session 30 mai + 8 session 31 mai)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
-- **Phase 6B** : F6.B.0→F6.B.5a DONE — chaîne core Training opérationnelle, auto-gen post-onboarding live
-- **Tâche en cours** : F6.B.5b (auto-regen post-Apply diagnostic) OU F6.B.6 (cron) à décider
+- **Phase 6B** : F6.B.0→F6.B.5b DONE — closed-loop training quasi complet (génération onboarding + regen diagnostic)
+- **Tâche en cours** : F6.B.6 cron auto-regen 14j (dernier morceau Phase 6B Training)
 
 ---
 
@@ -33,6 +33,8 @@ Session 2 marathon Phase 6B. Plan : F6.B.2 + F6.B.3 + F6.B.5 (auto-gen post-onbo
 | 4 | f7009d9 | F6.B.5a-1 | feat(onboarding): flag needs_initial_generation |
 | 5 | 88a903f | F6.B.4 | fix(training): refacto generate-custom-program vers tool_use |
 | 6 | 74a4481 | F6.B.5a-2 | feat(onboarding): auto-gen meal plan + programme post-onboarding |
+| 7 | aeeed83 | docs | docs F6.B.3/4/5a |
+| 8 | d7b9a6b | F6.B.5b | feat(training): auto-regen programme post-Apply diagnostic |
 
 ### Phase 6B — F6.B.2 livré
 
@@ -67,6 +69,14 @@ Architecture (Solution D — flag + génération sur la home) : onboarding case 
 Fix design : le flag passe à false UNIQUEMENT si les 2 générations réussissent (sinon reste true pour retry au prochain load). Découpé en 2 sous-batches : F6.B.5a-1 (migration + flag), F6.B.5a-2 (hook + branchement + fix design).
 
 Test E2E Jean validé : 2 endpoints 200, programme "PPL Hypertrophie Homme — 6 jours", flag false.
+
+### F6.B.5b — Auto-regen programme post-Apply diagnostic (d7b9a6b)
+
+Équivalent training de F6.A.2 (meal). Quand un user Applique un diagnostic qui recommande un ajustement de volume (adj.training_volume_delta_pct ≠ 0), le programme est régénéré automatiquement.
+
+handleApply détecte volumeChanged et déclenche regenProgram en chaîne séquentielle : meal (si macros changées) PUIS programme (si volume changé), pour éviter 2 appels IA simultanés et le chevauchement des messages de progression. regenProgram utilise buildProgramParams avec ProgramOverrides.notes (consigne "ajuste le volume de +/-X%"), insert custom_programs source='diagnostic_auto'. Best-effort. 3 clés i18n regen_program_* (fr/en/de).
+
+Test E2E Jean : Apply diagnostic avec volume +10% → nouveau programme diagnostic_auto généré, ancien deactivated.
 
 ---
 
