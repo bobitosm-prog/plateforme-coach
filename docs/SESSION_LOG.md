@@ -5,13 +5,13 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-31
-- **HEAD** : f71b88a
+- **HEAD** : 74a4481
 - **Working tree** : clean
-- **Total commits Phase 6** : 18 (17 session 30 mai + 1 F6.B.2 31 mai)
+- **Total commits Phase 6** : 23 (17 session 30 mai + 6 session 31 mai)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
-- **Phase 6B** : F6.B.0 DONE, F6.B.1 DONE, F6.B.2 DONE (variant_group 100% couverture)
-- **Tâche en cours** : démarrer F6.B.3 (helper buildProgramParams ~1h)
+- **Phase 6B** : F6.B.0→F6.B.5a DONE — chaîne core Training opérationnelle, auto-gen post-onboarding live
+- **Tâche en cours** : F6.B.5b (auto-regen post-Apply diagnostic) OU F6.B.6 (cron) à décider
 
 ---
 
@@ -28,6 +28,11 @@ Session 2 marathon Phase 6B. Plan : F6.B.2 + F6.B.3 + F6.B.5 (auto-gen post-onbo
 | # | Hash | Sous-batch | Description |
 |---|---|---|---|
 | 1 | f71b88a | F6.B.2 | feat(training): compléter variant_group sur 23 exos restants |
+| 2 | 7f366fa | docs | docs F6.B.2 |
+| 3 | 08e54f2 | F6.B.3 | feat(training): helper buildProgramParams |
+| 4 | f7009d9 | F6.B.5a-1 | feat(onboarding): flag needs_initial_generation |
+| 5 | 88a903f | F6.B.4 | fix(training): refacto generate-custom-program vers tool_use |
+| 6 | 74a4481 | F6.B.5a-2 | feat(onboarding): auto-gen meal plan + programme post-onboarding |
 
 ### Phase 6B — F6.B.2 livré
 
@@ -38,6 +43,30 @@ Audit en profondeur révèle 46 variant_groups existants (vs ~20 visibles au Top
 ### Tech debt #10 découvert
 
 Fragmentation des variant_groups : `good_morning` + `stiff` + `rdl` + `deadlift` = même pattern hip hinge en 4 groupes distincts. Idem pour fessiers (3 groupes) et chest (6 groupes). Cette fragmentation limitera la qualité de substitution intelligente en F6.B.4. À consolider post F6.B.4.
+
+### F6.B.3 — Helper buildProgramParams (08e54f2)
+
+lib/training/build-program-params.ts, équivalent F6.A.1 pour le training. Construit le body POST generate-custom-program depuis le profile. composeEquipmentString mappe training_location + home_equipment[] vers une string FR. normalizeObjective/Level/Gender tolérants FR/EN. 8/8 tests runtime.
+
+### F6.B.4 — Refacto generate-custom-program vers tool_use (88a903f)
+
+Découvert pendant le debug F6.B.5a : l'endpoint avait 2 bugs latents jamais déclenchés (personne n'appelait l'endpoint en auto avant le hook).
+
+Bug 1 : temperature:0 déprécié pour opus-4-7 → erreur 400 Anthropic. Retiré.
+
+Bug 2 : parsing JSON manuel (indexOf/lastIndexOf/regex/JSON.parse) tronquait sur gros programmes (max_tokens 4000 atteint → JSON coupé mid-array → "Expected ',' or ']'"). Migré vers tool_use Anthropic avec input_schema structuré (program_name/description/days[exercises[]]), tool_choice force generate_program, extraction directe toolUseBlock.input, max_tokens 8000. Pattern cohérent avec analyze-body (TD-5). Élimine définitivement la troncature.
+
+Test E2E : 200 en 50s, programme PPL 6 jours généré.
+
+### F6.B.5a — Auto-gen post-onboarding (f7009d9 + 74a4481)
+
+Gap UX critique comblé : à la fin de l'onboarding SOLO, le user reçoit automatiquement son meal plan + programme.
+
+Architecture (Solution D — flag + génération sur la home) : onboarding case 11 set profiles.needs_initial_generation=true → router.replace('/') → la home (composant stable) détecte le flag via hook useInitialGeneration → déclenche séquentiellement meal (SSE) puis programme (JSON tool_use) → insert DB → flag false. Banner gold non-bloquant affiche le progress.
+
+Fix design : le flag passe à false UNIQUEMENT si les 2 générations réussissent (sinon reste true pour retry au prochain load). Découpé en 2 sous-batches : F6.B.5a-1 (migration + flag), F6.B.5a-2 (hook + branchement + fix design).
+
+Test E2E Jean validé : 2 endpoints 200, programme "PPL Hypertrophie Homme — 6 jours", flag false.
 
 ---
 

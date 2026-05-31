@@ -69,6 +69,16 @@ Audit complet 46 variant_groups existants. Tous les "nouveaux groupes" envisagé
 
 Tech debt #10 : fragmentation variant_groups (4 groupes hip hinge distincts au lieu d'un) à consolider post F6.B.4.
 
+#### F6.B.3 — Helper buildProgramParams — ✅ DONE (08e54f2)
+
+#### F6.B.4 — Refacto generate-custom-program tool_use — ✅ DONE (88a903f)
+
+Anticipé (prévu plus tard). 2 bugs latents corrigés : temperature déprécié + troncature JSON. Migration tool_use.
+
+#### F6.B.5a — Auto-gen post-onboarding — ✅ DONE (f7009d9 + 74a4481)
+
+Solution D (flag + home hook). Meal + programme auto-générés en fin d'onboarding.
+
 ### F6.C — Notification combinée — TODO après F6.B
 
 - Push : "Ton plan adapté est prêt : 21 repas + 2 séances ajustées"
@@ -110,8 +120,9 @@ Session marathon 30 mai 2026, 5 tech debts résolus en prod :
 6. **design-tokens.ts i18n** — NUTRITION_DAYS/MEAL_TYPES en FR uniquement.
 7. **F6.A.3** — Refacto NutritionPreferences pour utiliser buildMealPlanParams (élimine duplication).
 8. **Upgrade Vercel Pro** — À 10 clients payants (ToS Hobby = non-commercial only).
-9. **F6.B.5 auto-gen post-onboarding** — Gap UX découvert : onboarding ne déclenche pas auto generate-meal-plan ni generate-custom-program. User arrive sur dashboard vide post-onboarding. À traiter dans F6.B.5 (dépend de F6.B.4 refacto generate-custom-program pour equipment).
+9. ~~**F6.B.5 auto-gen post-onboarding**~~ — ✅ RÉSOLU (F6.B.5a, commit 74a4481).
 10. **Consolidation variant_groups fragmentés** — `good_morning` + `stiff` + `rdl` + `deadlift` = 4 groupes hip hinge distincts. Idem fessiers (3 groupes), chest (6 groupes). Limite qualité substitution F6.B.4. À consolider post F6.B.4.
+11. **suggest-overload temperature avec Haiku** — app/api/suggest-overload/route.ts ligne 109 temperature:0.3 avec claude-haiku-4-5. Haiku accepte encore temperature (fonctionne en prod) mais à surveiller si dépréciation future. Migrer vers tool_use si besoin.
 
 ## Sprint Launch Prep — STATUS
 
