@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 
 import useClientDashboard, { type Tab } from './hooks/useClientDashboard'
+import useInitialGeneration from './hooks/useInitialGeneration'
 import Paywall from './components/Paywall'
 import ClientIntlProvider from '../components/ClientIntlProvider'
 import BugReport from './components/BugReport'
@@ -51,6 +52,7 @@ function NavAccountLabel() {
 
 export default function CoachApp() {
   const h = useClientDashboard()
+  const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase)
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const [isDesktop, setIsDesktop] = React.useState(false)
   const paymentHandled = React.useRef(false)
@@ -217,6 +219,32 @@ export default function CoachApp() {
         .client-main-scroll { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
         @media (min-width: 768px) { .client-main-scroll { padding-bottom: 16px; } }
       `}</style>
+
+      {/* ── F6.B.5a : auto-gen progress banner ── */}
+      {initialGen.generating && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 9999,
+          background: GOLD,
+          color: '#000',
+          padding: '8px 16px',
+          fontSize: 13,
+          fontWeight: 600,
+          textAlign: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        }}>
+          <Sparkles size={16} />
+          {initialGen.step === 'meal'
+            ? 'Préparation de ton plan nutrition...'
+            : 'Préparation de ton programme d\'entraînement...'}
+        </div>
+      )}
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (

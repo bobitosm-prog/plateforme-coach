@@ -40,6 +40,9 @@ export type Profile = {
   phone?: string | null
   status?: string | null
   created_at?: string
+  training_location?: string | null
+  home_equipment?: string[] | null
+  needs_initial_generation?: boolean
   [key: string]: any // Allow additional fields
 }
 
