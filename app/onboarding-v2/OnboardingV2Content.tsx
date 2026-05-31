@@ -359,6 +359,8 @@ export default function OnboardingV2Content() {
               onboarding_completed_at: new Date().toISOString(),
               // Premier diagnostic hebdomadaire dans 7 jours
               next_diagnostic_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              // F6.B.5a : trigger auto-gen meal plan + programme sur la home
+              needs_initial_generation: true,
             }, supabase)
             if (err11) { console.error('Save solo step 11:', err11); return false }
             invalidateProfileCache()
