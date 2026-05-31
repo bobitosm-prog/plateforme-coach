@@ -8,6 +8,7 @@ import { ArrowLeft, Check, Dumbbell, Target, ChevronDown, ChevronUp, Loader2 } f
 import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
 import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
+import { buildProgramParams } from '@/lib/training/build-program-params'
 import { colors, fonts, btnPrimary } from '@/lib/design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -114,9 +115,15 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
       setApplied(true)
       setApplying(false)
 
-      // F6.A.2 : auto-regen meal plan si macros changées (best-effort, async)
-      if (macrosChanged) {
-        regenMealPlan(updates)
+      // F6.A.2 + F6.B.5b : auto-regen meal plan (si macros) puis programme (si volume), best-effort
+      const volumeDeltaPct = typeof adj.training_volume_delta_pct === 'number' ? adj.training_volume_delta_pct : 0
+      const volumeChanged = volumeDeltaPct !== 0
+      if (macrosChanged || volumeChanged) {
+        // Chaîne séquentielle pour éviter 2 appels IA simultanés + chevauchement des messages
+        ;(async () => {
+          if (macrosChanged) await regenMealPlan(updates)
+          if (volumeChanged) await regenProgram(volumeDeltaPct)
+        })()
       } else {
         setRegenMsg(t('apply_success_no_regen'))
         setTimeout(() => setRegenMsg(''), 3000)
@@ -207,6 +214,61 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
     } catch (e: any) {
       console.error('Regen meal plan error:', e)
       setRegenMsg(t('regen_error'))
+      setTimeout(() => setRegenMsg(''), 5000)
+    }
+  }
+
+  // F6.B.5b : régénération programme training via JSON (best-effort)
+  // Déclenchée quand le diagnostic recommande un ajustement de volume.
+  async function regenProgram(volumeDeltaPct: number) {
+    if (!userId) return
+    setRegenMsg(t('regen_program_starting'))
+    try {
+      const { data: profile, error: profErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      if (profErr || !profile) throw new Error('Profile fetch failed')
+
+      const sign = volumeDeltaPct > 0 ? '+' : ''
+      const params = buildProgramParams(profile, {
+        notes: `Ajuste le volume total d'entrainement de ${sign}${volumeDeltaPct}% par rapport a un programme standard pour ce profil (plus/moins de series ou d'exercices selon le signe).`,
+      })
+
+      const res = await fetch('/api/generate-custom-program', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      if (!data.program) throw new Error('No program received')
+
+      await supabase
+        .from('custom_programs')
+        .update({ is_active: false })
+        .eq('user_id', userId)
+        .eq('is_active', true)
+      const { error: insertErr } = await supabase
+        .from('custom_programs')
+        .insert({
+          user_id: userId,
+          name: data.program.program_name || 'Programme IA',
+          description: data.program.description || '',
+          days: data.program.days || [],
+          source: 'diagnostic_auto',
+          is_active: true,
+        })
+      if (insertErr) throw insertErr
+
+      invalidateProfileCache()
+      cache.remove(`dashboard_${userId}`)
+      setRegenMsg(t('regen_program_success'))
+      setTimeout(() => setRegenMsg(''), 3000)
+    } catch (e: any) {
+      console.error('Regen program error:', e)
+      setRegenMsg(t('regen_program_error'))
       setTimeout(() => setRegenMsg(''), 5000)
     }
   }

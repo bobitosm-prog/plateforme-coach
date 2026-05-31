@@ -2412,7 +2412,10 @@
     "regen_starting": "Régénération de ton plan repas...",
     "regen_progress": "Génération... (jour {day}/7)",
     "regen_success": "Plan repas mis à jour ✓",
-    "regen_error": "Plan repas non régénéré (réessayer manuellement)"
+    "regen_error": "Plan repas non régénéré (réessayer manuellement)",
+    "regen_program_starting": "Régénération de ton programme...",
+    "regen_program_success": "Programme mis à jour ✓",
+    "regen_program_error": "Programme non régénéré (réessayer manuellement)"
   },
   "onboarding_v2": {
     "nav": {

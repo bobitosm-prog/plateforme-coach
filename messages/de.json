@@ -2412,7 +2412,10 @@
     "regen_starting": "Dein Mahlzeitenplan wird neu erstellt...",
     "regen_progress": "Generierung... (Tag {day}/7)",
     "regen_success": "Mahlzeitenplan aktualisiert ✓",
-    "regen_error": "Mahlzeitenplan nicht aktualisiert (manuell wiederholen)"
+    "regen_error": "Mahlzeitenplan nicht aktualisiert (manuell wiederholen)",
+    "regen_program_starting": "Dein Programm wird neu erstellt...",
+    "regen_program_success": "Programm aktualisiert ✓",
+    "regen_program_error": "Programm nicht aktualisiert (manuell wiederholen)"
   },
   "onboarding_v2": {
     "nav": {

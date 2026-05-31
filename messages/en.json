@@ -2412,7 +2412,10 @@
     "regen_starting": "Regenerating your meal plan...",
     "regen_progress": "Generating... (day {day}/7)",
     "regen_success": "Meal plan updated ✓",
-    "regen_error": "Meal plan not regenerated (retry manually)"
+    "regen_error": "Meal plan not regenerated (retry manually)",
+    "regen_program_starting": "Regenerating your program...",
+    "regen_program_success": "Program updated ✓",
+    "regen_program_error": "Program not regenerated (retry manually)"
   },
   "onboarding_v2": {
     "nav": {
