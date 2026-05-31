@@ -239,9 +239,58 @@ IMPORTANT :
       },
       body: JSON.stringify({
         model: 'claude-opus-4-7',
-        max_tokens: 4000,
-        temperature: 0,
+        max_tokens: 8000,
         system: systemPrompt,
+        tool_choice: { type: 'tool', name: 'generate_program' },
+        tools: [{
+          name: 'generate_program',
+          description: 'Structure le programme d\'entrainement genere en JSON exploitable',
+          input_schema: {
+            type: 'object',
+            required: ['program_name', 'description', 'days'],
+            properties: {
+              program_name: { type: 'string', description: 'Nom du programme' },
+              description: { type: 'string', description: 'Description courte du programme et de sa logique' },
+              days: {
+                type: 'array',
+                description: 'Liste des jours d\'entrainement',
+                items: {
+                  type: 'object',
+                  required: ['day_number', 'name', 'focus', 'muscle_groups', 'exercises'],
+                  properties: {
+                    day_number: { type: 'integer', description: 'Numero du jour (1, 2, 3...)' },
+                    name: { type: 'string', description: 'Nom du jour (ex: PUSH A — Poitrine & Epaules & Triceps)' },
+                    focus: { type: 'string', description: 'Groupes musculaires cibles en texte (ex: Poitrine, Epaules, Triceps)' },
+                    muscle_groups: {
+                      type: 'array',
+                      items: { type: 'string', enum: ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'quads', 'hamstrings', 'glutes', 'calves', 'core', 'abs'] },
+                      description: 'IDs anglais des groupes musculaires cibles',
+                    },
+                    exercises: {
+                      type: 'array',
+                      description: '5 a 7 exercices par jour',
+                      items: {
+                        type: 'object',
+                        required: ['custom_name', 'muscle_primary', 'sets', 'reps', 'rest_seconds', 'order', 'tempo', 'technique', 'technique_details'],
+                        properties: {
+                          custom_name: { type: 'string', description: 'Nom de l\'exercice' },
+                          muscle_primary: { type: 'string', description: 'Muscle principal travaille (en francais)' },
+                          sets: { type: 'integer', description: 'Nombre de series' },
+                          reps: { type: 'integer', description: 'Nombre de repetitions' },
+                          rest_seconds: { type: 'integer', description: 'Temps de repos en secondes' },
+                          order: { type: 'integer', description: 'Ordre de l\'exercice dans la seance (1, 2, 3...)' },
+                          tempo: { type: 'string', description: 'Tempo format X-X-X (ex: 2-0-2)' },
+                          technique: { type: ['string', 'null'], enum: ['dropset', 'restpause', 'superset', 'mechanical', null], description: 'Technique avancee ou null' },
+                          technique_details: { type: 'string', description: 'Details de la technique ou chaine vide' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }],
         messages: [{ role: 'user', content: userPrompt }],
       }),
     })
@@ -253,19 +302,13 @@ IMPORTANT :
     }
 
     const json = await res.json()
-    const raw = json.content?.[0]?.text || ''
-
-    const start = raw.indexOf('{')
-    const end = raw.lastIndexOf('}')
-    if (start === -1 || end === -1) {
-      console.error('[generate-custom-program] No JSON found in response:', raw.slice(0, 200))
-      return NextResponse.json({ error: 'JSON introuvable dans la reponse' }, { status: 500 })
+    const toolUseBlock = json.content?.find((c: any) => c.type === 'tool_use')
+    if (!toolUseBlock) {
+      console.error('[generate-custom-program] No tool_use in response:', JSON.stringify(json).slice(0, 500))
+      return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
     }
 
-    let cleaned = raw.slice(start, end + 1)
-    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1')
-
-    const program = JSON.parse(cleaned)
+    const program = toolUseBlock.input
 
     // Post-process: normalize day names to standard types
     const TYPE_MAP: Record<string, string> = {
