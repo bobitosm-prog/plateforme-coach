@@ -25,7 +25,8 @@ import SoloStep7Nutrition from './steps/solo/SoloStep7Nutrition'
 import SoloStep8Experience from './steps/solo/SoloStep8Experience'
 import SoloStep9PhotoBody from './steps/solo/SoloStep9PhotoBody'
 import SoloStep7Equipment from './steps/solo/SoloStep7Equipment'
-import SoloStep11Recap from './steps/solo/SoloStep11Recap'
+import SoloStep12Recap from './steps/solo/SoloStep12Recap'
+import SoloStep11Preferences, { type MealPrefsState } from './steps/solo/SoloStep11Preferences'
 import { GOALS, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS } from '@/lib/onboarding-options'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -35,7 +36,7 @@ const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 type Flow = 'invited' | 'solo' | null
 type InvitedStep = 1 | 2 | 3
-type SoloStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
+type SoloStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
 interface State {
   flow: Flow
@@ -62,7 +63,7 @@ function reducer(state: State, action: Action): State {
 }
 
 const INVITED_TOTAL_STEPS = 3
-const SOLO_TOTAL_STEPS = 11
+const SOLO_TOTAL_STEPS = 12
 
 export default function OnboardingV2Content() {
   const t = useTranslations('onboarding_v2')
@@ -106,6 +107,10 @@ export default function OnboardingV2Content() {
   const [locationIndex, setLocationIndex] = useState<number | null>(null)
   const [homeEquipment, setHomeEquipment] = useState<string[]>([])
 
+  // F6.B.7 — préférences alimentaires
+  const [mealPrefs, setMealPrefs] = useState<MealPrefsState>({ breakfast: [], snack: [], lunch: [], dinner: [] })
+  const [dislikedFoods, setDislikedFoods] = useState<string[]>([])
+
   // ─── Flow detection on mount ───
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -124,7 +129,7 @@ export default function OnboardingV2Content() {
       // Fetch profile to detect flow
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_type, full_name, birth_date, gender, avatar_url, current_weight, height, target_weight, training_location, home_equipment')
+        .select('subscription_type, full_name, birth_date, gender, avatar_url, current_weight, height, target_weight, training_location, home_equipment, meal_preferences')
         .eq('id', uid)
         .single()
 
@@ -142,6 +147,16 @@ export default function OnboardingV2Content() {
           setLocationIndex(['home', 'gym', 'both'].indexOf(loc))
         }
         if (profile.home_equipment) setHomeEquipment(profile.home_equipment as string[])
+        if (profile.meal_preferences && typeof profile.meal_preferences === 'object') {
+          const mp = profile.meal_preferences as any
+          setMealPrefs({
+            breakfast: Array.isArray(mp.breakfast) ? mp.breakfast : [],
+            snack: Array.isArray(mp.snack) ? mp.snack : [],
+            lunch: Array.isArray(mp.lunch) ? mp.lunch : [],
+            dinner: Array.isArray(mp.dinner) ? mp.dinner : [],
+          })
+          if (Array.isArray(mp.disliked_foods)) setDislikedFoods(mp.disliked_foods)
+        }
 
         // Flow detection: subscription_type === 'invited' → invited flow
         if (profile.subscription_type === 'invited') {
@@ -343,8 +358,16 @@ export default function OnboardingV2Content() {
             break
           }
           case 11: {
+            // F6.B.7 — save préférences alimentaires
+            const { error: errPrefs } = await updateProfile(userId, {
+              meal_preferences: { ...mealPrefs, disliked_foods: dislikedFoods },
+            }, supabase)
+            if (errPrefs) { console.error('Save solo step 11 preferences:', errPrefs); return false }
+            break
+          }
+          case 12: {
             if (!macrosCalc) {
-              console.error('Save solo step 11: macros calc null')
+              console.error('Save solo step 12: macros calc null')
               return false
             }
             const trialEndsAt = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
@@ -362,7 +385,7 @@ export default function OnboardingV2Content() {
               // F6.B.5a : trigger auto-gen meal plan + programme sur la home
               needs_initial_generation: true,
             }, supabase)
-            if (err11) { console.error('Save solo step 11:', err11); return false }
+            if (err11) { console.error('Save solo step 12:', err11); return false }
             invalidateProfileCache()
             cache.remove(`dashboard_${userId}`)
             break
@@ -463,6 +486,21 @@ export default function OnboardingV2Content() {
     )
   }
 
+  // F6.B.7 — handlers préférences alimentaires
+  function toggleMealFood(meal: keyof MealPrefsState, food: string) {
+    setMealPrefs((prev) => {
+      const list = prev[meal] || []
+      const updated = list.includes(food) ? list.filter((f) => f !== food) : [...list, food]
+      return { ...prev, [meal]: updated }
+    })
+  }
+  function addDislikedFood(food: string) {
+    setDislikedFoods((prev) => (prev.includes(food) ? prev : [...prev, food]))
+  }
+  function removeDislikedFood(food: string) {
+    setDislikedFoods((prev) => prev.filter((f) => f !== food))
+  }
+
   // ─── Navigation handlers ───
   async function handleNext() {
     const saved = await saveCurrentStep()
@@ -538,7 +576,8 @@ export default function OnboardingV2Content() {
       case 8: return experience === null
       case 9: return false // photo is skippable
       case 10: return locationIndex === null
-      case 11: return !macrosCalc
+      case 11: return false // préférences optionnelles, toujours OK
+      case 12: return !macrosCalc
       default: return false
     }
   }
@@ -552,7 +591,7 @@ export default function OnboardingV2Content() {
     // SOLO
     if (state.step === 1) return t('nav.letsGo')
     if (state.step === 9 && !photoBodyUrl) return t('nav.skip')
-    if (state.step === 11) return t('nav.start')
+    if (state.step === 12) return t('nav.start')
     return undefined
   }
 
@@ -756,14 +795,30 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 11 && macrosCalc && (
+          {!isInvited && state.step === 11 && (
+            <OnboardingScreen
+              stepKey="solo-preferences"
+              title="Tes préférences alimentaires"
+              subtitle="Aide-nous à personnaliser ton plan repas (optionnel)"
+              direction={state.direction}
+            >
+              <SoloStep11Preferences
+                mealPrefs={mealPrefs}
+                dislikedFoods={dislikedFoods}
+                onToggleFood={toggleMealFood}
+                onAddDisliked={addDislikedFood}
+                onRemoveDisliked={removeDislikedFood}
+              />
+            </OnboardingScreen>
+          )}
+          {!isInvited && state.step === 12 && macrosCalc && (
             <OnboardingScreen
               stepKey="solo-recap"
               title={t('solo.step10.title')}
               subtitle={t('solo.step10.subtitle')}
               direction={state.direction}
             >
-              <SoloStep11Recap {...macrosCalc} />
+              <SoloStep12Recap {...macrosCalc} />
             </OnboardingScreen>
           )}
         </AnimatePresence>

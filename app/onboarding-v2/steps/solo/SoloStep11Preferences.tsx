@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS, type MealKey } from '@/lib/meal-plan/meal-suggestions'
+import { colors, fonts } from '@/lib/design-tokens'
 
 export interface MealPrefsState {
   breakfast: string[]
@@ -40,13 +41,6 @@ export default function SoloStep11Preferences({
   const [activeMeal, setActiveMeal] = useState<MealKey>('breakfast')
   const [dislikedInput, setDislikedInput] = useState('')
 
-  const GOLD = '#C9A24B'
-  const GOLD_DIM = 'rgba(201,162,75,0.15)'
-  const BORDER = 'rgba(255,255,255,0.12)'
-  const BG = 'rgba(255,255,255,0.03)'
-  const TEXT = '#F5F0E6'
-  const TEXT_DIM = 'rgba(245,240,230,0.5)'
-
   function handleAddDisliked() {
     const v = dislikedInput.trim()
     if (v && !dislikedFoods.includes(v)) {
@@ -56,10 +50,10 @@ export default function SoloStep11Preferences({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, fontFamily: fonts.body }}>
       {/* Liked foods per meal */}
       <div>
-        <div style={{ fontSize: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7, marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, color: colors.textMuted, marginBottom: 12 }}>
           Mes aliments préférés par repas
         </div>
 
@@ -78,15 +72,16 @@ export default function SoloStep11Preferences({
                   alignItems: 'center',
                   gap: 4,
                   padding: '10px 4px',
-                  background: active ? GOLD_DIM : BG,
-                  border: `1.5px solid ${active ? GOLD : BORDER}`,
+                  background: active ? colors.goldDim : colors.surface,
+                  border: `1.5px solid ${active ? colors.gold : colors.goldBorder}`,
                   borderRadius: 12,
                   cursor: 'pointer',
                   transition: 'all 150ms',
+                  fontFamily: fonts.body,
                 }}
               >
                 <span style={{ fontSize: 20 }}>{MEAL_EMOJIS[key]}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: active ? GOLD : TEXT }}>{MEAL_LABELS[key]}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: active ? colors.gold : colors.text }}>{MEAL_LABELS[key]}</span>
               </button>
             )
           })}
@@ -105,23 +100,24 @@ export default function SoloStep11Preferences({
                   alignItems: 'center',
                   gap: 8,
                   padding: '10px 12px',
-                  background: active ? GOLD_DIM : BG,
-                  border: `1.5px solid ${active ? GOLD : BORDER}`,
+                  background: active ? colors.goldDim : colors.surface,
+                  border: `1.5px solid ${active ? colors.gold : colors.goldBorder}`,
                   borderRadius: 12,
                   cursor: 'pointer',
                   transition: 'all 150ms',
                   textAlign: 'left',
+                  fontFamily: fonts.body,
                 }}
               >
                 <div style={{
                   width: 16, height: 16, borderRadius: 8, flexShrink: 0,
-                  border: `1.5px solid ${active ? GOLD : TEXT_DIM}`,
-                  background: active ? GOLD : 'transparent',
+                  border: `1.5px solid ${active ? colors.gold : colors.textDim}`,
+                  background: active ? colors.gold : 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  {active && <span style={{ color: '#0D0B08', fontSize: 11, fontWeight: 700 }}>✓</span>}
+                  {active && <span style={{ color: colors.background, fontSize: 11, fontWeight: 700 }}>✓</span>}
                 </div>
-                <span style={{ fontSize: 13, color: active ? GOLD : TEXT }}>{food}</span>
+                <span style={{ fontSize: 13, color: active ? colors.gold : colors.text }}>{food}</span>
               </button>
             )
           })}
@@ -130,7 +126,7 @@ export default function SoloStep11Preferences({
 
       {/* Disliked foods */}
       <div>
-        <div style={{ fontSize: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7, marginBottom: 10 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, color: colors.textMuted, marginBottom: 10 }}>
           Aliments que tu n'aimes pas (optionnel)
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -140,17 +136,17 @@ export default function SoloStep11Preferences({
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddDisliked() } }}
             placeholder="Ex : champignons, fromage de chèvre..."
             style={{
-              flex: 1, padding: '10px 14px', background: BG,
-              border: `1.5px solid ${BORDER}`, borderRadius: 12,
-              color: TEXT, fontSize: 14, outline: 'none',
+              flex: 1, padding: '10px 14px', background: colors.surface,
+              border: `1.5px solid ${colors.goldBorder}`, borderRadius: 12,
+              color: colors.text, fontSize: 14, outline: 'none', fontFamily: fonts.body,
             }}
           />
           <button
             onClick={handleAddDisliked}
             style={{
-              padding: '10px 18px', background: GOLD_DIM, color: GOLD,
-              border: `1.5px solid ${GOLD}`, borderRadius: 12,
-              cursor: 'pointer', fontWeight: 600, fontSize: 14,
+              padding: '10px 18px', background: colors.goldDim, color: colors.gold,
+              border: `1.5px solid ${colors.gold}`, borderRadius: 12,
+              cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: fonts.body,
             }}
           >
             Ajouter
@@ -164,13 +160,13 @@ export default function SoloStep11Preferences({
                 onClick={() => onRemoveDisliked(food)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '6px 12px', background: BG,
-                  border: `1.5px solid ${BORDER}`, borderRadius: 20,
-                  color: TEXT, fontSize: 13, cursor: 'pointer',
+                  padding: '6px 12px', background: colors.surface,
+                  border: `1.5px solid ${colors.goldBorder}`, borderRadius: 20,
+                  color: colors.text, fontSize: 13, cursor: 'pointer', fontFamily: fonts.body,
                 }}
               >
                 {food}
-                <span style={{ color: TEXT_DIM, fontSize: 15 }}>×</span>
+                <span style={{ color: colors.textDim, fontSize: 15 }}>×</span>
               </button>
             ))}
           </div>
