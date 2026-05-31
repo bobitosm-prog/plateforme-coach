@@ -127,6 +127,14 @@ Hypothèses à investiguer :
 
 **CRITIQUE** : les nouveaux clients n'ont pas de programme training en prod. Le hook retry au prochain load mais échoue à chaque fois.
 
+**Bug prod #2 — CHANTIER CSP : config trop restrictive bloque ressources légitimes**
+
+Racine commune : CSP configuré trop strictement, plusieurs directives manquent des domaines légitimes. 2 symptômes identifiés :
+1. **connect-src** bloque `https://app.moovx.ch/register-client` et `api/vitals` depuis la landing (landing:1) → inscription client cassée. La landing (moovx.ch) et l'app (app.moovx.ch) sont des origines différentes, 'self' ne couvre pas l'autre.
+2. **img-src** bloque les avatars Google `https://lh3.googleusercontent.com/...` (users Google OAuth) → photo de profil invisible.
+
+**CRITIQUE** : inscription client + avatars Google cassés en prod. Chantier à traiter : audit complet de toutes les directives CSP, ajout des domaines légitimes manquants (googleusercontent.com pour img-src, app.moovx.ch pour connect-src si cross-origin).
+
 ---
 
 ## 2026-05-30 — Marathon Tech Debt + Phase 6A + Vision 6B + F6.B.0 + F6.B.1 (~8h)

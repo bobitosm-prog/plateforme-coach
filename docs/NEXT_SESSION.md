@@ -31,7 +31,9 @@ Doit afficher main clean, dernier commit 76a37a9 "feat(onboarding): intégration
 
 ## ETAPE 2 — Choisir le sujet
 
-### Priorité 1 — BUG PROD CRITIQUE : génération auto programme training vide en prod
+### Priorité 1 — BUGS PROD CRITIQUES (2 bugs à traiter en priorité)
+
+#### Bug prod #1 — Génération auto programme training vide en prod
 
 Le hook useInitialGeneration génère le meal plan OK mais le programme training reste vide (program: false). Bug spécifique à la prod (fonctionne en local). generate-custom-program prend ~50s (Anthropic tool_use opus-4-7, max_tokens 8000).
 
@@ -43,6 +45,23 @@ Le hook useInitialGeneration génère le meal plan OK mais le programme training
 5. Si timeout confirmé : ajouter `export const maxDuration = 60` ou optimiser le prompt ; envisager Vercel Pro (300s) si nécessaire
 
 **Impact** : les nouveaux clients n'ont pas de programme training auto-généré en prod. Le hook retry au prochain load mais échoue à chaque fois.
+
+#### Bug prod #2 — CHANTIER CSP : config trop restrictive bloque ressources légitimes
+
+Racine commune : le Content-Security-Policy est configuré trop strictement, plusieurs directives manquent des domaines légitimes. 2 symptômes identifiés :
+
+1. **connect-src** bloque `https://app.moovx.ch/register-client` et `api/vitals` depuis la landing (landing:1) → inscription client cassée. Directive actuelle : `connect-src 'self' https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com`
+2. **img-src** bloque les avatars Google `https://lh3.googleusercontent.com/...` (users Google OAuth) → photo de profil invisible. Directive actuelle : `img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com https://app.moovx.ch`
+
+**Étapes de diagnostic :**
+1. `grep -rn "Content-Security-Policy\|connect-src\|img-src\|script-src" next.config.* proxy.ts middleware.ts` — localiser la config CSP
+2. Auditer TOUTES les directives (connect-src, img-src, script-src, style-src, font-src, frame-src) pour identifier les domaines légitimes manquants
+3. Comprendre l'architecture origines : landing moovx.ch vs app app.moovx.ch (cross-origin → 'self' ne couvre pas l'autre)
+4. Ajouter les domaines manquants : `https://*.googleusercontent.com` (img-src), `https://app.moovx.ch` (connect-src si cross-origin)
+5. PRUDENCE SÉCURITÉ : domaines EXACTS, pas de wildcard trop large (le CSP protège contre XSS)
+6. Tester parcours complet en prod après fix (inscription, login Google, affichage avatar)
+
+**Impact** : inscription client + avatars Google cassés en prod. Probablement d'autres ressources bloquées non encore identifiées.
 
 ### Priorité 2 — Audit UX global (session dédiée)
 
