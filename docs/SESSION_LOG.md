@@ -114,6 +114,19 @@ meal_preferences sauvegardé shape : `{ breakfast, snack, lunch, dinner, dislike
 
 Test E2E Jean validé : 12 steps, meal plan auto-généré reflète les préférences (aliments aimés présents, champignons détestés absents).
 
+### Bug prod détecté en fin de session (test E2E client zéro)
+
+Test E2E prod sur PWA (compte marco.ferreira@bluemail.ch, reset complet + onboarding 12 steps). Résultat : meal plan auto-généré OK (meal: true), mais programme training reste **vide sans exercices** (program: false). Log console : `[useInitialGeneration] incomplete generation — meal: true program: false — flag kept true for retry`.
+
+En local (npm run dev) la génération programme fonctionnait. Bug spécifique à la prod.
+
+Hypothèses à investiguer :
+1. **TIMEOUT serverless** (probable) : generate-custom-program prend ~50s (Anthropic tool_use opus-4-7). Vercel Hobby plafonne à 60s. Si maxDuration absent dans l'endpoint, la fonction est tuée → programme vide/partiel.
+2. **TYPE_MAP post-process** : noms d'exercices générés ne matchent pas → days vides après normalisation.
+3. **Troncature tool_use** : max_tokens 8000 atteint sur gros programme → JSON partiel.
+
+**CRITIQUE** : les nouveaux clients n'ont pas de programme training en prod. Le hook retry au prochain load mais échoue à chaque fois.
+
 ---
 
 ## 2026-05-30 — Marathon Tech Debt + Phase 6A + Vision 6B + F6.B.0 + F6.B.1 (~8h)
