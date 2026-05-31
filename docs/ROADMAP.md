@@ -1,7 +1,7 @@
 # MoovX Roadmap
 
-> Document vivant — état au 2026-05-30
-> Branche : `main` (clean, HEAD 6c68a74)
+> Document vivant — état au 2026-05-31
+> Branche : `main` (clean, HEAD 76a37a9)
 
 ## Sprint Phase 5 — Weekly AI Diagnostic — DONE
 
@@ -23,7 +23,7 @@ Livré 30 mai 2026 (2 commits) :
 
 Test E2E validé runtime : meal plan régénéré en 1m30 sur Jean (compte test), DB cohérente.
 
-### F6.B — Training Closed Loop — VISION DOCUMENTÉE
+### F6.B — Training Closed Loop — ✅ COMPLET
 
 Voir `docs/PHASE_6B_TRAINING_VISION.md` (~600L, 26K) — vision complète avec :
 - Personnalisation équipement (home/gym/both + home_equipment[])
@@ -83,6 +83,14 @@ Solution D (flag + home hook). Meal + programme auto-générés en fin d'onboard
 
 Équivalent F6.A.2 pour training. Apply diagnostic avec volume delta → regen programme source diagnostic_auto. Chaîne séquentielle meal puis program.
 
+#### F6.B.6 — Cron auto-regen 14j — ✅ DONE (8540f65 + 9a084cd + 52c8160)
+
+Livré 31 mai 2026. Migration next_program_regen_at + extraction lib generateProgram (endpoint 338→57L) + cron quotidien 17h UTC. Architecture closed-loop 3 sources (onboarding_auto, diagnostic_auto, cron_auto), chacune repousse +14j.
+
+#### F6.B.7 — Préférences alimentaires onboarding — ✅ DONE (b1279a0 + 6730326 + 76a37a9)
+
+Livré 31 mai 2026. Extraction lib meal-suggestions + composant SoloStep11Preferences + intégration onboarding SOLO 12 steps. meal_preferences shape { breakfast, snack, lunch, dinner, disliked_foods }.
+
 ### F6.C — Notification combinée — TODO après F6.B
 
 - Push : "Ton plan adapté est prêt : 21 repas + 2 séances ajustées"
@@ -95,7 +103,7 @@ Solution D (flag + home hook). Meal + programme auto-générés en fin d'onboard
 
 ## Sprint Onboarding v2 — DONE
 
-Route unifiée /onboarding-v2 (SOLO 10 steps + INVITED 3 steps).
+Route unifiée /onboarding-v2 (SOLO 12 steps + INVITED 3 steps).
 Migration v1→v2 proxy + useClientDashboard. 5 commits prod.
 
 ## Sprint i18n — DONE
@@ -127,6 +135,12 @@ Session marathon 30 mai 2026, 5 tech debts résolus en prod :
 9. ~~**F6.B.5 auto-gen post-onboarding**~~ — ✅ RÉSOLU (F6.B.5a, commit 74a4481).
 10. **Consolidation variant_groups fragmentés** — `good_morning` + `stiff` + `rdl` + `deadlift` = 4 groupes hip hinge distincts. Idem fessiers (3 groupes), chest (6 groupes). Limite qualité substitution F6.B.4. À consolider post F6.B.4.
 11. **suggest-overload temperature avec Haiku** — app/api/suggest-overload/route.ts ligne 109 temperature:0.3 avec claude-haiku-4-5. Haiku accepte encore temperature (fonctionne en prod) mais à surveiller si dépréciation future. Migrer vers tool_use si besoin.
+12. **lockfile parent orphelin** — /Users/marcoferreira/package-lock.json (warning Next.js workspace root). Supprimer si pas de projet parent.
+13. **CRON_SECRET Vercel valeur suspecte** — valeur 'sk_live_' suspecte (cron fonctionne via secret jobid 4). À clarifier si c'est le bon secret ou une clé Stripe égarée.
+14. **total_calories null dans meal_plans** — données présentes dans plan_data.totals, colonne top-level non remplie par le hook useInitialGeneration. À remplir pour cohérence.
+15. **NutritionPreferences UX** — page NutritionPreferences cachée dans la page nutrition, peu discoverable. Recenser toutes les pages, mapper navigation.
+16. **Audit UX global navigation** — session dédiée pour mapper toutes les pages/onglets, cohérence navigation/disposition multi-pages.
+17. **Incohérence clés meal_preferences FR/EN** — legacy (petit_dejeuner/dejeuner/collation/diner) vs nouveau (breakfast/snack/lunch/dinner). extractMealFoodNames gère les deux mais à unifier.
 
 ## Sprint Launch Prep — STATUS
 

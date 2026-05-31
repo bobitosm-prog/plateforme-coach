@@ -5,23 +5,23 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-05-31
-- **HEAD** : d7b9a6b
+- **HEAD** : 76a37a9
 - **Working tree** : clean
-- **Total commits Phase 6** : 25 (17 session 30 mai + 8 session 31 mai)
+- **Total commits Phase 6** : 32 (17 session 30 mai + 15 session 31 mai)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
-- **Phase 6B** : F6.B.0→F6.B.5b DONE — closed-loop training quasi complet (génération onboarding + regen diagnostic)
-- **Tâche en cours** : F6.B.6 cron auto-regen 14j (dernier morceau Phase 6B Training)
+- **Phase 6B** : COMPLET — closed-loop training 3 sources (onboarding_auto + diagnostic_auto + cron_auto) + F6.B.7 préférences onboarding
+- **Tâche en cours** : session terminée, prochaine session = audit UX global
 
 ---
 
-## 2026-05-31 — Marathon Phase 6B (suite) — F6.B.2
+## 2026-05-31 — Marathon Phase 6B (suite) — F6.B.2→F6.B.7
 
 **Branche** : `main`
 
 ### Contexte
 
-Session 2 marathon Phase 6B. Plan : F6.B.2 + F6.B.3 + F6.B.5 (auto-gen post-onboarding). F6.B.4 (refacto core IA) gardé pour demain frais.
+Session 2 marathon Phase 6B. 15 commits. Phase 6B Training closed-loop COMPLET (3 sources de génération) + F6.B.7 préférences alimentaires onboarding. F6.B.4 finalement anticipé (bug latent bloquant F6.B.5a). Onboarding SOLO passe de 11 à 12 steps.
 
 ### Commits livrés (ordre chronologique)
 
@@ -35,6 +35,13 @@ Session 2 marathon Phase 6B. Plan : F6.B.2 + F6.B.3 + F6.B.5 (auto-gen post-onbo
 | 6 | 74a4481 | F6.B.5a-2 | feat(onboarding): auto-gen meal plan + programme post-onboarding |
 | 7 | aeeed83 | docs | docs F6.B.3/4/5a |
 | 8 | d7b9a6b | F6.B.5b | feat(training): auto-regen programme post-Apply diagnostic |
+| 9 | 565f88d | docs | docs F6.B.5b |
+| 10 | 8540f65 | F6.B.6-1 | feat(training): tracking next_program_regen_at (migration + backfill) |
+| 11 | 9a084cd | F6.B.6-2a | refactor(training): extraction lib generateProgram (endpoint 338→57 lignes) |
+| 12 | 52c8160 | F6.B.6-2b | feat(training): cron auto-regen 14j (endpoint + pg_cron 17h UTC) |
+| 13 | b1279a0 | F6.B.7-1a | refactor(meal-plan): extraction lib meal-suggestions |
+| 14 | 6730326 | F6.B.7-1b | feat(onboarding): composant SoloStep11Preferences isolé |
+| 15 | 76a37a9 | F6.B.7-2 | feat(onboarding): intégration step préférences + renumérotation 11→12 steps |
 
 ### Phase 6B — F6.B.2 livré
 
@@ -77,6 +84,35 @@ Test E2E Jean validé : 2 endpoints 200, programme "PPL Hypertrophie Homme — 6
 handleApply détecte volumeChanged et déclenche regenProgram en chaîne séquentielle : meal (si macros changées) PUIS programme (si volume changé), pour éviter 2 appels IA simultanés et le chevauchement des messages de progression. regenProgram utilise buildProgramParams avec ProgramOverrides.notes (consigne "ajuste le volume de +/-X%"), insert custom_programs source='diagnostic_auto'. Best-effort. 3 clés i18n regen_program_* (fr/en/de).
 
 Test E2E Jean : Apply diagnostic avec volume +10% → nouveau programme diagnostic_auto généré, ancien deactivated.
+
+### F6.B.6 — Cron auto-regen 14j (8540f65 + 9a084cd + 52c8160)
+
+Architecture closed-loop training : 3 sources de génération programme, chacune repousse next_program_regen_at +14j :
+- **onboarding_auto** : hook useInitialGeneration (F6.B.5a)
+- **diagnostic_auto** : regenProgram dans handleApply (F6.B.5b)
+- **cron_auto** : cron quotidien 17h UTC pour users passifs (F6.B.6)
+
+Découpé en 3 sous-batches :
+- **F6.B.6-1** (8540f65) : migration profiles.next_program_regen_at timestamptz, backfill NOW+14j pour clients onboarded existants
+- **F6.B.6-2a** (9a084cd) : extraction lib generateProgram pure (lib/training/generate-program.ts). Endpoint generate-custom-program passé de 338 à 57 lignes. La lib est réutilisable par le cron sans dépendance auth/request.
+- **F6.B.6-2b** (52c8160) : endpoint cron app/api/training-regen/cron/route.ts (auth CRON_SECRET, service_role, batch concurrency=3, notes anti-stagnation) + migration pg_cron quotidien 17h UTC (jobid 5)
+
+pg_cron jobs actifs prod : jobid 1 (purge chat 03h), jobid 4 (weekly-diagnostic 18h UTC), jobid 5 (training-regen 17h UTC).
+
+Test E2E : curl local → cron_auto programme 6 jours généré, next_program_regen_at repoussé +14j.
+
+### F6.B.7 — Préférences alimentaires onboarding (b1279a0 + 6730326 + 76a37a9)
+
+Onboarding SOLO collecte maintenant les aliments aimés par repas (4 onglets breakfast/snack/lunch/dinner) + aliments détestés, en step 11 optionnel. Recap devient step 12. SOLO_TOTAL_STEPS 11→12.
+
+Découpé en 3 sous-batches :
+- **F6.B.7-1a** (b1279a0) : extraction lib/meal-plan/meal-suggestions.ts (MEAL_KEYS/MEAL_DEFAULTS/MEAL_EMOJIS) depuis NutritionPreferences (DRY)
+- **F6.B.7-1b** (6730326) : composant SoloStep11Preferences isolé (props remontées, seul activeMeal est state interne)
+- **F6.B.7-2** (76a37a9) : intégration dans OnboardingV2Content (type SoloStep + 12, states mealPrefs/dislikedFoods, pre-fill depuis profile.meal_preferences, save case 11, renumérotation case 12 finalisation, git mv SoloStep11Recap→SoloStep12Recap)
+
+meal_preferences sauvegardé shape : `{ breakfast, snack, lunch, dinner, disliked_foods }` clés EN.
+
+Test E2E Jean validé : 12 steps, meal plan auto-généré reflète les préférences (aliments aimés présents, champignons détestés absents).
 
 ---
 
