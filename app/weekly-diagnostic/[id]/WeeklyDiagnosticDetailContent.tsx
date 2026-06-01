@@ -9,6 +9,7 @@ import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
 import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
 import { buildProgramParams } from '@/lib/training/build-program-params'
+import { consumeProgramStream } from '@/lib/training/consume-program-stream'
 import { colors, fonts, btnPrimary } from '@/lib/design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -241,9 +242,8 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      if (!data.program) throw new Error('No program received')
+      const program = await consumeProgramStream(res)
+      if (!program) throw new Error('No program received')
 
       await supabase
         .from('custom_programs')
@@ -254,9 +254,9 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
         .from('custom_programs')
         .insert({
           user_id: userId,
-          name: data.program.program_name || 'Programme IA',
-          description: data.program.description || '',
-          days: data.program.days || [],
+          name: program.program_name || 'Programme IA',
+          description: program.description || '',
+          days: program.days || [],
           source: 'diagnostic_auto',
           is_active: true,
         })

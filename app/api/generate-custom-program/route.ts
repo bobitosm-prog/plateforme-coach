@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
 import { generateProgram } from '../../../lib/training/generate-program'
 
+export const maxDuration = 300
+
 export async function POST(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
@@ -44,11 +46,36 @@ export async function POST(req: NextRequest) {
     }
 
     const days = parseInt(daysPerWeek) || 4
-    const program = await generateProgram({
-      objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
-    }, apiKey)
-
-    return NextResponse.json({ program })
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Heartbeat : garde la connexion active pendant la génération (~50s)
+        // sinon l'edge Vercel coupe une réponse silencieuse trop longue (bug prod status '---')
+        const heartbeat = setInterval(() => {
+          try {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress' })}\n\n`))
+          } catch {
+            // controller déjà fermé, ignorer
+          }
+        }, 5000)
+        try {
+          const program = await generateProgram({
+            objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
+          }, apiKey)
+          clearInterval(heartbeat)
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', program })}\n\n`))
+          controller.close()
+        } catch (e: any) {
+          clearInterval(heartbeat)
+          console.error('[generate-custom-program] ERROR:', e.message)
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`))
+          controller.close()
+        }
+      },
+    })
+    return new Response(stream, {
+      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+    })
 
   } catch (e: any) {
     console.error('[generate-custom-program] ERROR:', e.message)

@@ -297,7 +297,12 @@ IMPORTANT :
     throw new Error('Format IA invalide')
   }
 
-  const program = toolUseBlock.input
+  // Le modèle enveloppe parfois la sortie dans un wrapper 'input' parasite
+  // (toolUseBlock.input = { input: {...} }). On déballe si présent, sinon on garde tel quel.
+  const rawInput = toolUseBlock.input
+  const program = (rawInput && typeof rawInput === 'object' && rawInput.input && !rawInput.program_name)
+    ? rawInput.input
+    : rawInput
 
   // Post-process: normalize day names to standard types
   if (program.days) {

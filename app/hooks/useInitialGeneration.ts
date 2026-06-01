@@ -5,6 +5,7 @@ import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { updateProfile, invalidateProfileCache, type Profile } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
+import { consumeProgramStream } from '@/lib/training/consume-program-stream'
 
 /**
  * Generation step for UI progress display.
@@ -113,15 +114,15 @@ export default function useInitialGeneration(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(programParams),
         })
-        const data = await res.json()
-        if (data.program && !cancelled) {
+        const program = await consumeProgramStream(res)
+        if (program && !cancelled) {
           // Deactivate old programs first (consistency with meal plan pattern)
           await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', userId).eq('is_active', true)
           await supabase.from('custom_programs').insert({
             user_id: userId,
-            name: data.program.program_name || 'Programme IA',
-            description: data.program.description || '',
-            days: data.program.days || [],
+            name: program.program_name || 'Programme IA',
+            description: program.description || '',
+            days: program.days || [],
             source: 'onboarding_auto',
             is_active: true,
           })

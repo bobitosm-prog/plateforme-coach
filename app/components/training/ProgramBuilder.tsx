@@ -7,6 +7,7 @@ import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../../lib/session-types'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
+import { consumeProgramStream } from '@/lib/training/consume-program-stream'
 import { X, Plus, ChevronLeft, ChevronRight, Search, Trash2, Check } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -179,14 +180,14 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
           notes: aiNotes, gender: userGender,
         }),
       })
-      const data = await res.json()
-      if (data.program) {
-        setAiResult(data.program)
-        setProgramName(data.program.program_name || 'Programme IA') // DB value, do not translate
-        setProgramDays(padTo7Days(data.program.days || []))
+      const program = await consumeProgramStream(res)
+      if (program) {
+        setAiResult(program)
+        setProgramName(program.program_name || 'Programme IA') // DB value, do not translate
+        setProgramDays(padTo7Days(program.days || []))
         toast.success(t('toast.generated'))
       } else {
-        toast.error(data.error || t('toast.generationError'))
+        toast.error(t('toast.generationError'))
       }
     } catch (e: any) {
       console.error('[ProgramBuilder] Fetch error:', e)
