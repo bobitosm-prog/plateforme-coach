@@ -149,7 +149,7 @@ export default function WeeklyDiagnosticCard({
         {/* Points */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Points forts */}
-          {diagnostic.points_forts.length > 0 && (
+          {(diagnostic.points_forts?.length ?? 0) > 0 && (
             <div>
               <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#10B981' }}>
                 {t('points_forts_heading')}
@@ -162,7 +162,7 @@ export default function WeeklyDiagnosticCard({
             </div>
           )}
           {/* Points alerte */}
-          {diagnostic.points_alerte.length > 0 && (
+          {(diagnostic.points_alerte?.length ?? 0) > 0 && (
             <div>
               <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#F59E0B' }}>
                 {t('points_alerte_heading')}
