@@ -4,14 +4,55 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-05-31
-- **HEAD** : 76a37a9
+- **Date** : 2026-06-01
+- **HEAD** : 77347c4
 - **Working tree** : clean
-- **Total commits Phase 6** : 32 (17 session 30 mai + 15 session 31 mai)
+- **Total commits Phase 6** : 34 (17 session 30 mai + 15 session 31 mai + 2 fixes 1er juin)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
 - **Phase 6B** : COMPLET — closed-loop training 3 sources (onboarding_auto + diagnostic_auto + cron_auto) + F6.B.7 préférences onboarding
-- **Tâche en cours** : session terminée, prochaine session = audit UX global
+- **Tâche en cours** : fix double-wrap generator.ts (diagnostic) + chantier CSP
+
+---
+
+## 2026-06-01 — Fixes bugs prod post-test client zéro
+
+**Branche** : `main`
+
+### Contexte
+
+Session fixes bugs prod détectés lors du test E2E client zéro en prod le 31 mai. 2 commits fixes + 1 commit docs.
+
+### Commits livrés (ordre chronologique)
+
+| # | Hash | Sous-batch | Description |
+|---|---|---|---|
+| 1 | bfd330e | fix prod | fix(training): streaming SSE + déballage wrapper input pour generate-custom-program |
+| 2 | 77347c4 | fix prod | fix(home): guard null points_forts/points_alerte dans WeeklyDiagnosticCard |
+
+### Fix génération programme en prod (bfd330e)
+
+2 bugs résolus dans un même commit :
+
+**BUG 1 — Timeout edge Vercel** : la fonction generate-custom-program calculait ~50s en silence puis répondait JSON unique. L'infrastructure edge Vercel coupait la connexion silencieuse (status '---' dans les logs, aucune réponse côté client). Fix : endpoint converti en streaming SSE avec heartbeat toutes les 5s (même pattern que generate-meal-plan qui fonctionnait) + maxDuration 300. Nouveau helper `lib/training/consume-program-stream.ts`. 3 appelants migrés (useInitialGeneration, WeeklyDiagnosticDetailContent, ProgramBuilder). Cron non touché (utilise la lib directement).
+
+**BUG 2 — Double-wrap 'input' parasite** : le modèle Anthropic enveloppe par intermittence la sortie tool_use dans un wrapper 'input' (toolUseBlock.input = { input: { program_name, description, days } } au lieu de { program_name, description, days }). Conséquence : programme avec days vide. Fix défensif dans generate-program.ts : si rawInput.input existe et pas de program_name au niveau racine → déballer.
+
+Méthode de diagnostic : logs Vercel status '---' → hypothèse timeout confirmée. Logs debug temporaires (endpoint + helper + lib) pour localiser le double-wrap → identifié et retiré après fix.
+
+Test E2E PROD validé : programme PPL Hypertrophie Avancé 6 jours généré + is_active + source onboarding_auto.
+
+### Fix crash home diagnostic null (77347c4)
+
+Un diagnostic avec points_forts ET points_alerte null faisait crasher toute la home (error boundary "UNE ERREUR EST SURVENUE"). WeeklyDiagnosticCard accédait à .length sans optional chaining. Fix : `(diagnostic.points_forts?.length ?? 0)`.
+
+Constaté sur le diagnostic d9bc037f du 1er juin (compte f.marco@me.com) qui avait ces champs null.
+
+### Découverte cause racine : double-wrap dans generator.ts (diagnostic)
+
+Le générateur de diagnostic (lib/weekly-diagnostic/generator.ts ligne 301) souffre du MÊME double-wrap 'input' que le programme. Quand le modèle double-wrap, aiOutput = { input: {...} }, donc aiOutput.points_forts / points_alerte / score_semaine etc. sont tous undefined → insérés null en DB → crash home (patché côté affichage par 77347c4, mais la cause racine persiste).
+
+**À fixer en PRIORITÉ 1 prochaine séance** : appliquer le même fix défensif que generate-program.ts dans generator.ts.
 
 ---
 
