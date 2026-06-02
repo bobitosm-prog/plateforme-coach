@@ -120,6 +120,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
   const [inviteSending, setInviteSending] = useState(false)
   const [inviteSent, setInviteSent] = useState(false)
   const [clientSearch, setClientSearch] = useState('')
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null)
 
   async function sendInviteEmail() {
     if (!inviteEmail.includes('@') || !h.session?.user?.id) return
@@ -220,9 +221,9 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
               const active = h.section === id
               const badge = id === 'messages' ? h.totalUnread : 0
               return (
-                <button key={id} onClick={() => h.setSection(id as any)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, background: active ? 'rgba(230,195,100,0.08)' : 'transparent', border: 'none', borderLeft: `3px solid ${active ? GOLD : 'transparent'}`, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 150ms', position: 'relative' }}>
+                <button key={id} onClick={() => h.setSection(id as any)} onMouseEnter={() => setHoveredNav(id)} onMouseLeave={() => setHoveredNav(null)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, background: active ? 'rgba(230,195,100,0.08)' : (hoveredNav === id ? 'rgba(255,255,255,0.06)' : 'transparent'), borderTop: (hoveredNav === id && !active) ? '1px solid rgba(230,195,100,0.45)' : '1px solid transparent', borderRight: (hoveredNav === id && !active) ? '1px solid rgba(230,195,100,0.45)' : '1px solid transparent', borderBottom: (hoveredNav === id && !active) ? '1px solid rgba(230,195,100,0.45)' : '1px solid transparent', borderLeft: `3px solid ${active ? GOLD : (hoveredNav === id ? 'rgba(230,195,100,0.45)' : 'transparent')}`, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 150ms', position: 'relative', transform: (hoveredNav === id && !active) ? 'translateX(3px)' : 'none' }}>
                   <Icon size={18} color={active ? GOLD : TEXT_MUTED} strokeWidth={active ? 2.5 : 1.8} />
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: active ? GOLD : 'rgba(255,255,255,0.6)', letterSpacing: '0.12em' }}>{label}</span>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: active ? GOLD : (hoveredNav === id ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)'), letterSpacing: '0.12em', transition: 'color 150ms' }}>{label}</span>
                   {badge > 0 && <span style={{ marginLeft: 'auto', minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 9, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{badge > 9 ? '9+' : badge}</span>}
                 </button>
               )
@@ -269,7 +270,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Activite Aujourd&apos;hui</span><div style={SEC_LINE} /></div>
                   {/* Stats row */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-                    <div onClick={() => h.setSection('messages' as any)} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div className="coach-clickable" onClick={() => h.setSection('messages' as any)} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
                       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: h.totalUnread > 0 ? RED : TEXT_DIM }}>{h.totalUnread}</div>
                       <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>Messages non lus</div>
                     </div>
@@ -288,7 +289,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
                       {todaySessions.map((s: any) => {
                         const cn = h.clients.find((c: any) => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
                         return (
-                          <div key={s.id} onClick={() => h.setSelectedSession(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
+                          <div key={s.id} className="coach-clickable" onClick={() => h.setSelectedSession(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
                             <div style={{ width: 4, height: 28, borderRadius: 2, background: GOLD }} />
                             <div style={{ flex: 1 }}><div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY }}>{cn}</div><div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{s.session_type} · {format(new Date(s.scheduled_at), 'HH:mm')} · {s.duration_minutes}min</div></div>
                             <ChevronLeft size={14} color={TEXT_DIM} style={{ transform: 'rotate(180deg)' }} />
@@ -342,9 +343,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
                         const statusColor = isActive ? GREEN : isWarning ? GOLD : RED
                         const statusLabel = isActive ? 'Actif' : isWarning ? 'Inactif 7j+' : 'Inactif 14j+'
                         return (
-                          <div key={c.client_id} onClick={() => h.router.push(`/client/${c.client_id}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                          <div key={c.client_id} className="coach-clickable" onClick={() => h.router.push(`/client/${c.client_id}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
                             <div style={{ width: 34, height: 34, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 700, color: BG_BASE, flexShrink: 0 }}>{initials}</div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY }}>{name}</div>

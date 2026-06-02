@@ -189,6 +189,18 @@ button:active:not(:disabled) { transform: scale(0.96); }
 @media (hover: hover) {
   .card-hover { transition: transform 200ms ease, box-shadow 200ms ease; }
   .card-hover:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+
+  /* Élément cliquable interactif (coach + client) : feedback hover cohérent.
+     !important sur :hover pour battre les background définis en style inline. */
+  .coach-clickable {
+    transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    cursor: pointer;
+  }
+  .coach-clickable:hover {
+    background: rgba(255,255,255,0.06) !important;
+    border-color: rgba(230,195,100,0.45) !important;
+    transform: translateX(3px);
+  }
 }
 
 /* ── Input focus gold glow ── */
