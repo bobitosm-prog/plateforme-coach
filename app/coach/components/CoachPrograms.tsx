@@ -491,7 +491,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filteredPrograms.map(p => (
-            <div key={p.id} style={{ ...cardStyle, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? 10 : 12 }}>
+            <div key={p.id} className="card-hover-gold" style={{ ...cardStyle, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? 10 : 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY }}>{p.name}</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_MUTED, marginTop: 4 }}>

@@ -201,6 +201,16 @@ button:active:not(:disabled) { transform: scale(0.96); }
     border-color: rgba(230,195,100,0.45) !important;
     transform: translateX(3px);
   }
+
+  /* Carte d'info non-cliquable : bordure dorée au survol (langage visuel cohérent
+     avec .coach-clickable, mais sans translateX ni cursor pointer car pas de clic global). */
+  .card-hover-gold {
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .card-hover-gold:hover {
+    border-color: rgba(230,195,100,0.45) !important;
+    background: rgba(255,255,255,0.03) !important;
+  }
 }
 
 /* ── Input focus gold glow ── */
