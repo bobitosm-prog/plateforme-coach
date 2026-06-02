@@ -46,7 +46,7 @@ Quick win #1 sur écran pilote = HUB COACH (app/coach/page.tsx). Appliquer hover
 
 ## Suivi (à cocher au fil des sessions)
 
-- [ ] Quick win #1 — Interactivité hub coach (page.tsx)
+- [x] Quick win #1 — Interactivité hub coach (page.tsx) — FAIT 2026-06-02 : hover encadrement doré + glissement sur sidebar + cartes cliquables, classe réutilisable .coach-clickable
 - [ ] Quick win #1bis — Étendre interactivité aux autres écrans coach
 - [ ] Quick win #2 — Composant Card unifié
 - [ ] Polish micro-interactions
