@@ -4,14 +4,55 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-01
-- **HEAD** : 77347c4
+- **Date** : 2026-06-02
+- **HEAD** : 8a014be
 - **Working tree** : clean
-- **Total commits Phase 6** : 34 (17 session 30 mai + 15 session 31 mai + 2 fixes 1er juin)
+- **Total commits Phase 6** : 36 (17 session 30 mai + 15 session 31 mai + 2 fixes 1er juin + 2 fixes 2 juin)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
 - **Phase 6B** : COMPLET — closed-loop training 3 sources (onboarding_auto + diagnostic_auto + cron_auto) + F6.B.7 préférences onboarding
-- **Tâche en cours** : fix double-wrap generator.ts (diagnostic) + chantier CSP
+- **Bugs prod** : tous résolus — double-wrap neutralisé (3 endroits tool_use), CSP corrigé (connect-src + img-src), crash home patché
+- **Tâche en cours** : confirmer register-client prod + audit UX global
+
+---
+
+## 2026-06-02 — Helper unwrapToolInput généralisé + fix CSP
+
+**Branche** : `main`
+
+### Contexte
+
+Suite de la session 1er juin. Traiter la cause racine du double-wrap 'input' Anthropic (P1) et le chantier CSP (P2). Les deux sont résolus.
+
+### Commits livrés (ordre chronologique)
+
+| # | Hash | Sous-batch | Description |
+|---|---|---|---|
+| 1 | 81d6537 | fix anthropic | fix(anthropic): helper unwrapToolInput générique contre double-wrap input |
+| 2 | 8a014be | fix csp | fix(csp): ajout domaines moovx.ch + avatars Google dans connect-src/img-src |
+
+### Helper unwrapToolInput (81d6537)
+
+Audit complet des usages tool_use dans le codebase révèle **3 endroits** (un de plus que prévu) :
+1. `lib/training/generate-program.ts` — programme training (déjà patché inline le 1er juin)
+2. `lib/weekly-diagnostic/generator.ts` — diagnostic hebdomadaire (vulnérable, cause des diagnostics null)
+3. `app/api/analyze-body/route.ts` — analyse corporelle (3e endroit découvert, vulnérable)
+
+Décision : helper générique `lib/anthropic/unwrap-tool-input.ts` plutôt que patch inline avec champ témoin par endroit. Détection universelle : objet avec EXACTEMENT une clé 'input' contenant un objet. Aucun faux positif car les outputs légitimes ont tous plusieurs champs racine (program_name+description+days, score_semaine+points_forts+..., etc.).
+
+generate-program.ts migré du déballage inline (4 lignes) vers `unwrapToolInput()` (1 ligne). Les 3 endroits protégés.
+
+**Apprentissage** : auditer TOUS les usages d'un pattern bugué avant de fixer. Le 3e endroit (analyze-body) aurait crashé en prod plus tard sinon.
+
+### Fix CSP (8a014be)
+
+Architecture confirmée via Vercel : moovx.ch (landing) + app.moovx.ch (app) = même déploiement plateforme-coach. www.moovx.ch redirige vers moovx.ch. Les requêtes cross-origin entre les deux étaient bloquées par `connect-src 'self'`.
+
+Fix dans next.config.ts :
+- **connect-src** : ajout `https://app.moovx.ch https://moovx.ch` (nos propres domaines)
+- **img-src** : ajout `https://moovx.ch https://*.googleusercontent.com` (avatars Google OAuth)
+
+Validé PROD : connexion Google sans erreur CSP en console.
 
 ---
 

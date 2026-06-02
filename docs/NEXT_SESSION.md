@@ -2,19 +2,17 @@
 
 ## Contexte rapide
 
-Dernière session : 1er juin 2026 (fixes bugs prod post-test client zéro, 2 commits + docs).
-Bug génération programme en prod : RÉSOLU (streaming SSE + déballage double-wrap input).
-Crash home diagnostic null : RÉSOLU (guard optional chaining).
-Cause racine identifiée : le double-wrap 'input' intermittent du modèle Anthropic affecte AUSSI le générateur de diagnostic (generator.ts) → diagnostics vides en DB.
-Voir docs/SESSION_LOG.md "2026-06-01" pour détail complet.
+Dernière session : 2 juin 2026 (2 commits, HEAD 8a014be).
+P1 double-wrap Anthropic : RÉSOLU — helper unwrapToolInput générique appliqué aux 3 endroits tool_use (programme, diagnostic, analyze-body).
+P2 chantier CSP : RÉSOLU — connect-src + img-src corrigés, validé prod (connexion Google OK).
+Voir docs/SESSION_LOG.md "2026-06-02" pour détail complet.
 
 Etat au démarrage :
-- main clean, HEAD 77347c4 (ou commit docs de clôture)
-- Phase 6B Training Closed Loop : COMPLET (programme auto-gen validé E2E prod)
+- main clean, HEAD 8a014be
+- Phase 6B Training Closed Loop : COMPLET
+- Bugs prod : tous résolus (streaming programme, double-wrap 3 endroits, CSP, crash home diagnostic)
 - Onboarding SOLO : 12 steps avec préférences alimentaires
 - pg_cron actifs : purge chat (03h), training-regen (17h UTC), weekly-diagnostic (18h UTC)
-- Bug programme prod : RÉSOLU
-- Bug crash home diagnostic : RÉSOLU (symptôme patché, cause racine reste)
 
 ## ETAPE 1 — Commandes de démarrage
 
@@ -27,46 +25,37 @@ git --no-pager log --oneline -10
 
 ## ETAPE 2 — Choisir le sujet
 
-### Priorité 1 — Fix double-wrap dans generator.ts (diagnostic)
+### Priorité 1 — Confirmer register-client en prod + nettoyage
 
-Même bug que le programme (résolu dans generate-program.ts). Le générateur de diagnostic (lib/weekly-diagnostic/generator.ts ligne 301) fait `const aiOutput = toolUseBlock.input` sans déballer le wrapper 'input' parasite du modèle.
+Vérifier que l'inscription register-client fonctionne depuis la landing (le fix CSP connect-src devrait couvrir ce cas — même directive que la connexion Google validée). Tester le parcours complet : landing → register → onboarding.
 
-**Fix** : remplacer dans generator.ts :
-```typescript
-const aiOutput = toolUseBlock.input
-```
-par le même déballage défensif :
-```typescript
-const rawInput = toolUseBlock.input
-const aiOutput = (rawInput && typeof rawInput === 'object' && rawInput.input && !rawInput.score_semaine)
-  ? rawInput.input
-  : rawInput
+Optionnel : nettoyer le diagnostic vide d9bc037f de f.marco@me.com :
+```sql
+DELETE FROM weekly_diagnostics WHERE id = 'd9bc037f-a0b1-4cd0-a3d2-b4417a968399';
 ```
 
-**Optionnel** : nettoyer en DB le diagnostic d9bc037f (vide) du compte f.marco@me.com, ou le regénérer.
+### Priorité 2 — Audit UX global navigation/disposition
 
-~15 min. Impact : empêche les futurs diagnostics vides (points_forts/points_alerte null).
+Recenser toutes les pages/onglets, mapper la navigation, identifier incohérences. NutritionPreferences caché dans la page nutrition (#15), cohérence pages (#16). Session dédiée.
 
-### Priorité 2 — Chantier CSP : config trop restrictive
+### Priorité 3 — Tech debt résiduel
 
-Racine commune : CSP configuré trop strictement, plusieurs directives manquent des domaines légitimes. 2 symptômes :
+Items prioritaires :
+- **#14** total_calories null dans meal_plans (données dans plan_data.totals, colonne top-level non remplie)
+- **#17** Incohérence clés meal_preferences FR (legacy) vs EN (nouveau)
+- **#10** Consolidation variant_groups fragmentés (4 groupes hip hinge)
+- **#13** CRON_SECRET Vercel valeur sk_live suspecte
+- **#12** lockfile parent orphelin /Users/marcoferreira/package-lock.json
+- **#3** warnings images.qualities Next.js 16
 
-1. **connect-src** bloque `https://app.moovx.ch/register-client` et `api/vitals` depuis la landing → inscription client cassée
-2. **img-src** bloque les avatars Google `https://lh3.googleusercontent.com/...` (OAuth) → photo profil invisible
-
-**Étapes :**
-1. `grep -rn "Content-Security-Policy\|connect-src\|img-src" next.config.* proxy.ts middleware.ts`
-2. Auditer toutes les directives CSP, ajouter domaines légitimes (googleusercontent.com, app.moovx.ch)
-3. PRUDENCE : domaines EXACTS, pas de wildcard trop large (sécurité XSS)
-
-### Priorité 3 — Audit UX global + tech debt
-
-- Audit UX navigation/disposition (NutritionPreferences caché, cohérence pages)
-- Tech debt : total_calories null meal_plans (#14), clés meal_preferences FR/EN (#17), consolidation variant_groups (#10)
-- Clarifier CRON_SECRET Vercel valeur sk_live suspecte + lockfile parent orphelin
+Voir ROADMAP.md "Sprint Tech Debt — backlog résiduel" pour la liste complète (17 items).
 
 ## Si tu veux faire autre chose
 
-### F6.C — Notification combinée (30 min estimé)
+### F6.C — Notification combinée (~30 min)
 
 Push : "Ton plan adapté est prêt : 21 repas + 2 séances ajustées" — Phase 6B complet, F6.C peut être attaqué.
+
+### Features V2/V3 (brainstorming)
+
+Voir docs/IDEES_FEATURES.md : scanner d'assiette IA (haute priorité, 1-2 sem), form check vidéo, Apple Watch/HealthKit sync, proactive nudges.
