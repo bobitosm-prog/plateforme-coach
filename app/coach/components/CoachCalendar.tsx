@@ -87,91 +87,75 @@ export default function CoachCalendar({
         </div>
       </div>
 
-      {/* ── Day list ── */}
-      <div style={{ padding: '8px 16px 16px', display: 'flex', flexDirection: 'column' }}>
-        {days.map((day, i) => {
-          const dateStr = day.toISOString().split('T')[0]
-          const isToday = dateStr === todayStr
-          const daySessions = scheduledSessions
-            .filter(s => s.scheduled_at.startsWith(dateStr))
-            .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
-          return (
-            <div key={i} style={{ borderBottom: i < 6 ? `1px solid ${BORDER}` : 'none', paddingBottom: 12, marginBottom: 4 }}>
-              {/* Day header row */}
-              <div className="cal-day-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div className={`cal-day-label${isToday ? ' today' : ''}`}>
-                    <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '1.1rem', color: isToday ? GOLD : TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '2px' }}>
-                      {DAY_LABELS[i]} {format(day, 'd')}
-                    </span>
-                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', fontWeight: 600, color: isToday ? GOLD : TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-                      {format(day, 'MMM', { locale: fr })}
-                    </span>
-                  </div>
-                  {daySessions.length > 0 && (
-                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '2px 7px', letterSpacing: '1px' }}>
-                      {daySessions.length}
-                    </span>
-                  )}
+      {/* ── Vue semaine ── */}
+      {isMobile ? (
+        /* MOBILE : cartes par jour empilées */
+        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {days.map((day, i) => {
+            const dateStr = day.toISOString().split('T')[0]
+            const isToday = dateStr === todayStr
+            const daySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(dateStr)).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+            return (
+              <div key={i} style={{ background: BG_CARD, border: `1px solid ${isToday ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD, padding: '10px 12px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <div style={{ textAlign: 'center', minWidth: 40, flexShrink: 0 }}>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: '0.62rem', fontWeight: 700, color: isToday ? GOLD : TEXT_MUTED, letterSpacing: '1px', textTransform: 'uppercase' }}>{DAY_LABELS[i]}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, color: isToday ? GOLD : TEXT_PRIMARY }}>{format(day, 'd')}</div>
                 </div>
-                <button
-                  className="cal-add-day"
-                  onClick={() => { setNsDate(dateStr); setShowNewSession(true) }}
-                ><Plus size={11} /> Ajouter</button>
-              </div>
-
-              {/* Sessions or empty state */}
-              {daySessions.length === 0 ? (
-                <div className="cal-empty">Aucune séance</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {daySessions.map(s => {
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {daySessions.length === 0 ? (
+                    <button onClick={() => { setNsDate(dateStr); setShowNewSession(true) }} style={{ background: 'none', border: `1px dashed ${BORDER}`, borderRadius: 10, padding: '8px', color: TEXT_DIM, fontFamily: FONT_ALT, fontSize: '0.72rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, letterSpacing: '0.5px' }}><Plus size={12} /> Ajouter</button>
+                  ) : daySessions.map(s => {
                     const color = SESSION_COLORS[s.session_type] ?? GOLD
                     const client = clients.find(c => c.client_id === s.client_id)
                     const clientName = client?.profiles?.full_name ?? 'Client'
-                    const avatarInitials = clientName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
                     const dt = new Date(s.scheduled_at)
-                    const dtEnd = new Date(dt.getTime() + s.duration_minutes * 60000)
                     return (
-                      <div
-                        key={s.id}
-                        className="cal-session-card"
-                        onClick={() => setSelectedSession(s)}
-                        style={{ borderLeft: `2px solid ${GOLD}` }}
-                      >
-                        {/* Type icon */}
-                        <div style={{ width: 38, height: 38, borderRadius: 12, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, flexShrink: 0 }}>
-                          {TYPE_ICONS[s.session_type] ?? <Dumbbell size={15} />}
-                        </div>
-                        {/* Info */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '1rem', color: TEXT_PRIMARY, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{s.session_type}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                            <Clock size={11} color={TEXT_MUTED} />
-                            <span style={{ fontFamily: FONT_BODY, fontSize: '0.75rem', color: TEXT_MUTED }}>{format(dt, 'HH:mm')} – {format(dtEnd, 'HH:mm')}</span>
-                          </div>
-                        </div>
-                        {/* Client + duration */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                            <span style={{ fontFamily: FONT_BODY, fontSize: '0.72rem', color: TEXT_MUTED, maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName}</span>
-                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '0.58rem', color: GOLD, flexShrink: 0 }}>
-                              {avatarInitials}
-                            </div>
-                          </div>
-                          <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '2px 7px', letterSpacing: '0.5px' }}>
-                            {s.duration_minutes}min
-                          </span>
-                        </div>
+                      <div key={s.id} className="coach-clickable" onClick={() => setSelectedSession(s)} style={{ background: GOLD_DIM, borderLeft: `3px solid ${color}`, borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700, color: GOLD, flexShrink: 0 }}>{format(dt, 'HH:mm')}</span>
+                        <span style={{ fontFamily: FONT_BODY, fontSize: '0.78rem', color: TEXT_PRIMARY, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName} · {s.session_type}</span>
+                        <span style={{ fontFamily: FONT_ALT, fontSize: '0.62rem', color: TEXT_MUTED, flexShrink: 0 }}>{s.duration_minutes}min</span>
                       </div>
                     )
                   })}
                 </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        /* DESKTOP : grille 7 colonnes */
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, padding: '12px 16px' }}>
+          {days.map((day, i) => {
+            const dateStr = day.toISOString().split('T')[0]
+            const isToday = dateStr === todayStr
+            const daySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(dateStr)).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+            return (
+              <div key={i} style={{ background: BG_CARD, border: `1px solid ${isToday ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden', minHeight: 220, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '8px 6px', textAlign: 'center', borderBottom: `1px solid ${BORDER}`, background: isToday ? GOLD_DIM : 'transparent' }}>
+                  <div style={{ fontFamily: FONT_ALT, fontSize: '0.6rem', fontWeight: 700, color: isToday ? GOLD : TEXT_MUTED, letterSpacing: '1px', textTransform: 'uppercase' }}>{DAY_LABELS[i]}</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.3rem', fontWeight: 700, color: isToday ? GOLD : TEXT_PRIMARY, lineHeight: 1.1 }}>{format(day, 'd')}</div>
+                </div>
+                <div style={{ flex: 1, padding: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {daySessions.map(s => {
+                    const color = SESSION_COLORS[s.session_type] ?? GOLD
+                    const client = clients.find(c => c.client_id === s.client_id)
+                    const clientName = client?.profiles?.full_name ?? 'Client'
+                    const dt = new Date(s.scheduled_at)
+                    return (
+                      <div key={s.id} className="coach-clickable" onClick={() => setSelectedSession(s)} style={{ background: GOLD_DIM, borderLeft: `3px solid ${color}`, borderRadius: 6, padding: '5px 6px', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <span style={{ fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, color: GOLD }}>{format(dt, 'HH:mm')}</span>
+                        <span style={{ fontFamily: FONT_BODY, fontSize: '0.66rem', color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName}</span>
+                        <span style={{ fontFamily: FONT_BODY, fontSize: '0.6rem', color: TEXT_MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.session_type}</span>
+                      </div>
+                    )
+                  })}
+                  <button onClick={() => { setNsDate(dateStr); setShowNewSession(true) }} title="Ajouter une séance" style={{ marginTop: 'auto', background: 'none', border: `1px dashed ${BORDER}`, borderRadius: 6, padding: '5px', color: TEXT_DIM, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={12} /></button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Legend */}
       <div style={{ display: 'flex', gap: 12, padding: '0 16px 16px', flexWrap: 'wrap' }}>
