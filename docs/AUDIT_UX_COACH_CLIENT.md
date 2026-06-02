@@ -47,9 +47,13 @@ Quick win #1 sur écran pilote = HUB COACH (app/coach/page.tsx). Appliquer hover
 ## Suivi (à cocher au fil des sessions)
 
 - [x] Quick win #1 — Interactivité hub coach (page.tsx) — FAIT 2026-06-02 : hover encadrement doré + glissement sur sidebar + cartes cliquables, classe réutilisable .coach-clickable
-- [ ] Quick win #1bis — Étendre interactivité aux autres écrans coach
+- [x] Quick win #1bis — Page Mes Clients en cartes (composant ClientCard réutilisable) — FAIT 2026-06-02 : tableau remplacé par cartes style home + recherche restylée + hover doré
 - [ ] Quick win #2 — Composant Card unifié
 - [ ] Polish micro-interactions
 - [ ] (fond) Migration inline → tokens
 - [ ] (fond) Découpage monoblocs
 - [ ] Audit interactivité côté client (HomeTab, etc.)
+
+## Tech debt / cleanup
+
+- [ ] Nettoyer CSS-in-JS mort dans app/coach/page.tsx (~lignes 455-495) : .data-table* et .client-card-m* (plus utilisés depuis le passage de ClientsList aux cartes ClientCard ; entremêlés avec du CSS vivant, à retirer en passe dédiée)
