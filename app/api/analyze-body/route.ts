@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { unwrapToolInput } from '../../../lib/anthropic/unwrap-tool-input'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
     }
 
-    const result = toolUseBlock.input
+    const result = unwrapToolInput(toolUseBlock.input)
     return NextResponse.json(result)
   } catch (e: any) {
     console.error('[analyze-body] Error:', e.message)

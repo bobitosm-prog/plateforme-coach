@@ -3,8 +3,11 @@
  * Called by both:
  *   - /api/weekly-diagnostic (session user, rate-limited)
  *   - /api/weekly-diagnostic/cron (service_role, scheduled)
+ *
+ * @see lib/anthropic/unwrap-tool-input.ts for the double-wrap 'input' fix
  */
 import webpush from 'web-push'
+import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 
 export interface DiagnosticResult {
   diagnostic_id?: string
@@ -298,7 +301,7 @@ Pense étape par étape avant de répondre :
       return { error: 'Format IA invalide' }
     }
 
-    const aiOutput = toolUseBlock.input
+    const aiOutput = unwrapToolInput(toolUseBlock.input)
     const aiTokensUsed = (aiData.usage?.input_tokens || 0) + (aiData.usage?.output_tokens || 0)
 
     // 9. PERSIST

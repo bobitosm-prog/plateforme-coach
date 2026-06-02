@@ -3,6 +3,7 @@
  * Used by the API endpoint (generate-custom-program) and the cron (F6.B.6).
  */
 import { getPrefatigueInstructions } from '../prefatigue-mapping'
+import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { PROGRAM_GENERATION_PROMPT } from '../coach-knowledge'
 
 export interface GenerateProgramInput {
@@ -297,12 +298,7 @@ IMPORTANT :
     throw new Error('Format IA invalide')
   }
 
-  // Le modèle enveloppe parfois la sortie dans un wrapper 'input' parasite
-  // (toolUseBlock.input = { input: {...} }). On déballe si présent, sinon on garde tel quel.
-  const rawInput = toolUseBlock.input
-  const program = (rawInput && typeof rawInput === 'object' && rawInput.input && !rawInput.program_name)
-    ? rawInput.input
-    : rawInput
+  const program = unwrapToolInput(toolUseBlock.input)
 
   // Post-process: normalize day names to standard types
   if (program.days) {
