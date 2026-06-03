@@ -64,7 +64,7 @@ export default function CoachCalendar({
   const [calView, setCalView] = useState<'week' | 'month'>('week')
   const [calMonthOffset, setCalMonthOffset] = useState(0)
   const days = getWeekDays(calWeekOffset)
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
   const monthGrid = getMonthGrid(calMonthOffset)
   const monthLabel = new Date(new Date().getFullYear(), new Date().getMonth() + calMonthOffset, 1)
   const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -118,9 +118,9 @@ export default function CoachCalendar({
         /* MOBILE : cartes par jour empilées */
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {days.map((day, i) => {
-            const dateStr = day.toISOString().split('T')[0]
+            const dateStr = format(day, 'yyyy-MM-dd')
             const isToday = dateStr === todayStr
-            const daySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(dateStr)).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+            const daySessions = scheduledSessions.filter(s => format(new Date(s.scheduled_at), 'yyyy-MM-dd') === dateStr).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
             return (
               <div key={i} style={{ background: BG_CARD, border: `1px solid ${isToday ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD, padding: '10px 12px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <div style={{ textAlign: 'center', minWidth: 40, flexShrink: 0 }}>
@@ -152,9 +152,9 @@ export default function CoachCalendar({
         /* DESKTOP : grille 7 colonnes */
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, padding: '12px 16px' }}>
           {days.map((day, i) => {
-            const dateStr = day.toISOString().split('T')[0]
+            const dateStr = format(day, 'yyyy-MM-dd')
             const isToday = dateStr === todayStr
-            const daySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(dateStr)).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+            const daySessions = scheduledSessions.filter(s => format(new Date(s.scheduled_at), 'yyyy-MM-dd') === dateStr).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
             return (
               <div key={i} style={{ background: BG_CARD, border: `1px solid ${isToday ? GOLD_RULE : BORDER}`, borderRadius: RADIUS_CARD, overflow: 'hidden', minHeight: 220, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ padding: '8px 6px', textAlign: 'center', borderBottom: `1px solid ${BORDER}`, background: isToday ? GOLD_DIM : 'transparent' }}>
@@ -193,9 +193,9 @@ export default function CoachCalendar({
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
             {monthGrid.map(({ date, inMonth }, idx) => {
-              const dateStr = date.toISOString().split('T')[0]
+              const dateStr = format(date, 'yyyy-MM-dd')
               const isToday = dateStr === todayStr
-              const daySessions = scheduledSessions.filter(s => s.scheduled_at.startsWith(dateStr))
+              const daySessions = scheduledSessions.filter(s => format(new Date(s.scheduled_at), 'yyyy-MM-dd') === dateStr)
               const goToWeek = () => {
                 const today0 = new Date(); const dow0 = today0.getDay(); const d0 = dow0 === 0 ? -6 : 1 - dow0
                 const mondayThis = new Date(today0); mondayThis.setDate(today0.getDate() + d0); mondayThis.setHours(0,0,0,0)
