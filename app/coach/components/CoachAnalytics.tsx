@@ -94,6 +94,7 @@ export default function CoachAnalytics({ coachId }: Props) {
             <button
               key={card.label}
               onClick={() => setFilterBy(card.filter)}
+              className="card-hover-gold"
               style={{
                 background: BG_CARD,
                 border: `1.5px solid ${isActive ? GOLD : BORDER}`,
@@ -170,18 +171,17 @@ export default function CoachAnalytics({ coachId }: Props) {
               <div
                 key={c.client_id}
                 onClick={() => router.push(`/client/${c.client_id}`)}
+                className="coach-clickable"
                 style={{
                   background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD,
-                  padding: '14px 16px', cursor: 'pointer', transition: 'border-color 150ms',
+                  padding: '14px 16px', cursor: 'pointer',
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = GOLD_RULE }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = BORDER }}
               >
                 {/* Row 1: avatar + name + status */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
                   <div style={{
-                    width: 32, height: 32, borderRadius: '50%', background: GOLD_DIM,
+                    width: 34, height: 34, borderRadius: '50%', background: GOLD_DIM,
+                    border: `2px solid ${cfg.color}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_PRIMARY, flexShrink: 0,
                   }}>
