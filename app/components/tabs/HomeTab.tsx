@@ -10,7 +10,7 @@ import { de as deLocale } from 'date-fns/locale/de'
 import type { Locale } from 'date-fns'
 import { useTranslations, useLocale } from 'next-intl'
 import {
-  Ruler, Camera, Zap, Moon, CheckCircle, Flame, Dumbbell, TrendingUp, Droplets,
+  Ruler, Camera, Zap, Moon, CheckCircle, Flame, Dumbbell, TrendingUp, Droplets, Calendar,
 } from 'lucide-react'
 import ExercisePreview from '../ExercisePreview'
 import { getTodaySession, getSessionForDay } from '../../../lib/get-today-session'
@@ -100,6 +100,9 @@ export default function HomeTab({
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekSessions, setWeekSessions] = useState(0)
   const [xpData, setXpData] = useState<{ total_xp: number; current_streak: number } | null>(null)
+  const [nextAppt, setNextAppt] = useState<any>(null)
+  const [apptCount, setApptCount] = useState(0)
+  const [apptCoachName, setApptCoachName] = useState('votre coach')
   const [muscleStatus, setMuscleStatus] = useState<Record<string, number>>({})
   const [generatingDiag, setGeneratingDiag] = useState(false)
 
@@ -385,6 +388,24 @@ export default function HomeTab({
   const quoteCount = parseInt(ht(`quotes.${quoteCategory}Count`), 10) || 15
   const dailyQuote = ht(`quotes.${quoteCategory}.${getDailyQuoteIndex(quoteCount)}`)
 
+  useEffect(() => {
+    const uid = session?.user?.id
+    if (!uid || !supabase) return
+    supabase.from('coach_appointments')
+      .select('*')
+      .eq('client_id', uid)
+      .gte('scheduled_at', new Date().toISOString())
+      .order('scheduled_at', { ascending: true })
+      .limit(10)
+      .then(async ({ data }: any) => {
+        if (data && data.length > 0) {
+          setNextAppt(data[0]); setApptCount(data.length)
+          const { data: coach } = await supabase.from('profiles').select('full_name').eq('id', data[0].coach_id).maybeSingle()
+          if (coach?.full_name) setApptCoachName(coach.full_name)
+        } else { setNextAppt(null); setApptCount(0) }
+      })
+  }, [session?.user?.id, supabase])
+
   // Card title style from centralized design system
   const T = titleStyle
 
@@ -400,6 +421,25 @@ export default function HomeTab({
         streak={streak}
         onLevelClick={() => setShowLevelModal(true)}
       />
+
+      {nextAppt && (
+        <div style={{ margin: '12px 16px', padding: '14px 16px', background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(230,195,100,0.35)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(230,195,100,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Calendar size={18} color="#E6C364" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#E6C364', marginBottom: 2 }}>
+              Prochain rendez-vous{apptCount > 1 ? ` · +${apptCount - 1} autre${apptCount - 1 > 1 ? 's' : ''}` : ''}
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>
+              {format(new Date(nextAppt.scheduled_at), "EEEE d MMMM 'à' HH:mm", { locale: dateLocale })}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>
+              avec {apptCoachName}{nextAppt.location ? ` · ${nextAppt.location}` : ''}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══ HERO CARD — SÉANCE DU JOUR ═══ */}
       <HeroSessionCard
