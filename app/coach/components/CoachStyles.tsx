@@ -70,14 +70,6 @@ export default function CoachStyles() {
         .bottom-nav-label { font-family: ${FONT_ALT}; font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
         .nav-badge { position: absolute; top: 2px; right: calc(50% - 20px); min-width: 16px; height: 16px; background: ${RED}; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
         .chat-fullscreen { position: fixed; inset: 0; background: ${BG_BASE}; z-index: 200; display: flex; flex-direction: column; overflow: hidden; width: 100vw; height: 100vh; }
-        .cal-day-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 8px; }
-        .cal-day-label { display: inline-flex; align-items: baseline; gap: 6px; border-radius: 12px; padding: 4px 10px; }
-        .cal-day-label.today { background: ${GOLD_DIM}; border: 1px solid ${GOLD_RULE}; }
-        .cal-session-card { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 150ms; min-height: 64px; }
-        .cal-session-card:hover { background: ${BG_CARD_2}; }
-        .cal-empty { padding: 10px 14px; color: ${TEXT_DIM}; font-family: ${FONT_BODY}; font-size: 0.78rem; font-style: italic; background: ${BG_BASE}; border-radius: ${RADIUS_CARD}px; border: 1px solid ${BORDER}; }
-        .cal-add-day { display: flex; align-items: center; gap: 4px; background: transparent; border: 1px dashed ${BORDER}; border-radius: 12px; padding: 6px 10px; color: ${TEXT_MUTED}; cursor: pointer; font-family: ${FONT_ALT}; font-size: 0.72rem; font-weight: 600; min-height: 36px; transition: border-color 150ms, color 150ms; }
-        .cal-add-day:hover { border-color: ${GOLD}; color: ${GOLD}; }
         .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
         .modal-box { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.4); }
         .form-label { font-family: ${FONT_ALT}; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: ${TEXT_MUTED}; display: block; margin-bottom: 6px; }
