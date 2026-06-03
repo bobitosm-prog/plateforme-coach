@@ -37,6 +37,7 @@ export interface ScheduledSession {
   session_type: string
   notes: string | null
   status: string
+  location: string | null
   created_at: string
 }
 
@@ -138,6 +139,7 @@ export default function useCoachDashboard(initialSession?: any) {
   const [nsEndTime,        setNsEndTime]        = useState('11:00')
   const [nsType,           setNsType]           = useState('Force')
   const [nsNotes,          setNsNotes]          = useState('')
+  const [nsLocation,       setNsLocation]       = useState('')
   const [nsSaving,         setNsSaving]         = useState('')
 
   // Messaging state
@@ -563,18 +565,13 @@ export default function useCoachDashboard(initialSession?: any) {
     const days = getWeekDays(weekOffset)
     const from = days[0]; from.setHours(0, 0, 0, 0)
     const to   = days[6]; to.setHours(23, 59, 59, 999)
-    const fromStr = from.toISOString().split('T')[0]
-    const toStr = to.toISOString().split('T')[0]
-    // Query by client IDs (the table uses user_id + scheduled_date, not coach_id + scheduled_at)
-    const clientIds = clients.map(c => c.client_id)
-    if (!clientIds.length) { setScheduledSessions([]); return }
     const { data, error } = await supabase
-      .from('scheduled_sessions')
+      .from('coach_appointments')
       .select('*')
-      .in('user_id', clientIds)
-      .gte('scheduled_date', fromStr)
-      .lte('scheduled_date', toStr)
-      .order('scheduled_date', { ascending: true })
+      .eq('coach_id', coachId)
+      .gte('scheduled_at', from.toISOString())
+      .lte('scheduled_at', to.toISOString())
+      .order('scheduled_at', { ascending: true })
       .limit(100)
     if (error) console.warn('[fetchScheduledSessions]', error.message)
     setScheduledSessions(data ?? [])
@@ -588,12 +585,13 @@ export default function useCoachDashboard(initialSession?: any) {
     const end   = new Date(`${nsDate}T${nsEndTime}:00`)
     const duration = Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000))
     setNsSaving('saving')
-    const { error } = await supabase.from('scheduled_sessions').insert({
+    const { error } = await supabase.from('coach_appointments').insert({
       client_id: nsClientId,
       coach_id: session.user.id,
-      scheduled_at: `${nsDate}T${nsStartTime}:00`,
+      scheduled_at: start.toISOString(),
       session_type: nsType,
       duration_minutes: duration,
+      location: nsLocation || null,
       notes: nsNotes || null,
       status: 'scheduled',
     })
@@ -609,7 +607,7 @@ export default function useCoachDashboard(initialSession?: any) {
       setShowNewSession(false)
       setNsClientId(''); setNsDate(new Date().toISOString().split('T')[0])
       setNsStartTime('10:00'); setNsEndTime('11:00')
-      setNsType('Force'); setNsNotes(''); setNsSaving('')
+      setNsType('Force'); setNsNotes(''); setNsLocation(''); setNsSaving('')
     }, 800)
   }
 
@@ -809,6 +807,7 @@ export default function useCoachDashboard(initialSession?: any) {
     nsEndTime, setNsEndTime,
     nsType, setNsType,
     nsNotes, setNsNotes,
+    nsLocation, setNsLocation,
     nsSaving,
     saveNewSession,
 
