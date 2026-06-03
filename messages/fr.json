@@ -2244,6 +2244,10 @@
     }
   },
   "home": {
+    "nextAppointment": "Prochain rendez-vous",
+    "appointmentAt": "à",
+    "nextAppointmentMore": "+{count, plural, one {# autre} other {# autres}}",
+    "appointmentWith": "avec {name}",
     "quotes": {
       "mass": {
         "0": "Chaque calorie compte. Tu construis la meilleure version de toi-meme.",

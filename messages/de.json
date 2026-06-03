@@ -2244,6 +2244,10 @@
     }
   },
   "home": {
+    "nextAppointment": "Nächster Termin",
+    "appointmentAt": "um",
+    "nextAppointmentMore": "+{count, plural, one {# weiterer} other {# weitere}}",
+    "appointmentWith": "mit {name}",
     "quotes": {
       "mass": {
         "0": "Jede Kalorie zählt. Du baust die beste Version von dir selbst.",

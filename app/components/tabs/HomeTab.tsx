@@ -429,13 +429,13 @@ export default function HomeTab({
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#E6C364', marginBottom: 2 }}>
-              Prochain rendez-vous{apptCount > 1 ? ` · +${apptCount - 1} autre${apptCount - 1 > 1 ? 's' : ''}` : ''}
+              {ht('nextAppointment')}{apptCount > 1 ? ` · ${ht('nextAppointmentMore', { count: apptCount - 1 })}` : ''}
             </div>
             <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>
-              {format(new Date(nextAppt.scheduled_at), "EEEE d MMMM 'à' HH:mm", { locale: dateLocale })}
+              {`${format(new Date(nextAppt.scheduled_at), 'EEEE d MMMM', { locale: dateLocale })} ${ht('appointmentAt')} ${format(new Date(nextAppt.scheduled_at), 'HH:mm', { locale: dateLocale })}`}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>
-              avec {apptCoachName}{nextAppt.location ? ` · ${nextAppt.location}` : ''}
+              {ht('appointmentWith', { name: apptCoachName })}{nextAppt.location ? ` · ${nextAppt.location}` : ''}
             </div>
           </div>
         </div>

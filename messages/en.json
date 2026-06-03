@@ -2244,6 +2244,10 @@
     }
   },
   "home": {
+    "nextAppointment": "Next appointment",
+    "appointmentAt": "at",
+    "nextAppointmentMore": "+{count, plural, one {# more} other {# more}}",
+    "appointmentWith": "with {name}",
     "quotes": {
       "mass": {
         "0": "Every calorie counts. You're building the best version of yourself.",
