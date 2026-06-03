@@ -426,8 +426,9 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
                 <div><label className="form-label">Client *</label><select value={h.nsClientId} onChange={e => h.setNsClientId(e.target.value)} className="form-input" style={{ cursor: 'pointer' }}><option value="">Selectionner un client…</option>{h.clients.map((c: any) => <option key={c.client_id} value={c.client_id}>{c.profiles?.full_name ?? c.client_id}</option>)}</select></div>
                 <div><label className="form-label">Date *</label><input type="date" value={h.nsDate} onChange={e => h.setNsDate(e.target.value)} className="form-input" style={{ colorScheme: 'dark' }} /></div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}><div><label className="form-label">Debut</label><input type="time" value={h.nsStartTime} onChange={e => h.setNsStartTime(e.target.value)} className="form-input" style={{ colorScheme: 'dark' }} /></div><div><label className="form-label">Fin</label><input type="time" value={h.nsEndTime} onChange={e => h.setNsEndTime(e.target.value)} className="form-input" style={{ colorScheme: 'dark' }} /></div></div>
-                <div><label className="form-label">Type</label><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{SESSION_TYPES.map((t: any) => <button key={t.key} onClick={() => h.setNsType(t.key)} className="type-chip" style={{ background: h.nsType === t.key ? `${t.color}20` : BG_CARD_2, borderColor: h.nsType === t.key ? t.color : 'transparent', color: h.nsType === t.key ? t.color : TEXT_MUTED }}>{t.emoji} {t.label}</button>)}</div></div>
+                <div><label className="form-label">Type</label><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{SESSION_TYPES.map(t => { const color = SESSION_COLORS[t]; const active = h.nsType === t; return <button key={t} onClick={() => h.setNsType(t)} className="type-chip" style={{ background: active ? `${color}22` : BG_CARD_2, borderColor: active ? color : 'transparent', color: active ? color : TEXT_MUTED }}>{t}</button> })}</div></div>
                 <div><label className="form-label">Notes</label><textarea value={h.nsNotes} onChange={e => h.setNsNotes(e.target.value)} className="form-input" rows={2} placeholder="Instructions..." /></div>
+                <div><label className="form-label">Lieu</label><input type="text" value={h.nsLocation} onChange={e => h.setNsLocation(e.target.value)} className="form-input" placeholder="Ex: Salle de sport, Parc, Zoom…" /></div>
                 <button onClick={h.saveNewSession} disabled={!h.nsClientId || !!h.nsSaving} className="btn-primary" style={{ marginTop: 8 }}>{h.nsSaving ? 'Enregistrement...' : 'CREER LA SEANCE'}</button>
               </div>
             </div>
@@ -652,6 +653,10 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
               <div>
                 <label className="form-label">Notes (optionnel)</label>
                 <textarea value={h.nsNotes} onChange={e => h.setNsNotes(e.target.value)} rows={3} placeholder="Objectifs, exercices prévus…" className="form-input" style={{ resize: 'vertical', minHeight: 80 }} />
+              </div>
+              <div>
+                <label className="form-label">Lieu</label>
+                <input type="text" value={h.nsLocation} onChange={e => h.setNsLocation(e.target.value)} placeholder="Ex: Salle de sport, Parc, Zoom…" className="form-input" />
               </div>
               <button onClick={h.saveNewSession} disabled={!h.nsClientId || !h.nsDate || h.nsSaving === 'saving'}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: h.nsSaving === 'done' ? GREEN : GOLD, color: BG_BASE, border: 'none', borderRadius: 12, padding: '13px 20px', fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', opacity: (!h.nsClientId || !h.nsDate) ? 0.5 : 1, transition: 'background 200ms',  }}>
