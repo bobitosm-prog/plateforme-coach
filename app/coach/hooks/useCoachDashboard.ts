@@ -611,6 +611,13 @@ export default function useCoachDashboard(initialSession?: any) {
     }, 800)
   }
 
+  async function deleteSession(id: string) {
+    const { error } = await supabase.from('coach_appointments').delete().eq('id', id)
+    if (error) { console.error('[deleteSession]', error); return }
+    if (session?.user?.id) await fetchScheduledSessions(session.user.id, calWeekOffset)
+    setSelectedSession(null)
+  }
+
   async function loadChat(clientId: string, coachId: string) {
     const { data } = await supabase
       .from('messages')
@@ -810,6 +817,7 @@ export default function useCoachDashboard(initialSession?: any) {
     nsLocation, setNsLocation,
     nsSaving,
     saveNewSession,
+    deleteSession,
 
     // Food management
     foodList,

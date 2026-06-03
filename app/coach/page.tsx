@@ -14,7 +14,7 @@ import {
 } from '../../lib/design-tokens'
 import {
   Zap, Users, ChevronLeft, Dumbbell, Calendar, Home, Activity,
-  LogOut, Check, X, Plus, MessageCircle, Clock, UtensilsCrossed, User,
+  LogOut, Check, X, Plus, MessageCircle, Clock, MapPin, UtensilsCrossed, User,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -34,6 +34,7 @@ import CoachProfile from './components/CoachProfile'
 import CoachPrograms from './components/CoachPrograms'
 import CoachAnalytics from './components/CoachAnalytics'
 import CoachVideoReviews from './components/CoachVideoReviews'
+import SessionDetailModal from './components/SessionDetailModal'
 
 /* ── WheelPicker ──────────────────────────────────────────── */
 function WheelPicker({ items, value, onChange, label, width = 72 }: {
@@ -432,6 +433,9 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
             </div>
           </div>
         )}
+        {h.selectedSession && (
+          <SessionDetailModal session={h.selectedSession} clients={h.clients} onClose={() => h.setSelectedSession(null)} onDelete={h.deleteSession} />
+        )}
         <BugReport session={h.session} profile={h.coachProfile} />
       </div>
     )
@@ -659,33 +663,9 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
       )}
 
       {/* ══════════════ SESSION DETAIL MODAL ══════════════ */}
-      {h.selectedSession && (() => {
-        const clientName = h.clients.find(c => c.client_id === h.selectedSession!.client_id)?.profiles?.full_name ?? 'Client'
-        const color = SESSION_COLORS[h.selectedSession.session_type] ?? GOLD
-        const dt = new Date(h.selectedSession.scheduled_at)
-        return (
-          <div className="modal-bg" onClick={() => h.setSelectedSession(null)}>
-            <div className="modal-box" style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>
-              <div style={{ height: 4, background: color }} />
-              <div style={{ padding: '20px 24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                  <div>
-                    <span style={{ fontFamily: FONT_ALT, fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color, letterSpacing: '2px' }}>{h.selectedSession.session_type}</span>
-                    <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.5rem', fontWeight: 700, color: TEXT_PRIMARY, margin: '4px 0 0' }}>{clientName}</h3>
-                  </div>
-                  <button onClick={() => h.setSelectedSession(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: 4 }}><X size={16} /></button>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.85rem', color: TEXT_MUTED }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Calendar size={14} /><span>{format(dt, 'EEEE d MMMM yyyy', { locale: fr })}</span></div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={14} /><span>{format(dt, 'HH:mm', { locale: fr })} · {h.selectedSession.duration_minutes} min</span></div>
-                  {h.selectedSession.notes && <div style={{ background: BG_BASE, borderRadius: RADIUS_CARD, padding: '10px 14px', color: TEXT_PRIMARY, marginTop: 4, border: `1px solid ${BORDER}` }}>{h.selectedSession.notes}</div>}
-                </div>
-                <button onClick={() => h.setSelectedSession(null)} style={{ marginTop: 20, width: '100%', background: BG_CARD_2, color: TEXT_PRIMARY, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' as const }}>Fermer</button>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
+      {h.selectedSession && (
+        <SessionDetailModal session={h.selectedSession} clients={h.clients} onClose={() => h.setSelectedSession(null)} onDelete={h.deleteSession} />
+      )}
 
       {/* ══ CALENDAR SECTION ══ */}
       {h.section === 'calendar' && (
