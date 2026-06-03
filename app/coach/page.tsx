@@ -196,8 +196,8 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
     const fmtRev = Math.round(mRevTotal).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
 
     // Today sessions
-    const todayStr = new Date().toISOString().split('T')[0]
-    const todaySessions = h.scheduledSessions.filter((s: any) => s.scheduled_at.startsWith(todayStr))
+    const todayStr = format(new Date(), 'yyyy-MM-dd')
+    const todaySessions = h.scheduledSessions.filter((s: any) => format(new Date(s.scheduled_at), 'yyyy-MM-dd') === todayStr)
 
     return (
       <div style={{ display: 'flex', width: '100%', minHeight: '100dvh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>
@@ -608,8 +608,8 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
           <div className="sidebar-card">
             <h2 className="section-title">Aujourd&apos;hui</h2>
             {(() => {
-              const todayStr = new Date().toISOString().split('T')[0]
-              const todaySessions = h.scheduledSessions.filter(s => s.scheduled_at.startsWith(todayStr))
+              const todayStr = format(new Date(), 'yyyy-MM-dd')
+              const todaySessions = h.scheduledSessions.filter(s => format(new Date(s.scheduled_at), 'yyyy-MM-dd') === todayStr)
               if (todaySessions.length === 0) {
                 return <p style={{ fontSize: '0.9rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>Aucune séance aujourd&apos;hui</p>
               }
