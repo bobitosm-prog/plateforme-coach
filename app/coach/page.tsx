@@ -289,6 +289,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
                   {/* Today sessions list */}
                   {todaySessions.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, color: GOLD, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Ton planning aujourd&apos;hui</div>
                       {todaySessions.map((s: any) => {
                         const cn = h.clients.find((c: any) => c.client_id === s.client_id)?.profiles?.full_name ?? 'Client'
                         return (
@@ -606,7 +607,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
 
           {/* Bloc 1 — Agenda du jour */}
           <div className="sidebar-card">
-            <h2 className="section-title">Aujourd&apos;hui</h2>
+            <h2 className="section-title">Ton planning aujourd&apos;hui</h2>
             {(() => {
               const todayStr = format(new Date(), 'yyyy-MM-dd')
               const todaySessions = h.scheduledSessions.filter(s => format(new Date(s.scheduled_at), 'yyyy-MM-dd') === todayStr)
