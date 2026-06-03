@@ -17,11 +17,6 @@ export default function CoachStyles() {
         .stat-card:hover { border-color: rgba(212,168,67,0.3); box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(232,201,122,0.12); }
         .sidebar-card { background: rgba(20,18,9,0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(212,168,67,0.15); border-radius: ${RADIUS_CARD}px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,201,122,0.06); }
         .section-title { font-family: ${FONT_ALT}; font-size: 1.15rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: ${TEXT_PRIMARY}; margin: 0 0 16px 0; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table thead th { font-family: ${FONT_ALT}; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: ${GOLD}; padding: 10px 16px; text-align: left; background: ${GOLD_DIM}; border-bottom: 1px solid ${BORDER}; }
-        .data-table tbody tr { border-bottom: 1px solid ${BORDER}; transition: background 150ms ease; cursor: pointer; }
-        .data-table tbody tr:hover { background: ${BG_CARD_2}; }
-        .data-table tbody td { padding: 14px 16px; font-family: ${FONT_BODY}; font-size: 14px; font-weight: 400; color: ${TEXT_PRIMARY}; }
         .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 2px; font-family: ${FONT_ALT}; font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
         .badge-active { background: rgba(212,168,67,0.12); color: ${GOLD}; }
         .badge-warning { background: ${GOLD_DIM}; color: ${GOLD}; }
@@ -45,23 +40,10 @@ export default function CoachStyles() {
         .msg-input:focus { border-color: ${GOLD}; }
         @media (max-width: 640px) { .hide-sm { display: none !important; } }
         @media(max-width:768px){
-          .data-table th,.data-table td{padding:10px 8px;font-size:0.75rem}
           .section-pad{padding:16px!important}
         }
         @media (max-width: 1024px) { .lg-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 767px) { .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1px !important; } }
-        /* .client-cards-m responsive rules moved to globals.css */
-        .client-card-m { background: ${BG_CARD}; border: 1px solid ${BORDER}; border-radius: ${RADIUS_CARD}px; cursor: pointer; transition: border-color 150ms; overflow: hidden; }
-        .client-card-m:active { border-color: ${GOLD}; }
-        .client-card-m-inner { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
-        .avatar-circle-lg { width: 46px; height: 46px; border-radius: 50%; background: ${GOLD}; display: flex; align-items: center; justify-content: center; font-family: ${FONT_DISPLAY}; font-weight: 700; font-size: 1.05rem; color: ${BG_BASE}; flex-shrink: 0; }
-        .client-card-info { flex: 1; min-width: 0; }
-        .client-card-name { font-family: ${FONT_BODY}; font-weight: 600; font-size: 0.95rem; color: ${TEXT_PRIMARY}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .client-card-sub { font-family: ${FONT_BODY}; font-size: 0.72rem; color: ${TEXT_MUTED}; margin-top: 4px; }
-        .client-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-        .client-card-msg-btn { position: relative; background: transparent; border: none; cursor: pointer; padding: 8px; color: ${TEXT_MUTED}; display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 12px; transition: color 150ms; }
-        .client-card-msg-btn:active { color: ${GOLD}; }
-        .msg-badge { position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; background: ${RED}; border-radius: 8px; font-size: 0.6rem; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
         .bottom-nav { display: block; position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 100; }
         .bottom-nav-inner { display: flex; background: rgba(13,11,8,0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(212,168,67,0.08); border-radius: 18px; box-shadow: 0 -2px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(232,201,122,0.04); }
         .section-pad { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
