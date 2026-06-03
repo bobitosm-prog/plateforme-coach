@@ -52,8 +52,32 @@ Quick win #1 sur écran pilote = HUB COACH (app/coach/page.tsx). Appliquer hover
 - [ ] Polish micro-interactions
 - [ ] (fond) Migration inline → tokens
 - [ ] (fond) Découpage monoblocs
-- [ ] Audit interactivité côté client (HomeTab, etc.)
+- [x] Audit interactivité côté client (HomeTab) — VÉRIFIÉ 2026-06-03 : UX déjà correcte (boutons avec cursor pointer, active:scale sur addWater, cartes Aperçu = composants EnergyCard/RecoveryCard/NutritionCard dont seule RecoveryCard est cliquable). Pas de chantier justifié (RAS).
 
 ## Tech debt / cleanup
 
-- [ ] Nettoyer CSS-in-JS mort dans app/coach/page.tsx (~lignes 455-495) : .data-table* et .client-card-m* (plus utilisés depuis le passage de ClientsList aux cartes ClientCard ; entremêlés avec du CSS vivant, à retirer en passe dédiée)
+- [x] Nettoyer CSS-in-JS mort — FAIT 2026-06-03 : .data-table* et tout l'ancien bloc cartes clients mobile (.client-card-*, .avatar-circle-lg, .msg-badge) retirés de CoachStyles.tsx (le <style> ayant été extrait de page.tsx vers ce composant). Vérifié 0 usage en className.
+
+## Bug TZ systémique — dates locales (À TRAITER en session dédiée, flux par flux)
+
+Découvert le 2026-06-03 lors de l'audit. NE PAS faire de fix partiel (voir avertissement).
+
+**Pattern fautif** : ~55 occurrences de `new Date().toISOString().split('T')[0]` (ou `someDate.toISOString().split('T')[0]`) pour obtenir une chaîne 'YYYY-MM-DD'.
+
+**Cause** : `toISOString()` convertit en UTC. Sur une Date à minuit LOCAL (Genève UTC+1/+2), elle renvoie la veille 22h/23h UTC → `split('T')[0]` donne J-1.
+
+**Impact confirmé** :
+- TrainingTab (~345-362) et ProgramBuilder (~246-264) : `monday`/`date` à minuit local → `scheduled_date` des séances de programme enregistré à **J-1 systématiquement** (pas seulement la nuit).
+- `new Date().toISOString().split` pour "aujourd'hui" : faux seulement entre minuit et ~02h locales (fenêtre nocturne).
+- Inserts de date nocturnes (water_intake, daily_food_logs, weight_logs, cardio, body assessment, achievements) : date persistée = veille si saisie entre 00h–02h.
+
+**⚠️ Cohérence fragile** : lecture + delete + insert utilisent le MÊME pattern décalé (ex TrainingTab delete `gte mondayStr lte sundayStr` puis insert `scheduled_date` décalés pareil). Le système "marche" par cohérence du décalage. **Corriger un seul côté (ex les inserts) CASSE cette cohérence → séances qui disparaissent de l'affichage.**
+
+**Fix recommandé** :
+1. Créer un helper `localDate(d = new Date())` = `format(d, 'yyyy-MM-dd')` (date locale).
+2. Migrer FLUX PAR FLUX (écriture + lecture + delete ENSEMBLE), avec test à chaque flux. Commencer par scheduled_date (TrainingTab + ProgramBuilder + lectures HomeTab/TrainingTab).
+3. NE JAMAIS faire de fix partiel sur un flux.
+
+**Légitimes (ne pas toucher)** : noms de fichiers CSV (page.tsx ~95, ShoppingList ~43), bornes de requête gte/lte (impact négligeable de quelques heures).
+
+**Déjà corrigé** : CoachCalendar + dashboard coach (page.tsx) — coach_appointments lu via `format(new Date(scheduled_at), 'yyyy-MM-dd')` local.
