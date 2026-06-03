@@ -3,7 +3,7 @@ import { X, Calendar, Clock, MapPin } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import {
-  BG_BASE, BG_CARD_2, BORDER, GOLD, RED, TEXT_PRIMARY, TEXT_MUTED,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, RED, TEXT_PRIMARY, TEXT_MUTED,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT,
 } from '../../../lib/design-tokens'
 import { SESSION_COLORS, type ScheduledSession } from '../hooks/useCoachDashboard'
@@ -18,8 +18,8 @@ export default function SessionDetailModal({ session, clients, onClose, onDelete
   const color = SESSION_COLORS[session.session_type] ?? GOLD
   const dt = new Date(session.scheduled_at)
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal-box" style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, width: '100%', maxWidth: 380, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}>
         <div style={{ height: 4, background: color }} />
         <div style={{ padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
