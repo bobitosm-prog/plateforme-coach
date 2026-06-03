@@ -212,16 +212,16 @@ export default function CoachAnalytics({ coachId }: Props) {
 
                 {/* Row 2: metrics */}
                 <div style={{ display: 'flex', gap: isMobile ? 10 : 16, flexWrap: 'wrap', paddingLeft: 52 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 10px' }}>
                     <Calendar size={12} color={TEXT_DIM} />{c.sessionsLast7d} séances
                   </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 10px' }}>
                     <Flame size={12} color={TEXT_DIM} />{c.streak}j
                   </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 10px' }}>
                     <Scale size={12} color={TEXT_DIM} />{formatWeightDelta(c.weightDelta7d)}
                   </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 10px' }}>
                     <Utensils size={12} color={TEXT_DIM} />{c.mealAdherence7d}%
                   </span>
                 </div>
