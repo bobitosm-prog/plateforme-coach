@@ -181,6 +181,20 @@ html, body {
   to { transform: rotate(360deg); }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   SYSTEME D'INTERACTION MoovX — referentiel (source de verite)
+   Appliquer a TOUT element interactif, partout dans l'app :
+   - <button>             -> rien a faire : button:active (scale) est global
+   - div/span CLIQUABLE    -> className="coach-clickable" (bordure doree + glissement)
+   - carte INFO non-clic   -> className="card-hover-gold" (bordure doree seule)
+   - carte qui se souleve  -> className="card-hover" (lift + ombre)
+   - lien texte cliquable  -> className="coach-clickable"
+   REGLE D'OR : dore par defaut. On NE garde une couleur specifique au survol
+   que si elle PORTE une info (ex : carte exercice coloree par groupe musculaire).
+   INTERDIT : hover inline via onMouseEnter / currentTarget.style (incoherent,
+   non mobile-safe) -> toujours passer par une classe.
+   Tout est sous @media (hover: hover) = pas de hover collant sur tactile.
+   ═══════════════════════════════════════════════════════════ */
 /* ── Buttons ── */
 button { transition: transform 150ms ease; }
 button:active:not(:disabled) { transform: scale(0.96); }

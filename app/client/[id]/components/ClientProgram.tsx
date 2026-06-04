@@ -82,9 +82,8 @@ export default function ClientProgram({
               <div style={{position:'absolute',top:'100%',left:0,marginTop:4,background:BG_CARD,border:`1px solid ${BORDER}`,borderRadius:10,padding:6,minWidth:220,zIndex:10,boxShadow:'0 8px 24px rgba(0,0,0,0.5)'}}>
                 {coachTemplates.map(tpl=>(
                   <button key={tpl.id} onClick={()=>{setResyncOpen(false);onResyncFromTemplate?.(tpl)}}
-                    style={{display:'block',width:'100%',padding:'10px 12px',background:'none',border:'none',color:TEXT_PRIMARY,textAlign:'left',cursor:'pointer',fontFamily:FONT_BODY,fontSize:13,borderRadius:6}}
-                    onMouseEnter={e=>{(e.target as HTMLElement).style.background=GOLD_DIM}}
-                    onMouseLeave={e=>{(e.target as HTMLElement).style.background='none'}}>
+                    className="coach-clickable"
+                    style={{display:'block',width:'100%',padding:'10px 12px',background:'none',border:'none',color:TEXT_PRIMARY,textAlign:'left',cursor:'pointer',fontFamily:FONT_BODY,fontSize:13,borderRadius:6}}>
                     {tpl.name}
                   </button>
                 ))}
