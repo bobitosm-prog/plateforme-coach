@@ -143,7 +143,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: BG_BASE, display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
-      <div style={{ flexShrink: 0, background: BG_BASE, padding: '16px 16px 10px', paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', borderBottom: `1px solid ${BORDER}` }}>
+      <div style={{ flexShrink: 0, background: BG_BASE, paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', paddingRight: 16, paddingBottom: 10, paddingLeft: 16, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
             <ArrowLeft size={14} /> {t('back')}
@@ -158,9 +158,9 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
         {selected.length > 0 && (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
             {selected.map(e => (
-              <span key={e.id} onClick={() => toggle(e)} style={{ padding: '4px 10px', borderRadius: 10, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button key={e.id} onClick={() => toggle(e)} style={{ padding: '4px 10px', borderRadius: 10, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 {getExerciseName(e, locale)} <X size={9} />
-              </span>
+              </button>
             ))}
           </div>
         )}
@@ -1213,15 +1213,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                             </button>
                           )}
                           {set.done ? (
-                            <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.success, border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
-                              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.9)' }}
-                              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
+                            <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.success, border: 'none', borderRadius: '50%', cursor: 'pointer' }}>
                               <Check size={18} strokeWidth={3} color="#fff" />
                             </button>
                           ) : ok ? (
-                            <button onClick={() => validate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GOLD, border: 'none', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.15s' }}
-                              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.9)' }}
-                              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}>
+                            <button onClick={() => validate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GOLD, border: 'none', borderRadius: '50%', cursor: 'pointer' }}>
                               <Check size={18} strokeWidth={3} color="#0D0B08" />
                             </button>
                           ) : (
@@ -1268,9 +1264,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     width: '100%', marginTop: 8, padding: '10px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                     background: 'transparent', border: `1px dashed rgba(201,168,76,0.2)`, borderRadius: 8, cursor: 'pointer',
                     fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, color: GOLD, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(230,195,100,0.04)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                  }}>
                     <Plus size={12} /> {t('addSet')}
                   </button>
                 </div>
