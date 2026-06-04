@@ -81,3 +81,15 @@ Découvert le 2026-06-03 lors de l'audit. NE PAS faire de fix partiel (voir aver
 **Légitimes (ne pas toucher)** : noms de fichiers CSV (page.tsx ~95, ShoppingList ~43), bornes de requête gte/lte (impact négligeable de quelques heures).
 
 **Déjà corrigé** : CoachCalendar + dashboard coach (page.tsx) — coach_appointments lu via `format(new Date(scheduled_at), 'yyyy-MM-dd')` local.
+
+## Harmonisation interaction (referentiel globals.css)
+
+FAIT :
+- Referentiel d'interaction fige en tete de globals.css (source de verite)
+- Fiche client : auditee, deja coherente (tout en <button> + overlays). Seul ecart corrige : ClientProgram (hover inline -> coach-clickable). page.tsx : carte exercice = hover couleur groupe musculaire CONSERVE (semantique).
+- WorkoutSession : span tag -> button, retrait feedback inline redondant, fix padding shorthand.
+
+RESTE (sessions futures, hors landing/* et admin/* qui ont leur propre contexte) :
+- Hover inline (onMouseEnter) a traiter : ConversationList, coach/page.tsx, TrainingExerciseCard, OverloadBanner, ChatAI, page-desktop.tsx, login, register-client
+- div/span cliquables a taguer coach-clickable (trier overlays modale vs vraies cartes) : coach/* (CoachCalendar, CoachRevenue, ClientCard, SessionDetailModal, CoachPrograms, page), tabs/* (TrainingTab, StartProgramModal, AddExercisePopup, TrainingExerciseCard, SaveChoicePopup, NutritionTab, ProfileTab, ImportPlanSheet, HomeTab, ProgressTab), RecoveryCard, MessageImage, ProgramBuilder, VideoFeedbackModal, ObjectiveModal, ExerciseInfoPopup, FoodSearch, page-desktop
+- Methode : 1 fichier/lot, test + commit. Regle d'or : dore par defaut, garder couleur semantique qui informe. <button> = rien a faire (button:active global).
