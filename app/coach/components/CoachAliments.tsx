@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Plus, Search, X, Check, Trash2 } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -28,8 +29,11 @@ export default function CoachAliments({
   foodLoading, loadFoods, showAddFood, setShowAddFood,
   newFood, setNewFood, saveNewFood, deleteFood,
 }: CoachAlimentsProps) {
-  // Auto-load on first render
-  if (foodList.length === 0 && !foodLoading) loadFoods()
+  // Charge la liste au montage et a chaque changement de filtre (hors render)
+  useEffect(() => {
+    loadFoods()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foodFilter])
 
   return (
     <div style={{ padding: '16px 14px' }}>
@@ -46,7 +50,7 @@ export default function CoachAliments({
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         {([['fitness', 'Fitness'], ['anses', 'ANSES'], ['coach', 'Mes ajouts']] as const).map(([k, l]) => (
-          <button key={k} onClick={() => { setFoodFilter(k); setTimeout(loadFoods, 0) }} style={{
+          <button key={k} onClick={() => setFoodFilter(k)} style={{
             padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
             fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const,
             background: foodFilter === k ? GOLD_DIM : BG_CARD,
