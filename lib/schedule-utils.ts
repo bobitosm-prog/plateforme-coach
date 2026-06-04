@@ -97,7 +97,8 @@ export function getWeekDates(referenceDate: Date): Date[] {
 
 // Format date to YYYY-MM-DD
 export function toDateStr(d: Date): string {
-  return d.toISOString().split('T')[0]
+  // Date locale (pas UTC) : evite le decalage J-1 a minuit en UTC+1/+2
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 // Check if two dates are the same calendar day

@@ -23,7 +23,7 @@ import { toast } from 'sonner'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 import CardioSection from '../CardioSection'
-import { ScheduledSession } from '../../../lib/schedule-utils'
+import { ScheduledSession, toDateStr } from '../../../lib/schedule-utils'
 
 import WorkoutCelebration from './training/WorkoutCelebration'
 import TrainingActiveBar from './training/TrainingActiveBar'
@@ -204,7 +204,7 @@ export default function TrainingTab({
     return paddedDays.map((day: any, i: number) => {
       const date = new Date(monday)
       date.setDate(monday.getDate() + i)
-      const dateStr = date.toISOString().split('T')[0]
+      const dateStr = toDateStr(date)
       const existing = scheduledSessions.find((s: any) => s.scheduled_date === dateStr)
       const isRest = day.is_rest
       return {
@@ -292,7 +292,7 @@ export default function TrainingTab({
       .then(async ({ data }: any) => {
         const programs = data || []
         // Auto-activate scheduled programs that are due
-        const today = new Date().toISOString().split('T')[0]
+        const today = toDateStr(new Date())
         const dueToStart = programs.filter((p: any) => p.scheduled && p.start_date && p.start_date <= today)
         if (dueToStart.length > 0) {
           await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).eq('is_active', true)
@@ -348,8 +348,8 @@ export default function TrainingTab({
         monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
         monday.setHours(0, 0, 0, 0)
         const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6)
-        const mondayStr = monday.toISOString().split('T')[0]
-        const sundayStr = sunday.toISOString().split('T')[0]
+        const mondayStr = toDateStr(monday)
+        const sundayStr = toDateStr(sunday)
         await supabase.from('scheduled_sessions').delete().eq('user_id', session.user.id).gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr).eq('completed', false)
         const paddedDays = padTo7Days(activeProg.days)
         const DAY_LABELS_FULL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -357,7 +357,7 @@ export default function TrainingTab({
         for (let i = 0; i < 7; i++) {
           const day = paddedDays[i]; if (!day || day.is_rest) continue
           const date = new Date(monday); date.setDate(monday.getDate() + i)
-          newSessions.push({ user_id: session.user.id, title: day.name || day.weekday || DAY_LABELS_FULL[i], session_type: 'custom', scheduled_date: date.toISOString().split('T')[0], scheduled_time: '08:00', duration_min: 60, completed: false })
+          newSessions.push({ user_id: session.user.id, title: day.name || day.weekday || DAY_LABELS_FULL[i], session_type: 'custom', scheduled_date: toDateStr(date), scheduled_time: '08:00', duration_min: 60, completed: false })
         }
         if (newSessions.length > 0) await supabase.from('scheduled_sessions').insert(newSessions)
       } catch (e) { console.error('[activateProgram] sync error:', e) }

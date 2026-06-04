@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { toDateStr } from '../../lib/schedule-utils'
 import { Play, Pause, Square, SkipForward, ChevronDown } from 'lucide-react'
 import { HIIT_WORKOUTS, LISS_WORKOUTS, estimateCalories, type CardioWorkout, type HiitExercise } from '../../lib/cardio-data'
 import { toast } from 'sonner'
@@ -164,7 +165,7 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
       user_id: userId, type: 'hiit', name: workout.name,
       duration_min: Math.round(elapsed / 60), calories_burned: cal,
       exercises: workout.exercises, completed: true, completed_at: new Date().toISOString(),
-      scheduled_date: new Date().toISOString().split('T')[0],
+      scheduled_date: toDateStr(new Date()),
     })
     toast.success(`${workout.name} terminé ! ~${cal} kcal`)
     onFinish()
@@ -264,7 +265,7 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
       user_id: userId, type: 'liss', name: workout.name,
       duration_min: mins, calories_burned: cal,
       notes: workout.notes, completed: true, completed_at: new Date().toISOString(),
-      scheduled_date: new Date().toISOString().split('T')[0],
+      scheduled_date: toDateStr(new Date()),
     })
     toast.success(`${workout.name} terminé ! ~${cal} kcal`)
     onFinish()

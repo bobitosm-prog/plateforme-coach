@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { toDateStr } from '../../../lib/schedule-utils'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 import { getMuscleLabel } from '../../../lib/i18n-muscle'
@@ -243,8 +244,8 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       monday.setHours(0, 0, 0, 0)
       const sunday = new Date(monday)
       sunday.setDate(monday.getDate() + 6)
-      const mondayStr = monday.toISOString().split('T')[0]
-      const sundayStr = sunday.toISOString().split('T')[0]
+      const mondayStr = toDateStr(monday)
+      const sundayStr = toDateStr(sunday)
 
       await supabase.from('scheduled_sessions').delete()
         .eq('user_id', session.user.id)
@@ -261,7 +262,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
           user_id: session.user.id,
           title: day.name || day.weekday || DAY_NAMES[i],
           session_type: 'custom',
-          scheduled_date: date.toISOString().split('T')[0],
+          scheduled_date: toDateStr(date),
           scheduled_time: '08:00',
           duration_min: 60,
           completed: false,

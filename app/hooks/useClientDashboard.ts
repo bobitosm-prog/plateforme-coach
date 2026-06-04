@@ -1,5 +1,6 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
+import { toDateStr } from '../../lib/schedule-utils'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getRole } from '../../lib/getRole'
@@ -328,7 +329,7 @@ export default function useClientDashboard() {
       }
     }
     // Mark today's scheduled session as completed
-    const todayStr = new Date().toISOString().split('T')[0]
+    const todayStr = toDateStr(new Date())
     await supabase.from('scheduled_sessions').update({ completed: true, completed_at: new Date().toISOString() })
       .eq('user_id', session.user.id).eq('scheduled_date', todayStr).eq('completed', false)
     // Update last_workout_at
