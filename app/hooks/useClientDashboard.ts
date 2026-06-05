@@ -276,6 +276,16 @@ export default function useClientDashboard() {
       muscles_worked: musclesWorked.length > 0 ? musclesWorked : null,
     }).select().single()
     if (sess) {
+      // Marquer la séance planifiée du jour comme complétée (sync calendrier).
+      // Update ciblé : si aucune ligne planifiée aujourd'hui (séance libre), 0 ligne touchée — voulu.
+      const todayFinish = toDateStr(new Date())
+      await supabase
+        .from('scheduled_sessions')
+        .update({ completed: true, completed_at: new Date().toISOString() })
+        .eq('user_id', session.user.id)
+        .eq('scheduled_date', todayFinish)
+        .eq('completed', false)
+
       const setsToInsert: any[] = []
       data.exercises.forEach((exo: any) => {
         exo.sets.forEach((s: any, i: number) => {
