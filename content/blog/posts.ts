@@ -108,18 +108,102 @@ export const BLOG_POSTS: BlogPost[] = [
       en: {
         title: 'How much protein per day to build muscle? What science says',
         description: 'Science is clear on protein intake for muscle gain: about 1.6 g/kg/day. We break down the numbers, sources, and how to apply them.',
-        intro: 'Full English version coming soon.',
-        sections: [],
+        intro: "It is probably the most common question in sports nutrition: how many grams of protein should you eat every day to build muscle effectively? Between contradictory social media advice and the sometimes extreme dosages promoted by supplement brands, it is easy to get lost. Good news: scientific research has provided clear answers through large-scale meta-analyses. And it is simpler than you might think.",
+        sections: [
+          {
+            heading: 'The key number: 1.6 g per kilogram',
+            paragraphs: [
+              'In 2018, a research team led by Morton and Schoenfeld published the largest meta-analysis on this topic in the British Journal of Sports Medicine: 49 controlled studies, 1,863 participants. Their conclusion is clear: muscle mass gains increase with protein intake but plateau around 1.6 g per kilogram of body weight per day.',
+              'Beyond this threshold, eating more protein does not produce additional measurable muscle gains. This is a robust result, obtained by aggregating data from varied populations (young, older, male, female, beginners, trained individuals).',
+              'For a 75 kg person, that means roughly 120 g of protein per day — the equivalent of two portions of chicken (200 g each) and a Greek yogurt, or a distribution across 4 meals at approximately 30 g each.',
+            ],
+          },
+          {
+            heading: 'The official range: 1.4 to 2.0 g/kg',
+            paragraphs: [
+              'The official position of the International Society of Sports Nutrition (ISSN), published in 2017 by Jäger and colleagues, recommends an intake of 1.4 to 2.0 g of protein per kg of body weight per day for most individuals practicing resistance training.',
+              'This range is deliberately broad: it accounts for individual differences (training level, muscle mass, age, goals). A beginner can progress perfectly well with 1.4 g/kg, while an experienced athlete in an intensive growth phase may aim for the upper end.',
+              "The key point: there is no need to systematically aim for the maximum. Staying between 1.4 and 1.8 g/kg is sufficient for the vast majority of athletes, and Morton's meta-analysis confirms that the marginal benefit beyond 1.6 g/kg is virtually zero.",
+            ],
+          },
+          {
+            heading: 'During a cut: increase protein',
+            paragraphs: [
+              'When in a caloric deficit — eating less than you burn to lose fat — the body tends to draw from its reserves, including muscle. To minimize lean mass loss, the ISSN recommends increasing protein intake to 2.3 to 3.1 g/kg of lean body mass per day.',
+              'This is significantly higher than for muscle building, and it makes sense: protein plays a protective role when the body is in restriction. It fuels muscle protein synthesis and increases satiety, helping maintain the deficit without excessive hunger.',
+              'For our 75 kg person during a cut, that rises to roughly 170 to 230 g of protein per day. An intake that requires serious nutritional planning — exactly the kind of calculation MoovX automates for you.',
+            ],
+          },
+          {
+            heading: 'How to distribute throughout the day',
+            paragraphs: [
+              'Total daily protein intake is the most important factor, but distribution also plays a role. Research shows that muscle protein synthesis is optimized when protein is spread evenly across the day rather than concentrated in one or two large meals.',
+              'The practical recommendation: aim for about 0.25 g/kg of body weight per serving (or 20 to 40 g depending on your build), spread across 3 to 5 meals spaced 3 to 4 hours apart. For our 75 kg person, that means approximately 20 g of protein 4 to 6 times per day.',
+            ],
+          },
+        ],
+        tableTitle: 'Your protein needs by goal',
+        table: {
+          headers: ['Goal', 'Recommended intake', 'Example (75 kg)'],
+          rows: [
+            ['Maintenance / muscle gain', '1.6 g/kg/day', '~120 g/day'],
+            ['Comfort range (ISSN)', '1.4 – 2.0 g/kg/day', '105 – 150 g/day'],
+            ['Cut / caloric deficit', '2.3 – 3.1 g/kg/day', '170 – 230 g/day'],
+            ['Per meal', '0.25 g/kg (20–40 g)', '~20 g, 4x/day'],
+          ],
+        },
         ctaText: 'MoovX automatically calculates your protein needs based on your weight, goals, and activity — and generates your meals from 170 Swiss foods. 10-day free trial.',
-        disclaimer: 'This article is for informational purposes only and does not replace professional medical advice.',
+        disclaimer: 'This article is for informational purposes only and does not replace professional medical advice. Adapt your diet to your personal situation, especially in case of medical conditions.',
       },
       de: {
         title: 'Wie viel Protein pro Tag für Muskelaufbau? Was die Wissenschaft sagt',
         description: 'Die Wissenschaft ist klar: Etwa 1,6 g/kg/Tag für optimalen Muskelaufbau. Wir erklären die Zahlen, Quellen und praktische Umsetzung.',
-        intro: 'Vollständige deutsche Version kommt bald.',
-        sections: [],
+        intro: 'Es ist wohl die am häufigsten gestellte Frage in der Sporternährung: Wie viele Gramm Protein sollte man täglich essen, um effektiv Muskeln aufzubauen? Zwischen widersprüchlichen Tipps aus sozialen Medien und den teils extremen Dosierungen mancher Supplement-Marken kann man leicht den Überblick verlieren. Die gute Nachricht: Die Wissenschaft hat durch grosse Metaanalysen klare Antworten geliefert. Und es ist einfacher, als man denkt.',
+        sections: [
+          {
+            heading: 'Die Schlüsselzahl: 1,6 g pro Kilogramm',
+            paragraphs: [
+              'Im Jahr 2018 veröffentlichte ein Forscherteam um Morton und Schoenfeld im British Journal of Sports Medicine die bisher grösste Metaanalyse zu diesem Thema: 49 kontrollierte Studien, 1.863 Teilnehmer. Ihr Ergebnis ist eindeutig: Der Zuwachs an Muskelmasse steigt mit der Proteinzufuhr, erreicht aber ein Plateau bei etwa 1,6 g pro Kilogramm Körpergewicht pro Tag.',
+              'Über diese Schwelle hinaus bringt mehr Protein keinen messbaren zusätzlichen Muskelzuwachs. Dies ist ein robustes Ergebnis, das aus Daten verschiedenster Populationen gewonnen wurde (jung, älter, männlich, weiblich, Anfänger, Fortgeschrittene).',
+              'Für eine 75 kg schwere Person bedeutet das rund 120 g Protein pro Tag — das entspricht etwa zwei Portionen Hähnchen (je 200 g) und einem griechischen Joghurt, oder verteilt auf 4 Mahlzeiten à ca. 30 g.',
+            ],
+          },
+          {
+            heading: 'Der offizielle Bereich: 1,4 bis 2,0 g/kg',
+            paragraphs: [
+              'Die offizielle Position der International Society of Sports Nutrition (ISSN), veröffentlicht 2017 von Jäger und Kollegen, empfiehlt eine Zufuhr von 1,4 bis 2,0 g Protein pro kg Körpergewicht pro Tag für die meisten Sportler im Krafttraining.',
+              'Diese Spanne ist bewusst breit angelegt: Sie berücksichtigt individuelle Unterschiede (Trainingslevel, Muskelmasse, Alter, Ziele). Ein Anfänger kann mit 1,4 g/kg bestens Fortschritte machen, während ein erfahrener Athlet in einer intensiven Aufbauphase den oberen Bereich anpeilen kann.',
+              'Der entscheidende Punkt: Man muss nicht systematisch das Maximum anstreben. Zwischen 1,4 und 1,8 g/kg zu liegen, reicht für die grosse Mehrheit der Sportler — und die Metaanalyse von Morton bestätigt, dass der Grenznutzen über 1,6 g/kg hinaus praktisch null ist.',
+            ],
+          },
+          {
+            heading: 'In der Diätphase: Protein erhöhen',
+            paragraphs: [
+              'Im Kaloriendefizit — also wenn man weniger isst, als man verbraucht, um Fett abzubauen — neigt der Körper dazu, auf seine Reserven zurückzugreifen, einschliesslich Muskelmasse. Um diesen Verlust zu begrenzen, empfiehlt die ISSN, die Proteinzufuhr auf 2,3 bis 3,1 g/kg fettfreie Körpermasse pro Tag zu erhöhen.',
+              'Das ist deutlich mehr als beim Muskelaufbau, und es ist logisch: Protein spielt eine schützende Rolle, wenn der Körper in Restriktion ist. Es fördert die Muskelproteinsynthese und erhöht das Sättigungsgefühl, was hilft, das Defizit ohne übermässigen Hunger einzuhalten.',
+              'Für unsere 75 kg schwere Person in der Diätphase steigt das auf etwa 170 bis 230 g Protein pro Tag. Eine Menge, die eine seriöse Ernährungsplanung erfordert — genau die Art von Berechnung, die MoovX für dich automatisiert.',
+            ],
+          },
+          {
+            heading: 'Wie über den Tag verteilen',
+            paragraphs: [
+              'Die Gesamtmenge an Protein über den Tag ist der wichtigste Faktor, aber die Verteilung spielt ebenfalls eine Rolle. Die Forschung zeigt, dass die Muskelproteinsynthese optimiert wird, wenn Protein gleichmässig über den Tag verteilt wird, statt auf ein oder zwei grosse Mahlzeiten konzentriert.',
+              'Die praktische Empfehlung: Etwa 0,25 g/kg Körpergewicht pro Mahlzeit anpeilen (also 20 bis 40 g je nach Statur), verteilt auf 3 bis 5 Mahlzeiten im Abstand von 3 bis 4 Stunden. Für unsere 75 kg schwere Person bedeutet das ca. 20 g Protein 4 bis 6 Mal am Tag.',
+            ],
+          },
+        ],
+        tableTitle: 'Dein Proteinbedarf nach Ziel',
+        table: {
+          headers: ['Ziel', 'Empfohlene Zufuhr', 'Beispiel (75 kg)'],
+          rows: [
+            ['Erhalt / Muskelaufbau', '1,6 g/kg/Tag', '~120 g/Tag'],
+            ['Komfortbereich (ISSN)', '1,4 – 2,0 g/kg/Tag', '105 – 150 g/Tag'],
+            ['Diät / Kaloriendefizit', '2,3 – 3,1 g/kg/Tag', '170 – 230 g/Tag'],
+            ['Pro Mahlzeit', '0,25 g/kg (20–40 g)', '~20 g, 4x/Tag'],
+          ],
+        },
         ctaText: 'MoovX berechnet automatisch deinen Proteinbedarf basierend auf Gewicht, Ziel und Aktivität — und erstellt deine Mahlzeiten aus 170 Schweizer Lebensmitteln. 10 Tage kostenlos testen.',
-        disclaimer: 'Dieser Artikel dient nur zu Informationszwecken und ersetzt keine professionelle medizinische Beratung.',
+        disclaimer: 'Dieser Artikel dient nur zu Informationszwecken und ersetzt keine professionelle medizinische Beratung. Passe deine Ernährung an deine persönliche Situation an, besonders bei bestehenden Erkrankungen.',
       },
     },
   },
@@ -194,18 +278,96 @@ export const BLOG_POSTS: BlogPost[] = [
       en: {
         title: 'How many sets per week to build muscle? The optimal volume according to science',
         description: 'Training volume is the key driver of hypertrophy. Science recommends 10 to 20 sets per muscle group per week. Here is the breakdown.',
-        intro: 'Full English version coming soon.',
-        sections: [],
+        intro: "After protein, this is probably the second most common question in weight training: how many sets should you do per week for each muscle group? Too few, and you plateau. Too many, and you exhaust yourself without progressing. Research has made great strides on this question in recent years, and the answers are both clear and nuanced.",
+        sections: [
+          {
+            heading: 'Volume: the #1 driver of hypertrophy',
+            paragraphs: [
+              'In 2017, Schoenfeld, Ogborn, and Krieger published a meta-analysis in the Journal of Sports Sciences covering 15 controlled studies. Their goal: to quantify the relationship between weekly training volume (number of sets per muscle) and muscle growth. The result is unambiguous: there is a significant dose-response relationship. The more sets you perform for a given muscle, the more that muscle grows.',
+              'The threshold that consistently emerges: 10+ sets per muscle per week produce significantly greater muscle gains than fewer than 5 sets. This is the floor above which stimulation becomes truly productive for most trainees.',
+            ],
+          },
+          {
+            heading: 'The practical range: 10 to 20 sets',
+            paragraphs: [
+              'The consensus from the body of research places the effective zone between 10 and 20 sets per muscle group per week, spread across at least 2 sessions (rather than crammed into one).',
+              "For a beginner, 10 sets per week per muscle is an excellent starting point. As the body adapts and progress slows, gradually increasing to 14, 16, or even 20 sets allows you to restart gains. The key idea: volume is a lever you increase gradually — not a maximum to hit from day one.",
+            ],
+          },
+          {
+            heading: 'Watch out for diminishing returns',
+            paragraphs: [
+              'More is not always better. A more recent systematic review by Baz-Valle and colleagues, published in 2022 in the Journal of Human Kinetics, showed that muscle mass gains plateau beyond 20 sets per week per muscle. Worse: at very high volumes, accumulated fatigue can compromise the quality of subsequent sets and limit recovery.',
+              'The central concept is PRODUCTIVE volume: each additional set must provide enough stimulus to justify the fatigue cost. Once that balance tips, adding volume becomes counterproductive. This is why well-designed programs modulate volume in phases (periodization), rather than maintaining maximum volume permanently.',
+            ],
+          },
+          {
+            heading: 'What really counts in a set',
+            paragraphs: [
+              'Not all sets are created equal. For a set to count toward productive volume, it must be taken close enough to muscular failure — ideally between 0 and 4 reps in reserve (RIR). The load used should allow between 6 and 30 reps: below that is too heavy to target hypertrophy; above that, intensity is insufficient.',
+              'Warm-up sets, sets that are too light, or those stopped well before effort do not count toward weekly volume. It is the quality of effort, combined with quantity, that determines muscle growth.',
+            ],
+          },
+        ],
+        tableTitle: 'Weekly volume benchmarks per muscle',
+        table: {
+          headers: ['Level', 'Sets / muscle / week', 'Suggested split'],
+          rows: [
+            ['Beginner', '10 sets', '2 sessions of 5 sets'],
+            ['Intermediate', '12 – 16 sets', '2 to 3 sessions'],
+            ['Advanced', '16 – 20 sets', '3 sessions or more'],
+            ['Plateau zone', '> 20 sets', 'Diminishing returns'],
+          ],
+        },
         ctaText: 'MoovX builds your program with the right volume per muscle group based on your level, and adjusts as you progress. 10-day free trial.',
-        disclaimer: 'This article is for informational purposes only and does not replace professional guidance.',
+        disclaimer: 'This article is for informational purposes only and does not replace professional guidance. Adjust volume to your recovery and experience.',
       },
       de: {
         title: 'Wie viele Sätze pro Woche für Muskelaufbau? Das optimale Volumen laut Wissenschaft',
         description: 'Das Trainingsvolumen ist der Schlüsselfaktor für Hypertrophie. Die Wissenschaft empfiehlt 10 bis 20 Sätze pro Muskelgruppe pro Woche.',
-        intro: 'Vollständige deutsche Version kommt bald.',
-        sections: [],
+        intro: 'Nach der Proteinfrage ist dies wohl die zweithäufigste Frage im Krafttraining: Wie viele Sätze sollte man pro Woche für jede Muskelgruppe machen? Zu wenig, und man stagniert. Zu viel, und man ermüdet sich, ohne Fortschritte zu machen. Die Forschung hat in den letzten Jahren grosse Fortschritte bei dieser Frage gemacht, und die Antworten sind sowohl klar als auch differenziert.',
+        sections: [
+          {
+            heading: 'Volumen: Faktor Nr. 1 für Hypertrophie',
+            paragraphs: [
+              'Im Jahr 2017 veröffentlichten Schoenfeld, Ogborn und Krieger im Journal of Sports Sciences eine Metaanalyse über 15 kontrollierte Studien. Ihr Ziel: die Beziehung zwischen wöchentlichem Trainingsvolumen (Anzahl der Sätze pro Muskel) und Muskelwachstum zu quantifizieren. Das Ergebnis ist eindeutig: Es gibt eine signifikante Dosis-Wirkungs-Beziehung. Je mehr Sätze man für einen bestimmten Muskel macht, desto mehr wächst dieser Muskel.',
+              'Die Schwelle, die sich konsistent herauskristallisiert: 10+ Sätze pro Muskel pro Woche erzeugen signifikant grössere Muskelzuwächse als weniger als 5 Sätze. Das ist der Mindestbereich, ab dem die Stimulation für die Mehrheit der Trainierenden wirklich produktiv wird.',
+            ],
+          },
+          {
+            heading: 'Der praktische Bereich: 10 bis 20 Sätze',
+            paragraphs: [
+              'Der Konsens aus der gesamten Literatur liegt bei 10 bis 20 Sätzen pro Muskelgruppe pro Woche, verteilt auf mindestens 2 Trainingseinheiten (statt in einer einzigen konzentriert).',
+              'Für einen Anfänger sind 10 Sätze pro Woche und Muskel ein hervorragender Ausgangspunkt. Wenn sich der Körper anpasst und die Fortschritte langsamer werden, ermöglicht eine schrittweise Steigerung auf 14, 16 oder sogar 20 Sätze, die Zuwächse wieder anzukurbeln. Die Kernidee: Das Volumen ist ein Hebel, den man schrittweise erhöht — kein Maximum, das man vom ersten Tag an erreichen muss.',
+            ],
+          },
+          {
+            heading: 'Vorsicht vor abnehmenden Erträgen',
+            paragraphs: [
+              'Mehr ist nicht immer besser. Eine neuere systematische Übersicht von Baz-Valle und Kollegen, veröffentlicht 2022 im Journal of Human Kinetics, zeigte, dass die Muskelzuwächse jenseits von 20 Sätzen pro Woche und Muskel ein Plateau erreichen. Schlimmer noch: Bei sehr hohem Volumen kann die angesammelte Ermüdung die Qualität der folgenden Sätze beeinträchtigen und die Erholung einschränken.',
+              'Das zentrale Konzept ist das PRODUKTIVE Volumen: Jeder zusätzliche Satz muss genug Stimulus liefern, um die Ermüdungskosten zu rechtfertigen. Sobald sich dieses Verhältnis umkehrt, wird zusätzliches Volumen kontraproduktiv. Deshalb modulieren gut konzipierte Programme das Volumen phasenweise (Periodisierung), anstatt dauerhaft maximales Volumen aufrechtzuerhalten.',
+            ],
+          },
+          {
+            heading: 'Was wirklich in einem Satz zählt',
+            paragraphs: [
+              'Nicht alle Sätze sind gleichwertig. Damit ein Satz zum produktiven Volumen zählt, muss er nah genug ans Muskelversagen geführt werden — idealerweise zwischen 0 und 4 Wiederholungen in Reserve (RIR). Das verwendete Gewicht sollte zwischen 6 und 30 Wiederholungen erlauben: darunter ist es zu schwer für Hypertrophie; darüber ist die Intensität unzureichend.',
+              'Aufwärmsätze, zu leichte Sätze oder solche, die weit vor der Anstrengung abgebrochen werden, zählen nicht zum Wochenvolumen. Es ist die Qualität der Anstrengung, kombiniert mit der Menge, die das Muskelwachstum bestimmt.',
+            ],
+          },
+        ],
+        tableTitle: 'Wöchentliche Volumen-Richtwerte pro Muskel',
+        table: {
+          headers: ['Niveau', 'Sätze / Muskel / Woche', 'Empfohlene Aufteilung'],
+          rows: [
+            ['Anfänger', '10 Sätze', '2 Einheiten à 5 Sätze'],
+            ['Fortgeschrittener', '12 – 16 Sätze', '2 bis 3 Einheiten'],
+            ['Erfahrener', '16 – 20 Sätze', '3 Einheiten oder mehr'],
+            ['Plateau-Zone', '> 20 Sätze', 'Abnehmende Erträge'],
+          ],
+        },
         ctaText: 'MoovX erstellt dein Programm mit dem richtigen Volumen pro Muskelgruppe basierend auf deinem Level und passt es laufend an. 10 Tage kostenlos testen.',
-        disclaimer: 'Dieser Artikel dient nur zu Informationszwecken und ersetzt keine professionelle Beratung.',
+        disclaimer: 'Dieser Artikel dient nur zu Informationszwecken und ersetzt keine professionelle Beratung. Passe das Volumen an deine Erholung und Erfahrung an.',
       },
     },
   },
@@ -279,16 +441,92 @@ export const BLOG_POSTS: BlogPost[] = [
       en: {
         title: 'How often should you train per week to build muscle?',
         description: '1, 2 or 3 times per muscle per week? Science is clear: at equal volume, total volume is what matters. Here is how to split it.',
-        intro: 'Full English version coming soon.',
-        sections: [],
+        intro: "Should you train each muscle once, twice, or three times a week to maximize growth? It is one of the oldest debates in weight training. Good news: research has evolved considerably in recent years, and the answer is more liberating than you might expect. You have more flexibility than you think.",
+        sections: [
+          {
+            heading: 'Twice a week beats once… initially',
+            paragraphs: [
+              'In 2016, Schoenfeld, Ogborn, and Krieger published a meta-analysis in Sports Medicine pooling studies that compared different training frequencies. Their conclusion made waves: training a muscle twice per week produced greater muscle mass gains than just once a week.',
+              'This result largely popularized programs like Upper/Lower or PPL (Push/Pull/Legs), which expose each muscle to 2 weekly stimulations. And for good reason: at the time, the explanation seemed logical — more frequency, more protein synthesis, more muscle.',
+            ],
+          },
+          {
+            heading: 'The key nuance: volume is what matters',
+            paragraphs: [
+              'Three years later, Schoenfeld, Grgic, and Krieger refined their analysis with a larger study (25 studies, published in 2019 in the Journal of Sports Sciences). The conclusion this time is more nuanced and more important: at EQUAL VOLUME, training frequency has no significant impact on hypertrophy.',
+              'In other words, if you do 12 sets per week for your chest, splitting them into 1, 2, or 3 sessions produces comparable results — as long as each set is performed with sufficient intensity. Frequency is not a growth factor in itself; it is primarily a tool for organizing volume.',
+            ],
+          },
+          {
+            heading: 'Why splitting still helps in practice',
+            paragraphs: [
+              'If frequency is not biologically superior, it offers important practical advantages. Splitting 16 chest sets across 2 sessions (8 each) rather than one allows you to perform better on each set: less accumulated fatigue during the session, better technique, heavier loads maintained.',
+              'It is also about recovery and session duration. A focused 45-minute session is easier to fit into a schedule than a 2-hour marathon. Frequency is therefore a lever for consistency — and consistency is the true engine of long-term progress.',
+            ],
+          },
+          {
+            heading: 'What to take away',
+            paragraphs: [
+              'Choose the frequency that allows you to hit your weekly volume target and stay consistent. If you can train 6 days a week, a PPL hits each muscle twice — an excellent compromise between volume and recovery. If you only have 3 days, well-built Full Body sessions can deliver equally good results.',
+              'The message from science is liberating: there is no magic frequency. What matters is accumulating enough productive sets over the week and doing so sustainably. The rest is a matter of preference and scheduling.',
+            ],
+          },
+        ],
+        tableTitle: 'Frequency by your schedule',
+        table: {
+          headers: ['Frequency / muscle', 'Best for', 'Note'],
+          rows: [
+            ['1x / week', 'Tight schedule', 'OK if total volume is reached'],
+            ['2x / week', 'Most trainees', 'Good balance (e.g. PPL 6 days)'],
+            ['3x / week', 'Advanced, high volume', 'Better way to spread high volume'],
+          ],
+        },
         ctaText: "MoovX's PPL program automatically distributes your volume across the week for optimal training/recovery balance. 10-day free trial.",
         disclaimer: 'This article is for informational purposes only. Adjust frequency to your recovery, sleep, and stress level.',
       },
       de: {
         title: 'Wie oft pro Woche trainieren für Muskelaufbau?',
         description: '1, 2 oder 3 Mal pro Muskel pro Woche? Die Wissenschaft ist klar: Bei gleichem Volumen zählt das Gesamtvolumen. So teilst du es richtig auf.',
-        intro: 'Vollständige deutsche Version kommt bald.',
-        sections: [],
+        intro: 'Sollte man jeden Muskel ein-, zwei- oder dreimal pro Woche trainieren, um das Wachstum zu maximieren? Es ist eine der ältesten Debatten im Krafttraining. Gute Nachricht: Die Forschung hat sich in den letzten Jahren erheblich weiterentwickelt, und die Antwort ist befreiender, als man denkt. Du hast mehr Flexibilität, als du glaubst.',
+        sections: [
+          {
+            heading: 'Zweimal pro Woche schlägt einmal… anfänglich',
+            paragraphs: [
+              'Im Jahr 2016 veröffentlichten Schoenfeld, Ogborn und Krieger in Sports Medicine eine Metaanalyse, die Studien zum Vergleich verschiedener Trainingsfrequenzen zusammenfasste. Ihre Schlussfolgerung machte Schlagzeilen: Einen Muskel zweimal pro Woche zu trainieren brachte grössere Muskelzuwächse als nur einmal pro Woche.',
+              'Dieses Ergebnis hat Programme wie Upper/Lower oder PPL (Push/Pull/Legs), die jeden Muskel 2 wöchentlichen Stimulationen aussetzen, stark populär gemacht. Und das zu Recht: Damals schien die Erklärung logisch — mehr Frequenz, mehr Proteinsynthese, mehr Muskel.',
+            ],
+          },
+          {
+            heading: 'Die entscheidende Nuance: Das Volumen zählt',
+            paragraphs: [
+              'Drei Jahre später verfeinerten Schoenfeld, Grgic und Krieger ihre Analyse mit einer grösseren Studie (25 Studien, veröffentlicht 2019 im Journal of Sports Sciences). Die Schlussfolgerung diesmal ist differenzierter und wichtiger: Bei GLEICHEM VOLUMEN hat die Trainingsfrequenz keinen signifikanten Einfluss auf die Hypertrophie.',
+              'Anders gesagt: Wenn du 12 Sätze pro Woche für die Brust machst, bringt es vergleichbare Ergebnisse, ob du sie auf 1, 2 oder 3 Einheiten aufteilst — solange jeder Satz mit ausreichender Intensität ausgeführt wird. Die Frequenz ist kein Wachstumsfaktor an sich; sie ist in erster Linie ein Werkzeug zur Organisation des Volumens.',
+            ],
+          },
+          {
+            heading: 'Warum Aufteilen in der Praxis trotzdem sinnvoll ist',
+            paragraphs: [
+              'Wenn die Frequenz biologisch nicht überlegen ist, bietet sie dennoch wichtige praktische Vorteile. 16 Brustsätze auf 2 Einheiten (je 8) aufzuteilen statt auf eine ermöglicht es, bei jedem Satz besser zu performen: weniger angesammelte Ermüdung während der Einheit, bessere Technik, schwerere Gewichte, die gehalten werden können.',
+              'Es geht auch um Erholung und Trainingsdauer. Eine fokussierte 45-Minuten-Einheit lässt sich leichter in den Alltag integrieren als ein 2-Stunden-Marathon. Die Frequenz ist daher ein Hebel für Regelmässigkeit — und Regelmässigkeit ist der wahre Motor für langfristigen Fortschritt.',
+            ],
+          },
+          {
+            heading: 'Was du konkret mitnehmen solltest',
+            paragraphs: [
+              'Wähle die Frequenz, die es dir ermöglicht, dein wöchentliches Volumenziel zu erreichen und konstant zu bleiben. Wenn du 6 Tage pro Woche trainieren kannst, trifft ein PPL jeden Muskel zweimal — ein hervorragender Kompromiss zwischen Volumen und Erholung. Wenn du nur 3 Tage hast, können gut aufgebaute Ganzkörper-Einheiten genauso gute Ergebnisse liefern.',
+              'Die Botschaft der Wissenschaft ist befreiend: Es gibt keine magische Frequenz. Was zählt, ist, genügend produktive Sätze über die Woche zu sammeln und dies nachhaltig zu tun. Der Rest ist eine Frage der Präferenz und der Planung.',
+            ],
+          },
+        ],
+        tableTitle: 'Frequenz nach deiner Organisation',
+        table: {
+          headers: ['Frequenz / Muskel', 'Für wen', 'Hinweis'],
+          rows: [
+            ['1x / Woche', 'Enger Zeitplan', 'OK wenn das Gesamtvolumen erreicht wird'],
+            ['2x / Woche', 'Die meisten Trainierenden', 'Guter Kompromiss (z.B. PPL 6 Tage)'],
+            ['3x / Woche', 'Fortgeschrittene, hohes Volumen', 'Hohes Volumen besser aufteilen'],
+          ],
+        },
         ctaText: 'Das PPL-Programm von MoovX verteilt dein Volumen automatisch über die Woche für ein optimales Training-/Erholungsgleichgewicht. 10 Tage kostenlos testen.',
         disclaimer: 'Dieser Artikel dient nur zu Informationszwecken. Passe die Frequenz an deine Erholung, deinen Schlaf und dein Stressniveau an.',
       },
