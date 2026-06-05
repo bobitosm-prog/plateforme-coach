@@ -138,15 +138,6 @@ REGLES SCIENTIFIQUES OBLIGATOIRES :
    - Pour superset : technique_details = "nom de l'exercice partenaire"
    - Pour mechanical : technique_details = "description de la variation"`
 
-// Post-process: normalize day names to standard types
-const TYPE_MAP: Record<string, string> = {
-  'push': 'Pectoraux', 'chest': 'Pectoraux', 'pec': 'Pectoraux', 'poitrine': 'Pectoraux',
-  'pull': 'Dos', 'back': 'Dos', 'dorsal': 'Dos',
-  'legs': 'Jambes', 'lower': 'Jambes', 'quads': 'Jambes', 'ischio': 'Jambes', 'glute': 'Jambes', 'fessier': 'Jambes',
-  'upper': 'Haut du Corps', 'epaule': 'Épaules', 'shoulder': 'Épaules',
-  'full body': 'Full Body', 'cardio': 'Cardio',
-}
-
 /**
  * Generate a training program via Anthropic tool_use.
  * Pure function: no auth, no request, no rate-limit.
@@ -299,18 +290,6 @@ IMPORTANT :
   }
 
   const program = unwrapToolInput(toolUseBlock.input)
-
-  // Post-process: normalize day names to standard types
-  if (program.days) {
-    for (const day of program.days) {
-      if (day.name) {
-        const n = day.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        for (const [key, val] of Object.entries(TYPE_MAP)) {
-          if (n.includes(key)) { day.name = val; break }
-        }
-      }
-    }
-  }
 
   return program
 }
