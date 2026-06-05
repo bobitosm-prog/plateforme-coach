@@ -124,6 +124,27 @@ Validé runtime en PROD : clic FR -> dashboard FR, reste FR après reload, docum
 
 DETTE / À SURVEILLER : next-intl peut reposer un cookie host-only depuis l'Accept-Language ; le fix nettoie au moment du switch mais si le doublon réapparaît dans d'autres flux, envisager de faire lire preferred_locale (DB, source de vérité) par ClientIntlProvider — à faire à froid, avec test isolé (touche le provider racine).
 
+### Blog SEO — état final (5 articles piliers trilingues)
+
+Le module blog (commit 6329b93) a été complété :
+- Traductions EN + DE des 3 premiers articles (04f8ca8) : blog entièrement trilingue.
+- 2 articles supplémentaires créatine + sommeil, trilingues d'emblée (66498bd).
+
+État final : 5 articles piliers FR/EN/DE = 15 pages article + 3 index, tous sourcés scientifiquement (références réelles paraphrasées, chiffres identiques entre langues) :
+1. Protéines/prise de muscle — Morton 2018 (BJSM), ISSN 2017
+2. Volume/séries par semaine — Schoenfeld 2017 (JSS), Baz-Valle 2022
+3. Fréquence d'entraînement — Schoenfeld 2016 (Sports Med), 2019 (JSS)
+4. Créatine dosage/sécurité — Kreider/ISSN 2017, Antonio 2021
+5. Sommeil/récupération — Craven 2022 (Sports Med), Watson 2017
+
+Cluster cohérent : nutrition + entraînement + supplémentation + récupération. Contenu dans content/blog/posts.ts (typé), intégré sitemap + hreflang + JSON-LD Article. Lien Blog au footer landing.
+
+DETTE / À FAIRE (non bloquant) :
+- Soumettre sitemap à Google Search Console + demander indexation des articles
+- Google Business Profile (SEO local Genève)
+- Prochains articles : ajouter dans content/blog/posts.ts (structure dupliquable)
+- Le SEO porte ses fruits sur des mois, pas immédiat
+
 ### État final
 
 - 4 commits poussés sur main (8221305..c1bcf86), build prod vert (62/62 pages), déployé Vercel Production.
