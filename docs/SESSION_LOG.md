@@ -93,6 +93,20 @@ Roté par précaution malgré tout : nouveau openssl rand -hex 32, mis à jour d
 
 Conclusion : aucune fuite, clé Stripe jamais exposée, rotation Stripe NON nécessaire (annulée). CRON_SECRET désormais secret dédié propre.
 
+### Bug critique inscription — signup cassé (training_location)
+
+Découvert en testant register-client E2E sur prod (objectif : valider le fix CSP). Le CSP était OK (page register-client charge), mais la création de compte échouait : "Database error saving new user".
+
+Cause racine : le trigger on_auth_user_created appelle handle_new_user() qui insère dans public.profiles (id, full_name, email). Or training_location était NOT NULL SANS DEFAULT (colonne ajoutée le 30 mai, F6.B.1a, avec backfill des users existants mais sans default). À chaque signup, l'INSERT du trigger violait la contrainte NOT NULL → Supabase Auth annulait la création → "Database error saving new user".
+
+Impact : TOUTE inscription cassée depuis le 30 mai (6 jours), invisible car 0 client payant donc 0 inscription tentée jusqu'à ce test.
+
+Fix : ALTER TABLE profiles ALTER COLUMN training_location SET DEFAULT 'gym' (valeur du CHECK home/gym/both, cohérente avec le backfill). Appliqué prod via SQL Editor + versionné (migration 20260605141613). Validé E2E : nouveau compte créé, onboarding 1/12 atteint.
+
+RÈGLE À RETENIR : toute colonne NOT NULL ajoutée à profiles doit avoir un DEFAULT, OU être fournie dans handle_new_user(). Sinon = signup cassé silencieux (le bug ne sort qu'à l'inscription réelle, pas en dev).
+
+DETTE LOGGÉE : handle_new_user n'insère que (id, full_name, email). C'est un point de défaillance silencieux à chaque évolution du schéma profiles. Envisager soit des DEFAULT systématiques sur les NOT NULL, soit un test E2E signup dans le CI.
+
 ### État final
 
 - 4 commits poussés sur main (8221305..c1bcf86), build prod vert (62/62 pages), déployé Vercel Production.
