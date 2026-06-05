@@ -4,15 +4,92 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-02
-- **HEAD** : 8a014be
+- **Date** : 2026-06-05
+- **HEAD** : c1bcf86
 - **Working tree** : clean
-- **Total commits Phase 6** : 36 (17 session 30 mai + 15 session 31 mai + 2 fixes 1er juin + 2 fixes 2 juin)
+- **Total commits Phase 6** : 40 (17 session 30 mai + 15 session 31 mai + 2 fixes 1er juin + 2 fixes 2 juin + 4 fixes 5 juin)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
 - **Phase 6B** : COMPLET — closed-loop training 3 sources (onboarding_auto + diagnostic_auto + cron_auto) + F6.B.7 préférences onboarding
 - **Bugs prod** : tous résolus — double-wrap neutralisé (3 endroits tool_use), CSP corrigé (connect-src + img-src), crash home patché
-- **Tâche en cours** : confirmer register-client prod + audit UX global
+- **Session 5 juin** : 4 fixes training (week TZ, noms séances, désync calendrier, warning React) — déployés prod
+- **Tâche en cours** : test E2E prod app.moovx.ch + audit UX global (suite)
+
+---
+
+## 2026-06-05 — Faisceau bugs suivi de programme (training) — 4 fixes
+
+**Branche** : `main`
+
+### Contexte
+
+Faisceau de 3 bugs "suivi de programme" annoncés (current_week figée, noms de séances écrasés, mapping jour). Diagnostic terrain a recadré le périmètre réel : 2 des 3 bugs confirmés, 1 mirage, + 2 bugs découverts en cours (désync calendrier, warning React) + 1 faux bug (gamification, cause = config locale). Compte test `f.marco@me.com` (UUID `00a8a3a6-66b0-449a-8788-c105b8df580a`), programme "PPL Masse Intermédiaire — 6 jours Homme" (régénéré en séance).
+
+### Commits livrés (ordre chronologique)
+
+| # | Hash | Sous-batch | Description |
+|---|---|---|---|
+| 1 | 09afc4d | fix #1 | fix(training): derive program week from calendar days, TZ-safe |
+| 2 | 5afbe50 | fix #2 | fix(training): stop overwriting generated day names with muscle types |
+| 3 | 85e4125 | fix désync | fix(training): sync scheduled_sessions on workout completion |
+| 4 | c1bcf86 | fix React | fix(training): move onClose out of setState updater in WorkoutSession |
+
+### Fix #1 — current_week figée (09afc4d)
+
+Décision validée : avancement calendaire dérivé de `start_date`, fin du bouton manuel `advanceWeek`. Nouveau `lib/training/program-week.ts` avec `getEffectiveWeek()`. Suppression `advanceWeek`/`onAdvanceWeek` dans TrainingTab + PhaseProgressBanner.
+
+**Bug TZ attrapé à l'audit** : la première implémentation parsait `start_date` via `new Date(start_date)` (UTC minuit) soustrait à `Date.now()` (local) → off-by-one possible à la bascule de semaine entre 00h-02h locales à Genève. Fix final : calcul de jours calendaires purs via `Date.UTC(y, m-1, d)` (jour local lu, repère fixe) — robuste TZ et DST (un parse local simple +'T00:00:00' aurait laissé un trou sur un programme traversant mars/octobre).
+
+Validé runtime : SEMAINE 7/12 + Phase 2 affichées, Date.UTC confirmé dans le code.
+
+### Fix #2 — noms de séances écrasés (5afbe50)
+
+TYPE_MAP (generate-program.ts) réécrivait day.name ("Push A") en type muscle ("Pectoraux") dans un post-process. Audit : TYPE_MAP n'avait que 2 occurrences (def + boucle), aucun consommateur aval — les noms muscle système viennent d'ailleurs (MUSCLE_FILTERS, design-tokens, i18n-muscle), pas de cette normalisation. Code mort destructeur. Supprimé map + boucle (21 lignes).
+
+Validé runtime sur génération fraîche : calendrier affiche "PUSH A — Poitrine & Épaules & Triceps". Note : programmes existants gardent les noms écrasés (figés en base), seules les nouvelles générations bénéficient du fix.
+
+### Bug #3 "mapping index" — MIRAGE (rien à corriger)
+
+Symptôme annoncé : mapping jour par index au lieu de weekday. Audit base : weekday_order du programme = Lundi | Mardi | ... | Dimanche dans l'ordre parfait. padTo7Days assigne weekday = DAY_NAMES[i] par le même index → index = weekday par construction. Faux positif, padTo7Days non touché.
+
+### Fix désync calendrier (85e4125)
+
+Symptôme annoncé "séances faites marquées Manque" requalifié à l'audit : PAS un bug d'affichage (isMissed correct), mais une désync inter-tables. Terminer une séance insère dans workout_sessions mais ne marquait jamais scheduled_sessions.completed → calendrier rouge sur séances réellement faites.
+
+Fix dans onFinishWorkout (useClientDashboard) : update scheduled_sessions (user_id + date du jour via toDateStr, PAS toISOString pour éviter le décalage TZ). Update only, idempotent (.eq completed false), une séance libre sans ligne planifiée ne crée rien.
+
+Validé runtime + base : point Ven 5 passe vert, scheduled_sessions.completed=true confirmé en base.
+
+Backfill SQL : 3 jours (01/02/04 juin) faits avant le fix marqués completed=true, ciblés par date + exists sur workout_sessions correspondant. Le 03/06 (aucun workout réel) laissé false — fidélité aux données.
+
+### Fix warning React (c1bcf86)
+
+Warning "Cannot update a component (CoachApp) while rendering a different component (WorkoutSession)" — le countdown auto-redirect appelait onClose() dans l'updater de setAutoRedirectCountdown (updater impur déclenchant un setState parent). Fix : updater rendu pur (décrément seul) + onClose déplacé dans un effet séparé réagissant à autoRedirectCountdown === 0. Validé runtime : retour au dashboard sans erreur console.
+
+### Faux bug gamification 400 — cause = config locale (PAS de code)
+
+24+ erreurs 400 Bad Request sur upsert user_xp/user_badges en console locale. Éliminé contrainte manquante (PK sur user_id existe), éliminé RLS (policies correctes). Cause racine = espace parasite dans .env.local : NEXT_PUBLIC_SUPABASE_URL=" https://..." (espace après le guillemet) → URL malformée côté client navigateur → écritures rejetées. Corrigé local + redémarrage → 400 disparus. Vérifié Vercel : variable prod PROPRE. Gamification jamais cassée en prod, bug strictement local.
+
+### Apprentissages senior
+
+- Mismatch UUID dès le début : interrogé fd3f4544 (= marco.ferreira@bluemail.ch) pendant la première moitié de session alors que le compte connecté était f.marco@me.com (00a8a3a6). Les "workout_sessions vide / No rows" étaient trompeurs. Toujours recouper email ↔ UUID avant de conclure "table vide".
+- L'audit terrain a évité 2 fixes au mauvais endroit : désync ciblé d'abord sur finishTrainingWorkout (flux B) alors que le flux réel est onFinishWorkout (flux A, page.tsx:251) ; gamification soupçonnée RLS alors que c'était un espace .env.local.
+- Anti-pattern catch {} vide sur addXP/updateStreak (TrainingTab:679) et insert workout — avale les erreurs, coûte du temps de diagnostic.
+
+### Dette technique loggée
+
+1. finishTrainingWorkout (TrainingTab) probablement code mort — flux réel = onFinishWorkout (flux A). Deux flux de complétion parallèles, un inutilisé. À vérifier et supprimer.
+2. catch {} vides à remplacer par capture + log (TrainingTab:679, autres).
+3. Double package-lock.json : /Users/marcoferreira/package-lock.json parasite (warning build/dev). Supprimer + config turbopack.root.
+4. start_date null sur programmes prod pré-fix #1 : fallback current_week||1 masque une semaine fausse. Vérifier qu'aucun programme actif prod n'a start_date null.
+5. Avancement calendaire ignore les pauses (blessure/vacances) → programme finit à S12 calendaire même si moins de séances réelles. Décision produit, trou UX assumé.
+6. Images qualities non déclarées dans next.config (warnings build) — déclarer [75, 85, 88, 90].
+
+### État final
+
+- 4 commits poussés sur main (8221305..c1bcf86), build prod vert (62/62 pages), déployé Vercel Production.
+- Working tree clean. Backfill calendrier appliqué. Instrumentation debug retirée.
+- Validé E2E prod : séance terminée sur app.moovx.ch, calendrier synchronisé (Lun/Mar/Jeu/Ven verts, Mer rouge légitime non fait).
 
 ---
 
