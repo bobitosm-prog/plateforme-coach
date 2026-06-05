@@ -532,6 +532,331 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     },
   },
+  {
+    slug: 'creatine-musculation-dosage-science',
+    date: '2026-06-05',
+    readingMinutes: 6,
+    references: [
+      {
+        authors: 'Kreider RB, Kalman DS, Antonio J, et al.',
+        title: 'International Society of Sports Nutrition position stand: safety and efficacy of creatine supplementation in exercise, sport, and medicine',
+        journal: 'Journal of the International Society of Sports Nutrition',
+        year: 2017,
+        url: 'https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z',
+      },
+      {
+        authors: 'Antonio J, Candow DG, Forbes SC, et al.',
+        title: 'Common questions and misconceptions about creatine supplementation: what does the scientific evidence really show?',
+        journal: 'Journal of the International Society of Sports Nutrition',
+        year: 2021,
+        url: 'https://jissn.biomedcentral.com/articles/10.1186/s12970-021-00412-w',
+      },
+    ],
+    content: {
+      fr: {
+        title: 'La créatine en musculation : dosage, effets et sécurité selon la science',
+        description: "La créatine monohydrate est le supplément le plus étudié et le plus efficace. 3 à 5 g par jour, sûre, sans phase de charge obligatoire. On fait le point.",
+        intro: "La créatine fait partie des sujets les plus chargés en idées reçues dans le monde du fitness. Rétention d'eau, danger pour les reins, nécessité d'une phase de charge... les mythes ont la vie dure. Pourtant, c'est de loin le supplément sportif le mieux documenté par la recherche scientifique, avec des centaines d'études sur plusieurs décennies. On s'appuie ici sur la position officielle de l'International Society of Sports Nutrition pour faire le tri.",
+        sections: [
+          {
+            heading: 'Le supplément le plus étudié et le plus efficace',
+            paragraphs: [
+              "La position officielle de l'ISSN, publiée par Kreider et collaborateurs en 2017, est sans équivoque : la créatine monohydrate est la forme de créatine la plus étudiée et la plus efficace pour augmenter la capacité d'effort à haute intensité et la masse maigre. C'est le supplément nutritionnel le plus efficace actuellement disponible pour les sportifs, en termes d'augmentation de la capacité d'exercice à haute intensité et de la masse musculaire.",
+              "Ce n'est pas une affirmation marketing — c'est le résumé de centaines d'études évaluées par des chercheurs indépendants. La créatine augmente les réserves de phosphocréatine dans les muscles, ce qui permet de produire plus d'énergie lors d'efforts courts et intenses (séries de musculation, sprints). Le résultat : plus de répétitions, plus de charge, et donc plus de stimulus pour la croissance musculaire.",
+            ],
+          },
+          {
+            heading: 'Combien en prendre : 3 à 5 g par jour',
+            paragraphs: [
+              "Deux protocoles existent. Le premier, avec phase de charge : environ 0,3 g par kg de poids de corps par jour pendant 3 jours (soit ~20 g/jour pour une personne de 70 kg), suivi de 3 à 5 g par jour en entretien. Ce protocole sature rapidement les stocks de créatine dans les muscles (en environ 1 semaine).",
+              "Le second, sans phase de charge : 3 à 5 g par jour directement, dès le début. Les stocks musculaires se remplissent en 3 à 4 semaines au lieu d'une seule. Le résultat final est strictement identique — seul le délai change. La phase de charge n'est donc PAS obligatoire ; elle est simplement plus rapide.",
+              "La plupart des pratiquants préfèrent la méthode sans charge, plus simple et sans inconfort digestif (que la dose élevée peut parfois provoquer).",
+            ],
+          },
+          {
+            heading: 'Est-ce dangereux ? Ce que dit la science',
+            paragraphs: [
+              "L'ISSN est catégorique : il n'existe aucune preuve scientifique d'effet néfaste de la créatine monohydrate à court ou long terme chez les individus en bonne santé, aux doses recommandées. Cette conclusion est renforcée par la revue de 2021 (Antonio et al.) qui passe en revue les questions et idées reçues les plus courantes.",
+              "Les craintes les plus répandues — dommages aux reins, perte de cheveux, déshydratation, crampes — ne sont pas soutenues par les données scientifiques. La créatine peut augmenter légèrement la créatinine sanguine (un marqueur indirect de la fonction rénale), ce qui peut alarmer un médecin non informé, mais cela ne reflète pas un dommage rénal réel.",
+            ],
+          },
+          {
+            heading: 'Comment bien la prendre',
+            paragraphs: [
+              "La forme monohydrate est la référence. Les autres formes (HCL, éthyl ester, buffered) n'ont pas démontré de supériorité et coûtent plus cher. Inutile de surpayer.",
+              "Le moment de la prise dans la journée importe peu — matin, midi, soir, avant ou après l'entraînement, la différence est négligeable. Ce qui compte, c'est la régularité : prendre ses 3 à 5 g chaque jour, sans interruption. La prendre avec des glucides ou des protéines peut légèrement améliorer l'absorption, mais ce n'est pas indispensable.",
+            ],
+          },
+        ],
+        tableTitle: 'Comment prendre la créatine',
+        table: {
+          headers: ['Protocole', 'Dosage', "Délai d'effet"],
+          rows: [
+            ['Avec charge', '0,3 g/kg/j (3 j) puis 3-5 g/j', 'Stocks pleins en ~1 semaine'],
+            ['Sans charge', '3-5 g/j directement', 'Stocks pleins en 3-4 semaines'],
+            ['Entretien', '3-5 g/j', 'À maintenir dans la durée'],
+          ],
+        },
+        ctaText: "MoovX intègre vos compléments dans votre suivi nutritionnel et vous rappelle vos prises. Essai 10 jours offert.",
+        disclaimer: "Cet article est fourni à titre informatif et ne remplace pas l'avis d'un professionnel de santé. En cas de pathologie rénale ou de doute, consultez un médecin avant toute supplémentation.",
+      },
+      en: {
+        title: 'Creatine for muscle building: dosage, effects and safety according to science',
+        description: 'Creatine monohydrate is the most studied and effective supplement. 3 to 5 g per day, safe, no loading phase required. Here is the full picture.',
+        intro: "Creatine is one of the most myth-laden topics in the fitness world. Water retention, kidney danger, mandatory loading phase... misconceptions die hard. Yet it is by far the most scientifically documented sports supplement, backed by hundreds of studies over several decades. We rely here on the official position of the International Society of Sports Nutrition to separate fact from fiction.",
+        sections: [
+          {
+            heading: 'The most studied and effective supplement',
+            paragraphs: [
+              "The official ISSN position, published by Kreider and colleagues in 2017, is unequivocal: creatine monohydrate is the most studied and most effective form of creatine for increasing high-intensity exercise capacity and lean body mass. It is the most effective nutritional supplement currently available for athletes in terms of increasing high-intensity exercise capacity and muscle mass.",
+              "This is not a marketing claim — it is the summary of hundreds of studies evaluated by independent researchers. Creatine increases phosphocreatine stores in muscles, allowing more energy production during short, intense efforts (weight training sets, sprints). The result: more reps, heavier loads, and therefore more stimulus for muscle growth.",
+            ],
+          },
+          {
+            heading: 'How much to take: 3 to 5 g per day',
+            paragraphs: [
+              "Two protocols exist. The first, with a loading phase: approximately 0.3 g per kg of body weight per day for 3 days (roughly 20 g/day for a 70 kg person), followed by 3 to 5 g per day for maintenance. This protocol rapidly saturates muscle creatine stores (in about 1 week).",
+              "The second, without loading: 3 to 5 g per day right from the start. Muscle stores fill up in 3 to 4 weeks instead of one. The end result is strictly identical — only the timeline differs. The loading phase is therefore NOT mandatory; it is simply faster.",
+              "Most practitioners prefer the no-loading method, which is simpler and avoids the digestive discomfort that the high dose can sometimes cause.",
+            ],
+          },
+          {
+            heading: 'Is it dangerous? What science says',
+            paragraphs: [
+              "The ISSN is categorical: there is no scientific evidence of harmful effects from creatine monohydrate in the short or long term in healthy individuals at recommended doses. This conclusion is reinforced by the 2021 review (Antonio et al.) which addresses the most common questions and misconceptions.",
+              "The most widespread fears — kidney damage, hair loss, dehydration, cramps — are not supported by scientific data. Creatine may slightly increase blood creatinine (an indirect marker of kidney function), which can alarm an uninformed physician, but this does not reflect actual kidney damage.",
+            ],
+          },
+          {
+            heading: 'How to take it properly',
+            paragraphs: [
+              "Monohydrate is the gold standard. Other forms (HCL, ethyl ester, buffered) have not demonstrated superiority and cost more. No need to overpay.",
+              "The timing of intake during the day matters little — morning, noon, evening, before or after training, the difference is negligible. What matters is consistency: taking your 3 to 5 g every day, without interruption. Taking it with carbohydrates or protein may slightly improve absorption, but it is not essential.",
+            ],
+          },
+        ],
+        tableTitle: 'How to take creatine',
+        table: {
+          headers: ['Protocol', 'Dosage', 'Time to effect'],
+          rows: [
+            ['With loading', '0.3 g/kg/d (3 d) then 3-5 g/d', 'Full stores in ~1 week'],
+            ['Without loading', '3-5 g/d directly', 'Full stores in 3-4 weeks'],
+            ['Maintenance', '3-5 g/d', 'Maintain long-term'],
+          ],
+        },
+        ctaText: 'MoovX integrates your supplements into your nutritional tracking and reminds you of your doses. 10-day free trial.',
+        disclaimer: 'This article is for informational purposes only and does not replace professional medical advice. If you have kidney disease or any doubts, consult a physician before supplementing.',
+      },
+      de: {
+        title: 'Kreatin im Krafttraining: Dosierung, Wirkung und Sicherheit laut Wissenschaft',
+        description: 'Kreatin-Monohydrat ist das am besten erforschte und wirksamste Supplement. 3 bis 5 g pro Tag, sicher, keine Ladephase erforderlich. Hier der Überblick.',
+        intro: 'Kreatin gehört zu den Themen mit den meisten Mythen in der Fitnesswelt. Wassereinlagerungen, Nierenschäden, obligatorische Ladephase... Fehlinformationen halten sich hartnäckig. Dabei ist es mit Abstand das wissenschaftlich am besten dokumentierte Sportnahrungsergänzungsmittel, gestützt auf Hunderte von Studien über mehrere Jahrzehnte. Wir stützen uns hier auf die offizielle Position der International Society of Sports Nutrition, um Fakten von Mythen zu trennen.',
+        sections: [
+          {
+            heading: 'Das am besten erforschte und wirksamste Supplement',
+            paragraphs: [
+              'Die offizielle ISSN-Position, veröffentlicht von Kreider und Kollegen 2017, ist eindeutig: Kreatin-Monohydrat ist die am besten erforschte und wirksamste Form von Kreatin zur Steigerung der hochintensiven Leistungsfähigkeit und der fettfreien Körpermasse. Es ist das effektivste derzeit verfügbare Nahrungsergänzungsmittel für Sportler.',
+              'Das ist keine Marketingaussage — es ist die Zusammenfassung Hunderter von Studien, bewertet von unabhängigen Forschern. Kreatin erhöht die Phosphokreatinspeicher in den Muskeln, was mehr Energieproduktion bei kurzen, intensiven Belastungen ermöglicht (Krafttrainings-Sätze, Sprints). Das Ergebnis: mehr Wiederholungen, schwerere Gewichte und damit mehr Stimulus für Muskelwachstum.',
+            ],
+          },
+          {
+            heading: 'Wie viel einnehmen: 3 bis 5 g pro Tag',
+            paragraphs: [
+              'Zwei Protokolle existieren. Das erste, mit Ladephase: Etwa 0,3 g pro kg Körpergewicht pro Tag über 3 Tage (ca. 20 g/Tag für eine 70 kg schwere Person), gefolgt von 3 bis 5 g pro Tag zur Erhaltung. Dieses Protokoll füllt die Kreatinspeicher in den Muskeln schnell auf (in etwa 1 Woche).',
+              'Das zweite, ohne Ladephase: 3 bis 5 g pro Tag von Anfang an. Die Muskelspeicher füllen sich in 3 bis 4 Wochen statt in einer. Das Endergebnis ist strikt identisch — nur der Zeitrahmen unterscheidet sich. Die Ladephase ist daher NICHT obligatorisch; sie ist einfach schneller.',
+              'Die meisten Sportler bevorzugen die Methode ohne Laden — einfacher und ohne das Verdauungsunbehagen, das die hohe Dosis manchmal verursachen kann.',
+            ],
+          },
+          {
+            heading: 'Ist es gefährlich? Was die Wissenschaft sagt',
+            paragraphs: [
+              'Die ISSN ist kategorisch: Es gibt keine wissenschaftlichen Belege für schädliche Auswirkungen von Kreatin-Monohydrat kurz- oder langfristig bei gesunden Personen in empfohlenen Dosen. Diese Schlussfolgerung wird durch die Übersichtsarbeit von 2021 (Antonio et al.) verstärkt, die die häufigsten Fragen und Missverständnisse behandelt.',
+              'Die am weitesten verbreiteten Befürchtungen — Nierenschäden, Haarausfall, Dehydration, Krämpfe — werden durch die wissenschaftlichen Daten nicht gestützt. Kreatin kann das Blutkreatinin leicht erhöhen (ein indirekter Marker der Nierenfunktion), was einen nicht informierten Arzt alarmieren kann, aber dies spiegelt keinen tatsächlichen Nierenschaden wider.',
+            ],
+          },
+          {
+            heading: 'Wie man es richtig einnimmt',
+            paragraphs: [
+              'Monohydrat ist der Goldstandard. Andere Formen (HCL, Ethylester, gepuffert) haben keine Überlegenheit gezeigt und kosten mehr. Kein Grund, mehr zu bezahlen.',
+              'Der Zeitpunkt der Einnahme am Tag spielt kaum eine Rolle — morgens, mittags, abends, vor oder nach dem Training, der Unterschied ist vernachlässigbar. Was zählt, ist Regelmässigkeit: Täglich 3 bis 5 g einnehmen, ohne Unterbrechung. Die Einnahme mit Kohlenhydraten oder Protein kann die Aufnahme leicht verbessern, ist aber nicht unbedingt nötig.',
+            ],
+          },
+        ],
+        tableTitle: 'Wie man Kreatin einnimmt',
+        table: {
+          headers: ['Protokoll', 'Dosierung', 'Wirkungszeitraum'],
+          rows: [
+            ['Mit Ladephase', '0,3 g/kg/T (3 T) dann 3-5 g/T', 'Volle Speicher in ~1 Woche'],
+            ['Ohne Ladephase', '3-5 g/T direkt', 'Volle Speicher in 3-4 Wochen'],
+            ['Erhaltung', '3-5 g/T', 'Langfristig beibehalten'],
+          ],
+        },
+        ctaText: 'MoovX integriert deine Supplements in dein Ernährungs-Tracking und erinnert dich an die Einnahme. 10 Tage kostenlos testen.',
+        disclaimer: 'Dieser Artikel dient nur zu Informationszwecken und ersetzt keine professionelle medizinische Beratung. Bei Nierenerkrankungen oder Zweifeln einen Arzt konsultieren.',
+      },
+    },
+  },
+  {
+    slug: 'sommeil-recuperation-musculaire-performance',
+    date: '2026-06-05',
+    readingMinutes: 5,
+    references: [
+      {
+        authors: 'Craven J, McCartney D, Desbrow B, et al.',
+        title: 'Effects of Acute Sleep Loss on Physical Performance: A Systematic and Meta-Analytical Review',
+        journal: 'Sports Medicine',
+        year: 2022,
+        url: 'https://link.springer.com/article/10.1007/s40279-022-01706-y',
+      },
+      {
+        authors: 'Watson AM',
+        title: 'Sleep and Athletic Performance',
+        journal: 'Current Sports Medicine Reports',
+        year: 2017,
+        url: 'https://pubmed.ncbi.nlm.nih.gov/29135639/',
+      },
+    ],
+    content: {
+      fr: {
+        title: 'Sommeil et récupération musculaire : pourquoi dormir fait grandir vos muscles',
+        description: "Le sommeil est un pilier sous-estimé de la performance et de la prise de muscle. 7 à 9h par nuit, davantage pour les sportifs. La science l'explique.",
+        intro: "On optimise ses entraînements, on calcule ses macros, on chronomètre ses temps de repos. Mais il y a un facteur de progression que la majorité des sportifs négligent : le sommeil. C'est pourtant pendant le sommeil profond que le corps répare les fibres musculaires, libère les hormones de croissance et consolide les apprentissages moteurs. La science est formelle : mal dormir, c'est freiner sa progression.",
+        sections: [
+          {
+            heading: "Combien d'heures dormir",
+            paragraphs: [
+              "Les recommandations de l'American Academy of Sleep Medicine situent le besoin de l'adulte entre 7 et 9 heures par nuit. C'est la fourchette dans laquelle la majorité des fonctions cognitives et physiques sont optimisées.",
+              "Pour les sportifs soumis à de fortes charges d'entraînement, les données suggèrent que 9 à 10 heures de sommeil sont bénéfiques pour une récupération optimale. Ce n'est pas un luxe : c'est le prix de la réparation tissulaire intensive que demande l'entraînement en force.",
+            ],
+          },
+          {
+            heading: 'Le manque de sommeil dégrade la performance',
+            paragraphs: [
+              "La méta-analyse de Craven et collaborateurs, publiée en 2022 dans Sports Medicine et portant sur 69 études, est la plus complète sur le sujet. Elle montre que le manque de sommeil aigu (6 heures ou moins) altère la performance dans presque toutes les catégories d'effort physique testées.",
+              "En moyenne, la performance décline d'environ 0,4% par heure d'éveil supplémentaire avant l'entraînement. Dit autrement : plus vous restez éveillé longtemps avant votre séance, moins vous performez. C'est un effet mesurable, reproductible, et qui touche autant la force que l'endurance.",
+            ],
+          },
+          {
+            heading: 'Pourquoi le sommeil construit le muscle',
+            paragraphs: [
+              "Le lien entre sommeil et croissance musculaire n'est pas seulement statistique — il est physiologique. Pendant le sommeil profond (stades N3 et REM), le corps libère l'hormone de croissance (GH), essentielle à la réparation et à la synthèse des fibres musculaires sollicitées à l'entraînement.",
+              "Mal dormir réduit la sécrétion de GH, augmente le cortisol (hormone catabolique), et compromet la synthèse protéique musculaire. En pratique, cela signifie que deux athlètes suivant le même programme et la même alimentation progresseront différemment si l'un dort 8 heures et l'autre 5.",
+            ],
+          },
+          {
+            heading: 'Améliorer son sommeil concrètement',
+            paragraphs: [
+              "Les leviers les plus efficaces sont simples : maintenir des horaires réguliers de coucher et de lever (y compris le week-end), garder la chambre sombre et fraîche (18-20°C), et limiter les écrans et la caféine en soirée (idéalement 6 heures avant le coucher pour la caféine).",
+              "La régularité prime sur la perfection ponctuelle. Une nuit de 6 heures dans une semaine de 8 heures régulières a un impact bien moindre qu'une alternance chaotique entre 5 et 10 heures. Le corps s'adapte aux routines — donnez-lui un rythme stable.",
+            ],
+          },
+        ],
+        tableTitle: 'Vos besoins de sommeil',
+        table: {
+          headers: ['Profil', 'Durée recommandée', 'Pourquoi'],
+          rows: [
+            ['Adulte', '7 – 9 h / nuit', 'Santé et récupération de base'],
+            ['Sportif (charge élevée)', '9 – 10 h / nuit', 'Récupération optimale'],
+            ['En dette de sommeil', '≤ 6 h', "Performance dégradée (~0,4%/h d'éveil)"],
+          ],
+        },
+        ctaText: "MoovX suit votre sommeil et votre récupération aux côtés de vos entraînements pour une progression durable. Essai 10 jours offert.",
+        disclaimer: "Cet article est fourni à titre informatif. En cas de troubles du sommeil persistants, consultez un professionnel de santé.",
+      },
+      en: {
+        title: 'Sleep and muscle recovery: why sleeping grows your muscles',
+        description: 'Sleep is an underestimated pillar of performance and muscle building. 7 to 9 hours per night, more for athletes. Science explains why.',
+        intro: "We optimize our workouts, calculate our macros, time our rest periods. But there is one progression factor that most athletes neglect: sleep. It is during deep sleep that the body repairs muscle fibers, releases growth hormones, and consolidates motor learning. The science is clear: poor sleep means slower progress.",
+        sections: [
+          {
+            heading: 'How many hours to sleep',
+            paragraphs: [
+              'The American Academy of Sleep Medicine recommends that adults sleep between 7 and 9 hours per night. This is the range in which most cognitive and physical functions are optimized.',
+              'For athletes under heavy training loads, the data suggest that 9 to 10 hours of sleep are beneficial for optimal recovery. This is not a luxury: it is the cost of the intensive tissue repair that strength training demands.',
+            ],
+          },
+          {
+            heading: 'Sleep deprivation degrades performance',
+            paragraphs: [
+              'The meta-analysis by Craven and colleagues, published in 2022 in Sports Medicine and covering 69 studies, is the most comprehensive on the topic. It shows that acute sleep deprivation (6 hours or less) impairs performance across nearly all categories of physical effort tested.',
+              'On average, performance declines by approximately 0.4% per additional hour of wakefulness before training. Put differently: the longer you stay awake before your session, the worse you perform. This is a measurable, reproducible effect that impacts both strength and endurance.',
+            ],
+          },
+          {
+            heading: 'Why sleep builds muscle',
+            paragraphs: [
+              'The link between sleep and muscle growth is not just statistical — it is physiological. During deep sleep (stages N3 and REM), the body releases growth hormone (GH), essential for the repair and synthesis of muscle fibers stressed during training.',
+              'Poor sleep reduces GH secretion, increases cortisol (a catabolic hormone), and compromises muscle protein synthesis. In practice, this means two athletes following the same program and diet will progress differently if one sleeps 8 hours and the other 5.',
+            ],
+          },
+          {
+            heading: 'How to improve your sleep',
+            paragraphs: [
+              'The most effective levers are simple: maintain regular bedtime and wake times (including weekends), keep the bedroom dark and cool (18-20°C), and limit screens and caffeine in the evening (ideally 6 hours before bed for caffeine).',
+              'Consistency matters more than occasional perfection. One 6-hour night in a week of regular 8-hour nights has far less impact than chaotic alternation between 5 and 10 hours. The body adapts to routines — give it a stable rhythm.',
+            ],
+          },
+        ],
+        tableTitle: 'Your sleep needs',
+        table: {
+          headers: ['Profile', 'Recommended duration', 'Why'],
+          rows: [
+            ['Adult', '7 – 9 h / night', 'Basic health and recovery'],
+            ['Athlete (high load)', '9 – 10 h / night', 'Optimal recovery'],
+            ['Sleep deprived', '≤ 6 h', 'Degraded performance (~0.4%/h of wakefulness)'],
+          ],
+        },
+        ctaText: 'MoovX tracks your sleep and recovery alongside your workouts for sustainable progress. 10-day free trial.',
+        disclaimer: 'This article is for informational purposes only. If you have persistent sleep issues, consult a healthcare professional.',
+      },
+      de: {
+        title: 'Schlaf und Muskelregeneration: Warum Schlafen deine Muskeln wachsen lässt',
+        description: 'Schlaf ist eine unterschätzte Säule der Leistung und des Muskelaufbaus. 7 bis 9 Stunden pro Nacht, mehr für Sportler. Die Wissenschaft erklärt warum.',
+        intro: 'Wir optimieren unser Training, berechnen unsere Makros, stoppen unsere Ruhezeiten. Aber es gibt einen Progressionsfaktor, den die meisten Sportler vernachlässigen: den Schlaf. Während des Tiefschlafs repariert der Körper Muskelfasern, schüttet Wachstumshormone aus und festigt motorische Lernprozesse. Die Wissenschaft ist eindeutig: Schlechter Schlaf bremst den Fortschritt.',
+        sections: [
+          {
+            heading: 'Wie viele Stunden schlafen',
+            paragraphs: [
+              'Die American Academy of Sleep Medicine empfiehlt für Erwachsene 7 bis 9 Stunden Schlaf pro Nacht. In diesem Bereich sind die meisten kognitiven und körperlichen Funktionen optimal.',
+              'Für Sportler unter hoher Trainingsbelastung deuten die Daten darauf hin, dass 9 bis 10 Stunden Schlaf für eine optimale Erholung vorteilhaft sind. Das ist kein Luxus: Es ist der Preis für die intensive Gewebereparatur, die Krafttraining erfordert.',
+            ],
+          },
+          {
+            heading: 'Schlafmangel verschlechtert die Leistung',
+            paragraphs: [
+              'Die Metaanalyse von Craven und Kollegen, veröffentlicht 2022 in Sports Medicine und umfassend 69 Studien, ist die umfangreichste zu diesem Thema. Sie zeigt, dass akuter Schlafmangel (6 Stunden oder weniger) die Leistung in nahezu allen getesteten Kategorien körperlicher Anstrengung beeinträchtigt.',
+              'Im Durchschnitt sinkt die Leistung um etwa 0,4% pro zusätzliche Stunde Wachheit vor dem Training. Anders gesagt: Je länger du vor deiner Einheit wach bist, desto schlechter performst du. Das ist ein messbarer, reproduzierbarer Effekt, der sowohl Kraft als auch Ausdauer betrifft.',
+            ],
+          },
+          {
+            heading: 'Warum Schlaf Muskeln aufbaut',
+            paragraphs: [
+              'Die Verbindung zwischen Schlaf und Muskelwachstum ist nicht nur statistisch — sie ist physiologisch. Während des Tiefschlafs (Stadien N3 und REM) schüttet der Körper Wachstumshormon (GH) aus, das für die Reparatur und Synthese der beim Training beanspruchten Muskelfasern essentiell ist.',
+              'Schlechter Schlaf reduziert die GH-Ausschüttung, erhöht Cortisol (ein kataboles Hormon) und beeinträchtigt die Muskelproteinsynthese. In der Praxis bedeutet das: Zwei Athleten mit demselben Programm und derselben Ernährung werden unterschiedlich Fortschritte machen, wenn einer 8 Stunden und der andere 5 schläft.',
+            ],
+          },
+          {
+            heading: 'Schlaf konkret verbessern',
+            paragraphs: [
+              'Die wirksamsten Hebel sind einfach: Regelmässige Schlaf- und Aufstehzeiten einhalten (auch am Wochenende), das Schlafzimmer dunkel und kühl halten (18-20°C) und Bildschirme sowie Koffein am Abend einschränken (idealerweise 6 Stunden vor dem Schlafengehen für Koffein).',
+              'Regelmässigkeit zählt mehr als gelegentliche Perfektion. Eine 6-Stunden-Nacht in einer Woche mit regelmässigen 8-Stunden-Nächten hat weit weniger Auswirkungen als chaotischer Wechsel zwischen 5 und 10 Stunden. Der Körper passt sich an Routinen an — gib ihm einen stabilen Rhythmus.',
+            ],
+          },
+        ],
+        tableTitle: 'Dein Schlafbedarf',
+        table: {
+          headers: ['Profil', 'Empfohlene Dauer', 'Warum'],
+          rows: [
+            ['Erwachsener', '7 – 9 h / Nacht', 'Grundlegende Gesundheit und Erholung'],
+            ['Sportler (hohe Belastung)', '9 – 10 h / Nacht', 'Optimale Erholung'],
+            ['Schlafdefizit', '≤ 6 h', 'Leistungseinbusse (~0,4%/h Wachheit)'],
+          ],
+        },
+        ctaText: 'MoovX verfolgt deinen Schlaf und deine Erholung neben deinem Training für nachhaltige Fortschritte. 10 Tage kostenlos testen.',
+        disclaimer: 'Dieser Artikel dient nur zu Informationszwecken. Bei anhaltenden Schlafproblemen einen Gesundheitsfachmann konsultieren.',
+      },
+    },
+  },
 ]
 
 export function getPost(slug: string): BlogPost | undefined {
