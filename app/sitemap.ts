@@ -1,6 +1,7 @@
 // app/sitemap.ts
 import type { MetadataRoute } from 'next';
 import { SITE_URL, LOCALES, DEFAULT_LOCALE } from '@/lib/seo';
+import { getAllPosts } from '@/content/blog/posts';
 
 const PAGES: Array<{
   path: string;
@@ -8,6 +9,12 @@ const PAGES: Array<{
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
 }> = [
   { path: '/landing', priority: 1.0, changeFrequency: 'weekly' },
+  { path: '/blog', priority: 0.8, changeFrequency: 'weekly' },
+  ...getAllPosts().map((post) => ({
+    path: `/blog/${post.slug}`,
+    priority: 0.7 as number,
+    changeFrequency: 'monthly' as const,
+  })),
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

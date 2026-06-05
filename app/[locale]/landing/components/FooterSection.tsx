@@ -15,6 +15,7 @@ export default function FooterSection() {
     { label: t('pricing'), href: '#pricing', type: 'anchor' as const },
     { label: t('faq'), href: '#faq', type: 'anchor' as const },
     { label: t('contact'), href: 'mailto:contact@moovx.ch', type: 'external' as const },
+    { label: 'Blog', href: `/${locale}/blog`, type: 'internal' as const },
     { label: t('terms'), href: `/${locale}/cgu`, type: 'internal' as const },
     { label: t('privacy'), href: `/${locale}/privacy`, type: 'internal' as const },
   ]
