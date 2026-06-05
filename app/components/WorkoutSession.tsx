@@ -400,17 +400,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     if (!done) return
     setAutoRedirectCountdown(AUTO_REDIRECT_SECONDS)
     const interval = setInterval(() => {
-      setAutoRedirectCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          onClose()
-          return 0
-        }
-        return prev - 1
-      })
+      setAutoRedirectCountdown(prev => (prev <= 1 ? 0 : prev - 1))
     }, 1000)
     return () => clearInterval(interval)
-  }, [done, onClose])
+  }, [done])
+
+  // Effet séparé : quand le countdown atteint 0, fermer
+  useEffect(() => {
+    if (done && autoRedirectCountdown === 0) onClose()
+  }, [done, autoRedirectCountdown, onClose])
 
   useEffect(() => {
     if (!done) return
