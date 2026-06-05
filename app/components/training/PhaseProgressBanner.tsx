@@ -1,19 +1,20 @@
 'use client'
 import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../lib/design-tokens'
+import { getEffectiveWeek } from '../../../lib/training/program-week'
 
 interface PhaseProgressBannerProps {
   program: {
     phases?: { name: string; weeks: number[] }[]
     total_weeks: number
     current_week?: number
+    start_date?: string | null
   }
-  onAdvanceWeek: () => void
 }
 
-export default function PhaseProgressBanner({ program, onAdvanceWeek }: PhaseProgressBannerProps) {
+export default function PhaseProgressBanner({ program }: PhaseProgressBannerProps) {
   const t = useTranslations('training_tab.phase')
-  const week = program.current_week || 1
+  const week = getEffectiveWeek(program)
   const totalWeeks = program.total_weeks
   const phase = (program.phases || []).find((p) => week >= p.weeks[0] && week <= p.weeks[1])
   const progress = week / totalWeeks
@@ -31,11 +32,6 @@ export default function PhaseProgressBanner({ program, onAdvanceWeek }: PhasePro
       <div style={{ height: 4, background: colors.goldDim, borderRadius: 2, overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${progress * 100}%`, background: colors.gold, borderRadius: 2, transition: 'width 0.5s ease' }} />
       </div>
-      {totalWeeks && (program.current_week || 1) < totalWeeks && (
-        <button onClick={onAdvanceWeek} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, background: 'none', border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '4px 10px', cursor: 'pointer', marginTop: 6 }}>
-          {t('nextWeek')}
-        </button>
-      )}
     </div>
   )
 }

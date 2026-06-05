@@ -24,6 +24,7 @@ import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 import CardioSection from '../CardioSection'
 import { ScheduledSession, toDateStr } from '../../../lib/schedule-utils'
+import { getEffectiveWeek } from '../../../lib/training/program-week'
 
 import WorkoutCelebration from './training/WorkoutCelebration'
 import TrainingActiveBar from './training/TrainingActiveBar'
@@ -158,8 +159,8 @@ export default function TrainingTab({
 
   // Resolve exercises for current phase (periodized programs)
   const resolvedExercises: any[] = baseExercises.map((ex: any) => {
-    if (!ex.phases || !activeCustomProgram?.current_week) return ex
-    const week = activeCustomProgram.current_week || 1
+    if (!ex.phases || !activeCustomProgram) return ex
+    const week = getEffectiveWeek(activeCustomProgram)
     const phaseKey = week <= 4 ? 'p1' : week <= 8 ? 'p2' : 'p3'
     const phaseData = ex.phases[phaseKey] || ex.phases.p1 || {}
     return {
@@ -333,7 +334,9 @@ export default function TrainingTab({
 
   async function doActivateProgram(programId: string) {
     await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).neq('id', programId)
-    const { error } = await supabase.from('custom_programs').update({ is_active: true, scheduled: false, current_week: 1 }).eq('id', programId).eq('user_id', session.user.id)
+    const progToActivate = customPrograms.find(p => p.id === programId)
+    const startDate = progToActivate?.start_date || toDateStr(new Date())
+    const { error } = await supabase.from('custom_programs').update({ is_active: true, scheduled: false, start_date: startDate }).eq('id', programId).eq('user_id', session.user.id)
     if (error) { toast.error(t('calendar.toasts.error') + ': ' + error.message); return }
     const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId, scheduled: p.id === programId ? false : p.scheduled }))
     setCustomPrograms(updated)
@@ -413,27 +416,7 @@ export default function TrainingTab({
     toast.success(t('calendar.toasts.deactivated'))
   }
 
-  async function advanceWeek() {
-    if (!activeCustomProgram?.total_weeks) return
-    const currentWeek = (activeCustomProgram.current_week || 1)
-    if (currentWeek >= activeCustomProgram.total_weeks) { toast('Programme terminé !'); return }
-    const newWeek = currentWeek + 1
 
-    // Update in local state
-    const updated = { ...activeCustomProgram, current_week: newWeek }
-    setActiveCustomProgram(updated)
-
-    // Persist to DB
-    await supabase.from('custom_programs').update({ current_week: newWeek }).eq('id', activeCustomProgram.id)
-
-    // Check phase transition
-    const oldPhase = currentWeek <= 4 ? 1 : currentWeek <= 8 ? 2 : 3
-    const newPhase = newWeek <= 4 ? 1 : newWeek <= 8 ? 2 : 3
-    if (newPhase > oldPhase) {
-      const phaseName = activeCustomProgram.phases?.[newPhase - 1]?.name || `Phase ${newPhase}`
-      toast.success(t('calendar.toasts.phaseChange', { phase: phaseName }))
-    }
-  }
 
   async function deleteProgram(programId: string) {
     await supabase.from('custom_programs').delete().eq('id', programId).eq('user_id', session.user.id)
@@ -814,7 +797,7 @@ export default function TrainingTab({
           </div>
           <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
             {activeCustomProgram
-              ? `${activeCustomProgram.name}${activeCustomProgram.total_weeks ? ` • SEMAINE ${activeCustomProgram.current_week || 1}/${activeCustomProgram.total_weeks}` : ''}`
+              ? `${activeCustomProgram.name}${activeCustomProgram.total_weeks ? ` • SEMAINE ${getEffectiveWeek(activeCustomProgram)}/${activeCustomProgram.total_weeks}` : ''}`
               : t('header.noActiveProgram')}
           </div>
         </div>
@@ -1133,7 +1116,7 @@ export default function TrainingTab({
                   <>
                     {activeCustomProgram?.phases && activeCustomProgram?.total_weeks && trainingIsToday && (
                       <div style={{ marginBottom: 20 }}>
-                        <PhaseProgressBanner program={activeCustomProgram} onAdvanceWeek={advanceWeek} />
+                        <PhaseProgressBanner program={activeCustomProgram} />
                       </div>
                     )}
 
