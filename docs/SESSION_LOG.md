@@ -107,6 +107,23 @@ RÈGLE À RETENIR : toute colonne NOT NULL ajoutée à profiles doit avoir un DE
 
 DETTE LOGGÉE : handle_new_user n'insère que (id, full_name, email). C'est un point de défaillance silencieux à chaque évolution du schéma profiles. Envisager soit des DEFAULT systématiques sur les NOT NULL, soit un test E2E signup dans le CI.
 
+### Fix i18n — sélecteur de langue cassé (double cookie NEXT_LOCALE)
+
+Découvert en testant le funnel register-client E2E : dashboard en EN pour un nouveau compte (Chrome en anglais), et le sélecteur de langue ne changeait rien.
+
+Audit terrain (le fix "évident" était faux) : AUCUN fallback EN dans la chaîne i18n. ClientIntlProvider fallback 'fr', routing.defaultLocale 'fr', i18n/request.ts 'fr'. Pas de middleware racine. La cause réelle, invisible sans inspecter le cookie : document.cookie contenait DEUX NEXT_LOCALE — un 'en' host-only (posé par next-intl via Accept-Language sur app.moovx.ch) et un 'fr' sur .moovx.ch (posé par /api/user/locale). La regex de lecture (/NEXT_LOCALE=([a-z]{2})/) prenait le premier match = 'en'. Confirmé : supprimer les 2 cookies + reload -> dashboard repasse en 'fr'.
+
+Décision produit : le dashboard suit la langue du NAVIGATEUR par défaut (cohérent marché Genève FR/EN/DE) ; seul le sélecteur explicite doit écraser ce défaut. Donc "dashboard en EN au départ" = comportement voulu, PAS un bug. Le seul vrai bug = le sélecteur qui ne prenait pas effet.
+
+Fix (commit 5e612da, 2 fichiers) :
+- LocaleSelector.tsx : supprime le cookie NEXT_LOCALE host-only parasite (path=/ et domain=app.moovx.ch) avant window.location.reload, pour qu'il ne reste que celui posé par l'API.
+- api/user/locale/route.ts : domain du cookie 'moovx.ch' -> '.moovx.ch' (scope explicite sous-domaines).
+- NON touché : ClientIntlProvider (composant racine, risque de crash déjà vécu via revert F1b). Fix volontairement minimal.
+
+Validé runtime en PROD : clic FR -> dashboard FR, reste FR après reload, document.cookie = 1 seul NEXT_LOCALE.
+
+DETTE / À SURVEILLER : next-intl peut reposer un cookie host-only depuis l'Accept-Language ; le fix nettoie au moment du switch mais si le doublon réapparaît dans d'autres flux, envisager de faire lire preferred_locale (DB, source de vérité) par ClientIntlProvider — à faire à froid, avec test isolé (touche le provider racine).
+
 ### État final
 
 - 4 commits poussés sur main (8221305..c1bcf86), build prod vert (62/62 pages), déployé Vercel Production.
