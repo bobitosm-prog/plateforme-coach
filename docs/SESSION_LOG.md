@@ -85,6 +85,14 @@ Warning "Cannot update a component (CoachApp) while rendering a different compon
 5. Avancement calendaire ignore les pauses (blessure/vacances) → programme finit à S12 calendaire même si moins de séances réelles. Décision produit, trou UX assumé.
 6. Images qualities non déclarées dans next.config (warnings build) — déclarer [75, 85, 88, 90].
 
+### Rotation CRON_SECRET (suite de session)
+
+La ROADMAP notait CRON_SECRET comme suspect ("valeur sk_live_, clé Stripe égarée ?"). Audit code : CRON_SECRET utilisé uniquement comme token Bearer en comparaison string locale dans les 2 endpoints cron (training-regen, weekly-diagnostic), jamais envoyé à une API externe. Stripe utilise une variable séparée (STRIPE_SECRET_KEY). Vérif valeur réelle pg_cron : secret hex 64 car (format openssl rand -hex 32), PAS de préfixe sk_live_. Note roadmap = FAUX POSITIF.
+
+Roté par précaution malgré tout : nouveau openssl rand -hex 32, mis à jour dans Vercel (variable Sensitive) + redéploiement prod, et dans les 2 jobs pg_cron via cron.alter_job (jobid 4 et 5, mêmes URLs/timeouts, seul le Bearer change). Validé : curl POST /api/training-regen/cron avec nouvelle clé → HTTP 200, réponse {"total":0,"success":0,"errors":0}. Crons sains.
+
+Conclusion : aucune fuite, clé Stripe jamais exposée, rotation Stripe NON nécessaire (annulée). CRON_SECRET désormais secret dédié propre.
+
 ### État final
 
 - 4 commits poussés sur main (8221305..c1bcf86), build prod vert (62/62 pages), déployé Vercel Production.

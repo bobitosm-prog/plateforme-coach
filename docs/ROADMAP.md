@@ -136,7 +136,7 @@ Session marathon 30 mai 2026, 5 tech debts résolus en prod :
 10. **Consolidation variant_groups fragmentés** — `good_morning` + `stiff` + `rdl` + `deadlift` = 4 groupes hip hinge distincts. Idem fessiers (3 groupes), chest (6 groupes). Limite qualité substitution F6.B.4. À consolider post F6.B.4.
 11. **suggest-overload temperature avec Haiku** — app/api/suggest-overload/route.ts ligne 109 temperature:0.3 avec claude-haiku-4-5. Haiku accepte encore temperature (fonctionne en prod) mais à surveiller si dépréciation future. Migrer vers tool_use si besoin.
 12. **lockfile parent orphelin** — /Users/marcoferreira/package-lock.json (warning Next.js workspace root). Supprimer si pas de projet parent.
-13. **CRON_SECRET Vercel valeur suspecte** — valeur 'sk_live_' suspecte (cron fonctionne via secret jobid 4). À clarifier si c'est le bon secret ou une clé Stripe égarée.
+13. ~~**CRON_SECRET Vercel valeur suspecte**~~ — ✅ RÉSOLU 5 juin. Vérifié = secret hex aléatoire dédié (pas une clé Stripe, faux positif de l'ancienne note). Roté par précaution via openssl rand -hex 32, synchronisé Vercel + pg_cron jobs 4 et 5, validé curl 200. RAS.
 14. **total_calories null dans meal_plans** — données présentes dans plan_data.totals, colonne top-level non remplie par le hook useInitialGeneration. À remplir pour cohérence.
 15. **NutritionPreferences UX** — page NutritionPreferences cachée dans la page nutrition, peu discoverable. Recenser toutes les pages, mapper navigation.
 16. **Audit UX global navigation** — session dédiée pour mapper toutes les pages/onglets, cohérence navigation/disposition multi-pages.
