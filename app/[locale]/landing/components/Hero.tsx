@@ -8,7 +8,6 @@ export default async function Hero() {
   const t = await getTranslations('hero')
 
   const STATS = [
-    { value: 1200, suffix: '+', label: t('stat_users') },
     { value: 163,  suffix: '',  label: t('stat_exercises') },
     { value: 170,  suffix: '',  label: t('stat_foods') },
     { value: 24,   suffix: '/7', label: t('stat_coach') },

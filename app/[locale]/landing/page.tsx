@@ -20,7 +20,6 @@ import CoachIaSection from './components/CoachIaSection';
 import CoachingPro from './components/CoachingPro';
 // import EconomicModel from './components/EconomicModel';
 // SKIP — fait doublon avec PricingSection, a refondre Power dans session future
-import Testimonials from './components/Testimonials';
 import Steps from './components/Steps';
 import PWASection from './components/PwaSection';
 import PricingSection from './components/PricingSection';
@@ -152,7 +151,6 @@ export default async function LandingPage({
         <GoldSeparator />
         {/* <div style={{ background: '#0a0a0a' }}><EconomicModel /></div> */}
         {/* SKIP : doublon avec PricingSection, a refondre Power */}
-        <div style={{ background: '#111' }}><Testimonials /></div>
         <GoldSeparator />
         <div style={{ background: '#0a0a0a' }}><Steps /></div>
         <GoldSeparator />

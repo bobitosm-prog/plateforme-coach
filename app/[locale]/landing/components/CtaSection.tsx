@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Star, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -207,25 +207,11 @@ export default function CtaSection() {
             paddingTop: 32,
             borderTop: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {[0, 1, 2, 3, 4].map(i => (
-                <Star key={i} size={16} fill="var(--gold)" stroke="var(--gold)" />
-              ))}
-              <span style={{
-                fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
-                fontSize: 12, color: '#fff', marginLeft: 6, letterSpacing: 1,
-              }}>
-                {t('proof_rating')}
-              </span>
-            </div>
-
-            <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)' }} />
-
             <div style={{
               fontFamily: 'var(--font-alt), "Barlow Condensed", monospace',
               fontSize: 12, color: 'rgba(255,255,255,0.7)', letterSpacing: 1,
             }}>
-              <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{t('proof_count')}</span> {t('proof_count_label')}
+              {t('proof_count_label')}
             </div>
 
             <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)' }} />

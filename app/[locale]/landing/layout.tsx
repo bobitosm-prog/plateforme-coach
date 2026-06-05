@@ -12,11 +12,6 @@ const jsonLd = {
     priceCurrency: 'CHF',
     availability: 'https://schema.org/InStock',
   },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    reviewCount: '1200',
-  },
 }
 
 export default function LandingLayout({ children }: { children: React.ReactNode }) {

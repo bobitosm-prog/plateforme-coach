@@ -46,10 +46,10 @@ export default function Results() {
   const quoteRef = useRef<HTMLDivElement>(null)
 
   const STATS = [
-    { value: 1200, suffix: '+', label: t('stat1_label'), detail: t('stat1_detail') },
-    { value: 12,   suffix: '',  label: t('stat2_label'), detail: t('stat2_detail') },
-    { value: 96,   suffix: '%', label: t('stat3_label'), detail: t('stat3_detail') },
-    { value: 7,    suffix: 'kg', label: t('stat4_label'), detail: t('stat4_detail') },
+    { value: 163, suffix: '', label: t('stat1_label'), detail: t('stat1_detail') },
+    { value: 170, suffix: '', label: t('stat2_label'), detail: t('stat2_detail') },
+    { value: 14,  suffix: '', label: t('stat3_label'), detail: t('stat3_detail') },
+    { value: 3,   suffix: '', label: t('stat4_label'), detail: t('stat4_detail') },
   ]
 
   useEffect(() => {
