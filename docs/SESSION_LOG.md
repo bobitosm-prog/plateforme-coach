@@ -4,16 +4,46 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-05
-- **HEAD** : c1bcf86
+- **Date** : 2026-06-06
+- **HEAD** : 481c74f
 - **Working tree** : clean
-- **Total commits Phase 6** : 40 (17 session 30 mai + 15 session 31 mai + 2 fixes 1er juin + 2 fixes 2 juin + 4 fixes 5 juin)
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
 - **Phase 6B** : COMPLET — closed-loop training 3 sources (onboarding_auto + diagnostic_auto + cron_auto) + F6.B.7 préférences onboarding
-- **Bugs prod** : tous résolus — double-wrap neutralisé (3 endroits tool_use), CSP corrigé (connect-src + img-src), crash home patché
-- **Session 5 juin** : 4 fixes training (week TZ, noms séances, désync calendrier, warning React) — déployés prod
-- **Tâche en cours** : test E2E prod app.moovx.ch + audit UX global (suite)
+- **Bugs prod** : tous résolus
+- **Session 6 juin** : fix génération meal plan (macros + convention cuit) + compte test lifetime
+- **Tâche en cours** : surveiller plans extrêmes + audit UX global (suite)
+
+---
+
+## 2026-06-06 — Fix génération meal plan (macros + convention cuit) + compte test lifetime
+
+**Branche** : `main`
+
+### Problème signalé
+
+Plan alimentaire IA : gros écarts sur les macros. Compte test (prise de masse 66 kg, cibles P134/G352/L72) montrait P188 (+40%), G250 (-29%), L91 (+26%) alors que les CALORIES tombaient juste (2592 vs 2590).
+
+### Diagnostic (audit de generate-meal-plan/route.ts)
+
+Cause racine : tout le système pilote par les CALORIES (contrainte "NON NÉGOCIABLE" ±50), les macros n'étaient qu'une indication. Pire : proteinRules forçait des portions fixes (viande/poisson 150-250g au déj ET dîner + petit-déj + collation) → ~180g de protéines mécaniques quelle que soit la cible. verifyDayPlan ne vérifiait QUE les calories, jamais les macros.
+
+### Fix (commit 481c74f) — approche en 2 étages, mesurée
+
+ÉTAGE 1 (prompt) : macros cibles par repas ajoutées, contrainte ±10% au même niveau que les kcal, fin des portions protéiques fixes. Test runtime sur 7 jours : erreur protéines réduite de moitié (+40% → +22% moyen) MAIS toujours hors cible (jusqu'à +37%). Conclusion mesurée : prompt insuffisant.
+
+ÉTAGE 2 (verifyDayPlan) : rééquilibrage programmatique déterministe. Si protéines > cible+10%, réduit les aliments les plus protéinés (jamais < 40g), réinjecte les kcal libérées en glucides (justifié science : excès protéines inutile au-delà ~1.6g/kg, glucides = carburant bulk). Garde-fous : fallback sur l'original si incohérent (kcal hors ±100, qty ≤0, NaN). Test runtime : macros dans la cible, repas cohérents.
+
+BONUS attrapé au test runtime : l'IA générait parfois "Riz basmati (cru)" (~350 kcal/100g) au lieu de cuit (~130) → fausse le calcul utilisateur. Ajout convention de pesée "aliments féculents toujours CUITS" dans le prompt.
+
+### À surveiller
+
+- Étage 2 touche l'endpoint de génération (zone à bugs prod passés). Surveiller les plans de profils extrêmes (sèche basse, bulk haut, keto/vegan) : le garde-fou doit fallback proprement.
+- DETTE loggée (ROADMAP) : l'IA invente encore les valeurs nutritionnelles de tête → imprécision possible sur tous les aliments. Fix de fond futur : contraindre l'IA à une base vérifiée.
+
+### Compte test permanent
+
+marko.rosa@bluewin.ch (UUID 6aeb6c85) passé en subscription_type='lifetime' (source de vérité accès dans useClientDashboard:449, valeur prévue par le modèle). Compte de test produit en prod réel pour traquer bugs nutrition/sport. Limite assumée : court-circuite le parcours essai→paywall→Stripe (ne teste pas le flux paiement).
 
 ---
 
