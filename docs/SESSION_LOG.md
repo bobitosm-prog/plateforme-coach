@@ -5,7 +5,7 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-06
-- **HEAD** : 481c74f
+- **HEAD** : 7cbd829
 - **Working tree** : clean
 - **Phase 5** : DONE (Weekly Diagnostic en prod)
 - **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
@@ -44,6 +44,12 @@ BONUS attrapé au test runtime : l'IA générait parfois "Riz basmati (cru)" (~3
 ### Compte test permanent
 
 marko.rosa@bluewin.ch (UUID 6aeb6c85) passé en subscription_type='lifetime' (source de vérité accès dans useClientDashboard:449, valeur prévue par le modèle). Compte de test produit en prod réel pour traquer bugs nutrition/sport. Limite assumée : court-circuite le parcours essai→paywall→Stripe (ne teste pas le flux paiement).
+
+### Effet glass nav mobile (icône active)
+
+Demande UI : effet "liquid glass" Apple sur l'icône sélectionnée de la barre de nav du bas (tendance Instagram/Facebook). Constat : la barre avait DÉJÀ un backdrop-filter blur (couche 1 OK). Ajouté : pastille glass sur l'onglet actif (gradient + inset shadows pour le volume de verre + liseré gold) + tentative de réfraction via filtre SVG feDisplacementMap avec fallback @supports (Safari/iOS gère mal url() dans backdrop-filter). Rendu validé comme "acceptable" — le vrai liquid glass Apple (réfraction GPU native iOS 26) reste difficile à égaler en CSS web pur.
+
+À SURVEILLER : perf iPhone. Le filtre SVG feDisplacementMap + backdrop-filter sur barre permanente peut aggraver le freeze PWA iPhone connu (perf-pending.md). Tester scroll long sur iPhone réel. Si saccade : retirer url(#liquid-glass) du backdrop-filter, garder les reflets gradient/inset (fix trivial, fallback déjà prêt).
 
 ---
 
