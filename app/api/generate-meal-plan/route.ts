@@ -221,19 +221,24 @@ function convertLegacyDayToCanonical(legacyDay: any): DayPlan {
  * Rebalance macros deterministically after AI generation.
  * Reduces excess protein by shrinking the most protein-dense foods,
  * then reinjects freed calories into the most carb-dense foods.
- * Returns original day unchanged if anything goes wrong (safety-first).
+ * Works on a deep copy — returns the rebalanced COPY if it improves the plan,
+ * otherwise returns the ORIGINAL intact (never a half-mutated state).
  */
 function rebalanceMacros(day: any, targets: { protein_goal: number; carbs_goal: number; fat_goal: number; calorie_goal: number }): any {
-  const { protein_goal, carbs_goal, calorie_goal } = targets
+  const { protein_goal, carbs_goal, fat_goal, calorie_goal } = targets
   if (!protein_goal || protein_goal <= 0 || !carbs_goal || carbs_goal <= 0) return day
 
-  // Collect all food items across all meals
+  // Deep copy — all mutations happen on working, original stays pristine
+  const original = day
+  const working = structuredClone(day)
+
+  // Collect all food items from the WORKING copy
   const allItems: any[] = []
-  for (const foods of Object.values(day.repas || {}) as any[]) {
+  for (const foods of Object.values(working.repas || {}) as any[]) {
     if (!Array.isArray(foods)) continue
     for (const item of foods) allItems.push(item)
   }
-  if (allItems.length === 0) return day
+  if (allItems.length === 0) return original
 
   // Calculate current totals
   const sumTotals = () => {
@@ -243,6 +248,12 @@ function rebalanceMacros(day: any, targets: { protein_goal: number; carbs_goal: 
   }
   const before = sumTotals()
   const kcalBefore = before.k
+
+  // Memorize entry-state gaps for do-no-harm checks
+  const protGapBefore = Math.abs(before.p - protein_goal)
+  const pOutBefore = before.p < protein_goal * 0.85 || before.p > protein_goal * 1.15
+  const gOutBefore = before.g < carbs_goal * 0.85 || before.g > carbs_goal * 1.15
+  const lOutBefore = before.l < (fat_goal || 70) * 0.85 || before.l > (fat_goal || 70) * 1.15
 
   // Step 1: reduce protein if > target × 1.10
   if (before.p > protein_goal * 1.10) {
@@ -292,22 +303,41 @@ function rebalanceMacros(day: any, targets: { protein_goal: number; carbs_goal: 
     }
   }
 
-  // Safety checks: no NaN, no negative, kcal in range
+  // Safety checks on the working copy — revert to original if any fails
   const final = sumTotals()
+
+  // (a) NaN / qty <= 0
   for (const item of allItems) {
     if (!Number.isFinite(item.quantite_g) || item.quantite_g <= 0 ||
         !Number.isFinite(item.kcal) || !Number.isFinite(item.proteines) ||
         !Number.isFinite(item.glucides) || !Number.isFinite(item.lipides)) {
       console.warn('[rebalanceMacros] Invalid value detected, reverting to original')
-      return day
+      return original
     }
   }
+
+  // (b) kcal out of range
   if (Math.abs(final.k - calorie_goal) > 100) {
     console.warn(`[rebalanceMacros] Kcal out of range after rebalance (${final.k} vs ${calorie_goal}), reverting`)
-    return day
+    return original
   }
 
-  return day
+  // (c) do-no-harm: protein gap must not worsen
+  if (Math.abs(final.p - protein_goal) > protGapBefore + 1) {
+    console.warn(`[rebalanceMacros] Protein gap worsened (${Math.abs(final.p - protein_goal)} > ${protGapBefore}), reverting`)
+    return original
+  }
+
+  // (d) do-no-harm: no macro pushed out of ±15% that wasn't already out
+  const pOutAfter = final.p < protein_goal * 0.85 || final.p > protein_goal * 1.15
+  const gOutAfter = final.g < carbs_goal * 0.85 || final.g > carbs_goal * 1.15
+  const lOutAfter = final.l < (fat_goal || 70) * 0.85 || final.l > (fat_goal || 70) * 1.15
+  if ((pOutAfter && !pOutBefore) || (gOutAfter && !gOutBefore) || (lOutAfter && !lOutBefore)) {
+    console.warn('[rebalanceMacros] Macro pushed out of ±15% bounds, reverting')
+    return original
+  }
+
+  return working
 }
 
 function verifyDayPlan(day: any, params: any): any {
@@ -332,9 +362,9 @@ function verifyDayPlan(day: any, params: any): any {
     console.warn(`[meal-plan] Day off target: ${totalKcal} vs ${typeof targetKcal === 'number' ? targetKcal : params.calorie_goal} (diff: ${totalKcal - (typeof targetKcal === 'number' ? targetKcal : params.calorie_goal)})`)
   }
 
-  // Rebalance macros if targets available
+  // Rebalance macros if targets available (captures return — may be original or rebalanced copy)
   if (params && typeof params === 'object' && params.protein_goal) {
-    rebalanceMacros(day, {
+    day = rebalanceMacros(day, {
       protein_goal: params.protein_goal,
       carbs_goal: params.carbs_goal,
       fat_goal: params.fat_goal,
