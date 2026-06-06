@@ -5,14 +5,72 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-06
-- **HEAD** : 7cbd829
-- **Working tree** : clean
-- **Phase 5** : DONE (Weekly Diagnostic en prod)
-- **Phase 6A** : DONE (meal plan auto-regen post-Apply validé E2E)
-- **Phase 6B** : COMPLET — closed-loop training 3 sources (onboarding_auto + diagnostic_auto + cron_auto) + F6.B.7 préférences onboarding
-- **Bugs prod** : tous résolus
-- **Session 6 juin** : fix génération meal plan (macros + convention cuit) + compte test lifetime
-- **Tâche en cours** : surveiller plans extrêmes + audit UX global (suite)
+- **HEAD** : 9400236
+- **Working tree** : clean (après commit docs)
+- **Phase 5 / 6A / 6B** : DONE
+- **Session 6 juin (suite)** : fix rebalanceMacros revert réel + test perf nav iPhone OK
+- **Tâche en cours** : dettes B/C/E loggées ; audit UX global à reprendre
+
+---
+
+## 2026-06-06 (suite) — Fix rebalanceMacros (revert réel) + test perf nav iPhone
+
+**Branche** : `main` — HEAD `9400236`
+
+### Point 1 — rebalanceMacros : le fallback ne fallback pas (bug A) + garde-fou aveugle (bug D)
+
+Audit terrain (lecture seule, terminal + Node isolé) de la robustesse du
+rééquilibrage déterministe meal-plan sur profils extrêmes. La pierre
+angulaire (« le keto existe-t-il vraiment ? ») a révélé que oui (route.ts:42),
+mais 0 user keto en prod → risque dormant. Le vrai bug trouvé est plus grave
+et touche TOUS les profils.
+
+CAUSE RACINE (A) : rebalanceMacros mutait les items EN PLACE et renvoyait
+`day` dans les 3 branches. Le commentaire « reverting to original » mentait :
+aucune copie de l'original n'existait, le fallback renvoyait le plan déjà
+saccadé. verifyDayPlan ignorait en plus la valeur de retour (fire-and-forget).
+
+CAUSE RACINE (D) : garde-fou ne vérifiait que kcal±100/qty/NaN, jamais la
+cohérence macro.
+
+FIX (commit 9400236) : structuredClone(day) en entrée, mutations sur la copie
+`working`, 4 checks ordonnés (NaN → kcal±100 → do-no-harm protéines → bornes
+±15% causées par le rééquilibrage), return original si échec sinon working.
+verifyDayPlan capture désormais le retour (day = rebalanceMacros(...)).
+fat_goal ajouté à la destructuration (manquant).
+
+TESTS RUNTIME (Node isolé, fonction pure extraite via sed — pas d'install,
+pas d'export laissé dans route.ts) :
+- Succès réel : P 109→84 (cible 80), G 133→163, kcal stables, original intact.
+- Fallback forcé (kcal 1084 vs 700 → check b) : retour = original intact à
+  1760 kcal, PAS le muté. Bug A prouvé mort.
+- Invariant central validé : l'original n'est jamais muté par effet de bord.
+
+APPRENTISSAGE : un « revert » qui mute en place sans snapshot ne revert rien.
+tsc ne voyait pas le bug (le code compilait, il était faux). Tester les DEUX
+branches d'un garde-fou (succès + rejet) est obligatoire.
+
+### Point 2 — Perf nav iPhone (liquid-glass) : testé OK, gardé
+
+Audit code : le liquid-glass (feDisplacementMap) ne vit que sur .nav-glass-active
+(pastille onglet actif, page.tsx:481). La ligne -webkit-backdrop-filter
+(globals.css:57) ne contient PAS url(#liquid-glass) → le filtre n'est
+vraisemblablement jamais appliqué sur iOS (WebKit privilégie la version
+préfixée). Suspect principal réel = blur(24px) saturate(180%) permanent de
+.stitch-card-nav, mais inerte sur A16+.
+
+TEST : iPhone A16+, PWA prod app.moovx.ch, 3 scénarios (scroll long, switch
+onglets ×10, scroll+nav visible) → fluide, pas de freeze.
+
+DÉCISION PRODUIT : garder l'effet tel quel. Limite assumée : non testé sur
+11/12 (le freeze PWA connu touche surtout les vieux modèles). Fallback déjà
+câblé (@supports + ligne -webkit- sans url) → correctif trivial si un
+beta-testeur sur vieux modèle signale une saccade.
+
+### Dettes loggées (ROADMAP)
+- B : réinjection glucides ignore keto (dormant, 0 user keto)
+- C : keto ne contraint pas carbs_goal numériquement (prompt-only)
+- E : data quality dietary_type (« Je suis mes macros » stocké au lieu de l'enum, 2 profils)
 
 ---
 
