@@ -141,6 +141,7 @@ Session marathon 30 mai 2026, 5 tech debts résolus en prod :
 15. **NutritionPreferences UX** — page NutritionPreferences cachée dans la page nutrition, peu discoverable. Recenser toutes les pages, mapper navigation.
 16. **Audit UX global navigation** — session dédiée pour mapper toutes les pages/onglets, cohérence navigation/disposition multi-pages.
 17. **Incohérence clés meal_preferences FR/EN** — legacy (petit_dejeuner/dejeuner/collation/diner) vs nouveau (breakfast/snack/lunch/dinner). extractMealFoodNames gère les deux mais à unifier.
+18. **Meal plan IA — valeurs nutritionnelles inventées** — L'IA (generate-meal-plan) génère les valeurs nutritionnelles des aliments de tête (kcal, P/G/L par 100g). Risque d'imprécision sur TOUS les aliments, pas seulement le cas 'riz cru' déjà corrigé par la convention de pesée cuit (5 juin). Symptômes possibles : densités fausses (ex. blanc de poulet à 200 au lieu de 165 kcal/100g). FIX DE FOND (gros chantier, à planifier) : contraindre l'IA à utiliser uniquement les valeurs d'une base vérifiée (les 170 aliments suisses + lib/meal-plan-templates.ts) plutôt que de les inventer — soit en injectant la table dans le prompt, soit en validant/remplaçant les valeurs post-génération contre la base. Impact : fiabilité nutritionnelle réelle des plans.
 
 ## Sprint Launch Prep — STATUS
 
