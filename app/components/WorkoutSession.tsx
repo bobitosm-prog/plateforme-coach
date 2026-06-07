@@ -1282,6 +1282,29 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         <div style={{ height: 8 }} />
       </div>
 
+      {/* FAB ajout exercice — flottant, au-dessus de la barre TERMINER */}
+      {!reorderMode && (
+        <button
+          onClick={() => setMode('custom')}
+          aria-label={t('addExercise')}
+          className="active:scale-90"
+          style={{
+            position: 'fixed',
+            left: 20,
+            bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
+            zIndex: 201,
+            width: 56, height: 56, borderRadius: '50%',
+            background: GOLD, border: 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(212,175,55,0.3)',
+            cursor: 'pointer',
+            transition: 'transform 120ms ease',
+          }}
+        >
+          <Plus size={26} color="#0D0B08" strokeWidth={2.5} />
+        </button>
+      )}
+
       {/* BARRE BAS — centered TERMINER — hidden in reorder mode */}
       {!reorderMode && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
