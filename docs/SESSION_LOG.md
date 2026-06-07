@@ -4,12 +4,57 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-06
-- **HEAD** : 9400236
-- **Working tree** : clean (après commit docs)
+- **Date** : 2026-06-07
+- **HEAD** : 73061a7 (+ commit docs à suivre)
+- **Working tree** : clean
 - **Phase 5 / 6A / 6B** : DONE
-- **Session 6 juin (suite)** : fix rebalanceMacros revert réel + test perf nav iPhone OK
-- **Tâche en cours** : dettes B/C/E loggées ; audit UX global à reprendre
+- **Session 7 juin** : freeze séance perf + ProgramBuilder save + FAB ajout exo + fix padding (4 commits)
+- **À valider iPhone** : freeze séance (récidive), save button, placement FAB
+- **Tâche en cours** : B3 (refonte flow ajout exo) = session dédiée ; audit UX global à reprendre
+
+---
+
+## 2026-06-07 — Freeze séance (perf) + ProgramBuilder save + FAB ajout exo + fix padding
+
+**Branche** : `main` — 4 commits
+
+Parti d'un signal terrain vague ("freeze pendant mon entraînement + bouton
+ajout caché + pas de sauvegarde programme"). Démêlé en 4 sujets distincts,
+chacun diagnostiqué avant fix, testé, commité isolément.
+
+### 1. Freeze séance — perf header (08b449b)
+backdrop-filter blur(20px) sur le header sticky de WorkoutSession (fond
+OPAQUE #0D0B08) : flou recalculé à chaque frame de scroll pour zéro pixel
+visible. Retiré (rendu identique). Cause probable du freeze au scroll iOS.
+Validation par absence de récidive (pas de profiler). Détail + suspects
+suivants dans perf-pending.md.
+
+### 2. ProgramBuilder — bouton sauvegarder inaccessible (4f61e0e)
+Bouton SAUVEGARDER coincé sous la nav du bas en édition de programme.
+Cause : padding-bottom fixe 100px du wrapper scrollable, insuffisant
+(nav + safe-area iOS). saveProgram() fonctionnait — bug purement layout.
+Fix : padding-bottom -> calc(120px + env(safe-area-inset-bottom)).
+
+### 3. FAB ajout exercice en séance (eeb86ae)
+Ajout d'exo fréquent en séance, mais le bouton (haut de liste) sortait de
+l'écran au scroll. Ajout d'un FAB rond doré flottant, toujours accessible.
+Placé en bas-GAUCHE (la bulle chat Athena occupe le bas-droite -> évite le
+chevauchement, constaté en test). Même handler setMode('custom'), éphémère
+by design. Bouton du haut conservé (point d'entrée contextuel liste vide).
+
+### 4. Warning padding CustomBuilder (73061a7)
+Warning React "padding shorthand/longhand conflict" sur 5 <div> de
+CustomBuilder (padding: + paddingTop/Bottom sur le même style). Décomposé
+en longhand explicites, rendu pixel-identique. Note : l'overlay pointait
+la ligne du composant parent, pas l'élément fautif.
+
+### À valider sur iPhone prod
+- Freeze séance : pas de récidive sur plusieurs séances réelles
+- Save button ProgramBuilder : atteignable (safe-area)
+- FAB : placement correct, pas trop bas (sinon ajuster le 100px)
+
+### Note état précédent
+ETAT ACTUEL du log était sur 9400236/06dab98 (session 6 juin). Repris.
 
 ---
 

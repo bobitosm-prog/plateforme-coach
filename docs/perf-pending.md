@@ -1,5 +1,40 @@
 # Performance Issues — Pending
 
+## Workout session : freeze au scroll pendant une séance active
+
+### Reported
+2026-06-07 — Freeze écran pendant une séance active (scroll des séries)
+sur iPhone PWA. Déjà arrivé plusieurs fois. Séance normale (pas un
+problème de volume de données).
+
+### Diagnostic (audit statique, pas de profiler dispo)
+- Intervals de WorkoutSession audités : tous propres (cleanup OK, pas
+  d'accumulation). Écarté.
+- Halo blur(80px) L.734 : monté seulement sur l'écran de récap (done),
+  pas pendant la séance active. Écarté pour ce freeze (mais reste un coût
+  GPU à corriger un jour — voir dette ci-dessous).
+- CAUSE RETENUE : header sticky (L.930) avec backdrop-filter blur(20px)
+  sur fond OPAQUE (#0D0B08). Le flou était calculé à chaque frame de
+  scroll par iOS, pour zéro pixel visible (fond opaque le recouvre).
+  Combo sticky + backdrop-filter + scroll permanent = profil classique
+  du freeze de composition iOS.
+
+### Fix (commit 08b449b)
+Retrait du backdrop-filter du header (rendu pixel-identique, fond opaque).
+
+### Validation
+Pas de profiler -> validé par ABSENCE de récidive sur séances réelles,
+pas par mesure. Si le freeze revient, suspects suivants :
+- barres fixes L.135/225 (backdrop-filter blur sur rgba .9/.95, blur quasi
+  invisible mais coût quasi inutile)
+- halo blur(80px) L.734 (écran récap) + duplicata OnboardingFitness L.253
+- repaint au scroll non lié au blur
+
+### Dette perf liée (non bloquant)
+- Pattern halo `filter: blur(80px)` dupliqué (WorkoutSession récap +
+  OnboardingFitness). Un radial-gradient plus large sans filter rendrait
+  pareil sans coût GPU. À refactorer si freeze sur écrans concernés.
+
 ## PWA iPhone : 5s freeze on initial load
 
 ### Reported
