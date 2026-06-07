@@ -389,7 +389,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60, background: BG_BASE, overflowY: 'auto',
     }}>
-      <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 16px 100px' }}>
+      <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 16px calc(120px + env(safe-area-inset-bottom, 0px))' }}>
 
         {/* ──────── MODE SELECT ──────── */}
         {mode === 'select' && (
