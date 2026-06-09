@@ -20,6 +20,13 @@ const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 export type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'compte' | 'profil' | 'messages' | 'coachIA' | 'feedback'
 
+// Convertit un coach program normalisé (objet {lundi,...}) en forme .days[]
+function coachToDays(normalized: any): { days: any[] } | null {
+  if (!normalized) return null
+  const WD = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
+  return { days: WD.map(d => normalized[d] || { is_rest: true, name: '', exercises: [] }) }
+}
+
 export default function useClientDashboard() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
@@ -130,7 +137,7 @@ export default function useClientDashboard() {
       }
     }
 
-    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes] = await Promise.all([
+    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
@@ -143,6 +150,7 @@ export default function useClientDashboard() {
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('completed_sessions').select('session_index, session_name, completed_at').eq('client_id', uid).order('completed_at', { ascending: false }).limit(50),
       supabase.from('weekly_diagnostics').select('*').eq('user_id', uid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('custom_programs').select('*').eq('user_id', uid).eq('is_active', true).maybeSingle(),
     ])
 
     if (!profRes.data) { router.replace('/onboarding-v2'); return }
@@ -217,7 +225,9 @@ export default function useClientDashboard() {
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
-    await scheduledHook.fetchScheduledSessions(uid, profileData, !!coachProgData)
+    const customProg = customProgRes?.data || null
+    const planningProgram = customProg || coachToDays(coachProgData)
+    await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
     analyticsHook.fetchAnalyticsData(uid)
     await resolveCoachLink(uid)
     fetchAllComplete.current = true

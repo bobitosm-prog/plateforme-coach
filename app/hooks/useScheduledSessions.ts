@@ -16,7 +16,7 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
   const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date>(() => new Date())
   const reminderTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  async function fetchScheduledSessions(uid: string, profileData: any, hasProgram: boolean) {
+  async function fetchScheduledSessions(uid: string, profileData: any, program: any) {
     const monday = getMonday(new Date())
     const sunday = new Date(monday)
     sunday.setDate(monday.getDate() + 6)
@@ -33,7 +33,7 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
     let sessions = existing || []
 
     // Auto-generate if no sessions exist this week and user has a program
-    if (sessions.length === 0 && hasProgram) {
+    if (sessions.length === 0 && program) {
       const newSessions = buildWeekSessions(uid, monday, {
         preferred_training_time: profileData.preferred_training_time || '08:00',
         reminder_enabled: profileData.reminder_enabled !== false,
@@ -41,7 +41,7 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
         cardio_enabled: profileData.cardio_enabled,
         cardio_frequency: profileData.cardio_frequency,
         cardio_preference: profileData.cardio_preference,
-      })
+      }, program)
       const { data: inserted } = await supabase
         .from('scheduled_sessions')
         .insert(newSessions)
