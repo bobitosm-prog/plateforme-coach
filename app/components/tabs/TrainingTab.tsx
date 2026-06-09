@@ -23,7 +23,7 @@ import { toast } from 'sonner'
 import ExerciseSearchModal from '../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 import CardioSection from '../CardioSection'
-import { ScheduledSession, toDateStr } from '../../../lib/schedule-utils'
+import { ScheduledSession, toDateStr, buildWeekSessions } from '../../../lib/schedule-utils'
 import { getEffectiveWeek } from '../../../lib/training/program-week'
 
 import WorkoutCelebration from './training/WorkoutCelebration'
@@ -354,14 +354,7 @@ export default function TrainingTab({
         const mondayStr = toDateStr(monday)
         const sundayStr = toDateStr(sunday)
         await supabase.from('scheduled_sessions').delete().eq('user_id', session.user.id).gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr).eq('completed', false)
-        const paddedDays = padTo7Days(activeProg.days)
-        const DAY_LABELS_FULL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-        const newSessions: any[] = []
-        for (let i = 0; i < 7; i++) {
-          const day = paddedDays[i]; if (!day || day.is_rest) continue
-          const date = new Date(monday); date.setDate(monday.getDate() + i)
-          newSessions.push({ user_id: session.user.id, title: day.name || day.weekday || DAY_LABELS_FULL[i], session_type: 'custom', scheduled_date: toDateStr(date), scheduled_time: '08:00', duration_min: 60, completed: false })
-        }
+        const newSessions = buildWeekSessions(session.user.id, monday, profile || {}, activeProg)
         if (newSessions.length > 0) await supabase.from('scheduled_sessions').insert(newSessions)
       } catch (e) { console.error('[activateProgram] sync error:', e) }
     }
