@@ -21,6 +21,19 @@ export interface ScheduledSession {
   created_at: string
 }
 
+// Day names (FR) for padTo7Days — used to tag weekday on program days
+export const DAY_NAMES_FR = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+
+/** Ensure programDays always has exactly 7 entries, each tagged with weekday */
+export function padTo7Days(days: any[]): any[] {
+  const result = [...days]
+  result.forEach((d, i) => { if (!d.weekday) d.weekday = DAY_NAMES_FR[i] || `Jour ${i + 1}` })
+  while (result.length < 7) {
+    result.push({ name: '', weekday: DAY_NAMES_FR[result.length], is_rest: true, exercises: [] })
+  }
+  return result.slice(0, 7)
+}
+
 // Fixed PPL mapping: Monday=1 ... Sunday=0
 // JS getDay(): 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 export const PPL_SCHEDULE: { jsDay: number; title: string; type: SessionType }[] = [
@@ -118,7 +131,8 @@ function pickCardioDays(frequency: number): number[] {
 export function buildWeekSessions(
   userId: string,
   weekStart: Date, // Monday
-  profile: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number; cardio_enabled?: boolean; cardio_frequency?: number; cardio_preference?: string }
+  profile: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number; cardio_enabled?: boolean; cardio_frequency?: number; cardio_preference?: string },
+  program?: { days?: any[] } | null,
 ): Omit<ScheduledSession, 'id' | 'created_at'>[] {
   const time = profile.preferred_training_time || '08:00'
   const reminderEnabled = profile.reminder_enabled !== false
@@ -126,26 +140,50 @@ export function buildWeekSessions(
 
   const sessions: Omit<ScheduledSession, 'id' | 'created_at'>[] = []
 
-  // Add PPL sessions for each day of the week
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart)
-    d.setDate(weekStart.getDate() + i)
-    const jsDay = d.getDay()
-    const ppl = PPL_SCHEDULE.find(s => s.jsDay === jsDay)!
+  if (program?.days && program.days.length > 0) {
+    // Generate from real program days (padded to 7, index 0 = Monday)
+    const padded = padTo7Days(program.days)
+    for (let i = 0; i < 7; i++) {
+      const day = padded[i]
+      if (!day || day.is_rest) continue
+      const d = new Date(weekStart)
+      d.setDate(weekStart.getDate() + i)
+      sessions.push({
+        user_id: userId,
+        title: day.name || day.weekday || 'Séance',
+        session_type: 'custom',
+        scheduled_date: toDateStr(d),
+        scheduled_time: time,
+        duration_min: 60,
+        completed: false,
+        completed_at: null,
+        reminder_enabled: reminderEnabled,
+        reminder_minutes_before: reminderMin,
+        notes: null,
+      })
+    }
+  } else {
+    // Fallback: PPL_SCHEDULE (no active program)
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart)
+      d.setDate(weekStart.getDate() + i)
+      const jsDay = d.getDay()
+      const ppl = PPL_SCHEDULE.find(s => s.jsDay === jsDay)!
 
-    sessions.push({
-      user_id: userId,
-      title: ppl.title,
-      session_type: ppl.type,
-      scheduled_date: toDateStr(d),
-      scheduled_time: time,
-      duration_min: ppl.type === 'rest' ? 0 : 60,
-      completed: false,
-      completed_at: null,
-      reminder_enabled: ppl.type === 'rest' ? false : reminderEnabled,
-      reminder_minutes_before: reminderMin,
-      notes: null,
-    })
+      sessions.push({
+        user_id: userId,
+        title: ppl.title,
+        session_type: ppl.type,
+        scheduled_date: toDateStr(d),
+        scheduled_time: time,
+        duration_min: ppl.type === 'rest' ? 0 : 60,
+        completed: false,
+        completed_at: null,
+        reminder_enabled: ppl.type === 'rest' ? false : reminderEnabled,
+        reminder_minutes_before: reminderMin,
+        notes: null,
+      })
+    }
   }
 
   // Add cardio sessions if enabled

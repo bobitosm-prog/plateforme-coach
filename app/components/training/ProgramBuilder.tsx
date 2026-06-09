@@ -69,21 +69,11 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 8,
 }
 
-const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+import { padTo7Days, DAY_NAMES_FR } from '../../../lib/schedule-utils'
+export { padTo7Days } // re-export for existing importers
+
+const DAY_NAMES = DAY_NAMES_FR
 const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-
-/** Ensure programDays always has exactly 7 entries, each tagged with weekday */
-function padTo7Days(days: any[]): any[] {
-  const result = [...days]
-  result.forEach((d, i) => { if (!d.weekday) d.weekday = DAY_NAMES[i] || `Jour ${i + 1}` })
-  while (result.length < 7) {
-    result.push({ name: '', weekday: DAY_NAMES[result.length], is_rest: true, exercises: [] })
-  }
-  return result.slice(0, 7)
-}
-
-/** Export for TrainingTab */
-export { padTo7Days }
 
 /* ─── Component ─── */
 export default function ProgramBuilder({ supabase, session, aiAllowed = true, onClose, onSave, editProgram }: ProgramBuilderProps) {
