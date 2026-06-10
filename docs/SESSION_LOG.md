@@ -4,13 +4,71 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-10
-- **HEAD** : d854bc9 (+ commit docs à suivre)
+- **Date** : 2026-06-10 (soir)
+- **HEAD** : 1f275f5
 - **Working tree** : clean
-- **Refonte planning training F1→F5** : LIVRÉE et pushée (8 commits)
-- **À surveiller** : génération semaine 15-21 lundi prochain (gap-fill en réel)
-- **Dettes** : weekSessions demi-source (design doc), B3 flow ajout exo,
-  E2E meal-plan prod, audit UX global
+- **Refonte planning F1→F5** : livrée (matin/journée) ; gamification +
+  analytics cache : fixés (soir)
+- **À surveiller** : streak user_xp qui s'incrémente au fil des séances ;
+  génération semaine 15-21 lundi prochain
+- **Prochaines sessions** : câblage PR (1) puis purge flux mort (2) ;
+  session produit "3 mois -> 1 mois offert" quand streak prouvé
+- **Dettes** : voir entrée 2026-06-10 soir + design doc planning
+
+---
+
+## 2026-06-10 (soir) — Gamification + analytics : 2 fixes, 3e système mort découvert
+
+**Branche** : `main` — 2 commits (718fd09, 1f275f5)
+
+Signal terrain marko.rosa : streak 0 jour malgré 3 séances consécutives,
+cartes Poids/Volume "---", 0 PR.
+
+### Diagnostic — le pattern "flux mort" se confirme
+TrainingTab ~L.672 contient un ANCIEN flux de fin de séance qui ne
+s'exécute plus, mais qui portait : gamification (addXP+updateStreak) ET
+détection PR (checkForPR L.689). Le flux RÉEL (onFinishWorkout,
+useClientDashboard) n'appelait ni l'un ni l'autre. Même maladie que les
+deux générateurs de planning (session précédente). Preuve par les
+données : total_xp=50 = 5 check-ins x10 XP (jamais +100 séance),
+last_activity_date=null, personal_records 0 ligne malgré 63 sets.
+NB : le diagnostic du 6 juin (UNIQUE(user_id) manquant sur user_xp)
+avait été résolu entre-temps — ce n'était plus la cause.
+
+### Livré
+- 718fd09 : addXP(100)+updateStreak branchés dans onFinishWorkout
+  (après sync calendrier, dans if(sess), catch AVEC console.error).
+  E2E : total_xp 50->150, level 2, streak 1, last_activity_date posé.
+- 1f275f5 : fetchAnalyticsData ajouté au chemin cache-hit (jumeau du
+  fix c26dfb2 scheduled). E2E : Streak 4j + Volume -16% affichés (ex ---).
+
+### Non-bugs élucidés
+- Poids "---" : variation 30j, marko n'a qu'1 pesée -> rien à comparer.
+- Volume -16% : variation hebdo, semaine en cours non finie. Normal.
+
+### Dettes consignées (par priorité)
+1. CÂBLAGE PR (session dédiée ~45min) : checkForPR jamais appelé du vrai
+   flux -> personal_records vide pour tous. À brancher dans la boucle
+   sets d'onFinishWorkout. Attention : pas 1 await/set (63 awaits séqu.),
+   agréger par exercice (meilleur set) d'abord. Célébration UI newPR à
+   recâbler. Backfill historique à décider.
+2. PURGE FLUX MORT TrainingTab ~L.655-695 : 3 systèmes y étaient
+   accrochés (planning/gamif/PR), tous re-câblés ou consignés -> le
+   cartographier et le supprimer proprement.
+3. DOUBLE SOURCE STREAK : carte Graphiques calcule localement (4j),
+   user_xp.current_streak=1. Convergeront naturellement, mais UNE source
+   requise avant toute récompense monétaire adossée au streak.
+4. weightPeriod (AnalyticsSection L.64) : ternaire à deux branches
+   identiques, sélecteur de période sans effet. Cosmétique.
+
+### Idée produit consignée — "3 mois parfaits -> 1 mois offert"
+Récompenser la constance par un mois d'abonnement offert. À trancher
+avant implémentation : (1) définition de "parfait" — streak strict 90j
+= inatteignable/frustrant ; viser "séances planifiées du mois complétées"
++ 1-2 jokers ; (2) impact MRR (-25% sur les meilleurs users) vs
+alternatives non monétaires (badge exclusif, séance coach offerte) ;
+(3) PRÉREQUIS : streak fiable et prouvé en prod plusieurs semaines —
+le système vient tout juste d'être branché. Session produit dédiée.
 
 ---
 
