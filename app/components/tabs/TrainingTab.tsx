@@ -193,6 +193,13 @@ export default function TrainingTab({
     return s + (completedSets[key] || []).filter(Boolean).length
   }, 0)
 
+  // Dates with a completed workout (used by calendar + HeroSessionCard)
+  const doneDates = new Set(
+    (workoutHistory || [])
+      .filter((w: any) => w.completed && w.date)
+      .map((w: any) => w.date)
+  )
+
   // Build week sessions from custom program (single source of truth for calendar)
   const weekSessions: any[] = (() => {
     if (!activeCustomProgram?.days?.length) return scheduledSessions
@@ -813,12 +820,6 @@ export default function TrainingTab({
         baseMonday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + weekOffset * 7)
         baseMonday.setHours(0, 0, 0, 0)
 
-        const doneDates = new Set(
-          (workoutHistory || [])
-            .filter((w: any) => w.completed && w.date)
-            .map((w: any) => w.date)
-        )
-
         const displayDays = Array.from({ length: 7 }, (_, i) => {
           const d = new Date(baseMonday)
           d.setDate(baseMonday.getDate() + i)
@@ -1038,7 +1039,7 @@ export default function TrainingTab({
           if (target > now) return 'future' as const
           const dateStr = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`
           const ws = weekSessions.find((s: any) => s.scheduled_date === dateStr)
-          return ws?.completed ? 'done' as const : 'missed' as const
+          return (ws?.completed || doneDates.has(dateStr)) ? 'done' as const : 'missed' as const
         })()
 
         const heroState: HeroState = (() => {
