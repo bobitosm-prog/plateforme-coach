@@ -32,9 +32,9 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
 
     let sessions = existing || []
 
-    // Auto-generate if no sessions exist this week and user has a program
-    if (sessions.length === 0 && program) {
-      const newSessions = buildWeekSessions(uid, monday, {
+    // Gap-fill: insert only missing expected sessions (idempotent, never duplicates)
+    if (program) {
+      const expected = buildWeekSessions(uid, monday, {
         preferred_training_time: profileData.preferred_training_time || '08:00',
         reminder_enabled: profileData.reminder_enabled !== false,
         reminder_minutes_before: profileData.reminder_minutes_before ?? 30,
@@ -42,11 +42,12 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
         cardio_frequency: profileData.cardio_frequency,
         cardio_preference: profileData.cardio_preference,
       }, program)
-      const { data: inserted } = await supabase
-        .from('scheduled_sessions')
-        .insert(newSessions)
-        .select()
-      sessions = inserted || []
+      const existingKeys = new Set(sessions.map((s: any) => `${s.scheduled_date}|${s.session_type}`))
+      const missing = expected.filter(e => !existingKeys.has(`${e.scheduled_date}|${e.session_type}`))
+      if (missing.length > 0) {
+        const { data: inserted } = await supabase.from('scheduled_sessions').insert(missing).select()
+        sessions = [...sessions, ...(inserted || [])].sort((a: any, b: any) => a.scheduled_date.localeCompare(b.scheduled_date))
+      }
     }
 
     setScheduledSessions(sessions)
@@ -97,33 +98,56 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
     }
   }
 
-  async function regenerateWeekSchedule(uid: string, profile: any) {
+  async function regenerateWeekSchedule(uid: string, profile: any, program?: any) {
     if (!uid || !profile) return
     const monday = getMonday(new Date())
     const sunday = new Date(monday)
     sunday.setDate(monday.getDate() + 6)
+    const mondayStr = toDateStr(monday)
+    const sundayStr = toDateStr(sunday)
 
+    // Delete only non-completed sessions (preserve done ones)
     await supabase
       .from('scheduled_sessions')
       .delete()
       .eq('user_id', uid)
-      .gte('scheduled_date', toDateStr(monday))
-      .lte('scheduled_date', toDateStr(sunday))
+      .gte('scheduled_date', mondayStr)
+      .lte('scheduled_date', sundayStr)
+      .eq('completed', false)
 
-    const newSessions = buildWeekSessions(uid, monday, {
+    // Fetch remaining (completed) sessions
+    const { data: remaining } = await supabase
+      .from('scheduled_sessions')
+      .select('*')
+      .eq('user_id', uid)
+      .gte('scheduled_date', mondayStr)
+      .lte('scheduled_date', sundayStr)
+
+    // Gap-fill: only insert sessions whose date|type key doesn't already exist
+    const remainingKeys = new Set((remaining || []).map((s: any) => `${s.scheduled_date}|${s.session_type}`))
+    const expected = buildWeekSessions(uid, monday, {
       preferred_training_time: profile.preferred_training_time || '08:00',
       reminder_enabled: profile.reminder_enabled !== false,
       reminder_minutes_before: profile.reminder_minutes_before ?? 30,
       cardio_enabled: profile.cardio_enabled,
       cardio_frequency: profile.cardio_frequency,
       cardio_preference: profile.cardio_preference,
-    })
-    const { data: inserted } = await supabase
+    }, program)
+    const missing = expected.filter(e => !remainingKeys.has(`${e.scheduled_date}|${e.session_type}`))
+    if (missing.length > 0) {
+      await supabase.from('scheduled_sessions').insert(missing)
+    }
+
+    // Refetch full week (completed preserved + new)
+    const { data: refreshed } = await supabase
       .from('scheduled_sessions')
-      .insert(newSessions)
-      .select()
-    setScheduledSessions(inserted || [])
-    scheduleReminders(inserted || [])
+      .select('*')
+      .eq('user_id', uid)
+      .gte('scheduled_date', mondayStr)
+      .lte('scheduled_date', sundayStr)
+      .order('scheduled_date', { ascending: true })
+    setScheduledSessions(refreshed || [])
+    scheduleReminders(refreshed || [])
     toast.success('Planning régénéré !')
   }
 

@@ -354,7 +354,12 @@ export default function TrainingTab({
         const mondayStr = toDateStr(monday)
         const sundayStr = toDateStr(sunday)
         await supabase.from('scheduled_sessions').delete().eq('user_id', session.user.id).gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr).eq('completed', false)
+        const { data: remaining } = await supabase.from('scheduled_sessions')
+          .select('scheduled_date, session_type').eq('user_id', session.user.id)
+          .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
+        const remainingKeys = new Set((remaining || []).map((s: any) => `${s.scheduled_date}|${s.session_type}`))
         const newSessions = buildWeekSessions(session.user.id, monday, profile || {}, activeProg)
+          .filter(s => !remainingKeys.has(`${s.scheduled_date}|${s.session_type}`))
         if (newSessions.length > 0) await supabase.from('scheduled_sessions').insert(newSessions)
       } catch (e) { console.error('[activateProgram] sync error:', e) }
     }
