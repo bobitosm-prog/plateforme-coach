@@ -135,6 +135,7 @@ export default function useClientDashboard() {
         resolveCoachLink(uid)
         const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
+        analyticsHook.fetchAnalyticsData(uid)
         fetchAllComplete.current = true
         return
       }
