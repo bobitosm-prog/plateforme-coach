@@ -312,7 +312,7 @@ export default function TrainingTab({
   // ── Load workout history (refetch when todaySessionDone changes = session just completed) ──
   useEffect(() => {
     if (!session?.user?.id) return
-    supabase.from('workout_sessions').select('id, name, completed, duration_minutes, notes, created_at, muscles_worked')
+    supabase.from('workout_sessions').select('id, name, completed, date, duration_minutes, notes, created_at, muscles_worked')
       .eq('user_id', session.user.id).eq('completed', true).order('created_at', { ascending: false }).limit(50)
       .then(({ data }: any) => setWorkoutHistory(data || []))
   }, [session?.user?.id, todaySessionDone])
@@ -808,6 +808,12 @@ export default function TrainingTab({
         baseMonday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + weekOffset * 7)
         baseMonday.setHours(0, 0, 0, 0)
 
+        const doneDates = new Set(
+          (workoutHistory || [])
+            .filter((w: any) => w.completed && w.date)
+            .map((w: any) => w.date)
+        )
+
         const displayDays = Array.from({ length: 7 }, (_, i) => {
           const d = new Date(baseMonday)
           d.setDate(baseMonday.getDate() + i)
@@ -866,7 +872,7 @@ export default function TrainingTab({
                 const dayName = format(date, 'EEE', { locale: dateLocale }).toUpperCase()
                 const isToday = dateStr === todayStr
                 const isRest = isProgRest || ws?.session_type === 'rest' || ws?.title === 'Repos'
-                const isDone = ws?.completed && !isRest
+                const isDone = (ws?.completed || doneDates.has(dateStr)) && !isRest
                 const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
                 const dotColor = isRest ? 'rgba(255,255,255,0.2)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : `${colors.goldContainer}4d`
 
