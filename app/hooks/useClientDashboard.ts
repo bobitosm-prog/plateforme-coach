@@ -132,6 +132,8 @@ export default function useClientDashboard() {
       if (cached) {
         applyFetchedData(cached.profileData, cached.weightsData, cached.sessData, cached.measureData, cached.photosData, cached.coachProgData, cached.coachMealData)
         resolveCoachLink(uid)
+        const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
+        await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
         fetchAllComplete.current = true
         return
       }
@@ -221,7 +223,7 @@ export default function useClientDashboard() {
     setCompletedThisWeek(cwMap)
     setNextSession(suggestNextSession(coachProgData, lcMap))
 
-    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData }, 5 * 60 * 1000)
+    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
@@ -500,8 +502,12 @@ export default function useClientDashboard() {
   const checkForPR = (exerciseName: string, weight: number, reps: number) =>
     analyticsHook.checkForPR(userId, exerciseName, weight, reps)
 
-  const regenerateWeekSchedule = () =>
-    scheduledHook.regenerateWeekSchedule(userId, profile)
+  const regenerateWeekSchedule = async () => {
+    const { data: customProg } = await supabase.from('custom_programs')
+      .select('*').eq('user_id', userId).eq('is_active', true).maybeSingle()
+    const prog = customProg || coachToDays(coachProgram)
+    return scheduledHook.regenerateWeekSchedule(userId, profile, prog)
+  }
 
   const updateReminderSettings = (settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) =>
     scheduledHook.updateReminderSettings(supabase, userId, settings, setProfile)
