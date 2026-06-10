@@ -14,6 +14,7 @@ import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
 import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
 import { suggestNextSession, SuggestedSession } from '../../lib/suggestNextSession'
+import { addXP, updateStreak } from '../../lib/gamification'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -297,6 +298,12 @@ export default function useClientDashboard() {
         .eq('user_id', session.user.id)
         .eq('scheduled_date', todayFinish)
         .eq('completed', false)
+
+      // Gamification : +100 XP séance + streak (flux réel de fin de séance)
+      try {
+        await addXP(session.user.id, 100, supabase)
+        await updateStreak(session.user.id, supabase)
+      } catch (e) { console.error('[gamification] fin de séance:', e) }
 
       const setsToInsert: any[] = []
       data.exercises.forEach((exo: any) => {
