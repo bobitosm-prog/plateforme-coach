@@ -4,13 +4,82 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-07
-- **HEAD** : 73061a7 (+ commit docs à suivre)
+- **Date** : 2026-06-10
+- **HEAD** : d854bc9 (+ commit docs à suivre)
 - **Working tree** : clean
-- **Phase 5 / 6A / 6B** : DONE
-- **Session 7 juin** : freeze séance perf + ProgramBuilder save + FAB ajout exo + fix padding (4 commits)
-- **À valider iPhone** : freeze séance (récidive), save button, placement FAB
-- **Tâche en cours** : B3 (refonte flow ajout exo) = session dédiée ; audit UX global à reprendre
+- **Refonte planning training F1→F5** : LIVRÉE et pushée (8 commits)
+- **À surveiller** : génération semaine 15-21 lundi prochain (gap-fill en réel)
+- **Dettes** : weekSessions demi-source (design doc), B3 flow ajout exo,
+  E2E meal-plan prod, audit UX global
+
+---
+
+## 2026-06-09/10 — Refonte planning training (F1→F5) : séance faite affichée "manquée"
+
+**Branche** : `main` — 8 commits sur 2 jours (diagnostic le 9, refonte le 9-10)
+
+Bug terrain marko.rosa : Push faite lundi 8 affichée "MANQUÉE" partout.
+Le diagnostic a révélé 3 bugs structurels, pas un bug d'affichage :
+générateur PPL hardcodé ignorant le programme réel (B-gen), auto-gen
+jamais déclenchée pour les SOLO (B-hasProgram = !!coachProgData), statut
+fait/manqué aveugle aux workout_sessions réelles (B-matching).
+
+### Livré (design doc : REFONTE_PLANNING_TRAINING.md)
+- 2c73e38 design doc — 3 bugs, plan F1→F5, décisions d'archi
+- 5cf2979 F1 — buildWeekSessions lit program.days (padTo7Days extrait
+  vers lib), fallback PPL conservé. Test runtime isolé Node.
+- c42f818 F1.5 — un seul générateur (activateProgram délègue)
+- 4a5833f F2 — custom_programs au Promise.all (dernière position),
+  coachToDays, programme branché à fetchScheduledSessions. E2E : semaine
+  8-14 générée avec les vrais noms.
+- 3d5538c F3 — doneDates (workout_sessions.date, TZ-safe) croisé dans
+  isDone. E2E : lun 8 + mar 9 verts.
+- b740c49 F4 — gap-fill idempotent (clé date|type) sur les 3 chemins.
+  E2E : trou artificiel jeudi 11 auto-réparé, 0 doublon.
+- c26dfb2 F4-cache — chemin cache-hit rafraîchit les scheduled (découvert
+  par échec du test E2E : le reload servait le cache, gap-fill jamais
+  exécuté).
+- d854bc9 F4d — HeroSessionCard sur doneDates ("TERMINÉE" affiché,
+  l'image d'origine du bug corrigée)
+- F5 (SQL) — doublon 7 juin nettoyé
+
+### Découpage (commits isolés, bisect-friendly) — TOUS LIVRÉS (10 juin 2026)
+- F1   (5cf2979) : buildWeekSessions lit le vrai programme, fallback PPL. DONE
+- F1.5 (c42f818) : activateProgram délègue à buildWeekSessions. DONE
+- F2   (4a5833f) : hasProgram custom+coach, programme branché au fetch
+       (helper coachToDays, custom_programs au Promise.all). DONE
+- F3   (3d5538c) : isDone croise workout_sessions via doneDates (w.date,
+       jamais created_at -> TZ-safe). DONE
+- F4   (b740c49) : gap-fill idempotent clé date|type sur les 3 chemins
+       (fetch, regenerate, activate). Jamais de delete des complétées. DONE
+- F4-cache (c26dfb2) : le chemin cache-hit (sessionStorage TTL 5min)
+       rafraîchit les scheduled_sessions (avant : return sans fetch). DONE
+- F4d  (d854bc9) : HeroSessionCard alignée sur doneDates (remonté au
+       scope composant). DONE
+- F5   (SQL direct, pas de commit) : doublon LEGS QUADS du 7 juin supprimé
+       (ligne completed=false résiduelle). Données marko.rosa propres. DONE
+
+### Méthode
+Audit terrain complet avant toute ligne (SQL information_schema + grep),
+design doc commité avant le code, test runtime isolé des fonctions pures,
+E2E sur compte test à chaque étape, test négatif (trou artificiel) qui a
+attrapé le bug du cache. Le refus du quick-fix backfill initial a payé :
+le "témoin" (données cassées de marko) a servi à valider chaque batch.
+
+### Dettes consignées (hors scope, à reprendre un jour)
+- weekSessions (TrainingTab L.197) dérive du programme quand
+  activeCustomProgram existe, scheduledSessions à défaut : demi-source de
+  vérité héritée. Fonctionne avec doneDates, à unifier.
+- "Régénérer" sans aucun programme -> fallback PPL générique (comportement
+  historique conservé).
+- Changement de semaine réel (lundi 15) : le gap-fill générera la nouvelle
+  semaine au premier chargement — mécanisme testé par trou artificiel,
+  à confirmer en conditions réelles lundi prochain.
+
+### À surveiller
+- Lundi 15 juin : première génération de semaine en conditions réelles
+  (le gap-fill doit créer la semaine 15-21 au premier chargement).
+- Dette weekSessions (demi-source de vérité) consignée dans le design doc.
 
 ---
 
