@@ -50,12 +50,69 @@ function NavAccountLabel() {
   return <>{tc('navAccount')}</>
 }
 
+const TAB_INDEX = { home: 0, training: 1, nutrition: 2, progress: 3, compte: 4 } as const
+const TAB_RAIL_KEYS = ['home', 'training', 'nutrition', 'progress', 'compte'] as const
+
 export default function CoachApp() {
   const h = useClientDashboard()
   const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase)
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const [isDesktop, setIsDesktop] = React.useState(false)
   const paymentHandled = React.useRef(false)
+
+  // ── Rail horizontal: lazy keep-alive ──
+  const visitedTabs = React.useRef(new Set<string>(['home']))
+  const lastRailIndex = React.useRef(0)
+  const [, forceRender] = React.useState(0)
+  const [mainWidth, setMainWidth] = React.useState(0)
+  const railRO = React.useRef<ResizeObserver | null>(null)
+  const measureMainRef = React.useCallback((el: HTMLElement | null) => {
+    h.mainRef.current = el
+    railRO.current?.disconnect()
+    if (!el) return
+    const measure = () => setMainWidth(el.getBoundingClientRect().width)
+    measure()
+    railRO.current = new ResizeObserver(measure)
+    railRO.current.observe(el)
+  }, [])
+  const idx = TAB_INDEX[h.activeTab as keyof typeof TAB_INDEX]
+  if (idx !== undefined) lastRailIndex.current = idx
+  const railIndex = idx ?? lastRailIndex.current
+  // Mark active tab as visited (triggers render to mount it)
+  React.useEffect(() => {
+    if (TAB_RAIL_KEYS.includes(h.activeTab as any) && !visitedTabs.current.has(h.activeTab)) {
+      visitedTabs.current.add(h.activeTab)
+      forceRender(n => n + 1)
+    }
+  }, [h.activeTab])
+  // Pré-montage progressif : seulement les voisins de l'onglet actif,
+  // après un délai plancher (le boot d'abord, les voisins ensuite)
+  React.useEffect(() => {
+    const curIdx = TAB_INDEX[h.activeTab as keyof typeof TAB_INDEX]
+    if (curIdx === undefined) return
+    const neighbors = [TAB_RAIL_KEYS[curIdx - 1], TAB_RAIL_KEYS[curIdx + 1]].filter(Boolean) as string[]
+    const missing = neighbors.filter(t => !visitedTabs.current.has(t))
+    if (missing.length === 0) return
+    const mount = () => {
+      missing.forEach(t => visitedTabs.current.add(t))
+      forceRender(n => n + 1)
+    }
+    // Délai plancher 3s puis idle (laisse le boot finir même sur machine rapide)
+    const timer = setTimeout(() => {
+      if ('requestIdleCallback' in window) (window as any).requestIdleCallback(mount, { timeout: 2000 })
+      else mount()
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [h.activeTab])
+  // Verrou anti-scroll horizontal du conteneur du rail (scrollIntoView internes)
+  React.useEffect(() => {
+    const el = h.mainRef.current
+    if (!el) return
+    const lock = () => { if (el.scrollLeft !== 0) el.scrollLeft = 0 }
+    lock()
+    el.addEventListener('scroll', lock, { passive: true })
+    return () => el.removeEventListener('scroll', lock)
+  }, [])
 
   // Handle Stripe return (?payment=success or ?payment=cancel)
   React.useEffect(() => {
@@ -410,33 +467,43 @@ export default function CoachApp() {
         </div>
       )}
 
-      {/* ── TAB CONTENT ── */}
-      <main ref={h.mainRef} className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      {/* ── TAB CONTENT — rail horizontal (S1 swipe nav) ── */}
+      {/* Sous-écrans (hors rail) */}
+      {(h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback') && (
+        <main className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <AnimatePresence mode="wait">
+            <motion.div key={h.activeTab} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}>
+              {h.activeTab === 'profil' && <ProfileTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} fullName={h.fullName} firstName={h.firstName} avatarRef={h.avatarRef} uploadAvatar={h.uploadAvatar} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} coachProgram={h.coachProgram} coachId={h.coachId} setModal={h.setModal} fetchAll={h.fetchAll} updateReminderSettings={h.updateReminderSettings} regenerateWeekSchedule={h.regenerateWeekSchedule} onBack={() => h.setActiveTab('compte')} />}
+              {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isInvited={perms.isInvited} onBack={() => h.setActiveTab('compte')} />}
+              {h.activeTab === 'feedback' && <FeedbackTab onBack={() => h.setActiveTab('compte')} />}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      )}
 
-      <AnimatePresence mode="wait">
-        <motion.div key={h.activeTab} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}>
-          {h.activeTab === 'home' && <HomeTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} firstName={h.firstName} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} />}
-          {h.activeTab === 'training' && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} coachProgram={h.coachProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} startProgramWorkout={h.startProgramWorkout} fetchAll={h.fetchAll} scheduledSessions={h.scheduledSessions} calendarSelectedDate={h.calendarSelectedDate} setCalendarSelectedDate={h.setCalendarSelectedDate} markSessionCompleted={h.markSessionCompleted} checkForPR={h.checkForPR} lastCompletedByIndex={h.lastCompletedByIndex} />}
-          {h.activeTab === 'nutrition' && <NutritionTab coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} setModal={h.setModal} profile={h.profile} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} />}
-          {h.activeTab === 'progress' && <ProgressTab supabase={h.supabase} session={h.session} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} deletePhoto={h.deletePhoto} setModal={h.setModal} chartMin={h.chartMin} chartMax={h.chartMax} onRefresh={h.fetchAll} profile={h.profile} coachId={h.coachId} personalRecords={h.personalRecords} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weeklyVolume={h.weeklyVolume} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} calorieGoal={h.calorieGoal} goalWeight={h.goalWeight} waterGoal={h.profile?.water_goal || 3000} streak={h.streak} currentWeight={h.currentWeight} />}
-          {h.activeTab === 'profil' && <ProfileTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} fullName={h.fullName} firstName={h.firstName} avatarRef={h.avatarRef} uploadAvatar={h.uploadAvatar} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} coachProgram={h.coachProgram} coachId={h.coachId} setModal={h.setModal} fetchAll={h.fetchAll} updateReminderSettings={h.updateReminderSettings} regenerateWeekSchedule={h.regenerateWeekSchedule} onBack={() => h.setActiveTab('compte')} />}
-          {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isInvited={perms.isInvited} onBack={() => h.setActiveTab('compte')} />}
-          {h.activeTab === 'feedback' && (
-            <FeedbackTab onBack={() => h.setActiveTab('compte')} />
-          )}
-          {h.activeTab === 'compte' && (
-            <AccountTab
-              firstName={h.firstName}
-              displayAvatar={h.displayAvatar}
-              unreadCount={h.unreadCount}
-              supabase={h.supabase}
-              userId={h.session?.user?.id}
-              onNavigate={(tab) => h.setActiveTab(tab)}
-              onLogout={async () => { cache.clearAll(); await h.supabase.auth.signOut(); window.location.href = '/login' }}
-            />
-          )}
+      {/* Rail horizontal — 5 onglets racine (lazy keep-alive) */}
+      <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback') ? 'none' : 'flex' }}>
+        <motion.div
+          style={{ display: 'flex', width: mainWidth * 5, height: '100%', flexShrink: 0, visibility: mainWidth === 0 ? 'hidden' : 'visible' }}
+          animate={{ x: -railIndex * mainWidth }}
+          transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
+        >
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            {visitedTabs.current.has('home') && <HomeTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} firstName={h.firstName} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} />}
+          </div>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} coachProgram={h.coachProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} startProgramWorkout={h.startProgramWorkout} fetchAll={h.fetchAll} scheduledSessions={h.scheduledSessions} calendarSelectedDate={h.calendarSelectedDate} setCalendarSelectedDate={h.setCalendarSelectedDate} markSessionCompleted={h.markSessionCompleted} checkForPR={h.checkForPR} lastCompletedByIndex={h.lastCompletedByIndex} />}
+          </div>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            {visitedTabs.current.has('nutrition') && <NutritionTab coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} setModal={h.setModal} profile={h.profile} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} />}
+          </div>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            {visitedTabs.current.has('progress') && <ProgressTab supabase={h.supabase} session={h.session} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} deletePhoto={h.deletePhoto} setModal={h.setModal} chartMin={h.chartMin} chartMax={h.chartMax} onRefresh={h.fetchAll} profile={h.profile} coachId={h.coachId} personalRecords={h.personalRecords} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weeklyVolume={h.weeklyVolume} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} calorieGoal={h.calorieGoal} goalWeight={h.goalWeight} waterGoal={h.profile?.water_goal || 3000} streak={h.streak} currentWeight={h.currentWeight} />}
+          </div>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} onNavigate={(tab) => h.setActiveTab(tab)} onLogout={async () => { cache.clearAll(); await h.supabase.auth.signOut(); window.location.href = '/login' }} />}
+          </div>
         </motion.div>
-      </AnimatePresence>
       </main>
 
       </div>{/* end main-content-area */}

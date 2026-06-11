@@ -117,9 +117,11 @@ export default function useClientDashboard() {
     fetchAll()
   }, [session])
 
-  useEffect(() => {
-    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
-  }, [activeTab])
+  // Scroll-to-top disabled: each tab slide now has its own scroll container
+  // (rail architecture, S1 swipe nav). Slides keep their position on tab switch.
+  // useEffect(() => {
+  //   mainRef.current?.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+  // }, [activeTab])
 
   /* ── Data fetching (with cache) ── */
   async function fetchAll(forceRefresh = false) {
