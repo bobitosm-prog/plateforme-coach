@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 import { fr as frLocale } from 'date-fns/locale/fr'
@@ -89,6 +89,7 @@ export default function TrainingTab({
   const exercisesCacheLoaded = useRef(false)
   const [showProgramManager, setShowProgramManager] = useState(false)
   const [weekOffset, setWeekOffset] = useState(0)
+  const [weekDir, setWeekDir] = useState(0)
   const calTouchStart = useRef<number | null>(null)
   const [expandedProgram, setExpandedProgram] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
@@ -848,8 +849,8 @@ export default function TrainingTab({
             onTouchEnd={e => {
               if (calTouchStart.current === null) return
               const diff = e.changedTouches[0].clientX - calTouchStart.current
-              if (diff > 60) setWeekOffset(o => o - 1)
-              else if (diff < -60) setWeekOffset(o => o + 1)
+              if (diff > 60) { setWeekDir(-1); setWeekOffset(o => o - 1) }
+              else if (diff < -60) { setWeekDir(1); setWeekOffset(o => o + 1) }
               calTouchStart.current = null
             }}
           >
@@ -858,22 +859,30 @@ export default function TrainingTab({
               <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{monthLabel}</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 {weekOffset !== 0 && (
-                  <button onClick={() => setWeekOffset(0)} aria-label={t('calendar.backToWeek')}
+                  <button onClick={() => { setWeekDir(weekOffset > 0 ? -1 : 1); setWeekOffset(0) }} aria-label={t('calendar.backToWeek')}
                     style={{ ...glassBtn, width: 'auto', padding: '6px 12px', fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' as const }}>
                     AUJOURD&apos;HUI
                   </button>
                 )}
-                <button onClick={() => setWeekOffset(o => o - 1)} aria-label={t('calendar.prevWeek')} style={glassBtn}>
+                <button onClick={() => { setWeekDir(-1); setWeekOffset(o => o - 1) }} aria-label={t('calendar.prevWeek')} style={glassBtn}>
                   <ChevronLeft size={16} color={colors.gold} />
                 </button>
-                <button onClick={() => setWeekOffset(o => o + 1)} aria-label={t('calendar.nextWeek')} style={glassBtn}>
+                <button onClick={() => { setWeekDir(1); setWeekOffset(o => o + 1) }} aria-label={t('calendar.nextWeek')} style={glassBtn}>
                   <ChevronRight size={16} color={colors.gold} />
                 </button>
               </div>
             </div>
 
             {/* 7-day grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+            <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={weekOffset}
+              initial={{ x: weekDir * 60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -weekDir * 60, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 32, mass: 0.7 }}
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}
+            >
               {displayDays.map(({ date, dateStr, ws, isProgRest }, i) => {
                 const dayNum = date.getDate()
                 const dayName = format(date, 'EEE', { locale: dateLocale }).toUpperCase()
@@ -905,7 +914,8 @@ export default function TrainingTab({
                   </button>
                 )
               })}
-            </div>
+            </motion.div>
+            </AnimatePresence>
 
             {/* Legend compact */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 16 }}>
