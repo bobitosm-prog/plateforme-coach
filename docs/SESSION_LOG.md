@@ -4,14 +4,40 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-12
-- **HEAD** : 5e0909c
+- **Date** : 2026-06-12 (soir)
+- **HEAD** : 22517fc
 - **Working tree** : clean
-- **Swipe nav S1** : livré (rail horizontal 5 onglets, lazy keep-alive,
-  pré-montage progressif voisins)
-- **Prochaines sessions** : S2 drag Framer Motion ; câblage PR ; purge flux mort
+- **Swipe nav** : S1 livré + fix hauteurs pixels (22517fc). S2 drag reverté,
+  à reconstruire (S2-v2). Prod saine.
+- **Prochaines sessions** : S2-v2 drag (design scroll/drag d'avance) ;
+  câblage PR ; purge flux mort
 - **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ~/package-lock.json ;
   voir aussi entrée 2026-06-10 soir
+
+---
+
+## 2026-06-12 — S2 drag livré puis reverté ; incident prod scroll (clos)
+
+**Branche** : main — état final : S1 + fix hauteurs (22517fc), prod saine.
+
+Matin : S2 drag Framer Motion livré (useMotionValue + animate après
+crash useAnimationControls sur device ; touchAction pan-y ; snap 25%/
+500px/s ; gel directionnel du scroll). Validé au pouce sur prod :
+drag/snap/snapback OK, ressenti bon mais scroll diagonal trop sensible.
+
+Incident : le gel du scroll (pushé SANS test local malgré mode de panne
+identifié) -> scroll mort en prod. Reverts successifs (gel puis S2
+entier) insuffisants. Mesure DOM décisive : slides 2311px de haut =
+chaîne height:100% effondrée (cousin vertical des 227px de S1).
+Fix 22517fc : mainSize {w,h}, géométrie 100% pixels. Vérifié iPhone prod.
+
+Leçons consignées dans SWIPE_NAVIGATION.md (mesure>symptôme, zéro %,
+test du mode de panne, build périmé x4). Webhook Vercel : 1 raté,
+remède commit vide.
+
+Prochaine étape : S2-v2 — drag reconstruit avec gestion scroll/drag
+conçue d'avance (voir design doc), checklist scroll locale obligatoire
+avant push.
 
 ---
 
