@@ -88,8 +88,21 @@ export default function CoachApp() {
   }, [railIndex, mainSize.w])
   const touchState = React.useRef<{ startX: number, startY: number, baseX: number, t0: number, mode: 'pending'|'horizontal'|'rejected' } | null>(null)
   const railDivRef = React.useRef<HTMLDivElement | null>(null)
+  const inHorizontalScroller = (el: HTMLElement | null): boolean => {
+    let node = el
+    while (node && node !== document.body) {
+      if (node.hasAttribute?.('data-no-tab-swipe')) return true
+      const style = getComputedStyle(node)
+      const ox = style.overflowX
+      if ((ox === 'auto' || ox === 'scroll') && node.scrollWidth > node.clientWidth + 1) return true
+      node = node.parentElement
+    }
+    return false
+  }
   const onRailTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0]
+    if (inHorizontalScroller(e.target as HTMLElement)) return
+    if (t.clientX < 24 || t.clientX > window.innerWidth - 24) return
     touchState.current = { startX: t.clientX, startY: t.clientY, baseX: railX.get(), t0: performance.now(), mode: 'pending' }
   }
   // touchmove handler registered via addEventListener({ passive: false }) to allow preventDefault

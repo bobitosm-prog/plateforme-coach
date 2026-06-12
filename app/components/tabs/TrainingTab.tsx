@@ -842,6 +842,7 @@ export default function TrainingTab({
 
         return (
           <div
+            data-no-tab-swipe="true"
             style={{ margin: '0 20px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 24 }}
             onTouchStart={e => { calTouchStart.current = e.touches[0].clientX }}
             onTouchEnd={e => {

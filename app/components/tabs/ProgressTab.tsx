@@ -1013,7 +1013,7 @@ export default function ProgressTab({
           } finally { setIsAligning(false) }
         }
         return (
-          <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
+          <div data-no-tab-swipe="true" style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #222', flexShrink: 0 }}>
               <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
                 <span style={{ color: colors.error, fontWeight: 600 }}>{t('tab.before')} : {beforeDate}</span>

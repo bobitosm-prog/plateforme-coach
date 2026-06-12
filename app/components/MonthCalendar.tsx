@@ -42,6 +42,7 @@ export default function MonthCalendar({ sessions, selectedDate, onSelectDate, on
 
   return (
     <motion.div
+      data-no-tab-swipe="true"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
