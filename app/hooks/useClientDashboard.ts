@@ -14,6 +14,7 @@ import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
 import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
 import { suggestNextSession, SuggestedSession } from '../../lib/suggestNextSession'
+import { computeStreak } from '../../lib/streak'
 import { addXP, updateStreak } from '../../lib/gamification'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -464,12 +465,11 @@ export default function useClientDashboard() {
   const currentWeight = weightHistory30.length > 0 ? weightHistory30[weightHistory30.length - 1].poids : profile?.current_weight
   const completedSessions = wSessions.filter(s => s.completed).length
   const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  const streak = (() => {
-    const dates = new Set(wSessions.filter(s => s.completed).map(s => toLocal(new Date(s.created_at))))
-    let count = 0; const d = new Date()
-    while (dates.has(toLocal(d))) { count++; d.setDate(d.getDate() - 1) }
-    return count
-  })()
+  // Single source: lib/streak.ts (Duolingo grace period)
+  // NB: wSessions capped at 90 — a streak >90 days would be truncated
+  const streakDates = wSessions.filter(s => s.completed).map(s => toLocal(new Date(s.created_at)))
+  const streakResult = computeStreak(streakDates, toLocal(new Date()))
+  const streak = streakResult.current
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
   const todaySessionDone = wSessions.some(s => s.completed && toLocal(new Date(s.created_at)) === toLocal(new Date()))

@@ -99,7 +99,7 @@ export default function HomeTab({
   const [caloriesWeekData, setCaloriesWeekData] = useState<{ day: string; calories: number }[]>([])
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekSessions, setWeekSessions] = useState(0)
-  const [xpData, setXpData] = useState<{ total_xp: number; current_streak: number } | null>(null)
+  const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
   const [nextAppt, setNextAppt] = useState<any>(null)
   const [apptCount, setApptCount] = useState(0)
   const [apptCoachName, setApptCoachName] = useState('votre coach')
@@ -275,7 +275,7 @@ export default function HomeTab({
       .then(({ data }: any) => { if (data) setTodayScheduledSession(data) })
 
     // Fetch XP data
-    supabase.from('user_xp').select('total_xp, current_streak').eq('user_id', userId).maybeSingle()
+    supabase.from('user_xp').select('total_xp').eq('user_id', userId).maybeSingle()
       .then(({ data }: any) => { if (data) setXpData(data) })
 
     // Fetch muscle status from recent workout sets + sessions

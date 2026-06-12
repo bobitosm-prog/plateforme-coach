@@ -1,4 +1,5 @@
 // ─── Gamification System ───
+import { toDateStr } from './schedule-utils'
 
 export function getLevelFromXP(xp: number): { level: number; xpForNext: number; xpInLevel: number; progress: number } {
   let level = 1
@@ -26,14 +27,21 @@ export async function addXP(userId: string, amount: number, supabase: any) {
   return { newXP, level }
 }
 
+/**
+ * Update streak metadata in user_xp (longest_streak + last_activity_date).
+ * NOTE: current_streak in DB is DEPRECATED for reads — the single source
+ * of truth for streak display is lib/streak.ts (computeStreak). This
+ * function still writes it for backward compat but no UI reads it.
+ */
 export async function updateStreak(userId: string, supabase: any) {
-  const today = new Date().toISOString().split('T')[0]
+  const today = toDateStr(new Date())
   const { data } = await supabase.from('user_xp').select('current_streak, longest_streak, last_activity_date').eq('user_id', userId).maybeSingle()
   let streak = data?.current_streak || 0
   let longest = data?.longest_streak || 0
   const lastDate = data?.last_activity_date
   if (lastDate === today) return streak
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+  const yd = new Date(); yd.setDate(yd.getDate() - 1)
+  const yesterday = toDateStr(yd)
   streak = lastDate === yesterday ? streak + 1 : 1
   longest = Math.max(longest, streak)
   await supabase.from('user_xp').upsert({ user_id: userId, current_streak: streak, longest_streak: longest, last_activity_date: today, updated_at: new Date().toISOString() })
