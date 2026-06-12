@@ -5,15 +5,29 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-12 (nuit)
-- **HEAD** : 7408ad4
+- **HEAD** : 1cb6124
 - **Working tree** : clean
-- **Bloc A blindage** : TERMINÉ (9 commits). Sécurité IA + webhook Stripe +
-  câblage PR + backfill + toast i18n agrégé + purge module orphelin.
+- **Bloc A blindage** : TERMINÉ (9 commits).
+- **Bloc B rétention** : en cours. Streak source unique LIVRÉ (3 commits).
 - **Swipe nav** : TERMINÉ (S1+S2+S3 prod). S4 = backlog.
-- **Prochaines sessions** : BLOC B rétention (streak -> push -> célébrations) ;
+- **Prochaines sessions** : Bloc B suite (push adaptatives, célébrations) ;
   dette image delivery 2,2 MiB ; consolidation 2 flux fin de séance (Bloc D)
 - **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ~/package-lock.json ;
-  2 flux fin séance parallèles ; i18n exercices FR-only ; voir entrée Bloc A
+  2 flux fin séance parallèles ; i18n exercices FR-only ; wSessions cap 90
+  (streak >90j tronqué) ; suppression colonne current_streak (migration ultérieure)
+
+---
+
+## 2026-06-13 — Bloc B rétention : streak source unique
+
+- 01:30 `5ae51e1` feat(gamification): lib/streak.ts pure engine (7/7 tests, grace period Duolingo)
+- 01:40 `14604e2` refactor: câblage computeStreak dans useClientDashboard + check-badges + HomeTab
+- 01:45 `1cb6124` refactor: suppression lecture current_streak desktop page
+
+Résultat grep final : current_streak lu/écrit UNIQUEMENT dans updateStreak
+(gamification.ts, écriture deprecated backward-compat). Zéro lecture UI.
+Suppression de colonne différée à une migration ultérieure (prod saine
+quelques semaines d'abord).
 
 ---
 
