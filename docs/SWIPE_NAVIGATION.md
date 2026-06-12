@@ -50,11 +50,16 @@ insuffisant.
   onglets d'un coup coûtait 7 pts Lighthouse (72->65 mesuré) ->
   pré-montage progressif des seuls voisins, délai 3s + idle.
   mainWidth (px) est directement réutilisable en S2 pour le drag.
-- S2 : LIVRÉ PUIS REVERTÉ (a45f09d -> revert 28d455b). Le drag
-  fonctionnait (snap, snapback, vélocité validés sur device prod) mais
-  capturait/perturbait le scroll vertical. Le gel correctif (ce4c060,
-  reverté 567a585) a causé un gel permanent en prod. À reconstruire :
-  S2-v2, voir leçons.
+- S2 : LIVRÉ EN v2 (50310e4), validé device prod au pouce. Moteur
+  touch MANUEL (pattern carrousel) : détection d'intention par
+  dominance d'axe (H si ax>12 && ax>ay*1.5 ; V rendu au natif si
+  ay>16 && ay>ax*1.5), preventDefault chirurgical sur gestes qualifiés
+  H seulement (touchmove addEventListener passive:false + cleanup),
+  railX useMotionValue piloté direct, snap 25%/500px/s, élastique 15%
+  aux bornes. Desktop souris : drag inactif (touch only, assumé).
+  Historique : v1 dragControls+pointer events abandonnée — pointermove
+  coupé par le scroll natif (mesuré) ; drag Framer natif abandonné —
+  capturait le scroll vertical (incident, post-mortem ci-dessous).
 - S3 : boucliers.
 - S4 : perf iPhone réel + polish (sync indicateur bottom nav pendant le
   drag).
@@ -79,6 +84,14 @@ axes ont produit le même bug (227px en largeur, 2311px en hauteur) ;
 panne prévu s'est produit en prod) ; (4) npm start sert le build
 .next figé — 4 diagnostics fantômes en 2 jours, itérer sur npm run
 dev, mesurer sur build frais.
+
+Leçon S2-v2 : sur mobile web, la cohabitation drag horizontal /
+scroll vertical ne se règle PAS en empilant les mécanismes (touch-
+action + directionLock Framer + gel manuel = 3 arbitres en course).
+UN SEUL propriétaire du geste : détecteur d'intention maison sur
+touch events, qui ne donne le geste au drag QUE qualifié horizontal
+et ne touche JAMAIS au vertical. Diagnostic par espion d'événements
+console = la méthode qui a tranché (down sans move qualifié).
 
 ## Risques connus
 - Mémoire : 5 onglets montés à terme (Recharts x2). À mesurer en S4.

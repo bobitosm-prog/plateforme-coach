@@ -5,12 +5,12 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-12 (soir)
-- **HEAD** : 22517fc
+- **HEAD** : 50310e4
 - **Working tree** : clean
-- **Swipe nav** : S1 livré + fix hauteurs pixels (22517fc). S2 drag reverté,
-  à reconstruire (S2-v2). Prod saine.
-- **Prochaines sessions** : S2-v2 drag (design scroll/drag d'avance) ;
-  câblage PR ; purge flux mort
+- **Swipe nav** : S1 + S2-v2 livrés (moteur touch manuel, validé prod).
+  Prod saine.
+- **Prochaines sessions** : S3 boucliers ; S4 polish ; câblage PR ;
+  purge flux mort
 - **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ~/package-lock.json ;
   voir aussi entrée 2026-06-10 soir
 
@@ -38,6 +38,16 @@ remède commit vide.
 Prochaine étape : S2-v2 — drag reconstruit avec gestion scroll/drag
 conçue d'avance (voir design doc), checklist scroll locale obligatoire
 avant push.
+
+**Après-midi — S2-v2 livré (50310e4), validé prod au pouce.** Moteur
+touch manuel : 2 itérations diagnostiquées à l'espion console
+(pointermove coupé par le scroll natif -> abandon pointer events ;
+détecteur décidant au premier seuil -> dominance d'axe). Checklist 7
+points passée en dev ET build prod local avant push — la discipline
+réinstaurée après l'incident du matin. Restent : S3 boucliers
+(calendrier Training onTouchStart L.846, comparateur photos, zone morte
+bords iOS, inactif séance active) puis S4 (polish : sync bottom nav
+pendant drag, perf device, seuils fins).
 
 ---
 
