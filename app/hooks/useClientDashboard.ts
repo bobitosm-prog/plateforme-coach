@@ -308,6 +308,26 @@ export default function useClientDashboard() {
         await updateStreak(session.user.id, supabase)
       } catch (e) { console.error('[gamification] fin de séance:', e) }
 
+      // PR detection : 1 appel checkForPR par exercice (meilleur set Epley)
+      // toast directement ici — le hook importe déjà toast (sonner L.7)
+      // et n'a pas accès à useTranslations (hook non-intl) ; template inline
+      // cohérent avec les autres toast.error du hook (L.507)
+      try {
+        for (const exo of data.exercises) {
+          const valid = (exo.sets || []).filter((s: any) => Number(s.weight) > 0 && Number(s.reps) > 0)
+          if (valid.length === 0) continue
+          const best = valid.reduce((a: any, b: any) => {
+            const scoreA = Number(a.weight) * (1 + Number(a.reps) / 30)
+            const scoreB = Number(b.weight) * (1 + Number(b.reps) / 30)
+            return scoreA >= scoreB ? a : b
+          })
+          const result = await checkForPR(exo.name, Number(best.weight), Number(best.reps))
+          if (result.newPR) {
+            toast.success(`Record ! ${result.exercise} — ${result.value} kg (1RM)`, { duration: 5000 })
+          }
+        }
+      } catch (e) { console.error('[PR detection] fin de séance:', e) }
+
       const setsToInsert: any[] = []
       data.exercises.forEach((exo: any) => {
         exo.sets.forEach((s: any, i: number) => {
