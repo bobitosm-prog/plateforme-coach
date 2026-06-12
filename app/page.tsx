@@ -52,15 +52,13 @@ function NavAccountLabel() {
   return <>{tc('navAccount')}</>
 }
 
-/** Wrapper: PR toasts + badge celebration overlay — rendered INSIDE ClientIntlProvider */
-function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose, supabase, userId }: {
+/** Wrapper: PR toasts + pushes newBadges to global queue — rendered INSIDE ClientIntlProvider */
+function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose, onBadgesEarned }: {
   sessionName: string; exercises: any[]; startedAt?: string
   onFinish: (data: any) => Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
-  onClose: () => void; supabase: any; userId: string
+  onClose: () => void; onBadgesEarned: (badges: Badge[]) => void
 }) {
   const t = useTranslations('training_tab')
-  const [celebrateBadge, setCelebrateBadge] = React.useState<Badge | null>(null)
-  const badgeQueue = React.useRef<Badge[]>([])
   const handleFinish = React.useCallback(async (data: any) => {
     const result = await onFinish(data)
     const prs = result?.newPRs
@@ -70,29 +68,9 @@ function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onF
       const list = prs.map(p => `${p.exercise} ${p.value}kg`).join(' \u00b7 ')
       toast.success(t('calendar.toasts.newPRMultiple', { count: prs.length, list }), { duration: 6000 })
     }
-    if (result?.newBadges?.length) {
-      badgeQueue.current = result.newBadges.slice(1)
-      setCelebrateBadge(result.newBadges[0])
-    }
-  }, [onFinish, t])
-  const handleBadgeClose = React.useCallback(async () => {
-    // Mark ALL uncelebrated badges as celebrated (same pattern as ProfileTab L.528)
-    try {
-      await supabase.from('user_badges').update({ celebrated: true }).eq('user_id', userId).eq('celebrated', false)
-    } catch (e) { console.error('[badge-celebration] flag error:', e) }
-    if (badgeQueue.current.length > 0) {
-      const next = badgeQueue.current.shift()!
-      setCelebrateBadge(next)
-    } else {
-      setCelebrateBadge(null)
-    }
-  }, [supabase, userId])
-  return (
-    <>
-      <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} />
-      {celebrateBadge && <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={handleBadgeClose} />}
-    </>
-  )
+    if (result?.newBadges?.length) onBadgesEarned(result.newBadges)
+  }, [onFinish, t, onBadgesEarned])
+  return <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} />
 }
 
 const TAB_INDEX = { home: 0, training: 1, nutrition: 2, progress: 3, compte: 4 } as const
@@ -104,6 +82,25 @@ export default function CoachApp() {
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const [isDesktop, setIsDesktop] = React.useState(false)
   const paymentHandled = React.useRef(false)
+
+  // ── Badge celebration queue (global — survives workout unmount) ──
+  const [celebrateBadge, setCelebrateBadge] = React.useState<Badge | null>(null)
+  const badgeQueue = React.useRef<Badge[]>([])
+  const handleBadgesEarned = React.useCallback((badges: Badge[]) => {
+    badgeQueue.current = badges.slice(1)
+    setCelebrateBadge(badges[0])
+  }, [])
+  const handleBadgeClose = React.useCallback(async () => {
+    // Mark ALL uncelebrated as celebrated (same pattern as ProfileTab L.528)
+    try {
+      await h.supabase.from('user_badges').update({ celebrated: true }).eq('user_id', h.session?.user?.id).eq('celebrated', false)
+    } catch (e) { console.error('[badge-celebration] flag error:', e) }
+    if (badgeQueue.current.length > 0) {
+      setCelebrateBadge(badgeQueue.current.shift()!)
+    } else {
+      setCelebrateBadge(null)
+    }
+  }, [h.supabase, h.session?.user?.id])
 
   // ── Rail horizontal: lazy keep-alive ──
   const visitedTabs = React.useRef(new Set<string>(['home']))
@@ -417,7 +414,7 @@ export default function CoachApp() {
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
-        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} supabase={h.supabase} userId={h.session.user.id} />
+        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} onBadgesEarned={handleBadgesEarned} />
       )}
 
       {/* ── WEIGHT MODAL ── */}
@@ -623,6 +620,7 @@ export default function CoachApp() {
       </div>{/* end main-content-area */}
 
       <BugReport session={h.session} profile={h.profile} />
+      {celebrateBadge && <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={handleBadgeClose} />}
       {!perms.isInvited && (
           <ChatAI
             session={h.session}
