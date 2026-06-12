@@ -34,6 +34,34 @@ quelques semaines d'abord).
   Garde horaire Zurich 18h, 2 jobs UTC (CET/CEST), computeStreak atRisk >= 3,
   push 3 locales, anti-spam last_streak_reminder_at. "LA chose a faire lundi matin."
 
+**Soir — Bloc B #1 et #2 livrés et validés.**
+#1 streak source unique : computeStreak (lib/streak.ts, pur, 7/7 tests)
+câblé dans 4 consommateurs (useClientDashboard, check-badges, HomeTab,
+page-desktop — le 4e découvert par grep). Validé device : 3 écrans = 6,
+grace period prouvée (reset jour -> 5, pas 0). Colonne user_xp.current_streak
+plus lue nulle part (suppression différée).
+#2 push streak 18h : helper lib/push-server.ts extrait (send-notification
+= wrapper), route cron avec garde horaire Zurich + anti-spam
+last_streak_reminder_at + messages 3 locales. 2 jobs pg_cron (16h/17h UTC
+pour le DST).
+INCIDENT résolu : premier câblage pg_cron en 401 (mauvais CRON_SECRET
+collé à la main). Fix : clonage du command du job sain weekly-diagnostic
+via replace() SQL — le secret ne transite plus par un copier-coller humain.
+LEÇON : pour tout nouveau job pg_cron, dupliquer un job existant par SQL.
+Chaîne validée par job jetable : 200 {"skipped":"not 18h local",
+"zurichHour":19} — pg_cron->HTTP->auth->route->garde OK.
+
+RESTE A VALIDER (demain) :
+- [ ] 18h00 : push réelle sur marko.rosa (streak 4, atRisk) — NE PAS faire
+      de séance avant 18h. Contrôles : notification device +
+      last_streak_reminder_at + job_run_details.
+- [ ] Toast multi-PR (391d3a7) : séance battant 2 records, APRÈS la push.
+- [ ] Resend Stripe webhook -> 200 sans rejet (si pas déjà fait).
+- [ ] Modal "Mon niveau" = stub -> backlog Bloc B #6.
+Prochain chantier : Bloc B #6 célébrations synchrones (audit fait :
+checkAndUnlockBadges appelé seulement au mount ProfileTab, BadgeCelebration
+existant, AchievementToast orphelin -> déclencher depuis onFinishWorkout).
+
 ---
 
 ## 2026-06-12 — S2 drag livré puis reverté ; incident prod scroll (clos)
