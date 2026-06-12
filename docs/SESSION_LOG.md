@@ -5,16 +5,18 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-12 (nuit)
-- **HEAD** : 4f04047
+- **HEAD** : dd97f25
 - **Working tree** : clean
-- **Bloc A blindage** : TERMINÉ (9 commits).
-- **Bloc B rétention** : en cours. Streak source unique LIVRÉ (3 commits).
+- **Bloc A blindage** : TERMINÉ.
+- **Bloc B rétention** : #1 streak OK, #2 push cron OK (validations demain 18h),
+  #6 badges synchrones OK (5 overlays validés device).
 - **Swipe nav** : TERMINÉ (S1+S2+S3 prod). S4 = backlog.
-- **Prochaines sessions** : Bloc B suite (push adaptatives, célébrations) ;
-  dette image delivery 2,2 MiB ; consolidation 2 flux fin de séance (Bloc D)
-- **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ~/package-lock.json ;
-  2 flux fin séance parallèles ; i18n exercices FR-only ; wSessions cap 90
-  (streak >90j tronqué) ; suppression colonne current_streak (migration ultérieure)
+- **Prochaines sessions** : validations push 18h + multi-PR + webhook ;
+  Bloc D (drift code<->schéma, await sans check error, consolidation 2 flux) ;
+  dette image delivery 2,2 MiB
+- **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ; 2 flux fin
+  séance ; i18n exercices FR-only ; wSessions cap 90 ; suppression colonnes
+  current_streak + badge_type ; checkAchievements orphelin ; drift schéma
 
 ---
 
@@ -58,9 +60,32 @@ RESTE A VALIDER (demain) :
 - [ ] Toast multi-PR (391d3a7) : séance battant 2 records, APRÈS la push.
 - [ ] Resend Stripe webhook -> 200 sans rejet (si pas déjà fait).
 - [ ] Modal "Mon niveau" = stub -> backlog Bloc B #6.
-Prochain chantier : Bloc B #6 célébrations synchrones (audit fait :
-checkAndUnlockBadges appelé seulement au mount ProfileTab, BadgeCelebration
-existant, AchievementToast orphelin -> déclencher depuis onFinishWorkout).
+
+**Nuit — Bloc B #6 (badges synchrones) livré et validé device après 3
+itérations + 1 incident schéma.**
+Livré : checkAndUnlockBadges câblé dans onFinishWorkout (post-insert sets),
+file FIFO BadgeCelebration hissée au niveau CoachApp (survit à
+l'auto-redirect), flag celebrated posé au close par le wrapper.
+INCIDENT (cause racine de la coquille vide badges) : user_badges.badge_type
+NOT NULL sans default + upsert sans badge_type -> 23502 silencieux depuis
+toujours, ZÉRO badge jamais écrit pour aucun user. 3e désalignement
+code<->schéma du jour (unit, earned_at, badge_type). Fix : DROP NOT NULL en
+prod + migration tracée.
+ITÉRATIONS (leçon : validation device ENTRE chaque commit, pas après 3) :
+(1) flag celebrated non posé par le wrapper -> fix 04b1728 ; (2) file tuée
+par l'auto-redirect (démontage du conditionnel workoutSession) -> hissage
+dc8c32e ; (3) validé device : 5 overlays en chaîne, 5 flags true,
+ProfileTab muet.
+Dette : checkAchievements (gamification.ts) orphelin à purger — commit
+séparé non livré ce soir.
+AUDIT À PLANIFIER (Bloc D, urgence montée d'un cran) : drift code<->schéma
+systématique + pattern "await supabase sans check error" généralisé.
+
+RESTE A VALIDER demain :
+- [ ] 18h00 : push streak réelle (marko.rosa streak vivant via grace
+      period — AUCUNE séance le 13 avant 18h)
+- [ ] Toast multi-PR (391d3a7) après la push
+- [ ] Resend webhook Stripe si pas fait
 
 ---
 
