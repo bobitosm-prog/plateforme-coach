@@ -84,17 +84,7 @@ export default function CoachApp() {
     if (mainWidth === 0) return
     railControls.start({ x: -railIndex * mainWidth, transition: RAIL_SPRING })
   }, [railIndex, mainWidth])
-  const scrollFrozen = React.useRef(false)
-  const setSlidesScrollLock = (locked: boolean) => {
-    const rail = h.mainRef.current?.firstElementChild
-    if (!rail) return
-    for (const slide of Array.from(rail.children)) {
-      (slide as HTMLElement).style.overflowY = locked ? 'hidden' : 'auto'
-    }
-    scrollFrozen.current = locked
-  }
   function handleRailDragEnd(_e: any, info: { offset: { x: number }, velocity: { x: number } }) {
-    if (scrollFrozen.current) setSlidesScrollLock(false)
     const SWIPE_DISTANCE = mainWidth * 0.25
     const SWIPE_VELOCITY = 500
     let target = railIndex
@@ -520,7 +510,6 @@ export default function CoachApp() {
           dragMomentum={false}
           dragElastic={0.12}
           dragConstraints={{ left: -4 * mainWidth, right: 0 }}
-          onDirectionLock={(axis) => { if (axis === 'x') setSlidesScrollLock(true) }}
           onDragEnd={handleRailDragEnd}
         >
           <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
