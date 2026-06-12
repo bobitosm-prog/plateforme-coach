@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { parseCheckoutMetadata } from '../../../../lib/stripe/metadata'
 
 function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
 function getServiceSupabase() {
@@ -66,15 +67,17 @@ export async function POST(req: NextRequest) {
         (event.data.object as Stripe.Checkout.Session).id,
         { expand: ['subscription'] }
       )
-      const clientId = session.metadata?.clientId
-      const subType = session.metadata?.subType || session.metadata?.planId || 'client_monthly'
+      const meta = parseCheckoutMetadata(session.metadata as Record<string, string> | null)
+      if (!meta.ok) {
+        console.error('[stripe_webhook] metadata rejected:', meta.reason, session.id)
+        return NextResponse.json({ received: true })
+      }
+
+      const { clientId, subType, isCoachSubscription, coachId } = meta
       const isLifetime = subType === 'client_lifetime'
       const isCoach = subType === 'coach_monthly'
 
-      if (clientId) {
-        const isCoachSubscription = session.metadata?.type === 'coach_subscription'
-        const coachId = session.metadata?.coachId
-
+      {
         if (isCoachSubscription && coachId) {
           await supabase.from('profiles').update({
             stripe_customer_id: session.customer as string || null,
