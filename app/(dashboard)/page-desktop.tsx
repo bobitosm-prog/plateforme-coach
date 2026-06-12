@@ -190,7 +190,7 @@ export default function DesktopDashboard({
   const [newRecords, setNewRecords] = useState(0)
   const [muscleStatus, setMuscleStatus] = useState<Record<string, number>>({})
   const [badges, setBadges] = useState<any[]>([])
-  const [xpData, setXpData] = useState<{ total_xp: number; current_streak: number } | null>(null)
+  const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
   const [prevWeight, setPrevWeight] = useState<number | null>(null)
   const [allBadges, setAllBadges] = useState<any[]>([])
   const [todayFoodLogs, setTodayFoodLogs] = useState<any[]>([])
@@ -244,7 +244,7 @@ export default function DesktopDashboard({
     supabase.from('user_badges').select('badge_id, earned_at, badges(name, icon, category)').eq('user_id', uid).order('earned_at', { ascending: false }).limit(20)
       .then(({ data }: any) => { if (data) setAllBadges(data) })
 
-    supabase.from('user_xp').select('total_xp, current_streak').eq('user_id', uid).maybeSingle()
+    supabase.from('user_xp').select('total_xp').eq('user_id', uid).maybeSingle()
       .then(({ data }: any) => { if (data) setXpData(data) })
 
     supabase.from('weight_logs').select('poids, date').eq('user_id', uid).order('date', { ascending: false }).limit(2)
