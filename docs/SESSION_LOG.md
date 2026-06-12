@@ -73,6 +73,9 @@ security-auditor.
 - 23:30 `1ff246c` feat(security): DB rate limits sur analyze-body (5/h), suggest-exercise (20/h), analyze-meal-photo (15/h)
 - 23:32 `2f19a8a` feat(security): rejet 413 images >5 MB sur analyze-meal-photo + validation typeof string
 - 23:34 `18f3d59` feat(security): admin-gate generate-exercise-instructions (ADMIN_EMAIL + RL 2/min)
+- 23:50 `a10f990` feat(security): validation metadata webhook Stripe (UUID + subType allowlist, 8/8 tests)
+- 00:10 `a2bc07f` feat(training): cablage PR dans onFinishWorkout (1 checkForPR/exercice, meilleur set Epley)
+- 00:15 `2033423` chore(db): backfill personal_records (1rm + max_weight, migration SQL idempotente)
 
 ---
 
