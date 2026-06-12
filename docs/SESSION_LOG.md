@@ -60,6 +60,16 @@ boucliers, en prod. S4 = backlog polish. Prochaines priorités hors
 chantier : câblage PR (session dédiée), purge flux mort TrainingTab,
 dette image delivery 2,2 MiB (plus gros gain perf dispo).
 
+**Soir — AUDIT COMPLET client SOLO livré (docs/AUDIT_CLIENT_SOLO.md).**
+Verdict : diagnostic IA + tempo + onboarding = forces uniques ; rétention
+non câblée + programme statique + méga-composants = faiblesses critiques.
+2 risques sécurité découverts (3 routes IA sans rate limit, webhook
+Stripe metadata non validée). Feuille de route actée : Bloc A blindage
+(sécu + PR + purge), Bloc B rétention (streak -> push -> célébrations),
+Bloc C programme adaptatif (Phase 6 + suggest-overload, design doc
+d'abord), Bloc D fond de cale. Premier agent CC à créer :
+security-auditor.
+
 ---
 
 ## 2026-06-11/12 — Swipe nav S1 : rail horizontal livré
