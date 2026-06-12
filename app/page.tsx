@@ -64,13 +64,13 @@ export default function CoachApp() {
   const visitedTabs = React.useRef(new Set<string>(['home']))
   const lastRailIndex = React.useRef(0)
   const [, forceRender] = React.useState(0)
-  const [mainWidth, setMainWidth] = React.useState(0)
+  const [mainSize, setMainSize] = React.useState({ w: 0, h: 0 })
   const railRO = React.useRef<ResizeObserver | null>(null)
   const measureMainRef = React.useCallback((el: HTMLElement | null) => {
     h.mainRef.current = el
     railRO.current?.disconnect()
     if (!el) return
-    const measure = () => setMainWidth(el.getBoundingClientRect().width)
+    const measure = () => { const r = el.getBoundingClientRect(); setMainSize({ w: r.width, h: r.height }) }
     measure()
     railRO.current = new ResizeObserver(measure)
     railRO.current.observe(el)
@@ -484,23 +484,23 @@ export default function CoachApp() {
       {/* Rail horizontal — 5 onglets racine (lazy keep-alive) */}
       <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback') ? 'none' : 'flex' }}>
         <motion.div
-          style={{ display: 'flex', width: mainWidth * 5, height: '100%', flexShrink: 0, visibility: mainWidth === 0 ? 'hidden' : 'visible' }}
-          animate={{ x: -railIndex * mainWidth }}
+          style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible' }}
+          animate={{ x: -railIndex * mainSize.w }}
           transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
         >
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('home') && <HomeTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} firstName={h.firstName} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} />}
           </div>
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} coachProgram={h.coachProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} startProgramWorkout={h.startProgramWorkout} fetchAll={h.fetchAll} scheduledSessions={h.scheduledSessions} calendarSelectedDate={h.calendarSelectedDate} setCalendarSelectedDate={h.setCalendarSelectedDate} markSessionCompleted={h.markSessionCompleted} checkForPR={h.checkForPR} lastCompletedByIndex={h.lastCompletedByIndex} />}
           </div>
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('nutrition') && <NutritionTab coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} setModal={h.setModal} profile={h.profile} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} />}
           </div>
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('progress') && <ProgressTab supabase={h.supabase} session={h.session} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} deletePhoto={h.deletePhoto} setModal={h.setModal} chartMin={h.chartMin} chartMax={h.chartMax} onRefresh={h.fetchAll} profile={h.profile} coachId={h.coachId} personalRecords={h.personalRecords} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weeklyVolume={h.weeklyVolume} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} calorieGoal={h.calorieGoal} goalWeight={h.goalWeight} waterGoal={h.profile?.water_goal || 3000} streak={h.streak} currentWeight={h.currentWeight} />}
           </div>
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} onNavigate={(tab) => h.setActiveTab(tab)} onLogout={async () => { cache.clearAll(); await h.supabase.auth.signOut(); window.location.href = '/login' }} />}
           </div>
         </motion.div>
