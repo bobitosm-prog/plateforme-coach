@@ -59,10 +59,12 @@ function WorkoutSessionWithPR({ sessionName, exercises, startedAt, onFinish, onC
   const t = useTranslations('training_tab')
   const handleFinish = React.useCallback(async (data: any) => {
     const result = await onFinish(data)
-    if (result?.newPRs) {
-      for (const pr of result.newPRs) {
-        toast.success(t('calendar.toasts.newPR', { exercise: pr.exercise, value: pr.value }), { duration: 5000 })
-      }
+    const prs = result?.newPRs
+    if (prs && prs.length === 1) {
+      toast.success(t('calendar.toasts.newPR', { exercise: prs[0].exercise, value: prs[0].value }), { duration: 5000 })
+    } else if (prs && prs.length > 1) {
+      const list = prs.map(p => `${p.exercise} ${p.value}kg`).join(' \u00b7 ')
+      toast.success(t('calendar.toasts.newPRMultiple', { count: prs.length, list }), { duration: 6000 })
     }
   }, [onFinish, t])
   return <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} />

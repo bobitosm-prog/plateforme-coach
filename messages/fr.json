@@ -1625,7 +1625,8 @@
         "phaseChange": "Tu passes en {phase} !",
         "deleted": "Programme supprimé",
         "updated": "Programme mis à jour",
-        "newPR": "🏆 NOUVEAU RECORD ! {exercise} — {value} kg (1RM)"
+        "newPR": "🏆 NOUVEAU RECORD ! {exercise} — {value} kg (1RM)",
+        "newPRMultiple": "🏆 {count} records ! {list}"
       },
       "buttons": {
         "editMode": "MODE EDITION",

@@ -1625,7 +1625,8 @@
         "phaseChange": "Wechsel zu {phase}!",
         "deleted": "Programm gelöscht",
         "updated": "Programm aktualisiert",
-        "newPR": "🏆 NEUER REKORD! {exercise} — {value} kg (1RM)"
+        "newPR": "🏆 NEUER REKORD! {exercise} — {value} kg (1RM)",
+        "newPRMultiple": "🏆 {count} Rekorde! {list}"
       },
       "buttons": {
         "editMode": "BEARBEITUNGSMODUS",

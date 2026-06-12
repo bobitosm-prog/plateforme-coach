@@ -1625,7 +1625,8 @@
         "phaseChange": "Moving to {phase}!",
         "deleted": "Program deleted",
         "updated": "Program updated",
-        "newPR": "🏆 NEW PR! {exercise} — {value} kg (1RM)"
+        "newPR": "🏆 NEW PR! {exercise} — {value} kg (1RM)",
+        "newPRMultiple": "🏆 {count} PRs! {list}"
       },
       "buttons": {
         "editMode": "EDIT MODE",
