@@ -5,7 +5,7 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-12 (nuit)
-- **HEAD** : 1cb6124
+- **HEAD** : 4f04047
 - **Working tree** : clean
 - **Bloc A blindage** : TERMINÉ (9 commits).
 - **Bloc B rétention** : en cours. Streak source unique LIVRÉ (3 commits).
@@ -28,6 +28,11 @@ Résultat grep final : current_streak lu/écrit UNIQUEMENT dans updateStreak
 (gamification.ts, écriture deprecated backward-compat). Zéro lecture UI.
 Suppression de colonne différée à une migration ultérieure (prod saine
 quelques semaines d'abord).
+
+- 02:15 `5ba137c` refactor(push): lib/push-server.ts extraite (sendPushToUser, VAPID, nettoyage subs mortes)
+- 02:30 `4f04047` feat(retention): /api/streak-reminder/cron + migration pg_cron
+  Garde horaire Zurich 18h, 2 jobs UTC (CET/CEST), computeStreak atRisk >= 3,
+  push 3 locales, anti-spam last_streak_reminder_at. "LA chose a faire lundi matin."
 
 ---
 
