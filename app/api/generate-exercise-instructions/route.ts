@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { checkRateLimit } from '../../../lib/rate-limit'
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabaseAuth = createServerClient(
@@ -16,6 +17,16 @@ export async function POST() {
   if (!user) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
+
+  // Admin-only gate
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail || user.email !== adminEmail) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+  }
+
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  const rl = checkRateLimit(`exinstr:${ip}`, 2, 60000)
+  if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
   if (!process.env.ANTHROPIC_API_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: 'Missing ANTHROPIC_API_KEY or SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 })
