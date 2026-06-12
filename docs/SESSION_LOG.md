@@ -81,11 +81,34 @@ séparé non livré ce soir.
 AUDIT À PLANIFIER (Bloc D, urgence montée d'un cran) : drift code<->schéma
 systématique + pattern "await supabase sans check error" généralisé.
 
-RESTE A VALIDER demain :
-- [ ] 18h00 : push streak réelle (marko.rosa streak vivant via grace
-      period — AUCUNE séance le 13 avant 18h)
-- [ ] Toast multi-PR (391d3a7) après la push
-- [ ] Resend webhook Stripe si pas fait
+**Fin de soirée — 2 fixes UI Training validés device.**
+a5815e1 hero card (titre clampé 2 lignes, CTA visible) + fabcb5a
+SessionDetailModal en portal (échappe au transform du rail) — les deux
+confirmés sur iPhone prod.
+
+BUG DIAGNOSTIQUÉ (à corriger, prioritaire demain) : le diagnostic IA hebdo
+affiche "0 séance complétée / adhérence 0%" alors que 6 séances existent
+et qu'il voit lui-même 16 653 kg de tonnage. Cause :
+lib/weekly-diagnostic/generator.ts L.86-90 lit la table completed_sessions
+(probablement legacy/vide — 6e source morte du jour) au lieu de
+workout_sessions completed=true. Vérifier par COUNT puis recâbler la
+requête. Impact : tous les diagnostics générés à ce jour sous-évaluent
+l'adhérence training -> scores faussés.
+
+FEATURE REQUEST consignée : SessionDetailModal d'une séance terminée
+n'affiche qu'un écran "Bravo" — afficher l'historique réel (exercices,
+sets, kg) depuis workout_sets. A designer.
+
+TRIAGE EN ATTENTE : les ~25 modals position:fixed dans les slides du rail
+(dette fabcb5a) — 3 sondages device à faire (fiche exercice Training,
+modal Nutrition, modal Progress) pour qualifier régression P1 vs dette
+Bloc D.
+
+DEMAIN :
+- [ ] 18h00 push streak réelle — marko.rosa AUCUNE séance avant 18h
+- [ ] COUNT completed_sessions + fix generator L.86
+- [ ] 3 sondages modals rail
+- [ ] Toast multi-PR + Resend Stripe si pas faits
 
 ---
 
