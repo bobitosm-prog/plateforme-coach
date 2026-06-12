@@ -15,6 +15,7 @@ import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/pro
 import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
 import { suggestNextSession, SuggestedSession } from '../../lib/suggestNextSession'
 import { computeStreak } from '../../lib/streak'
+import { checkAndUnlockBadges, type Badge } from '../../lib/check-badges'
 import { addXP, updateStreak } from '../../lib/gamification'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -282,8 +283,9 @@ export default function useClientDashboard() {
     try { localStorage.setItem('moovx_active_workout', JSON.stringify(ws)) } catch {}
   }
 
-  async function onFinishWorkout(data: any): Promise<{ newPRs: { exercise: string; value: number }[] }> {
+  async function onFinishWorkout(data: any): Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }> {
     const newPRs: { exercise: string; value: number }[] = []
+    const newBadges: Badge[] = []
     try { localStorage.removeItem('moovx_active_workout') } catch {}
     // Extract unique muscles worked from exercises
     const musclesWorked = [...new Set(data.exercises.map((e: any) => e.muscle).filter(Boolean))] as string[]
@@ -342,6 +344,15 @@ export default function useClientDashboard() {
         })
       })
       if (setsToInsert.length > 0) await supabase.from('workout_sets').insert(setsToInsert)
+
+      // Badge check: after sets insert so stats include this session
+      try {
+        const { newlyUnlockedIds } = await checkAndUnlockBadges(session.user.id, supabase)
+        if (newlyUnlockedIds.length > 0) {
+          const { data: badges } = await supabase.from('badges').select('*').in('id', newlyUnlockedIds)
+          if (badges?.length) newBadges.push(...badges)
+        }
+      } catch (e) { console.error('[badges] fin de séance:', e) }
 
       // ── Sprint 6 - Progressive Overload IA (fire-and-forget) ──
       // Pour chaque exercice où tous les sets ont meme reps + meme weight,
@@ -407,7 +418,7 @@ export default function useClientDashboard() {
 
     toast.success('Séance terminée ! Bien joué 💪')
     fetchAll(true)
-    return { newPRs }
+    return { newPRs, newBadges }
   }
 
   async function saveWeight(value: number, date: string) {

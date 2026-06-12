@@ -12,6 +12,8 @@ import useInitialGeneration from './hooks/useInitialGeneration'
 import Paywall from './components/Paywall'
 import ClientIntlProvider from '../components/ClientIntlProvider'
 import BugReport from './components/BugReport'
+import BadgeCelebration from './components/BadgeCelebration'
+import type { Badge } from '../lib/check-badges'
 import FeedbackTab from './components/client/FeedbackTab'
 import ChatAI from './components/ChatAI'
 import BarcodeScanner from './components/BarcodeScanner'
@@ -50,13 +52,15 @@ function NavAccountLabel() {
   return <>{tc('navAccount')}</>
 }
 
-/** Wrapper for WorkoutSession that toasts PRs with i18n — rendered INSIDE ClientIntlProvider */
-function WorkoutSessionWithPR({ sessionName, exercises, startedAt, onFinish, onClose }: {
+/** Wrapper: PR toasts + badge celebration overlay — rendered INSIDE ClientIntlProvider */
+function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose }: {
   sessionName: string; exercises: any[]; startedAt?: string
-  onFinish: (data: any) => Promise<{ newPRs: { exercise: string; value: number }[] }>
+  onFinish: (data: any) => Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
   onClose: () => void
 }) {
   const t = useTranslations('training_tab')
+  const [celebrateBadge, setCelebrateBadge] = React.useState<Badge | null>(null)
+  const badgeQueue = React.useRef<Badge[]>([])
   const handleFinish = React.useCallback(async (data: any) => {
     const result = await onFinish(data)
     const prs = result?.newPRs
@@ -66,8 +70,25 @@ function WorkoutSessionWithPR({ sessionName, exercises, startedAt, onFinish, onC
       const list = prs.map(p => `${p.exercise} ${p.value}kg`).join(' \u00b7 ')
       toast.success(t('calendar.toasts.newPRMultiple', { count: prs.length, list }), { duration: 6000 })
     }
+    if (result?.newBadges?.length) {
+      badgeQueue.current = result.newBadges.slice(1)
+      setCelebrateBadge(result.newBadges[0])
+    }
   }, [onFinish, t])
-  return <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} />
+  const handleBadgeClose = React.useCallback(async () => {
+    if (badgeQueue.current.length > 0) {
+      const next = badgeQueue.current.shift()!
+      setCelebrateBadge(next)
+    } else {
+      setCelebrateBadge(null)
+    }
+  }, [])
+  return (
+    <>
+      <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} />
+      {celebrateBadge && <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={handleBadgeClose} />}
+    </>
+  )
 }
 
 const TAB_INDEX = { home: 0, training: 1, nutrition: 2, progress: 3, compte: 4 } as const
@@ -392,7 +413,7 @@ export default function CoachApp() {
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
-        <WorkoutSessionWithPR sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} />
+        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} />
       )}
 
       {/* ── WEIGHT MODAL ── */}
