@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit } from '../../../lib/rate-limit'
+import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { unwrapToolInput } from '../../../lib/anthropic/unwrap-tool-input'
 
 export async function POST(req: NextRequest) {
@@ -20,6 +20,11 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`body:${ip}`, 5, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+
+  // DB-backed hourly rate limit
+  const aiRl = await checkAiRateLimit(supabase, user.id, 'analyze-body')
+  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+  await logAiUsage(supabase, user.id, 'analyze-body')
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()

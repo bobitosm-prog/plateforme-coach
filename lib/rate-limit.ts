@@ -27,6 +27,9 @@ export const AI_RATE_LIMITS: Record<string, number> = {
   'generate-custom-program': 5,
   'analyze-progress-photo': 10,
   'generate-meal-plan': 10,
+  'analyze-body': 5,
+  'suggest-exercise': 20,
+  'analyze-meal-photo': 15,
 }
 
 const WINDOW_SECONDS = 3600

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit } from '../../../lib/rate-limit'
+import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { EXERCISE_SWAP_PROMPT } from '../../../lib/coach-knowledge'
 
 export async function POST(req: NextRequest) {
@@ -20,6 +20,11 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`suggest:${ip}`, 10, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
+
+  // DB-backed hourly rate limit
+  const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'suggest-exercise')
+  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+  await logAiUsage(supabaseAuth, user.id, 'suggest-exercise')
 
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
