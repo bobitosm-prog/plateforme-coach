@@ -35,9 +35,21 @@ insuffisant.
   rail comme aujourd'hui), WorkoutSession active, modals ouverts.
 
 ## Sprints
-- S1 : restructure rail + slides scroll propre + lazy keep-alive +
-  pré-montage idle. SANS geste. Critère : nav par boutons identique,
-  boot non dégradé (vérif Lighthouse mobile avant/après).
+- S1 : LIVRÉ (5e0909c). Restructure rail + slides scroll propre +
+  lazy keep-alive + pré-montage progressif des voisins.
+  Leçons S1 : (1) les % de largeur ne se résolvent pas fiablement
+  dans un parent dimensionné par flex (slides rendues 227px au lieu de
+  430) -> pixels mesurés via ResizeObserver, branché par CALLBACK REF
+  car le <main> n'existe pas au premier mount (écran de chargement).
+  (2) overflow:hidden n'empêche pas le scroll programmatique : des
+  scrollIntoView internes (calendrier) ont scrollé le conteneur
+  (scrollLeft=600 mesuré) -> overflow:clip + verrou scrollLeft=0.
+  (3) Toujours valider aux deux largeurs (mobile simulé ET desktop).
+  (4) npm start sert le dernier build .next, pas le code courant ->
+  rebuild obligatoire après tout checkout. (5) Le pré-montage des 5
+  onglets d'un coup coûtait 7 pts Lighthouse (72->65 mesuré) ->
+  pré-montage progressif des seuls voisins, délai 3s + idle.
+  mainWidth (px) est directement réutilisable en S2 pour le drag.
 - S2 : drag Framer Motion (suivi, verrou d'axe, snap distance/vélocité).
 - S3 : boucliers.
 - S4 : perf iPhone réel + polish (sync indicateur bottom nav pendant le
@@ -50,3 +62,7 @@ insuffisant.
   dépend de todaySessionDone, donc OK, mais inventaire requis).
 - Doubles déclenchements interdits : gamification/gap-fill sont sur
   onFinishWorkout/fetchAll, PAS sur le mount des tabs — vérifié, sûr.
+- LCP du dashboard dominé par ~2,2 MiB d'images non optimisées
+  (mesuré Lighthouse, PRÉ-EXISTANT au rail). Dette prioritaire 'image
+  delivery' (AVIF/WebP, resize CDN Supabase ou next/image) — le plus
+  gros gain perf disponible de l'app.

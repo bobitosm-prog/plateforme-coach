@@ -4,16 +4,46 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-10 (soir)
-- **HEAD** : 1f275f5
+- **Date** : 2026-06-12
+- **HEAD** : 5e0909c
 - **Working tree** : clean
-- **Refonte planning F1→F5** : livrée (matin/journée) ; gamification +
-  analytics cache : fixés (soir)
-- **À surveiller** : streak user_xp qui s'incrémente au fil des séances ;
-  génération semaine 15-21 lundi prochain
-- **Prochaines sessions** : câblage PR (1) puis purge flux mort (2) ;
-  session produit "3 mois -> 1 mois offert" quand streak prouvé
-- **Dettes** : voir entrée 2026-06-10 soir + design doc planning
+- **Swipe nav S1** : livré (rail horizontal 5 onglets, lazy keep-alive,
+  pré-montage progressif voisins)
+- **Prochaines sessions** : S2 drag Framer Motion ; câblage PR ; purge flux mort
+- **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ~/package-lock.json ;
+  voir aussi entrée 2026-06-10 soir
+
+---
+
+## 2026-06-11/12 — Swipe nav S1 : rail horizontal livré
+
+**Branche** : main — pushé : c797ed3 (design doc) + 5e0909c (S1 amendé)
+
+Design doc 4 sprints (S1 rail / S2 drag / S3 boucliers / S4 perf device).
+Audit préalable : 23 useEffect des 4 tabs classés, 1 seul [] au-mount
+(cache exercises_db avec guard ref, keep-alive safe) -> zéro migration.
+
+S1 livré : rail 5 onglets lazy keep-alive (montage 1re visite puis
+persistant), scroll par slide (position conservée par onglet),
+sous-écrans hors rail, pré-montage progressif des voisins (3s + idle).
+
+Debug géométrie en 4 itérations, diagnostic console mesuré à chaque
+fois : flex-basis dur (insuffisant) -> overflow:clip + verrou
+(scrollLeft=600 par scrollIntoView calendrier) -> flexShrink rail
+(insuffisant) -> PIXELS MESURÉS (cause racine : % auto-référents en
+parent flex, slides 227px/430) + callback ref (main absent au 1er
+mount -> effect [] ratait la mesure -> écrans noirs). Validé :
+rail 2150px, slides [430x5], mapping correct aux deux largeurs.
+
+Lighthouse final : 67/64 (2 runs) vs baseline 72 (c797ed3, mesurée).
+TBT vert — le rail ne bloque pas le boot. LCP rouge = 2,2 MiB d'images
+(PRÉ-EXISTANT) -> dette prioritaire "image delivery".
+
+Dettes mineures : lockfile parasite ~/package-lock.json (warning Next
+à chaque build) ; warnings Recharts offscreen au pre-mount (bénins,
+charts OK à la visite).
+
+Prochaine session : S2 — drag Framer Motion sur le rail.
 
 ---
 
