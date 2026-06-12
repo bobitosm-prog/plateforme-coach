@@ -53,10 +53,10 @@ function NavAccountLabel() {
 }
 
 /** Wrapper: PR toasts + badge celebration overlay — rendered INSIDE ClientIntlProvider */
-function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose }: {
+function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose, supabase, userId }: {
   sessionName: string; exercises: any[]; startedAt?: string
   onFinish: (data: any) => Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
-  onClose: () => void
+  onClose: () => void; supabase: any; userId: string
 }) {
   const t = useTranslations('training_tab')
   const [celebrateBadge, setCelebrateBadge] = React.useState<Badge | null>(null)
@@ -76,13 +76,17 @@ function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onF
     }
   }, [onFinish, t])
   const handleBadgeClose = React.useCallback(async () => {
+    // Mark ALL uncelebrated badges as celebrated (same pattern as ProfileTab L.528)
+    try {
+      await supabase.from('user_badges').update({ celebrated: true }).eq('user_id', userId).eq('celebrated', false)
+    } catch (e) { console.error('[badge-celebration] flag error:', e) }
     if (badgeQueue.current.length > 0) {
       const next = badgeQueue.current.shift()!
       setCelebrateBadge(next)
     } else {
       setCelebrateBadge(null)
     }
-  }, [])
+  }, [supabase, userId])
   return (
     <>
       <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} />
@@ -413,7 +417,7 @@ export default function CoachApp() {
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
-        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} />
+        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} supabase={h.supabase} userId={h.session.user.id} />
       )}
 
       {/* ── WEIGHT MODAL ── */}
