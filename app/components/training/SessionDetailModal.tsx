@@ -1,5 +1,6 @@
 'use client'
 
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -24,7 +25,10 @@ export default function SessionDetailModal({
   const isPast = dayStatus === 'done' || dayStatus === 'missed'
   const isDone = dayStatus === 'done'
 
-  return (
+  // Portal to document.body to escape rail transform containing block
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -113,6 +117,7 @@ export default function SessionDetailModal({
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }
