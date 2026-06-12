@@ -5,7 +5,7 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-12 (soir)
-- **HEAD** : d275056
+- **HEAD** : 18f3d59
 - **Working tree** : clean
 - **Swipe nav** : CHANTIER TERMINÉ — S1+S2+S3 en prod, validés device.
   S4 = backlog polish.
@@ -69,6 +69,10 @@ Stripe metadata non validée). Feuille de route actée : Bloc A blindage
 Bloc C programme adaptatif (Phase 6 + suggest-overload, design doc
 d'abord), Bloc D fond de cale. Premier agent CC à créer :
 security-auditor.
+
+- 23:30 `1ff246c` feat(security): DB rate limits sur analyze-body (5/h), suggest-exercise (20/h), analyze-meal-photo (15/h)
+- 23:32 `2f19a8a` feat(security): rejet 413 images >5 MB sur analyze-meal-photo + validation typeof string
+- 23:34 `18f3d59` feat(security): admin-gate generate-exercise-instructions (ADMIN_EMAIL + RL 2/min)
 
 ---
 
