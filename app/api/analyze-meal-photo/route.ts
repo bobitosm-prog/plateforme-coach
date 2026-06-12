@@ -27,12 +27,17 @@ export async function POST(req: NextRequest) {
 
   try {
     const { image } = await req.json()
-    if (!image) return NextResponse.json({ error: 'Image requise' }, { status: 400 })
+    if (!image || typeof image !== 'string') return NextResponse.json({ error: 'Image requise' }, { status: 400 })
 
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '')
+
+    // ~5 MB binaire = ~6.7M chars base64 (plafond API Anthropic)
+    if (base64Data.length > 6_700_000) {
+      return NextResponse.json({ error: 'Image trop volumineuse (max 5 MB)' }, { status: 413 })
+    }
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
