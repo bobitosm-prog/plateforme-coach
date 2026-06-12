@@ -5,12 +5,12 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-12 (soir)
-- **HEAD** : 50310e4
+- **HEAD** : d275056
 - **Working tree** : clean
-- **Swipe nav** : S1 + S2-v2 livrés (moteur touch manuel, validé prod).
-  Prod saine.
-- **Prochaines sessions** : S3 boucliers ; S4 polish ; câblage PR ;
-  purge flux mort
+- **Swipe nav** : CHANTIER TERMINÉ — S1+S2+S3 en prod, validés device.
+  S4 = backlog polish.
+- **Prochaines sessions** : câblage PR ; purge flux mort TrainingTab ;
+  dette image delivery 2,2 MiB
 - **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ~/package-lock.json ;
   voir aussi entrée 2026-06-10 soir
 
@@ -48,6 +48,17 @@ réinstaurée après l'incident du matin. Restent : S3 boucliers
 (calendrier Training onTouchStart L.846, comparateur photos, zone morte
 bords iOS, inactif séance active) puis S4 (polish : sync bottom nav
 pendant drag, perf device, seuils fins).
+
+**Fin de journée — S3 livré (e7293e1) + animation semaines calendrier
+(d275056), validés iPhone prod 5/5 (swipe onglets, calendriers protégés,
+edge iOS).** Bouclier générique inHorizontalScroller (les 9+ scrollers
+horizontaux couverts sans attribut), zone morte bords, attributs sur
+zones custom. Debug notable : bouclier Training 'inopérant' = page
+périmée (8e fantôme de la semaine, prouvé par Elements en fenêtre
+privée). CHANTIER SWIPE TERMINÉ : S1 rail + S2-v2 moteur touch + S3
+boucliers, en prod. S4 = backlog polish. Prochaines priorités hors
+chantier : câblage PR (session dédiée), purge flux mort TrainingTab,
+dette image delivery 2,2 MiB (plus gros gain perf dispo).
 
 ---
 

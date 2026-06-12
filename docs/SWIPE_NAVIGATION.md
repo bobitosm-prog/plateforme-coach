@@ -1,6 +1,6 @@
 # Navigation par swipe entre onglets (suivi du doigt)
 
-## Statut : design validé, implémentation par sprints (11 juin 2026)
+## Statut : CHANTIER LIVRÉ — S1+S2+S3 en prod, validés device. S4 = backlog.
 
 ## Objectif
 Swipe horizontal type Instagram entre les 5 onglets racine
@@ -60,9 +60,18 @@ insuffisant.
   Historique : v1 dragControls+pointer events abandonnée — pointermove
   coupé par le scroll natif (mesuré) ; drag Framer natif abandonné —
   capturait le scroll vertical (incident, post-mortem ci-dessous).
-- S3 : boucliers.
-- S4 : perf iPhone réel + polish (sync indicateur bottom nav pendant le
-  drag).
+- S3 : LIVRÉ (e7293e1 + d275056), validé iPhone prod.
+  Bouclier GÉNÉRIQUE inHorizontalScroller (remontée d'arbre :
+  data-no-tab-swipe OU overflowX auto/scroll avec débordement réel)
+  + zone morte 24px bords iOS + attributs sur les zones interactives
+  non scrollables (calendriers Training/Home/Month, comparateur
+  photos, WorkoutSession, ProgramBuilder, StartProgramModal).
+  Bonus : transition animée des semaines du calendrier Training
+  (AnimatePresence key=weekOffset, glissement directionnel).
+- S4 : BACKLOG POLISH (non bloquant) — sync visuelle bottom nav
+  pendant le drag ; warnings [Intervention] preventDefault tardif ;
+  suivi du doigt continu calendrier (option C, écartée coût/bénéfice) ;
+  seuils fins selon retours d'usage.
 
 ## Post-mortem incident 12 juin (~40 min de prod dégradée)
 
@@ -92,6 +101,11 @@ UN SEUL propriétaire du geste : détecteur d'intention maison sur
 touch events, qui ne donne le geste au drag QUE qualifié horizontal
 et ne touche JAMAIS au vertical. Diagnostic par espion d'événements
 console = la méthode qui a tranché (down sans move qualifié).
+
+Leçon S3 : quand le code source et le DOM mesuré se contredisent,
+la PAGE est périmée — fenêtre privée fraîche avant de conclure à un
+bug (le bouclier Training 'inopérant' était un bundle non rechargé,
+prouvé par inspection Elements).
 
 ## Risques connus
 - Mémoire : 5 onglets montés à terme (Recharts x2). À mesurer en S4.
