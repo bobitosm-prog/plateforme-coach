@@ -50,6 +50,24 @@ function NavAccountLabel() {
   return <>{tc('navAccount')}</>
 }
 
+/** Wrapper for WorkoutSession that toasts PRs with i18n — rendered INSIDE ClientIntlProvider */
+function WorkoutSessionWithPR({ sessionName, exercises, startedAt, onFinish, onClose }: {
+  sessionName: string; exercises: any[]; startedAt?: string
+  onFinish: (data: any) => Promise<{ newPRs: { exercise: string; value: number }[] }>
+  onClose: () => void
+}) {
+  const t = useTranslations('training_tab')
+  const handleFinish = React.useCallback(async (data: any) => {
+    const result = await onFinish(data)
+    if (result?.newPRs) {
+      for (const pr of result.newPRs) {
+        toast.success(t('calendar.toasts.newPR', { exercise: pr.exercise, value: pr.value }), { duration: 5000 })
+      }
+    }
+  }, [onFinish, t])
+  return <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} />
+}
+
 const TAB_INDEX = { home: 0, training: 1, nutrition: 2, progress: 3, compte: 4 } as const
 const TAB_RAIL_KEYS = ['home', 'training', 'nutrition', 'progress', 'compte'] as const
 
@@ -372,7 +390,7 @@ export default function CoachApp() {
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
-        <WorkoutSession sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} />
+        <WorkoutSessionWithPR sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} />
       )}
 
       {/* ── WEIGHT MODAL ── */}

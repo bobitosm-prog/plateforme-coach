@@ -281,7 +281,8 @@ export default function useClientDashboard() {
     try { localStorage.setItem('moovx_active_workout', JSON.stringify(ws)) } catch {}
   }
 
-  async function onFinishWorkout(data: any) {
+  async function onFinishWorkout(data: any): Promise<{ newPRs: { exercise: string; value: number }[] }> {
+    const newPRs: { exercise: string; value: number }[] = []
     try { localStorage.removeItem('moovx_active_workout') } catch {}
     // Extract unique muscles worked from exercises
     const musclesWorked = [...new Set(data.exercises.map((e: any) => e.muscle).filter(Boolean))] as string[]
@@ -309,9 +310,8 @@ export default function useClientDashboard() {
       } catch (e) { console.error('[gamification] fin de séance:', e) }
 
       // PR detection : 1 appel checkForPR par exercice (meilleur set Epley)
-      // toast directement ici — le hook importe déjà toast (sonner L.7)
-      // et n'a pas accès à useTranslations (hook non-intl) ; template inline
-      // cohérent avec les autres toast.error du hook (L.507)
+      // Le hook n'a pas useTranslations — on collecte les PRs et on les
+      // retourne pour que l'appelant (page.tsx) toast avec la bonne locale.
       try {
         for (const exo of data.exercises) {
           const valid = (exo.sets || []).filter((s: any) => Number(s.weight) > 0 && Number(s.reps) > 0)
@@ -322,8 +322,8 @@ export default function useClientDashboard() {
             return scoreA >= scoreB ? a : b
           })
           const result = await checkForPR(exo.name, Number(best.weight), Number(best.reps))
-          if (result.newPR) {
-            toast.success(`Record ! ${result.exercise} — ${result.value} kg (1RM)`, { duration: 5000 })
+          if (result.newPR && result.exercise && result.value) {
+            newPRs.push({ exercise: result.exercise, value: result.value })
           }
         }
       } catch (e) { console.error('[PR detection] fin de séance:', e) }
@@ -406,6 +406,7 @@ export default function useClientDashboard() {
 
     toast.success('Séance terminée ! Bien joué 💪')
     fetchAll(true)
+    return { newPRs }
   }
 
   async function saveWeight(value: number, date: string) {
