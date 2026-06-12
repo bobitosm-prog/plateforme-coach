@@ -76,6 +76,10 @@ security-auditor.
 - 23:50 `a10f990` feat(security): validation metadata webhook Stripe (UUID + subType allowlist, 8/8 tests)
 - 00:10 `a2bc07f` feat(training): cablage PR dans onFinishWorkout (1 checkForPR/exercice, meilleur set Epley)
 - 00:15 `2033423` chore(db): backfill personal_records (1rm + max_weight, migration SQL idempotente)
+- 00:30 `82b170f` fix(training): i18n PR toast (regression a2bc07f, WorkoutSessionWithPR wrapper)
+- 00:35 `391d3a7` fix(training): agreger toasts PR multiples en un seul (newPRMultiple, 3 locales)
+- 01:00 `25a7a11` chore(lib): suppression lib/personal-records.ts orphelin (0 appelant)
+- DECISION : purge flux mort TrainingTab L.650 REPORTEE — l'audit revele 3 call sites UI vivants (bouton Terminer, TempoExecutor, SaveChoicePopup). C'est un SECOND flux parallele, pas du code mort. Consolidation = Bloc D (mega-composants).
 
 ---
 
