@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import dynamic from 'next/dynamic'
-import { AnimatePresence, motion, useAnimationControls } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Home, Dumbbell, UtensilsCrossed, TrendingUp, Sparkles,
   User, MessageCircle, Bot, Plus, ChevronRight, Search, X,
@@ -78,25 +78,6 @@ export default function CoachApp() {
   const idx = TAB_INDEX[h.activeTab as keyof typeof TAB_INDEX]
   if (idx !== undefined) lastRailIndex.current = idx
   const railIndex = idx ?? lastRailIndex.current
-  const railControls = useAnimationControls()
-  const RAIL_SPRING = { type: 'spring' as const, stiffness: 380, damping: 30, mass: 0.8 }
-  React.useEffect(() => {
-    if (mainWidth === 0) return
-    railControls.start({ x: -railIndex * mainWidth, transition: RAIL_SPRING })
-  }, [railIndex, mainWidth])
-  function handleRailDragEnd(_e: any, info: { offset: { x: number }, velocity: { x: number } }) {
-    const SWIPE_DISTANCE = mainWidth * 0.25
-    const SWIPE_VELOCITY = 500
-    let target = railIndex
-    if (info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -SWIPE_VELOCITY) target = railIndex + 1
-    else if (info.offset.x > SWIPE_DISTANCE || info.velocity.x > SWIPE_VELOCITY) target = railIndex - 1
-    target = Math.max(0, Math.min(4, target)) as typeof railIndex
-    if (target !== railIndex) {
-      h.setActiveTab(TAB_RAIL_KEYS[target] as any)
-    } else {
-      railControls.start({ x: -railIndex * mainWidth, transition: RAIL_SPRING })
-    }
-  }
   // Mark active tab as visited (triggers render to mount it)
   React.useEffect(() => {
     if (TAB_RAIL_KEYS.includes(h.activeTab as any) && !visitedTabs.current.has(h.activeTab)) {
@@ -503,14 +484,9 @@ export default function CoachApp() {
       {/* Rail horizontal — 5 onglets racine (lazy keep-alive) */}
       <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback') ? 'none' : 'flex' }}>
         <motion.div
-          style={{ display: 'flex', width: mainWidth * 5, height: '100%', flexShrink: 0, visibility: mainWidth === 0 ? 'hidden' : 'visible', touchAction: 'pan-y' }}
-          animate={railControls}
-          drag={mainWidth > 0 ? 'x' : false}
-          dragDirectionLock
-          dragMomentum={false}
-          dragElastic={0.12}
-          dragConstraints={{ left: -4 * mainWidth, right: 0 }}
-          onDragEnd={handleRailDragEnd}
+          style={{ display: 'flex', width: mainWidth * 5, height: '100%', flexShrink: 0, visibility: mainWidth === 0 ? 'hidden' : 'visible' }}
+          animate={{ x: -railIndex * mainWidth }}
+          transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
         >
           <div className="client-main-scroll" data-scroll-container style={{ width: mainWidth, flexShrink: 0, minWidth: mainWidth, maxWidth: mainWidth, height: '100%', overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('home') && <HomeTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} firstName={h.firstName} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} />}
