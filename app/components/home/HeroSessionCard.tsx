@@ -139,6 +139,11 @@ export default function HeroSessionCard({
             color: '#ffffff', letterSpacing: '0.01em', lineHeight: 1,
             textTransform: 'uppercase', marginBottom: 12,
             maxWidth: '70%',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical' as any,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}>
             {getHeroTitle(state, sessionTitle)}
           </div>
@@ -199,7 +204,7 @@ export default function HeroSessionCard({
         </div>
 
         {/* Bottom */}
-        <div>
+        <div style={{ flexShrink: 0 }}>
           {state === 'active' && !hideStartButton && (
             <button
               onClick={(e) => { e.stopPropagation(); onStart() }}
