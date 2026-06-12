@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import dynamic from 'next/dynamic'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import {
   Home, Dumbbell, UtensilsCrossed, TrendingUp, Sparkles,
   User, MessageCircle, Bot, Plus, ChevronRight, Search, X,
@@ -78,6 +78,60 @@ export default function CoachApp() {
   const idx = TAB_INDEX[h.activeTab as keyof typeof TAB_INDEX]
   if (idx !== undefined) lastRailIndex.current = idx
   const railIndex = idx ?? lastRailIndex.current
+  // ── S2-v2 : drag par détection d'intention ──
+  const railX = useMotionValue(0)
+  const RAIL_SPRING = { type: 'spring' as const, stiffness: 380, damping: 30, mass: 0.8 }
+  React.useEffect(() => {
+    if (mainSize.w === 0) return
+    const anim = fmAnimate(railX, -railIndex * mainSize.w, RAIL_SPRING)
+    return () => anim.stop()
+  }, [railIndex, mainSize.w])
+  const touchState = React.useRef<{ startX: number, startY: number, baseX: number, t0: number, mode: 'pending'|'horizontal'|'rejected' } | null>(null)
+  const railDivRef = React.useRef<HTMLDivElement | null>(null)
+  const onRailTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0]
+    touchState.current = { startX: t.clientX, startY: t.clientY, baseX: railX.get(), t0: performance.now(), mode: 'pending' }
+  }
+  // touchmove handler registered via addEventListener({ passive: false }) to allow preventDefault
+  React.useEffect(() => {
+    const el = railDivRef.current
+    if (!el) return
+    const handler = (e: TouchEvent) => {
+      const s = touchState.current
+      if (!s || s.mode === 'rejected') return
+      const t = e.touches[0]
+      const dx = t.clientX - s.startX, dy = t.clientY - s.startY
+      if (s.mode === 'pending') {
+        const ax = Math.abs(dx), ay = Math.abs(dy)
+        if (ax > 12 && ax > ay * 1.5) s.mode = 'horizontal'
+        else if (ay > 16 && ay > ax * 1.5) { s.mode = 'rejected'; return }
+        else return
+      }
+      e.preventDefault()
+      const min = -4 * mainSize.w, max = 0
+      let x = s.baseX + dx
+      if (x > max) x = max + (x - max) * 0.15
+      else if (x < min) x = min + (x - min) * 0.15
+      railX.set(x)
+    }
+    el.addEventListener('touchmove', handler, { passive: false })
+    return () => { el.removeEventListener('touchmove', handler) }
+  }, [mainSize.w])
+  const onRailTouchEnd = () => {
+    const s = touchState.current
+    touchState.current = null
+    if (!s || s.mode !== 'horizontal') return
+    const dx = railX.get() - s.baseX
+    const dt = Math.max(1, performance.now() - s.t0)
+    const vx = (dx / dt) * 1000
+    const D = mainSize.w * 0.25, V = 500
+    let target = railIndex
+    if (dx < -D || vx < -V) target = railIndex + 1
+    else if (dx > D || vx > V) target = railIndex - 1
+    target = Math.max(0, Math.min(4, target)) as typeof railIndex
+    if (target !== railIndex) h.setActiveTab(TAB_RAIL_KEYS[target] as any)
+    else fmAnimate(railX, -railIndex * mainSize.w, RAIL_SPRING)
+  }
   // Mark active tab as visited (triggers render to mount it)
   React.useEffect(() => {
     if (TAB_RAIL_KEYS.includes(h.activeTab as any) && !visitedTabs.current.has(h.activeTab)) {
@@ -484,9 +538,11 @@ export default function CoachApp() {
       {/* Rail horizontal — 5 onglets racine (lazy keep-alive) */}
       <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback') ? 'none' : 'flex' }}>
         <motion.div
-          style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible' }}
-          animate={{ x: -railIndex * mainSize.w }}
-          transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
+          ref={railDivRef}
+          style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: railX, touchAction: 'pan-y' }}
+          onTouchStart={onRailTouchStart}
+          onTouchEnd={onRailTouchEnd}
+          onTouchCancel={onRailTouchEnd}
         >
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('home') && <HomeTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} firstName={h.firstName} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} />}
