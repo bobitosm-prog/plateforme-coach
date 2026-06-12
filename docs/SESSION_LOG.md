@@ -4,15 +4,16 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-12 (soir)
-- **HEAD** : 18f3d59
+- **Date** : 2026-06-12 (nuit)
+- **HEAD** : 7408ad4
 - **Working tree** : clean
-- **Swipe nav** : CHANTIER TERMINÉ — S1+S2+S3 en prod, validés device.
-  S4 = backlog polish.
-- **Prochaines sessions** : câblage PR ; purge flux mort TrainingTab ;
-  dette image delivery 2,2 MiB
+- **Bloc A blindage** : TERMINÉ (9 commits). Sécurité IA + webhook Stripe +
+  câblage PR + backfill + toast i18n agrégé + purge module orphelin.
+- **Swipe nav** : TERMINÉ (S1+S2+S3 prod). S4 = backlog.
+- **Prochaines sessions** : BLOC B rétention (streak -> push -> célébrations) ;
+  dette image delivery 2,2 MiB ; consolidation 2 flux fin de séance (Bloc D)
 - **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ~/package-lock.json ;
-  voir aussi entrée 2026-06-10 soir
+  2 flux fin séance parallèles ; i18n exercices FR-only ; voir entrée Bloc A
 
 ---
 
@@ -80,6 +81,35 @@ security-auditor.
 - 00:35 `391d3a7` fix(training): agreger toasts PR multiples en un seul (newPRMultiple, 3 locales)
 - 01:00 `25a7a11` chore(lib): suppression lib/personal-records.ts orphelin (0 appelant)
 - DECISION : purge flux mort TrainingTab L.650 REPORTEE — l'audit revele 3 call sites UI vivants (bouton Terminer, TempoExecutor, SaveChoicePopup). C'est un SECOND flux parallele, pas du code mort. Consolidation = Bloc D (mega-composants).
+
+## 2026-06-12 (soir) — BLOC A BLINDAGE : TERMINE
+
+Livré (9 commits) : agent CC security-auditor (read-only, .claude/agents/) ;
+rate limits DB par user sur analyze-body/suggest-exercise/analyze-meal-photo ;
+plafond base64 5MB ; gate admin generate-exercise-instructions ; fix fuite
+erreur analyze-body L.99 ; validation metadata webhook Stripe (UUID + enum,
+fonction pure + 8 tests Node) ; câblage PR dans onFinishWorkout (meilleur set
+Epley, 1 appel/exercice) ; backfill 156 paires 1rm/max_weight ; toast PR i18n
+via wrapper IntlProvider ; toast agrégé multi-PR ; purge lib/personal-records.ts.
+
+Découvertes terrain (corrections à l'audit du 12/06) :
+- analyze-body et suggest-exercise avaient DÉJÀ un rate limit IP (audit faux) ;
+  analyze-meal-photo n'avait PAS de limit DB (audit faux dans l'autre sens).
+- generate-exercise-instructions : backfill jamais exécuté (178/178 sans
+  instructions) mais UI consommatrice -> gated, backfill à déclencher (9 appels).
+- personal_records : colonne unit absente -> upserts checkForPR échouaient en
+  SILENCE (pattern await supabase sans check error, répandu -> audit Bloc D).
+  Fix : ALTER TABLE en prod.
+- finishTrainingWorkout (TrainingTab) n'est PAS mort : 3 call sites UI actifs
+  (Terminer L.1314, TempoExecutor L.1337, SaveChoicePopup L.1655). DEUX flux
+  de fin de séance parallèles. Consolidation -> Bloc D. Incohérence vivante :
+  le flux inline fait 1 checkForPR par set.
+
+Dettes consignées : matching noms PR vs régénération programme (Bloc C) ;
+i18n exercices FR-only en séance + boutons muscle du SaveChoicePopup ;
+overlay célébration PR (Bloc B #6) ; backfill instructions à lancer (admin).
+
+Prochain : BLOC B RÉTENTION — streak source unique -> push adaptatives -> célébrations.
 
 ---
 
