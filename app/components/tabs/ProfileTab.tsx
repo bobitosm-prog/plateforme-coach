@@ -316,7 +316,7 @@ export default function ProfileTab({
             } else {
               // Check iOS PWA
               const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
-              const isPWA = window.matchMedia('(display-mode: standalone)').matches
+              const isPWA = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true
               if (isIOS && !isPWA) {
                 alert(t('reminders.iosAlert'))
                 setPushLoading(false); return
