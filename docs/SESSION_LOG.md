@@ -4,19 +4,94 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-12 (nuit)
-- **HEAD** : dd97f25
+- **Date** : 2026-06-13 (soir)
+- **HEAD** : a7b3e96
 - **Working tree** : clean
-- **Bloc A blindage** : TERMINÉ.
-- **Bloc B rétention** : #1 streak OK, #2 push cron OK (validations demain 18h),
-  #6 badges synchrones OK (5 overlays validés device).
-- **Swipe nav** : TERMINÉ (S1+S2+S3 prod). S4 = backlog.
-- **Prochaines sessions** : validations push 18h + multi-PR + webhook ;
-  Bloc D (drift code<->schéma, await sans check error, consolidation 2 flux) ;
-  dette image delivery 2,2 MiB
-- **Dettes** : image delivery (LCP 2,2 MiB) ; lockfile parasite ; 2 flux fin
-  séance ; i18n exercices FR-only ; wSessions cap 90 ; suppression colonnes
-  current_streak + badge_type ; checkAchievements orphelin ; drift schéma
+- **Push web** : RESSUSCITÉ (SW push-only, sub marko OK, delivery prouvée device).
+  Reste : validation cron réel 18h demain + anti-régression fantôme.
+- **Bloc B rétention** : #1 streak + #2 push cron + #6 badges = livrés. Push
+  enfin testable bout-en-bout (était bloqué par SW mort).
+- **Dettes** : observabilité cron streak (Bloc D) ; déplacer réglages notifs
+  vers Préférences (backlog UX) ; + dettes antérieures (image delivery 2,2 MiB,
+  2 flux fin séance, drift schéma, etc.)
+
+---
+
+## 2026-06-13 (soir) — Push web ressuscité : 3 bugs d'infra empilés (SW mort depuis 6183951)
+
+**Branche** : `main` — 3 commits (c3ec038, 2aed5a3, a7b3e96)
+
+### Contexte
+Validation push streak 18h (en attente depuis la veille) : marko.rosa devait
+recevoir la notif atRisk. Rien reçu. Diagnostic en remontée de toute la chaîne.
+
+### Diagnostic (cause racine en 5 couches)
+Le système streak lui-même était PARFAIT (cron jobid 8 a tiré à 16h UTC = 18h
+Zurich CEST, garde horaire OK, atRisk OK, anti-spam OK). Le bug était entièrement
+EN AMONT :
+1. marko n'apparaissait pas dans `eligible` (route cron filtre les users sans
+   sub AVANT la boucle, ligne 79-80) -> jamais évalué, `last_streak_reminder_at`
+   resté null.
+2. 0 subscription pour marko en DB (seule sub = f.marco, datée 19 avril).
+3. Toggle notifs muet en PWA : ProfileTab `enableNotifications` fait
+   `await navigator.serviceWorker.ready` qui pendait indéfiniment.
+4. SW jamais enregistré : `app/layout.tsx` faisait `getRegistrations().unregister()`
+   + purge caches à CHAQUE boot.
+5. CAUSE RACINE : commit `6183951 fix(admin): remove /admin from proxy.ts` avait
+   SUPPRIMÉ l'enregistrement du SW (`register('/sw.js')`) et `public/sw.js`
+   lui-même, remplacés par un unregister global — mesure anti-cache ("page
+   périmée") qui a emporté tout le push web avec elle. Invisible : 0 client
+   payant, seule sub test datait d'avant la casse (19 avril).
++ Bug de détection iOS découvert : `isPWA` ne testait que
+  `matchMedia('display-mode: standalone')`, non fiable sur iOS -> `false` même
+  en vraie PWA -> garde `isIOS && !isPWA` déclenchée -> toggle bloqué.
++ Bug latent attrapé : ancien SW référençait `/icon-192.png` (inexistant) au
+  lieu de `/logo-moovx-192.png`.
+
+### Livré (3 commits, bisect-friendly)
+- c3ec038 feat(pwa): SW push-only sans cache (re-enable web push)
+  -> public/sw.js : push + notificationclick, AUCUN handler 'fetch' (garantie
+     zéro-cache zéro-fantôme), purge caches résiduels à l'activate, icônes
+     corrigées logo-moovx-192.
+- 2aed5a3 fix(pwa): re-register SW push-only — web push mort depuis 6183951
+  -> layout.tsx : remplace l'unregister par `register('/sw.js').catch()`.
+     Pas de controllerchange/updatefound->reload (source d'instabilité de
+     l'ancien SW, non réintroduite).
+- a7b3e96 fix(pwa): detect iOS standalone via navigator.standalone (toggle push)
+  -> isPWA = matchMedia(...) || (navigator as any).standalone === true
+
+### Validation E2E prod (device réel)
+- Toggle push activé en PWA marko.rosa -> permission iOS accordée -> sub créée
+  en DB (user_id 6aeb6c85, created_at 2026-06-13 17:32 UTC). CONFIRMÉ SQL.
+- Delivery prouvée : script jetable scripts/test-push.mjs (webpush minimal,
+  PAS d'import push-server.ts à cause de 'server-only') -> notif "Test delivery
+  from MoovX / Chaine VAPID OK" reçue sur écran de verrouillage. CONFIRMÉ device.
+- Chaîne complète VAPID -> sub -> SW -> affichage OS : OK.
+
+### RESTE A VALIDER (demain)
+- [ ] 18h00 (16h UTC) : cron streak RÉEL sur marko (atRisk vrai, 6 séances/0
+      aujourd'hui). NE PAS faire de séance avant 18h. Contrôles : notif device
+      + last_streak_reminder_at posé (profiles) + cron.job_run_details.
+- [ ] ANTI-RÉGRESSION FANTÔME : modif UI triviale en prod, recharger la PWA
+      SANS réinstaller, vérifier qu'elle apparaît (preuve que le SW push-only
+      ne cache rien -> fantôme "page périmée" définitivement mort).
+
+### Dettes consignées
+- OBSERVABILITÉ (Bloc D) : route cron streak filtre les users sans sub en
+  SILENCE avant la boucle. Un `console.log('candidates=N eligible=M')` aurait
+  donné "marko sans sub" en 2s au lieu d'une heure de SQL.
+- UX (backlog) : déplacer réglages notifs/rappels de ProfileTab vers
+  AccountTab>Préférences. Migrer states push + handler iOS + câbler props
+  (updateReminderSettings, profile, regenerateWeekSchedule) à AccountTab.
+  Risque hub + ClientIntlProvider (cf. crash F1b). Session dédiée + design doc
+  + test PWA device. NON fait ce soir volontairement (refacto sur push critique
+  fragile juste après réparation = à froid).
+- CLEANUP : scripts/test-push.mjs jetable -> supprimer ou gitignore.
+
+LEÇON SENIOR : un fix anti-cache (6183951) a tué une infra entière (push web)
+comme effet de bord, invisible faute de trafic réel. Quand on désactive un SW
+"pour régler le cache", on désactive AUSSI le push qui en dépend. Réintroduire
+un SW push-only (sans handler fetch) réconcilie les deux besoins.
 
 ---
 
