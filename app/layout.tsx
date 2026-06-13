@@ -69,8 +69,7 @@ export default function RootLayout({
         <meta httpEquiv="Expires" content="0" />
         <script dangerouslySetInnerHTML={{ __html: `
           if('serviceWorker' in navigator){
-            navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})});
-            if(window.caches){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k)})})}
+            navigator.serviceWorker.register('/sw.js').catch(function(){});
           }
           try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait').catch(function(){})}catch(e){}
         ` }} />
