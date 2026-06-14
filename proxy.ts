@@ -114,8 +114,14 @@ export async function proxy(request: NextRequest) {
 
   // ===== ROOT PATH: locale detection for non-auth visitors =====
   if (pathname === '/' && !session) {
-    const locale = detectLocale(request)
     const url = request.nextUrl.clone()
+    // Sur l'app : non-authentifié → /login (same-origin, préserve le conteneur PWA iOS)
+    if ((request.headers.get('host') || '') === APP_HOST) {
+      url.pathname = '/login'
+      return NextResponse.redirect(url, 308)
+    }
+    // Sur la landing (ou dev/preview) : visiteur externe → page marketing localisée
+    const locale = detectLocale(request)
     url.pathname = `/${locale}/landing`
     return NextResponse.redirect(url, 308)
   }
