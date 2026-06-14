@@ -370,14 +370,26 @@ export default function OnboardingV2Content() {
               console.error('Save solo step 12: macros calc null')
               return false
             }
-            const trialEndsAt = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+            // Système campagne beta : tenter de réclamer un slot gratuit
+            let trialEndsAt: string | null = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+            try {
+              const { data: betaResult } = await supabase.rpc('claim_beta_slot')
+              if (betaResult?.claimed) {
+                // Slot beta obtenu : la RPC a déjà posé subscription_type/status/end_date.
+                // Pas de trial_ends_at (l'user a un accès beta, pas un essai).
+                trialEndsAt = null
+              }
+            } catch (e) {
+              // En cas d'échec RPC, fallback silencieux sur l'essai 10j normal
+              console.error('claim_beta_slot failed, fallback trial 10j:', e)
+            }
             const { error: err11 } = await updateProfile(userId, {
               tdee: macrosCalc.tdee,
               calorie_goal: macrosCalc.calorieGoal,
               protein_goal: macrosCalc.protein,
               carbs_goal: macrosCalc.carbs,
               fat_goal: macrosCalc.fat,
-              trial_ends_at: trialEndsAt,
+              ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
               onboarding_completed: true,
               onboarding_completed_at: new Date().toISOString(),
               // Premier diagnostic hebdomadaire dans 7 jours
