@@ -1294,7 +1294,7 @@
     "reminders": {
       "pushNotifications": "Notifications push",
       "pushDescription": "Messages du coach + rappels",
-      "sessionReminders": "Rappels seance",
+      "sessionReminders": "Rappels de séance",
       "timerSound": "Son du timer",
       "trainingTime": "HEURE D'ENTRAÎNEMENT",
       "reminderBefore": "RAPPEL AVANT SÉANCE",
@@ -2099,10 +2099,10 @@
     "myReports": "Mes rapports",
     "goals": "Objectifs",
     "goalsSoon": "Section Objectifs : bientot disponible",
-    "preferences": "Preferences",
+    "preferences": "Préférences",
     "language": "Langue",
     "accountSection": "COMPTE",
-    "signOut": "Deconnexion"
+    "signOut": "Déconnexion"
   },
   "nutrition_tab": {
     "meals": {
