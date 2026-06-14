@@ -503,9 +503,19 @@ export default function useClientDashboard() {
     if (profile.subscription_type === 'lifetime') return true
     if (profile.subscription_type === 'invited') return true
 
+    // Beta : accès gratuit limité dans le temps (campagne). REQUIERT une date de fin.
+    if (profile.subscription_type === 'beta') {
+      if (!profile.subscription_end_date) return false
+      return new Date(profile.subscription_end_date) > new Date()
+    }
+
     // Fallback: subscription_status (for older profiles or status-driven flows)
     const st = profile.subscription_status
     if (st === 'lifetime' || st === 'invited') return true
+    if (st === 'beta') {
+      if (!profile.subscription_end_date) return false
+      return new Date(profile.subscription_end_date) > new Date()
+    }
     if (st === 'active') {
       if (!profile.subscription_end_date) return true
       return new Date(profile.subscription_end_date) > new Date()
