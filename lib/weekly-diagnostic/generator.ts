@@ -78,16 +78,11 @@ export async function generateWeeklyDiagnostic(
     }
 
     // 3. COLLECT DATA (parallel)
-    const [profileRes, sessionsRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes] = await Promise.all([
+    const [profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes] = await Promise.all([
       supabase.from('profiles')
         .select('*')
         .eq('id', userId)
         .single(),
-      supabase.from('completed_sessions')
-        .select('id, completed_at, session_name, duration_minutes')
-        .eq('client_id', userId)
-        .gte('completed_at', weekStart.toISOString())
-        .lt('completed_at', weekEnd.toISOString()),
       supabase.from('daily_food_logs')
         .select('date, calories, protein, carbs, fat')
         .eq('user_id', userId)
@@ -132,7 +127,7 @@ export async function generateWeeklyDiagnostic(
     }
 
     // 5. SERVER PRE-ANALYSIS (deterministic)
-    const sessionsDone = sessionsRes.data?.length || 0
+    const sessionsDone = workoutSessionsRes.data?.length || 0
     const sessionsPlanned = (profile.onboarding_answers as any)?.sessions_per_week || 4
     const adherencePct = sessionsPlanned > 0
       ? Math.min(100, (sessionsDone / sessionsPlanned) * 100)
