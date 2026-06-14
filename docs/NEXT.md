@@ -21,7 +21,7 @@ Voir ROADMAP.md. On est en Phase A (BLINDER avant la pub).
       de séance marko avant 18h. Contrôles : notif device + last_streak_reminder_at
       + cron.job_run_details.
 - [ ] Anti-régression fantôme : déjà validée ce matin (accents apparus sans
-      réinstall PWA). SW push-only ne cache rien. ✅
+      réinstall PWA). SW push-only ne cache rien. OK.
 
 ## Après Phase A → Phase B (acquisition)
 Visuels SEEDANCE + prompts pub Insta/TikTok (Claude aide). PAS avant que
