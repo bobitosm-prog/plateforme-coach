@@ -1,213 +1,119 @@
-# MoovX Roadmap
+# MoovX — Roadmap
 
-> Document vivant — état au 2026-05-31
-> Branche : `main` (clean, HEAD 76a37a9)
+> Document vivant. Mis à jour à chaque fin de session.
+> État au 2026-06-14. Branche `main`.
+> **Règle anti-dérive : ce doc reflète `main`, pas l'inverse. Si un doc contredit le code, le code gagne — vérifier avant de planifier.**
 
-## Sprint Phase 5 — Weekly AI Diagnostic — DONE
+---
 
-Killer feature livrée, concurrente directe KAI Swiss. 7 commits prod, 0 régression.
-Voir SESSION_LOG.md "29 mai 2026" pour détail complet.
+## CAP
 
-Architecture : generator.ts réutilisable + cron quotidien pg_cron + push web-push + drill-down /weekly-diagnostic/[id] + Apply 1-click.
+**Mettre l'app entre les mains de vrais utilisateurs payants à Genève, et la rendre excellente avec leur feedback.**
 
-## Sprint Phase 6 — Closed Loop AI
+Principe directeur : **livré et utilisé > parfait et invisible.**
 
-Vision : transformer le diagnostic PASSIF (lecture) en boucle ACTIVE.
-Quand l'user clique "Appliquer", l'app regénère AUTOMATIQUEMENT son meal plan et son programme.
+Mesure n°1 : passer de **0 à 1 utilisateur payant réel**. Tout le reste en découle. Tant que ce chiffre est à 0, le risque n°1 du projet n'est aucun bug technique — c'est de construire quelque chose que personne ne veut, sans le savoir.
 
-### F6.A — Auto-regénération meal plan après Apply — DONE
+Les 3 horizons, dans l'ordre temporel :
 
-Livré 30 mai 2026 (2 commits) :
-- 8325f09 — Helper `lib/meal-plan/build-generation-params.ts` (mapping FR/EN, defaults safe)
-- a16d76a — Auto-regen dans handleApply diagnostic + toast progress SSE + i18n FR/EN/DE
+1. **Launch beta Genève** ← MAINTENANT
+2. **App Store iOS** (si la beta prouve la rétention)
+3. **Assurance maladie suisse** (si traction démontrable)
 
-Test E2E validé runtime : meal plan régénéré en 1m30 sur Jean (compte test), DB cohérente.
+---
 
-### F6.B — Training Closed Loop — ✅ COMPLET
+## HORIZON 1 — Launch beta Genève (cap immédiat)
 
-Voir `docs/PHASE_6B_TRAINING_VISION.md` (~600L, 26K) — vision complète avec :
-- Personnalisation équipement (home/gym/both + home_equipment[])
-- Substitution intelligente d'exercices (via exercises_db.variant_group)
-- Périodisation 8 semaines (4 phases de 2 sem, progression + variation alternées)
-- Auto-regen tous les 14 jours via pg_cron
+**Critère de réussite :** 5-10 vrais utilisateurs (pas Marco, pas comptes test) qui complètent un parcours réel — signup → onboarding → 1ère séance → 1er plan repas → 1 semaine d'usage. Objectif : l'app survit au contact d'inconnus.
 
-Découpage 7 sous-features F6.B.0 à F6.B.6, ~20-25h sur 5-7 sessions.
+**Stratégie d'acquisition :** pub Instagram + TikTok (visuels SEEDANCE), offre « 20 premiers inscrits = gratuit 2 mois ».
 
-#### F6.B.0 — Normalisation equipment — DONE
+**Note critique sur les chiffres :** 20 inscrits ≠ 20 testeurs. Attendre ~5-8 actifs réels, 2-3 qui reviennent. Le « gratuit » sélectionne mal l'engagement — le vrai test viendra quand on demandera de payer. Viser large à l'inscription.
 
-Livré 30 mai 2026 (commit 6c68a74) :
-- Helper `lib/training/equipment-normalize.ts` (mapping 43→6 enum + isHomeFriendly)
-- Migration SQL idempotente + CHECK constraint
-- 178 exos / 6 enum / 0 invalid / backup `equipment_legacy` préservé
+### Phase A — BLINDER (avant toute pub)
 
-Distribution finale :
-| Equipment | Nb | % | Home-friendly |
-|-----------|-----|---|---------------|
-| machine_gym | 61 | 34.3% | non |
-| barbell | 41 | 23.0% | non |
-| dumbbell | 40 | 22.5% | oui |
-| bodyweight | 32 | 18.0% | oui |
-| kettlebell | 2 | 1.1% | oui |
-| band | 2 | 1.1% | oui |
+Rien de tout ça n'est négociable avant d'envoyer du trafic. Une pub qui marche vers un produit cassé = acquisition brûlée.
 
-Total home_friendly : 76/178 = 43% — à enrichir kettlebell+band dans future itération.
+- [ ] **Vercel Pro** — Hobby = ToS non-commercial (infraction dès 1 payant) + débloque maxDuration 60s→300s (générations IA ~50s à la limite). Prérequis légal absolu.
+- [ ] **Mécanisme beta gratuit 2 mois** — à implémenter (code promo Stripe 60j OU flag DB `beta_tester` bypass paywall, modèle `lifetime` existant) + TESTER (un beta qui se heurte au paywall au jour 11 = expérience ratée).
+- [ ] **Parcours signup→onboarding→1ère séance validé E2E par un TIERS** — pas par Marco. Le bug `training_location` (signup cassé 6 jours, invisible) prouve que ce parcours n'est pas réellement validé de bout en bout.
+- [ ] **Observabilité minimale** — 5 bugs latents découverts par hasard cette semaine. Avec de vrais users, besoin de voir les erreurs QUAND elles arrivent. Fiabiliser `app_logs` (un insert fire-and-forget ne loggue pas — vu sur PAGE_REDIRECT).
 
-#### F6.B.1 — Profile équipement + onboarding — DONE
+### Phase B — ACQUÉRIR (quand Phase A est cochée)
 
-Livré 30 mai 2026 (3 commits bisect-friendly) :
-- **F6.B.1a** (1d77887) : migration `profiles.training_location` + `home_equipment[]` + CHECK constraint + NOT NULL après backfill 10 users
-- **F6.B.1b** (51df602) : composant `SoloStep7Equipment.tsx` isolé avec Q1 radio location + Q2 multi-select conditionnel home_equipment + i18n FR/EN/DE
-- **F6.B.1c** (0dfe488) : intégration via Option C' (insertion step 10 Equipment avant Recap, Recap devient step 11), refacto type SoloStep + SOLO_TOTAL_STEPS + state + save logic
+- [ ] Visuels SEEDANCE + prompts Insta/TikTok (Claude aide)
+- [ ] Page d'inscription beta + mécanisme « 20 premiers »
+- [ ] Lancement pub
 
-Test E2E validé runtime sur Jean (compte test). 10 users existants en prod avec `training_location='gym'` (assomption majoritaire, à mettre à jour si user change via re-onboarding).
+### Phase C — APPRENDRE
 
-#### F6.B.2 — Peupler variant_group — ✅ DONE
+- [ ] Observer les 20 : qui complète, qui revient, où ça coince
+- [ ] Itérer sur feedback réel (c'est ICI que les P1 ci-dessous se priorisent vraiment)
 
-Livré 31 mai 2026 (commit f71b88a).
+---
 
-Audit complet 46 variant_groups existants. Tous les "nouveaux groupes" envisagés existaient déjà. Migration 23 UPDATE par ID vers groupes existants. Couverture finale 178/178 = 100%.
+## HORIZON 2 — App Store iOS
 
-Tech debt #10 : fragmentation variant_groups (4 groupes hip hinge distincts au lieu d'un) à consolider post F6.B.4.
+**Critère d'entrée :** la beta a prouvé la RÉTENTION (les gens reviennent, pas juste s'inscrivent). Sinon Capacitor + HealthKit = effort gâché sur un produit non validé.
 
-#### F6.B.3 — Helper buildProgramParams — ✅ DONE (08e54f2)
+- Wrapper Capacitor (PWA → app native)
+- HealthKit sync (non accessible depuis PWA)
+- Conformité guideline 3.1.3(b) : Stripe sur web, login-only sur iOS (multiplateforme/reader-app)
 
-#### F6.B.4 — Refacto generate-custom-program tool_use — ✅ DONE (88a903f)
+---
 
-Anticipé (prévu plus tard). 2 bugs latents corrigés : temperature déprécié + troncature JSON. Migration tool_use.
+## HORIZON 3 — Assurance maladie suisse
 
-#### F6.B.5a — Auto-gen post-onboarding — ✅ DONE (f7009d9 + 74a4481)
+**Critère d'entrée :** base d'utilisateurs + traction démontrable. SWICA/KPT ne référencent pas une app à 0 user.
 
-Solution D (flag + home hook). Meal + programme auto-générés en fin d'onboarding.
+- Positionnement remboursement (SWICA/KPT)
+- Angle GLP-1 / préservation musculaire
+- Dossier de référencement
 
-#### F6.B.5b — Auto-regen programme post-Apply — ✅ DONE (d7b9a6b)
+---
 
-Équivalent F6.A.2 pour training. Apply diagnostic avec volume delta → regen programme source diagnostic_auto. Chaîne séquentielle meal puis program.
+## BACKLOG (hors bloqueurs launch)
 
-#### F6.B.6 — Cron auto-regen 14j — ✅ DONE (8540f65 + 9a084cd + 52c8160)
+Priorisé. Les P0 sont dans Horizon 1 Phase A ci-dessus. Ce qui suit se traite PENDANT ou APRÈS la beta, sur feedback réel.
 
-Livré 31 mai 2026. Migration next_program_regen_at + extraction lib generateProgram (endpoint 338→57L) + cron quotidien 17h UTC. Architecture closed-loop 3 sources (onboarding_auto, diagnostic_auto, cron_auto), chacune repousse +14j.
+### P1 — Fiabilité (pendant la beta)
 
-#### F6.B.7 — Préférences alimentaires onboarding — ✅ DONE (b1279a0 + 6730326 + 76a37a9)
+- **#18 — IA invente les valeurs nutritionnelles.** `generate-meal-plan` génère kcal/macros de tête → imprécision sur TOUS les aliments (ex. poulet 200 au lieu de 165 kcal/100g). Marché Genève soucieux des macros = enjeu réel. Fix de fond : contraindre l'IA aux 170 aliments suisses vérifiés (injection prompt OU validation post-génération). Gros chantier.
+- **Bloc D — cohérence schéma↔code.** Le pattern racine de TOUS les bugs latents de la semaine : drift code↔schéma + `await supabase` sans check error (échecs silencieux). Ex. résolus : `personal_records.unit`, `user_badges.badge_type`, `training_location`, `completed_sessions` morte. Audit systématique à planifier.
+- **Refonte exercise_id FK** (ex-TICKETS) — `workout_sets.exercise_id` UUID FK vers `exercises_db`, prioriser match par id sinon nom. Résout le bug séance libre (noms variants non matchés).
+- **Validation total_weeks** (ex-TICKETS) — champ requis à la création de programme périodisé (sinon `advanceWeek` guard bloque).
 
-Livré 31 mai 2026. Extraction lib meal-suggestions + composant SoloStep11Preferences + intégration onboarding SOLO 12 steps. meal_preferences shape { breakfast, snack, lunch, dinner, disliked_foods }.
+### P2 — Confort
 
-### F6.C — Notification combinée — TODO après F6.B
+- Recovery Modal V2 (overlay SVG zones musculaires)
+- AccountTab V2 (sections Objectifs + Préférences fonctionnelles)
+- Déplacer toggle notifs ProfileTab → Préférences (migrer states push + handler iOS + props vers AccountTab ; risque hub/ClientIntlProvider)
+- Perf : PWA boot iOS (paralléliser Phase C, cache role localStorage, lazy-load par tab)
+- Templates emails restants (invite user, change email, reauth)
 
-- Push : "Ton plan adapté est prêt : 21 repas + 2 séances ajustées"
-- Estim : 30 min après F6.B livré
+### P3 — Cosmétique / hygiène
 
-### Economie projetée Phase 6 complète
+- Accents FR manquants dans messages/fr.json (Deconnexion ×2 restants, prefsTitle, modal "Reprendre la séance", etc.) — passage i18n dédié
+- `www.moovx.ch` cassé dans proxy.ts MARKETING_HOSTS (transformé en Markdown au paste, à re-corriger)
+- warnings images.qualities Next.js 16
+- lockfile parent orphelin
+- web-push DEP0169 (url.parse deprecated)
+- Consolidation variant_groups fragmentés (4 groupes hip hinge)
+- Nettoyage page.tsx ligne ~270 (chemin PAGE_REDIRECT mort)
 
-- Diag $0.10 + Meal $0.08 + Programme $0.10 = $0.28/semaine/user = ~$1.20/mois
-- Sur 10 CHF/mois → margin brute ~90%
+### Idées V2/V3 (sur feedback)
 
-## Sprint Onboarding v2 — DONE
+- Scanner d'assiette IA (haute priorité si demandé)
+- Form check vidéo
+- Proactive nudges
+- Notification combinée F6.C ("Ton plan adapté est prêt")
 
-Route unifiée /onboarding-v2 (SOLO 12 steps + INVITED 3 steps).
-Migration v1→v2 proxy + useClientDashboard. 5 commits prod.
+---
 
-## Sprint i18n — DONE
+## ÉTAT DE SANTÉ (14 juin)
 
-Couverture 48% → ~99%. 864 clés. 178 exercices traduits. Voir SESSION_LOG.
+**Solide :** closed-loop AI (diagnostic → regen meal+programme), i18n ~99%, RLS 57/57, RGPD delete, sécurité durcie (rate limits, webhook Stripe validé), push web (réparé 13 juin), persistance séance (draft + reprise).
 
-## Sprint Tech Debt Marathon — 30 mai 2026 — DONE
+**Fragile :** dette cohérence schéma↔code (Bloc D — source des bugs latents), fiabilité nutritionnelle IA (#18), 0 utilisateur réel (le vrai risque).
 
-Session marathon 30 mai 2026, 5 tech debts résolus en prod :
-
-| TD | Description | Commits |
-|----|-------------|---------|
-| TD-1 | Bug timezone week_start (dim au lieu de lun en TZ Geneva) | faf0a23 + 15cb5cb |
-| TD-2 | next_diagnostic_at init nouveaux users (4 orphelins backfillés) | 935afa6 + bb45291 |
-| TD-3 | Bug capitalize full_name (helper unifié + 2 backfills) | 8b01e34 + 3524ece |
-| TD-4 | Vercel timeout cron (batch parallel concurrency=5) | 2d46b02 |
-| TD-5 | analyze-body regex JSON fragile (refacto tool_use Anthropic) | 04430a2 |
-
-## Sprint Tech Debt — backlog résiduel
-
-1. **Anomalie next_diagnostic_at résiduelle** (cosmétique) — 3 users avec ancien calcul = 2026-05-31 18h. Inerte grâce idempotency. À corriger si visible UX.
-2. **currentMonday() useClientDetail.ts** — Même bug TZ que TD-1, feature dormante (0 rows). TODO posé dans le code.
-3. **Image qualities Next.js 16** — `quality 88/85/90 not configured in images.qualities [75]` warnings console. Update next.config.
-4. **web-push DEP0169** — url.parse() deprecated Node 22+. Migration vers WHATWG URL.
-5. **OnboardingV2Content.tsx 723L** — Refacto SoloFlowRenderer/InvitedFlowRenderer.
-6. **design-tokens.ts i18n** — NUTRITION_DAYS/MEAL_TYPES en FR uniquement.
-7. **F6.A.3** — Refacto NutritionPreferences pour utiliser buildMealPlanParams (élimine duplication).
-8. **Upgrade Vercel Pro** — À 10 clients payants (ToS Hobby = non-commercial only).
-9. ~~**F6.B.5 auto-gen post-onboarding**~~ — ✅ RÉSOLU (F6.B.5a, commit 74a4481).
-10. **Consolidation variant_groups fragmentés** — `good_morning` + `stiff` + `rdl` + `deadlift` = 4 groupes hip hinge distincts. Idem fessiers (3 groupes), chest (6 groupes). Limite qualité substitution F6.B.4. À consolider post F6.B.4.
-11. **suggest-overload temperature avec Haiku** — app/api/suggest-overload/route.ts ligne 109 temperature:0.3 avec claude-haiku-4-5. Haiku accepte encore temperature (fonctionne en prod) mais à surveiller si dépréciation future. Migrer vers tool_use si besoin.
-12. **lockfile parent orphelin** — /Users/marcoferreira/package-lock.json (warning Next.js workspace root). Supprimer si pas de projet parent.
-13. ~~**CRON_SECRET Vercel valeur suspecte**~~ — ✅ RÉSOLU 5 juin. Vérifié = secret hex aléatoire dédié (pas une clé Stripe, faux positif de l'ancienne note). Roté par précaution via openssl rand -hex 32, synchronisé Vercel + pg_cron jobs 4 et 5, validé curl 200. RAS.
-14. **total_calories null dans meal_plans** — données présentes dans plan_data.totals, colonne top-level non remplie par le hook useInitialGeneration. À remplir pour cohérence.
-15. **NutritionPreferences UX** — page NutritionPreferences cachée dans la page nutrition, peu discoverable. Recenser toutes les pages, mapper navigation.
-16. **Audit UX global navigation** — session dédiée pour mapper toutes les pages/onglets, cohérence navigation/disposition multi-pages.
-17. **Incohérence clés meal_preferences FR/EN** — legacy (petit_dejeuner/dejeuner/collation/diner) vs nouveau (breakfast/snack/lunch/dinner). extractMealFoodNames gère les deux mais à unifier.
-18. **Meal plan IA — valeurs nutritionnelles inventées** — L'IA (generate-meal-plan) génère les valeurs nutritionnelles des aliments de tête (kcal, P/G/L par 100g). Risque d'imprécision sur TOUS les aliments, pas seulement le cas 'riz cru' déjà corrigé par la convention de pesée cuit (5 juin). Symptômes possibles : densités fausses (ex. blanc de poulet à 200 au lieu de 165 kcal/100g). FIX DE FOND (gros chantier, à planifier) : contraindre l'IA à utiliser uniquement les valeurs d'une base vérifiée (les 170 aliments suisses + lib/meal-plan-templates.ts) plutôt que de les inventer — soit en injectant la table dans le prompt, soit en validant/remplaçant les valeurs post-génération contre la base. Impact : fiabilité nutritionnelle réelle des plans.
-19. **Réinjection glucides ignore keto (bug B dormant)** — rebalanceMacros Step 2 réinjecte les kcal libérées en glucides dès que `afterReduce.g < carbs_goal`, sans condition sur dietary_type. Sur un profil keto (carbs_goal bas), réinjecterait activement du glucide et trahirait le régime. Dormant : 0 user keto en prod. Fix futur : skip Step 2 si diet ∈ {keto, low-carb} OU borner par les 50g du prompt.
-20. **Keto ne contraint pas carbs_goal numériquement (bug C)** — keto agit uniquement via le prompt (dietaryRules "glucides MAX 50g"). carbs_goal reste la valeur DB (potentiellement 200+). Aggrave B. Fix futur : forcer carbs_goal ≤ 50 côté buildMealPlanParams si diet=keto.
-21. **Data quality dietary_type pollué (bug E)** — 2 profils ont dietary_type="Je suis mes macros" (le LABEL d'onboarding stocké au lieu de l'enum). Tombe dans le else=omnivore, pas de crash, mais fausse toute logique diététique future. Vérifier l'onboarding qui écrit le label au lieu de l'id, + backfill SQL des 2 lignes.
-
-## Sprint Launch Prep — STATUS
-
-| Phase | Status | Notes |
-|-------|--------|-------|
-| Split host-based | ✅ Done | Mergé |
-| RLS audit | ✅ Done | Mergé |
-| Delete account RPC RGPD | ✅ Done | Mergé |
-| Bug Celebration (récap V3) | ✅ Done | Mergé |
-| Auth signup confirmation banner | ✅ Done | Prod validé |
-| Email infra Infomaniak + DKIM | ✅ Done | 3/6 templates premium |
-
-## Sprint P2 — Training Improvements
-
-### Phase A — Tempo prescrit affichage premium
-- **Status** : ✅ DONE — en production
-- Pill gold + modal pédagogique 3 phases
-- Bug latent fix bonus : `get-today-session.ts` (préservation tous champs exo)
-
-### Phase B — Minuteur exec piloté par tempo
-- **Status** : ✅ DONE (B.1 + B.2 + B.4.1 + B.4.2) — en production
-- Bouton PLAY gold sur 1er set non-done
-- Modal plein écran focus total avec countdown phase par phase
-- Audio + vibration différenciées par phase (Android/desktop, neutre iOS)
-- iOS background recovery propre (modal "TEMPO INTERROMPU")
-- Fix bug audio rest timer en bonus (sons schedulés qui sonnaient post-skip)
-
-### Phase B — Reportées (à évaluer après usage réel)
-- **B.3** — Bridge auto vers rest timer après tempo : ❌ NON RETENU (décision UX finale)
-- **B.4.3** — Countdown 3-2-1 GO avant rep 1 : ⏳ À évaluer si feedback usage le réclame
-- **B.4.4** — Animations cosmétiques transitions : ⏳ À évaluer si feedback usage
-
-### Phase C — Swipe navigation
-- **Status** : ⏳ TODO
-- **Effort estimé** : 3-4h
-- **Position senior** : préférer stepper "Exo 2/6 ← →" plutôt que swipe horizontal (conflit scroll vertical iOS)
-
-## Backlog bugs (priorité non urgente)
-
-1. Dashboard "VOIR LA SEANCE" → redirige Analytics (devrait ouvrir détail session)
-2. Désync scheduled_sessions vs dashboard display
-3. CustomBuilder ne permet pas saisie tempo (feature manquante)
-4. Templates emails restants à premiumiser : invite user, change email, reauthentication
-5. `addRestTime` (+30s) ne re-schedule pas les sons (bip arrive trop tôt si on étend le repos) — mineur
-
-## Tech debt notable
-
-- WorkoutSession.tsx = 1500+ lignes monobloc (split à terme, hors priorité)
-- Décision tempo "afficher toujours même 2-0-2" à réévaluer après feedback usage réel
-
-## Idées feedback usage réel (à observer)
-
-Avec Phase A + B en prod, à surveiller sur les prochaines séances :
-- Le countdown 3-2-1 manque-t-il vraiment ? (B.4.3 candidate)
-- Les animations cosmétiques améliorent-elles l'engagement ? (B.4.4 candidate)
-- L'user oublie-t-il de cliquer PLAY ? (besoin d'un nudge ?)
-- Le bouton PAUSE est-il utilisé ? (sinon le simplifier)
-- Les vibrations différenciées sont-elles perceptibles à l'usage ?
-
-## Stack & déploiement
-
-- Repo : github.com/bobitosm-prog/plateforme-coach
-- Production : app.moovx.ch (Vercel auto-deploy main)
-- Landing : moovx.ch
-- DB : Supabase project njlzossopgknanhkzcbk
-- Email : Infomaniak SMTP (noreply@moovx.ch)
+**Stack :** Next.js 16 + TS + Tailwind + Supabase + Anthropic API + Stripe Live, Vercel (Hobby → Pro requis), Cloudflare DNS. Repo `bobitosm-prog/plateforme-coach`. Prod `app.moovx.ch`, landing `moovx.ch`.

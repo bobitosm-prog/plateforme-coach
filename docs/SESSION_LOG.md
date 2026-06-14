@@ -4,16 +4,89 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-13 (soir)
-- **HEAD** : a7b3e96
-- **Working tree** : clean
-- **Push web** : RESSUSCITÉ (SW push-only, sub marko OK, delivery prouvée device).
-  Reste : validation cron réel 18h demain + anti-régression fantôme.
-- **Bloc B rétention** : #1 streak + #2 push cron + #6 badges = livrés. Push
-  enfin testable bout-en-bout (était bloqué par SW mort).
-- **Dettes** : observabilité cron streak (Bloc D) ; déplacer réglages notifs
-  vers Préférences (backlog UX) ; + dettes antérieures (image delivery 2,2 MiB,
-  2 flux fin séance, drift schéma, etc.)
+- **Date** : 2026-06-14 (matin)
+- **HEAD** : 4eab788
+- **Working tree** : clean (après ménage docs)
+- **Cap** : Launch beta Genève (voir ROADMAP.md). Horizon 1 Phase A (blinder
+  avant pub). Mesure n°1 : 0→1 user payant.
+- **Fixes prod du jour** : adhérence diagnostic (ed61f5a), accents FR (48cd907),
+  logout PWA (74a8cb0 + page.tsx). Tous validés runtime.
+- **Push web** : ressuscité (13 juin), delivery + anti-régression cache validées.
+- **Prochaines tâches** : voir NEXT.md (mécanisme beta gratuit, Vercel Pro,
+  signup E2E tiers, observabilité).
+- **Impératif** : 18h00 cron streak marko (pas de séance avant 18h).
+- **Dettes** : #18 IA valeurs nutritionnelles inventées, Bloc D cohérence
+  schéma↔code, + backlog ROADMAP.
+
+---
+
+## 2026-06-14 — 3 fix prod + refonte roadmap (cap launch beta)
+
+**Branche** : `main` — 4 commits (ed61f5a, 48cd907, 74a8cb0, 4eab788) + ménage docs
+
+### Fix 1 — Adhérence diagnostic IA (ed61f5a)
+CAUSE RACINE : generator.ts chargeait DEUX sources de séances en parallèle.
+Le tonnage lisait workout_sessions (vraie source, 110 lignes) mais l'adhérence
+(ligne 135 sessionsDone) lisait completed_sessions (table morte, 1 ligne en
+DB, 0 pour les SOLO). Incohérence interne : 0 séance affiché alors que 16653 kg
+de tonnage présents. TOUS les diagnostics SOLO sous-évaluaient l'adhérence
+depuis l'origine.
+FIX : sessionsDone lit workoutSessionsRes (source déjà chargée) + suppression
+du fetch mort completed_sessions du Promise.all (+2/-7). Alignement positionnel
+du Promise.all vérifié (5 vars ↔ 5 tables).
+VALIDÉ : régénéré diagnostic marko -> sessions_done 0->5, adherence_pct 0->100%,
+cohérent avec tonnage. Vieux diagnostic 12 juin supprimé (week_start 2026-06-08,
+bloquait la régén via already_exists). Anciens diagnostics autres users gardent
+score faussé (data historique, non régénérés — décision : laisser, pré-launch).
+
+### Fix 2 — Accents FR section rappels + nav (48cd907)
+messages/fr.json : "Rappels seance"->"Rappels de séance", "Preferences"->
+"Préférences", "Deconnexion"->"Déconnexion" (le signOut du namespace compte, les
+2 autres préservés). FR uniquement, JSON validé. A servi de témoin pour le test
+anti-régression cache SW (voir ci-dessous).
+
+### Anti-régression fantôme SW — VALIDÉE
+Après réintroduction du SW push-only (13 juin), test : modif accents déployée,
+PWA rouverte SANS réinstall -> accents apparus immédiatement. Preuve que le SW
+push-only (zéro handler fetch) ne cache RIEN. Le fantôme "page périmée"
+(8 occurrences cette semaine) est définitivement mort. Dossier SW clos.
+
+### Fix 3 — Logout éjecte hors PWA (74a8cb0 + 4eab788)
+CAUSE RACINE (prouvée au Network tab, après 2 hypothèses fausses) : au logout,
+window.location.href='/login' démarre MAIS au re-render (session=null), page.tsx
+ligne 272 router.push('/fr/landing') s'exécute et ANNULE la nav /login (vu :
+"login canceled" + "landing _rsc 308" dans Network). /fr/landing -> middleware
+getHostRedirect -> redirect cross-origin app.moovx.ch->moovx.ch -> SORT du conteneur
+PWA iOS -> Safari.
+Le log PAGE_REDIRECT_LANDING n'apparaissait pas (insert fire-and-forget annulé
+par la nav) -> faux négatif qui a égaré le diagnostic.
+FIX en 2 maillons :
+- 74a8cb0 (proxy.ts) : non-auth sur app.moovx.ch/ -> /login same-origin (protège
+  l'entrée à froid). N'a pas suffi (page.tsx redirige avant).
+- 4eab788 (page.tsx) : router.push('/fr/landing') -> '/login' (same-origin,
+  reste PWA) + suppression insert app_logs mort. LE vrai fix.
+VALIDÉ device : logout depuis PWA -> reste sur app.moovx.ch/login en standalone.
+
+### Bugs WorkoutSession (pending 25 avril) — DÉJÀ RÉSOLUS, fermés
+Audit + test device : les 2 bugs du pending sont résolus depuis longtemps.
+- Bug timer lock : déjà en restEndsAtRef/Date.now() + visibilitychange recalc.
+- Bug perte progression : moovx_workout_draft persiste exos (sets/poids/reps/
+  done), prompt "Reprendre la séance ?" au remount. Testé device : verrou+rouvre
+  OK, swipe OK, kill+rouvre -> prompt reprise affiché. Mécanisme fonctionne.
+Pending périmés -> archivés.
+
+### Refonte ROADMAP — cap launch beta
+Cadrage stratégique. Cap recadré : "livré et utilisé > parfait et invisible",
+mesure n°1 = 0->1 user payant. 3 horizons : launch beta Genève (pub Insta/TikTok
+SEEDANCE, 20 premiers gratuits 2 mois) -> App Store iOS (si rétention) -> assurance
+maladie suisse (si traction). Horizon 1 Phase A (blinder) avant toute pub :
+Vercel Pro, mécanisme beta gratuit, signup E2E par tiers, observabilité.
+Ménage docs : 15 fichiers archivés, 4 docs vivants (ROADMAP/NEXT/SESSION_LOG/
+CLAUDE). Rituel de fin de session + règle anti-dérive ajoutés à CLAUDE.md.
+
+### RESTE (demain / prochaine session)
+- [ ] 18h00 : cron streak réel marko (atRisk vrai, pas de séance avant 18h)
+- [ ] Horizon 1 Phase A : mécanisme beta gratuit + Vercel Pro (voir NEXT.md)
 
 ---
 

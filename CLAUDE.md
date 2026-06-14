@@ -1,24 +1,25 @@
 # MOOVX - Instructions Claude Code
 
-## REGLE DE SESSION (lecture obligatoire)
+## Rituel de fin de session (OBLIGATOIRE)
 
-**Au demarrage de toute session :**
-1. Lire `docs/SESSION_LOG.md` en entier (zone "ETAT ACTUEL" minimum)
-2. Confirmer le HEAD et la tache en cours avec l'utilisateur
+À chaque fin de session, dans l'ordre :
+1. **SESSION_LOG.md** : append ce qui a été fait (date, commits, cause/fix/leçon). Append-only, ne jamais effacer.
+2. **ROADMAP.md** : cocher ce qui est fait, re-prioriser le backlog.
+3. **NEXT.md** : réécrire les 3-5 prochaines tâches concrètes + l'impératif du moment.
+4. **CLAUDE.md** : MAJ uniquement si conventions/archi/stack ont changé.
 
-**Apres chaque commit :**
-1. Mettre a jour la zone "ETAT ACTUEL" (date, HEAD, working tree, tache)
-2. Ajouter une ligne dans la zone "LOG CHRONOLOGIQUE" :
-   - format : `- HH:MM \`<hash>\` <sujet bref>`
-3. Commit le SESSION_LOG.md soit avec le commit feature, soit dans un
-   commit "docs(log): update session state"
+## Règle anti-dérive (apprise le 14 juin)
+Les docs reflètent `main`, pas l'inverse. Si un doc (pending, roadmap) contredit
+le code, **le code gagne** — vérifier l'état réel par grep/audit AVANT de planifier
+un fix. Plusieurs heures perdues sur des docs périmés (bugs déjà résolus mais
+pending non fermés : timer, swipe, persistance séance).
 
-**Apres chaque decision importante (changement de plan, blocker) :**
-- Ajouter une ligne dans le log avec horodatage et description
-- Pas besoin de commit immediat, batch avec le prochain commit feature
-
-**Ne JAMAIS effacer le log chronologique** — append-only.
-Seule la zone "ETAT ACTUEL" est ecrasable.
+## Docs vivants (les seuls à jour)
+- ROADMAP.md — cap 3 horizons + état + backlog priorisé
+- NEXT.md — prochaines tâches
+- SESSION_LOG.md — historique append-only
+- CLAUDE.md — ce fichier (contexte projet)
+Tout le reste est dans docs/archive/ (historique, ne pas s'y fier pour l'état courant).
 
 ## Frontend Design Skill
 Whenever building or styling UI, follow the guidelines in .claude/skills/frontend-design.md
@@ -61,26 +62,9 @@ pédagogiques étape par étape.
 6. Commits avec message détaillé (contexte, cause, solution, learnings)
 7. Documentation SESSION_LOG + ROADMAP en fin de session
 
-## État actuel du projet (mai 2026)
-
-### Sprint Launch Prep — COMPLET
-
-| Phase | Statut | Description |
-|---|---|---|
-| Phase 1 | DONE | Split landing/app moovx.ch ↔ app.moovx.ch (middleware host-based) |
-| Phase 2 | DONE | RLS audit Supabase (57 tables, 7 fixes sécurité) |
-| Phase 3 | DONE | Delete account RPC RGPD/nLPD transactionnel |
-| Bug Celebration | DONE | Refacto récap fin séance design éditorial premium V3 |
-
-**Launch readiness : ~99%.** Prêt pour beta Genève.
-
-### Backlog post-launch (non bloquant)
-
-- P1 : Page confirmation après validation email (actuellement landing
-  sans feedback)
-- P2 : Améliorations training (minuteur exec, tempo prescrit, swipe)
-- P2 : Cleanup doublons RLS (~1h)
-- P3 : Sprint 6 i18n complet
+## État courant
+L'état du projet, le cap et le backlog vivent dans ROADMAP.md et NEXT.md.
+Ne PAS dupliquer l'état ici — il périme (leçon 14 juin).
 
 ## Patterns techniques (DO)
 
