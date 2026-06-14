@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
+import { formatFitnessFoodsForPrompt } from '../../../lib/fitness-food-database'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-plan'
 
 export const maxDuration = 300
@@ -119,6 +120,17 @@ Le client a ces aliments chez lui. Utilise-les en priorité :
 ${params.scanned_foods.map((f: any) => `- ${f.name}${f.brand ? ' (' + f.brand + ')' : ''}: ${f.calories}kcal, P${f.proteins}g, G${f.carbs}g, L${f.fat}g /100g`).join('\n')}
 Complète avec les aliments fitness de base si nécessaire.
 ` : ''}
+═══ BASE D'ALIMENTS DE RÉFÉRENCE (valeurs pour 100g) ═══
+${formatFitnessFoodsForPrompt()}
+
+RÈGLES STRICTES (non négociables) :
+- Utilise EN PRIORITÉ les aliments de cette base avec EXACTEMENT ces valeurs.
+- Ne JAMAIS inventer de kcal/protéines/glucides/lipides pour ces aliments.
+- Si un aliment nécessaire n'est pas dans la liste, remplace-le par l'aliment
+  le plus proche disponible dans la base.
+- Les valeurs sont pour 100g dans l'état indiqué (cuit/cru/sec/prêt à consommer).
+  Respecte cet état dans tes calculs de portions.
+
 RÉPARTITION PAR REPAS (kcal ET macros) :
 - petit_dejeuner : ~${pdjKcal} kcal | P:${pdjP}g G:${pdjG}g L:${pdjL}g
 - dejeuner : ~${dejKcal} kcal | P:${dejP}g G:${dejG}g L:${dejL}g
