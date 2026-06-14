@@ -3,6 +3,90 @@
 Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
+## 2026-06-14 (suite) — Après-midi : #18 nutrition + système beta + Vercel Pro
+
+**Branche** : `main` — commits c076303, e247a86 + SQL (briques beta) + Vercel Pro (admin)
+
+### #18 — Fiabilité nutritionnelle IA [RÉSOLU]
+CAUSE RACINE : app/api/generate-meal-plan/route.ts — le prompt donnait des cibles
+kcal/macros par repas mais N'IMPOSAIT aucune source pour les valeurs des aliments.
+L'IA inventait kcal/P/G/L de tête (sauf scanned_foods). Imprécision sur tous les plans.
+DÉCISION : rejet d'ANSES/grandes bases. food_items (3669 lignes, double schéma FR vide/
+EN rempli) = table de SCAN/LOG user (9 fichiers l'utilisent) → NON touchée. Création
+d'une base fitness curée injectée dans le prompt comme palette imposée.
+FIX : créé lib/fitness-food-database.ts (77 aliments fitness, valeurs vérifiées /100g,
+champ state raw/cooked/dry/ready_to_eat, fonction formatFitnessFoodsForPrompt()).
+Branché dans le prompt après scanned_foods (import relatif), avec règles strictes
+"n'invente pas les valeurs". scanned_foods reste prioritaire.
+VALIDÉ runtime (signup test) : plan généré, 13/13 aliments aux valeurs EXACTES de la
+base (poulet 165, riz cuit 130, œuf 143, skyr 60...). États respectés (cuit/cru/sec).
+NUANCE : couvre les aliments de base (~90% des plans). Aliments hors-liste = estimation IA.
+
+### Système de campagnes beta gratuit [FONCTIONNEL — UI admin manquante]
+BESOIN : paramétrer depuis l'admin "X jours gratuits pour X premiers inscrits" par campagne.
+DÉCISION archi : statut subscription_type='beta' + status='beta' + subscription_end_date
+(expiration auto → paywall → conversion). Pas de code promo Stripe (friction CB). Pas
+'invited' (= accès permanent, pas ce qu'on veut).
+- Brique 1 : table beta_campaigns (name, free_days, max_slots, used_slots, is_active)
+  + RLS admin + 4 CHECK (used<=max) + index unique "une seule active". Idempotent.
+- Brique 2 : RPC claim_beta_slot() SECURITY DEFINER — incrément atomique du slot
+  (UPDATE WHERE used_slots<max_slots RETURNING) + pose beta/beta/end_date sur auth.uid().
+  Anti-double-claim. Retour jsonb {claimed, free_days, reason}.
+- Brique 3 : hasPaidSub (useClientDashboard) reconnaît 'beta' AVEC check date
+  (beta sans date = pas d'accès ; date dépassée = paywall). Commit c076303.
+- Brique 4 : hook claim_beta_slot() à la fin de OnboardingV2Content (try/catch,
+  fallback essai 10j si pas de slot, ne bloque JAMAIS l'inscription). Commit e247a86.
+TESTS : compteur atomique OK (monte 1→20, bloque à 20/20, contrainte DB refuse 21).
+End-to-end OK : signup réel (vapo-premium.ch) → beta 60j posé. RPC validée sur compte
+test (slot incrémenté + profil beta). Marko JAMAIS touché.
+RESTE : Brique 5 (UI admin pour créer/gérer campagnes sans SQL).
+DETTE UX : l'onboarding affiche "10 jours d'essai" en dur même pour un beta (qui a 60j)
+— trompeur, à corriger (l'écran final doit connaître le résultat du claim).
+Compte test marco.ferreira@vapo-premium.ch laissé en beta (volontaire).
+
+### Vercel Pro [FAIT]
+Upgrade Hobby → Pro (~20$/mois, 20$ crédit usage inclus). Raisons : (1) légal (Hobby
+= non-commercial, infraction dès 1 payant), (2) maxDuration — 4 routes déclaraient déjà
+300 (generate-meal-plan, generate-custom-program, training-regen/cron, weekly-diagnostic/
+cron) mais étaient PLAFONNÉES à 60s sur Hobby (timeouts silencieux possibles). Pro rend
+les 300s effectifs, ZÉRO code à changer. Toggle "improve models with my data" laissé OFF
+(code propriétaire). vercel.json = headers seulement, pas de cron Vercel.
+
+### Cron streak 18h — DIAGNOSTIC : technique OK, logique métier inadaptée [CHANTIER DEMAIN]
+Pas de notif reçue à 18h. Diagnostic complet :
+- Les 2 crons ont tourné (jobid 8 à 16h UTC=18h CEST, jobid 9 à 17h UTC=19h CEST),
+  status succeeded. net.http_post est fire-and-forget ("1 row" = requête postée, pas
+  push envoyé).
+- BUG : jobid 8 ET 9 actifs simultanément → en été le cron tourne DEUX fois (18h ET 19h).
+  À corriger (désactiver le job hors-saison ; en été CEST=UTC+2, garder 0 16 UTC).
+- POURQUOI pas de notif à marko (PAS un bug technique) : route ligne 108
+  `if (!streak.atRisk || streak.current < 3) skip`. Marko a streak_current=0,
+  aucune séance → computeStreak retourne current=0, atRisk=false → skip légitime.
+  La logique actuelle = RÉTENTION de streak (notifie seulement les séries ≥3 jours).
+- DÉCISION produit (Marco) : ce n'est PAS le bon comportement. Besoin = rappel
+  "tu as loupé ta séance prévue aujourd'hui, il te reste du temps" pour TOUS les users
+  ayant une séance prévue ce jour et ne l'ayant pas faite (pas seulement streak≥3).
+  Sinon les beta (streak<3) ne reçoivent JAMAIS de rappel = inverse du besoin au launch.
+- LOGIQUE CIBLE (à coder demain) : pour chaque user client/onboardé/push_sub/pas déjà
+  rappelé : charger custom_programs actif → getSessionForDay(programDays, getTodayIndex())
+  → si type='rest' skip (jour de repos, via day.is_rest) → si type='workout' ET pas de
+  workout_sessions completed aujourd'hui → ENVOYER. Message adapté : streak>=1 "ton streak
+  de X jours est en jeu, ta séance [nom] t'attend" ; streak=0 "ta séance [nom] t'attend".
+- SOUS-QUESTION à trancher : computeStreak doit-il considérer les jours de repos PLANIFIÉS
+  comme neutres (ne cassent pas le streak) ? Fort impact (touche home/training/badges).
+  À penser séparément, peut-être pas tout de suite.
+- Architecture séances : la "séance du jour" vient du PROGRAMME ACTIF (custom_programs
+  JSONB programDays) + jour de semaine (lib/get-today-session.ts), PAS de scheduled_sessions
+  (qui est un système de planif manuelle/coach à part).
+
+### DETTES SÉCURITÉ découvertes (P0 avant launch)
+- FAILLE RLS profiles : policies "Users can update own profile" + "profiles_update_own"
+  = auth.uid()=id avec with_check=null → un user peut modifier N'IMPORTE QUELLE colonne
+  de son profil, dont subscription_type='lifetime'. S'auto-octroyer un accès gratuit à vie.
+  Préexistant, non exploité pré-launch. À CORRIGER avant beta (restreindre colonnes
+  modifiables ou trigger bloquant subscription_*). C'est pour ça que claim_beta_slot est
+  en SECURITY DEFINER (le client ne pose jamais beta lui-même).
+- Doublon de policy profiles (les deux ci-dessus font la même chose) — à nettoyer.
 
 - **Date** : 2026-06-14 (matin)
 - **HEAD** : 4eab788
