@@ -62,9 +62,14 @@ export async function POST(req: NextRequest) {
   if (!expectedSecret) return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
   if (auth !== `Bearer ${expectedSecret}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // 2. TIMEZONE GUARD — only run at 18h Europe/Zurich
+  // 2. TIMEZONE GUARD — only run at 18h Europe/Zurich (bypass via {"force":true} pour tests)
+  let force = false
+  try {
+    const body = await req.json()
+    force = body?.force === true
+  } catch { /* pas de body JSON, force reste false */ }
   const hour = zurichHour()
-  if (hour !== 18) {
+  if (hour !== 18 && !force) {
     return NextResponse.json({ skipped: 'not 18h local', zurichHour: hour })
   }
 
