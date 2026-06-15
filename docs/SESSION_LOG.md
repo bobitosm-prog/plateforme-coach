@@ -3,6 +3,53 @@
 Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
+
+- **Date** : 2026-06-15 (soir)
+- **HEAD** : 3a05dad
+- **Working tree** : clean
+- **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
+- **Cron streak** : refondu (séance prévue du jour, pas seuil streak>=3), validé device.
+- **Push web** : stable. Sub f.marco recréée 15/06. Trou re-sync au boot = chantier suivant.
+- **Prochaines tâches** : voir NEXT.md (notifs robustes + Préférences, faille RLS, UI admin beta).
+- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK, re-sync sub boot.
+
+---
+
+## 2026-06-15 (soir) — Refonte logique cron streak + validation push end-to-end
+
+**Commits** : 5491bac (refonte logique) + 3a05dad (bypass force=true)
+
+### Cron streak — refonte logique métier [RÉSOLU + VALIDÉ DEVICE]
+Logique d'origine ne notifiait que streak>=3 (rétention) -> inadapté (les beta streak<3
+jamais notifiés). Nouveau besoin : rappeler "séance prévue aujourd'hui non faite".
+FIX (app/api/streak-reminder/cron/route.ts) :
+- Supprimé condition ligne 108 (!atRisk || current<3).
+- Par user : charger custom_programs actif (.days) -> getSessionForDay(days, zurichDayIndex())
+  -> skip si type='rest' -> vérifier workout_sessions completed today (date=todayZurich) ->
+  skip si fait -> sinon ENVOYER.
+- Message adapté : streak>=1 "ton streak de X jours en jeu, séance [nom] t'attend" ;
+  streak=0 "tu as loupé ta séance [nom], il te reste du temps".
+- zurichDayIndex() Monday-first en tz Europe/Zurich. streak (5d) sur created_at (cohérent
+  useClientDashboard/check-badges — created_at vs date = dette Bloc D).
+- NON touché : computeStreak, get-today-session.
+- Ajout bypass {"force":true} (test hors 18h). Auth Bearer toujours obligatoire.
+VALIDÉ : curl force -> {processed:2, sent:1, skipped:1}. f.marco notifié, NOTIF REÇUE DEVICE.
+
+### Diagnostic non-delivery (résolu)
+1er curl sent:1 mais pas de notif. Cause : sub f.marco datait du 19 AVRIL (périmée après
+recréation SW 12-13 juin, Apple ignore sub morte). Recréé via toggle off/on -> sub fraîche
+-> notif reçue. Upsert onConflict user_id = remplace, pas de doublon.
+LEÇON : sent serveur != reçu device. Sub ancienne meurt silencieusement.
+
+### Découvertes
+- Bug "2 crons" (jobid 8/9) NEUTRALISÉ par garde horaire (zurichHour!==18 rejette le 19h).
+  Pas dangereux, mais à nettoyer (désactiver jobid 9).
+- SW push-only stable (MAJ Next.js ne le casse pas).
+- Logique abonnement push (ProfileTab:121-123) correcte MAIS tourne QUE au toggle manuel.
+  Aucune re-sync au boot -> sub périmée jamais rattrapée -> trou (cas f.marco). Chantier suivant.
+
+---
+
 ## 2026-06-14 (suite) — Après-midi : #18 nutrition + système beta + Vercel Pro
 
 **Branche** : `main` — commits c076303, e247a86 + SQL (briques beta) + Vercel Pro (admin)
