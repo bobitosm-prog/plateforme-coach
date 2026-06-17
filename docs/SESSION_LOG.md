@@ -5,12 +5,12 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-17
-- **HEAD** : aecff36 (feat(push): silent subscription re-sync at boot)
-- **Working tree** : clean
+- **HEAD** : 9a44eb8 (fix(onboarding): neutral subtitle wording)
+- **Working tree** : clean (post-push session complète)
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Faille RLS P0** : RÉSOLUE (trigger + cleanup doublon, validé 4/4 tests prod).
-- **Push re-sync boot** : RÉSOLU + VALIDÉ DEVICE (3 tests).
-- **Prochaines tâches** : voir NEXT.md (notifs robustes + Préférences, UI admin beta).
+- **Session 17/06** : Faille RLS P0 RÉSOLUE, push re-sync boot VALIDÉ, offre dynamique 60j COMPLÈTE (landing+pricing+register), trial standard 14j aligné, wording onboarding qualitatif.
+- **Campagne beta** : is_active=false en DB. Activation = 1 flag DB, zéro déploiement.
+- **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul (pas clés p256dh/auth).
 
 ---
@@ -91,6 +91,41 @@ ProfileTab.tsx — fichier push fragile, isolation préférée).
 p256dh/auth). Couvre le cas réel (sub périmée = endpoint mort ou absent).
 Angle mort résiduel : régénération de clés à endpoint constant — jamais
 observé en pratique, non couvert.
+
+### Cohérence offre d'essai + système beta dynamique [RÉSOLU + VALIDÉ]
+
+**Commits** : 5c37f85, 90d8308, c894664, 4b29f7f, 8291ecc, 4515c3d,
+5abe617, 020e647, bdc0d4c, 122a79f, 9a44eb8
+
+#### Trial standard 10j → 14j
+- Code : OnboardingV2Content.tsx + OnboardingContent.tsx (multiplicateur
+  10→14 dans le calcul trial_ends_at).
+- i18n : 12 chaînes (4 clés × 3 langues) landing hero/trust/pricing/onboarding.
+
+#### Système offre dynamique beta (campagne active → 60j, inactive → 14j)
+- **lib/beta-offer.ts** (server-only) : getActiveBetaOffer() lecture durcie
+  (try/catch, best-effort), trialDaysFor(offer) → freeDays ou 14 standard.
+  Réutilisable par tout Server Component.
+- **Hero** (Server Component) : badge "60 JOURS GRATUITS" (Bebas/gold géant,
+  compteur places, auto-masqué si inactive/plein) + CTA cta_primary + trust
+  dynamiques via {days: trialDays}.
+- **PricingSection** (Client Component) : trialDays passé en prop par
+  page.tsx (Server). CTA client_cta paramétré {days}.
+- **register-client** (Client Component) : trialDays passé en prop par
+  page.tsx (Server, rendu async). CTA auth.register.client.cta paramétré {days}.
+- **RLS** : policy beta_campaigns_public_read (SELECT, public, USING true)
+  pour lecture anon du compteur. Migration versionnée (20260617130000).
+
+#### Wording qualitatif onboarding
+- trialBadge (step1 + step10) : "Démarre gratuitement" / "Ton accès
+  gratuit est activé" (pas de nombre, durée inconnue pré-claim).
+- subtitle step1 : "Essai gratuit." (pas de nombre, claim pas encore fait).
+- Mention légale rétractation 14j : intouchée (waiveWithdrawal).
+
+#### Décision produit
+Campagne reste is_active=false. Activation = 1 flag DB, zéro déploiement.
+Le jour du lancement : UPDATE beta_campaigns SET is_active=true → tous les
+écrans affichent automatiquement "60 jours" + badge + compteur.
 
 ---
 
