@@ -416,7 +416,7 @@
     "client_feat4": "AI Coach Athena 24/7",
     "client_feat5": "Complete analytics & tracking",
     "client_feat6": "Private before/after photos",
-    "client_cta": "Start — 14 days free",
+    "client_cta": "Start — {days} days free",
     "coach_badge": "Pro",
     "coach_label": "For coaches",
     "coach_title": "Coach Pro",

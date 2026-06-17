@@ -7,6 +7,7 @@ import {
   getAlternateOgLocales,
   type Locale,
 } from '@/lib/seo'
+import { getActiveBetaOffer, trialDaysFor } from '@/lib/beta-offer'
 import Cursor from './components/Cursor';
 import ScrollBar from './components/ScrollBar';
 import Navbar from './components/Navbar';
@@ -114,6 +115,8 @@ export default async function LandingPage({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params;
+  const betaOffer = await getActiveBetaOffer()
+  const trialDays = trialDaysFor(betaOffer)
   const schemaGraph = buildSchemaGraph([
     buildOrganizationSchema(),
     buildLocalBusinessSchema(),
@@ -156,7 +159,7 @@ export default async function LandingPage({
         <GoldSeparator />
         <div style={{ background: '#111' }}><PWASection /></div>
         <GoldSeparator />
-        <div style={{ background: '#0a0a0a' }}><PricingSection /></div>
+        <div style={{ background: '#0a0a0a' }}><PricingSection trialDays={trialDays} /></div>
         <GoldSeparator />
         <div style={{ background: '#111' }}><FaqSection /></div>
         <GoldSeparator />

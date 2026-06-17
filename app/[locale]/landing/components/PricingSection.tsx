@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
-export default function PricingSection() {
+export default function PricingSection({ trialDays = 14 }: { trialDays?: number }) {
   const t = useTranslations('pricing')
   const tLegal = useTranslations('legal')
   const locale = useLocale()
@@ -321,7 +321,7 @@ export default function PricingSection() {
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              {t('client_cta')}
+              {t('client_cta', { days: trialDays })}
             </Link>
           </div>
 
