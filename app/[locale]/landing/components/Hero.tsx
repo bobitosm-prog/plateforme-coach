@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { getActiveBetaOffer, trialDaysFor } from '@/lib/beta-offer'
 import HeroStats from './HeroStats'
 import HeroAnimation from './HeroAnimation'
 
@@ -9,24 +9,8 @@ export default async function Hero() {
   const t = await getTranslations('hero')
   const tBeta = await getTranslations('beta_banner')
 
-  let betaOffer: { freeDays: number; slotsLeft: number; maxSlots: number } | null = null
-  try {
-    const supabase = await createSupabaseRouteClient()
-    const { data } = await supabase
-      .from('beta_campaigns')
-      .select('free_days, max_slots, used_slots, is_active')
-      .eq('is_active', true)
-      .limit(1)
-      .maybeSingle()
-    if (data && data.is_active) {
-      const left = data.max_slots - data.used_slots
-      if (left > 0) {
-        betaOffer = { freeDays: data.free_days, slotsLeft: left, maxSlots: data.max_slots }
-      }
-    }
-  } catch {
-    betaOffer = null
-  }
+  const betaOffer = await getActiveBetaOffer()
+  const trialDays = trialDaysFor(betaOffer)
 
   const STATS = [
     { value: 163,  suffix: '',  label: t('stat_exercises') },
@@ -297,7 +281,7 @@ export default async function Hero() {
               transition: 'all 0.2s',
             }}
           >
-            {t('cta_primary')}
+            {t('cta_primary', { days: trialDays })}
           </Link>
 
           <a
@@ -323,7 +307,7 @@ export default async function Hero() {
             color: 'rgba(255,255,255,0.5)',
             letterSpacing: 1,
           }}>
-            {t('trust')}
+            {t('trust', { days: trialDays })}
           </span>
         </div>
 
