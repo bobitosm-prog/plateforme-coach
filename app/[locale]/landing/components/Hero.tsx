@@ -1,11 +1,32 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
+import { createSupabaseRouteClient } from '@/lib/supabase/server'
 import HeroStats from './HeroStats'
 import HeroAnimation from './HeroAnimation'
 
 export default async function Hero() {
   const t = await getTranslations('hero')
+  const tBeta = await getTranslations('beta_banner')
+
+  let betaOffer: { freeDays: number; slotsLeft: number; maxSlots: number } | null = null
+  try {
+    const supabase = await createSupabaseRouteClient()
+    const { data } = await supabase
+      .from('beta_campaigns')
+      .select('free_days, max_slots, used_slots, is_active')
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle()
+    if (data && data.is_active) {
+      const left = data.max_slots - data.used_slots
+      if (left > 0) {
+        betaOffer = { freeDays: data.free_days, slotsLeft: left, maxSlots: data.max_slots }
+      }
+    }
+  } catch {
+    betaOffer = null
+  }
 
   const STATS = [
     { value: 163,  suffix: '',  label: t('stat_exercises') },
@@ -176,6 +197,36 @@ export default async function Hero() {
             {t('description')}
           </span>
         </div>
+
+        {/* Beta offer badge */}
+        {betaOffer && (
+          <div className="hero-content-animate-delay" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 18px',
+            marginBottom: 24,
+            border: '1px solid rgba(212,168,67,0.4)',
+            background: 'rgba(212,168,67,0.08)',
+            borderRadius: 2,
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(11px, 1vw, 13px)',
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            alignSelf: 'flex-start',
+          }}>
+            <span style={{ color: 'var(--gold)', fontWeight: 700 }}>
+              {tBeta('highlight', { days: betaOffer.freeDays })}
+            </span>
+            <span style={{ textDecoration: 'line-through', opacity: 0.45, color: 'rgba(255,255,255,0.6)' }}>
+              {tBeta('strikethrough')}
+            </span>
+            <span style={{ color: 'rgba(255,255,255,0.45)' }}>·</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)' }}>
+              {tBeta('slots', { left: betaOffer.slotsLeft, total: betaOffer.maxSlots })}
+            </span>
+          </div>
+        )}
 
         {/* CTAs */}
         <div className="hero-content-animate-delay" style={{
