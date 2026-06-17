@@ -10,7 +10,7 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Mécanisme beta gratuit (briques 1-4) ✅ 14 juin
 - [x] Cron streak refondu, validé device ✅ 15 juin
 - [ ] Notifications robustes + rangement Compte/Préférences (#1)
-- [ ] Faille RLS profiles P0 (#2)
+- [x] Faille RLS profiles P0 ✅ 17 juin
 - [ ] Brique 5 UI admin campagnes
 - [ ] Signup→onboarding→1ère séance E2E par un tiers
 - [ ] Observabilité minimale
@@ -30,17 +30,13 @@ c. Filet de sécurité : re-sync silencieuse de la sub au boot (user notifs acti
 d. Test : activer → simuler sub périmée → vérifier recréation auto au lancement.
 Note : SW stable (push-only), risque vient des subs anciennes (Apple expire).
 
-### 2. FAILLE RLS profiles (P0 avant launch)
-Policies update = with_check=null → user peut s'auto-poser subscription_type='lifetime'.
-Restreindre colonnes modifiables (trigger/policy bloquant subscription_*). Nettoyer doublon policy.
-
-### 3. Brique 5 — UI admin campagnes beta
+### 2. Brique 5 — UI admin campagnes beta
 Créer/activer/voir compteur. Réutiliser patterns admin (SubscriptionDialog).
 
-### 4. Fix UX onboarding "10 jours" trompeur (beta a 60j)
+### 3. Fix UX onboarding "10 jours" trompeur (beta a 60j)
 Adapter le texte selon résultat claim_beta_slot.
 
-### 5. Nettoyage cron (mineur) : désactiver jobid 9 (déjà neutralisé par garde horaire).
+### 4. Nettoyage cron (mineur) : désactiver jobid 9 (déjà neutralisé par garde horaire).
 
 ## Backlog (ROADMAP)
 #18 nutrition = RÉSOLU. P1 : Bloc D (created_at vs date, await sans check error),

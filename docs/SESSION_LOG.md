@@ -4,14 +4,43 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-15 (soir)
-- **HEAD** : 3a05dad
+- **Date** : 2026-06-17
+- **HEAD** : (post commit cleanup doublon)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Cron streak** : refondu (séance prévue du jour, pas seuil streak>=3), validé device.
-- **Push web** : stable. Sub f.marco recréée 15/06. Trou re-sync au boot = chantier suivant.
-- **Prochaines tâches** : voir NEXT.md (notifs robustes + Préférences, faille RLS, UI admin beta).
+- **Faille RLS P0** : RÉSOLUE (trigger + cleanup doublon, validé 4/4 tests prod).
+- **Prochaines tâches** : voir NEXT.md (notifs robustes + Préférences, UI admin beta).
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK, re-sync sub boot.
+
+---
+
+## 2026-06-17 — Faille RLS profiles P0 [RÉSOLU + VALIDÉ PROD 4/4]
+
+**Commits** : 67b27c0 (trigger) + (cleanup doublon)
+
+### Faille
+Policies UPDATE sur profiles avaient with_check=null -> un user authentifié
+pouvait modifier n'importe quelle colonne de SON profil, dont
+subscription_type='lifetime' (accès payant gratuit à vie) et role='super_admin'.
+
+### Fix
+Trigger BEFORE UPDATE guard_profile_sensitive_columns() : blacklist 7 colonnes
+(role, status, subscription_type/status/end_date/price, trial_ends_at).
+IS DISTINCT FROM = bloque le CHANGEMENT de valeur, pas la présence de colonne.
+SECURITY INVOKER = seuls authenticated/anon bloqués ; service_role/postgres/
+SECURITY DEFINER passent (RPC claim_beta_slot, webhooks Stripe, etc.).
+Blacklist (pas whitelist) : stable face aux futures migrations (ajout de
+colonnes légitimes ne casse pas le trigger).
+
+### Cleanup
+Suppression doublon policy "Users can update own profile" (profiles_update_own
+conservé, même logique).
+
+### Validation prod (4/4)
+1. Escalade subscription_type='lifetime' via supabaseAuth.rpc -> bloqué (42501)
+2. Escalade role='super_admin' via supabaseAuth -> bloqué (42501)
+3. Update légitime full_name via supabaseAuth -> OK
+4. Update subscription_type via service_role (webhook Stripe) -> OK (bypass)
 
 ---
 
