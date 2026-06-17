@@ -744,7 +744,7 @@
         "feat2": "PPL program",
         "feat3": "Progress tracking",
         "feat4": "Personal coach 24/7",
-        "cta": "Start — 14 days free",
+        "cta": "Start — {days} days free",
         "title": "CREATE YOUR ACCOUNT",
         "subtitle": "Start your transformation",
         "submitButton": "Create my account",

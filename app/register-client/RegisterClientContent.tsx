@@ -29,7 +29,7 @@ const CoachIcon = () => (
   </svg>
 )
 
-function RegisterContent() {
+function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   const t = useTranslations('auth.register')
   const tLogin = useTranslations('auth.login')
   const T = titleStyle
@@ -236,7 +236,7 @@ function RegisterContent() {
                   ))}
                 </div>
                 <button className="gold-btn" style={{ marginTop: 8 }} onClick={e => { e.stopPropagation(); setSelectedRole('client'); setStep('client') }}>
-                  {t('client.cta')}
+                  {t('client.cta', { days: trialDays })}
                 </button>
               </div>
 
@@ -432,7 +432,7 @@ function RegisterContent() {
   )
 }
 
-export default function RegisterClientContent() {
+export default function RegisterClientContent({ trialDays = 14 }: { trialDays?: number }) {
   return (
     <Suspense fallback={
       <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BG_BASE }}>
@@ -440,7 +440,7 @@ export default function RegisterClientContent() {
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     }>
-      <RegisterContent />
+      <RegisterContent trialDays={trialDays} />
     </Suspense>
   )
 }

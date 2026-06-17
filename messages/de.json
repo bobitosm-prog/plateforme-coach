@@ -744,7 +744,7 @@
         "feat2": "PPL-Programm",
         "feat3": "Fortschrittsverfolgung",
         "feat4": "Persönlicher Coach 24/7",
-        "cta": "Starten — 14 Tage gratis",
+        "cta": "Starten — {days} Tage gratis",
         "title": "KONTO ERSTELLEN",
         "subtitle": "Starte deine Transformation",
         "submitButton": "Mein Konto erstellen",
