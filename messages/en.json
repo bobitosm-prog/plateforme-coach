@@ -2455,7 +2455,7 @@
       "step1": {
         "title": "Welcome to MoovX",
         "subtitle": "10-day free trial. We set up your app in 6-8 minutes.",
-        "trialBadge": "10 days free"
+        "trialBadge": "Start for free"
       },
       "step3": {
         "title": "Your measurements",
@@ -2542,7 +2542,7 @@
         "protein": "Protein",
         "carbs": "Carbs",
         "fat": "Fat",
-        "trialBadge": "10-day trial started"
+        "trialBadge": "Your free access is active"
       }
     }
   }

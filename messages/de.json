@@ -2455,7 +2455,7 @@
       "step1": {
         "title": "Willkommen bei MoovX",
         "subtitle": "10 Tage kostenlose Testversion. Wir richten deine App in 6-8 Minuten ein.",
-        "trialBadge": "10 Tage gratis"
+        "trialBadge": "Kostenlos starten"
       },
       "step3": {
         "title": "Deine Masse",
@@ -2542,7 +2542,7 @@
         "protein": "Protein",
         "carbs": "Kohlenhydrate",
         "fat": "Fett",
-        "trialBadge": "10-tagige Testversion gestartet"
+        "trialBadge": "Dein kostenloser Zugang ist aktiv"
       }
     }
   }
