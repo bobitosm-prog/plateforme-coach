@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import {
-  LayoutGrid, Users, DollarSign, ScrollText, MessageSquare,
+  LayoutGrid, Users, DollarSign, ScrollText, MessageSquare, Megaphone,
   LogOut, Menu, X, ExternalLink
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
@@ -12,6 +12,7 @@ const NAV = [
   { href: '/admin/users', label: 'Comptes', icon: Users },
   { href: '/admin/revenue', label: 'Revenue', icon: DollarSign },
   { href: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
+  { href: '/admin/campaigns', label: 'Campagnes', icon: Megaphone },
   { href: '/admin/logs', label: 'Logs', icon: ScrollText },
 ] as const
 
