@@ -18,6 +18,7 @@ import FeedbackTab from './components/client/FeedbackTab'
 import ChatAI from './components/ChatAI'
 import BarcodeScanner from './components/BarcodeScanner'
 import { cache } from '../lib/cache'
+import { resyncPushSubscription } from '../lib/push-resync'
 
 import WorkoutSession from './components/WorkoutSession'
 import WeightModal from './components/modals/WeightModal'
@@ -258,6 +259,19 @@ export default function CoachApp() {
       return cleanup
     }
   }, [h.session?.user?.id, h.profile?.reminder_enabled])
+
+  // Silent push subscription re-sync (repair stale/expired subs)
+  const pushResyncRan = React.useRef(false)
+  React.useEffect(() => {
+    if (pushResyncRan.current) return
+    if (!h.session?.user?.id) return
+    pushResyncRan.current = true
+    const uid = h.session.user.id
+    const id = setTimeout(() => {
+      resyncPushSubscription(h.supabase, uid)
+    }, 1500)
+    return () => clearTimeout(id)
+  }, [h.session?.user?.id, h.supabase])
 
   /* ── Loading splash ── */
   if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
