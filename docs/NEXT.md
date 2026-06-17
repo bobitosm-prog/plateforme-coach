@@ -36,8 +36,6 @@ Créer/activer/voir compteur. Réutiliser patterns admin (SubscriptionDialog).
 ### 3. Fix UX onboarding "10 jours" trompeur (beta a 60j)
 Adapter le texte selon résultat claim_beta_slot.
 
-### 4. Nettoyage cron (mineur) : désactiver jobid 9 (déjà neutralisé par garde horaire).
-
 ## Backlog (ROADMAP)
 #18 nutrition = RÉSOLU. P1 : Bloc D (created_at vs date, await sans check error),
 exercise_id FK, validation total_weeks.

@@ -42,6 +42,19 @@ conservé, même logique).
 3. Update légitime full_name via supabaseAuth -> OK
 4. Update subscription_type via service_role (webhook Stripe) -> OK (bypass)
 
+### Correction note cron DST (jobid 8/9)
+Audit pg_cron : jobid 8 "streak-reminder-summer" (0 16 * * * UTC = 18h CEST)
+et jobid 9 "streak-reminder-winter" (0 17 * * * UTC = 18h CET) sont le
+mécanisme ANTI-DST VOLONTAIRE. La garde zurichHour===18 sélectionne le bon
+job selon la saison. NE PAS désactiver jobid 9.
+La note précédente "désactiver jobid 9" (14/06) était une mauvaise lecture :
+le mécanisme anti-DST a été pris pour un doublon. Corrigée dans NEXT.md.
+DETTE CONSIGNÉE (non bloquant) : jobid 4 (weekly-diagnostic, 0 18 UTC) et
+jobid 5 (training-regen, 0 17 UTC) sont à heure UTC fixe SANS double-job
+DST -> leur heure Zurich dérive de +/-1h entre CEST/CET. À vérifier si une
+contrainte horaire Zurich stricte existe (probablement non : diagnostic/regen
+peuvent tourner à n'importe quelle heure tant qu'ils tournent 1x/jour).
+
 ---
 
 ## 2026-06-15 (soir) — Refonte logique cron streak + validation push end-to-end
