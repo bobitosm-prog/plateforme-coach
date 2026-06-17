@@ -13,55 +13,52 @@ interface Props {
 }
 
 export function CampaignsTable({ campaigns, loading, error, onToggle, onEdit, onNew }: Props) {
-  const labelClass = 'text-[11px] uppercase tracking-wider font-medium'
-  const cellClass = 'px-4 py-3 text-sm'
-
   return (
-    <div className="admin-card-flat rounded-xl overflow-hidden">
+    <>
       {/* Toolbar */}
-      <div className="px-4 py-3 flex items-center justify-between border-b" style={{ borderColor: 'rgba(201,168,76,0.08)' }}>
-        <span className={labelClass} style={{ color: '#99907e' }}>
-          {campaigns.length} campagne{campaigns.length !== 1 ? 's' : ''}
-        </span>
-        <button
-          onClick={onNew}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
-          style={{
-            background: 'rgba(212,168,67,0.12)',
-            color: '#d4a843',
-            border: '1px solid rgba(212,168,67,0.2)',
-          }}
-        >
-          <Plus size={14} />
-          Nouvelle campagne
-        </button>
+      <div className="admin-card mb-4" style={{ padding: '16px 20px' }}>
+        <div className="flex items-center justify-between">
+          <div className="admin-label tabular-nums">
+            {campaigns.length} campagne{campaigns.length !== 1 ? 's' : ''}
+          </div>
+          <button
+            onClick={onNew}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+            style={{
+              background: 'rgba(212,168,67,0.12)',
+              color: '#d4a843',
+              border: '1px solid rgba(212,168,67,0.2)',
+            }}
+          >
+            <Plus size={14} />
+            Nouvelle campagne
+          </button>
+        </div>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="px-4 py-3 text-sm" style={{ color: '#fb7185' }}>
-          {error}
-        </div>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 size={20} className="animate-spin" style={{ color: '#d4a843' }} />
-        </div>
-      )}
-
       {/* Table */}
-      {!loading && campaigns.length > 0 && (
-        <div style={{ overflowX: 'auto' }}>
-          <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+      <div className="admin-table-wrap">
+        {error && (
+          <div className="px-4 py-3 text-sm" style={{ color: '#fb7185' }}>
+            {error}
+          </div>
+        )}
+
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 size={20} className="animate-spin" style={{ color: '#d4a843' }} />
+          </div>
+        )}
+
+        {!loading && campaigns.length > 0 && (
+          <table className="admin-table">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(201,168,76,0.08)' }}>
-                <th className={`${cellClass} ${labelClass} text-left`} style={{ color: '#99907e' }}>Nom</th>
-                <th className={`${cellClass} ${labelClass} text-left`} style={{ color: '#99907e' }}>Duree</th>
-                <th className={`${cellClass} ${labelClass} text-left`} style={{ color: '#99907e' }}>Places</th>
-                <th className={`${cellClass} ${labelClass} text-left`} style={{ color: '#99907e' }}>Statut</th>
-                <th className={`${cellClass} ${labelClass} text-right`} style={{ color: '#99907e' }}>Actions</th>
+              <tr>
+                <th>Nom</th>
+                <th>Duree</th>
+                <th>Places</th>
+                <th>Statut</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -69,14 +66,14 @@ export function CampaignsTable({ campaigns, loading, error, onToggle, onEdit, on
                 const slotsLeft = c.max_slots - c.used_slots
                 const pct = c.max_slots > 0 ? Math.round((c.used_slots / c.max_slots) * 100) : 0
                 return (
-                  <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td className={cellClass}>
+                  <tr key={c.id}>
+                    <td>
                       <span className="text-zinc-100 font-medium">{c.name}</span>
                     </td>
-                    <td className={cellClass}>
+                    <td>
                       <span className="tabular-nums" style={{ color: '#d0c5b2' }}>{c.free_days}j</span>
                     </td>
-                    <td className={cellClass}>
+                    <td>
                       <div className="flex items-center gap-2">
                         <span className="tabular-nums" style={{ color: '#d0c5b2' }}>
                           {c.used_slots}/{c.max_slots}
@@ -105,12 +102,12 @@ export function CampaignsTable({ campaigns, loading, error, onToggle, onEdit, on
                         </span>
                       </div>
                     </td>
-                    <td className={cellClass}>
+                    <td>
                       <StatusBadge variant={c.is_active ? 'emerald' : 'zinc'}>
                         {c.is_active ? 'Actif' : 'Inactif'}
                       </StatusBadge>
                     </td>
-                    <td className={`${cellClass} text-right`}>
+                    <td style={{ textAlign: 'right' }}>
                       <div className="inline-flex items-center gap-1">
                         <button
                           onClick={() => onToggle(c.id, !c.is_active)}
@@ -135,15 +132,14 @@ export function CampaignsTable({ campaigns, loading, error, onToggle, onEdit, on
               })}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
 
-      {/* Empty */}
-      {!loading && !error && campaigns.length === 0 && (
-        <div className="py-12 text-center text-sm" style={{ color: '#99907e' }}>
-          Aucune campagne. Cree-en une pour lancer la beta.
-        </div>
-      )}
-    </div>
+        {!loading && !error && campaigns.length === 0 && (
+          <div className="py-12 text-center text-sm" style={{ color: '#99907e' }}>
+            Aucune campagne. Cree-en une pour lancer la beta.
+          </div>
+        )}
+      </div>
+    </>
   )
 }
