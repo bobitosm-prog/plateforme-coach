@@ -5,13 +5,13 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-17
-- **HEAD** : 9a44eb8 (fix(onboarding): neutral subtitle wording)
-- **Working tree** : clean (post-push session complète)
+- **HEAD** : 73fbb37 (style(admin): align campaigns table with admin design system)
+- **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Session 17/06** : Faille RLS P0 RÉSOLUE, push re-sync boot VALIDÉ, offre dynamique 60j COMPLÈTE (landing+pricing+register), trial standard 14j aligné, wording onboarding qualitatif.
-- **Campagne beta** : is_active=false en DB. Activation = 1 flag DB, zéro déploiement.
+- **Session 17/06** : Faille RLS P0 RÉSOLUE, push re-sync boot VALIDÉ, offre dynamique 60j COMPLÈTE, admin campagnes COMPLET (API+UI+design), trial 14j aligné, wording onboarding qualitatif.
+- **Campagne beta** : is_active=false en DB. Activation = toggle UI admin ou 1 UPDATE DB.
 - **Prochaines tâches** : voir docs/NEXT.md.
-- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul (pas clés p256dh/auth).
+- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin).
 
 ---
 
@@ -126,6 +126,42 @@ observé en pratique, non couvert.
 Campagne reste is_active=false. Activation = 1 flag DB, zéro déploiement.
 Le jour du lancement : UPDATE beta_campaigns SET is_active=true → tous les
 écrans affichent automatiquement "60 jours" + badge + compteur.
+
+### Admin campagnes beta (#3 Brique 5) [COMPLET + DÉPLOYÉ PROD]
+
+**Commits** : a43e47b (API), 26dce0c (UI), 73fbb37 (design polish)
+
+#### API (app/api/admin/campaigns/)
+- GET → liste campagnes (desc), POST → création (inactive par défaut),
+  PATCH [id] → édition + toggle is_active.
+- Pattern admin standard : verifyAdmin + handleAdminAuthError + supabaseAdmin.
+- Validations : name 1-120, free_days 1-365, max_slots 1-10000,
+  max_slots >= used_slots (refus 400), used_slots jamais écrit.
+- Règle une-seule-active : PATCH is_active=true désactive les autres d'abord
+  (index partiel idx_beta_one_active respecté).
+
+#### UI (/admin/campaigns)
+- useCampaigns : hook adminFetch (fetch/create/update/toggleActive).
+- CampaignsTable : toolbar admin-card + table admin-table-wrap/admin-table,
+  colonnes nom/durée/places (barre progression)/statut (StatusBadge)/actions
+  (toggle Power/PowerOff + Pencil edit).
+- CampaignDialog : modal create/edit (calqué SubscriptionDialog), validation
+  client, used_slots lecture seule en mode edit.
+- page.tsx : PageHeader + table + dialog, window.confirm avant activation
+  ("visible publiquement sur le site").
+- AdminSidebar : lien "Campagnes" ajouté (icône Megaphone).
+
+#### Validation bout-en-bout
+Toggle UI → DB is_active=true → landing Hero badge "60 JOURS GRATUITS" +
+CTA "60 jours" + compteur places → fonctionnel. Désactivation → badge/CTA
+reviennent à "14 jours". Auth admin 401 sans Bearer vérifié.
+
+#### Décision auth admin
+Pas de login admin séparé — le compte+rôle existant est conservé. Le Bearer
+token est celui de la session Supabase de l'admin.
+
+**Dette mineure** : 2 PATCH activation simultanés → erreur unique 23505
+possible. Inoffensif (1 seul admin), non corrigé.
 
 ---
 
