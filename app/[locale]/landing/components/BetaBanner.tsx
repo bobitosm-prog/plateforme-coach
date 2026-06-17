@@ -2,13 +2,25 @@ import { getTranslations } from 'next-intl/server'
 import { createSupabaseRouteClient } from '@/lib/supabase/server'
 
 export default async function BetaBanner({ locale }: { locale: string }) {
-  const supabase = await createSupabaseRouteClient()
-  const { data } = await supabase
-    .from('beta_campaigns')
-    .select('free_days, max_slots, used_slots, is_active')
-    .eq('is_active', true)
-    .limit(1)
-    .maybeSingle()
+  let data: {
+    free_days: number
+    max_slots: number
+    used_slots: number
+    is_active: boolean
+  } | null = null
+
+  try {
+    const supabase = await createSupabaseRouteClient()
+    const res = await supabase
+      .from('beta_campaigns')
+      .select('free_days, max_slots, used_slots, is_active')
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle()
+    data = res.data
+  } catch {
+    return null // une bannière optionnelle ne doit jamais casser la landing
+  }
 
   if (!data || !data.is_active) return null
   const slotsLeft = data.max_slots - data.used_slots
