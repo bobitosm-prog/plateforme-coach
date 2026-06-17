@@ -84,6 +84,12 @@
     "start": "Loslegen",
     "swissMade": "Swiss Made"
   },
+  "beta_banner": {
+    "strikethrough": "14 Tage",
+    "highlight": "{days} TAGE GRATIS",
+    "slots": "Nur noch {left} von {total} Plätzen",
+    "feedback": "Für Early Adopters · Feedback erwünscht"
+  },
   "hero": {
     "eyebrow": "Swiss Made · Professionelles Coaching",
     "headline_line1": "Verwandle",

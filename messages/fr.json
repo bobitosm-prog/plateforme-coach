@@ -84,6 +84,12 @@
     "start": "Commencer",
     "swissMade": "Swiss Made"
   },
+  "beta_banner": {
+    "strikethrough": "14 jours",
+    "highlight": "{days} JOURS GRATUITS",
+    "slots": "Plus que {left} places sur {total}",
+    "feedback": "Pour les premiers inscrits · feedback attendu"
+  },
   "hero": {
     "eyebrow": "Swiss Made · Coaching professionnel",
     "headline_line1": "Transforme",

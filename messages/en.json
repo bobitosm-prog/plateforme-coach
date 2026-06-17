@@ -84,6 +84,12 @@
     "start": "Get started",
     "swissMade": "Swiss Made"
   },
+  "beta_banner": {
+    "strikethrough": "14 days",
+    "highlight": "{days} DAYS FREE",
+    "slots": "Only {left} spots left out of {total}",
+    "feedback": "For early adopters · feedback expected"
+  },
   "hero": {
     "eyebrow": "Swiss Made · Professional coaching",
     "headline_line1": "Transform",

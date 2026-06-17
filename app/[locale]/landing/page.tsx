@@ -7,6 +7,7 @@ import {
   getAlternateOgLocales,
   type Locale,
 } from '@/lib/seo'
+import BetaBanner from './components/BetaBanner';
 import Cursor from './components/Cursor';
 import ScrollBar from './components/ScrollBar';
 import Navbar from './components/Navbar';
@@ -134,6 +135,7 @@ export default async function LandingPage({
       }} />
 
       <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--text)' }}>
+        <BetaBanner locale={locale} />
         <Navbar />
         <Hero />
         <MarqueeSection />
