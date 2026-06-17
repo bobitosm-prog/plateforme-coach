@@ -9,38 +9,52 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Vercel Pro ✅ 14 juin
 - [x] Mécanisme beta gratuit (briques 1-4) ✅ 14 juin
 - [x] Cron streak refondu, validé device ✅ 15 juin
-- [ ] Notifications robustes + rangement Compte/Préférences (#1)
-- [x] Faille RLS profiles P0 ✅ 17 juin
-- [ ] Brique 5 UI admin campagnes
-- [ ] Signup→onboarding→1ère séance E2E par un tiers
+- [x] Faille RLS profiles P0 ✅ 17 juin (trigger guard + cleanup doublon policy)
+- [x] Re-sync push sub au boot (#1c) ✅ 17 juin (validé device 3/3)
+- [ ] Brique 5 UI admin campagnes (#3)
+- [ ] Fix UX onboarding "10 jours" trompeur (#4)
+- [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
 ## Prochaines tâches
 
-### 1. Notifications robustes + rangement Compte → Préférences (CHANTIER, à faire ensemble)
-Contexte : abonnement push (ProfileTab:121-123) correct mais ne tourne QU'au toggle manuel.
-Aucune re-sync au boot → sub périmée jamais rattrapée (cas f.marco sub d'avril morte).
-a. AUDIT onglet Compte/ProfileTab : inventaire, décider quoi va dans Préférences (notifs,
-   langue...) vs reste dans Compte.
-b. Déplacer réglages notifs ProfileTab → Préférences EN PRÉSERVANT la logique push
-   (getSubscription/subscribe + upsert push_subscriptions onConflict user_id).
-   Risque : hub/ClientIntlProvider.
-c. Filet de sécurité : re-sync silencieuse de la sub au boot (user notifs activées →
-   getSubscription, si changée/disparue → recréer + ré-upsert). Sans redemander permission.
-d. Test : activer → simuler sub périmée → vérifier recréation auto au lancement.
-Note : SW stable (push-only), risque vient des subs anciennes (Apple expire).
+### Chantier #1 — Notifications robustes
+- [x] (a) Cron streak : logique métier refaite (rappel séance prévue non faite,
+      bypass force=true, garde horaire Zurich). Validé device 15/06.
+- [x] (c) Re-sync push subscription au boot : helper lib/push-resync.ts,
+      useEffect différé 1,5s dans CoachApp. 3 gardes (permission granted /
+      row existante / SW ready timeout 4s). Comparaison endpoint DB vs
+      navigateur. Validé device 17/06 (3/3 tests).
+- [ ] (b) Déplacer réglages notifs ProfileTab → page Préférences dédiée.
+      **REPORTÉ post-launch** : refacto fragile (ProfileTab monolithique,
+      risque F1b), à faire à froid avec design doc. Décision senior : pas
+      juste avant launch.
 
-### 2. Brique 5 — UI admin campagnes beta
+### #3 — Brique 5 — UI admin campagnes beta
 Créer/activer/voir compteur. Réutiliser patterns admin (SubscriptionDialog).
 
-### 3. Fix UX onboarding "10 jours" trompeur (beta a 60j)
+### #4 — Fix UX onboarding "10 jours" trompeur (beta a 60j)
 Adapter le texte selon résultat claim_beta_slot.
+
+### Prérequis launch (Chantier #2)
+- [ ] Parcours signup → onboarding → 1ère séance E2E par un tiers (pas Marco).
+- [ ] Observabilité — fiabiliser app_logs (insert fire-and-forget ne loggue
+      pas), surveillance erreurs temps réel pendant la beta.
+
+## Après Phase A → Phase B (acquisition)
+Visuels SEEDANCE + prompts pub Insta/TikTok. PAS avant que Phase A soit cochée.
 
 ## Backlog (ROADMAP)
 #18 nutrition = RÉSOLU. P1 : Bloc D (created_at vs date, await sans check error),
 exercise_id FK, validation total_weeks.
 
+## Dettes consignées (non bloquantes)
+- Bloc D : created_at vs date (streak/badges), await sans check
+- exercise_id FK manquant
+- Comparaison sub par endpoint seul (pas clés p256dh/auth) — angle mort résiduel mineur
+- Jobid 4/5 UTC fixe sans double-job DST (drift ±1h, acceptable)
+
 ## Notes test
-- f.marco : sub fraîche 15/06 18:42, last_streak_reminder_at posé 20:43 (remettre null
-  pour re-tester aujourd'hui).
+- f.marco (UUID 00a8a3a6) : sub saine après test re-sync 17/06. last_streak_reminder_at
+  posé par curl force 17/06 (remettre null pour re-tester le cron aujourd'hui).
 - Bypass force=true reste en prod (protégé par auth Bearer).
