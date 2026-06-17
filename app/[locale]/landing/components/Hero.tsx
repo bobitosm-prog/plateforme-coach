@@ -202,28 +202,71 @@ export default async function Hero() {
         {betaOffer && (
           <div className="hero-content-animate-delay" style={{
             display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '10px 18px',
-            marginBottom: 24,
-            border: '1px solid rgba(212,168,67,0.4)',
-            background: 'rgba(212,168,67,0.08)',
-            borderRadius: 2,
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(11px, 1vw, 13px)',
-            letterSpacing: 2,
-            textTransform: 'uppercase',
+            flexDirection: 'column',
+            gap: 12,
+            padding: '20px 24px',
+            marginBottom: 28,
+            border: '1px solid rgba(212,168,67,0.5)',
+            background: 'linear-gradient(135deg, rgba(212,168,67,0.12) 0%, rgba(212,168,67,0.04) 100%)',
+            backdropFilter: 'blur(8px)',
             alignSelf: 'flex-start',
+            position: 'relative',
           }}>
-            <span style={{ color: 'var(--gold)', fontWeight: 700 }}>
-              {tBeta('highlight', { days: betaOffer.freeDays })}
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 12,
+              letterSpacing: 4,
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              opacity: 0.9,
+            }}>
+              ● Offre lancement beta
             </span>
-            <span style={{ textDecoration: 'line-through', opacity: 0.45, color: 'rgba(255,255,255,0.6)' }}>
-              {tBeta('strikethrough')}
-            </span>
-            <span style={{ color: 'rgba(255,255,255,0.45)' }}>·</span>
-            <span style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {tBeta('slots', { left: betaOffer.slotsLeft, total: betaOffer.maxSlots })}
+
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(44px, 6vw, 64px)',
+                lineHeight: 0.85,
+                fontWeight: 700,
+                color: 'var(--bg, #0D0B08)',
+                background: 'var(--gold)',
+                padding: '4px 14px',
+                letterSpacing: 1,
+              }}>
+                {betaOffer.freeDays}
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(20px, 2.4vw, 30px)',
+                fontWeight: 700,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                color: '#fff',
+              }}>
+                {tBeta('highlight_label')}
+              </span>
+              <span style={{
+                textDecoration: 'line-through',
+                opacity: 0.4,
+                color: 'rgba(255,255,255,0.6)',
+                fontSize: 'clamp(13px, 1.4vw, 16px)',
+                fontFamily: 'var(--font-display)',
+                letterSpacing: 1,
+              }}>
+                {tBeta('strikethrough')}
+              </span>
+            </div>
+
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(13px, 1.4vw, 15px)',
+              letterSpacing: 2,
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              fontWeight: 600,
+            }}>
+              ◆ {tBeta('slots', { left: betaOffer.slotsLeft, total: betaOffer.maxSlots })}
             </span>
           </div>
         )}

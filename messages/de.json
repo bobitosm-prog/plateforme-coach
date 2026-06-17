@@ -87,6 +87,7 @@
   "beta_banner": {
     "strikethrough": "14 Tage",
     "highlight": "{days} TAGE GRATIS",
+    "highlight_label": "Tage gratis",
     "slots": "Nur noch {left} von {total} Plätzen",
     "feedback": "Für Early Adopters · Feedback erwünscht"
   },
