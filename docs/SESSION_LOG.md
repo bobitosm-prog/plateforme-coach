@@ -5,12 +5,13 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-17
-- **HEAD** : (post commit cleanup doublon)
+- **HEAD** : aecff36 (feat(push): silent subscription re-sync at boot)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
 - **Faille RLS P0** : RÉSOLUE (trigger + cleanup doublon, validé 4/4 tests prod).
+- **Push re-sync boot** : RÉSOLU + VALIDÉ DEVICE (3 tests).
 - **Prochaines tâches** : voir NEXT.md (notifs robustes + Préférences, UI admin beta).
-- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK, re-sync sub boot.
+- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul (pas clés p256dh/auth).
 
 ---
 
@@ -54,6 +55,42 @@ jobid 5 (training-regen, 0 17 UTC) sont à heure UTC fixe SANS double-job
 DST -> leur heure Zurich dérive de +/-1h entre CEST/CET. À vérifier si une
 contrainte horaire Zurich stricte existe (probablement non : diagnostic/regen
 peuvent tourner à n'importe quelle heure tant qu'ils tournent 1x/jour).
+
+### Push re-sync silencieuse au boot [RÉSOLU + VALIDÉ DEVICE 3/3]
+
+**Commit** : aecff36
+
+**Problème** : une sub push Apple/navigateur peut périmer silencieusement
+(MAJ SW, expiration Apple) sans que l'user le sache. Le serveur nettoie les
+subs mortes après échec d'envoi (lib/push-server.ts) mais ne les recrée
+jamais. Cas réel : f.marco, sub d'avril morte après recréation SW de juin,
+jamais régénérée → cron streak sent:1 mais notif jamais reçue device.
+
+**Fix** : nouveau helper `lib/push-resync.ts` (resyncPushSubscription),
+branché dans CoachApp (app/page.tsx) via useEffect différé 1,5s (hors boot
+chaud, rafale de requêtes useClientDashboard). Logique :
+1. Vérifie permission === 'granted' (JAMAIS de popup)
+2. Vérifie qu'une row push_subscriptions existe pour le user (JAMAIS de
+   création pour un user qui n'avait pas activé)
+3. serviceWorker.ready borné par timeout 4s (incident 13/06 : peut pendre)
+4. Compare endpoint navigateur vs endpoint DB. Si identiques → no-op.
+   Sinon → subscribe + upsert onConflict user_id.
+5. Try/catch global : échec = warn console, jamais de throw.
+
+urlBase64ToUint8Array dupliquée volontairement (pas d'extraction depuis
+ProfileTab.tsx — fichier push fragile, isolation préférée).
+
+**Validation device (3/3)** :
+1. Sub saine → no-op, endpoint inchangé ✅
+2. Endpoint corrompu en DB → kill/rouvre PWA → réparation auto au boot,
+   endpoint Apple restauré sans popup ✅
+3. Confirmatoire : curl force=true cron streak → {processed:2,sent:1,
+   skipped:1}, notif REÇUE device ✅
+
+**Dette mineure consignée** : comparaison par endpoint seul (pas les clés
+p256dh/auth). Couvre le cas réel (sub périmée = endpoint mort ou absent).
+Angle mort résiduel : régénération de clés à endpoint constant — jamais
+observé en pratique, non couvert.
 
 ---
 
