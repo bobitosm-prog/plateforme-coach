@@ -144,7 +144,7 @@ export default function OnboardingContent() {
       update.carbs_goal = tdeeData.carbsG
       update.fat_goal = tdeeData.fatG
     }
-    update.trial_ends_at = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+    update.trial_ends_at = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
     const { error } = await supabase.from('profiles').update(update).eq('id', uid).select()
     if (error) await supabase.from('profiles').upsert(update).select()
     if (weight) {

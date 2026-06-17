@@ -371,7 +371,7 @@ export default function OnboardingV2Content() {
               return false
             }
             // Système campagne beta : tenter de réclamer un slot gratuit
-            let trialEndsAt: string | null = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+            let trialEndsAt: string | null = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
             try {
               const { data: betaResult } = await supabase.rpc('claim_beta_slot')
               if (betaResult?.claimed) {

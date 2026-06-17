@@ -90,9 +90,9 @@
     "headline_line2": "deinen Körper",
     "subtitle": "Übertreffe deine Grenzen",
     "description": "Die erste Schweizer Fitness-Coaching-Plattform, angetrieben von zertifizierten Experten. Massgeschneiderte Ernährungspläne, 6-Tage-PPL-Programm, KI-Coach 24/7.",
-    "cta_primary": "Jetzt starten — 10 Tage gratis →",
+    "cta_primary": "Jetzt starten — 14 Tage gratis →",
     "cta_secondary": "Entdecken ↓",
-    "trust": "10 Tage kostenlos testen · Ohne Verpflichtung",
+    "trust": "14 Tage kostenlos testen · Ohne Verpflichtung",
     "stat_users": "aktive Nutzer",
     "stat_exercises": "geführte Übungen",
     "stat_foods": "Schweizer Lebensmittel",
@@ -737,7 +737,7 @@
         "feat2": "PPL-Programm",
         "feat3": "Fortschrittsverfolgung",
         "feat4": "Persönlicher Coach 24/7",
-        "cta": "Starten — 10 Tage gratis",
+        "cta": "Starten — 14 Tage gratis",
         "title": "KONTO ERSTELLEN",
         "subtitle": "Starte deine Transformation",
         "submitButton": "Mein Konto erstellen",
@@ -2454,7 +2454,7 @@
     "solo": {
       "step1": {
         "title": "Willkommen bei MoovX",
-        "subtitle": "10 Tage kostenlose Testversion. Wir richten deine App in 6-8 Minuten ein.",
+        "subtitle": "14 Tage kostenlose Testversion. Wir richten deine App in 6-8 Minuten ein.",
         "trialBadge": "Kostenlos starten"
       },
       "step3": {
