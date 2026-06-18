@@ -18,6 +18,7 @@ import FeedbackTab from './components/client/FeedbackTab'
 import ChatAI from './components/ChatAI'
 import BarcodeScanner from './components/BarcodeScanner'
 import { cache } from '../lib/cache'
+import { useOverlayOpen } from './hooks/useOverlayOpen'
 import { resyncPushSubscription } from '../lib/push-resync'
 
 import WorkoutSession from './components/WorkoutSession'
@@ -82,6 +83,7 @@ export default function CoachApp() {
   const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase)
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const [isDesktop, setIsDesktop] = React.useState(false)
+  const overlayOpen = useOverlayOpen()
   const paymentHandled = React.useRef(false)
 
   // ── Badge celebration queue (global — survives workout unmount) ──
@@ -143,6 +145,7 @@ export default function CoachApp() {
     return false
   }
   const onRailTouchStart = (e: React.TouchEvent) => {
+    if (overlayOpen) return
     const t = e.touches[0]
     if (inHorizontalScroller(e.target as HTMLElement)) return
     if (t.clientX < 24 || t.clientX > window.innerWidth - 24) return
@@ -174,6 +177,7 @@ export default function CoachApp() {
     return () => { el.removeEventListener('touchmove', handler) }
   }, [mainSize.w])
   const onRailTouchEnd = () => {
+    if (overlayOpen) return
     const s = touchState.current
     touchState.current = null
     if (!s || s.mode !== 'horizontal') return
@@ -364,7 +368,7 @@ export default function CoachApp() {
             const active = h.activeTab === id
             const badge = id === 'compte' && h.unreadCount > 0
             return (
-              <button key={id} onClick={() => h.setActiveTab(id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms' }}>
+              <button key={id} onClick={() => { if (overlayOpen) return; h.setActiveTab(id) }} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: overlayOpen ? 'default' : 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms, opacity 0.2s ease', opacity: overlayOpen ? 0.4 : 1 }}>
                 <div style={{ position: 'relative' }}>
                   <Icon size={20} color={active ? GOLD : TEXT_MUTED} strokeWidth={2} />
                   {badge && <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 14, height: 14, background: '#EF4444', borderRadius: 7, fontSize: '0.5rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{h.unreadCount > 9 ? '9+' : h.unreadCount}</span>}
@@ -668,7 +672,7 @@ export default function CoachApp() {
         ]).map(({ id, Icon, label }) => {
           const active = h.activeTab === id
           return (
-            <button key={id} onClick={() => h.setActiveTab(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>
+            <button key={id} onClick={() => { if (overlayOpen) return; h.setActiveTab(id) }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: overlayOpen ? 'default' : 'pointer', padding: '0 4px', opacity: overlayOpen ? 0.4 : 1, transition: 'opacity 0.2s ease' }}>
               <div
                 className={active ? 'nav-glass-active' : undefined}
                 style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 14, transition: 'all 0.3s ease' }}
