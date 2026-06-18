@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { RailOverlay } from '../../ui/RailOverlay'
 import { useTranslations } from 'next-intl'
 import { Crown, UserMinus } from 'lucide-react'
 import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../../../lib/design-tokens'
@@ -47,7 +48,7 @@ export default function CoachSection({ supabase, session, coachId }: { supabase:
           {t('noCoach')}
         </div>
       )}
-      {showLeaveModal && (
+      {showLeaveModal && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 400, width: '100%' }}>
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 12px' }}>{t('changeModal.title')}</h3>
@@ -58,7 +59,7 @@ export default function CoachSection({ supabase, session, coachId }: { supabase:
             </div>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
     </div>
   )
 }

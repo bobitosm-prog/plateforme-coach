@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, titleLineStyle, cardStyle, cardTitleAbove, mutedStyle, radii } from '../../lib/design-tokens'
@@ -43,7 +44,8 @@ export default function BadgesModal({ allBadges, unlockedIds, totalXp, currentVa
   const filtered = filter === 'all' ? allBadges : allBadges.filter(b => b.category === filter)
   const categories = filter === 'all' ? ['training', 'nutrition', 'streak', 'social'] : [filter]
 
-  return (
+  if (typeof document === 'undefined') return null
+  const portalContent = (
     <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 1000, overflowY: 'auto' }}>
       <div style={{ padding: '20px 20px 120px', maxWidth: 420, margin: '0 auto' }}>
         {/* Header */}
@@ -158,4 +160,5 @@ export default function BadgesModal({ allBadges, unlockedIds, totalXp, currentVa
       </div>
     </div>
   )
+  return createPortal(portalContent, document.body)
 }

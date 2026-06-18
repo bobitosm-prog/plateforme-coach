@@ -4,6 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useTranslations, useLocale } from 'next-intl'
 import { LogOut, Zap, ChevronRight, Crown, Bell, BellOff, X, Clock, Calendar, Volume2, User, Cake, Ruler, Target, Activity, ArrowLeft } from 'lucide-react'
 import Paywall from '../Paywall'
+import { RailOverlay } from '../ui/RailOverlay'
 import ClientIntlProvider from '@/components/ClientIntlProvider'
 import { cache } from '../../../lib/cache'
 import { colors, fonts, titleStyle, titleLineStyle, subtitleStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, radii } from '../../../lib/design-tokens'
@@ -459,7 +460,7 @@ export default function ProfileTab({
       </div>
 
       {/* Paywall modal */}
-      {showPaywall && (
+      {showPaywall && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, overflowY: 'auto' }}>
           <button onClick={() => setShowPaywall(false)} style={{ position: 'fixed', top: 16, right: 16, zIndex: 1001, width: 36, height: 36, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={colors.textMuted} />
@@ -468,7 +469,7 @@ export default function ProfileTab({
             <Paywall role="client" userId={session?.user?.id} coachId={coachId} onSignOut={() => setShowPaywall(false)} />
           </ClientIntlProvider>
         </div>
-      )}
+      </RailOverlay>)}
 
       {/* ═══ SECTION 9 — PAIEMENTS ═══ */}
       <PaymentHistory supabase={supabase} userId={session?.user?.id} />

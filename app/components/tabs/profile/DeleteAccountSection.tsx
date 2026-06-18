@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { RailOverlay } from '../../ui/RailOverlay'
 import { useTranslations } from 'next-intl'
 import { Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
@@ -35,7 +36,7 @@ export default function DeleteAccountSection({ session }: { session: any }) {
         <Trash2 size={16} color={RED} />
         <span style={{ fontSize: '0.82rem', fontFamily: FONT_ALT, fontWeight: 600, color: RED }}>{t('button')}</span>
       </button>
-      {showModal && (
+      {showModal && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: BG_CARD, border: `1px solid ${RED}`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 400, width: '100%' }}>
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, letterSpacing: '2px', color: RED, margin: '0 0 12px' }}>{t('title')}</h3>
@@ -48,7 +49,7 @@ export default function DeleteAccountSection({ session }: { session: any }) {
             </div>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
     </>
   )
 }
