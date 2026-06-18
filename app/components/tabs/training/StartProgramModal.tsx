@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations, useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -89,7 +90,8 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
     new Date(2024, 0, i + 1).toLocaleDateString(locale, { weekday: 'narrow' }).toUpperCase()
   )
 
-  return (
+  if (typeof document === 'undefined') return null
+  const portalContent = (
     <div data-no-tab-swipe="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
       <motion.div
         initial={{ y: 100, opacity: 0 }}
@@ -206,4 +208,5 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
       </motion.div>
     </div>
   )
+  return createPortal(portalContent, document.body)
 }
