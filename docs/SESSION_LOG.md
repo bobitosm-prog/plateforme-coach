@@ -4,14 +4,15 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-17
-- **HEAD** : 73fbb37 (style(admin): align campaigns table with admin design system)
+- **Date** : 2026-06-18
+- **HEAD** : 2730c51 (fix(training): portal remaining popups to escape rail transform)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Session 17/06** : Faille RLS P0 RÉSOLUE, push re-sync boot VALIDÉ, offre dynamique 60j COMPLÈTE, admin campagnes COMPLET (API+UI+design), trial 14j aligné, wording onboarding qualitatif.
-- **Campagne beta** : is_active=false en DB. Activation = toggle UI admin ou 1 UPDATE DB.
+- **Dernière session** : 18/06 — P0 overlays rail RÉSOLU (tous les fixed portalisés).
+- **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin).
+- **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx.
 
 ---
 
@@ -162,6 +163,44 @@ token est celui de la session Supabase de l'admin.
 
 **Dette mineure** : 2 PATCH activation simultanés → erreur unique 23505
 possible. Inoffensif (1 seul admin), non corrigé.
+
+### Fix P0 overlays rail — portails createPortal [RÉSOLU + VALIDÉ PROD]
+
+**Date** : 2026-06-18
+**Commits** : 50c58ab, abde2bb, dfd1829, 7baae5a, 700c864, 497b6f2, af5be89, 2730c51
+
+**Symptôme** : écran noir en ouvrant ProgramManager, ProgramBuilder, et autres
+overlays depuis les tabs Training/Nutrition/Progress/Profile.
+
+**Cause racine** : le rail de swipe (app/page.tsx) anime un transform:translateX
+sur le conteneur des slides. En CSS, un position:fixed rendu dans un ancêtre
+transformé devient relatif à cet ancêtre (containing block), pas au viewport.
+Tous les overlays fixés dans les slides étaient donc décalés hors écran.
+
+**Fix** :
+1. Créé `app/components/ui/RailOverlay.tsx` : wrapper réutilisable qui téléporte
+   ses enfants vers document.body via createPortal + garde SSR typeof document.
+2. Portalisé TOUS les overlays position:fixed rendus dans le rail :
+   - **Training** : ProgramManager (TrainingTab inline → RailOverlay),
+     ProgramBuilder, StartProgramModal (createPortal interne),
+     AddExercisePopup, SaveChoicePopup, TechniqueTooltip,
+     TechniqueActivePopup, WorkoutCelebration (createPortal interne).
+   - **Nutrition** : 5 overlays inline (editingMeal, photoCapture,
+     saveMealPopup, copyMealPopup, savedMeals → RailOverlay),
+     ImportPlanSheet (createPortal interne).
+   - **Profile** : paywall inline (→ RailOverlay), BadgesModal,
+     DeleteAccountSection, CoachSection (createPortal/RailOverlay).
+   - **Progress** : 4 overlays inline (bodyUpload, photoCompare, weight,
+     measure → RailOverlay), BodyAssessment (createPortal interne).
+3. Hors rail (WorkoutSession, ChatAI, modals page.tsx) : déjà OK, non touchés.
+
+**Règle permanente** : tout nouvel overlay position:fixed rendu dans une slide
+du rail DOIT être enveloppé dans `<RailOverlay>` (inline) ou portalisé en interne
+(composant autonome), sinon il sera cassé par le transform du rail.
+Patterns de référence : RailOverlay.tsx, SessionDetailModal.tsx.
+
+**Validation** : testé sur les 4 tabs en local + prod. Tous les overlays
+s'affichent plein écran correctement.
 
 ---
 

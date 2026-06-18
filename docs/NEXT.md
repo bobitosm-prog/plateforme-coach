@@ -11,11 +11,12 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Cron streak refondu, validé device ✅ 15 juin
 - [x] Faille RLS profiles P0 ✅ 17 juin
 - [x] Re-sync push sub au boot (#1c) ✅ 17 juin
-- [x] Offre dynamique 60j ✅ 17 juin (Hero badge+CTA+trust, pricing, register-client)
+- [x] Offre dynamique 60j ✅ 17 juin
 - [x] Trial standard 10j → 14j ✅ 17 juin
 - [x] Wording onboarding qualitatif ✅ 17 juin
-- [x] Admin campagnes beta (#3 Brique 5) ✅ 17 juin (API+UI+design, toggle bout-en-bout)
-- [ ] **Feature "jours restants" dans l'app** (PRIORITAIRE prochaine session)
+- [x] Admin campagnes beta (#3 Brique 5) ✅ 17 juin
+- [x] Fix P0 overlays rail (portails createPortal) ✅ 18 juin
+- [ ] **Feature "jours restants" dans l'app** (PRIORITAIRE)
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
@@ -26,6 +27,11 @@ L'user beta/trial doit voir sa durée restante dans l'app (AccountTab ou
 HomeTab). useClientDashboard expose déjà trialDaysLeft ; manque
 l'équivalent beta (subscription_end_date) + l'affichage UI.
 Phase A souhaitable pour campagne honnête.
+
+### Bug — Records Personnels : noms d'exercices vides
+Analytics → Records Personnels : 50 PR listés avec poids mais colonne nom
+vide. Probable : exercise_id non résolu par getExerciseName / i18n, ou
+champ name vide en DB. À diagnostiquer.
 
 ### Chantier #1 — Notifications robustes
 - [x] (a) Cron streak. Validé device 15/06.
@@ -46,6 +52,11 @@ Visuels SEEDANCE + prompts pub Insta/TikTok. PAS avant que Phase A soit cochée.
 - Comparaison sub par endpoint seul (pas clés p256dh/auth) — angle mort résiduel mineur
 - Jobid 4/5 UTC fixe sans double-job DST (drift ±1h, acceptable)
 - 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin)
+
+## Règles dev permanentes
+- **Overlays dans le rail** : tout position:fixed rendu dans une slide du rail
+  DOIT être portalisé (<RailOverlay> ou createPortal interne). Le transform du
+  rail casse le containing block. Ref : RailOverlay.tsx, SessionDetailModal.tsx.
 
 ## Notes test
 - f.marco (UUID 00a8a3a6) : sub saine après test re-sync 17/06.
