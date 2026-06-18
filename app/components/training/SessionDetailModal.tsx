@@ -26,7 +26,7 @@ export default function SessionDetailModal({
   const isDone = dayStatus === 'done'
 
   // Portal to document.body to escape rail transform containing block
-  return (<RailOverlay>
+  return (<RailOverlay active={isOpen}>
     <AnimatePresence>
       {isOpen && (
         <motion.div

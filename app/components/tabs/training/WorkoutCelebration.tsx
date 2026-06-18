@@ -28,7 +28,7 @@ export default function WorkoutCelebration({ visible }: WorkoutCelebrationProps)
     return () => clearTimeout(timer)
   }, [visible])
 
-  return (<RailOverlay>
+  return (<RailOverlay active={internalVisible}>
     <AnimatePresence>
       {internalVisible && (
         <motion.div
