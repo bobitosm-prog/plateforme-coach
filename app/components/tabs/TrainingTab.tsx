@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
 import { getExerciseName } from '../../../lib/i18n-exercise'
@@ -1349,7 +1350,7 @@ export default function TrainingTab({
       </div>
 
       {/* ═══ SECTION 7 — PROGRAM MANAGER MODAL (fullscreen) ═══ */}
-      {showProgramManager && (
+      {showProgramManager && typeof document !== 'undefined' && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Header */}
           <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0 }}>
@@ -1508,7 +1509,8 @@ export default function TrainingTab({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ═══ IMPORT PREVIEW MODAL ═══ */}
