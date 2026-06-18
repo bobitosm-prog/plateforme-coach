@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { colors, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_BODY } from '../../../lib/design-tokens'
@@ -180,7 +181,8 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
     }
   }
 
-  return (
+  if (typeof document === 'undefined') return null
+  const portalContent = (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60, background: BG_BASE,
       overflowY: 'auto', padding: '20px 16px',
@@ -365,4 +367,5 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
       `}</style>
     </div>
   )
+  return createPortal(portalContent, document.body)
 }

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useMemo, useEffect } from 'react'
+import { RailOverlay } from '../ui/RailOverlay'
 import { format } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
@@ -721,7 +722,7 @@ export default function ProgressTab({
         </div>
 
         {/* Upload modal — centered */}
-        {showBodyUpload && (
+        {showBodyUpload && (<RailOverlay>
           <div onClick={() => { if (!bodyAnalysisLoading) { setShowBodyUpload(false); setBodyUploadPhotos({}) } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
             <div onClick={e => e.stopPropagation()} style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 20, padding: 24, width: '100%', maxWidth: 360 }}>
               {/* a) Header */}
@@ -762,7 +763,7 @@ export default function ProgressTab({
               <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', textAlign: 'center', margin: '12px 0 0' }}>{t('tab.aiDisclaimer')}</p>
             </div>
           </div>
-        )}
+        </RailOverlay>)}
 
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
@@ -1012,7 +1013,7 @@ export default function ProgressTab({
             setAlignError(t('tab.analysisError'))
           } finally { setIsAligning(false) }
         }
-        return (
+        return (<RailOverlay>
           <div data-no-tab-swipe="true" style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #222', flexShrink: 0 }}>
               <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
@@ -1068,13 +1069,13 @@ export default function ProgressTab({
               <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(34,197,94,0.8)', borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 700, color: '#fff', zIndex: 2 }}>APRES</div>
             </div>
           </div>
-        )
+        </RailOverlay>)
       })()}
 
       <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
 
       {/* ── WEIGHT MODAL ── */}
-      {showWeight && (
+      {showWeight && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
           <div style={{ background: colors.surface, borderTop: `1px solid ${colors.goldBorder}`, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
@@ -1096,10 +1097,10 @@ export default function ProgressTab({
             </button>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
 
       {/* ── MEASUREMENTS MODAL ── */}
-      {showMeasure && (
+      {showMeasure && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, overflowY: 'auto' }}>
           <div style={{ background: colors.surface, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', marginTop: 60, minHeight: 'calc(100vh - 60px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -1126,7 +1127,7 @@ export default function ProgressTab({
             </button>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
     </div>
   )
 }
