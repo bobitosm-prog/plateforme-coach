@@ -1,4 +1,5 @@
 'use client'
+import { createPortal } from 'react-dom'
 import { BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_BODY } from '../../../../lib/design-tokens'
 
 interface Props {
@@ -8,7 +9,8 @@ interface Props {
 }
 
 export default function SaveChoicePopup({ onSaveModified, onSaveOriginal, onClose }: Props) {
-  return (
+  if (typeof document === 'undefined') return null
+  const portalContent = (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
       <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 40px)', maxWidth: 380, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, zIndex: 1101, textAlign: 'center' }}>
@@ -20,4 +22,5 @@ export default function SaveChoicePopup({ onSaveModified, onSaveOriginal, onClos
       </div>
     </>
   )
+  return createPortal(portalContent, document.body)
 }

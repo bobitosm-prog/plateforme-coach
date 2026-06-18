@@ -1,4 +1,5 @@
 'use client'
+import { createPortal } from 'react-dom'
 import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_BODY } from '../../../../lib/design-tokens'
 
 interface Props {
@@ -10,7 +11,8 @@ interface Props {
 }
 
 export default function AddExercisePopup({ searchQ, onSearchChange, results, onSelect, onClose }: Props) {
-  return (
+  if (typeof document === 'undefined') return null
+  const portalContent = (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
       <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 420, maxHeight: '70vh', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
@@ -35,4 +37,5 @@ export default function AddExercisePopup({ searchQ, onSearchChange, results, onS
       </div>
     </>
   )
+  return createPortal(portalContent, document.body)
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -50,7 +51,8 @@ export function TechniqueTooltip({ technique, onClose }: TechniqueTooltipProps) 
   const data = TECHNIQUE_DATA[technique]
   if (!data) return null
 
-  return (
+  if (typeof document === 'undefined') return null
+  const tooltipContent = (
     <AnimatePresence>
       <motion.div
         key="tooltip-overlay"
@@ -151,6 +153,7 @@ export function TechniqueTooltip({ technique, onClose }: TechniqueTooltipProps) 
       </motion.div>
     </AnimatePresence>
   )
+  return createPortal(tooltipContent, document.body)
 }
 
 /* ═══════════════════════════════════════════════════
@@ -221,7 +224,8 @@ export function TechniqueActivePopup({
 
   const goMessage = isRestpause ? t('ui.restpauseGo') : t('ui.go')
 
-  return (
+  if (typeof document === 'undefined') return null
+  const activeContent = (
     <AnimatePresence>
       <motion.div
         key="active-overlay"
@@ -463,6 +467,7 @@ export function TechniqueActivePopup({
       </motion.div>
     </AnimatePresence>
   )
+  return createPortal(activeContent, document.body)
 }
 
 /* ═══════════════════════════════════════════════════

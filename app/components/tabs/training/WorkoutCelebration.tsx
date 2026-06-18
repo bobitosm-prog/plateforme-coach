@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Award } from 'lucide-react'
 import { colors, fonts } from '../../../../lib/design-tokens'
@@ -27,7 +28,8 @@ export default function WorkoutCelebration({ visible }: WorkoutCelebrationProps)
     return () => clearTimeout(timer)
   }, [visible])
 
-  return (
+  if (typeof document === 'undefined') return null
+  const portalContent = (
     <AnimatePresence>
       {internalVisible && (
         <motion.div
@@ -54,4 +56,5 @@ export default function WorkoutCelebration({ visible }: WorkoutCelebrationProps)
       )}
     </AnimatePresence>
   )
+  return createPortal(portalContent, document.body)
 }
