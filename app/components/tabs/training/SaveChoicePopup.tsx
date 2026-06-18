@@ -1,5 +1,5 @@
 'use client'
-import { createPortal } from 'react-dom'
+import { RailOverlay } from '../../ui/RailOverlay'
 import { BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_BODY } from '../../../../lib/design-tokens'
 
 interface Props {
@@ -9,8 +9,7 @@ interface Props {
 }
 
 export default function SaveChoicePopup({ onSaveModified, onSaveOriginal, onClose }: Props) {
-  if (typeof document === 'undefined') return null
-  const portalContent = (
+  return (<RailOverlay>
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
       <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 40px)', maxWidth: 380, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, zIndex: 1101, textAlign: 'center' }}>
@@ -21,6 +20,5 @@ export default function SaveChoicePopup({ onSaveModified, onSaveOriginal, onClos
         <button onClick={onSaveOriginal} style={{ width: '100%', padding: 16, background: 'transparent', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, border: '1.5px solid rgba(212,168,67,0.5)', borderRadius: 12, cursor: 'pointer' }}>GARDER LA SEANCE DE BASE</button>
       </div>
     </>
-  )
-  return createPortal(portalContent, document.body)
+  </RailOverlay>)
 }

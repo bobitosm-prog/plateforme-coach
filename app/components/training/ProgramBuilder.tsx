@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
+import { RailOverlay } from '../ui/RailOverlay'
 import { toDateStr } from '../../../lib/schedule-utils'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../../lib/i18n-exercise'
@@ -1318,6 +1318,6 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       />
       </div>
     )
-  return createPortal(portalContent, document.body)
+  return <RailOverlay>{portalContent}</RailOverlay>
   }
 }

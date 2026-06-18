@@ -1,6 +1,6 @@
 'use client'
 
-import { createPortal } from 'react-dom'
+import { RailOverlay } from '../ui/RailOverlay'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -26,9 +26,7 @@ export default function SessionDetailModal({
   const isDone = dayStatus === 'done'
 
   // Portal to document.body to escape rail transform containing block
-  if (typeof document === 'undefined') return null
-
-  return createPortal(
+  return (<RailOverlay>
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -117,7 +115,6 @@ export default function SessionDetailModal({
           </div>
         </motion.div>
       )}
-    </AnimatePresence>,
-    document.body
-  )
+    </AnimatePresence>
+  </RailOverlay>)
 }

@@ -1,5 +1,5 @@
 'use client'
-import { createPortal } from 'react-dom'
+import { RailOverlay } from '../../ui/RailOverlay'
 import { colors, fonts } from '../../../../lib/design-tokens'
 import type { Food } from '../../../../lib/meal-plan'
 
@@ -12,8 +12,7 @@ interface Props {
 }
 
 export default function ImportPlanSheet({ mealLabel, foods, isInvited, onImport, onClose }: Props) {
-  if (typeof document === 'undefined') return null
-  const portalContent = (
+  return (<RailOverlay>
     <>
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} onClick={onClose} />
       <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200, background: colors.surface2, border: `1px solid ${colors.divider}`, borderBottom: 'none', borderRadius: '20px 20px 0 0', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
@@ -39,6 +38,5 @@ export default function ImportPlanSheet({ mealLabel, foods, isInvited, onImport,
         </div>
       </div>
     </>
-  )
-  return createPortal(portalContent, document.body)
+  </RailOverlay>)
 }

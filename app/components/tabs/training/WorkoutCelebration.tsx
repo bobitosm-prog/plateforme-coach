@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
+import { RailOverlay } from '../../ui/RailOverlay'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Award } from 'lucide-react'
 import { colors, fonts } from '../../../../lib/design-tokens'
@@ -28,8 +28,7 @@ export default function WorkoutCelebration({ visible }: WorkoutCelebrationProps)
     return () => clearTimeout(timer)
   }, [visible])
 
-  if (typeof document === 'undefined') return null
-  const portalContent = (
+  return (<RailOverlay>
     <AnimatePresence>
       {internalVisible && (
         <motion.div
@@ -55,6 +54,5 @@ export default function WorkoutCelebration({ visible }: WorkoutCelebrationProps)
         </motion.div>
       )}
     </AnimatePresence>
-  )
-  return createPortal(portalContent, document.body)
+  </RailOverlay>)
 }
