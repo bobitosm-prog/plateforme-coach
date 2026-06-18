@@ -1,4 +1,5 @@
 'use client'
+import { createPortal } from 'react-dom'
 import { colors, fonts } from '../../../../lib/design-tokens'
 import type { Food } from '../../../../lib/meal-plan'
 
@@ -11,7 +12,8 @@ interface Props {
 }
 
 export default function ImportPlanSheet({ mealLabel, foods, isInvited, onImport, onClose }: Props) {
-  return (
+  if (typeof document === 'undefined') return null
+  const portalContent = (
     <>
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} onClick={onClose} />
       <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200, background: colors.surface2, border: `1px solid ${colors.divider}`, borderBottom: 'none', borderRadius: '20px 20px 0 0', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
@@ -38,4 +40,5 @@ export default function ImportPlanSheet({ mealLabel, foods, isInvited, onImport,
       </div>
     </>
   )
+  return createPortal(portalContent, document.body)
 }

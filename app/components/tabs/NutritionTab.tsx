@@ -10,6 +10,7 @@ import { normalizeFoodItem } from '../../../lib/utils/food'
 import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
+import { RailOverlay } from '../ui/RailOverlay'
 import {
   fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
 } from '../../../lib/design-tokens'
@@ -986,7 +987,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       )}
 
       {/* Meal edit modal */}
-      {editingMeal && (
+      {editingMeal && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflow: 'auto', padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -1074,7 +1075,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>SUPPRIMER LE REPAS</button>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
 
       {/* Shopping list modal */}
       {showShoppingModal && (activeMealPlan?.plan_data || coachMealPlan) && (
@@ -1085,7 +1086,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       )}
 
       {/* ═══ PHOTO MEAL SCAN ═══ */}
-      {showPhotoCapture && (
+      {showPhotoCapture && (<RailOverlay>
         <>
           <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
@@ -1134,10 +1135,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             )}
           </div>
         </>
-      )}
+      </RailOverlay>)}
 
       {/* ═══ SAVE MEAL POPUP ═══ */}
-      {showSaveMealPopup && saveMealData && (
+      {showSaveMealPopup && saveMealData && (<RailOverlay>
         <>
           <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
@@ -1161,10 +1162,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             </div>
           </div>
         </>
-      )}
+      </RailOverlay>)}
 
       {/* ═══ COPY MEAL POPUP ═══ */}
-      {showCopyMealPopup && copyMealData && (
+      {showCopyMealPopup && copyMealData && (<RailOverlay>
         <>
           <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
@@ -1187,10 +1188,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             </div>
           </div>
         </>
-      )}
+      </RailOverlay>)}
 
       {/* ═══ SAVED MEALS POPUP ═══ */}
-      {showSavedMeals && (
+      {showSavedMeals && (<RailOverlay>
         <>
           <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
@@ -1213,7 +1214,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             </div>
           </div>
         </>
-      )}
+      </RailOverlay>)}
     </div>
   )
 }
