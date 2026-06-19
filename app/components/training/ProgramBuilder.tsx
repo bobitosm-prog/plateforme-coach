@@ -1322,6 +1322,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       />
       </div>
     )
-  return <RailOverlay>{portalContent}</RailOverlay>
   }
+
+  return <RailOverlay>{portalContent}</RailOverlay>
 }
