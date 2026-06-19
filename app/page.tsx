@@ -611,7 +611,7 @@ export default function CoachApp() {
       <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback') ? 'none' : 'flex' }}>
         <motion.div
           ref={railDivRef}
-          style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: railX, touchAction: 'pan-y' }}
+          style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: overlayOpen ? 0 : railX, touchAction: 'pan-y' }}
           onTouchStart={onRailTouchStart}
           onTouchEnd={onRailTouchEnd}
           onTouchCancel={onRailTouchEnd}
