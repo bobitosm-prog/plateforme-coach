@@ -143,7 +143,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   const [saving, setSaving] = useState(false)
   const [userGender, setUserGender] = useState('male')
 
-  /* ─── Load exercises + profile gender ─── */
+  /* ─── Load exercises + profile gender (au montage) ─── */
   useEffect(() => {
     supabase.from('exercises_db').select('id, name, muscle_group').order('name').limit(200)
       .then(({ data }: any) => setDbExercises(data || []))
@@ -151,13 +151,17 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       .then(({ data }: any) => setCustomExercises(data || []))
     supabase.from('profiles').select('gender').eq('id', session.user.id).single()
       .then(({ data }: any) => { if (data?.gender) setUserGender(data.gender) })
+  }, [])
+
+  /* ─── Charger le programme à éditer (réagit à editProgram) ─── */
+  useEffect(() => {
     if (editProgram) {
       setProgramName(editProgram.name)
       setProgramDays(padTo7Days(editProgram.days || []))
       setMode('manual')
       setManualStep(1)
     }
-  }, [])
+  }, [editProgram])
 
   /* ─── AI generate ─── */
   async function generateAI() {
