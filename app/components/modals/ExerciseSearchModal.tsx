@@ -6,6 +6,7 @@ import { getExerciseName } from '../../../lib/i18n-exercise'
 import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
+import { RailOverlay } from '../ui/RailOverlay'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, ORANGE, GOLD,
   MUSCLE_COLORS, MUSCLE_GROUPS_FILTER,
@@ -55,7 +56,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
     return l
   })()
 
-  return (
+  return (<RailOverlay>
     <>
       {/* ── EXERCISE DB FULL-SCREEN MODAL ── */}
       <AnimatePresence>
@@ -300,5 +301,5 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
         )}
       </AnimatePresence>
     </>
-  )
+  </RailOverlay>)
 }

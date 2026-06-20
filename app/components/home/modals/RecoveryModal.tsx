@@ -3,6 +3,7 @@
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../../lib/design-tokens'
+import { RailOverlay } from '../../ui/RailOverlay'
 import MuscleHeatMap from '../../ui/MuscleHeatMap'
 
 const GOLD = colors.gold
@@ -34,7 +35,7 @@ export default function RecoveryModal({ muscleStatus, onClose }: RecoveryModalPr
   const statusTextMap: Record<RecoveryStatusKey, string> = { good: 'statusGood', watch: 'statusWatch', recover: 'statusRecover' }
   const captionMap: Record<RecoveryStatusKey, string> = { good: 'captionGood', watch: 'captionWatch', recover: 'captionRecover' }
 
-  return (
+  return (<RailOverlay>
     <div
       onClick={onClose}
       style={{
@@ -110,5 +111,5 @@ export default function RecoveryModal({ muscleStatus, onClose }: RecoveryModalPr
         <MuscleHeatMap muscleStatus={muscleStatus} hideTitle />
       </div>
     </div>
-  )
+  </RailOverlay>)
 }

@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 import { AnimatePresence, motion } from 'framer-motion'
+import { RailOverlay } from '../ui/RailOverlay'
 import { toast } from 'sonner'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_DIM, GOLD_RULE,
@@ -45,7 +46,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
     onClose()
   }
 
-  return (
+  return (<RailOverlay>
     <AnimatePresence>
       <motion.div
         key="exdetail-backdrop"
@@ -181,5 +182,5 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  )
+  </RailOverlay>)
 }
