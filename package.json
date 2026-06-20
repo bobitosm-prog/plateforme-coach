@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "echo \"⚠️  Utilise: npm run dev:webpack (Turbopack corrompt le cache avec le polling P1)\" && exit 1",
     "dev:webpack": "next dev --webpack",
     "build": "next build",
     "start": "next start",
