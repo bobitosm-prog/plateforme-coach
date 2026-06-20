@@ -7,7 +7,7 @@ import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
 import {
-  colors, fonts,
+  colors, fonts, btnPrimary, btnGhost,
 } from '../../../lib/design-tokens'
 import { getHeroImage } from '../../../lib/session-types'
 
@@ -74,7 +74,8 @@ export default function HeroSessionCard({
       onClick={onClick}
       style={{
         position: 'relative', height: 260, borderRadius: 20,
-        overflow: 'hidden', marginBottom: 24, marginInline: 20,
+        overflow: 'hidden', margin: '16px 16px 24px',
+        border: `1px solid ${colors.divider}`,
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
@@ -92,7 +93,7 @@ export default function HeroSessionCard({
       {/* Gradient overlay */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.15) 100%)',
+        background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.1) 100%)',
       }} />
 
       {/* Green tint for done/completed state */}
@@ -135,8 +136,8 @@ export default function HeroSessionCard({
         {/* Middle */}
         <div>
           <div style={{
-            fontFamily: FONT_DISPLAY, fontSize: 44, fontWeight: 400,
-            color: '#ffffff', letterSpacing: '0.01em', lineHeight: 1,
+            fontFamily: FONT_DISPLAY, fontSize: 32, fontWeight: 400,
+            color: colors.text, letterSpacing: '0.01em', lineHeight: 1,
             textTransform: 'uppercase', marginBottom: 12,
             maxWidth: '70%',
             display: '-webkit-box',
@@ -209,11 +210,8 @@ export default function HeroSessionCard({
             <button
               onClick={(e) => { e.stopPropagation(); onStart() }}
               style={{
+                ...btnPrimary,
                 padding: '14px 28px',
-                background: GOLD, color: '#0e0e0e',
-                fontFamily: FONT_ALT, fontSize: 12, fontWeight: 800,
-                letterSpacing: '0.18em', textTransform: 'uppercase',
-                border: 'none', borderRadius: 10, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 8,
               }}
             >
@@ -223,14 +221,7 @@ export default function HeroSessionCard({
           {state === 'done' && (
             <button
               onClick={(e) => { e.stopPropagation(); (onViewDetail || onCalendar)() }}
-              style={{
-                padding: '14px 28px',
-                background: 'transparent',
-                border: `1px solid ${GOLD}`, color: GOLD,
-                fontFamily: FONT_ALT, fontSize: 12, fontWeight: 800,
-                letterSpacing: '0.18em', textTransform: 'uppercase',
-                borderRadius: 10, cursor: 'pointer',
-              }}
+              style={{ ...btnGhost, padding: '14px 28px' }}
             >
               {t('viewSession')}
             </button>
@@ -248,11 +239,8 @@ export default function HeroSessionCard({
             <button
               onClick={(e) => { e.stopPropagation(); onStart() }}
               style={{
+                ...btnPrimary,
                 padding: '14px 28px',
-                background: GOLD, color: '#0e0e0e',
-                fontFamily: FONT_ALT, fontSize: 12, fontWeight: 800,
-                letterSpacing: '0.18em', textTransform: 'uppercase',
-                border: 'none', borderRadius: 10, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 8,
               }}
             >
