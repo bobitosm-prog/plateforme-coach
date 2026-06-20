@@ -11,6 +11,7 @@ export const colors = {
   background: '#131313',
   surface: '#0e0e0e',
   surfaceHigh: '#1c1b1b',
+  surfaceCard: '#181818',
   gold: '#e6c364',
   goldContainer: '#c9a84c',
   goldBorder: 'rgba(201,168,76,0.15)',
@@ -44,7 +45,7 @@ export const fonts = {
 // ══════════════════════════════════════════
 
 export const radii = {
-  card: 16,
+  card: 18,
   button: 12,
   input: 12,
   pill: 8,
@@ -71,10 +72,11 @@ export const spacing = {
 
 /** Standard card container */
 export const cardStyle: React.CSSProperties = {
-  background: colors.surface,
-  border: '1px solid rgba(255,255,255,0.06)',
+  background: colors.surfaceCard,
+  border: '1px solid rgba(255,255,255,0.07)',
   borderRadius: radii.card,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+  boxShadow:
+    '0 1px 0 0 rgba(255,255,255,0.03) inset, 0 6px 24px -4px rgba(0,0,0,0.5)',
 }
 
 // ─── Typography inline presets ───
@@ -194,12 +196,27 @@ export const btnPrimary: React.CSSProperties = {
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
   fontSize: 14,
+  boxShadow: '0 4px 16px -2px rgba(230,195,100,0.30)',
 }
 
 /** Secondary button */
 export const btnSecondary: React.CSSProperties = {
   background: colors.surface,
   border: `1px solid ${colors.goldBorder}`,
+  color: colors.gold,
+  fontFamily: fonts.headline,
+  fontWeight: 700,
+  borderRadius: radii.button,
+  cursor: 'pointer',
+  textTransform: 'uppercase',
+  letterSpacing: '0.12em',
+  fontSize: 14,
+}
+
+/** Ghost / tertiary button — silent action, no fill */
+export const btnGhost: React.CSSProperties = {
+  background: 'transparent',
+  border: `1px solid ${colors.goldRule}`,
   color: colors.gold,
   fontFamily: fonts.headline,
   fontWeight: 700,
@@ -233,10 +250,43 @@ export const modalOverlay: React.CSSProperties = {
 
 /** Modal container */
 export const modalContainer: React.CSSProperties = {
-  background: colors.background,
+  background: colors.surfaceCard,
   border: `1px solid ${colors.goldBorder}`,
   borderRadius: radii.card,
   boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+}
+
+// ─── Empty states (encouraging, non-alarmant) ───
+
+/** Empty state label — calme, PAS uppercase (ex: "À évaluer") */
+export const emptyStateStyle: React.CSSProperties = {
+  fontFamily: fonts.body,
+  fontSize: 13,
+  fontWeight: 600,
+  color: colors.textMuted,
+  letterSpacing: '0.02em',
+  textAlign: 'center',
+}
+
+/** Ring track when empty — cercle gris seul, sans arc doré */
+export const ringTrackEmpty = 'rgba(255,255,255,0.07)'
+
+// ─── XP bar (header Home) ───
+
+/** XP bar track (fond) */
+export const xpBarTrackStyle: React.CSSProperties = {
+  height: 8,
+  borderRadius: radii.full,
+  background: 'rgba(255,255,255,0.06)',
+  overflow: 'hidden',
+}
+
+/** XP bar fill (progression dorée) */
+export const xpBarFillStyle: React.CSSProperties = {
+  height: '100%',
+  borderRadius: radii.full,
+  background: `linear-gradient(90deg, ${colors.gold}, ${colors.goldContainer})`,
+  transition: 'width 0.4s ease',
 }
 
 // ══════════════════════════════════════════
