@@ -2314,7 +2314,8 @@
       "energy": "Energie",
       "recovery": "Erholung",
       "noData": "Keine Daten",
-      "energyEmpty": "Auswerten"
+      "energyEmpty": "Auswerten",
+      "recoveryEmpty": "Auswerten"
     },
     "overview": "Tagesübersicht",
     "hydration": "HYDRIERUNG",

@@ -2314,7 +2314,8 @@
       "energy": "Energy",
       "recovery": "Recovery",
       "noData": "No data",
-      "energyEmpty": "To assess"
+      "energyEmpty": "To assess",
+      "recoveryEmpty": "To assess"
     },
     "overview": "Today's overview",
     "hydration": "HYDRATION",

@@ -3,6 +3,7 @@
 import { User } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../../lib/design-tokens'
+import CardEmptyState from './CardEmptyState'
 
 const GOLD = colors.gold
 const FONT_DISPLAY = fonts.headline
@@ -11,11 +12,11 @@ const TEXT_DIM = colors.textDim
 
 function getRecoveryStatus(muscleStatus: Record<string, number>): { text: string; color: string } {
   const values = Object.values(muscleStatus)
-  if (!values.length) return { text: 'GOOD', color: '#4ade80' }
+  if (!values.length) return { text: 'GOOD', color: colors.success }
   const avg = values.reduce((a, b) => a + b, 0) / values.length
-  if (avg < 0.3) return { text: 'GOOD', color: '#4ade80' }
-  if (avg < 0.6) return { text: 'WATCH', color: '#fb923c' }
-  return { text: 'RECOVER', color: '#ef4444' }
+  if (avg < 0.3) return { text: 'GOOD', color: colors.success }
+  if (avg < 0.6) return { text: 'WATCH', color: colors.orange }
+  return { text: 'RECOVER', color: colors.error }
 }
 
 const cardStyle: React.CSSProperties = {
@@ -32,10 +33,12 @@ const cardStyle: React.CSSProperties = {
 interface RecoveryCardProps {
   muscleStatus: Record<string, number>
   onCardClick: () => void
+  hasTrainedBefore: boolean
 }
 
-export default function RecoveryCard({ muscleStatus, onCardClick }: RecoveryCardProps) {
+export default function RecoveryCard({ muscleStatus, onCardClick, hasTrainedBefore }: RecoveryCardProps) {
   const t = useTranslations('home.cards')
+  const isEmpty = !hasTrainedBefore
   const status = getRecoveryStatus(muscleStatus)
 
   return (
@@ -67,9 +70,13 @@ export default function RecoveryCard({ muscleStatus, onCardClick }: RecoveryCard
         <span style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', color: TEXT_DIM, textTransform: 'uppercase' }}>
           Etat
         </span>
-        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 400, color: status.color, letterSpacing: '0.05em' }}>
-          {status.text}
-        </span>
+        {isEmpty ? (
+          <CardEmptyState label={t('recoveryEmpty')} />
+        ) : (
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 400, color: status.color, letterSpacing: '0.05em' }}>
+            {status.text}
+          </span>
+        )}
       </div>
     </div>
   )
