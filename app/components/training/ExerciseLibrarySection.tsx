@@ -6,6 +6,7 @@ import { getExerciseName } from '../../../lib/i18n-exercise'
 import { getMuscleLabel, matchMuscleFilter } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { fonts, colors, btnPrimary } from '../../../lib/design-tokens'
+import { RailOverlay } from '../ui/RailOverlay'
 
 // Mix of DB values + UI aliases (Jambes aggregates quads/hamstrings/glutes/calves)
 const MUSCLE_FILTER_VALUES = ['Pectoraux', 'Dos', '\u00c9paules', 'Biceps', 'Triceps', 'Jambes', 'Abdos', 'Fessiers', 'Mollets']
@@ -119,7 +120,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
       </div>
 
       {/* Detail bottom-sheet */}
-      {libDetail && (
+      {libDetail && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflow: 'auto', padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -138,10 +139,10 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
             <button onClick={() => { onStartWorkout({ day_name: 'Séance libre' }, [{ exercise_name: libDetail.name, muscle_group: libDetail.muscle_group, sets: 3, reps: 10, rest_seconds: 90, video_url: libDetail.video_url, gif_url: libDetail.gif_url }]); setLibDetail(null) }} style={{ ...btnPrimary, width: '100%', padding: '14px 0', fontSize: 13, textAlign: 'center' }}>{t('addToSession')}</button>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
 
       {/* Fullscreen library */}
-      {libShowAll && (
+      {libShowAll && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: colors.background, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', paddingTop: 'max(16px, env(safe-area-inset-top))', borderBottom: `1px solid ${colors.divider}`, display: 'flex', alignItems: 'center', gap: 12 }}>
             <button aria-label={t('close')} onClick={() => setLibShowAll(false)} style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: `1px solid ${colors.divider}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={18} color={colors.text} /></button>
@@ -174,7 +175,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
             ))}
           </div>
         </div>
-      )}
+      </RailOverlay>)}
 
       {/* ═══ ALTERNATIVES ═══ */}
       <div style={{ padding: '0 20px 16px' }}>
