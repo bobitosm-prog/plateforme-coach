@@ -2,7 +2,8 @@
 
 import { Zap } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, emptyStateStyle, ringTrackEmpty } from '../../../../lib/design-tokens'
+import { colors, fonts, ringTrackEmpty } from '../../../../lib/design-tokens'
+import CardEmptyState from './CardEmptyState'
 
 const GOLD = colors.gold
 const FONT_DISPLAY = fonts.headline
@@ -79,7 +80,7 @@ export default function EnergyCard({ consumedKcal, calorieGoal, weekData }: Ener
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             {isEmpty ? (
-              <span style={emptyStateStyle}>{t('energyEmpty')}</span>
+              <CardEmptyState label={t('energyEmpty')} />
             ) : (
               <>
                 <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 400, color: GOLD, lineHeight: 1 }}>{calPct}%</span>
