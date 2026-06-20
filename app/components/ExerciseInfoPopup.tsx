@@ -6,6 +6,7 @@ import {
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
 import { getExerciseName, getExerciseDescription, getExerciseTips } from '../../lib/i18n-exercise'
+import { RailOverlay } from './ui/RailOverlay'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
 
 interface ExerciseInfo {
@@ -38,7 +39,7 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
   const displayDesc = getExerciseDescription(info, locale)
   const displayTips = getExerciseTips(info, locale)
 
-  return (
+  return (<RailOverlay>
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
       backdropFilter: 'blur(8px)', zIndex: 300,
@@ -130,5 +131,5 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
         </div>
       </div>
     </div>
-  )
+  </RailOverlay>)
 }
