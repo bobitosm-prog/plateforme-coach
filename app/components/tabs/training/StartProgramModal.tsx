@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../../../lib/design-tokens'
 
 interface StartProgramModalProps {
@@ -109,7 +109,7 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
             {!showPicker ? (
               <motion.div key="options" initial={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {/* MAINTENANT */}
-                <button onClick={() => onStart('now')} style={{ ...btnBase, background: GOLD, color: '#0D0B08', border: 'none' }}>
+                <button onClick={() => onStart('now')} style={{ ...btnBase, background: GOLD, color: colors.onGold, border: 'none' }}>
                   <span>{t('now')}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, fontFamily: FONT_BODY, opacity: 0.7 }}>
                     {t('today', { date: formatDateLocale(today, locale) })}
@@ -176,7 +176,7 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
                             padding: '10px 4px', textAlign: 'center', border: 'none', cursor: sel ? 'pointer' : 'default',
                             fontFamily: FONT_BODY, fontSize: 14, fontWeight: picked ? 700 : 400, borderRadius: 8,
                             background: picked ? GOLD : 'transparent',
-                            color: picked ? '#0D0B08' : sel ? TEXT_PRIMARY : `${TEXT_PRIMARY}30`,
+                            color: picked ? colors.onGold : sel ? TEXT_PRIMARY : `${TEXT_PRIMARY}30`,
                           }}
                         >{day}</button>
                       )
@@ -186,7 +186,7 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
 
                 {/* Confirm selected date */}
                 {selectedDate && (
-                  <button onClick={() => onStart('custom', selectedDate)} style={{ width: '100%', padding: 16, marginTop: 16, background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 14, fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 700, letterSpacing: '0.05em', cursor: 'pointer' }}>
+                  <button onClick={() => onStart('custom', selectedDate)} style={{ width: '100%', padding: 16, marginTop: 16, background: GOLD, color: colors.onGold, border: 'none', borderRadius: 14, fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 700, letterSpacing: '0.05em', cursor: 'pointer' }}>
                     {t('startOn', { date: new Date(selectedDate + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'long' }).toUpperCase() })}
                   </button>
                 )}

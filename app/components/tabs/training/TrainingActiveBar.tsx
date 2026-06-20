@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Timer, Check } from 'lucide-react'
 import {
   BG_CARD, BORDER, GOLD, GREEN, TEXT_PRIMARY, TEXT_MUTED,
-  FONT_ALT, FONT_DISPLAY,
+  FONT_ALT, FONT_DISPLAY, colors,
 } from '../../../../lib/design-tokens'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
@@ -56,7 +56,7 @@ export default function TrainingActiveBar({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={onFinish}
-            style={{ background: GREEN, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '10px 20px', fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ background: GREEN, color: colors.onGold, border: 'none', borderRadius: 12, padding: '10px 20px', fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
             <Check size={15} strokeWidth={3} /> Terminer
           </motion.button>

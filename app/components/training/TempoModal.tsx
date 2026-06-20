@@ -13,6 +13,7 @@ import {
   FONT_DISPLAY,
   FONT_ALT,
   FONT_BODY,
+  colors,
 } from '../../../lib/design-tokens'
 
 interface TempoModalProps {
@@ -239,7 +240,7 @@ export default function TempoModal({ tempo, exerciseName, onClose }: TempoModalP
             background: GOLD,
             border: 'none',
             borderRadius: 12,
-            color: '#0D0B08',
+            color: colors.onGold,
             fontFamily: FONT_ALT,
             fontWeight: 800,
             fontSize: 13,

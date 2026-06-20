@@ -782,7 +782,7 @@ export default function TrainingTab({
               {motivationalMsg}
             </p>
             <button onClick={() => setShowTimerAlert(false)} style={{
-              background: colors.gold, color: '#0D0B08', border: 'none',
+              background: colors.gold, color: colors.onGold, border: 'none',
               fontFamily: fonts.body, fontWeight: 800, fontSize: 16, letterSpacing: 2,
               padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
 
@@ -1302,7 +1302,7 @@ export default function TrainingTab({
                           <motion.button
                             whileTap={{ scale: 0.97 }}
                             onClick={() => startProgramWorkout(trainingDayData, trainingExercises)}
-                            style={{ width: '100%', marginTop: 12, background: colors.gold, color: '#0D0B08', fontWeight: 400, padding: '18px', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: fonts.headline, fontSize: 20, letterSpacing: '0.15em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                            style={{ width: '100%', marginTop: 12, background: colors.gold, color: colors.onGold, fontWeight: 400, padding: '18px', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: fonts.headline, fontSize: 20, letterSpacing: '0.15em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
                           >
                             DEMARRER LA SEANCE
                           </motion.button>
@@ -1313,9 +1313,9 @@ export default function TrainingTab({
                           <motion.button
                             whileTap={{ scale: 0.97 }}
                             onClick={handleFinishWithCheck}
-                            style={{ width: '100%', marginTop: 12, background: colors.success, color: '#0D0B08', fontWeight: 700, padding: '16px', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase' as const, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                            style={{ width: '100%', marginTop: 12, background: colors.success, color: colors.onGold, fontWeight: 700, padding: '16px', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase' as const, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
                           >
-                            <Award size={18} color="#0D0B08" />
+                            <Award size={18} color={colors.onGold} />
                             {t('session.finishSession')}
                           </motion.button>
                         )}
@@ -1422,7 +1422,7 @@ export default function TrainingTab({
                           ) : prog.scheduled ? (
                             <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 10px', borderRadius: 999 }}>📅 {new Date(prog.start_date + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short' }).toUpperCase()}</span>
                           ) : (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: 999 }}>○ Inactif</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: colors.divider, padding: '3px 10px', borderRadius: 999 }}>○ Inactif</span>
                           )}
                           <span style={{ color: colors.textMuted, fontSize: 14, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
                         </div>

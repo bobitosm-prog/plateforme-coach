@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../../../lib/design-tokens'
 
 /* ═══════════════════════════════════════════════════
@@ -448,7 +448,7 @@ export function TechniqueActivePopup({
                 background: `linear-gradient(135deg, ${GOLD}, #c9a84c)`,
                 border: 'none',
                 borderRadius: 12,
-                color: '#0D0B08',
+                color: colors.onGold,
                 fontFamily: FONT_DISPLAY,
                 fontSize: 13,
                 fontWeight: 700,

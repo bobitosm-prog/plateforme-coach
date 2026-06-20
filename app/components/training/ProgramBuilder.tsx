@@ -14,7 +14,7 @@ import { X, Plus, ChevronLeft, ChevronRight, Search, Trash2, Check } from 'lucid
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../../lib/design-tokens'
 import { TechniqueExplanationCards } from '../tabs/training/TechniquePopup'
 import ConfirmDialog from '../ui/ConfirmDialog'
@@ -567,7 +567,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               disabled={aiGenerating}
               style={{
                 width: '100%', padding: '16px', background: aiGenerating ? GOLD_DIM : GOLD,
-                color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                color: colors.onGold, border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
                 cursor: aiGenerating ? 'not-allowed' : 'pointer', opacity: aiGenerating ? 0.6 : 1,
               }}
             >
@@ -603,7 +603,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               disabled={saving}
               style={{
                 width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
-                color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                color: colors.onGold, border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
                 cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
               }}
             >
@@ -680,7 +680,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     setManualStep(1)
                   }}
                   style={{
-                    width: '100%', padding: '16px', background: GOLD, color: '#0D0B08',
+                    width: '100%', padding: '16px', background: GOLD, color: colors.onGold,
                     border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18, cursor: 'pointer',
                   }}
                 >
@@ -698,7 +698,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                   disabled={saving}
                   style={{
                     width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
-                    color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                    color: colors.onGold, border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
                     cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
                   }}
                 >
@@ -784,7 +784,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               disabled={saving || !ceName.trim()}
               style={{
                 width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
-                color: '#0D0B08', border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
+                color: colors.onGold, border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
                 cursor: saving || !ceName.trim() ? 'not-allowed' : 'pointer',
                 opacity: !ceName.trim() ? 0.5 : 1,
               }}
@@ -1002,14 +1002,14 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               >
                 <span style={{
                   fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
-                  letterSpacing: 1, color: isActive ? '#0D0B08' : isRest ? TEXT_DIM : hasEx ? GOLD : TEXT_MUTED,
+                  letterSpacing: 1, color: isActive ? colors.onGold : isRest ? TEXT_DIM : hasEx ? GOLD : TEXT_MUTED,
                 }}>{DAY_SHORT[i]}</span>
                 {isRest ? (
                   <span style={{ fontSize: 14, lineHeight: 1 }}>😴</span>
                 ) : (
                   <span style={{
                     fontFamily: FONT_DISPLAY, fontSize: 18,
-                    color: isActive ? '#0D0B08' : hasEx ? GOLD : TEXT_DIM,
+                    color: isActive ? colors.onGold : hasEx ? GOLD : TEXT_DIM,
                   }}>{day.exercises?.length || 0}</span>
                 )}
               </button>
