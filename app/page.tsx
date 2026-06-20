@@ -128,19 +128,15 @@ export default function CoachApp() {
   const RAIL_SPRING = { type: 'spring' as const, stiffness: 380, damping: 30, mass: 0.8 }
   React.useEffect(() => {
     if (mainSize.w === 0) return
+    if (overlayOpen) {
+      // Quand un overlay est ouvert, neutraliser le transform immédiatement
+      // (pas d'animation) pour supprimer le containing-block CSS.
+      railX.set(0)
+      return
+    }
     const anim = fmAnimate(railX, -railIndex * mainSize.w, RAIL_SPRING)
     return () => anim.stop()
-  }, [railIndex, mainSize.w])
-  // Neutralise le transform du rail quand un overlay est ouvert pour que
-  // les position:fixed (même portalisés) ne subissent pas le containing-block.
-  // Restaure la position correcte du rail quand l'overlay se ferme.
-  React.useEffect(() => {
-    if (overlayOpen) {
-      railX.set(0)
-    } else if (mainSize.w > 0) {
-      railX.set(-railIndex * mainSize.w)
-    }
-  }, [overlayOpen])
+  }, [railIndex, mainSize.w, overlayOpen])
   const touchState = React.useRef<{ startX: number, startY: number, baseX: number, t0: number, mode: 'pending'|'horizontal'|'rejected' } | null>(null)
   const railDivRef = React.useRef<HTMLDivElement | null>(null)
   const inHorizontalScroller = (el: HTMLElement | null): boolean => {
