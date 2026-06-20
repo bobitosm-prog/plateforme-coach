@@ -2372,7 +2372,8 @@
       "kcal": "KCAL",
       "protein": "PROTEIN",
       "carbs": "CARBS",
-      "fat": "FAT"
+      "fat": "FAT",
+      "empty": "To assess"
     },
     "recovery": {
       "title": "Muscle recovery",

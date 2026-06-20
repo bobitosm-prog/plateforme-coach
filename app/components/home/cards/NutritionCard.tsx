@@ -3,6 +3,7 @@
 import { UtensilsCrossed } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../../lib/design-tokens'
+import CardEmptyState from './CardEmptyState'
 
 const GOLD = colors.gold
 const FONT_DISPLAY = fonts.headline
@@ -32,10 +33,11 @@ export default function NutritionCard({
   consumedKcal, calorieGoal, proteinGoal, carbsGoal, fatGoal,
 }: NutritionCardProps) {
   const t = useTranslations('home.nutritionCard')
+  const isEmpty = consumedKcal === 0
   const macros = [
-    { label: t('protein'), value: proteinGoal, color: '#4ade80' },
-    { label: t('carbs'), value: carbsGoal, color: '#e6c364' },
-    { label: t('fat'), value: fatGoal, color: '#fb923c' },
+    { label: t('protein'), value: proteinGoal, color: colors.success },
+    { label: t('carbs'), value: carbsGoal, color: colors.gold },
+    { label: t('fat'), value: fatGoal, color: colors.orange },
   ]
 
   return (
@@ -50,12 +52,18 @@ export default function NutritionCard({
 
       {/* Big kcal */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 400, color: '#ffffff', lineHeight: 1 }}>
-          {consumedKcal}
-        </div>
-        <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: TEXT_DIM, marginTop: 2 }}>
-          {t('kcal')}
-        </div>
+        {isEmpty ? (
+          <CardEmptyState label={t('empty')} />
+        ) : (
+          <>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 400, color: colors.text, lineHeight: 1 }}>
+              {consumedKcal}
+            </div>
+            <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: TEXT_DIM, marginTop: 2 }}>
+              {t('kcal')}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Macro bars */}

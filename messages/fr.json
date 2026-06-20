@@ -2372,7 +2372,8 @@
       "kcal": "KCAL",
       "protein": "PROTEINES",
       "carbs": "GLUCIDES",
-      "fat": "LIPIDES"
+      "fat": "LIPIDES",
+      "empty": "À évaluer"
     },
     "recovery": {
       "title": "Recuperation musculaire",

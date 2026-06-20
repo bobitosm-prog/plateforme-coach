@@ -2372,7 +2372,8 @@
       "kcal": "KCAL",
       "protein": "PROTEINE",
       "carbs": "KOHLENHYDRATE",
-      "fat": "FETTE"
+      "fat": "FETTE",
+      "empty": "Auswerten"
     },
     "recovery": {
       "title": "Muskelregeneration",
