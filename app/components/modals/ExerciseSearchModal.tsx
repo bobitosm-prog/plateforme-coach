@@ -10,7 +10,7 @@ import { RailOverlay } from '../ui/RailOverlay'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, ORANGE, GOLD,
   MUSCLE_COLORS, MUSCLE_GROUPS_FILTER,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../../lib/design-tokens'
 import { getExerciseImage } from '../../../lib/exercise-media'
 
@@ -242,11 +242,11 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
 
               {/* Video or placeholder */}
               {selectedExDb.video_url ? (
-                <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 20, background: '#0a0a0a' }}>
+                <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 20, background: colors.surface }}>
                   <video src={`${selectedExDb.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
               ) : (
-                <div style={{ borderRadius: 12, border: `1px dashed ${BORDER}`, padding: '32px 20px', textAlign: 'center', background: '#0a0a0a', marginBottom: 20 }}>
+                <div style={{ borderRadius: 12, border: `1px dashed ${BORDER}`, padding: '32px 20px', textAlign: 'center', background: colors.surface, marginBottom: 20 }}>
                   <div style={{ fontSize: 28, marginBottom: 6 }}>🎬</div>
                   <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1 }}>VIDÉO À VENIR</div>
                 </div>
@@ -283,7 +283,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                     setSelectedExDb(null)
                     setExDbAddSets('3'); setExDbAddReps('10'); setExDbAddRest('60')
                   }}
-                  style={{ width: '100%', background: GOLD, color: '#0D0B08', fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_DISPLAY, fontSize: '1rem', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8 }}
+                  style={{ width: '100%', background: GOLD, color: colors.onGold, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_DISPLAY, fontSize: '1rem', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8 }}
                 >
                   AJOUTER À MA SÉANCE
                 </button>

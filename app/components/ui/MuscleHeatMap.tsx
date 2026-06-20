@@ -1,5 +1,5 @@
 'use client'
-import { colors, fonts } from '../../../lib/design-tokens'
+import { colors, fonts, cardStyle } from '../../../lib/design-tokens'
 
 export const EXERCISE_MUSCLES: Record<string, string[]> = {
   // Chest
@@ -108,7 +108,7 @@ export default function MuscleHeatMap({ muscleStatus, hideTitle, compact }: { mu
   return (
     <div style={compact
       ? { background: 'transparent', border: 'none', padding: 0, boxShadow: 'none' }
-      : { background: colors.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
+      : { ...cardStyle, padding: 20 }
     }>
       {!hideTitle && !compact && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>

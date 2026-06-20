@@ -8,7 +8,7 @@ import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
 import {
   BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
 } from '../../../lib/design-tokens'
 
 interface MeasureModalProps {
@@ -92,7 +92,7 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
           <button
             onClick={handleSave}
             disabled={!hasValue}
-            style={{ flex: 2, background: hasValue ? GOLD : '#2A2A2A', color: hasValue ? '#0D0B08' : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: hasValue ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 200ms',  }}
+            style={{ flex: 2, background: hasValue ? GOLD : '#2A2A2A', color: hasValue ? colors.onGold : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: hasValue ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 200ms',  }}
           >
             {t('measureModal.save')}
           </button>

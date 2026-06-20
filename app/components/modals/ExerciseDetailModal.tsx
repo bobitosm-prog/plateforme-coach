@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_DIM, GOLD_RULE,
   MUSCLE_COLORS,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../../lib/design-tokens'
 
 interface ExerciseDetailModalProps {
@@ -170,7 +170,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
           <div style={{ flexShrink: 0, padding: '12px 20px', paddingBottom: 'max(16px, env(safe-area-inset-bottom, 16px))', borderTop: `1px solid ${BORDER}`, background: BG_CARD, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {onAdd && (
               <button onClick={handleAdd}
-                style={{ width: '100%', background: GOLD, color: '#0D0B08', fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_DISPLAY, fontSize: '1rem', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                style={{ width: '100%', background: GOLD, color: colors.onGold, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT_DISPLAY, fontSize: '1rem', letterSpacing: '2px', textTransform: 'uppercase' }}>
                 AJOUTER À MA SÉANCE
               </button>
             )}

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import {
   BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
   ACTIVITY_LEVELS, calcMifflinStJeor, calcKatchMcArdle, calcHarrisBenedict,
 } from '../../../lib/design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
@@ -98,7 +98,7 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
             </button>
           ))}
         </div>
-        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,  }}>Calculer mon TDEE</button>
+        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,  }}>Calculer mon TDEE</button>
         {bmrResult && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: 20 }}>

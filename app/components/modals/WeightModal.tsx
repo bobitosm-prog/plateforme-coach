@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import {
   BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
 } from '../../../lib/design-tokens'
 
 interface WeightModalProps {
@@ -60,7 +60,7 @@ export default function WeightModal({ currentWeight, onSave, onClose }: WeightMo
           <button
             onClick={handleSave}
             disabled={!weightForm}
-            style={{ flex: 2, background: weightForm ? GOLD : '#2A2A2A', color: weightForm ? '#0D0B08' : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: weightForm ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 200ms',  }}
+            style={{ flex: 2, background: weightForm ? GOLD : '#2A2A2A', color: weightForm ? colors.onGold : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: weightForm ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 200ms',  }}
           >
             Sauvegarder
           </button>

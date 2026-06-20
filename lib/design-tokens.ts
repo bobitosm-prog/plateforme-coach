@@ -12,6 +12,7 @@ export const colors = {
   surface: '#0e0e0e',
   surfaceHigh: '#1c1b1b',
   surfaceCard: '#181818',
+  onGold: '#0D0B08',
   gold: '#e6c364',
   goldContainer: '#c9a84c',
   goldBorder: 'rgba(201,168,76,0.15)',
