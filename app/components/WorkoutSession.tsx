@@ -102,14 +102,14 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
           <ArrowLeft size={14} /> {t('back')}
         </button>
         <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{t('builder.configure')}</span>
-        <button onClick={launch} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.launch')}</button>
+        <button onClick={launch} style={{ background: GOLD, color: colors.onGold, border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.launch')}</button>
       </div>
       <div style={{ flex: 1, paddingTop: 16, paddingRight: 16, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {cfg.map((e, i) => (
           <div key={e.id} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <div style={{ width: 32, height: 32, borderRadius: 10, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 14 }}>{i + 1}</span>
+                <span style={{ color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 14 }}>{i + 1}</span>
               </div>
               <div>
                 <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
@@ -133,7 +133,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
         ))}
       </div>
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}`, zIndex: 51 }}>
-        <button onClick={launch} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
+        <button onClick={launch} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
           {t('builder.launchSession')}
         </button>
       </div>
@@ -150,7 +150,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
           </button>
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{t('builder.add')}</span>
           {selected.length > 0 ? (
-            <button onClick={goConfig} style={{ background: GOLD, color: '#0D0B08', border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.next', { count: selected.length })}</button>
+            <button onClick={goConfig} style={{ background: GOLD, color: colors.onGold, border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.next', { count: selected.length })}</button>
           ) : <div style={{ width: 60 }} />}
         </div>
 
@@ -204,7 +204,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
               opacity: sel ? 0.5 : 1,
             }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: sel ? GOLD : GOLD_DIM, border: `1px solid ${sel ? 'transparent' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {sel ? <Check size={16} color="#0D0B08" strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
+                {sel ? <Check size={16} color={colors.onGold} strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
@@ -223,7 +223,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       {/* Bottom button */}
       {selected.length > 0 && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.9)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${BORDER}` }}>
-          <button onClick={goConfig} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
+          <button onClick={goConfig} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
             {t('builder.addExercises', { count: selected.length })}
           </button>
         </div>
@@ -896,7 +896,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={discardDraft} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.restart')}</button>
-              <button onClick={resumeDraft} style={{ flex: 2, padding: '12px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.resume')}</button>
+              <button onClick={resumeDraft} style={{ flex: 2, padding: '12px', background: GOLD, border: 'none', borderRadius: 10, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.resume')}</button>
             </div>
           </div>
         </div>
@@ -916,7 +916,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               <button onClick={() => { dismissRestDone(); startRest(30, restExoId || undefined, restNextInfo) }} className="active:scale-95"
                 style={{ flex: 1, padding: '14px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: GOLD, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30S</button>
               <button onClick={dismissRestDone} className="active:scale-95"
-                style={{ flex: 2, padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('restDone.start')}</button>
+                style={{ flex: 2, padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('restDone.start')}</button>
             </div>
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
               <div style={{ height: '100%', background: GOLD, animation: 'rest-autoclose-progress 5s linear forwards' }} />
@@ -1011,7 +1011,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 </Reorder.Item>
               ))}
             </Reorder.Group>
-            <button onClick={() => setReorderMode(false)} style={{ width: '100%', background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: '#0D0B08', letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>{t('reorder.done')}</button>
+            <button onClick={() => setReorderMode(false)} style={{ width: '100%', background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: colors.onGold, letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>{t('reorder.done')}</button>
           </div>
         )}
 
@@ -1216,7 +1216,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                             </button>
                           ) : ok ? (
                             <button onClick={() => validate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GOLD, border: 'none', borderRadius: '50%', cursor: 'pointer' }}>
-                              <Check size={18} strokeWidth={3} color="#0D0B08" />
+                              <Check size={18} strokeWidth={3} color={colors.onGold} />
                             </button>
                           ) : (
                             <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(201,168,76,0.3)', borderRadius: '50%' }}>
@@ -1249,7 +1249,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
                             <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
-                            <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('skipRest')}</button>
+                            <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('skipRest')}</button>
                           </div>
                         </div>
                       )}
@@ -1301,7 +1301,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             transition: 'transform 120ms ease',
           }}
         >
-          <Plus size={26} color="#0D0B08" strokeWidth={2.5} />
+          <Plus size={26} color={colors.onGold} strokeWidth={2.5} />
         </button>
       )}
 
@@ -1312,7 +1312,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>{t('time')}</span>
             <span style={{ fontSize: 18, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
+          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
         </div>
       </div>}
 
@@ -1340,7 +1340,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             </div>
             {/* Save button */}
             <button onClick={() => { setShowEndModal(false); sessionModified ? setShowSavePopup(true) : finish() }} className="active:scale-[0.98]" style={{
-              width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08',
+              width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold,
               fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
             }}>
@@ -1421,7 +1421,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               }}>{t('repsWarning.edit')}</button>
               <button onClick={() => { doValidate(repsWarning.eid, repsWarning.sid); setRepsWarning(null) }} className="active:scale-[0.98]" style={{
                 width: '100%', padding: 12, borderRadius: 12,
-                background: GOLD, border: 'none', color: '#0D0B08',
+                background: GOLD, border: 'none', color: colors.onGold,
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
               }}>{t('repsWarning.confirm')}</button>
             </div>
@@ -1452,7 +1452,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
               ))}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={saveAsTemplate} style={{ width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08', fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer' }}>
+              <button onClick={saveAsTemplate} style={{ width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer' }}>
                 {t('saveTemplate.yes')}
               </button>
               <button onClick={() => { setShowSaveTemplate(false); setDone(true) }} style={{ width: '100%', padding: 14, borderRadius: 14, background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>
@@ -1556,7 +1556,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button onClick={() => { setShowSavePopup(false); finish() }} style={{
-                width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: '#0D0B08',
+                width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold,
                 fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer',
               }}>{t('savePopup.save')}</button>
               <button onClick={() => { setSessionModified(false); setShowSavePopup(false); finish() }} style={{
