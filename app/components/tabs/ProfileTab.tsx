@@ -253,7 +253,7 @@ export default function ProfileTab({
           <div style={{ display: 'flex', gap: 8 }}>
             <input type="tel" value={phoneForm} onChange={e => setPhoneForm(e.target.value)} placeholder={t('phone.placeholder')}
               style={{ flex: 1, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.button, padding: '8px 12px', color: colors.text, fontSize: 14, outline: 'none', fontFamily: fonts.body }} />
-            <button onClick={savePhone} style={{ background: colors.gold, border: 'none', borderRadius: radii.button, padding: '8px 14px', color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>OK</button>
+            <button onClick={savePhone} style={{ background: colors.gold, border: 'none', borderRadius: radii.button, padding: '8px 14px', color: colors.onGold, fontFamily: fonts.headline, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>OK</button>
             <button onClick={() => { setPhoneEditing(false); setPhoneForm(profile?.phone || '') }} style={{ background: colors.surfaceHigh, border: 'none', borderRadius: radii.button, padding: '8px 12px', color: colors.textMuted, fontSize: 12, cursor: 'pointer' }}>✕</button>
           </div>
         ) : (
@@ -451,7 +451,7 @@ export default function ProfileTab({
           return (
             <div>
               <p style={{ ...mutedStyle, fontSize: 12, margin: '0 0 14px', lineHeight: 1.5 }}>{t('subscription.subscribePrompt')}</p>
-              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: 14, background: colors.gold, border: 'none', borderRadius: radii.button, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.08em' }}>
+              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: 14, background: colors.gold, border: 'none', borderRadius: radii.button, color: colors.onGold, fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.08em' }}>
                 {t('subscription.subscribeCta')}
               </button>
             </div>

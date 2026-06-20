@@ -110,7 +110,7 @@ export default function AccountTab({
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('messages')}</span>
             <span style={{ flex: 1 }} />
             {unreadCount > 0 && (
-              <span style={{ background: GOLD, color: '#0e0e0e', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
+              <span style={{ background: GOLD, color: colors.onGold, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
                 {unreadCount}
               </span>
             )}
@@ -140,7 +140,7 @@ export default function AccountTab({
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('myReports')}</span>
             <span style={{ flex: 1 }} />
             {feedbackUnread > 0 && (
-              <span style={{ background: GOLD, color: '#0e0e0e', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
+              <span style={{ background: GOLD, color: colors.onGold, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
                 {feedbackUnread}
               </span>
             )}

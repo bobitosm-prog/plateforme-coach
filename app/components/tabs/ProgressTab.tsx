@@ -754,7 +754,7 @@ export default function ProgressTab({
                 const ready = !!(bodyUploadPhotos.front && bodyUploadPhotos.back && bodyUploadPhotos.side)
                 return (
                   <button onClick={runBodyAnalysis} disabled={!ready || bodyAnalysisLoading}
-                    style={{ width: '100%', padding: 14, borderRadius: radii.button, border: 'none', cursor: ready && !bodyAnalysisLoading ? 'pointer' : 'default', background: ready ? colors.gold : colors.surfaceHigh, color: ready ? '#000' : colors.textMuted, fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, opacity: ready && !bodyAnalysisLoading ? 1 : 0.5 }}>
+                    style={{ width: '100%', padding: 14, borderRadius: radii.button, border: 'none', cursor: ready && !bodyAnalysisLoading ? 'pointer' : 'default', background: ready ? colors.gold : colors.surfaceHigh, color: ready ? colors.onGold : colors.textMuted, fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, opacity: ready && !bodyAnalysisLoading ? 1 : 0.5 }}>
                     {bodyAnalysisLoading ? t('tab.analyzing') : t('tab.launchAi')}
                   </button>
                 )
@@ -1022,7 +1022,7 @@ export default function ProgressTab({
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <button onClick={handleAutoAlign} disabled={isAligning}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: isAligning ? '#222' : `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: isAligning ? colors.textMuted : '#0D0B08', border: 'none', borderRadius: 10, cursor: isAligning ? 'default' : 'pointer', fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: isAligning ? '#222' : `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: isAligning ? colors.textMuted : colors.onGold, border: 'none', borderRadius: 10, cursor: isAligning ? 'default' : 'pointer', fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
                   {isAligning ? (
                     <><div style={{ width: 12, height: 12, border: '2px solid #555', borderTopColor: colors.gold, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />{t('tab.analyzingShort')}</>
                   ) : (
@@ -1061,7 +1061,7 @@ export default function ProgressTab({
               <img src={beforeUrl} alt="Avant" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000', clipPath: `inset(0 ${100 - sliderValue}% 0 0)` }} />
               <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${sliderValue}%`, width: 2, background: colors.gold, transform: 'translateX(-50%)', zIndex: 2 }}>
                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 36, height: 36, borderRadius: '50%', background: colors.gold, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ color: '#000', fontSize: 11, fontWeight: 700 }}>⟷</span>
+                  <span style={{ color: colors.onGold, fontSize: 11, fontWeight: 700 }}>⟷</span>
                 </div>
               </div>
               <input type="range" min={0} max={100} value={sliderValue} onChange={e => setSliderValue(Number(e.target.value))} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'ew-resize', zIndex: 3 }} />
@@ -1092,7 +1092,7 @@ export default function ProgressTab({
               <label style={{ display: 'block', ...subtitleStyle, marginBottom: 8 }}>{t('tab.date')}</label>
               <input type="date" value={weightDate} onChange={e => setWeightDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
             </div>
-            <button onClick={handleSaveWeight} disabled={!weightVal || savingWeight} style={{ width: '100%', background: weightVal && !savingWeight ? colors.gold : colors.surfaceHigh, color: weightVal && !savingWeight ? '#000' : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: weightVal && !savingWeight ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56 }}>
+            <button onClick={handleSaveWeight} disabled={!weightVal || savingWeight} style={{ width: '100%', background: weightVal && !savingWeight ? colors.gold : colors.surfaceHigh, color: weightVal && !savingWeight ? colors.onGold : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: weightVal && !savingWeight ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56 }}>
               {savingWeight ? 'Enregistrement...' : 'Sauvegarder'}
             </button>
           </div>
@@ -1122,7 +1122,7 @@ export default function ProgressTab({
               <input type="date" value={measureDate} onChange={e => setMeasureDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
             </div>
             <button onClick={handleSaveMeasure} disabled={Object.values(measureForm).every(v => !v) || savingMeasure}
-              style={{ width: '100%', background: Object.values(measureForm).some(v => v) && !savingMeasure ? colors.gold : '#2A2A2A', color: Object.values(measureForm).some(v => v) && !savingMeasure ? '#000' : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: Object.values(measureForm).some(v => v) && !savingMeasure ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56, marginBottom: 32 }}>
+              style={{ width: '100%', background: Object.values(measureForm).some(v => v) && !savingMeasure ? colors.gold : '#2A2A2A', color: Object.values(measureForm).some(v => v) && !savingMeasure ? colors.onGold : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: Object.values(measureForm).some(v => v) && !savingMeasure ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56, marginBottom: 32 }}>
               {savingMeasure ? 'Enregistrement...' : 'Sauvegarder'}
             </button>
           </div>

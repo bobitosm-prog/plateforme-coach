@@ -228,7 +228,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
                       <div style={{
                         position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%',
                         background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 16, color: '#000', fontWeight: 700,
+                        fontSize: 16, color: colors.onGold, fontWeight: 700,
                       }}>
                         ✓
                       </div>
@@ -273,7 +273,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
               background: allPhotosReady ? GOLD : GOLD_DIM,
               border: 'none', borderRadius: 10, cursor: allPhotosReady ? 'pointer' : 'not-allowed',
               fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px',
-              color: allPhotosReady ? '#000' : TEXT_DIM, fontWeight: 700,
+              color: allPhotosReady ? colors.onGold : TEXT_DIM, fontWeight: 700,
             }}
           >
             {t('analyze')}
@@ -339,7 +339,7 @@ export default function BodyAssessment({ supabase, session, profile, onClose, on
                 width: '100%', padding: 16, background: GOLD, border: 'none',
                 borderRadius: 10, cursor: saving ? 'not-allowed' : 'pointer',
                 fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '1px',
-                color: '#000', fontWeight: 700,
+                color: colors.onGold, fontWeight: 700,
               }}
             >
               {saving ? t('saving') : t('save')}
