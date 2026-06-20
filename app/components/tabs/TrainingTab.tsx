@@ -755,7 +755,7 @@ export default function TrainingTab({
       `}</style>
 
       {/* ── TIMER COMPLETE POPUP ── */}
-      {showTimerAlert && (
+      {showTimerAlert && (<RailOverlay>
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -791,7 +791,7 @@ export default function TrainingTab({
             </button>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
 
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
       <WorkoutCelebration visible={workoutFinished} />
@@ -1515,7 +1515,7 @@ export default function TrainingTab({
       )}
 
       {/* ═══ IMPORT PREVIEW MODAL ═══ */}
-      {importPreview && (
+      {importPreview && (<RailOverlay>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setImportPreview(null)}>
           <div onClick={e => e.stopPropagation()} style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Scrollable content */}
@@ -1593,7 +1593,7 @@ export default function TrainingTab({
             </div>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
 
       {/* ═══ ALL EXISTING MODALS (unchanged) ═══ */}
 
@@ -1674,7 +1674,7 @@ export default function TrainingTab({
       )}
 
       {/* Variant popup */}
-      {variantPopup && (
+      {variantPopup && (<RailOverlay>
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
           <div onClick={e=>e.stopPropagation()} style={{background:colors.surface,border:`1px solid ${colors.goldRule}`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.goldBorder}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -1698,10 +1698,10 @@ export default function TrainingTab({
             </div>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
 
       {/* Workout detail popup */}
-      {selectedWorkout && (
+      {selectedWorkout && (<RailOverlay>
         <div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setSelectedWorkout(null)}>
           <div onClick={e=>e.stopPropagation()} style={{background:colors.surface,border:`1px solid ${colors.goldRule}`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.goldBorder}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
@@ -1743,7 +1743,7 @@ export default function TrainingTab({
             </div>
           </div>
         </div>
-      )}
+      </RailOverlay>)}
     </div>
   )
 }
