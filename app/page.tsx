@@ -131,6 +131,16 @@ export default function CoachApp() {
     const anim = fmAnimate(railX, -railIndex * mainSize.w, RAIL_SPRING)
     return () => anim.stop()
   }, [railIndex, mainSize.w])
+  // Neutralise le transform du rail quand un overlay est ouvert pour que
+  // les position:fixed (même portalisés) ne subissent pas le containing-block.
+  // Restaure la position correcte du rail quand l'overlay se ferme.
+  React.useEffect(() => {
+    if (overlayOpen) {
+      railX.set(0)
+    } else if (mainSize.w > 0) {
+      railX.set(-railIndex * mainSize.w)
+    }
+  }, [overlayOpen])
   const touchState = React.useRef<{ startX: number, startY: number, baseX: number, t0: number, mode: 'pending'|'horizontal'|'rejected' } | null>(null)
   const railDivRef = React.useRef<HTMLDivElement | null>(null)
   const inHorizontalScroller = (el: HTMLElement | null): boolean => {
@@ -611,7 +621,7 @@ export default function CoachApp() {
       <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback') ? 'none' : 'flex' }}>
         <motion.div
           ref={railDivRef}
-          style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: overlayOpen ? 0 : railX, touchAction: 'pan-y' }}
+          style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: railX, touchAction: 'pan-y' }}
           onTouchStart={onRailTouchStart}
           onTouchEnd={onRailTouchEnd}
           onTouchCancel={onRailTouchEnd}
