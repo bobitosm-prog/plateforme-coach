@@ -414,13 +414,24 @@ export default function HomeTab({
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
       {/* ═══ HOME HEADER ═══ */}
-      <HomeHeader
-        firstName={firstName}
-        displayAvatar={displayAvatar}
-        level={getLevelFromXP(xpData?.total_xp ?? 0).level}
-        streak={streak}
-        onLevelClick={() => setShowLevelModal(true)}
-      />
+      {(() => {
+        const xp = xpData?.total_xp ?? 0
+        const { level: xpLevel, xpForNext, xpInLevel, progress: xpProgress } = getLevelFromXP(xp)
+        const levelTitle = getLevelTitle(xpLevel)
+        return (
+          <HomeHeader
+            firstName={firstName}
+            displayAvatar={displayAvatar}
+            level={xpLevel}
+            levelTitle={levelTitle}
+            streak={streak}
+            xpInLevel={xpInLevel}
+            xpForNext={xpForNext}
+            xpProgress={xpProgress}
+            onLevelClick={() => setShowLevelModal(true)}
+          />
+        )
+      })()}
 
       {nextAppt && (
         <div style={{ margin: '12px 16px', padding: '14px 16px', background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(230,195,100,0.35)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -611,23 +622,6 @@ export default function HomeTab({
               </div>
             )}
           </div>
-          {/* XP bar */}
-          {(() => {
-            const xp = xpData?.total_xp || 0
-            const { level, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
-            const title = getLevelTitle(level)
-            return (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: colors.gold, letterSpacing: '0.1em', textTransform: 'uppercase' }}>LV.{level} — {title}</span>
-                  <span style={{ ...mutedStyle, fontSize: 10 }}>{xpInLevel} / {xpForNext} XP</span>
-                </div>
-                <div style={{ width: '100%', height: 6, borderRadius: 3, background: colors.surfaceHigh, overflow: 'hidden' }}>
-                  <div style={{ width: `${progress * 100}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #D4A843, #E8C97A)', transition: 'width 1s ease' }} />
-                </div>
-              </div>
-            )
-          })()}
           {/* Performance bar chart */}
           <div style={{ marginTop: 16 }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 60, gap: 6 }}>
