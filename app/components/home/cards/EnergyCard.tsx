@@ -2,7 +2,7 @@
 
 import { Zap } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { colors, fonts } from '../../../../lib/design-tokens'
+import { colors, fonts, emptyStateStyle, ringTrackEmpty } from '../../../../lib/design-tokens'
 
 const GOLD = colors.gold
 const FONT_DISPLAY = fonts.headline
@@ -10,9 +10,9 @@ const FONT_ALT = fonts.alt
 const FONT_BODY = fonts.body
 
 function getEnergyLabel(pct: number): { text: string; color: string } {
-  if (pct >= 70) return { text: 'Bonne', color: '#4ade80' }
-  if (pct >= 40) return { text: 'Moyenne', color: '#e6c364' }
-  return { text: 'Faible', color: '#fb923c' }
+  if (pct >= 70) return { text: 'Bonne', color: colors.success }
+  if (pct >= 40) return { text: 'Moyenne', color: colors.gold }
+  return { text: 'Faible', color: colors.orange }
 }
 
 const cardStyle: React.CSSProperties = {
@@ -33,6 +33,7 @@ interface EnergyCardProps {
 
 export default function EnergyCard({ consumedKcal, calorieGoal, weekData }: EnergyCardProps) {
   const t = useTranslations('home.cards')
+  const isEmpty = consumedKcal === 0
   const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
   const label = getEnergyLabel(calPct)
   const r = 32
@@ -67,16 +68,24 @@ export default function EnergyCard({ consumedKcal, calorieGoal, weekData }: Ener
                 <stop offset="100%" stopColor="#c9a84c" />
               </linearGradient>
             </defs>
-            <circle cx="40" cy="40" r={r} fill="none" stroke="#2a2a2a" strokeWidth="6" />
-            <circle cx="40" cy="40" r={r} fill="none" stroke="url(#energyGold)" strokeWidth="6"
-              strokeLinecap="round" strokeDasharray={circ}
-              strokeDashoffset={circ * (1 - calPct / 100)}
-              style={{ transition: 'stroke-dashoffset 1.5s ease' }}
-            />
+            <circle cx="40" cy="40" r={r} fill="none" stroke={isEmpty ? ringTrackEmpty : '#2a2a2a'} strokeWidth="6" />
+            {!isEmpty && (
+              <circle cx="40" cy="40" r={r} fill="none" stroke="url(#energyGold)" strokeWidth="6"
+                strokeLinecap="round" strokeDasharray={circ}
+                strokeDashoffset={circ * (1 - calPct / 100)}
+                style={{ transition: 'stroke-dashoffset 1.5s ease' }}
+              />
+            )}
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 400, color: GOLD, lineHeight: 1 }}>{calPct}%</span>
-            <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: label.color, marginTop: 2 }}>{label.text}</span>
+            {isEmpty ? (
+              <span style={emptyStateStyle}>{t('energyEmpty')}</span>
+            ) : (
+              <>
+                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 400, color: GOLD, lineHeight: 1 }}>{calPct}%</span>
+                <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: label.color, marginTop: 2 }}>{label.text}</span>
+              </>
+            )}
           </div>
         </div>
       </div>

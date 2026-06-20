@@ -2313,7 +2313,8 @@
     "cards": {
       "energy": "Energie",
       "recovery": "Erholung",
-      "noData": "Keine Daten"
+      "noData": "Keine Daten",
+      "energyEmpty": "Auswerten"
     },
     "overview": "Tagesübersicht",
     "hydration": "HYDRIERUNG",

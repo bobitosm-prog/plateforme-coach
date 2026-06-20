@@ -2313,7 +2313,8 @@
     "cards": {
       "energy": "Energy",
       "recovery": "Recovery",
-      "noData": "No data"
+      "noData": "No data",
+      "energyEmpty": "To assess"
     },
     "overview": "Today's overview",
     "hydration": "HYDRATION",
