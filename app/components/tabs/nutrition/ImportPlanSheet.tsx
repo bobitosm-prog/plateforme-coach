@@ -34,7 +34,7 @@ export default function ImportPlanSheet({ mealLabel, foods, isInvited, onImport,
         </div>
         <div style={{ padding: '16px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 20px) + 80px)', borderTop: `1px solid ${colors.divider}`, background: colors.surface2, display: 'flex', gap: 12, flexShrink: 0 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 14, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: colors.gold, fontFamily: fonts.alt, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const }}>ANNULER</button>
-          <button onClick={onImport} style={{ flex: 1, padding: 14, border: 'none', background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', borderRadius: 12, color: '#0D0B08', fontFamily: fonts.alt, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const, boxShadow: '0 4px 20px rgba(212,168,67,0.2)' }}>IMPORTER</button>
+          <button onClick={onImport} style={{ flex: 1, padding: 14, border: 'none', background: 'linear-gradient(135deg, #E8C97A, #D4A843, #C9A84C, #8B6914)', borderRadius: 12, color: colors.onGold, fontFamily: fonts.alt, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const, boxShadow: '0 4px 20px rgba(212,168,67,0.2)' }}>IMPORTER</button>
         </div>
       </div>
     </>

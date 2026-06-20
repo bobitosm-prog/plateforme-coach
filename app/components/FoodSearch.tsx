@@ -177,7 +177,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
           </div>
           <button onClick={addFood} disabled={saving} style={{
             width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: saving ? 'wait' : 'pointer',
-            background: colors.gold, color: '#0D0B08',
+            background: colors.gold, color: colors.onGold,
             fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 800,
             letterSpacing: '1px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1,
 

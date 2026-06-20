@@ -198,7 +198,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
           </div>
         </div>
 
-        <button onClick={generateRecipe} disabled={generating} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, color: '#0D0B08', fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', opacity: generating ? 0.6 : 1 }}>
+        <button onClick={generateRecipe} disabled={generating} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, color: colors.onGold, fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', opacity: generating ? 0.6 : 1 }}>
           {generating ? t('generating') : t('generate')}
         </button>
       </div>
@@ -211,7 +211,7 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h2 style={{ fontFamily: fonts.headline, fontSize: '1.1rem', fontWeight: 700, color: colors.text, margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{t('title')}</h2>
-        <button onClick={() => setShowGenerate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, color: '#0D0B08', fontSize: '0.72rem', fontWeight: 800, fontFamily: fonts.alt, letterSpacing: '1px', textTransform: 'uppercase' }}>
+        <button onClick={() => setShowGenerate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, color: colors.onGold, fontSize: '0.72rem', fontWeight: 800, fontFamily: fonts.alt, letterSpacing: '1px', textTransform: 'uppercase' }}>
           <Sparkles size={13} /> {t('generateBtn')}
         </button>
       </div>

@@ -467,7 +467,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           {([['auto', t('labels.auto')], ['manual', t('labels.manual')], ['ratio', t('labels.ratio')]] as [string, string][]).map(([id, label]) => {
             const active = macroMode === id
             return (
-              <button key={id} onClick={() => setMacroMode(id as MacroMode)} style={{ flex: 1, padding: '10px 8px', background: active ? colors.gold : colors.background, border: 'none', cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '1px', color: active ? '#0D0B08' : colors.textMuted, transition: 'all 150ms' }}>
+              <button key={id} onClick={() => setMacroMode(id as MacroMode)} style={{ flex: 1, padding: '10px 8px', background: active ? colors.gold : colors.background, border: 'none', cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '1px', color: active ? colors.onGold : colors.textMuted, transition: 'all 150ms' }}>
                 {label}
               </button>
             )
@@ -649,8 +649,8 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             return (
               <button key={key} onClick={() => { setActiveMealTab(key); setMealSearchQuery(''); setMealSearchResults([]) }} style={{ flex: 1, padding: '8px 4px', background: active ? colors.gold : colors.background, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, transition: 'all 150ms' }}>
                 <span style={{ fontSize: '1rem' }}>{mEmoji}</span>
-                <span style={{ fontFamily: fonts.alt, fontSize: '0.58rem', fontWeight: 800, color: active ? '#0D0B08' : colors.textMuted, letterSpacing: '0.5px' }}>{t(`meals.${key}`)}</span>
-                {count > 0 && <span style={{ fontSize: '0.52rem', fontFamily: fonts.headline, color: active ? '#0D0B08' : colors.gold, fontWeight: 700 }}>{count}</span>}
+                <span style={{ fontFamily: fonts.alt, fontSize: '0.58rem', fontWeight: 800, color: active ? colors.onGold : colors.textMuted, letterSpacing: '0.5px' }}>{t(`meals.${key}`)}</span>
+                {count > 0 && <span style={{ fontSize: '0.52rem', fontFamily: fonts.headline, color: active ? colors.onGold : colors.gold, fontWeight: 700 }}>{count}</span>}
               </button>
             )
           })}
@@ -675,7 +675,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             return (
               <button key={food} onClick={() => toggleMealFood(activeMealTab, food)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: active ? colors.goldDim : colors.background, border: `1.5px solid ${active ? colors.gold : colors.divider}`, borderRadius: 12, cursor: 'pointer', transition: 'all 150ms' }}>
                 <div style={{ width: 14, height: 14, border: `1.5px solid ${active ? colors.gold : colors.textDim}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? colors.gold : 'transparent' }}>
-                  {active && <Check size={10} color="#0D0B08" strokeWidth={3} />}
+                  {active && <Check size={10} color={colors.onGold} strokeWidth={3} />}
                 </div>
                 <span style={{ fontSize: '0.72rem', fontFamily: fonts.body, fontWeight: 400, color: active ? colors.gold : colors.text, textAlign: 'left' }}>{food}</span>
               </button>
@@ -709,7 +709,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       </div>
 
       {/* ═══ SAVE BUTTON ═══ */}
-      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, marginBottom: 8 }}>
+      <button onClick={save} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 800, color: colors.onGold, letterSpacing: '2px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1, marginBottom: 8 }}>
         {saving ? t('save.saving') : t('save.saveButton')}
       </button>
 
@@ -723,7 +723,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             <button onClick={() => setShowRegenCard(false)} style={{ flex: 1, padding: '12px', background: colors.background, border: `1px solid ${colors.divider}`, borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 700, color: colors.textMuted, letterSpacing: '1px' }}>
               {t('save.noThanks')}
             </button>
-            <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: colors.gold, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
+            <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: colors.gold, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: colors.onGold, letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
               {regenerating ? t('save.regenerating') : t('save.regenerate')}
             </button>
           </div>
@@ -732,7 +732,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
       {/* Toast */}
       {toastMsg && (
-        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: colors.success, color: '#0D0B08', padding: '10px 24px', borderRadius: 12, fontFamily: fonts.alt, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: colors.success, color: colors.onGold, padding: '10px 24px', borderRadius: 12, fontFamily: fonts.alt, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
           {toastMsg}
         </div>
       )}

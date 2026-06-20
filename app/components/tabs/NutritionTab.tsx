@@ -346,7 +346,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <p style={{ ...bodyStyle, fontSize: '0.82rem', margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
           {nt('prefs.configurePrompt')}
         </p>
-        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 800, color: '#0D0B08', letterSpacing: '2px', textTransform: 'uppercase',  }}>
+        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 800, color: colors.onGold, letterSpacing: '2px', textTransform: 'uppercase',  }}>
           {nt('prefs.configureCta')}
         </button>
       </div>
@@ -793,7 +793,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                               <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: colors.background, border: `1px solid ${colors.gold}`, borderRadius: 6, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
                               <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted }}>g</span>
-                              <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: colors.gold, border: 'none', borderRadius: 6, color: '#0D0B08', padding: '4px 10px', fontFamily: fonts.body, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
+                              <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: colors.gold, border: 'none', borderRadius: 6, color: colors.onGold, padding: '4px 10px', fontFamily: fonts.body, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
                               <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}><X size={14} color={colors.textMuted} /></button>
                             </div>
                           ) : (
@@ -979,7 +979,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <button onClick={async () => {
               const { data } = await supabase.from('saved_meals').insert({ user_id: userId, name: 'Nouveau repas', meal_type: 'dejeuner', foods: [] }).select().single()
               if (data) { setMyMeals(prev => [data, ...prev]); setEditingMeal(data) }
-            }} style={{ width: '100%', marginTop: 16, padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, textAlign: 'center' }}>
+            }} style={{ width: '100%', marginTop: 16, padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: colors.onGold, fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, textAlign: 'center' }}>
               + CRÉER UN REPAS
             </button>
           </div>
@@ -1063,7 +1063,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               setEditMealSaving(false)
               setEditMealSaved(true)
               setTimeout(() => setEditMealSaved(false), 2000)
-            }} disabled={editMealSaving} style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08', fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, marginBottom: 8, opacity: editMealSaving ? 0.6 : 1 }}>
+            }} disabled={editMealSaving} style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: colors.onGold, fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, marginBottom: 8, opacity: editMealSaving ? 0.6 : 1 }}>
               {editMealSaving ? nt('actions.saving') : editMealSaved ? nt('actions.saved') : nt('actions.save')}
             </button>
             <button onClick={async () => {
@@ -1130,7 +1130,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             {photoResults?.foods && (
               <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.goldDim}`, display: 'flex', gap: 12, flexShrink: 0 }}>
                 <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
-                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, borderRadius: 12, color: '#0D0B08', fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.addAll')}</button>
+                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, borderRadius: 12, color: colors.onGold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.addAll')}</button>
               </div>
             )}
           </div>
@@ -1158,7 +1158,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               <button disabled={!saveMealName.trim()} onClick={async () => {
                 await supabase.from('saved_meals').insert({ user_id: userId, name: saveMealName, meal_type: saveMealType, foods: saveMealData.foods, total_calories: saveMealData.foods.reduce((s: number, f: any) => s + (f.calories || 0), 0), total_proteins: saveMealData.foods.reduce((s: number, f: any) => s + (f.proteins || 0), 0), total_carbs: saveMealData.foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0), total_fats: saveMealData.foods.reduce((s: number, f: any) => s + (f.fats || 0), 0) })
                 setShowSaveMealPopup(false); setSaveMealName('')
-              }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: saveMealName.trim() ? '#0D0B08' : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.save')}</button>
+              }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: saveMealName.trim() ? colors.onGold : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.save')}</button>
             </div>
           </div>
         </>
@@ -1184,7 +1184,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setShowCopyMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('copyMealPopup.cancel')}</button>
-              <button disabled={!copyTargetDate || !copyTargetMealType} onClick={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} style={{ flex: 1, padding: 14, background: (copyTargetDate && copyTargetMealType) ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: (copyTargetDate && copyTargetMealType) ? '#0D0B08' : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('copyMealPopup.copy')}</button>
+              <button disabled={!copyTargetDate || !copyTargetMealType} onClick={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} style={{ flex: 1, padding: 14, background: (copyTargetDate && copyTargetMealType) ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: (copyTargetDate && copyTargetMealType) ? colors.onGold : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('copyMealPopup.copy')}</button>
             </div>
           </div>
         </>
