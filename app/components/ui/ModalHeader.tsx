@@ -11,7 +11,7 @@ interface ModalHeaderProps {
 
 export default function ModalHeader({ title, onClose, badge, action }: ModalHeaderProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
         <div style={{ width: 3.5, height: 22, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
         <span style={{ fontFamily: fonts.alt, fontSize: 20, fontWeight: 700, letterSpacing: '0.1em', color: colors.gold, textTransform: 'uppercase', lineHeight: 1 }}>{title}</span>

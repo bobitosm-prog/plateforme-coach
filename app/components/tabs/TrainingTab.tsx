@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { RailOverlay } from '../ui/RailOverlay'
 import SectionTitle from '../ui/SectionTitle'
+import WorkoutDetailList from '../training/WorkoutDetailList'
 import ModalHeader from '../ui/ModalHeader'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
@@ -1689,45 +1690,14 @@ export default function TrainingTab({
 
       {/* Workout detail popup */}
       {selectedWorkout && (<RailOverlay>
-        <div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setSelectedWorkout(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:colors.surface,border:`1px solid ${colors.goldRule}`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.goldBorder}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
-              <div>
-                <div style={{fontFamily:fonts.headline,fontSize:22,letterSpacing:2,color:colors.text}}>{selectedWorkout.name||t('calendar.exercise')}</div>
-                <div style={{fontFamily:fonts.body,fontSize:12,color:colors.textMuted,marginTop:2}}>
-                  {new Date(selectedWorkout.created_at).toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',{weekday:'long',day:'numeric',month:'long'})}
-                  {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
-                </div>
-              </div>
-              <button aria-label={t('calendar.closeDetail')} onClick={()=>setSelectedWorkout(null)} style={{width:36,height:36,borderRadius:12,background:colors.goldDim,border:`1px solid ${colors.goldBorder}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:colors.textMuted,fontSize:16}}>✕</button>
+        <div style={{position:'fixed',inset:0,background:colors.background,zIndex:200,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          <ModalHeader title={selectedWorkout.name || t('calendar.exercise')} onClose={() => setSelectedWorkout(null)} />
+          <div style={{flex:1,overflowY:'auto',padding:'14px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
+            <div style={{fontFamily:fonts.body,fontSize:12,color:colors.textMuted,marginBottom:14}}>
+              {new Date(selectedWorkout.created_at).toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',{weekday:'long',day:'numeric',month:'long'})}
+              {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
             </div>
-            <div style={{flex:1,overflowY:'auto',padding:'12px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
-              {loadingDetail?(
-                <div style={{textAlign:'center',padding:40,color:colors.textMuted}}>{t('calendar.loading')}</div>
-              ):workoutDetail.length===0?(
-                <div style={{textAlign:'center',padding:40,color:colors.textDim,fontSize:14,fontFamily:fonts.body}}>{t('programs.noDetails')}</div>
-              ):(
-                workoutDetail.map((ex,i)=>(
-                  <div key={i} style={{marginBottom:16,paddingBottom:16,borderBottom:i<workoutDetail.length-1?`1px solid ${colors.goldBorder}`:'none'}}>
-                    <div style={{fontFamily:fonts.body,fontSize:16,fontWeight:700,color:colors.text,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{ex.name}</div>
-                    <div style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'4px 0',marginBottom:4}}>
-                      <span style={{fontFamily:fonts.body,fontSize:9,fontWeight:700,color:colors.textDim,letterSpacing:1}}>SET</span>
-                      <span style={{fontFamily:fonts.body,fontSize:9,fontWeight:700,color:colors.textDim,letterSpacing:1}}>KG</span>
-                      <span style={{fontFamily:fonts.body,fontSize:9,fontWeight:700,color:colors.textDim,letterSpacing:1}}>REPS</span>
-                      <span style={{fontFamily:fonts.body,fontSize:9,fontWeight:700,color:colors.textDim,letterSpacing:1}}>VOLUME</span>
-                    </div>
-                    {ex.sets.map((set:any,si:number)=>(
-                      <div key={si} style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 1fr',gap:8,padding:'6px 0',borderBottom:`1px solid ${colors.goldBorder}`}}>
-                        <span style={{fontFamily:fonts.headline,fontSize:16,color:colors.gold,width:28,height:28,borderRadius:8,background:colors.goldDim,display:'flex',alignItems:'center',justifyContent:'center'}}>{si+1}</span>
-                        <span style={{fontFamily:fonts.headline,fontSize:18,color:colors.text}}>{(set.weight||0).toLocaleString(locale)}</span>
-                        <span style={{fontFamily:fonts.headline,fontSize:18,color:colors.text}}>{set.reps||0}</span>
-                        <span style={{fontFamily:fonts.body,fontSize:13,color:colors.textMuted}}>{((set.weight||0)*(set.reps||0)).toLocaleString(locale)} kg</span>
-                      </div>
-                    ))}
-                  </div>
-                ))
-              )}
-            </div>
+            <WorkoutDetailList detail={workoutDetail} loading={loadingDetail} />
           </div>
         </div>
       </RailOverlay>)}
