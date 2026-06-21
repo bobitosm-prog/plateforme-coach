@@ -603,7 +603,7 @@ export default function useClientDashboard() {
     setMsgInput: messagesHook.setMsgInput, unreadCount: messagesHook.unreadCount,
     msgEndRef: messagesHook.msgEndRef, sendMessage: messagesHook.sendMessage,
     // Computed
-    calorieGoal, goalWeight, currentWeight, completedSessions, hasTrainedBefore, streak,
+    calorieGoal, goalWeight, currentWeight, completedSessions, hasTrainedBefore, streak, sessionDates,
     todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
     displayAvatar, fullName, firstName,
     // Subscription & trial

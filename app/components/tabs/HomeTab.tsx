@@ -33,6 +33,7 @@ import NutritionCard from '../home/cards/NutritionCard'
 import WeeklyDiagnosticCard, { formatWeekRange } from '../home/cards/WeeklyDiagnosticCard'
 import RecoveryModal from '../home/modals/RecoveryModal'
 import SectionTitle from '../ui/SectionTitle'
+import { formatZurichDate } from '../../../lib/format-time'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 
 /**
@@ -73,6 +74,7 @@ interface HomeTabProps {
   nextSession?: { sessionIndex: number; weekday: string; day: any; reason: string } | null
   latestDiagnostic?: any
   setLatestDiagnostic?: (d: any) => void
+  sessionDates?: { created_at: string }[]
 }
 
 export default function HomeTab({
@@ -82,7 +84,7 @@ export default function HomeTab({
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
-  latestDiagnostic, setLatestDiagnostic,
+  latestDiagnostic, setLatestDiagnostic, sessionDates = [],
 }: HomeTabProps) {
   const ht = useTranslations('home')
   const locale = useLocale()
@@ -372,15 +374,16 @@ export default function HomeTab({
     return 'active'
   })()
 
-  // Weekly bar chart data
+  // Weekly assiduity bar chart (1 bar/day, filled if session done)
   const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-  const todayDow = new Date().getDay() // 0=Sun
-  const barData = dayLabels.map((d, i) => {
-    const match = caloriesWeekData[i]
-    return { label: d, value: match?.calories || 0, isToday: i === (todayDow === 0 ? 6 : todayDow - 1) }
+  const trainedDays = new Set(sessionDates.map(s => formatZurichDate(s.created_at)))
+  const todayZ = formatZurichDate(new Date().toISOString())
+  const jsDow = new Date().getDay() === 0 ? 7 : new Date().getDay()
+  const barData = dayLabels.map((label, i) => {
+    const dd = new Date(); dd.setDate(dd.getDate() + (i - (jsDow - 1)))
+    const ds = formatZurichDate(dd.toISOString())
+    return { label, value: trainedDays.has(ds) ? 1 : 0, isToday: ds === todayZ }
   })
-  const barMax = Math.max(1, ...barData.map(b => b.value))
-
   // Objective label
   const objLabel = profile?.objective === 'weight_loss' || profile?.objective === 'seche' ? 'cut'
     : profile?.objective === 'mass' || profile?.objective === 'bulk' ? 'bulk' : 'maintain'
@@ -608,13 +611,20 @@ export default function HomeTab({
               </div>
             )}
           </div>
-          {/* Performance bar chart */}
+          {/* Assiduity dots */}
           <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 60, gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
               {barData.map((b, i) => (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: '100%', height: Math.max(4, (b.value / barMax) * 50), borderRadius: 999, background: b.isToday ? `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})` : colors.surfaceHigh, boxShadow: b.isToday ? `0 0 12px ${colors.goldDim}` : 'none', transition: 'height 0.5s ease' }} />
-                  <span style={{ fontSize: 8, fontWeight: 700, color: b.isToday ? GOLD : TEXT_MUTED }}>{b.label}</span>
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                  <div style={{
+                    width: 30, height: 30, borderRadius: 999,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    ...(b.value
+                      ? { background: `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})`, color: colors.onGold, fontSize: 15, fontWeight: 700, boxShadow: b.isToday ? `0 0 12px ${colors.goldDim}` : 'none' }
+                      : { border: `1.5px solid ${colors.divider}`, color: colors.textDim, fontSize: 12 }),
+                    transition: 'all 0.3s ease',
+                  }}>{b.value ? '✓' : '·'}</div>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: b.isToday ? GOLD : TEXT_MUTED, letterSpacing: '0.05em' }}>{b.label}</span>
                 </div>
               ))}
             </div>

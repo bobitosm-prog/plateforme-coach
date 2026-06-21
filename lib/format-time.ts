@@ -14,3 +14,16 @@ export function formatZurichTime(ts: string | null | undefined, locale = 'fr-CH'
     hour: '2-digit', minute: '2-digit', hour12: false,
   })
 }
+
+/**
+ * Formate un timestamp en date locale Europe/Zurich (YYYY-MM-DD).
+ * Meme logique de normalisation que formatZurichTime.
+ */
+export function formatZurichDate(ts: string | null | undefined): string {
+  if (!ts) return ''
+  const hasZone = /[Zz]|[+-]\d\d:?\d\d$/.test(ts)
+  const normalized = hasZone ? ts : ts.replace(' ', 'T') + 'Z'
+  const d = new Date(normalized)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('fr-CA', { timeZone: 'Europe/Zurich' })
+}
