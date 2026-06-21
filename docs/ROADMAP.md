@@ -110,6 +110,15 @@ Priorisé. Les P0 sont dans Horizon 1 Phase A ci-dessus. Ce qui suit se traite P
 
 ---
 
+## NOTE — Detour qualite 19-21 juin
+
+Sessions 19-21/06 = detour qualite Home (hors cap "0→1 payant") : fiabilisation donnees
+(streak/Recovery/heure hero/cache hit), refonte coherence visuelle (SectionTitle, closer,
+assiduite). 14 commits. Le cap reste Horizon 1 launch beta — feature "jours restants"
+PRIORITAIRE a reprendre.
+
+---
+
 ## ÉTAT DE SANTÉ (14 juin)
 
 **Solide :** closed-loop AI (diagnostic → regen meal+programme), i18n ~99%, RLS 57/57, RGPD delete, sécurité durcie (rate limits, webhook Stripe validé), push web (réparé 13 juin), persistance séance (draft + reprise).

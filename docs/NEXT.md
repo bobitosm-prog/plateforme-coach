@@ -16,6 +16,8 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Wording onboarding qualitatif ✅ 17 juin
 - [x] Admin campagnes beta (#3 Brique 5) ✅ 17 juin
 - [x] Fix P0 overlays rail (portails createPortal) ✅ 18 juin
+- [x] Fiabilisation donnees Home (streak/Recovery/heure hero/cache) ✅ 21 juin
+- [x] Refonte coherence Home (SectionTitle, closer, assiduite) ✅ 21 juin
 - [ ] **Feature "jours restants" dans l'app** (PRIORITAIRE)
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
@@ -39,6 +41,11 @@ champ name vide en DB. À diagnostiquer.
 - [ ] (b) Déplacer réglages notifs ProfileTab → Préférences.
       **REPORTÉ post-launch** (refacto fragile, risque F1b).
 
+### EN COURS — Etendre SectionTitle aux autres ecrans
+SectionTitle (app/components/ui/SectionTitle.tsx) unifie les titres de section du Home.
+A deployer sur Training, Nutrition, Progress, Account pour coherence globale.
+Commencer par TrainingTab (titres de section les plus visibles).
+
 ### Prérequis launch
 - [ ] Parcours signup → onboarding → 1ère séance E2E par un tiers (pas Marco).
 - [ ] Observabilité — fiabiliser app_logs, surveillance erreurs temps réel.
@@ -52,11 +59,18 @@ Visuels SEEDANCE + prompts pub Insta/TikTok. PAS avant que Phase A soit cochée.
 - Comparaison sub par endpoint seul (pas clés p256dh/auth) — angle mort résiduel mineur
 - Jobid 4/5 UTC fixe sans double-job DST (drift ±1h, acceptable)
 - 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin)
+- Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich)
+- AbsCalculator a recabler design-system
+- weekly_diagnostic obsolete marko.rosa en base
 
 ## Règles dev permanentes
 - **Overlays dans le rail** : tout position:fixed rendu dans une slide du rail
   DOIT être portalisé (<RailOverlay> ou createPortal interne). Le transform du
   rail casse le containing block. Ref : RailOverlay.tsx, SessionDetailModal.tsx.
+- **Cache hit hook** : tout state du Promise.all de useClientDashboard DOIT être
+  replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min).
+- **Timezone created_at** : colonnes timestamp WITHOUT time zone = UTC sans Z,
+  convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ## Notes test
 - f.marco (UUID 00a8a3a6) : sub saine après test re-sync 17/06.

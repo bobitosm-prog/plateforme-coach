@@ -4,15 +4,74 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-18
-- **HEAD** : 2730c51 (fix(training): portal remaining popups to escape rail transform)
+- **Date** : 2026-06-21
+- **HEAD** : 98c0408 (feat(home): graphe PROGRESSION = assiduite hebdo)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 18/06 — P0 overlays rail RÉSOLU (tous les fixed portalisés).
+- **Dernière session** : 21/06 — Fiabilisation donnees Home + refonte coherence Home (EN PROD).
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
-- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin).
-- **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx.
+- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base.
+- **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
+
+---
+
+## 2026-06-21 — Fiabilisation donnees Home + refonte coherence Home [EN PROD]
+
+### Contexte
+Detour QUALITE hors cap launch (debug fiabilite + coherence visuelle Home). La feature
+PRIORITAIRE "jours restants" reste a faire. (Rappel : le 18/06 = fix overlays rail, deja
+pousse, HEAD etait 2730c51.)
+
+### Bugs corriges [EN PROD]
+- RecoveryCard "À évaluer" faux comptes actifs : count dedie hasTrainedBefore (wSessions
+  tronque). Labels GOOD/WATCH/RECOVER -> i18n PRÊT/VIGILANCE/RÉCUP.
+- Heure hero UTC brut (06:30 vs 08:30) : helper formatZurichTime (lib/format-time.ts).
+- Streak/Récup faux : (1) wSessions tronque (select avec workout_sets, ~1017 sets) -> requete
+  dediee sessionDates (created_at, limit 400) ; (2) chemin cache hit ne repeuplait pas
+  sessionDates/hasTrainedBefore -> ajoutes a cache.set + cache.get.
+
+### Faux bugs verifies (rayes du backlog)
+- Heures messages : tables timestamptz, OK. Polling feedback/mine : polling volontaire 1/min, sain.
+
+### Refonte coherence Home
+- Hydratation bleu->dore ; focus-visible dore global (globals.css).
+- Composant SectionTitle (app/components/ui/SectionTitle.tsx) : barre doree + Barlow Condensed
+  + props action/trailing/noPadding. Norme espacement marginTop 28/marginBottom 20. Reutilisable
+  pour toute l'app.
+- 7 titres Home unifies ; cle i18n weekTitle (fr/en/de).
+- Bouton VALIDER CHECK-IN -> preset btnPrimary (glow).
+- Doublon "MA SEMAINE" retire (header interne WeeklyDiagnosticCard), date en trailing du
+  SectionTitle (formatWeekRange exportee).
+- Closer enrichi : bloc stats perso (nb seances hero + niveau + streak) au-dessus de la phrase
+  motivante tournante (dailyQuote conservee). Cles i18n closer*.
+- Graphe PROGRESSION : affichait les calories (incoherent en section entrainement) -> rebranche
+  sur l'assiduite hebdo (pastilles avec check par jour entraine, source sessionDates).
+  formatZurichDate ajoute (lib/format-time.ts).
+
+### Commits livres (chronologique)
+| # | Hash | Description |
+|---|------|-------------|
+| 1 | 4e7b512 | fix(home): RecoveryCard 'À évaluer' à tort pour comptes actifs |
+| 2 | 3ab70d8 | fix(i18n): RecoveryCard labels d'etat traduits |
+| 3 | d9d4d0c | fix(timezone): heure de seance du hero en Europe/Zurich |
+| 4 | 1a04613 | fix(home): streak/Recovery fiables sur cache hit + via requete dediee |
+| 5 | d662ace | style(home): hydratation en dore (icone + bouton +250ML) |
+| 6 | 765a3ec | style(global): focus-visible dore sur boutons |
+| 7 | ff8e266 | feat(ui): composant SectionTitle reutilisable |
+| 8 | 33eccbe | style(home): titres de section unifies (SectionTitle) + glow bouton check-in |
+| 9 | 3d724db | style(home): titres hydratation/checkin/ma-semaine sortis des cartes |
+| 10 | b886a50 | style(ui): SectionTitle marginBottom 14 -> 20 |
+| 11 | d36ac0b | feat(ui): SectionTitle prop trailing |
+| 12 | 80213bc | style(home): finition espacement + retrait doublon MA SEMAINE |
+| 13 | d350471 | feat(home): closer enrichi avec stats perso |
+| 14 | 98c0408 | feat(home): graphe PROGRESSION = assiduite hebdo (pastilles check) |
+
+### Lecons / regles permanentes (rappel)
+- Cache hit hook : tout state du Promise.all de useClientDashboard DOIT etre replique dans
+  cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min).
+- Timezone created_at : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via
+  formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
 
