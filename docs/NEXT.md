@@ -41,10 +41,15 @@ champ name vide en DB. À diagnostiquer.
 - [ ] (b) Déplacer réglages notifs ProfileTab → Préférences.
       **REPORTÉ post-launch** (refacto fragile, risque F1b).
 
-### EN COURS — Etendre SectionTitle aux autres ecrans
-SectionTitle (app/components/ui/SectionTitle.tsx) unifie les titres de section du Home.
-A deployer sur Training, Nutrition, Progress, Account pour coherence globale.
-Commencer par TrainingTab (titres de section les plus visibles).
+### EN COURS — Coherence visuelle design system
+Training : FAIT titres (SectionTitle) + modals (ModalHeader) + recap seance (WorkoutDetailList).
+RESTE Training :
+- Brancher WorkoutDetailList dans l'ecran "Bravo" (TrainingSessionDone) pour recap seance
+  du jour sous le message de felicitation (composant pret, charger workout_sets).
+- Titre hero SessionDetailModal en dore (actuellement blanc).
+- CARDIO (CardioSection) : header carte accordeon a aligner sur SectionTitle.
+- Records battus (PR) dans l'ecran de fin de seance (checkForPR existe).
+Puis propager SectionTitle/ModalHeader a Nutrition, Progress, Account.
 
 ### Prérequis launch
 - [ ] Parcours signup → onboarding → 1ère séance E2E par un tiers (pas Marco).

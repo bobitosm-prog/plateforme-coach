@@ -5,10 +5,10 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-21
-- **HEAD** : 98c0408 (feat(home): graphe PROGRESSION = assiduite hebdo)
+- **HEAD** : 1026ce1 (style(training): recap seance plein ecran + redesign aligne Home)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 21/06 — Fiabilisation donnees Home + refonte coherence Home (EN PROD).
+- **Dernière session** : 21/06 — Fiabilisation Home + coherence visuelle Home & Training.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base.
@@ -66,6 +66,20 @@ pousse, HEAD etait 2730c51.)
 | 12 | 80213bc | style(home): finition espacement + retrait doublon MA SEMAINE |
 | 13 | d350471 | feat(home): closer enrichi avec stats perso |
 | 14 | 98c0408 | feat(home): graphe PROGRESSION = assiduite hebdo (pastilles check) |
+| 15 | e68436e | style(training): titres unifies via SectionTitle + ligne doree universelle (lot A) |
+| 16 | 9a7e42e | style(training): header de modal unifie (lot B) |
+| 17 | 1026ce1 | style(training): recap seance plein ecran + redesign aligne Home |
+
+### Training — coherence visuelle (lots A + B + recap)
+- Lot A : titres de section unifies via SectionTitle (MES PROGRAMMES, DERNIÈRES SÉANCES,
+  EXERCICES, ALTERNATIVES). SectionTitle enrichi : prop icon + ligne doree TOUJOURS presente
+  (uniformite totale, Home inclus). Commit e68436e.
+- Lot B : composant ModalHeader cree (barre doree + Barlow 20px + croix). Applique a
+  ProgramManager + Apercu Import. Detail seance hero : barre doree + badge dore (hero garde).
+  borderBottom du ModalHeader retiree ensuite. Commit 9a7e42e.
+- Recap seance : WorkoutDetailList extrait + redesign (resume 3 stats + exercices en cartes
+  surface2, noms dores). Modal selectedWorkout passe en plein ecran depuis le haut (comme
+  ProgramManager). Commit 1026ce1.
 
 ### Lecons / regles permanentes (rappel)
 - Cache hit hook : tout state du Promise.all de useClientDashboard DOIT etre replique dans
