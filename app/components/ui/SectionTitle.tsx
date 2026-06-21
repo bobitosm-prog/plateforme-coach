@@ -11,7 +11,7 @@ interface SectionTitleProps {
 
 export default function SectionTitle({ title, action, trailing, noPadding }: SectionTitleProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, padding: noPadding ? 0 : '0 20px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 28, marginBottom: 20, padding: noPadding ? 0 : '0 20px' }}>
       <div style={{ width: 3, height: 16, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
       <span style={{
         fontFamily: fonts.alt, fontSize: 13, fontWeight: 700,

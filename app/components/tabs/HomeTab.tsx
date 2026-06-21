@@ -30,7 +30,7 @@ import HeroSessionCard, { type HeroState } from '../home/HeroSessionCard'
 import EnergyCard from '../home/cards/EnergyCard'
 import RecoveryCard from '../home/cards/RecoveryCard'
 import NutritionCard from '../home/cards/NutritionCard'
-import WeeklyDiagnosticCard from '../home/cards/WeeklyDiagnosticCard'
+import WeeklyDiagnosticCard, { formatWeekRange } from '../home/cards/WeeklyDiagnosticCard'
 import RecoveryModal from '../home/modals/RecoveryModal'
 import SectionTitle from '../ui/SectionTitle'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
@@ -479,7 +479,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ MA SEMAINE — Weekly AI Diagnostic ═══ */}
-        <SectionTitle noPadding title={ht('weekTitle')} />
+        <SectionTitle noPadding title={ht('weekTitle')} trailing={latestDiagnostic ? formatWeekRange(latestDiagnostic.week_start, locale) : undefined} />
         <WeeklyDiagnosticCard
           diagnostic={latestDiagnostic}
           onViewDetails={() => latestDiagnostic && router.push(`/weekly-diagnostic/${latestDiagnostic.id}`)}
@@ -587,7 +587,7 @@ export default function HomeTab({
         )}
       </div>
 
-      <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column' }}>
 
         {/* ═══ PROGRESSION (streak + weight + XP) ═══ */}
         <SectionTitle noPadding title={ht('progression')} action={{ label: ht('details'), onClick: () => setActiveTab('progress') }} />

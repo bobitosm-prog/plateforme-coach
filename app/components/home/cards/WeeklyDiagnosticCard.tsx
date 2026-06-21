@@ -12,7 +12,7 @@ function getScoreColor(score: number): string {
   return '#EF4444'
 }
 
-function formatWeekRange(weekStart: string, locale: string): string {
+export function formatWeekRange(weekStart: string, locale: string): string {
   const start = new Date(weekStart + 'T00:00:00')
   const end = new Date(start)
   end.setDate(start.getDate() + 6)
@@ -113,16 +113,6 @@ export default function WeeklyDiagnosticCard({
       transition={{ duration: 0.3 }}
       style={{ ...localCardStyle, marginTop: 16 }}
     >
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: colors.gold }}>
-          {t('title')}
-        </span>
-        <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>
-          {formatWeekRange(diagnostic.week_start, locale)}
-        </span>
-      </div>
-
       {/* Score circle + points */}
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         {/* Score */}
