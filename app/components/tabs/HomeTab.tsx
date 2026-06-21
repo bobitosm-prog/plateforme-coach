@@ -32,6 +32,7 @@ import RecoveryCard from '../home/cards/RecoveryCard'
 import NutritionCard from '../home/cards/NutritionCard'
 import WeeklyDiagnosticCard from '../home/cards/WeeklyDiagnosticCard'
 import RecoveryModal from '../home/modals/RecoveryModal'
+import SectionTitle from '../ui/SectionTitle'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 
 /**
@@ -470,15 +471,7 @@ export default function HomeTab({
 
       {/* ═══ APERÇU DU JOUR — 3 cards grid (moved up from below) ═══ */}
       <div style={{ padding: '0 20px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase', margin: 0 }}>
-            {ht('overview')}
-          </h2>
-          <button onClick={() => setActiveTab('progress')} aria-label={ht('details')}
-            style={{ background: 'transparent', border: 'none', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-            &rsaquo;
-          </button>
-        </div>
+        <SectionTitle noPadding title={ht('overview')} action={{ label: '›', onClick: () => setActiveTab('progress') }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           <EnergyCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} weekData={caloriesWeekData} />
           <RecoveryCard muscleStatus={muscleStatus} onCardClick={() => setShowRecoveryModal(true)} hasTrainedBefore={hasTrainedBefore} />
@@ -586,12 +579,13 @@ export default function HomeTab({
               style={{ width: '100%', padding: '8px 12px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none', resize: 'none', marginBottom: 12 }} />
             <button disabled={!checkinMood || checkinSaving} onClick={() => { clearTimeout(checkinSaveRef.current); saveCheckin().then(ok => { if (ok) setCheckinEditMode(false) }) }}
               style={{
-                width: '100%', padding: 13, borderRadius: 14, border: 'none', cursor: checkinMood && !checkinSaving ? 'pointer' : 'not-allowed',
-                opacity: checkinMood ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-                background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: '#0D0B08',
+                ...btnPrimary,
+                width: '100%', padding: 13,
+                opacity: checkinMood ? 1 : 0.4,
+                cursor: checkinMood && !checkinSaving ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}>
-              {checkinSaving ? (<><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#0D0B08', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />{ht('saving')}</>)
+              {checkinSaving ? (<><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: colors.onGold, borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />{ht('saving')}</>)
                 : checkinSaved ? ht('update') : ht('validateCheckin')}
             </button>
           </div>
@@ -601,11 +595,7 @@ export default function HomeTab({
       <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* ═══ PROGRESSION (streak + weight + XP) ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-          <span style={T}>{ht('progression')}</span>
-          <div style={titleLineStyle} />
-          <button onClick={() => setActiveTab('progress')} style={{ ...labelStyle, fontSize: 10, flexShrink: 0 }}>{ht('details')}</button>
-        </div>
+        <SectionTitle noPadding title={ht('progression')} action={{ label: ht('details'), onClick: () => setActiveTab('progress') }} />
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden' }}>
           {/* Streak */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -640,10 +630,7 @@ export default function HomeTab({
         {/* ═══ PROCHAINE SEANCE — invited clients only ═══ */}
         {!aiAllowed && coachProgram && nextSession && (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={titleStyle}>{ht('nextSession')}</span>
-              <div style={titleLineStyle} />
-            </div>
+            <SectionTitle noPadding title={ht('nextSession')} />
             <div style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 20 }}>
               <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
                 {ht('suggestedForYou')}
@@ -670,10 +657,7 @@ export default function HomeTab({
         {/* ═══ TA SEMAINE — invited clients only ═══ */}
         {!aiAllowed && coachProgram && (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={titleStyle}>{ht('yourWeek')}</span>
-              <div style={titleLineStyle} />
-            </div>
+            <SectionTitle noPadding title={ht('yourWeek')} />
             <div data-no-tab-swipe="true" style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
                 {(['dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri', 'daySat', 'daySun'] as const).map((dayKey, idx) => {
