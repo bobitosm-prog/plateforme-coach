@@ -39,6 +39,7 @@ export default function useClientDashboard() {
   const [progressPhotos, setProgressPhotos] = useState<any[]>([])
   const [wSessions, setWSessions] = useState<any[]>([])
   const [hasTrainedBefore, setHasTrainedBefore] = useState(false)
+  const [sessionDates, setSessionDates] = useState<{ created_at: string }[]>([])
   const [coachProgram, setCoachProgram] = useState<any>(null)
   const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
   const [lastCompletedByIndex, setLastCompletedByIndex] = useState<Map<number, string>>(new Map())
@@ -137,6 +138,8 @@ export default function useClientDashboard() {
       const cached = cache.get(`dashboard_${uid}`)
       if (cached) {
         applyFetchedData(cached.profileData, cached.weightsData, cached.sessData, cached.measureData, cached.photosData, cached.coachProgData, cached.coachMealData)
+        setSessionDates(cached.sessionDatesData || [])
+        setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
         resolveCoachLink(uid)
         const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
@@ -146,7 +149,7 @@ export default function useClientDashboard() {
       }
     }
 
-    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes] = await Promise.all([
+    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes, sessionDatesRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
@@ -161,6 +164,7 @@ export default function useClientDashboard() {
       supabase.from('weekly_diagnostics').select('*').eq('user_id', uid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('custom_programs').select('*').eq('user_id', uid).eq('is_active', true).maybeSingle(),
       supabase.from('workout_sessions').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('completed', true),
+      supabase.from('workout_sessions').select('created_at').eq('user_id', uid).eq('completed', true).order('created_at', { ascending: false }).limit(400),
     ])
 
     if (!profRes.data) { router.replace('/onboarding-v2'); return }
@@ -231,10 +235,11 @@ export default function useClientDashboard() {
     setCompletedThisWeek(cwMap)
     setNextSession(suggestNextSession(coachProgData, lcMap))
 
-    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null }, 5 * 60 * 1000)
+    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null, sessionDatesData: sessionDatesRes?.data || [], hasTrainedBeforeVal: (trainedCountRes?.count ?? 0) > 0 }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
     setHasTrainedBefore((trainedCountRes?.count ?? 0) > 0)
+    setSessionDates(sessionDatesRes?.data || [])
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
     const customProg = customProgRes?.data || null
     const planningProgram = customProg || coachToDays(coachProgData)
@@ -477,16 +482,15 @@ export default function useClientDashboard() {
   const calorieGoal = profile?.calorie_goal || 2500
   const goalWeight = profile?.target_weight ?? null
   const currentWeight = weightHistory30.length > 0 ? weightHistory30[weightHistory30.length - 1].poids : profile?.current_weight
-  const completedSessions = wSessions.filter(s => s.completed).length
+  const completedSessions = sessionDates.length
   const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   // Single source: lib/streak.ts (Duolingo grace period)
-  // NB: wSessions capped at 90 — a streak >90 days would be truncated
-  const streakDates = wSessions.filter(s => s.completed).map(s => toLocal(new Date(s.created_at)))
+  const streakDates = sessionDates.map(s => toLocal(new Date(s.created_at)))
   const streakResult = computeStreak(streakDates, toLocal(new Date()))
   const streak = streakResult.current
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
-  const todaySessionDone = wSessions.some(s => s.completed && toLocal(new Date(s.created_at)) === toLocal(new Date()))
+  const todaySessionDone = sessionDates.some(s => toLocal(new Date(s.created_at)) === toLocal(new Date()))
   const chartMin = weightHistory30.length > 0 ? Math.min(...weightHistory30.map(p => p.poids)) - 1 : 0
   const chartMax = weightHistory30.length > 0 ? Math.max(...weightHistory30.map(p => p.poids)) + 1 : 1
   const displayAvatar = session ? (profile?.avatar_url || session.user.user_metadata?.avatar_url) : undefined
