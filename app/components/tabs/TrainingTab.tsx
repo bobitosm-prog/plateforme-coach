@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { RailOverlay } from '../ui/RailOverlay'
 import SectionTitle from '../ui/SectionTitle'
+import ModalHeader from '../ui/ModalHeader'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
 import { getExerciseName } from '../../../lib/i18n-exercise'
@@ -1350,11 +1351,7 @@ export default function TrainingTab({
       {showProgramManager && (
         <RailOverlay>
         <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0 }}>
-            <span style={pageTitleStyle}>{t('programs.title')}</span>
-            <button onClick={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} style={{ width: 36, height: 36, borderRadius: 12, background: colors.surface2, border: `1px solid ${colors.divider}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.textMuted, fontSize: 16 }}>✕</button>
-          </div>
+          <ModalHeader title={t('programs.title')} onClose={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} />
 
           {/* Hidden file input for import */}
           <input ref={importFileRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={async (e) => {
@@ -1515,16 +1512,9 @@ export default function TrainingTab({
       {importPreview && (<RailOverlay>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setImportPreview(null)}>
           <div onClick={e => e.stopPropagation()} style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <ModalHeader title="APERÇU IMPORT" badge={importPreview.total_weeks ? `${importPreview.total_weeks} SEM` : undefined} onClose={() => setImportPreview(null)} />
             {/* Scrollable content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={pageTitleStyle}>APERÇU IMPORT</span>
-                {importPreview.total_weeks && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 8px', borderRadius: 999 }}>
-                    {importPreview.total_weeks} SEM
-                  </span>
-                )}
-              </div>
 
               <div style={{ marginTop: 16 }}>
                 <div style={{ ...labelStyle, marginBottom: 4 }}>{t('programs.programName')}</div>

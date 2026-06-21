@@ -80,24 +80,27 @@ export default function SessionDetailModal({
             </button>
 
             {/* Title + badge */}
-            <div style={{ position: 'absolute', bottom: 20, left: 20, right: 20 }}>
-              {dayBadge && (
-                <span style={{
-                  fontFamily: fonts.alt, fontSize: 10, fontWeight: 700,
-                  letterSpacing: '0.18em', color: dayBadge.color,
-                  textTransform: 'uppercase', display: 'block', marginBottom: 8,
+            <div style={{ position: 'absolute', bottom: 20, left: 20, right: 20, display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+              <div style={{ width: 4, height: 46, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
+              <div>
+                {dayBadge && (
+                  <span style={{
+                    fontFamily: fonts.alt, fontSize: 10, fontWeight: 700,
+                    letterSpacing: '0.18em', color: colors.gold,
+                    textTransform: 'uppercase', display: 'block', marginBottom: 8,
+                  }}>
+                    {dayBadge.text}
+                  </span>
+                )}
+                <h1 style={{
+                  fontFamily: fonts.headline, fontSize: 36, fontWeight: 400,
+                  color: 'white', textTransform: 'uppercase',
+                  letterSpacing: '0.02em', margin: 0, lineHeight: 1,
+                  textShadow: '0 2px 8px rgba(0,0,0,0.4)',
                 }}>
-                  {dayBadge.text}
-                </span>
-              )}
-              <h1 style={{
-                fontFamily: fonts.headline, fontSize: 36, fontWeight: 400,
-                color: 'white', textTransform: 'uppercase',
-                letterSpacing: '0.02em', margin: 0, lineHeight: 1,
-                textShadow: '0 2px 8px rgba(0,0,0,0.4)',
-              }}>
-                {shortenSessionTitle(sessionTitle)}
-              </h1>
+                  {shortenSessionTitle(sessionTitle)}
+                </h1>
+              </div>
             </div>
           </div>
 
