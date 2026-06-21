@@ -686,6 +686,21 @@ export default function HomeTab({
 
         {/* ═══ PHRASE MOTIVANTE (closer) ═══ */}
         <div style={{ textAlign: 'center', padding: '8px 0' }}>
+          {/* Stats perso */}
+          <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.22em', color: colors.textDim, textTransform: 'uppercase', marginBottom: 6 }}>
+            {ht('closerLabel')}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8 }}>
+            <span style={{ fontFamily: fonts.headline, fontSize: 64, color: colors.gold }}>{completedSessions}</span>
+            <span style={{ fontFamily: fonts.alt, fontSize: 16, fontWeight: 700, color: colors.gold, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{ht('closerSessions')}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 16, fontFamily: fonts.alt, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: colors.textDim, textTransform: 'uppercase' }}>
+            <span>{ht('closerLevel')} <span style={{ color: colors.gold }}>{getLevelFromXP(xpData?.total_xp ?? 0).level}</span></span>
+            <span style={{ color: colors.textDim, opacity: 0.4 }}>·</span>
+            <span><span style={{ color: colors.gold }}>{streak}</span> {ht('closerStreakDays')}</span>
+          </div>
+          <div style={{ height: 22 }} />
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
             <div style={{ width: 30, height: 1, background: 'rgba(201,168,76,0.4)' }} />
             <svg width="14" height="14" viewBox="0 0 24 24" fill={colors.gold}><path d="M12 2l2.5 7.5H22l-6 4.5 2.5 7.5-6-4.5-6 4.5 2.5-7.5-6-4.5h7.5z" /></svg>
