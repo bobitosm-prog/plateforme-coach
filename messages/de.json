@@ -2315,7 +2315,10 @@
       "recovery": "Erholung",
       "noData": "Keine Daten",
       "energyEmpty": "Auswerten",
-      "recoveryEmpty": "Auswerten"
+      "recoveryEmpty": "Auswerten",
+      "recoveryReady": "BEREIT",
+      "recoveryWatch": "ACHTUNG",
+      "recoveryRecover": "ERHOLUNG"
     },
     "overview": "Tagesübersicht",
     "hydration": "HYDRIERUNG",

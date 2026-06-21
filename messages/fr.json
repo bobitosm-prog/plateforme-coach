@@ -2315,7 +2315,10 @@
       "recovery": "Recup.",
       "noData": "Pas de donnees",
       "energyEmpty": "À évaluer",
-      "recoveryEmpty": "À évaluer"
+      "recoveryEmpty": "À évaluer",
+      "recoveryReady": "PRÊT",
+      "recoveryWatch": "VIGILANCE",
+      "recoveryRecover": "RÉCUP"
     },
     "overview": "Apercu du jour",
     "hydration": "HYDRATATION",

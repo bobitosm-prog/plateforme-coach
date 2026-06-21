@@ -10,13 +10,13 @@ const FONT_DISPLAY = fonts.headline
 const FONT_ALT = fonts.alt
 const TEXT_DIM = colors.textDim
 
-function getRecoveryStatus(muscleStatus: Record<string, number>): { text: string; color: string } {
+function getRecoveryStatus(muscleStatus: Record<string, number>): { key: string; color: string } {
   const values = Object.values(muscleStatus)
-  if (!values.length) return { text: 'GOOD', color: colors.success }
+  if (!values.length) return { key: 'recoveryReady', color: colors.success }
   const avg = values.reduce((a, b) => a + b, 0) / values.length
-  if (avg < 0.3) return { text: 'GOOD', color: colors.success }
-  if (avg < 0.6) return { text: 'WATCH', color: colors.orange }
-  return { text: 'RECOVER', color: colors.error }
+  if (avg < 0.3) return { key: 'recoveryReady', color: colors.success }
+  if (avg < 0.6) return { key: 'recoveryWatch', color: colors.orange }
+  return { key: 'recoveryRecover', color: colors.error }
 }
 
 const cardStyle: React.CSSProperties = {
@@ -74,7 +74,7 @@ export default function RecoveryCard({ muscleStatus, onCardClick, hasTrainedBefo
           <CardEmptyState label={t('recoveryEmpty')} />
         ) : (
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 400, color: status.color, letterSpacing: '0.05em' }}>
-            {status.text}
+            {t(status.key)}
           </span>
         )}
       </div>
