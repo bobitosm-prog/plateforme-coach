@@ -7,6 +7,7 @@ import { getMuscleLabel, matchMuscleFilter } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { fonts, colors, btnPrimary } from '../../../lib/design-tokens'
 import { RailOverlay } from '../ui/RailOverlay'
+import SectionTitle from '../ui/SectionTitle'
 
 // Mix of DB values + UI aliases (Jambes aggregates quads/hamstrings/glutes/calves)
 const MUSCLE_FILTER_VALUES = ['Pectoraux', 'Dos', '\u00c9paules', 'Biceps', 'Triceps', 'Jambes', 'Abdos', 'Fessiers', 'Mollets']
@@ -74,10 +75,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
     <>
       {/* ═══ EXERCICES ═══ */}
       <div style={{ padding: '0 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={sectionHeader}>{t('exercises')}</span>
-          <button onClick={() => setLibShowAll(true)} style={{ background: 'transparent', border: 'none', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase', cursor: 'pointer' }}>{t('viewAll')} &rsaquo;</button>
-        </div>
+        <SectionTitle noPadding title={t('exercises')} action={{ label: t('viewAll') + ' ›', onClick: () => setLibShowAll(true) }} />
         <div style={cardWrapper}>
           <div style={{ position: 'relative', marginBottom: 12 }}>
             <Search size={14} color={colors.textDim} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
@@ -179,10 +177,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
 
       {/* ═══ ALTERNATIVES ═══ */}
       <div style={{ padding: '0 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <span style={sectionHeader}>{t('alternatives')}</span>
-          <ArrowRightLeft size={14} color={colors.gold} style={{ flexShrink: 0 }} />
-        </div>
+        <SectionTitle noPadding title={t('alternatives')} icon={<ArrowRightLeft size={14} />} />
         <div style={cardWrapper}>
           <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textDim, margin: '0 0 12px', lineHeight: 1.5 }}>{t('altDesc')}</p>
           <div style={{ position: 'relative', marginBottom: 12 }}>

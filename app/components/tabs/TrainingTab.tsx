@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { RailOverlay } from '../ui/RailOverlay'
+import SectionTitle from '../ui/SectionTitle'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
 import { getExerciseName } from '../../../lib/i18n-exercise'
@@ -955,12 +956,8 @@ export default function TrainingTab({
 
       {/* ═══ SECTION 2.5 — MES PROGRAMMES (always visible for AUTO clients) ═══ */}
       {aiAllowed && (
-        <div style={{ margin: '16px 24px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={T}>{t('programs.title')}</span>
-            <div style={titleLineStyle} />
-            <span style={{ ...mutedStyle, flexShrink: 0 }}>{customPrograms.length}</span>
-          </div>
+        <div style={{ margin: '0 24px' }}>
+          <SectionTitle noPadding title={t('programs.title')} trailing={String(customPrograms.length)} />
           <button onClick={() => setShowProgramManager(true)} style={{ width: '100%', padding: '12px 16px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

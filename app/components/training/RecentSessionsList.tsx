@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
 import { resolveSessionType, HISTORY_FILTERS, getHeroImage } from '../../../lib/session-types'
 import { colors, fonts } from '../../../lib/design-tokens'
+import SectionTitle from '../ui/SectionTitle'
 
 interface RecentSessionsListProps {
   workoutHistory: any[]
@@ -27,16 +28,8 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
   const visible = filtered.slice(0, limit)
 
   return (
-    <div style={{ padding: '0 20px', marginTop: 24, marginBottom: 24 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingLeft: 4 }}>
-        <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' }}>
-          {t('lastSessions')}
-        </span>
-        <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textDim }}>
-          {t('sessionsCount', { count: workoutHistory.length })}
-        </span>
-      </div>
+    <div style={{ padding: '0 20px', marginBottom: 24 }}>
+      <SectionTitle noPadding title={t('lastSessions')} trailing={t('sessionsCount', { count: workoutHistory.length })} />
 
       {/* Filter chips */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>

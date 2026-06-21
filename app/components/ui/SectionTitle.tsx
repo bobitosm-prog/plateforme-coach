@@ -7,9 +7,10 @@ interface SectionTitleProps {
   action?: { label: string; onClick: () => void }
   trailing?: string
   noPadding?: boolean
+  icon?: React.ReactNode
 }
 
-export default function SectionTitle({ title, action, trailing, noPadding }: SectionTitleProps) {
+export default function SectionTitle({ title, action, trailing, noPadding, icon }: SectionTitleProps) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 28, marginBottom: 20, padding: noPadding ? 0 : '0 20px' }}>
       <div style={{ width: 3, height: 16, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
@@ -18,25 +19,22 @@ export default function SectionTitle({ title, action, trailing, noPadding }: Sec
         letterSpacing: '0.16em', color: colors.gold,
         textTransform: 'uppercase', lineHeight: 1,
       }}>{title}</span>
-      {(action || trailing) && (
-        <>
-          <div style={{ flexGrow: 1, height: 1, background: colors.goldRule }} />
-          {action ? (
-            <button onClick={action.onClick} aria-label={action.label} style={{
-              background: 'transparent', border: 'none', fontFamily: fonts.alt,
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: colors.gold,
-              textTransform: 'uppercase', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, padding: 0,
-            }}>{action.label}</button>
-          ) : trailing ? (
-            <span style={{
-              fontFamily: fonts.alt, fontSize: 11, fontWeight: 600,
-              letterSpacing: '0.08em', color: colors.textDim,
-              textTransform: 'uppercase', flexShrink: 0,
-            }}>{trailing}</span>
-          ) : null}
-        </>
-      )}
+      {icon && <span style={{ display: 'flex', alignItems: 'center', color: colors.gold, flexShrink: 0 }}>{icon}</span>}
+      <div style={{ flexGrow: 1, height: 1, background: colors.goldRule }} />
+      {action ? (
+        <button onClick={action.onClick} aria-label={action.label} style={{
+          background: 'transparent', border: 'none', fontFamily: fonts.alt,
+          fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: colors.gold,
+          textTransform: 'uppercase', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, padding: 0,
+        }}>{action.label}</button>
+      ) : trailing ? (
+        <span style={{
+          fontFamily: fonts.alt, fontSize: 11, fontWeight: 600,
+          letterSpacing: '0.08em', color: colors.textDim,
+          textTransform: 'uppercase', flexShrink: 0,
+        }}>{trailing}</span>
+      ) : null}
     </div>
   )
 }
