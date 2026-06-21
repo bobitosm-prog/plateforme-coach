@@ -479,6 +479,7 @@ export default function HomeTab({
         </div>
 
         {/* ═══ MA SEMAINE — Weekly AI Diagnostic ═══ */}
+        <SectionTitle noPadding title={ht('weekTitle')} />
         <WeeklyDiagnosticCard
           diagnostic={latestDiagnostic}
           onViewDetails={() => latestDiagnostic && router.push(`/weekly-diagnostic/${latestDiagnostic.id}`)}
@@ -487,10 +488,10 @@ export default function HomeTab({
         />
 
         {/* ═══ HYDRATATION ═══ */}
-        <div style={{ marginTop: 12, background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+        <SectionTitle noPadding title={ht('hydration')} />
+        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
           <Droplets size={18} color={colors.gold} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase' }}>{ht('hydration')}</div>
             <div style={{ fontFamily: fonts.headline, fontSize: 16, color: colors.gold }}>{(waterToday / 1000).toFixed(1)}L <span style={{ fontSize: 11, color: colors.textMuted }}>/ {((profile?.water_goal || 3000) / 1000).toFixed(1)}L</span></div>
           </div>
           <button onClick={() => addWater(250)} className="active:scale-95" style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.15s' }}>{ht('addWater')}</button>
@@ -502,11 +503,7 @@ export default function HomeTab({
         {checkinSaved && !checkinEditMode ? (
           /* ── COMPACT CARD: week calendar ── */
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.15em', margin: 0 }}>{ht('wellbeing')}</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(201,168,76,0.25)' }} />
-              <button onClick={() => setActiveTab('progress')} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', cursor: 'pointer', padding: '4px 0' }}>{ht('viewAll')}</button>
-            </div>
+            <SectionTitle noPadding title={ht('checkinTitle')} action={{ label: ht('viewAll'), onClick: () => setActiveTab('progress') }} />
             <div data-no-tab-swipe="true" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 12 }}>
                 {(() => {
@@ -536,12 +533,9 @@ export default function HomeTab({
           </>
         ) : (
           /* ── FULL CHECK-IN CARD ── */
+          <>
+          <SectionTitle noPadding title={ht('checkinTitle')} action={checkinSaved ? { label: ht('close'), onClick: () => setCheckinEditMode(false) } : undefined} />
           <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: colors.gold }}>{ht('checkinTitle')}</div>
-              {checkinSaved && <button onClick={() => setCheckinEditMode(false)} style={{ background: 'transparent', border: 'none', fontSize: 10, fontWeight: 700, color: colors.textDim, cursor: 'pointer', padding: '2px 6px' }}>{ht('close')}</button>}
-            </div>
-            <div style={{ height: 1, background: 'rgba(201,168,76,0.1)', margin: '8px 0 14px' }} />
             <div style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 12 }}>{ht('checkinQuestion')}</div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
               {[
@@ -589,6 +583,7 @@ export default function HomeTab({
                 : checkinSaved ? ht('update') : ht('validateCheckin')}
             </button>
           </div>
+          </>
         )}
       </div>
 
