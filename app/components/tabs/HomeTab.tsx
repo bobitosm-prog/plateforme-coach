@@ -57,6 +57,7 @@ interface HomeTabProps {
   goalWeight: number | null
   calorieGoal: number
   completedSessions: number
+  hasTrainedBefore: boolean
   streak: number
   coachProgram: any
   coachMealPlan: any
@@ -76,7 +77,7 @@ interface HomeTabProps {
 export default function HomeTab({
   supabase, session, profile, displayAvatar, firstName,
   avatarRef, photoRef, uploadAvatar, uploadProgressPhoto,
-  currentWeight, goalWeight, completedSessions, streak,
+  currentWeight, goalWeight, completedSessions, hasTrainedBefore, streak,
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
@@ -480,7 +481,7 @@ export default function HomeTab({
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           <EnergyCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} weekData={caloriesWeekData} />
-          <RecoveryCard muscleStatus={muscleStatus} onCardClick={() => setShowRecoveryModal(true)} hasTrainedBefore={completedSessions > 0} />
+          <RecoveryCard muscleStatus={muscleStatus} onCardClick={() => setShowRecoveryModal(true)} hasTrainedBefore={hasTrainedBefore} />
           <NutritionCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal} carbsGoal={profile?.carbs_goal} fatGoal={profile?.fat_goal} />
         </div>
 

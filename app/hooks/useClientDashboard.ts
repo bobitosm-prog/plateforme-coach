@@ -38,6 +38,7 @@ export default function useClientDashboard() {
   const [measurements, setMeasurements] = useState<any[]>([])
   const [progressPhotos, setProgressPhotos] = useState<any[]>([])
   const [wSessions, setWSessions] = useState<any[]>([])
+  const [hasTrainedBefore, setHasTrainedBefore] = useState(false)
   const [coachProgram, setCoachProgram] = useState<any>(null)
   const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
   const [lastCompletedByIndex, setLastCompletedByIndex] = useState<Map<number, string>>(new Map())
@@ -145,7 +146,7 @@ export default function useClientDashboard() {
       }
     }
 
-    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes] = await Promise.all([
+    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
@@ -159,6 +160,7 @@ export default function useClientDashboard() {
       supabase.from('completed_sessions').select('session_index, session_name, completed_at').eq('client_id', uid).order('completed_at', { ascending: false }).limit(50),
       supabase.from('weekly_diagnostics').select('*').eq('user_id', uid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('custom_programs').select('*').eq('user_id', uid).eq('is_active', true).maybeSingle(),
+      supabase.from('workout_sessions').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('completed', true),
     ])
 
     if (!profRes.data) { router.replace('/onboarding-v2'); return }
@@ -232,6 +234,7 @@ export default function useClientDashboard() {
     cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
+    setHasTrainedBefore((trainedCountRes?.count ?? 0) > 0)
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
     const customProg = customProgRes?.data || null
     const planningProgram = customProg || coachToDays(coachProgData)
@@ -596,7 +599,7 @@ export default function useClientDashboard() {
     setMsgInput: messagesHook.setMsgInput, unreadCount: messagesHook.unreadCount,
     msgEndRef: messagesHook.msgEndRef, sendMessage: messagesHook.sendMessage,
     // Computed
-    calorieGoal, goalWeight, currentWeight, completedSessions, streak,
+    calorieGoal, goalWeight, currentWeight, completedSessions, hasTrainedBefore, streak,
     todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
     displayAvatar, fullName, firstName,
     // Subscription & trial
