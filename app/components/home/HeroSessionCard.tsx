@@ -1,21 +1,17 @@
 'use client'
 
 import { Calendar, Clock, CheckCircle, ArrowRight } from 'lucide-react'
-import { format, type Locale } from 'date-fns'
-import { fr as frLocale } from 'date-fns/locale/fr'
-import { enUS } from 'date-fns/locale/en-US'
-import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
 import {
   colors, fonts, btnPrimary, btnGhost,
 } from '../../../lib/design-tokens'
 import { getHeroImage } from '../../../lib/session-types'
+import { formatZurichTime } from '../../../lib/format-time'
 
 const GOLD = colors.gold
 const FONT_DISPLAY = fonts.headline
 const FONT_ALT = fonts.alt
 const FONT_BODY = fonts.body
-const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
 export type HeroState = 'active' | 'done' | 'rest' | 'no-program' | 'no-exercises'
 
@@ -45,7 +41,7 @@ export default function HeroSessionCard({
 }: HeroSessionCardProps) {
   const t = useTranslations('training_tab.hero')
   const locale = useLocale()
-  const dateLocale = DATE_LOCALES[locale] || frLocale
+  const localeStr = locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH'
   const badgeLabel: Record<string, string> = { 'TERMINEE': t('badgeDone'), 'A VENIR': t('badgeUpcoming'), 'MANQUEE': t('badgeMissed') }
 
   function getHeroTitle(state: HeroState, sessionTitle: string): string {
@@ -181,7 +177,7 @@ export default function HeroSessionCard({
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
               <CheckCircle size={14} color={colors.success} />
-              {t('badgeDone')} &bull; {format(new Date(todaySession.created_at), 'HH:mm', { locale: dateLocale })}
+              {t('badgeDone')} &bull; {formatZurichTime(todaySession.created_at, localeStr)}
             </div>
           )}
           {state === 'rest' && (
