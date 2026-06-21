@@ -255,6 +255,12 @@ input:focus, textarea:focus, select:focus {
   transition: border-color 200ms, box-shadow 200ms;
 }
 
+/* ── Button focus (clavier uniquement, couleurs marque) ── */
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
 /* ── Progress bar mount animation ── */
 @keyframes growWidth {
   from { width: 0; }
