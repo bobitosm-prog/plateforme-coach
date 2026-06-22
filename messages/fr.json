@@ -2577,7 +2577,25 @@
       "save": "Sauvegarder",
       "targetHr": "FC cible :",
       "minShort": "min",
-      "finishedToast": "{name} terminé ! ~{cal} kcal"
+      "finishedToast": "{name} terminé ! ~{cal} kcal",
+      "done": "TERMINÉ",
+      "cancel": "Annuler"
+    },
+    "workouts": {
+      "tabata_brule_graisses": { "name": "Tabata Brûle-Graisses" },
+      "sprint_intervals": { "name": "Sprint Intervals" },
+      "full_body_hiit": { "name": "Full Body HIIT" },
+      "pyramide_infernale": { "name": "Pyramide Infernale" },
+      "cardio_boxing": { "name": "Cardio Boxing" },
+      "core_hiit": { "name": "Core HIIT" },
+      "classique_30_30": { "name": "30/30 Classique" },
+      "emom_20": { "name": "EMOM 20 min" },
+      "marche_rapide": { "name": "Marche rapide", "notes": "Rythme soutenu, 6-7 km/h. Idéal en extérieur ou sur tapis." },
+      "velo_zone_2": { "name": "Vélo zone 2", "notes": "Résistance modérée, FC 120-140 bpm." },
+      "rameur_steady": { "name": "Rameur steady", "notes": "Cadence régulière 20-24 coups/min." },
+      "elliptique": { "name": "Elliptique", "notes": "Résistance moyenne, mouvement fluide." },
+      "natation": { "name": "Natation", "notes": "Crawl ou brasse à rythme modéré." },
+      "velo_incline_walk": { "name": "Vélo + Incline Walk", "notes": "20 min vélo + 20 min marche inclinée 10-12% à 5 km/h." }
     }
   }
 }

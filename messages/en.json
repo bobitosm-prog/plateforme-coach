@@ -2577,7 +2577,25 @@
       "save": "Save",
       "targetHr": "Target HR:",
       "minShort": "min",
-      "finishedToast": "{name} done! ~{cal} kcal"
+      "finishedToast": "{name} done! ~{cal} kcal",
+      "done": "DONE",
+      "cancel": "Cancel"
+    },
+    "workouts": {
+      "tabata_brule_graisses": { "name": "Tabata Fat Burner" },
+      "sprint_intervals": { "name": "Sprint Intervals" },
+      "full_body_hiit": { "name": "Full Body HIIT" },
+      "pyramide_infernale": { "name": "Inferno Pyramid" },
+      "cardio_boxing": { "name": "Cardio Boxing" },
+      "core_hiit": { "name": "Core HIIT" },
+      "classique_30_30": { "name": "Classic 30/30" },
+      "emom_20": { "name": "EMOM 20 min" },
+      "marche_rapide": { "name": "Brisk Walk", "notes": "Brisk pace, 6-7 km/h. Ideal outdoors or on a treadmill." },
+      "velo_zone_2": { "name": "Zone 2 Cycling", "notes": "Moderate resistance, HR 120-140 bpm." },
+      "rameur_steady": { "name": "Steady Rowing", "notes": "Steady cadence, 20-24 strokes/min." },
+      "elliptique": { "name": "Elliptical", "notes": "Medium resistance, smooth motion." },
+      "natation": { "name": "Swimming", "notes": "Freestyle or breaststroke at moderate pace." },
+      "velo_incline_walk": { "name": "Bike + Incline Walk", "notes": "20 min bike + 20 min incline walk 10-12% at 5 km/h." }
     }
   }
 }

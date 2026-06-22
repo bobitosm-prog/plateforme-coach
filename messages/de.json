@@ -2577,7 +2577,25 @@
       "save": "Speichern",
       "targetHr": "Ziel-HF:",
       "minShort": "Min",
-      "finishedToast": "{name} fertig! ~{cal} kcal"
+      "finishedToast": "{name} fertig! ~{cal} kcal",
+      "done": "FERTIG",
+      "cancel": "Abbrechen"
+    },
+    "workouts": {
+      "tabata_brule_graisses": { "name": "Tabata Fettverbrennung" },
+      "sprint_intervals": { "name": "Sprint-Intervalle" },
+      "full_body_hiit": { "name": "Ganzkörper-HIIT" },
+      "pyramide_infernale": { "name": "Höllenpyramide" },
+      "cardio_boxing": { "name": "Cardio-Boxen" },
+      "core_hiit": { "name": "Core-HIIT" },
+      "classique_30_30": { "name": "Klassisches 30/30" },
+      "emom_20": { "name": "EMOM 20 Min." },
+      "marche_rapide": { "name": "Zügiges Gehen", "notes": "Zügiges Tempo, 6-7 km/h. Ideal im Freien oder auf dem Laufband." },
+      "velo_zone_2": { "name": "Zone-2-Radfahren", "notes": "Moderater Widerstand, HF 120-140 bpm." },
+      "rameur_steady": { "name": "Rudern im Gleichtempo", "notes": "Gleichmäßige Frequenz, 20-24 Züge/Min." },
+      "elliptique": { "name": "Crosstrainer", "notes": "Mittlerer Widerstand, flüssige Bewegung." },
+      "natation": { "name": "Schwimmen", "notes": "Kraulen oder Brustschwimmen in moderatem Tempo." },
+      "velo_incline_walk": { "name": "Rad + Steigungslaufband", "notes": "20 Min Rad + 20 Min Steigungslaufband 10-12% bei 5 km/h." }
     }
   }
 }

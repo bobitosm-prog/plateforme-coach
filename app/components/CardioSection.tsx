@@ -80,7 +80,7 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
                 })}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {filtered.map(w => <WorkoutCard key={w.name} workout={w} weight={weight} onStart={() => setActiveWorkout(w)} />)}
+                {filtered.map(w => <WorkoutCard key={w.id} workout={w} weight={weight} onStart={() => setActiveWorkout(w)} />)}
               </div>
             </>
           )}
@@ -100,7 +100,7 @@ function WorkoutCard({ workout, weight, onStart }: { workout: CardioWorkout; wei
         <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 6, background: isHiit ? 'rgba(239,68,68,0.15)' : 'rgba(96,165,250,0.15)', border: `1px solid ${isHiit ? RED : 'rgba(96,165,250,0.5)'}`, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: isHiit ? RED : 'rgba(96,165,250,1)', textTransform: 'uppercase' }}>{workout.type}</span>
         <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>🕐 {workout.duration_min} {t('ui.minShort')}</span>
       </div>
-      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 400, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.2 }}>{workout.name}</div>
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 400, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.2 }}>{t(`workouts.${workout.id}.name`)}</div>
       <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: GOLD, textTransform: 'uppercase' }}>~{cal} kcal</div>
     </button>
   )
@@ -167,15 +167,17 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
     setTimeLeft(intervals[next]?.work || 30)
   }
 
+  const realCal = Math.round(workout.calories_per_min * (elapsed / 60) * (weight / 75))
+
   async function saveAndFinish() {
-    const cal = estimateCalories(workout, weight)
-    await supabase.from('cardio_sessions').insert({
-      user_id: userId, type: 'hiit', name: workout.name,
-      duration_min: Math.round(elapsed / 60), calories_burned: cal,
+    const { error } = await supabase.from('cardio_sessions').insert({
+      user_id: userId, type: 'hiit', name: workout.id,
+      duration_min: Math.round(elapsed / 60), calories_burned: realCal,
       exercises: workout.exercises, completed: true, completed_at: new Date().toISOString(),
       scheduled_date: toDateStr(new Date()),
     })
-    toast.success(t('ui.finishedToast', { name: workout.name, cal }))
+    if (error) { console.error('[cardio] insert failed:', error); toast.error('Cardio non enregistré: ' + error.message); return }
+    toast.success(t('ui.finishedToast', { name: t(`workouts.${workout.id}.name`), cal: realCal }))
     onFinish()
   }
 
@@ -185,16 +187,16 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
   const accent = isWork ? GREEN : RED
 
   if (finished) {
-    const cal = estimateCalories(workout, weight)
     return (
       <div style={{ position: 'fixed', inset: 0, background: BG_BASE, zIndex: 1200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: 24 }}>
         <span style={{ fontSize: '3rem' }}>🎉</span>
-        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: TEXT_PRIMARY, textAlign: 'center', letterSpacing: '2px' }}>{workout.name} TERMINÉ</h2>
+        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: TEXT_PRIMARY, textAlign: 'center', letterSpacing: '2px' }}>{t(`workouts.${workout.id}.name`)} {t('ui.done')}</h2>
         <div style={{ display: 'flex', gap: 24 }}>
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{Math.round(elapsed / 60)}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.minutes')}</div></div>
-          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.kcal')}</div></div>
+          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{realCal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.kcal')}</div></div>
         </div>
         <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.save')}</button>
+        <button onClick={onFinish} style={{ padding: '10px 30px', borderRadius: 10, border: `1px solid ${BORDER}`, background: 'transparent', fontFamily: FONT_ALT, fontSize: '0.8rem', fontWeight: 700, color: TEXT_MUTED, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' }}>{t('ui.cancel')}</button>
       </div>
     )
   }
@@ -234,7 +236,7 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
         <button onClick={skip} style={{ width: 56, height: 56, borderRadius: '50%', background: BG_CARD, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <SkipForward size={24} color={TEXT_PRIMARY} />
         </button>
-        <button onClick={onFinish} style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', border: `1px solid ${RED}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={() => setFinished(true)} style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', border: `1px solid ${RED}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Square size={20} color={RED} fill={RED} />
         </button>
       </div>
@@ -270,13 +272,14 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
   const cal = Math.round(workout.calories_per_min * (elapsed / 60) * (weight / 75))
 
   async function saveAndFinish() {
-    await supabase.from('cardio_sessions').insert({
-      user_id: userId, type: 'liss', name: workout.name,
+    const { error } = await supabase.from('cardio_sessions').insert({
+      user_id: userId, type: 'liss', name: workout.id,
       duration_min: mins, calories_burned: cal,
-      notes: workout.notes, completed: true, completed_at: new Date().toISOString(),
+      completed: true, completed_at: new Date().toISOString(),
       scheduled_date: toDateStr(new Date()),
     })
-    toast.success(t('ui.finishedToast', { name: workout.name, cal }))
+    if (error) { console.error('[cardio] insert failed:', error); toast.error('Cardio non enregistré: ' + error.message); return }
+    toast.success(t('ui.finishedToast', { name: t(`workouts.${workout.id}.name`), cal }))
     onFinish()
   }
 
@@ -284,12 +287,13 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
     return (
       <div style={{ position: 'fixed', inset: 0, background: BG_BASE, zIndex: 1200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: 24 }}>
         <span style={{ fontSize: '3rem' }}>🎉</span>
-        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: TEXT_PRIMARY, textAlign: 'center', letterSpacing: '2px' }}>{workout.name} TERMINÉ</h2>
+        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: TEXT_PRIMARY, textAlign: 'center', letterSpacing: '2px' }}>{t(`workouts.${workout.id}.name`)} {t('ui.done')}</h2>
         <div style={{ display: 'flex', gap: 24 }}>
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{mins}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.minutes')}</div></div>
           <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.kcal')}</div></div>
         </div>
         <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.save')}</button>
+        <button onClick={onFinish} style={{ padding: '10px 30px', borderRadius: 10, border: `1px solid ${BORDER}`, background: 'transparent', fontFamily: FONT_ALT, fontSize: '0.8rem', fontWeight: 700, color: TEXT_MUTED, cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' }}>{t('ui.cancel')}</button>
       </div>
     )
   }
@@ -308,8 +312,8 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
         {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
       </div>
 
-      <div style={{ fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY, marginTop: 12, fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '2px' }}>{workout.name}</div>
-      {workout.notes && <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, textAlign: 'center', maxWidth: 300, marginTop: 8, lineHeight: 1.5, fontFamily: FONT_BODY }}>{workout.notes}</p>}
+      <div style={{ fontSize: '1.1rem', fontWeight: 700, color: TEXT_PRIMARY, marginTop: 12, fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '2px' }}>{t(`workouts.${workout.id}.name`)}</div>
+      {t.has(`workouts.${workout.id}.notes`) && <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, textAlign: 'center', maxWidth: 300, marginTop: 8, lineHeight: 1.5, fontFamily: FONT_BODY }}>{t(`workouts.${workout.id}.notes`)}</p>}
 
       <div style={{ display: 'flex', gap: 16, marginTop: 12, fontSize: '0.75rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>
         <span>{t('ui.targetHr')} <strong style={{ color: GOLD }}>120-140 bpm</strong></span>
@@ -321,7 +325,7 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
         <button onClick={() => setPaused(!paused)} style={{ width: 56, height: 56, borderRadius: '50%', background: BG_CARD, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {paused ? <Play size={24} color={TEXT_PRIMARY} /> : <Pause size={24} color={TEXT_PRIMARY} />}
         </button>
-        <button onClick={onFinish} style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', border: `1px solid ${RED}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={() => setFinished(true)} style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', border: `1px solid ${RED}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Square size={20} color={RED} fill={RED} />
         </button>
       </div>
