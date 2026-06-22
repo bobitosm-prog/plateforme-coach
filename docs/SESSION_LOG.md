@@ -4,15 +4,58 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-21
-- **HEAD** : 1026ce1 (style(training): recap seance plein ecran + redesign aligne Home)
+- **Date** : 2026-06-22
+- **HEAD** : 1b8e984 (feat(cardio): "renseigne ton poids" cliquable → WeightModal)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 21/06 — Fiabilisation Home + coherence visuelle Home & Training.
+- **Dernière session** : 22/06 — Bloc cardio complet + 3 bugs de fond déterrés.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
-- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base.
+- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. z-index chaos (~150 occurrences, patch ciblé 22/06, sprint dédié à planifier).
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
+
+---
+
+## 2026-06-22 — Bloc cardio complet + 3 bugs de fond déterrés
+
+### Contexte
+Parti de "afficher le poids cardio sur les cartes". A révélé en chaîne 3 bugs de fond.
+
+### Commits livrés
+| # | Hash | Description |
+|---|---|---|
+| 1 | 1ebaa47 | fix(cardio): calories au vrai poids (était 80 hardcodé, fallback 75=réf MET) |
+| 2 | ba64eea | fix(i18n): changement de langue s'applique (retrait nettoyage cookie parasite) |
+| 3 | 5f08070 | i18n(cardio): labels UI (namespace cardio.ui) |
+| 4 | eca43f0 | i18n(cardio): noms workouts+notes (id stables) + fix bouton Stop |
+| 5 | 0f17018 | i18n(cardio): affichage "estimé pour X kg" / "renseigne ton poids" |
+| 6 | 7ecebd5 | fix(ui): 6 modals zIndex 50→1000 (étaient sous la nav 999) |
+| 7 | 1b8e984 | feat(cardio): "renseigne ton poids" cliquable → WeightModal |
+
+### Bugs de fond corrigés
+- Changement de langue (ba64eea) : LocaleSelector posait NEXT_LOCALE via /api/user/locale PUIS le
+  supprimait (2 lignes Max-Age=0 path=/). Local même scope → effacé → fallback fr. Prod scopes séparés
+  (domain=.moovx.ch) → marchait. Bloquait TOUT l'i18n app connectée (page.tsx via ClientIntlProvider).
+  Expliquait le RIR jamais traduit. Fix: retrait des 2 lignes.
+  ⚠️ NOTE VIGILANCE : ces 2 lignes avaient été ajoutées au fix "double cookie NEXT_LOCALE" (voir log
+  ~L1140, mai). Elles servaient en prod (double cookie via Accept-Language) mais cassaient le local.
+  Vérifié 22/06 : langue OK en PROD après retrait (plus de double cookie, probablement car pas de
+  middleware next-intl). Si un middleware next-intl est ajouté plus tard, re-vérifier le double cookie.
+- Séances cardio jamais enregistrées (eca43f0) : bouton Stop = onFinish() (ferme sans sauver) ;
+  saveAndFinish() atteint seulement si timer va au bout (45 min pour Marche rapide). → cardio_sessions
+  VIDE pour tous. Fix: Stop → setFinished(true) → écran de fin (récap réel) + bouton Annuler.
+- Modals sous la nav (7ecebd5) : 6 modals zIndex 50 < nav 999. Fix ciblé →1000.
+
+### Décisions
+- Noms d'exercices (Burpees...) internationaux. Noms workouts/notes traduits FR/EN/DE.
+- cardio_sessions.name stocke l'id stable (ex 'marche_rapide'), pas le nom traduit → prêt multilingue.
+- estimateCalories = formule MET déterministe, PAS d'IA. Fallback futur quand montre/HealthKit.
+- WORK/REST/HIIT/LISS gardés en anglais.
+
+### Notes
+- toast.error technique sur insert cardio = diagnostic gardé temporairement (à nettoyer/i18n).
+- Câblage setModal: page → TrainingTab → CardioSection → WorkoutCard (props drilling, pattern existant).
+- WorkoutCard: <button> → <div role=button tabIndex onKeyDown> (permet span poids cliquable + stopPropagation).
 
 ---
 

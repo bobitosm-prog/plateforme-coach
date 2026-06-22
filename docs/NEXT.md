@@ -18,6 +18,7 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Fix P0 overlays rail (portails createPortal) ✅ 18 juin
 - [x] Fiabilisation donnees Home (streak/Recovery/heure hero/cache) ✅ 21 juin
 - [x] Refonte coherence Home (SectionTitle, closer, assiduite) ✅ 21 juin
+- [x] Bloc cardio complet (i18n, poids réel, bugs Stop/cookie/zIndex) ✅ 22 juin
 - [ ] **Feature "jours restants" dans l'app** (PRIORITAIRE)
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
@@ -50,6 +51,21 @@ RESTE Training :
 - CARDIO (CardioSection) : header carte accordeon a aligner sur SectionTitle.
 - Records battus (PR) dans l'ecran de fin de seance (checkForPR existe).
 Puis propager SectionTitle/ModalHeader a Nutrition, Progress, Account.
+
+### 🔴 Sprint dédié — Centraliser les z-index
+Chaos : ~150 occurrences sur ~60 fichiers, valeurs 1→99999 sans logique. Bug récurrent (modals sous
+la nav corrigé en patch ciblé 22/06 mais cause non traitée). Définir échelle dans design-tokens
+(Z_NAV/Z_OVERLAY/Z_MODAL/Z_TOAST). Migration PAR ZONES (modals → WorkoutSession → NutritionTab →
+reste), 1 commit testable/zone, branche dédiée. NE PAS faire d'un bloc.
+
+### ⚠️ Valider seuils RIR avec un coach
+RIR_SAFETY_MAX, RIR_ACCEL_MIN, deload -10% dans lib/training/compute-progression.ts. Justesse
+méthodologique = expertise coach, pas dev. AVANT d'ouvrir la feature RIR aux vrais users.
+
+### Petits
+- Nettoyer toast.error technique insert cardio (message i18n propre, pas brut Supabase).
+- Vérifier visuellement fallback "renseigne ton poids" (testé par logique seulement).
+- Puis : NUTRITION (gros chantier suivant).
 
 ### Prérequis launch
 - [ ] Parcours signup → onboarding → 1ère séance E2E par un tiers (pas Marco).
