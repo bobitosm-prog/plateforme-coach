@@ -179,7 +179,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
         </div>
 
         {/* Muscle filters */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
           {muscleFilters.map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)} style={{
               padding: '6px 14px', borderRadius: 10,
