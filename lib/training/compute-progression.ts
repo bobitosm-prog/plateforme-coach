@@ -1,6 +1,18 @@
+// ── Table d'autorégulation RIR (À VALIDER PAR UN COACH) ──
+// RIR = reps en réserve sur le dernier set. 0 = échec, 4+ = très facile.
+// Approche : le RIR module une progression déjà méritée par les reps. Ne crée jamais de progress.
+const RIR_SAFETY_MAX = 1   // RIR <= 1 sur un statut progress → bascule en hold (ne pas charger un user épuisé)
+const RIR_ACCEL_MIN  = 4   // RIR >= 4 → accélère le step
+
+function acceleratedStep(step: number): number {
+  if (step <= 1.25) return 2.5
+  if (step <= 2.5) return 5
+  return 7.5
+}
+
 // ── Types ──
 
-export type PrevSessionSet = { weight: number; reps: number; completed: boolean }
+export type PrevSessionSet = { weight: number; reps: number; completed: boolean; rir: number | null }
 export type ProgressionStatus = 'progress' | 'hold' | 'deload'
 export type ProgressionResult = {
   weight: number
@@ -82,8 +94,20 @@ export function computeProgression(
     }
   }
 
-  // 2. Tous les sets atteignent la cible → progress
+  // 2. Tous les sets atteignent la cible → progress (modulé par RIR si disponible)
   if (allReachedTarget) {
+    // RIR du dernier set complété ayant un rir non-null
+    const completedWithRir = lastSession.filter(s => s.rir != null)
+    const lastRir = completedWithRir.length > 0 ? completedWithRir[completedWithRir.length - 1].rir : null
+
+    if (lastRir != null && lastRir <= RIR_SAFETY_MAX) {
+      return { weight: refWeight, status: 'hold', reason: 'Effort maximal la dernière fois, on consolide', step }
+    }
+    if (lastRir != null && lastRir >= RIR_ACCEL_MIN) {
+      const accelStep = acceleratedStep(step)
+      return { weight: refWeight + accelStep, status: 'progress', reason: 'C\'était facile, on accélère', step: accelStep }
+    }
+
     return {
       weight: refWeight + step,
       status: 'progress',

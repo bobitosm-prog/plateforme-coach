@@ -65,7 +65,7 @@ export default function TrainingExerciseCard({
     fetchedRef.current = true
     supabase
       .from('workout_sets')
-      .select('weight, reps, set_number, session_id, completed, created_at')
+      .select('weight, reps, set_number, session_id, completed, created_at, rir')
       .eq('user_id', userId)
       .eq('exercise_name', ex.name)
       .order('created_at', { ascending: false })
@@ -85,7 +85,7 @@ export default function TrainingExerciseCard({
           data
             .filter((d: any) => d.session_id === sid)
             .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
-            .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0, completed: s.completed !== false }))
+            .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0, completed: s.completed !== false, rir: s.rir ?? null }))
         )
         setPrevSessions(sessions)
         // Keep previousSets (display "Précédent" column) from most recent session
