@@ -125,6 +125,9 @@ export default function TrainingTab({
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
   const [workoutDetail, setWorkoutDetail] = useState<any[]>([])
   const [loadingDetail, setLoadingDetail] = useState(false)
+  // Today session recap (dedicated, separate from selectedWorkout detail)
+  const [todayDetail, setTodayDetail] = useState<{ name: string; sets: any[] }[] | null>(null)
+  const [todayDetailLoading, setTodayDetailLoading] = useState(false)
   // Program edit mode
   const [editMode, setEditMode] = useState(false)
   const [editedDays, setEditedDays] = useState<any[] | null>(null)
@@ -328,6 +331,32 @@ export default function TrainingTab({
       .eq('user_id', session.user.id).eq('completed', true).order('created_at', { ascending: false }).limit(50)
       .then(({ data }: any) => setWorkoutHistory(data || []))
   }, [session?.user?.id, todaySessionDone])
+
+  // ── Load today session detail for "done" recap ──
+  useEffect(() => {
+    if (!(todaySessionDone && trainingIsToday)) { setTodayDetail(null); return }
+    const latestSession = workoutHistory[0]
+    if (!latestSession?.id) return
+    if (toDateStr(new Date(latestSession.created_at)) !== todayStr) { setTodayDetail(null); return }
+    let cancelled = false
+    setTodayDetailLoading(true)
+    supabase
+      .from('workout_sets')
+      .select('exercise_name, set_number, weight, reps, completed')
+      .eq('session_id', latestSession.id)
+      .order('exercise_name').order('set_number', { ascending: true })
+      .then(({ data }: any) => {
+        if (cancelled) return
+        const grouped: Record<string, any[]> = {}
+        for (const row of (data || [])) {
+          if (!grouped[row.exercise_name]) grouped[row.exercise_name] = []
+          grouped[row.exercise_name].push(row)
+        }
+        setTodayDetail(Object.entries(grouped).map(([name, sets]) => ({ name, sets })))
+        setTodayDetailLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [todaySessionDone, trainingIsToday, workoutHistory[0]?.id])
 
   // ── Load exercises_db cache ──
   useEffect(() => {
@@ -1114,7 +1143,7 @@ export default function TrainingTab({
               {/* ── Modal content: read-only exercise detail ── */}
               {(() => {
                 if (trainingDayData?.repos) return <TrainingRestDay />
-                if (todaySessionDone && trainingIsToday) return <TrainingSessionDone todayKey={todayKey} coachProgram={coachProgram} />
+                if (todaySessionDone && trainingIsToday) return <TrainingSessionDone todayKey={todayKey} coachProgram={coachProgram} detail={todayDetail} detailLoading={todayDetailLoading} />
                 if (!activeCustomProgram && !coachProgram) return (
                   <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textDim }}>
                     <Dumbbell size={48} color={colors.textDim} style={{ marginBottom: 16 }} />

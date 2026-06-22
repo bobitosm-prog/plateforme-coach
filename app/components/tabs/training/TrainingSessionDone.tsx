@@ -6,13 +6,17 @@ import {
   GREEN, TEXT_PRIMARY, TEXT_MUTED, WEEK_DAYS,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../../../lib/design-tokens'
+import SectionTitle from '../../ui/SectionTitle'
+import WorkoutDetailList from '../../training/WorkoutDetailList'
 
 interface TrainingSessionDoneProps {
   todayKey: string
   coachProgram: any
+  detail: { name: string; sets: any[] }[] | null
+  detailLoading: boolean
 }
 
-export default function TrainingSessionDone({ todayKey, coachProgram }: TrainingSessionDoneProps) {
+export default function TrainingSessionDone({ todayKey, coachProgram, detail, detailLoading }: TrainingSessionDoneProps) {
   return (
     <div style={{ padding: '0 16px' }}>
       <motion.div
@@ -51,6 +55,13 @@ export default function TrainingSessionDone({ todayKey, coachProgram }: Training
           ) : null
         })()}
       </motion.div>
+
+      {(detailLoading || (detail && detail.length > 0)) && (
+        <>
+          <SectionTitle title="TA SÉANCE" noPadding />
+          <WorkoutDetailList detail={detail ?? []} loading={detailLoading} />
+        </>
+      )}
     </div>
   )
 }
