@@ -39,7 +39,7 @@ export default function RecoveryModal({ muscleStatus, onClose }: RecoveryModalPr
     <div
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 50,
+        position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(0,0,0,0.85)',
         backdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',

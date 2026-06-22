@@ -1076,7 +1076,7 @@ export default function ProgressTab({
 
       {/* ── WEIGHT MODAL ── */}
       {showWeight && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'flex-end' }}>
           <div style={{ background: colors.surface, borderTop: `1px solid ${colors.goldBorder}`, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
               <h3 style={{ ...titleStyle, fontSize: 18, margin: 0 }}>ENREGISTRER MON POIDS</h3>
@@ -1101,7 +1101,7 @@ export default function ProgressTab({
 
       {/* ── MEASUREMENTS MODAL ── */}
       {showMeasure && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 50, overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, overflowY: 'auto' }}>
           <div style={{ background: colors.surface, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', marginTop: 60, minHeight: 'calc(100vh - 60px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h3 style={{ ...titleStyle, fontSize: 18, margin: 0 }}>{t('tab.myMeasurements')}</h3>
