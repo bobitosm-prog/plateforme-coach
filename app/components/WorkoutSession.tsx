@@ -949,19 +949,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
       {/* EXERCICES */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
-        {/* Add exercise button — hidden in reorder mode */}
-        {!reorderMode && (
-          <div style={{ margin: '0 4px 16px', width: 'calc(100% - 8px)' }}>
-            <button onClick={() => setMode('custom')} style={{
-              width: '100%', padding: 10, borderRadius: 12,
-              background: colors.surface2, border: `1px solid ${colors.divider}`,
-              color: GOLD,
-              fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
-              letterSpacing: 2, cursor: 'pointer',
-            }}>{t('addExercise')}</button>
-          </div>
-        )}
-
         {!reorderMode && exos.length === 0 && (
           <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${colors.divider}`, borderRadius: 14, background: colors.surface2 }}>
             <Dumbbell size={32} color={TEXT_DIM} style={{ marginBottom: 12 }} />
