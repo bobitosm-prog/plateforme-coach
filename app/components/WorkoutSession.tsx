@@ -112,7 +112,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
                 <span style={{ color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 14 }}>{i + 1}</span>
               </div>
               <div>
-                <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
                 {e.muscle_group && <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{getMuscleLabel(e.muscle_group, locale, tMuscle)}</div>}
               </div>
             </div>
@@ -207,7 +207,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
                 {sel ? <Check size={16} color={colors.onGold} strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                   {e.muscle_group && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: GOLD_DIM, color: GOLD, letterSpacing: 1, textTransform: 'uppercase' as const }}>{getMuscleLabel(e.muscle_group, locale, tMuscle)}</span>}
                   {e.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${dc(e.difficulty)}18`, color: dc(e.difficulty), letterSpacing: 1 }}>{t(`difficulty.${e.difficulty}`)}</span>}
@@ -1000,7 +1000,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 >
                   <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.15em', flexShrink: 0, minWidth: 16, fontFamily: FONT_ALT, fontWeight: 700 }}>{idx + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 15, color: TEXT_PRIMARY, fontWeight: 600, lineHeight: 1.2, fontFamily: FONT_BODY }}>{getExerciseName(exo, locale)}</div>
+                    <div style={{ fontSize: 15, color: TEXT_PRIMARY, fontWeight: 700, lineHeight: 1.2, fontFamily: FONT_BODY }}>{getExerciseName(exo, locale)}</div>
                     <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: FONT_BODY }}>{exo.muscle ? `${getMuscleLabel(exo.muscle, locale, tMuscle)} · ` : ''}{t('done.setsCount', { count: exo.targetSets })}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: 4, flexShrink: 0 }}>
@@ -1537,7 +1537,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
                   </div>
                   <div>
-                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{getExerciseName(v, locale)}</div>
+                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:700}}>{getExerciseName(v, locale)}</div>
                     <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${getMuscleLabel(v.muscle_group, locale, tMuscle)}`:''}</div>
                   </div>
                 </button>
