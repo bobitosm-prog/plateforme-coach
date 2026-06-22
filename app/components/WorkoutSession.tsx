@@ -179,10 +179,10 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
         </div>
 
         {/* Muscle filters */}
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {muscleFilters.map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)} style={{
-              flexShrink: 0, padding: '6px 14px', borderRadius: 10,
+              padding: '6px 14px', borderRadius: 10,
               border: `1px solid ${filter === f.key ? GOLD : BORDER}`,
               background: filter === f.key ? GOLD_DIM : colors.surface2,
               color: filter === f.key ? GOLD : TEXT_MUTED,
