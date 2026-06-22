@@ -1357,7 +1357,7 @@ export default function TrainingTab({
 
       {/* ═══ SECTION 6 — CARDIO ═══ */}
       <div style={{ padding: '0 24px 16px' }}>
-        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={80} />
+        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} />
       </div>
 
       {/* ═══ SECTION 7 — PROGRAM MANAGER MODAL (fullscreen) ═══ */}
