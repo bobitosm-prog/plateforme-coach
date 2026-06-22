@@ -1020,14 +1020,15 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           const cnt = exo.sets.filter(s => s.done).length
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
-          // Progression badge
+          // Progression badge — "même stade" : compare le volume cumulé des N premiers sets communs
           const progressBadge = (() => {
             const prev = previousData[exo.name]
             if (!prev?.length) return null
             const doneSets = exo.sets.filter(s => s.done && s.weight !== '' && s.reps !== '')
             if (!doneSets.length) return null
-            const curVol = doneSets.reduce((s, st) => s + Number(st.weight) * Number(st.reps), 0) / doneSets.length
-            const prevVol = prev.reduce((s, st) => s + st.weight * st.reps, 0) / prev.length
+            const n = Math.min(doneSets.length, prev.length)
+            const curVol = doneSets.slice(0, n).reduce((s, st) => s + Number(st.weight) * Number(st.reps), 0)
+            const prevVol = prev.slice(0, n).reduce((s, st) => s + st.weight * st.reps, 0)
             if (!prevVol) return null
             return Math.round(((curVol - prevVol) / prevVol) * 100)
           })()
