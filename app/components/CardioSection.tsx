@@ -16,9 +16,10 @@ interface CardioProps {
   supabase: any
   userId: string
   weight: number
+  weightIsReal: boolean
 }
 
-export default function CardioSection({ supabase, userId, weight }: CardioProps) {
+export default function CardioSection({ supabase, userId, weight, weightIsReal }: CardioProps) {
   const t = useTranslations('cardio')
   const [expanded, setExpanded] = useState(true)
   const [filter, setFilter] = useState<'all' | 'hiit' | 'liss'>('all')
@@ -59,8 +60,8 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Suggested workouts */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <WorkoutCard workout={suggestedHiit} weight={weight} onStart={() => setActiveWorkout(suggestedHiit)} />
-            <WorkoutCard workout={suggestedLiss} weight={weight} onStart={() => setActiveWorkout(suggestedLiss)} />
+            <WorkoutCard workout={suggestedHiit} weight={weight} weightIsReal={weightIsReal} onStart={() => setActiveWorkout(suggestedHiit)} />
+            <WorkoutCard workout={suggestedLiss} weight={weight} weightIsReal={weightIsReal} onStart={() => setActiveWorkout(suggestedLiss)} />
           </div>
 
           {/* Library toggle */}
@@ -80,7 +81,7 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
                 })}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {filtered.map(w => <WorkoutCard key={w.id} workout={w} weight={weight} onStart={() => setActiveWorkout(w)} />)}
+                {filtered.map(w => <WorkoutCard key={w.id} workout={w} weight={weight} weightIsReal={weightIsReal} onStart={() => setActiveWorkout(w)} />)}
               </div>
             </>
           )}
@@ -90,7 +91,7 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
   )
 }
 
-function WorkoutCard({ workout, weight, onStart }: { workout: CardioWorkout; weight: number; onStart: () => void }) {
+function WorkoutCard({ workout, weight, weightIsReal, onStart }: { workout: CardioWorkout; weight: number; weightIsReal: boolean; onStart: () => void }) {
   const t = useTranslations('cardio')
   const cal = estimateCalories(workout, weight)
   const isHiit = workout.type === 'hiit'
@@ -102,6 +103,9 @@ function WorkoutCard({ workout, weight, onStart }: { workout: CardioWorkout; wei
       </div>
       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 400, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.2 }}>{t(`workouts.${workout.id}.name`)}</div>
       <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: GOLD, textTransform: 'uppercase' }}>~{cal} kcal</div>
+      {weightIsReal
+        ? <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, marginTop: 3 }}>{t('ui.weightEstimate', { weight })}</div>
+        : <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: GOLD, opacity: 0.6, marginTop: 3 }}>{t('ui.weightPrompt')}</div>}
     </button>
   )
 }

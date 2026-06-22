@@ -2579,7 +2579,9 @@
       "minShort": "min",
       "finishedToast": "{name} done! ~{cal} kcal",
       "done": "DONE",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "weightEstimate": "estimated for {weight} kg",
+      "weightPrompt": "set your weight"
     },
     "workouts": {
       "tabata_brule_graisses": { "name": "Tabata Fat Burner" },
