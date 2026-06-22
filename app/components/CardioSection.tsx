@@ -6,7 +6,7 @@ import { HIIT_WORKOUTS, LISS_WORKOUTS, estimateCalories, type CardioWorkout, typ
 import { toast } from 'sonner'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
-  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../lib/design-tokens'
 import { RailOverlay } from './ui/RailOverlay'
@@ -18,7 +18,7 @@ interface CardioProps {
 }
 
 export default function CardioSection({ supabase, userId, weight }: CardioProps) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const [filter, setFilter] = useState<'all' | 'hiit' | 'liss'>('all')
   const [activeWorkout, setActiveWorkout] = useState<CardioWorkout | null>(null)
   const [showLibrary, setShowLibrary] = useState(false)
@@ -42,20 +42,19 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
   }
 
   return (
-    <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: RADIUS_CARD, overflow: 'hidden' }}>
-      {/* Header */}
-      <button onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: '1.1rem' }}>🏃</span>
-          <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Cardio</span>
-          <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>HIIT</span>
-          <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>LISS</span>
-        </div>
-        <ChevronDown size={16} color={TEXT_MUTED} style={{ transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+    <>
+      {/* Header — flat SectionTitle style with accordion */}
+      <button onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', marginTop: 28, marginBottom: 20, padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}>
+        <div style={{ width: 3, height: 16, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
+        <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: colors.gold, letterSpacing: '0.16em', textTransform: 'uppercase', lineHeight: 1 }}>Cardio</span>
+        <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>HIIT</span>
+        <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>LISS</span>
+        <div style={{ flexGrow: 1, height: 1, background: colors.goldRule }} />
+        <ChevronDown size={16} color={TEXT_MUTED} style={{ transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }} />
       </button>
 
       {expanded && (
-        <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Suggested workouts */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <WorkoutCard workout={suggestedHiit} weight={weight} onStart={() => setActiveWorkout(suggestedHiit)} />
@@ -85,7 +84,7 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
           )}
         </div>
       )}
-    </div>
+    </>
   )
 }
 
