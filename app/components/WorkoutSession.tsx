@@ -906,7 +906,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       {restDone && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 24 }}>
           <div style={{ position: 'relative', overflow: 'hidden', background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 32, textAlign: 'center', maxWidth: 340, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(201,168,76,0.15)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 80, height: 80, borderRadius: '50%', background: colors.goldBorder, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
             <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 3, margin: '0 0 8px' }}>{t('restDone.title')}</h2>
@@ -1045,7 +1045,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 {/* Gradient overlay */}
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(13,11,8,0.85) 100%)', pointerEvents: 'none' }} />
                 {/* Done overlay */}
-                {isDone && <div style={{ position: 'absolute', inset: 0, background: 'rgba(201,168,76,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Check size={32} color={GOLD} strokeWidth={3} /></div>}
+                {isDone && <div style={{ position: 'absolute', inset: 0, background: colors.goldBorder, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Check size={32} color={GOLD} strokeWidth={3} /></div>}
 
                 {/* Actions — top right */}
                 <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 2 }}>
@@ -1096,7 +1096,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                     )}
                     {exo.rir != null && <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 5px', background: 'rgba(0,0,0,0.35)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>R{exo.rir}</span>}
                     {exo.technique && TECHNIQUE_LABELS[exo.technique] && (
-                      <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 6px', background: 'rgba(201,168,76,0.15)', border: '0.5px solid rgba(201,168,76,0.25)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, color: GOLD }}>
+                      <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 6px', background: colors.goldBorder, border: `0.5px solid ${GOLD_RULE}`, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, color: GOLD }}>
                         {TECHNIQUE_LABELS[exo.technique].emoji} {TECHNIQUE_LABELS[exo.technique].label}{exo.techniqueDetails ? ` ×${exo.techniqueDetails.split(',')[0]}` : ''}
                       </span>
                     )}
@@ -1230,7 +1230,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                         <div style={{
                           marginTop: 8, marginBottom: 4, padding: 16, borderRadius: 12,
                           background: 'rgba(201,168,76,0.08)',
-                          border: `1px solid ${restSecs <= 10 ? colors.orange : 'rgba(201,168,76,0.25)'}`,
+                          border: `1px solid ${restSecs <= 10 ? colors.orange : GOLD_RULE}`,
                           display: 'flex', alignItems: 'center', gap: 16,
                           transition: 'border-color 200ms',
                         }}>
