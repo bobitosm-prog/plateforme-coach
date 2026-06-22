@@ -9,6 +9,7 @@ import {
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../lib/design-tokens'
+import { RailOverlay } from './ui/RailOverlay'
 
 interface CardioProps {
   supabase: any
@@ -31,9 +32,13 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
   const suggestedLiss = LISS_WORKOUTS[dayIdx % LISS_WORKOUTS.length]
 
   if (activeWorkout) {
-    return activeWorkout.type === 'hiit' && activeWorkout.exercises?.length
-      ? <HiitTimer workout={activeWorkout} weight={weight} supabase={supabase} userId={userId} onFinish={() => setActiveWorkout(null)} />
-      : <LissTimer workout={activeWorkout} weight={weight} supabase={supabase} userId={userId} onFinish={() => setActiveWorkout(null)} />
+    return (
+      <RailOverlay>
+        {activeWorkout.type === 'hiit' && activeWorkout.exercises?.length
+          ? <HiitTimer workout={activeWorkout} weight={weight} supabase={supabase} userId={userId} onFinish={() => setActiveWorkout(null)} />
+          : <LissTimer workout={activeWorkout} weight={weight} supabase={supabase} userId={userId} onFinish={() => setActiveWorkout(null)} />}
+      </RailOverlay>
+    )
   }
 
   return (
