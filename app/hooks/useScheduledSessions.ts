@@ -5,7 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   ScheduledSession, buildWeekSessions, getMonday, toDateStr, scheduleLocalReminder,
 } from '../../lib/schedule-utils'
-import { updateProfile } from '../../lib/profile-service'
+import { updateProfile, invalidateProfileCache } from '../../lib/profile-service'
 
 interface UseScheduledSessionsParams {
   supabase: SupabaseClient
@@ -158,8 +158,16 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
     toast.success('Préférences mises à jour')
   }
 
+  async function updateRirSettings(supabaseClient: SupabaseClient, uid: string, settings: { rir_tracking_enabled?: boolean; rir_scale_advanced?: boolean }, setProfile: (fn: (prev: any) => any) => void) {
+    if (!uid) return
+    await updateProfile(uid, settings, supabaseClient)
+    invalidateProfileCache()
+    setProfile((prev: any) => ({ ...prev, ...settings }))
+    toast.success('Préférences mises à jour')
+  }
+
   return {
     scheduledSessions, calendarSelectedDate, setCalendarSelectedDate,
-    fetchScheduledSessions, markSessionCompleted, regenerateWeekSchedule, updateReminderSettings,
+    fetchScheduledSessions, markSessionCompleted, regenerateWeekSchedule, updateReminderSettings, updateRirSettings,
   }
 }

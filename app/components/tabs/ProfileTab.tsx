@@ -40,6 +40,7 @@ interface ProfileTabProps {
   setModal: (modal: string) => void
   fetchAll: () => Promise<void>
   updateReminderSettings: (settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) => Promise<void>
+  updateRirSettings: (settings: { rir_tracking_enabled?: boolean; rir_scale_advanced?: boolean }) => Promise<void>
   regenerateWeekSchedule: () => Promise<void>
   onBack?: () => void
 }
@@ -47,7 +48,7 @@ interface ProfileTabProps {
 export default function ProfileTab({
   supabase, session, profile, displayAvatar, fullName, firstName, avatarRef, uploadAvatar,
   currentWeight, goalWeight, calorieGoal, coachProgram, coachId, setModal, fetchAll,
-  updateReminderSettings, regenerateWeekSchedule, onBack,
+  updateReminderSettings, updateRirSettings, regenerateWeekSchedule, onBack,
 }: ProfileTabProps) {
   const t = useTranslations('profile')
   const locale = useLocale()
@@ -379,6 +380,28 @@ export default function ProfileTab({
           </div>
         )}
       </div>
+
+      {/* ═══ RIR (auto-régulation) ═══ */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Activity size={14} color={profile?.rir_tracking_enabled ? colors.success : colors.textMuted} />
+          <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>Suivi de l'effort (RIR)</span>
+        </div>
+        <Toggle active={!!profile?.rir_tracking_enabled} onToggle={async () => {
+          await updateRirSettings({ rir_tracking_enabled: !profile?.rir_tracking_enabled })
+        }} />
+      </div>
+      {profile?.rir_tracking_enabled && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, paddingLeft: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Activity size={12} color={profile?.rir_scale_advanced ? colors.gold : colors.textMuted} />
+            <span style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 600, color: colors.textMuted }}>Échelle chiffrée (avancé)</span>
+          </div>
+          <Toggle active={!!profile?.rir_scale_advanced} onToggle={async () => {
+            await updateRirSettings({ rir_scale_advanced: !profile?.rir_scale_advanced })
+          }} />
+        </div>
+      )}
 
       {/* ═══ SECTION 7 — MON COACH ═══ */}
       {coachProgram && (

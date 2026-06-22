@@ -571,6 +571,9 @@ export default function useClientDashboard() {
   const updateReminderSettings = (settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) =>
     scheduledHook.updateReminderSettings(supabase, userId, settings, setProfile)
 
+  const updateRirSettings = (settings: { rir_tracking_enabled?: boolean; rir_scale_advanced?: boolean }) =>
+    scheduledHook.updateRirSettings(supabase, userId, settings, setProfile)
+
   return {
     // Auth / loading
     mounted, session, loading, roleChecked, userRole, router, supabase,
@@ -615,7 +618,7 @@ export default function useClientDashboard() {
     calendarSelectedDate: scheduledHook.calendarSelectedDate,
     setCalendarSelectedDate: scheduledHook.setCalendarSelectedDate,
     markSessionCompleted: scheduledHook.markSessionCompleted,
-    regenerateWeekSchedule, updateReminderSettings,
+    regenerateWeekSchedule, updateReminderSettings, updateRirSettings,
     // Analytics (from sub-hook)
     personalRecords: analyticsHook.personalRecords,
     weeklyCalories: analyticsHook.weeklyCalories,
