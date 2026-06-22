@@ -16,6 +16,7 @@ import ExercisePreview from '../ExercisePreview'
 import { getTodaySession, getSessionForDay } from '../../../lib/get-today-session'
 import { toast } from 'sonner'
 import { resolveSessionType } from '../../../lib/session-types'
+import SessionDoneModal from '../training/SessionDoneModal'
 import {
   colors, fonts, cardStyle, cardTitleAbove, titleStyle, titleLineStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
 } from '../../../lib/design-tokens'
@@ -93,6 +94,7 @@ export default function HomeTab({
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const [showLevelModal, setShowLevelModal] = useState(false)
   const [showRecoveryModal, setShowRecoveryModal] = useState(false)
+  const [showSessionModal, setShowSessionModal] = useState(false)
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [consumedKcal, setConsumedKcal] = useState(0)
   const calorieGoal = profile?.calorie_goal || 2000
@@ -469,7 +471,7 @@ export default function HomeTab({
             : () => startProgramWorkout({ day_name: sessionTitle || todayKey, name: sessionTitle || todayKey }, todayExercises)
         }
         onCalendar={() => setActiveTab('training')}
-        onViewDetail={() => setActiveTab('progress')}
+        onViewDetail={() => setShowSessionModal(true)}
       />
 
       {/* ═══ APERÇU DU JOUR — 3 cards grid (moved up from below) ═══ */}
@@ -749,6 +751,17 @@ export default function HomeTab({
           onClose={() => setShowRecoveryModal(false)}
         />
       )}
+
+      <SessionDoneModal
+        isOpen={showSessionModal}
+        onClose={() => setShowSessionModal(false)}
+        supabase={supabase}
+        userId={session?.user?.id ?? ''}
+        sessionId={todaySession?.id ?? null}
+        sessionTitle={sessionTitle}
+        todayKey={todayKey}
+        coachProgram={coachProgram}
+      />
     </div>
   )
 }
