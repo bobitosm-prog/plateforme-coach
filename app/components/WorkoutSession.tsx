@@ -360,7 +360,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       for (const name of missing) {
         const { data } = await supabase
           .from('workout_sets')
-          .select('weight, reps, set_number, session_id, completed, created_at')
+          .select('weight, reps, set_number, session_id, completed, created_at, rir')
           .eq('user_id', userId)
           .eq('exercise_name', name)
           .order('created_at', { ascending: false })
@@ -377,7 +377,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
             data
               .filter((d: any) => d.session_id === sid)
               .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
-              .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0, completed: s.completed !== false }))
+              .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0, completed: s.completed !== false, rir: s.rir ?? null }))
           )
           newPrevSessions[name] = sessions
           const latestCompleted = sessions[0]?.filter(s => s.completed) ?? []
