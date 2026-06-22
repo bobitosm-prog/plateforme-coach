@@ -2,21 +2,30 @@
 import { motion } from 'framer-motion'
 import { CheckCircle2 } from 'lucide-react'
 import {
-  BG_CARD, BG_BASE, BORDER, RADIUS_CARD, GOLD, GOLD_DIM,
-  GREEN, TEXT_PRIMARY, TEXT_MUTED, WEEK_DAYS,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
+  RADIUS_CARD, GOLD,
+  GREEN, TEXT_PRIMARY, TEXT_MUTED,
+  FONT_DISPLAY, FONT_BODY, colors,
 } from '../../../../lib/design-tokens'
 import SectionTitle from '../../ui/SectionTitle'
 import WorkoutDetailList from '../../training/WorkoutDetailList'
+
+interface PRRecord {
+  exercise_name: string
+  value: number
+  previous_value: number | null
+  unit: string
+}
 
 interface TrainingSessionDoneProps {
   todayKey: string
   coachProgram: any
   detail: { name: string; sets: any[] }[] | null
   detailLoading: boolean
+  prs: PRRecord[] | null
+  prsLoading: boolean
 }
 
-export default function TrainingSessionDone({ todayKey, coachProgram, detail, detailLoading }: TrainingSessionDoneProps) {
+export default function TrainingSessionDone({ todayKey, coachProgram, detail, detailLoading, prs, prsLoading }: TrainingSessionDoneProps) {
   return (
     <div style={{ padding: '0 16px' }}>
       <motion.div
@@ -34,27 +43,32 @@ export default function TrainingSessionDone({ todayKey, coachProgram, detail, de
         </motion.div>
         <p style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, color: GOLD, margin: '0 0 6px', letterSpacing: '0.04em' }}>SÉANCE TERMINÉE ✓</p>
         <p style={{ fontFamily: FONT_BODY, fontSize: '0.85rem', color: TEXT_MUTED, margin: '0 0 28px' }}>Bravo ! Tu as complété la séance du jour.</p>
-        {(() => {
-          const currentIdx = WEEK_DAYS.indexOf(todayKey)
-          let nextDay: string | null = null
-          for (let i = 1; i <= 7; i++) {
-            const nd = WEEK_DAYS[(currentIdx + i) % 7]
-            const dd = coachProgram?.[nd] ?? { repos: false, exercises: [] }
-            if (!dd.repos && (dd.exercises?.length || 0) > 0) { nextDay = nd; break }
-          }
-          return nextDay ? (
-            <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontFamily: FONT_ALT, fontSize: '0.62rem', color: TEXT_MUTED, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 3 }}>Prochaine séance</div>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1rem', fontWeight: 700, color: TEXT_PRIMARY, textTransform: 'capitalize' }}>{nextDay}</div>
-              </div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: '0.75rem', fontWeight: 700, color: GOLD, background: GOLD_DIM, borderRadius: 12, padding: '4px 10px' }}>
-                {(coachProgram?.[nextDay]?.exercises || []).length} exercices
-              </div>
-            </div>
-          ) : null
-        })()}
       </motion.div>
+
+      {(prsLoading || (prs && prs.length > 0)) && (
+        <>
+          <SectionTitle title="RECORDS BATTUS" noPadding />
+          {prsLoading ? (
+            <div style={{ textAlign: 'center', padding: 24, color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 13 }}>Chargement…</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {prs!.map((pr, i) => (
+                <div key={i} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                    <div style={{ width: 3, height: 14, background: GOLD, borderRadius: 2, flexShrink: 0 }} />
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.06em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pr.exercise_name}</span>
+                  </div>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, flexShrink: 0, marginLeft: 10 }}>
+                    {pr.previous_value != null
+                      ? `${pr.previous_value} → ${pr.value} ${pr.unit}`
+                      : `${pr.value} ${pr.unit} · Nouveau record`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       {(detailLoading || (detail && detail.length > 0)) && (
         <>

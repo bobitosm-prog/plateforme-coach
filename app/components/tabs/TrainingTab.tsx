@@ -128,6 +128,9 @@ export default function TrainingTab({
   // Today session recap (dedicated, separate from selectedWorkout detail)
   const [todayDetail, setTodayDetail] = useState<{ name: string; sets: any[] }[] | null>(null)
   const [todayDetailLoading, setTodayDetailLoading] = useState(false)
+  // Today PRs (dedicated, separate from personalRecords in useAnalytics)
+  const [todayPRs, setTodayPRs] = useState<{ exercise_name: string; value: number; previous_value: number | null; unit: string }[] | null>(null)
+  const [todayPRsLoading, setTodayPRsLoading] = useState(false)
   // Program edit mode
   const [editMode, setEditMode] = useState(false)
   const [editedDays, setEditedDays] = useState<any[] | null>(null)
@@ -357,6 +360,27 @@ export default function TrainingTab({
       })
     return () => { cancelled = true }
   }, [todaySessionDone, trainingIsToday, workoutHistory[0]?.id])
+
+  // ── Load today PRs for "done" recap ──
+  useEffect(() => {
+    if (!(todaySessionDone && trainingIsToday)) { setTodayPRs(null); return }
+    if (!session?.user?.id) return
+    let cancelled = false
+    setTodayPRsLoading(true)
+    supabase
+      .from('personal_records')
+      .select('exercise_name, value, previous_value, unit')
+      .eq('user_id', session.user.id)
+      .eq('record_type', '1rm')
+      .eq('achieved_at', todayStr)
+      .order('value', { ascending: false })
+      .then(({ data }: any) => {
+        if (cancelled) return
+        setTodayPRs(data || [])
+        setTodayPRsLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [todaySessionDone, trainingIsToday, session?.user?.id])
 
   // ── Load exercises_db cache ──
   useEffect(() => {
@@ -1143,7 +1167,7 @@ export default function TrainingTab({
               {/* ── Modal content: read-only exercise detail ── */}
               {(() => {
                 if (trainingDayData?.repos) return <TrainingRestDay />
-                if (todaySessionDone && trainingIsToday) return <TrainingSessionDone todayKey={todayKey} coachProgram={coachProgram} detail={todayDetail} detailLoading={todayDetailLoading} />
+                if (todaySessionDone && trainingIsToday) return <TrainingSessionDone todayKey={todayKey} coachProgram={coachProgram} detail={todayDetail} detailLoading={todayDetailLoading} prs={todayPRs} prsLoading={todayPRsLoading} />
                 if (!activeCustomProgram && !coachProgram) return (
                   <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textDim }}>
                     <Dumbbell size={48} color={colors.textDim} style={{ marginBottom: 16 }} />
