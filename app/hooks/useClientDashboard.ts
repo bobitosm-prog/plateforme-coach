@@ -348,6 +348,7 @@ export default function useClientDashboard() {
             reps: Number(s.reps) || 0,
             weight: Number(s.weight) || 0,
             completed: true,
+            rir: s.rir ?? null,
           })
         })
       })
