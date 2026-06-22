@@ -1230,7 +1230,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                         }}>
                           {rirTrackingEnabled && (
                             <div style={{ padding: '12px 16px 10px', borderBottom: `1px solid ${GOLD_RULE}` }}>
-                              <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: TEXT_DIM, textTransform: 'uppercase', marginBottom: 8 }}>C'était comment ?</div>
+                              <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: TEXT_DIM, textTransform: 'uppercase', marginBottom: 8 }}>{t(rirScaleAdvanced ? 'rirQuestionAdvanced' : 'rirQuestionSimple')}</div>
                               <div style={{ display: 'flex', gap: 6 }}>
                                 {rirScaleAdvanced
                                   ? [0, 1, 2, 3, 4].map(v => (

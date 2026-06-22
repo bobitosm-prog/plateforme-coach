@@ -1669,6 +1669,8 @@
       "keep": "Keep",
       "rest": "REST",
       "skipRest": "Skip →",
+      "rirQuestionSimple": "How did it feel?",
+      "rirQuestionAdvanced": "Reps left before failure?",
       "addSet": "Add a set",
       "reorderLink": "↕ Reorder exercises",
       "startTempo": "Start tempo",

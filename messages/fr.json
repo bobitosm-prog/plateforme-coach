@@ -1669,6 +1669,8 @@
       "keep": "Garder",
       "rest": "REPOS",
       "skipRest": "Passer →",
+      "rirQuestionSimple": "C'était comment ?",
+      "rirQuestionAdvanced": "Reps restantes avant l'échec ?",
       "addSet": "Ajouter une serie",
       "reorderLink": "↕ Réorganiser les exercices",
       "startTempo": "Démarrer le tempo",

@@ -1669,6 +1669,8 @@
       "keep": "Halten",
       "rest": "PAUSE",
       "skipRest": "Überspringen →",
+      "rirQuestionSimple": "Wie war es?",
+      "rirQuestionAdvanced": "Wiederholungen in Reserve?",
       "addSet": "Satz hinzufügen",
       "reorderLink": "↕ Übungen umordnen",
       "startTempo": "Tempo starten",
