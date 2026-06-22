@@ -17,9 +17,10 @@ interface CardioProps {
   userId: string
   weight: number
   weightIsReal: boolean
+  setModal: (m: string | null) => void
 }
 
-export default function CardioSection({ supabase, userId, weight, weightIsReal }: CardioProps) {
+export default function CardioSection({ supabase, userId, weight, weightIsReal, setModal }: CardioProps) {
   const t = useTranslations('cardio')
   const [expanded, setExpanded] = useState(true)
   const [filter, setFilter] = useState<'all' | 'hiit' | 'liss'>('all')
@@ -60,8 +61,8 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal }
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Suggested workouts */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <WorkoutCard workout={suggestedHiit} weight={weight} weightIsReal={weightIsReal} onStart={() => setActiveWorkout(suggestedHiit)} />
-            <WorkoutCard workout={suggestedLiss} weight={weight} weightIsReal={weightIsReal} onStart={() => setActiveWorkout(suggestedLiss)} />
+            <WorkoutCard workout={suggestedHiit} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(suggestedHiit)} />
+            <WorkoutCard workout={suggestedLiss} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(suggestedLiss)} />
           </div>
 
           {/* Library toggle */}
@@ -81,7 +82,7 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal }
                 })}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {filtered.map(w => <WorkoutCard key={w.id} workout={w} weight={weight} weightIsReal={weightIsReal} onStart={() => setActiveWorkout(w)} />)}
+                {filtered.map(w => <WorkoutCard key={w.id} workout={w} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(w)} />)}
               </div>
             </>
           )}
@@ -91,12 +92,12 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal }
   )
 }
 
-function WorkoutCard({ workout, weight, weightIsReal, onStart }: { workout: CardioWorkout; weight: number; weightIsReal: boolean; onStart: () => void }) {
+function WorkoutCard({ workout, weight, weightIsReal, setModal, onStart }: { workout: CardioWorkout; weight: number; weightIsReal: boolean; setModal: (m: string | null) => void; onStart: () => void }) {
   const t = useTranslations('cardio')
   const cal = estimateCalories(workout, weight)
   const isHiit = workout.type === 'hiit'
   return (
-    <button onClick={onStart} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div role="button" tabIndex={0} onClick={onStart} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStart() } }} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 6, background: isHiit ? 'rgba(239,68,68,0.15)' : 'rgba(96,165,250,0.15)', border: `1px solid ${isHiit ? RED : 'rgba(96,165,250,0.5)'}`, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: isHiit ? RED : 'rgba(96,165,250,1)', textTransform: 'uppercase' }}>{workout.type}</span>
         <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>🕐 {workout.duration_min} {t('ui.minShort')}</span>
@@ -105,8 +106,8 @@ function WorkoutCard({ workout, weight, weightIsReal, onStart }: { workout: Card
       <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: GOLD, textTransform: 'uppercase' }}>~{cal} kcal</div>
       {weightIsReal
         ? <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, marginTop: 3 }}>{t('ui.weightEstimate', { weight })}</div>
-        : <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: GOLD, opacity: 0.6, marginTop: 3 }}>{t('ui.weightPrompt')}</div>}
-    </button>
+        : <span onClick={(e) => { e.stopPropagation(); setModal('weight') }} style={{ fontFamily: FONT_BODY, fontSize: 9, color: GOLD, opacity: 0.6, marginTop: 3, cursor: 'pointer' }}>{t('ui.weightPrompt')} ›</span>}
+    </div>
   )
 }
 

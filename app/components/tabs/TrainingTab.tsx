@@ -70,12 +70,13 @@ interface TrainingTabProps {
   markSessionCompleted: (id: string) => Promise<void>
   checkForPR: (exerciseName: string, weight: number, reps: number) => Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }>
   lastCompletedByIndex?: Map<number, string>
+  setModal: (m: string | null) => void
 }
 
 export default function TrainingTab({
   supabase, session, profile, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
-  lastCompletedByIndex,
+  lastCompletedByIndex, setModal,
 }: TrainingTabProps) {
   const t = useTranslations('training_tab')
   const locale = useLocale() as 'fr' | 'en' | 'de'
@@ -1357,7 +1358,7 @@ export default function TrainingTab({
 
       {/* ═══ SECTION 6 — CARDIO ═══ */}
       <div style={{ padding: '0 24px 16px' }}>
-        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} />
+        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} setModal={setModal} />
       </div>
 
       {/* ═══ SECTION 7 — PROGRAM MANAGER MODAL (fullscreen) ═══ */}
