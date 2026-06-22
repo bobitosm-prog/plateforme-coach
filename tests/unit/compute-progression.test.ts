@@ -36,7 +36,7 @@ describe('roundToStep', () => {
 // ── computeProgression ──
 
 describe('computeProgression', () => {
-  const s = (weight: number, reps: number, completed = true): PrevSessionSet => ({ weight, reps, completed })
+  const s = (weight: number, reps: number, completed = true, rir: number | null = null): PrevSessionSet => ({ weight, reps, completed, rir })
 
   // ── Progress ──
 
