@@ -2565,5 +2565,19 @@
         "trialBadge": "Ton accès gratuit est activé"
       }
     }
+  },
+  "cardio": {
+    "ui": {
+      "title": "Cardio",
+      "hide": "Masquer",
+      "sessionsCount": "{count, plural, one {# séance} other {# séances}}",
+      "all": "Tout",
+      "minutes": "MINUTES",
+      "kcal": "KCAL",
+      "save": "Sauvegarder",
+      "targetHr": "FC cible :",
+      "minShort": "min",
+      "finishedToast": "{name} terminé ! ~{cal} kcal"
+    }
   }
 }

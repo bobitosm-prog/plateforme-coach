@@ -4,6 +4,7 @@ import { toDateStr } from '../../lib/schedule-utils'
 import { Play, Pause, Square, SkipForward, ChevronDown } from 'lucide-react'
 import { HIIT_WORKOUTS, LISS_WORKOUTS, estimateCalories, type CardioWorkout, type HiitExercise } from '../../lib/cardio-data'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -18,6 +19,7 @@ interface CardioProps {
 }
 
 export default function CardioSection({ supabase, userId, weight }: CardioProps) {
+  const t = useTranslations('cardio')
   const [expanded, setExpanded] = useState(true)
   const [filter, setFilter] = useState<'all' | 'hiit' | 'liss'>('all')
   const [activeWorkout, setActiveWorkout] = useState<CardioWorkout | null>(null)
@@ -46,7 +48,7 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
       {/* Header — flat SectionTitle style with accordion */}
       <button onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', marginTop: 28, marginBottom: 20, padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}>
         <div style={{ width: 3, height: 16, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
-        <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: colors.gold, letterSpacing: '0.16em', textTransform: 'uppercase', lineHeight: 1 }}>Cardio</span>
+        <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: colors.gold, letterSpacing: '0.16em', textTransform: 'uppercase', lineHeight: 1 }}>{t('ui.title')}</span>
         <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>HIIT</span>
         <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>LISS</span>
         <div style={{ flexGrow: 1, height: 1, background: colors.goldRule }} />
@@ -63,14 +65,14 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
 
           {/* Library toggle */}
           <button onClick={() => setShowLibrary(!showLibrary)} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: GOLD, textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
-            {showLibrary ? 'Masquer' : `${allWorkouts.length} seances`}
+            {showLibrary ? t('ui.hide') : t('ui.sessionsCount', { count: allWorkouts.length })}
           </button>
 
           {/* Library */}
           {showLibrary && (
             <>
               <div style={{ display: 'flex', gap: 8 }}>
-                {[['all', 'Tout'], ['hiit', 'HIIT'], ['liss', 'LISS']].map(([k, l]) => {
+                {[['all', t('ui.all')], ['hiit', 'HIIT'], ['liss', 'LISS']].map(([k, l]) => {
                   const active = filter === k
                   return (
                     <button key={k} onClick={() => setFilter(k as any)} style={{ padding: '8px 14px', borderRadius: 10, background: active ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: `1px solid ${active ? GOLD : 'rgba(255,255,255,0.1)'}`, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: active ? GOLD : TEXT_MUTED, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.15s' }}>{l}</button>
@@ -89,13 +91,14 @@ export default function CardioSection({ supabase, userId, weight }: CardioProps)
 }
 
 function WorkoutCard({ workout, weight, onStart }: { workout: CardioWorkout; weight: number; onStart: () => void }) {
+  const t = useTranslations('cardio')
   const cal = estimateCalories(workout, weight)
   const isHiit = workout.type === 'hiit'
   return (
     <button onClick={onStart} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 6, background: isHiit ? 'rgba(239,68,68,0.15)' : 'rgba(96,165,250,0.15)', border: `1px solid ${isHiit ? RED : 'rgba(96,165,250,0.5)'}`, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: isHiit ? RED : 'rgba(96,165,250,1)', textTransform: 'uppercase' }}>{workout.type}</span>
-        <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>🕐 {workout.duration_min} min</span>
+        <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>🕐 {workout.duration_min} {t('ui.minShort')}</span>
       </div>
       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 400, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.2 }}>{workout.name}</div>
       <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: GOLD, textTransform: 'uppercase' }}>~{cal} kcal</div>
@@ -105,6 +108,7 @@ function WorkoutCard({ workout, weight, onStart }: { workout: CardioWorkout; wei
 
 /* ═══════════════════════════════════ HIIT TIMER ═══════════════════════════════════ */
 function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: CardioWorkout; weight: number; supabase: any; userId: string; onFinish: () => void }) {
+  const t = useTranslations('cardio')
   const exercises = workout.exercises || []
   // Flatten all intervals
   const intervals = exercises.flatMap(ex =>
@@ -171,7 +175,7 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
       exercises: workout.exercises, completed: true, completed_at: new Date().toISOString(),
       scheduled_date: toDateStr(new Date()),
     })
-    toast.success(`${workout.name} terminé ! ~${cal} kcal`)
+    toast.success(t('ui.finishedToast', { name: workout.name, cal }))
     onFinish()
   }
 
@@ -187,10 +191,10 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
         <span style={{ fontSize: '3rem' }}>🎉</span>
         <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: TEXT_PRIMARY, textAlign: 'center', letterSpacing: '2px' }}>{workout.name} TERMINÉ</h2>
         <div style={{ display: 'flex', gap: 24 }}>
-          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{Math.round(elapsed / 60)}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>MINUTES</div></div>
-          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>KCAL</div></div>
+          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{Math.round(elapsed / 60)}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.minutes')}</div></div>
+          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.kcal')}</div></div>
         </div>
-        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
+        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.save')}</button>
       </div>
     )
   }
@@ -242,6 +246,7 @@ function HiitTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
 
 /* ═══════════════════════════════════ LISS TIMER ═══════════════════════════════════ */
 function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: CardioWorkout; weight: number; supabase: any; userId: string; onFinish: () => void }) {
+  const t = useTranslations('cardio')
   const [elapsed, setElapsed] = useState(0)
   const [paused, setPaused] = useState(false)
   const [finished, setFinished] = useState(false)
@@ -271,7 +276,7 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
       notes: workout.notes, completed: true, completed_at: new Date().toISOString(),
       scheduled_date: toDateStr(new Date()),
     })
-    toast.success(`${workout.name} terminé ! ~${cal} kcal`)
+    toast.success(t('ui.finishedToast', { name: workout.name, cal }))
     onFinish()
   }
 
@@ -281,10 +286,10 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
         <span style={{ fontSize: '3rem' }}>🎉</span>
         <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.4rem', fontWeight: 700, color: TEXT_PRIMARY, textAlign: 'center', letterSpacing: '2px' }}>{workout.name} TERMINÉ</h2>
         <div style={{ display: 'flex', gap: 24 }}>
-          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{mins}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>MINUTES</div></div>
-          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>KCAL</div></div>
+          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>{mins}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.minutes')}</div></div>
+          <div style={{ textAlign: 'center' }}><div style={{ fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 700, color: GOLD }}>~{cal}</div><div style={{ fontSize: '0.65rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.kcal')}</div></div>
         </div>
-        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>Sauvegarder</button>
+        <button onClick={saveAndFinish} style={{ padding: '14px 40px', borderRadius: 12, border: 'none', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase' }}>{t('ui.save')}</button>
       </div>
     )
   }
@@ -307,7 +312,7 @@ function LissTimer({ workout, weight, supabase, userId, onFinish }: { workout: C
       {workout.notes && <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, textAlign: 'center', maxWidth: 300, marginTop: 8, lineHeight: 1.5, fontFamily: FONT_BODY }}>{workout.notes}</p>}
 
       <div style={{ display: 'flex', gap: 16, marginTop: 12, fontSize: '0.75rem', color: TEXT_MUTED, fontFamily: FONT_BODY }}>
-        <span>FC cible : <strong style={{ color: GOLD }}>120-140 bpm</strong></span>
+        <span>{t('ui.targetHr')} <strong style={{ color: GOLD }}>120-140 bpm</strong></span>
         <span>~{cal} kcal</span>
       </div>
 
