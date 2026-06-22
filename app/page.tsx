@@ -55,10 +55,11 @@ function NavAccountLabel() {
 }
 
 /** Wrapper: PR toasts + pushes newBadges to global queue — rendered INSIDE ClientIntlProvider */
-function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose, onBadgesEarned }: {
+function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose, onBadgesEarned, rirTrackingEnabled, rirScaleAdvanced }: {
   sessionName: string; exercises: any[]; startedAt?: string
   onFinish: (data: any) => Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
   onClose: () => void; onBadgesEarned: (badges: Badge[]) => void
+  rirTrackingEnabled?: boolean; rirScaleAdvanced?: boolean
 }) {
   const t = useTranslations('training_tab')
   const handleFinish = React.useCallback(async (data: any) => {
@@ -72,7 +73,7 @@ function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onF
     }
     if (result?.newBadges?.length) onBadgesEarned(result.newBadges)
   }, [onFinish, t, onBadgesEarned])
-  return <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} />
+  return <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} rirTrackingEnabled={rirTrackingEnabled} rirScaleAdvanced={rirScaleAdvanced} />
 }
 
 const TAB_INDEX = { home: 0, training: 1, nutrition: 2, progress: 3, compte: 4 } as const
@@ -437,7 +438,7 @@ export default function CoachApp() {
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
-        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} onBadgesEarned={handleBadgesEarned} />
+        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} onBadgesEarned={handleBadgesEarned} rirTrackingEnabled={h.profile?.rir_tracking_enabled} rirScaleAdvanced={h.profile?.rir_scale_advanced} />
       )}
 
       {/* ── WEIGHT MODAL ── */}

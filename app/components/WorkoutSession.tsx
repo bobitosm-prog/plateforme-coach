@@ -24,7 +24,7 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 interface ExSet { id: string; num: number; weight: number | ''; weightRaw: string; reps: number | ''; done: boolean; rir: number | null }
 interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; sets: ExSet[]; open: boolean }
-interface WorkoutSessionProps { sessionName: string; exercises: any[]; startedAt?: string; onFinish: (data: any) => void; onClose: () => void }
+interface WorkoutSessionProps { sessionName: string; exercises: any[]; startedAt?: string; onFinish: (data: any) => void; onClose: () => void; rirTrackingEnabled?: boolean; rirScaleAdvanced?: boolean }
 
 function fmtStep(n: number): string { return n.toString().replace('.', ',') }
 
@@ -234,7 +234,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 
 const AUTO_REDIRECT_SECONDS = 8
 
-export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose }: WorkoutSessionProps) {
+export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose, rirTrackingEnabled, rirScaleAdvanced }: WorkoutSessionProps) {
   const t = useTranslations('training_tab.ws')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
@@ -605,6 +605,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   }
   const unvalidate = (eid: string, sid: string) => { skipRest(); setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: false }) })) }
   const addSet = (eid: string) => setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: [...e.sets, { id: uid(), num: e.sets.length + 1, weight: e.sets.at(-1)?.weight ?? '', weightRaw: e.sets.at(-1)?.weightRaw ?? '', reps: e.sets.at(-1)?.reps ?? '', done: false, rir: null }] }))
+  const setRir = (value: number) => {
+    if (!restExoId || !restSetId) return
+    setExos(p => p.map(e => e.id !== restExoId ? e : { ...e, sets: e.sets.map(s => s.id !== restSetId ? s : { ...s, rir: value }) }))
+  }
 
   const total = exos.reduce((s, e) => s + e.sets.length, 0)
   const completed = exos.reduce((s, e) => s + e.sets.filter(s => s.done).length, 0)
@@ -1214,14 +1218,47 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                         </div>
                       </div>
                       {/* INLINE REST TIMER — rendered below the set that triggered it */}
-                      {restOn && restExoId === exo.id && restSetId === set.id && (
+                      {restOn && restExoId === exo.id && restSetId === set.id && (() => {
+                        const currentRir = exo.sets.find(s => s.id === set.id)?.rir ?? null
+                        return (
                         <div style={{
-                          marginTop: 8, marginBottom: 4, padding: 16, borderRadius: 12,
+                          marginTop: 8, marginBottom: 4, borderRadius: 12,
                           background: 'rgba(201,168,76,0.08)',
                           border: `1px solid ${restSecs <= 10 ? colors.orange : GOLD_RULE}`,
-                          display: 'flex', alignItems: 'center', gap: 16,
                           transition: 'border-color 200ms',
+                          overflow: 'hidden',
                         }}>
+                          {rirTrackingEnabled && (
+                            <div style={{ padding: '12px 16px 10px', borderBottom: `1px solid ${GOLD_RULE}` }}>
+                              <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: TEXT_DIM, textTransform: 'uppercase', marginBottom: 8 }}>C'était comment ?</div>
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                {rirScaleAdvanced
+                                  ? [0, 1, 2, 3, 4].map(v => (
+                                      <button key={v} onClick={() => setRir(v)} style={{
+                                        flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
+                                        background: currentRir === v ? GOLD_DIM : colors.surface2,
+                                        border: `1px solid ${currentRir === v ? GOLD : colors.divider}`,
+                                        fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: currentRir === v ? GOLD : TEXT_MUTED,
+                                      }}>{v === 4 ? '4+' : v}</button>
+                                    ))
+                                  : ([
+                                      { label: 'Facile', value: 4 },
+                                      { label: 'Moyen', value: 2 },
+                                      { label: 'Dur', value: 1 },
+                                      { label: 'Échec', value: 0 },
+                                    ] as const).map(opt => (
+                                      <button key={opt.value} onClick={() => setRir(opt.value)} style={{
+                                        flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
+                                        background: currentRir === opt.value ? GOLD_DIM : colors.surface2,
+                                        border: `1px solid ${currentRir === opt.value ? GOLD : colors.divider}`,
+                                        fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', color: currentRir === opt.value ? GOLD : TEXT_MUTED,
+                                      }}>{opt.label}</button>
+                                    ))
+                                }
+                              </div>
+                            </div>
+                          )}
+                          <div style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
                           <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
                             <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
                               <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
@@ -1239,8 +1276,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                             <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
                             <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('skipRest')}</button>
                           </div>
+                          </div>
                         </div>
-                      )}
+                        )
+                      })()}
                       </Fragment>
                     )
                   })}
