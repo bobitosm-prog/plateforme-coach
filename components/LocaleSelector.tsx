@@ -42,10 +42,6 @@ export default function LocaleSelector() {
           return
         }
         setCurrentLocale(locale)
-        // Supprime le cookie NEXT_LOCALE host-only parasite (posé par next-intl
-        // via Accept-Language) pour qu'il ne reste que celui posé par l'API.
-        document.cookie = 'NEXT_LOCALE=; Max-Age=0; path=/'
-        document.cookie = 'NEXT_LOCALE=; Max-Age=0; path=/; domain=app.moovx.ch'
         router.refresh()
         window.location.reload()
       } catch (e) {
