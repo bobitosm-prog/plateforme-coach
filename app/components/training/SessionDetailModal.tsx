@@ -94,7 +94,7 @@ export default function SessionDetailModal({
                 )}
                 <h1 style={{
                   fontFamily: fonts.headline, fontSize: 36, fontWeight: 400,
-                  color: 'white', textTransform: 'uppercase',
+                  color: colors.gold, textTransform: 'uppercase',
                   letterSpacing: '0.02em', margin: 0, lineHeight: 1,
                   textShadow: '0 2px 8px rgba(0,0,0,0.4)',
                 }}>
