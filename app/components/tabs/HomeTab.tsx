@@ -76,6 +76,7 @@ interface HomeTabProps {
   latestDiagnostic?: any
   setLatestDiagnostic?: (d: any) => void
   sessionDates?: { created_at: string }[]
+  activeTab: string
 }
 
 export default function HomeTab({
@@ -85,7 +86,7 @@ export default function HomeTab({
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
-  latestDiagnostic, setLatestDiagnostic, sessionDates = [],
+  latestDiagnostic, setLatestDiagnostic, sessionDates = [], activeTab,
 }: HomeTabProps) {
   const ht = useTranslations('home')
   const locale = useLocale()
@@ -144,6 +145,14 @@ export default function HomeTab({
   const [nextSessionLabel, setNextSessionLabel] = useState<string | null>(null)
   const [todayScheduledSession, setTodayScheduledSession] = useState<any>(null)
 
+  // Re-fetch data when returning to Home tab (skip mount to avoid double-fetch)
+  const [homeRefreshKey, setHomeRefreshKey] = useState(0)
+  const skipFirstHome = useRef(true)
+  useEffect(() => {
+    if (skipFirstHome.current) { skipFirstHome.current = false; return }
+    if (activeTab === 'home') setHomeRefreshKey(k => k + 1)
+  }, [activeTab])
+
   // Fetch today's consumed calories
   useEffect(() => {
     if (!session?.user?.id) return
@@ -168,7 +177,7 @@ export default function HomeTab({
       const logsKcal = (logsRes.data || []).reduce((s: number, l: any) => s + (l.calories || 0), 0)
       setConsumedKcal(planKcal + logsKcal)
     })
-  }, [session?.user?.id])
+  }, [session?.user?.id, homeRefreshKey])
 
   // Fetch water
   useEffect(() => {
@@ -178,7 +187,7 @@ export default function HomeTab({
       .then(({ data }: any) => {
         setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0))
       })
-  }, [session?.user?.id])
+  }, [session?.user?.id, homeRefreshKey])
 
   async function addWater(ml: number) {
     if (!session?.user?.id) return
@@ -201,7 +210,7 @@ export default function HomeTab({
       .then(({ data }: { data: any[] | null }) => {
         setTodaySession(data?.[0] ?? null)
       })
-  }, [session?.user?.id])
+  }, [session?.user?.id, homeRefreshKey])
 
   // Fetch mini analytics
   useEffect(() => {
@@ -308,16 +317,21 @@ export default function HomeTab({
     supabase.from('daily_habits').select('*').eq('user_id', userId).eq('date', todayDate).maybeSingle()
       .then(({ data }: any) => { if (data) setTodayHabit(data) })
 
-    // Fetch today's mood check-in
-    supabase.from('daily_checkins').select('*').eq('user_id', userId).eq('date', todayDate).maybeSingle()
-      .then(({ data, error }: any) => {
-        if (error) console.error('[CheckIn] Fetch error:', error.message, '— Table may not exist. Run the migration in Supabase.')
-        if (data) { setCheckinMood(data.mood); setCheckinNote(data.note || ''); setCheckinSleep(data.sleep_hours?.toString() || ''); setCheckinSaved(true) }
-      })
     // Fetch last 7 days check-ins for mini-timeline
     const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
     supabase.from('daily_checkins').select('date, mood, sleep_hours').eq('user_id', userId).gte('date', weekAgo).order('date')
       .then(({ data }: any) => setLast7Checkins(data || []))
+  }, [session?.user?.id, homeRefreshKey])
+
+  // Mount-only: load checkin mood/note/sleep (re-fetching would trigger autosave)
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const todayDate = new Date().toISOString().split('T')[0]
+    supabase.from('daily_checkins').select('*').eq('user_id', session.user.id).eq('date', todayDate).maybeSingle()
+      .then(({ data, error }: any) => {
+        if (error) console.error('[CheckIn] Fetch error:', error.message, '— Table may not exist. Run the migration in Supabase.')
+        if (data) { setCheckinMood(data.mood); setCheckinNote(data.note || ''); setCheckinSleep(data.sleep_hours?.toString() || ''); setCheckinSaved(true) }
+      })
   }, [session?.user?.id])
 
   // Track modifications after initial save
@@ -411,7 +425,7 @@ export default function HomeTab({
           if (coach?.full_name) setApptCoachName(coach.full_name)
         } else { setNextAppt(null); setApptCount(0) }
       })
-  }, [session?.user?.id, supabase])
+  }, [session?.user?.id, supabase, homeRefreshKey])
 
   // Card title style from centralized design system
   const T = titleStyle
