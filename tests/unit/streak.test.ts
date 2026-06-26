@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { computeStreak } from '../../lib/streak'
 
-// Fixed today: 2026-06-26 (Thursday)
+// Fixed today: 2026-06-26 (Friday)
 // Mon=22, Tue=23, Wed=24, Thu=25, Fri=26
 // Previous week: Mon=15, Tue=16, Wed=17, Thu=18, Fri=19, Sat=20, Sun=21
 
@@ -9,7 +9,7 @@ describe('computeStreak', () => {
   const TODAY = '2026-06-26'
 
   it('1. rest day in the middle extends streak', () => {
-    // Mon✅ Tue✅ Wed🛌 Thu✅ → streak=4
+    // Tue(23)✅ Wed(24)✅ Thu(25)🛌 Fri(26)✅ → streak=4
     const completed = ['2026-06-23', '2026-06-24', '2026-06-26']
     const rest = ['2026-06-25']
     const result = computeStreak(completed, TODAY, rest)
@@ -19,25 +19,25 @@ describe('computeStreak', () => {
   })
 
   it('2. weekend rest (2 days) does not break streak', () => {
-    // Thu✅ Fri✅ Sat🛌 Sun🛌 Mon✅ ... Thu✅(today)
+    // Thu(18)✅ Fri(19)✅ Sat(20)🛌 Sun(21)🛌 Mon(22)✅ ... Fri(26)✅(today)
     const completed = ['2026-06-18', '2026-06-19', '2026-06-22', '2026-06-23', '2026-06-24', '2026-06-25', '2026-06-26']
     const rest = ['2026-06-20', '2026-06-21']
     const result = computeStreak(completed, TODAY, rest)
-    // Thu(18)+Fri(19)+Sat(20)+Sun(21)+Mon(22)+Tue(23)+Wed(24)+Thu(25)+Fri(26) = 9
+    // Thu(18)✅+Fri(19)✅+Sat(20)🛌+Sun(21)🛌+Mon(22)✅+Tue(23)✅+Wed(24)✅+Thu(25)✅+Fri(26)✅ = 9
     expect(result.current).toBe(9)
     expect(result.endsToday).toBe(true)
   })
 
   it('3. missed training day (not rest) breaks streak', () => {
-    // Mon✅ Tue❌(not rest, not completed) Wed✅(today=Wed)
+    // Tue(23)✅ Wed(24)❌(not rest, not completed) Thu(25)✅(today=Thu)
     const completed = ['2026-06-23', '2026-06-25']
     const rest: string[] = []
     const result = computeStreak(completed, '2026-06-25', rest)
-    expect(result.current).toBe(1) // only Wed counts, Tue breaks
+    expect(result.current).toBe(1) // only Thu counts, Wed breaks
   })
 
   it('4. deload week (all rest) does not break streak', () => {
-    // Mon(prev)✅ then Tue..Sun all rest, today=Sun
+    // Mon(15)✅ then Tue(16)..Sun(21) all rest, today=Sun(21)
     const completed = ['2026-06-15']
     const rest = ['2026-06-16', '2026-06-17', '2026-06-18', '2026-06-19', '2026-06-20', '2026-06-21']
     const result = computeStreak(completed, '2026-06-21', rest)
@@ -54,7 +54,7 @@ describe('computeStreak', () => {
   })
 
   it('6. non-regression: 2-arg call (no rest) behaves like original', () => {
-    // Wed✅ Thu✅ Fri✅(today)
+    // Wed(24)✅ Thu(25)✅ Fri(26)✅(today)
     const completed = ['2026-06-24', '2026-06-25', '2026-06-26']
     const result = computeStreak(completed, TODAY)
     expect(result.current).toBe(3)
@@ -63,7 +63,7 @@ describe('computeStreak', () => {
   })
 
   it('7. rest AND session on same day — no double counting', () => {
-    // Wed has both completed and rest → still counts as 1 day
+    // Fri(26) has both completed and rest → still counts as 1 day
     const completed = ['2026-06-26']
     const rest = ['2026-06-26']
     const result = computeStreak(completed, TODAY, rest)
@@ -72,7 +72,7 @@ describe('computeStreak', () => {
   })
 
   it('8. rest TODAY without session → endsToday=true, streak extends', () => {
-    // Mon✅ Tue✅ Wed🛌(today)
+    // Wed(24)✅ Thu(25)✅ Fri(26)🛌(today)
     const completed = ['2026-06-24', '2026-06-25']
     const rest = ['2026-06-26']
     const result = computeStreak(completed, TODAY, rest)
