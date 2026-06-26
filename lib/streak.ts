@@ -2,12 +2,16 @@
  * Pure streak computation — single source of truth for the entire app.
  * Zero dependencies (no Supabase, no React). Testable in plain Node.
  *
+ * A "held day" is a day the user either completed a session OR had a
+ * planned rest day. Both count toward the streak.
+ *
  * Semantics (Duolingo-style grace period):
- * - If the user trained TODAY: streak = consecutive days ending today.
- *   endsToday = true, atRisk = false.
- * - If NOT today but trained YESTERDAY: streak = consecutive days ending
- *   yesterday. endsToday = false, atRisk = true (the streak survives
- *   until midnight — used to trigger "keep your streak" push at 18h).
+ * - If the user has a held day TODAY: streak = consecutive held days
+ *   ending today. endsToday = true, atRisk = false.
+ * - If NOT today but held YESTERDAY: streak = consecutive held days
+ *   ending yesterday. endsToday = false, atRisk = true (the streak
+ *   survives until midnight — used to trigger "keep your streak" push
+ *   at 18h).
  * - Otherwise: current = 0, atRisk = false (streak already broken).
  *
  * All dates must be LOCAL 'YYYY-MM-DD' strings (not UTC — UTC midnight
@@ -15,21 +19,22 @@
  */
 
 export interface StreakResult {
-  /** Consecutive days with at least one completed session */
+  /** Consecutive held days (trained or planned rest) */
   current: number
-  /** True if today is part of the streak (user already trained) */
+  /** True if today is part of the streak (user already trained or planned rest) */
   endsToday: boolean
-  /** True if the streak is alive but the user hasn't trained today yet */
+  /** True if the streak is alive but the user hasn't held today yet */
   atRisk: boolean
 }
 
 export function computeStreak(
   completedLocalDates: string[],
-  todayLocal: string
+  todayLocal: string,
+  restLocalDates: string[] = []
 ): StreakResult {
-  // Deduplicate and sort descending
-  const unique = [...new Set(completedLocalDates)].sort().reverse()
-  if (unique.length === 0) return { current: 0, endsToday: false, atRisk: false }
+  // Union of completed sessions and planned rest days, deduplicated and sorted desc
+  const heldDates = [...new Set([...completedLocalDates, ...restLocalDates])].sort().reverse()
+  if (heldDates.length === 0) return { current: 0, endsToday: false, atRisk: false }
 
   const prevDay = (dateStr: string): string => {
     const d = new Date(dateStr + 'T12:00:00') // noon avoids DST edge
@@ -37,22 +42,22 @@ export function computeStreak(
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  const trainedToday = unique[0] === todayLocal
+  const heldToday = heldDates[0] === todayLocal
   const yesterday = prevDay(todayLocal)
-  const trainedYesterday = unique[0] === yesterday || (unique.length > 1 && unique[0] === todayLocal && unique[1] === yesterday)
+  const trainedYesterday = heldDates[0] === yesterday || (heldDates.length > 1 && heldDates[0] === todayLocal && heldDates[1] === yesterday)
 
   // Determine anchor: the most recent date that starts the backward count
   let anchor: string
-  if (trainedToday) {
+  if (heldToday) {
     anchor = todayLocal
-  } else if (unique[0] === yesterday) {
+  } else if (heldDates[0] === yesterday) {
     anchor = yesterday
   } else {
     return { current: 0, endsToday: false, atRisk: false }
   }
 
-  // Count consecutive days backward from anchor
-  const dateSet = new Set(unique)
+  // Count consecutive held days backward from anchor
+  const dateSet = new Set(heldDates)
   let count = 0
   let cursor = anchor
   while (dateSet.has(cursor)) {
@@ -62,7 +67,7 @@ export function computeStreak(
 
   return {
     current: count,
-    endsToday: trainedToday,
-    atRisk: !trainedToday,
+    endsToday: heldToday,
+    atRisk: !heldToday,
   }
 }
