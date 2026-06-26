@@ -19,6 +19,8 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Fiabilisation donnees Home (streak/Recovery/heure hero/cache) ✅ 21 juin
 - [x] Refonte coherence Home (SectionTitle, closer, assiduite) ✅ 21 juin
 - [x] Bloc cardio complet (i18n, poids réel, bugs Stop/cookie/zIndex) ✅ 22 juin
+- [x] Home refresh au retour d'onglet (homeRefreshKey) ✅ 25 juin
+- [x] Streak respecte le planning (def B, moteur + client + coach) ✅ 26 juin
 - [ ] **Feature "jours restants" dans l'app** (PRIORITAIRE)
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
@@ -58,43 +60,20 @@ la nav corrigé en patch ciblé 22/06 mais cause non traitée). Définir échell
 (Z_NAV/Z_OVERLAY/Z_MODAL/Z_TOAST). Migration PAR ZONES (modals → WorkoutSession → NutritionTab →
 reste), 1 commit testable/zone, branche dédiée. NE PAS faire d'un bloc.
 
-### 🔴 Sprint dédié — Streak respecte le planning (def B) — ~2-3h
-PROBLÈME : computeStreak (lib/streak.ts) compte les jours d'entraînement consécutifs STRICTS
-(boucle while dateSet.has(cursor) s'arrête au 1er jour sans séance) → un jour de repos casse le
-streak, retour à zéro. Décourage l'user (le repos fait partie de l'entraînement).
+### ✅ FAIT (26/06) — Streak respecte le planning (def B)
+Livré en prod : moteur lib/streak.ts (restLocalDates optionnel) + projection client
+(useClientDashboard, source custom_programs via getSessionForDay) + coach migré (D3).
+Prouvé runtime (7 vs 2). D1 révisée : source UNIQUE = programme actif, scheduled_sessions
+abandonné (n'était pas dans le flux streak ; session_type réel='repos' pas 'rest').
+5 commits, voir SESSION_LOG 26/06.
 
-OBJECTIF : un jour de repos PRÉVU ne casse pas le streak. Seul un jour d'entraînement prévu mais
-manqué casse.
-
-DÉCISIONS ACTÉES :
-- D1 — Source des jours de repos : CROISER les deux (union). Un jour = "repos prévu" s'il est
-  session_type='rest' dans scheduled_sessions OU repos:true dans coachProgram[jourSemaine].
-  Règle : union permissive — si l'une dit repos, c'est repos (ne jamais casser à tort).
-  ⚠️ subtilité : définir le cas où scheduled_sessions dit "séance" mais coachProgram dit "repos".
-- D2 — Le repos PROLONGE le compteur (compte comme jour tenu). Ex: lun✅ mar✅ mer🛌 jeu✅ → streak=4.
-- D3 — Aligner le 2e computeStreak divergent (app/coach/hooks/useCoachAnalytics.ts:45) sur
-  lib/streak.ts dans le même sprint (cohérence coach/client).
-
-PORTÉE (moteur + 3 appelants + 1 divergent) :
-- lib/streak.ts : computeStreak reçoit les jours de repos prévus (approche reco : enrichir la liste
-  des jours "tenus" = séances ∪ repos prévus, garder la boucle consecutive — moteur quasi intact).
-- app/hooks/useClientDashboard.ts:490 : a scheduledSessions + coachProgram → fournir restDates.
-- app/api/streak-reminder/cron/route.ts:173 : cron serveur batch. Lire scheduled_sessions
-  (session_type='rest') par user EN PLUS de workout_sessions. ⚠️ alourdit le cron (requête/user,
-  envisager fetch groupé).
-- lib/check-badges.ts:54 : idem, récupérer les jours de repos.
-- app/coach/hooks/useCoachAnalytics.ts:45 : remplacer la fonction locale par lib/streak.ts.
-
-TESTS UNITAIRES OBLIGATOIRES :
-1. Repos isolé : lun✅ mar✅ mer🛌 jeu✅ → streak=4 (ne casse pas, prolonge)
-2. Week-end 2 jours : ...ven✅ sam🛌 dim🛌 lun✅ → ne casse pas
-3. Jour d'entraînement MANQUÉ (pas repos) : lun✅ mar❌(prévu) mer✅ → CASSE
-4. Deload semaine entière (repos prévus) → ne casse pas
-5. Aucune activité ni repos prévu → casse
-6. Non-régression : user sans programme (pas de repos) → comportement actuel inchangé
-
-⚠️ MOTEUR CENTRAL : alimente UI + badges + push. Une erreur = faux streaks / fausses push.
-Tester les 3 systèmes en runtime. Commits isolés par appelant si possible.
+### 🔴 Sprint B STREAK serveur (cron + badges) — NON urgent
+Migrer app/api/streak-reminder/cron/route.ts et lib/check-badges.ts vers la prise en
+compte des repos (def B). NON urgent : le cron skip déjà les jours de repos
+(getSessionForDay type==='rest'), donc zéro fausse push aujourd'hui. B ne fait que :
+(1) prolonger le streak.current affiché dans le message du cron, (2) aligner les badges
+streak_days sur def B. ⚠️ serveur batch : projeter le repos par-user (fetch groupé
+custom_programs ou dérivation). Tête fraîche.
 
 ### ⚠️ Valider seuils RIR avec un coach
 RIR_SAFETY_MAX, RIR_ACCEL_MIN, deload -10% dans lib/training/compute-progression.ts. Justesse

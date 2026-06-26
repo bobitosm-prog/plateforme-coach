@@ -4,15 +4,84 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-22
-- **HEAD** : 1b8e984 (feat(cardio): "renseigne ton poids" cliquable → WeightModal)
+- **Date** : 2026-06-26
+- **HEAD** : 841539b (refactor(streak): remove dead trainedYesterday variable)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 22/06 — Bloc cardio complet + 3 bugs de fond déterrés.
+- **Dernière session** : 26/06 — Sprint STREAK def B complet (5 commits, prod). D1 révisée.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
-- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. z-index chaos (~150 occurrences, patch ciblé 22/06, sprint dédié à planifier).
+- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. z-index chaos (~150 occurrences, patch ciblé 22/06, sprint dédié à planifier). TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois).
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
+
+---
+
+## 2026-06-26 — Sprint STREAK respecte le planning (def B) [PROD]
+
+### Contexte
+computeStreak (lib/streak.ts) cassait le streak dès un jour de repos (boucle
+consecutive stricte). Objectif def B : un jour de repos PRÉVU prolonge le streak,
+seul un jour d'entraînement prévu mais manqué casse.
+
+### ⚠️ D1 RÉVISÉE — la spec NEXT.md était fondée sur une hypothèse fausse
+La spec disait « croiser scheduled_sessions session_type='rest' + coachProgram ».
+Audit terrain :
+- session_type réel = 'repos' (FR), PAS 'rest'. Valeurs en prod : jambes/custom/
+  repos/dos/pectoraux.
+- scheduled_sessions n'est utilisé par AUCUN flux streak (ni hook client, ni cron,
+  ni badges). Le cron lit custom_programs.days via getSessionForDay.
+- La vraie source de repos exploitable = custom_programs.days (lu via getSessionForDay,
+  champ is_rest), OU coachToDays(coachProgram) pour les coach-clients.
+DÉCISION : source UNIQUE = programme actif via getSessionForDay (même fonction que le
+cron → cohérence structurelle, pas juste conventionnelle). scheduled_sessions abandonné
+pour le streak. Plus de « union de 2 sources » → plus de risque de désync.
+La subtilité D1 laissée ouverte (scheduled dit séance / coach dit repos) disparaît :
+source unique = pas de contradiction possible.
+
+### Commits livrés (5, bisect-friendly)
+| # | Hash | Description |
+|---|------|-------------|
+| 1 | 0682f20 | feat(streak): rest days extend streak via optional restLocalDates (+9 tests Vitest) |
+| 2 | 67fbeb3 | fix(test): corrige commentaires jour/date dans streak.test.ts |
+| 3 | 990c1fb | feat(streak): project rest days from active program in dashboard |
+| 4 | e0b9f43 | refactor(coach): use lib/streak.ts in useCoachAnalytics (fix DST, align) |
+| 5 | 841539b | refactor(streak): remove dead trainedYesterday variable |
+
+### Détail technique
+- Moteur (lib/streak.ts) : 3e param restLocalDates: string[] = []. Union
+  completed ∪ rest = "held days". Param optionnel → non-régression des appelants non
+  touchés. D2 (le repos prolonge) tombe du union. 9 tests : repos isolé, week-end,
+  jour manqué (casse), deload semaine, aucune activité, non-régression 2-args,
+  repos+séance même jour (pas de double comptage), repos aujourd'hui.
+- Client (useClientDashboard) : nouveau state planningDays (customProg.days ||
+  coachToDays(coachProgram).days), peuplé sur les 2 chemins (cache-hit L146 + fetch L246).
+  Dérivé de données déjà cachées (customProgData) → pas de nouvelle clé cache, pas de
+  désync. Projection 60j au scope computed : pour chaque jour, mapping Monday-first
+  (dow===0?6:dow-1, identique getTodayIndex) → getSessionForDay → si 'rest' push dans
+  restDates. computeStreak(streakDates, today, restDates).
+- Coach (useCoachAnalytics) : D3. Fonction locale supprimée (avait bug DST :
+  new Date(uniqueDays[i]) en UTC minuit). Migrée vers lib/streak.ts, normalisation UTC
+  (.split('T')[0]) + today UTC → comportement de VALEUR identique, seul le moteur change.
+  PAS de rest days (vue agrégée multi-clients, hors scope).
+
+### Validation runtime (PROUVÉE)
+Compte réel, console : withRest=7 vs withoutRest=2. Sans la prise en compte des repos,
+le streak cassait à 2 ; avec, il remonte à 7. restDates = repos hebdo récurrent projeté
+correctement (24/06, 17/06, 10/06...). + 83/83 tests verts, tsc clean.
+
+### Sprint B reporté (serveur — NON urgent)
+cron + check-badges PAS migrés. Le cron skip DÉJÀ les jours de repos (getSessionForDay
+type==='rest', L141) → aucune fausse push possible. B ne servira qu'à faire prolonger le
+streak.current AFFICHÉ dans le message du cron + aligner badges. Tête fraîche, session
+dédiée.
+
+### Dette consignée
+- TZ vue coach (useCoachAnalytics) : streak calculé en UTC, pas Europe/Zurich. Identique
+  à l'ancien comportement (volontaire, un changement à la fois). À revoir si une
+  contrainte Zurich stricte apparaît côté coach.
+- Cas limite def B : une semaine de deload complète (que des repos prévus) garde le streak
+  en vie sans aucune séance. Voulu par D2. Si un jour « max N repos consécutifs » devient
+  souhaitable, c'est dans lib/streak.ts que ça se brancherait.
 
 ---
 
