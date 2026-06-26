@@ -15,6 +15,7 @@ import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/pro
 import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
 import { suggestNextSession, SuggestedSession } from '../../lib/suggestNextSession'
 import { computeStreak } from '../../lib/streak'
+import { getSessionForDay } from '../../lib/get-today-session'
 import { checkAndUnlockBadges, type Badge } from '../../lib/check-badges'
 import { addXP, updateStreak } from '../../lib/gamification'
 
@@ -41,6 +42,7 @@ export default function useClientDashboard() {
   const [hasTrainedBefore, setHasTrainedBefore] = useState(false)
   const [sessionDates, setSessionDates] = useState<{ created_at: string }[]>([])
   const [coachProgram, setCoachProgram] = useState<any>(null)
+  const [planningDays, setPlanningDays] = useState<any[] | null>(null)
   const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
   const [lastCompletedByIndex, setLastCompletedByIndex] = useState<Map<number, string>>(new Map())
   const [weightHistory30, setWeightHistory30] = useState<{ date: string; poids: number }[]>([])
@@ -142,6 +144,7 @@ export default function useClientDashboard() {
         setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
         resolveCoachLink(uid)
         const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
+        setPlanningDays(planningProgram?.days || null)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
         analyticsHook.fetchAnalyticsData(uid)
         fetchAllComplete.current = true
@@ -243,6 +246,7 @@ export default function useClientDashboard() {
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
     const customProg = customProgRes?.data || null
     const planningProgram = customProg || coachToDays(coachProgData)
+    setPlanningDays(planningProgram?.days || null)
     await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
     analyticsHook.fetchAnalyticsData(uid)
     await resolveCoachLink(uid)
@@ -485,9 +489,21 @@ export default function useClientDashboard() {
   const currentWeight = weightHistory30.length > 0 ? weightHistory30[weightHistory30.length - 1].poids : profile?.current_weight
   const completedSessions = sessionDates.length
   const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  // Single source: lib/streak.ts (Duolingo grace period)
+  // Project planned rest days from active program over the last 60 days
+  const restDates: string[] = []
+  if (planningDays?.length) {
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i)
+      const dow = d.getDay()
+      const mondayFirstIdx = dow === 0 ? 6 : dow - 1
+      if (getSessionForDay(planningDays, mondayFirstIdx).type === 'rest') {
+        restDates.push(toLocal(d))
+      }
+    }
+  }
+  // Single source: lib/streak.ts (Duolingo grace period, rest days extend)
   const streakDates = sessionDates.map(s => toLocal(new Date(s.created_at)))
-  const streakResult = computeStreak(streakDates, toLocal(new Date()))
+  const streakResult = computeStreak(streakDates, toLocal(new Date()), restDates)
   const streak = streakResult.current
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
