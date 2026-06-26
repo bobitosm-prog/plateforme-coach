@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { computeStreak } from '../../../lib/streak'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -40,27 +41,6 @@ function daysAgo(n: number): string {
   const d = new Date()
   d.setDate(d.getDate() - n)
   return d.toISOString().split('T')[0]
-}
-
-function computeStreak(sessionDates: string[]): number {
-  if (sessionDates.length === 0) return 0
-  const uniqueDays = [...new Set(sessionDates.map(d => d.split('T')[0]))].sort((a, b) => b.localeCompare(a))
-  const today = new Date().toISOString().split('T')[0]
-  const yesterday = daysAgo(1)
-
-  // Le streak commence aujourd'hui ou hier
-  if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) return 0
-
-  let streak = 1
-  for (let i = 1; i < uniqueDays.length; i++) {
-    const prev = new Date(uniqueDays[i - 1])
-    const curr = new Date(uniqueDays[i])
-    const diffMs = prev.getTime() - curr.getTime()
-    const diffDays = Math.round(diffMs / 86400000)
-    if (diffDays === 1) streak++
-    else break
-  }
-  return streak
 }
 
 const STATUS_ORDER: Record<ClientStatus, number> = { inactive: 0, declining: 1, active: 2, new: 3 }
@@ -161,8 +141,10 @@ export default function useCoachAnalytics(coachId: string | null) {
         ? new Date(allSessions.sort((a, b) => b.localeCompare(a))[0])
         : null
 
-      // Streak (sur 30j de données)
-      const streak = computeStreak(allSessions)
+      // Streak (sur 30j de données) — moteur unifié lib/streak.ts, normalisation UTC
+      const normalizedDates = allSessions.map(d => d.split('T')[0])
+      const todayUTC = new Date().toISOString().split('T')[0]
+      const streak = computeStreak(normalizedDates, todayUTC).current
 
       // Weight delta 7j
       let weightDelta7d: number | null = null
