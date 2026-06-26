@@ -44,7 +44,6 @@ export function computeStreak(
 
   const heldToday = heldDates[0] === todayLocal
   const yesterday = prevDay(todayLocal)
-  const trainedYesterday = heldDates[0] === yesterday || (heldDates.length > 1 && heldDates[0] === todayLocal && heldDates[1] === yesterday)
 
   // Determine anchor: the most recent date that starts the backward count
   let anchor: string
