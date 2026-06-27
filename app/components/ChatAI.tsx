@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, Heart, Dumbbell, BarChart3, UtensilsCrossed, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations, useLocale } from 'next-intl'
-import { colors, fonts, titleStyle, bodyStyle, mutedStyle, subtitleStyle, cardStyle } from '../../lib/design-tokens'
+import { colors, fonts, titleStyle, bodyStyle, mutedStyle, subtitleStyle, cardStyle, Z_MODAL, Z_FAB } from '../../lib/design-tokens'
 import { useChatAI } from '../hooks/useChatAI'
 
 const SUGGESTION_ICONS = [UtensilsCrossed, Dumbbell, Heart, BarChart3]
@@ -37,7 +37,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
 
   if (isInvited && open) {
     return (
-      <div style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: colors.background, zIndex: 1001, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+      <div style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: colors.background, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
         <div style={{ ...titleStyle, fontSize: 24, letterSpacing: '0.1em', color: colors.text, marginBottom: 12 }}>{t('invited.title')}</div>
         <p style={{ ...bodyStyle, fontSize: 15, color: colors.textMuted, lineHeight: 1.6, marginBottom: 24 }}>{t('invited.message')}</p>
@@ -89,7 +89,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
     if (hideFloatingButton) return null
     return (
       <button onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 300) }}
-        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: colors.gold, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px ${colors.goldRule}`, zIndex: 998 }}>
+        style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: colors.gold, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px ${colors.goldRule}`, zIndex: Z_FAB }}>
         <Bot size={24} color="#0D0B08" strokeWidth={2.5} />
       </button>
     )
@@ -105,7 +105,7 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
         exit={{ opacity: 0, y: 40 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className="chat-ai-panel"
-        style={{ position: 'fixed', inset: 0, width: '100%', height: '100dvh', background: colors.background, zIndex: 1001, display: 'flex', flexDirection: 'column' }}
+        style={{ position: 'fixed', inset: 0, width: '100%', height: '100dvh', background: colors.background, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column' }}
       >
         <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
 

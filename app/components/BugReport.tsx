@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { X, Send, Bug, Lightbulb, HelpCircle, MessageSquare, CheckCircle2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
-import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
+import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, Z_MODAL, Z_FAB } from '../../lib/design-tokens'
 import { useMyFeedback, type MyFeedbackReport } from '@/app/hooks/useMyFeedback'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 
@@ -184,7 +184,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
         position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16,
         width: 44, height: 44, borderRadius: 12, background: BG_CARD, border: `1px solid ${GOLD_RULE}`,
         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 900, boxShadow: '0 4px 16px rgba(0,0,0,0.4)', transition: 'transform 0.2s',
+        zIndex: Z_FAB, boxShadow: '0 4px 16px rgba(0,0,0,0.4)', transition: 'transform 0.2s',
       }}>
         <span style={{ fontSize: 18 }}>💬</span>
         {unreadCount > 0 && (
@@ -205,7 +205,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
 
       {/* Modal */}
       {open && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 480, padding: '0 20px 40px', maxHeight: '85vh', overflowY: 'auto' }}>
 
             {/* Tabs */}
