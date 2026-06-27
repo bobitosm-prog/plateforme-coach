@@ -38,7 +38,7 @@ import DesktopDashboard from './(dashboard)/page-desktop'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
-  MEAL_TYPES,
+  MEAL_TYPES, Z_NAV, Z_MODAL, Z_TOAST,
 } from '../lib/design-tokens'
 import { useClientPermissions } from '../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
@@ -360,7 +360,7 @@ export default function CoachApp() {
     <ClientIntlProvider>
     <div className="app-shell" style={{ display: 'flex', width: '100%', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: BG_BASE, borderRight: `1px solid ${BORDER}`, zIndex: 50, padding: '24px 0' }}>
+      <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: BG_BASE, borderRight: `1px solid ${BORDER}`, zIndex: Z_NAV, padding: '24px 0' }}>
         <div style={{ padding: '0 20px', marginBottom: 32 }}>
           <img src="/logo-moovx.png" alt="MoovX" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
         </div>
@@ -417,7 +417,7 @@ export default function CoachApp() {
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 9999,
+          zIndex: Z_TOAST,
           background: GOLD,
           color: '#000',
           padding: '8px 16px',
@@ -462,7 +462,7 @@ export default function CoachApp() {
 
       {/* ── FOOD MODAL ── */}
       {h.modal === 'food' && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: Z_MODAL, overflowY: 'auto' }}>
           <div style={{ background: BG_CARD, borderRadius: 12, padding: '20px 16px 40px', marginTop: 40, minHeight: 'min(90vh, calc(100dvh - 40px))', border: `1px solid ${BORDER}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontFamily: FONT_ALT, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>AJOUTER ALIMENT</h3>
@@ -562,7 +562,7 @@ export default function CoachApp() {
 
       {/* ── CUSTOM FOOD MODAL ── */}
       {h.modal === 'custom_food' && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'flex-end' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end' }}>
           <div style={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 20px 40px', width: '100%', border: `1px solid ${BORDER}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontFamily: FONT_ALT, fontSize: '1.3rem', fontWeight: 700, letterSpacing: '0.06em', margin: 0 }}>NOUVEL ALIMENT</h3>
@@ -668,7 +668,7 @@ export default function CoachApp() {
       </svg>
 
       {/* ── BOTTOM NAV — 3 centered tabs ── */}
-      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '8px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 8px)', zIndex: 999, display: 'flex', justifyContent: 'center' }}>
+      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '8px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 8px)', zIndex: Z_NAV, display: 'flex', justifyContent: 'center' }}>
         <div className="stitch-card-nav" style={{ display: 'flex', justifyContent: 'center', gap: 0, padding: '10px 8px', borderRadius: 18, maxWidth: 360, width: '100%' }}>
         {([
           { id: 'home' as Tab, Icon: Home, label: 'Home' },
