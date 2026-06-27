@@ -1,5 +1,6 @@
 // Gamification: badge checking, XP, levels
 import { computeStreak } from './streak'
+import { projectRestDates } from './project-rest-days'
 
 export interface Badge {
   id: string
@@ -45,13 +46,17 @@ async function getConditionValue(userId: string, conditionType: string, supabase
       return count || 0
     }
     case 'streak_days': {
-      // Single source: lib/streak.ts (aligned with client-side computation)
-      const { data } = await supabase.from('workout_sessions').select('created_at').eq('user_id', userId).eq('completed', true).order('created_at', { ascending: false }).limit(400)
+      // Single source: lib/streak.ts (def B — rest days extend streak)
+      const [{ data }, { data: prog }] = await Promise.all([
+        supabase.from('workout_sessions').select('created_at').eq('user_id', userId).eq('completed', true).order('created_at', { ascending: false }).limit(400),
+        supabase.from('custom_programs').select('days').eq('user_id', userId).eq('is_active', true).maybeSingle(),
+      ])
       if (!data?.length) return 0
       const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       const dates = data.map((s: any) => toLocal(new Date(s.created_at)))
       const today = toLocal(new Date())
-      return computeStreak(dates, today).current
+      const restDates = projectRestDates(prog?.days)
+      return computeStreak(dates, today, restDates).current
     }
     case 'total_volume': {
       const { data } = await supabase.from('workout_sets').select('weight, reps').eq('user_id', userId)
