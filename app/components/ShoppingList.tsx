@@ -3,7 +3,8 @@ import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { X, Copy, Check, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
-import { colors, fonts } from '../../lib/design-tokens'
+import { colors, fonts, Z_MODAL } from '../../lib/design-tokens'
+import { RailOverlay } from './ui/RailOverlay'
 import { parseMealPlan } from '../../lib/meal-plan'
 
 interface AisleInfo { aisleKey: string; emoji: string; order: number }
@@ -101,7 +102,8 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 1050, display: 'flex', flexDirection: 'column' }}>
+    <RailOverlay>
+    <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
         <div>
@@ -156,5 +158,6 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
         </div>
       )}
     </div>
+    </RailOverlay>
   )
 }
