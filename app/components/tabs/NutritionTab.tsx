@@ -12,6 +12,7 @@ import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
 import { RailOverlay } from '../ui/RailOverlay'
 import ModalHeader from '../ui/ModalHeader'
+import SectionTitle from '../ui/SectionTitle'
 import {
   fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, Z_MODAL,
 } from '../../../lib/design-tokens'
@@ -893,10 +894,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* Preferences sub-tab */}
       {subTab === 'prefs' && (
         <div style={{ padding: '0 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <SlidersHorizontal size={18} color={colors.gold} />
-            <h2 style={{ ...subtitleStyle, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: 0 }}>{nt('chrome.prefsTitle')}</h2>
-          </div>
+          <SectionTitle noPadding title={nt('chrome.prefsTitle')} icon={<SlidersHorizontal size={16} />} />
           <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
         </div>
       )}
@@ -911,10 +909,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* Mes Repas sub-tab */}
       {subTab === 'meals' && (
         <div style={{ padding: '0 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={T}>{nt('chrome.myMeals')}</span>
-            <div style={titleLineStyle} />
-          </div>
+          <SectionTitle noPadding title={nt('chrome.myMeals')} />
           <div style={{ ...cardStyle, padding: 16 }}>
             {/* Search */}
             <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder={nt('chrome.searchMeal')} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
