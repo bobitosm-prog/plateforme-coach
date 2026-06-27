@@ -4,6 +4,7 @@ import { Search, X, Plus, Minus, Star, Camera } from 'lucide-react'
 import { normalizeFoodItem } from '../../lib/utils/food'
 import BarcodeScanner from './BarcodeScanner'
 import { colors, fonts } from '../../lib/design-tokens'
+import { RailOverlay } from './ui/RailOverlay'
 
 const MEAL_OPTIONS = [
   { id: 'petit_dejeuner', label: 'Petit-dejeuner' },
@@ -127,7 +128,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
     const gluc = Math.round(((selected.glucides * quantity) / 100) * 10) / 10
     const lip = Math.round(((selected.lipides * quantity) / 100) * 10) / 10
     return (
-      <>
+      <RailOverlay><>
       <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
       <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: '24px 20px', zIndex: 1101, boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }} onClick={e => e.stopPropagation()}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -183,13 +184,13 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
 
           }}>{saving ? 'Ajout...' : 'Ajouter au repas'}</button>
       </div>
-      </>
+      </></RailOverlay>
     )
   }
 
   // Main view -- centered popup
   return (
-    <>
+    <RailOverlay><>
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
     <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
       <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
@@ -250,7 +251,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
         )}
       </div>
     </div>
-    </>
+    </></RailOverlay>
   )
 }
 
