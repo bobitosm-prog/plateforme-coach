@@ -12,7 +12,7 @@ import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
 import { RailOverlay } from '../ui/RailOverlay'
 import {
-  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
+  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
@@ -988,7 +988,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* Meal edit modal */}
       {editingMeal && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: Z_MODAL, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflow: 'auto', padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <span style={{ ...T, fontSize: 16 }}>{editingMeal.name || 'Modifier le repas'}</span>
@@ -1088,8 +1088,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ PHOTO MEAL SCAN ═══ */}
       {showPhotoCapture && (<RailOverlay>
         <>
-          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>{nt('chrome.scanMeal')}</span>
               <button onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
@@ -1140,8 +1140,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ SAVE MEAL POPUP ═══ */}
       {showSaveMealPopup && saveMealData && (<RailOverlay>
         <>
-          <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+          <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: Z_MODAL, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>{nt('saveMealPopup.title')}</h3>
             <input type="text" placeholder={nt('saveMealPopup.placeholder')} value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none', marginBottom: 12 }} />
             <div style={{ background: colors.background, borderRadius: 10, padding: 12, marginBottom: 16, border: `1px solid ${colors.goldDim}` }}>
@@ -1167,8 +1167,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ COPY MEAL POPUP ═══ */}
       {showCopyMealPopup && copyMealData && (<RailOverlay>
         <>
-          <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: 1101, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+          <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: Z_MODAL, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <h3 style={{ ...statSmallStyle, fontSize: 22, color: colors.text, letterSpacing: 2, marginBottom: 16 }}>{nt('copyMealPopup.title')}</h3>
             <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>{nt('copyMealPopup.date')}</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
@@ -1193,8 +1193,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ SAVED MEALS POPUP ═══ */}
       {showSavedMeals && (<RailOverlay>
         <>
-          <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+          <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>{nt('savedMeals.title')}</span>
               <button onClick={() => setShowSavedMeals(false)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
