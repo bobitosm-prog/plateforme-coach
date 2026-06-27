@@ -192,7 +192,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
   return (
     <RailOverlay><>
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
-    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+    <div style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 24px)', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
       <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <span style={{ fontFamily: fonts.headline, fontSize: 20, letterSpacing: 2, color: colors.text }}>AJOUTER UN ALIMENT</span>
