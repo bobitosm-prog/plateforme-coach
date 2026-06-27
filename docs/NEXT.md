@@ -22,6 +22,8 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Home refresh au retour d'onglet (homeRefreshKey) ✅ 25 juin
 - [x] Streak respecte le planning (def B, moteur + client + coach) ✅ 26 juin
 - [x] Z-index sprint partiel (échelle + 5 zones, 2 bugs nav réparés) ✅ 27 juin
+- [x] Sprint B streak serveur (cron + badges def B, 3 systèmes alignés) ✅ 27 juin
+- [x] Refonte Nutrition Direction B (10 sous-chantiers, FoodSearch/images/Athena) ✅ 27 juin
 - [ ] **Feature "jours restants" dans l'app** (PRIORITAIRE)
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
@@ -53,7 +55,10 @@ RESTE Training :
 - Titre hero SessionDetailModal en dore (actuellement blanc).
 - CARDIO (CardioSection) : header carte accordeon a aligner sur SectionTitle.
 - Records battus (PR) dans l'ecran de fin de seance (checkForPR existe).
-Puis propager SectionTitle/ModalHeader a Nutrition, Progress, Account.
+NUTRITION : FAIT 27/06 (cards cardStyle, 3 modals ModalHeader, popups + titres Direction B,
+SectionTitle meals/prefs, padding anti-FAB, ShoppingList portalisé, boutons allégés). RESTE :
+titre + sous-titre (nom du plan actif, pattern Training) NON fait.
+Puis propager SectionTitle/ModalHeader a Progress, Account.
 
 ### ✅ FAIT (27/06) — Z-INDEX sprint partiel
 Échelle Z_FAB/NAV/OVERLAY/MODAL/TOAST dans design-tokens. 5 zones migrées, 2 bugs
@@ -68,13 +73,11 @@ Prouvé runtime (7 vs 2). D1 révisée : source UNIQUE = programme actif, schedu
 abandonné (n'était pas dans le flux streak ; session_type réel='repos' pas 'rest').
 5 commits, voir SESSION_LOG 26/06.
 
-### 🔴 Sprint B STREAK serveur (cron + badges) — NON urgent
-Migrer app/api/streak-reminder/cron/route.ts et lib/check-badges.ts vers la prise en
-compte des repos (def B). NON urgent : le cron skip déjà les jours de repos
-(getSessionForDay type==='rest'), donc zéro fausse push aujourd'hui. B ne fait que :
-(1) prolonger le streak.current affiché dans le message du cron, (2) aligner les badges
-streak_days sur def B. ⚠️ serveur batch : projeter le repos par-user (fetch groupé
-custom_programs ou dérivation). Tête fraîche.
+### ✅ FAIT (27/06) — Sprint B STREAK serveur (cron + badges, def B)
+cron (dcaa2aa) : helper zurichDayIndexFor + projection repos 60j + computeStreak(restDates).
+badges (07d1265) : lib/project-rest-days.ts + check-badges case streak_days aligné def B.
+DRY (d919546) : useClientDashboard utilise projectRestDates. 3 systèmes alignés (cron Zurich,
+client/badges navigateur — divergence légitime). Validé 8/3. Voir SESSION_LOG 27/06.
 
 ### ⚠️ Valider seuils RIR avec un coach
 RIR_SAFETY_MAX, RIR_ACCEL_MIN, deload -10% dans lib/training/compute-progression.ts. Justesse
@@ -83,12 +86,13 @@ méthodologique = expertise coach, pas dev. AVANT d'ouvrir la feature RIR aux vr
 ### Petits
 - Nettoyer toast.error technique insert cardio (message i18n propre, pas brut Supabase).
 - Vérifier visuellement fallback "renseigne ton poids" (testé par logique seulement).
-- Puis : NUTRITION (gros chantier suivant).
+- Nutrition Direction B : FAIT 27/06 (reste : titre + sous-titre plan actif).
 
-### 🔴 Dette — FoodSearch non portalisé
-Modal "Ajouter UN aliment" (FoodSearch, écran Nutrition) passe SOUS la nav. Cause : rendu
-dans le rail SANS RailOverlay → piégé par le transform (z-index impuissant). Fix = portaliser
-via RailOverlay (pattern établi). PAS du z-index. Bug visible beta.
+### ✅ FAIT (27/06) — FoodSearch portalisé + fix clavier
+444b7dc : portalisé via RailOverlay (ne passe plus sous la nav). b9a8afc : ancré en haut
+(top safe-area + translateX + maxHeight 100dvh) → le clavier iOS ne masque plus le champ.
+Validé iPhone. RESTE : vue détail FoodSearch (L132) à vérifier (centrée, sans maxHeight,
+même souci clavier probable).
 
 ### 🟡 Dette — stack interne WorkoutSession + TempoExecutor
 z-index internes anarchiques (50/51/200/250/300/9999/10000 + TempoExecutor 3×9999), ordre
@@ -96,18 +100,19 @@ fonctionnel OK. Monde plein écran, nav masquée, aucun conflit global. Rational
 mini-échelle locale, sprint dédié. NE PAS oublier TempoExecutor. Valider device séance
 complète (Web Audio, draft, rest timer, tempo).
 
-### 🟡 Bug — image détail exercice coupée en hauteur
-Images d'exercice (fournies 16/9) rognées verticalement dans les modals de détail
-(ExerciseLibrarySection + probablement ExerciseDetailModal/InfoPopup). Probable object-fit
-+ hauteur fixe au lieu de aspect-ratio 16/9. Sprint UI.
+### ✅ FAIT (27/06) — Images exercice cadrées 9/16
+Les images sont en 9/16 PORTRAIT (pas 16/9 comme supposé). Fix : conteneur aspectRatio 9/16
++ maxHeight 55vh + objectFit cover sur 3 modals (d915c72, 7a2aad8). Miniatures 48x48 intactes.
 
-### 🟢 Feature — Athena bouton flottant global
-Bulle ChatAI visible uniquement dans Compte. La rendre accessible partout (comme bouton
-bug report). ⚠️ chevauchement avec FAB bug report (tous deux bas-droite) → décider placement.
+### ✅ FAIT (27/06) — Athena FAB global
+83458a3 : monogramme "A" + sparkle, bottom 136px (au-dessus bug report 80px), ouvre coachIA.
+Condition !workoutSession && activeTab !== 'coachIA'. Z_FAB.
 
-### 🟢 Code mort — food modal page.tsx
-h.modal==='food' (page.tsx) : seul accès = bouton X du custom_food modal, aucun point
-d'entrée depuis l'UI Nutrition. Vestige pré-FoodSearch. Supprimer ou rebrancher.
+### 🔴 Dette archi — doublon FoodSearch / modal 'food' (page.tsx)
+Le modal h.modal==='food' (page.tsx L464+) N'EST PAS mort : système complet d'ajout d'aliment
+sur hook useFoodLog (foodSearch, addFoodToMeal, addCustomFood), réexporté via useClientDashboard
+(8 réexports). DOUBLON avec FoodSearch (le moderne). custom_food ferme vers 'food'. Pas de point
+d'entrée direct UI. → Désentrelacement risqué, sprint dédié. NE PAS supprimer sans cartographier.
 
 ### Prérequis launch
 - [ ] Parcours signup → onboarding → 1ère séance E2E par un tiers (pas Marco).
