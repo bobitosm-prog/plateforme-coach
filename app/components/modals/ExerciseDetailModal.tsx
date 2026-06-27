@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_DIM, GOLD_RULE,
   MUSCLE_COLORS,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors, Z_MODAL,
 } from '../../../lib/design-tokens'
 
 interface ExerciseDetailModalProps {
@@ -53,7 +53,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 80, display: 'flex', alignItems: 'flex-end' }}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end' }}
         onClick={onClose}
       >
         <motion.div

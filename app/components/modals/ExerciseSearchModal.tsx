@@ -10,7 +10,7 @@ import { RailOverlay } from '../ui/RailOverlay'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, ORANGE, GOLD,
   MUSCLE_COLORS, MUSCLE_GROUPS_FILTER,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { getExerciseImage } from '../../../lib/exercise-media'
 
@@ -66,7 +66,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          style={{ position: 'fixed', inset: 0, background: BG_BASE, zIndex: 70, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+          style={{ position: 'fixed', inset: 0, background: BG_BASE, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         >
           {/* Header */}
           <div style={{ padding: '16px 20px 0', flexShrink: 0, borderBottom: `1px solid ${BORDER}`, paddingBottom: 0 }}>
@@ -195,7 +195,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 80, display: 'flex', alignItems: 'flex-end' }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end' }}
             onClick={() => setSelectedExDb(null)}
           >
             <motion.div

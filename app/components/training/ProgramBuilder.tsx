@@ -14,7 +14,7 @@ import { X, Plus, ChevronLeft, ChevronRight, Search, Trash2, Check } from 'lucid
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { TechniqueExplanationCards } from '../tabs/training/TechniquePopup'
 import ConfirmDialog from '../ui/ConfirmDialog'
@@ -383,7 +383,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   if (typeof document === 'undefined') return null
   const portalContent = (
     <div data-no-tab-swipe="true" style={{
-      position: 'fixed', inset: 0, zIndex: 600, background: BG_BASE, overflowY: 'auto',
+      position: 'fixed', inset: 0, zIndex: Z_MODAL, background: BG_BASE, overflowY: 'auto',
     }}>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 16px calc(120px + env(safe-area-inset-bottom, 0px))' }}>
 
@@ -799,7 +799,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       {showExerciseSearch && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: 200, background: BG_BASE,
+          zIndex: Z_MODAL, background: BG_BASE,
           display: 'flex', flexDirection: 'column',
           height: '100%',
         }}>
@@ -925,7 +925,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
       {/* ──────── VARIANT POPUP ──────── */}
       {variantPopup && (
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:Z_MODAL,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
           <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
             <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>{t('variants.title')}</span>

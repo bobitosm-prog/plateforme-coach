@@ -3,7 +3,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import {
   BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, Z_MODAL,
 } from '../../lib/design-tokens'
 import { getExerciseName, getExerciseDescription, getExerciseTips } from '../../lib/i18n-exercise'
 import { RailOverlay } from './ui/RailOverlay'
@@ -42,7 +42,7 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
   return (<RailOverlay>
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
-      backdropFilter: 'blur(8px)', zIndex: 300,
+      backdropFilter: 'blur(8px)', zIndex: Z_MODAL,
       display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{

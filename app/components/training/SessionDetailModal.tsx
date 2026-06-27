@@ -4,7 +4,7 @@ import { RailOverlay } from '../ui/RailOverlay'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { colors, fonts } from '../../../lib/design-tokens'
+import { colors, fonts, Z_MODAL } from '../../../lib/design-tokens'
 import { getHeroImage } from '../../../lib/session-types'
 import { shortenSessionTitle } from '../home/HeroSessionCard'
 
@@ -35,7 +35,7 @@ export default function SessionDetailModal({
           exit={{ y: '100%' }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           style={{
-            position: 'fixed', inset: 0, zIndex: 1000,
+            position: 'fixed', inset: 0, zIndex: Z_MODAL,
             background: colors.background,
             display: 'flex', flexDirection: 'column',
             paddingTop: 'env(safe-area-inset-top, 0px)',
