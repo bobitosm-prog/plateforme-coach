@@ -11,6 +11,7 @@ import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
 import { RailOverlay } from '../ui/RailOverlay'
+import ModalHeader from '../ui/ModalHeader'
 import {
   fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, Z_MODAL,
 } from '../../../lib/design-tokens'
@@ -1090,10 +1091,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <>
           <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
-            <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>{nt('chrome.scanMeal')}</span>
-              <button onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
-            </div>
+            <ModalHeader title={nt('chrome.scanMeal')} onClose={() => { setShowPhotoCapture(false); setPhotoResults(null) }} />
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
               <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
               {!photoResults && !analyzingPhoto && (
@@ -1195,10 +1193,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <>
           <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.goldBorder}`, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ ...statSmallStyle, fontSize: 20, color: colors.text, letterSpacing: 2 }}>{nt('savedMeals.title')}</span>
-              <button onClick={() => setShowSavedMeals(false)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
-            </div>
+            <ModalHeader title={nt('savedMeals.title')} onClose={() => setShowSavedMeals(false)} />
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
               {savedMeals.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.empty')}</div>
