@@ -86,12 +86,12 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
 
             {/* Media: video > gif > placeholder */}
             {exercise.video_url ? (
-              <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE }}>
-                <video src={`${exercise.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: 'auto', display: 'block' }} />
+              <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 18px', borderRadius: RADIUS_CARD, overflow: 'hidden', background: BG_BASE }}>
+                <video src={`${exercise.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
             ) : exercise.gif_url ? (
-              <div style={{ borderRadius: RADIUS_CARD, overflow: 'hidden', marginBottom: 18, background: BG_BASE, border: `1px solid ${BORDER}` }}>
-                <img src={exercise.gif_url} alt={getExerciseName(exercise, locale)} style={{ width: '100%', height: 'auto', display: 'block' }} />
+              <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 18px', borderRadius: RADIUS_CARD, overflow: 'hidden', background: BG_BASE, border: `1px solid ${BORDER}` }}>
+                <img src={exercise.gif_url} alt={getExerciseName(exercise, locale)} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
             ) : (
               <div style={{ borderRadius: RADIUS_CARD, border: `1px dashed ${BORDER}`, padding: '40px 20px', textAlign: 'center', background: GOLD_DIM, marginBottom: 18 }}>

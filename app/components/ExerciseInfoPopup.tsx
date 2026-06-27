@@ -91,12 +91,12 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px', WebkitOverflowScrolling: 'touch' as any }}>
           {/* Media: video > gif > placeholder */}
           {info.video_url ? (
-            <div style={{ marginBottom: 20, borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
-              <video src={`${info.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 20px', borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
+              <video src={`${info.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
           ) : info.gif_url ? (
-            <div style={{ marginBottom: 20, borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
-              <img src={info.gif_url} alt={displayName} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 20px', borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
+              <img src={info.gif_url} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
           ) : (
             <div style={{ marginBottom: 20, borderRadius: 14, border: `1px dashed ${BORDER}`, padding: '40px 20px', textAlign: 'center', background: GOLD_DIM }}>
