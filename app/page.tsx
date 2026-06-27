@@ -38,7 +38,7 @@ import DesktopDashboard from './(dashboard)/page-desktop'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
-  MEAL_TYPES, Z_NAV, Z_MODAL, Z_TOAST,
+  MEAL_TYPES, Z_FAB, Z_NAV, Z_MODAL, Z_TOAST,
 } from '../lib/design-tokens'
 import { useClientPermissions } from '../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
@@ -643,6 +643,13 @@ export default function CoachApp() {
 
       </div>{/* end main-content-area */}
 
+      {!h.workoutSession && h.activeTab !== 'coachIA' && (
+        <button onClick={() => h.setActiveTab('coachIA')} aria-label="Athena"
+          style={{ position: 'fixed', bottom: 'calc(136px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px ${GOLD_RULE}`, zIndex: Z_FAB }}>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 700, color: '#0D0B08', lineHeight: 1, letterSpacing: '0.02em' }}>A</span>
+          <Sparkles size={11} color="#0D0B08" style={{ position: 'absolute', top: 8, right: 9 }} />
+        </button>
+      )}
       <BugReport session={h.session} profile={h.profile} />
       {celebrateBadge && <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={handleBadgeClose} />}
       {!perms.isInvited && (
