@@ -990,11 +990,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* Meal edit modal */}
       {editingMeal && (<RailOverlay>
         <div style={{ position: 'fixed', inset: 0, zIndex: Z_MODAL, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflow: 'auto', padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <span style={{ ...T, fontSize: 16 }}>{editingMeal.name || 'Modifier le repas'}</span>
-              <button onClick={() => setEditingMeal(null)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}><X size={16} color={colors.text} /></button>
-            </div>
+          <div style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflow: 'auto' }}>
+            <ModalHeader title={editingMeal.name || 'Modifier le repas'} onClose={() => setEditingMeal(null)} />
+            <div style={{ padding: '0 24px 24px' }}>
             {/* Food items list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
               {(editingMeal.foods || []).map((food: any, idx: number) => (
@@ -1074,6 +1072,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 setEditingMeal(null)
               }
             }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>SUPPRIMER LE REPAS</button>
+            </div>
           </div>
         </div>
       </RailOverlay>)}
