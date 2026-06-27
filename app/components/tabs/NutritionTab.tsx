@@ -751,12 +751,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               const hasPlanFoods = !!rec
 
               return (
-                <div key={mealType} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, marginBottom: 12, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+                <div key={mealType} style={{ ...cardStyle, marginBottom: 12, overflow: 'hidden' }}>
                   {/* Meal header */}
                   <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       {React.createElement(MEAL_ICONS[mealType] || UtensilsCrossed, { size: 18, color: colors.gold })}
-                      <span style={{ ...statSmallStyle, color: colors.text, letterSpacing: '1px' }}>{MEAL_LABELS[mealType]}</span>
+                      <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: colors.text }}>{MEAL_LABELS[mealType]}</span>
                       <span style={{ ...T, marginLeft: 'auto' }}>{con.kcal} kcal</span>
                       {logs.length > 0 && (
                         <div style={{ position: 'relative' }}>
