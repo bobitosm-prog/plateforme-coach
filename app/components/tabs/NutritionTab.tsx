@@ -673,7 +673,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         const MEAL_ICONS: Record<string, React.ComponentType<any>> = { petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon }
 
         return (
-          <div style={{ padding: '0 20px' }}>
+          <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
             {/* ═══ CALENDAR STRIP ═══ */}
             <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
