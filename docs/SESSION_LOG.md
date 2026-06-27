@@ -4,15 +4,70 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-26
-- **HEAD** : 841539b (refactor(streak): remove dead trainedYesterday variable)
+- **Date** : 2026-06-27
+- **HEAD** : f825482 (fix(zindex): nutrition meal-edit modal below nav...)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 26/06 — Sprint STREAK def B complet (5 commits, prod). D1 révisée.
+- **Dernière session** : 27/06 — Sprint z-index partiel (échelle + 5 zones), 2 bugs "modal sous nav" réparés. 4 dettes consignées.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
-- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. z-index chaos (~150 occurrences, patch ciblé 22/06, sprint dédié à planifier). TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois).
+- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). FoodSearch non portalisé (passe sous nav). Stack interne WorkoutSession anarchique (fonctionnel). Image détail exercice coupée en hauteur. Code mort food modal page.tsx.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
+
+---
+
+## 2026-06-27 — Sprint Z-INDEX (partiel) + 2 bugs "modal sous la nav" réparés [PROD]
+
+### Contexte
+Centraliser le chaos z-index (~190 occurrences, valeurs 1→99999). Branche dédiée
+refactor/zindex-scale, migration PAR ZONES, 1 commit testable/zone (jamais d'un bloc).
+
+### Échelle créée (lib/design-tokens.ts)
+Z_FAB=900 (boutons flottants persistants, SOUS la nav) < Z_NAV=999 < Z_OVERLAY=1000
+< Z_MODAL=1100 < Z_TOAST=1200. Valeurs choisies en ISO-COMPORTEMENT (reprennent les
+ordres de grandeur existants) → migrer = renommer sans changer le rendu, sauf fixes voulus.
+Fix racine : modalOverlay (token, ~124 consommateurs) était à zIndex 50 (SOUS la nav) →
+passé à Z_MODAL. Corrige le bug "modal sous la nav" à la source pour tous ses consommateurs.
+
+### Commits livrés (7, bisect-friendly)
+| # | Hash | Description |
+|---|------|-------------|
+| 1 | 1872904 | feat(tokens): échelle z-index + fix modalOverlay sous la nav |
+| 2 | 9e23824 | refactor(zindex): page.tsx (nav, bannière, food modals) |
+| 3 | 023f737 | feat(tokens): Z_FAB (boutons flottants sous nav) |
+| 4 | 44eb086 | refactor(zindex): ChatAI + BugReport |
+| 5 | a65eb5c | refactor(zindex): 6 modals training hors séance → Z_MODAL |
+| 6 | 7d9914f | fix(zindex): ExerciseLibrarySection detail sous la nav (200→Z_MODAL) |
+| 7 | f825482 | fix(zindex): NutritionTab meal-edit sous la nav + overlays → Z_MODAL |
+
+### 2 BUGS RÉELS RÉPARÉS (visibles, écrans quotidiens beta)
+- Détail exercice (bibliothèque Training) passait SOUS la nav → était à zIndex 200 < nav 999.
+- Édition de repas (Nutrition) passait SOUS la nav → idem 200. Validés device.
+
+### Découverte clé (diagnostic DOM)
+Le bug "modal sous la nav" n'était PAS un problème de stacking context / transform du rail.
+C'étaient des modals restés à des VALEURS < 999 (200), donc légitimement sous la nav 999.
+Inspection DOM live : le modal était bien portalisé (enfant de body) mais à z-index 200.
+Les modals correctement portalisés (RailOverlay) à 1100 passent bien au-dessus de la nav.
+LEÇON : inspecter le DOM tranche en 30s ce que la spéculation sur le stacking aurait fait
+traîner une heure.
+
+### Décisions
+- Modals imbriqués (sous-modal/contenu par-dessus parent/backdrop) : TOUS Z_MODAL, l'ordre
+  DOM gère la superposition (contenu rendu après → passe devant à z-index égal). Validé
+  device sur save-meal popup (carte lisible devant son backdrop).
+- Famille A (empilements locaux : icône sur fond, menu déroulant, zIndex 1/2/3/50-absolute)
+  NON migrée — seules les couches plein écran qui se disputent le viewport global le sont.
+
+### EXCLUS du sprint (consignés en dette, voir NEXT.md)
+- WorkoutSession + TempoExecutor : monde plein écran autonome (nav masquée), stack interne
+  anarchique (50/51/200/250/300/9999/10000) mais ordre fonctionnel correct. Aucun conflit
+  global. À rationaliser en sprint dédié. NE PAS forcer dans les tokens globaux.
+- Landing : z-index quasi tous famille A (animations GSAP). Hors scope.
+
+### Zones z-index NON faites (faible enjeu, multi-sessions)
+TrainingTab (variant popup + plein écran à 200, certains potentiellement en séance),
+coach (coach/page.tsx, client/[id]), auth/onboarding, BadgeCelebration (2000).
 
 ---
 

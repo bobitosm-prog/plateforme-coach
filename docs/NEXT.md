@@ -21,6 +21,7 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Bloc cardio complet (i18n, poids réel, bugs Stop/cookie/zIndex) ✅ 22 juin
 - [x] Home refresh au retour d'onglet (homeRefreshKey) ✅ 25 juin
 - [x] Streak respecte le planning (def B, moteur + client + coach) ✅ 26 juin
+- [x] Z-index sprint partiel (échelle + 5 zones, 2 bugs nav réparés) ✅ 27 juin
 - [ ] **Feature "jours restants" dans l'app** (PRIORITAIRE)
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
@@ -54,11 +55,11 @@ RESTE Training :
 - Records battus (PR) dans l'ecran de fin de seance (checkForPR existe).
 Puis propager SectionTitle/ModalHeader a Nutrition, Progress, Account.
 
-### 🔴 Sprint dédié — Centraliser les z-index
-Chaos : ~150 occurrences sur ~60 fichiers, valeurs 1→99999 sans logique. Bug récurrent (modals sous
-la nav corrigé en patch ciblé 22/06 mais cause non traitée). Définir échelle dans design-tokens
-(Z_NAV/Z_OVERLAY/Z_MODAL/Z_TOAST). Migration PAR ZONES (modals → WorkoutSession → NutritionTab →
-reste), 1 commit testable/zone, branche dédiée. NE PAS faire d'un bloc.
+### ✅ FAIT (27/06) — Z-INDEX sprint partiel
+Échelle Z_FAB/NAV/OVERLAY/MODAL/TOAST dans design-tokens. 5 zones migrées, 2 bugs
+"modal sous la nav" réparés (library detail + meal-edit). Reste (faible enjeu) :
+TrainingTab, coach, auth/onboarding, BadgeCelebration. Famille A (locaux) jamais migrée.
+Voir SESSION_LOG 27/06.
 
 ### ✅ FAIT (26/06) — Streak respecte le planning (def B)
 Livré en prod : moteur lib/streak.ts (restLocalDates optionnel) + projection client
@@ -83,6 +84,30 @@ méthodologique = expertise coach, pas dev. AVANT d'ouvrir la feature RIR aux vr
 - Nettoyer toast.error technique insert cardio (message i18n propre, pas brut Supabase).
 - Vérifier visuellement fallback "renseigne ton poids" (testé par logique seulement).
 - Puis : NUTRITION (gros chantier suivant).
+
+### 🔴 Dette — FoodSearch non portalisé
+Modal "Ajouter UN aliment" (FoodSearch, écran Nutrition) passe SOUS la nav. Cause : rendu
+dans le rail SANS RailOverlay → piégé par le transform (z-index impuissant). Fix = portaliser
+via RailOverlay (pattern établi). PAS du z-index. Bug visible beta.
+
+### 🟡 Dette — stack interne WorkoutSession + TempoExecutor
+z-index internes anarchiques (50/51/200/250/300/9999/10000 + TempoExecutor 3×9999), ordre
+fonctionnel OK. Monde plein écran, nav masquée, aucun conflit global. Rationaliser en
+mini-échelle locale, sprint dédié. NE PAS oublier TempoExecutor. Valider device séance
+complète (Web Audio, draft, rest timer, tempo).
+
+### 🟡 Bug — image détail exercice coupée en hauteur
+Images d'exercice (fournies 16/9) rognées verticalement dans les modals de détail
+(ExerciseLibrarySection + probablement ExerciseDetailModal/InfoPopup). Probable object-fit
++ hauteur fixe au lieu de aspect-ratio 16/9. Sprint UI.
+
+### 🟢 Feature — Athena bouton flottant global
+Bulle ChatAI visible uniquement dans Compte. La rendre accessible partout (comme bouton
+bug report). ⚠️ chevauchement avec FAB bug report (tous deux bas-droite) → décider placement.
+
+### 🟢 Code mort — food modal page.tsx
+h.modal==='food' (page.tsx) : seul accès = bouton X du custom_food modal, aucun point
+d'entrée depuis l'UI Nutrition. Vestige pré-FoodSearch. Supprimer ou rebrancher.
 
 ### Prérequis launch
 - [ ] Parcours signup → onboarding → 1ère séance E2E par un tiers (pas Marco).
