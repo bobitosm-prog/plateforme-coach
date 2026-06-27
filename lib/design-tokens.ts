@@ -243,6 +243,7 @@ export const inputStyle: React.CSSProperties = {
 // ─── Z-index scale (single source for global stacking layers) ───
 // Local stacking (icons over gradients, etc.) keep their small ad-hoc values.
 // These tokens are ONLY for full-viewport layers competing globally.
+export const Z_FAB = 900    // floating action buttons, persistent, BELOW nav
 export const Z_NAV = 999
 export const Z_OVERLAY = 1000
 export const Z_MODAL = 1100
