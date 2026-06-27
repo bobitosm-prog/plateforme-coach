@@ -883,17 +883,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* Show AI meal plan from meal_plans table (priority) */}
       {subTab === 'plan' && activeMealPlan && (
-        <div style={{ padding: '0 20px' }}>{renderAiPlan(activeMealPlan)}</div>
+        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>{renderAiPlan(activeMealPlan)}</div>
       )}
 
       {/* Show old-style coach meal plan if no AI plan */}
       {subTab === 'plan' && !activeMealPlan && coachMealPlan && (
-        <div style={{ padding: '0 20px' }}>{renderCoachPlan()}</div>
+        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>{renderCoachPlan()}</div>
       )}
 
       {/* Preferences sub-tab */}
       {subTab === 'prefs' && (
-        <div style={{ padding: '0 20px' }}>
+        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
           <SectionTitle noPadding title={nt('chrome.prefsTitle')} icon={<SlidersHorizontal size={16} />} />
           <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
         </div>
@@ -901,14 +901,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* Recipes sub-tab */}
       {subTab === 'recipes' && (
-        <div style={{ padding: '0 20px' }}>
+        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
           <RecipesSection supabase={supabase} userId={userId} profile={profile} />
         </div>
       )}
 
       {/* Mes Repas sub-tab */}
       {subTab === 'meals' && (
-        <div style={{ padding: '0 20px' }}>
+        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
           <SectionTitle noPadding title={nt('chrome.myMeals')} />
           <div style={{ ...cardStyle, padding: 16 }}>
             {/* Search */}
