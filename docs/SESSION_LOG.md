@@ -5,16 +5,72 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-06-27
-- **HEAD** : f825482 (fix(zindex): nutrition meal-edit modal below nav...)
+- **HEAD** : b9a8afc (fix(nutrition): anchor FoodSearch to top so keyboard doesn't hide search field)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 27/06 — Sprint z-index partiel (échelle + 5 zones), 2 bugs "modal sous nav" réparés. 4 dettes consignées.
+- **Dernière session** : 27/06 — TRIPLE sprint : z-index partiel + Sprint B streak serveur (def B) + refonte Nutrition Direction B (10 sous-chantiers). FoodSearch/images/Athena en bonus matin.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
-- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). FoodSearch non portalisé (passe sous nav). Stack interne WorkoutSession anarchique (fonctionnel). Image détail exercice coupée en hauteur. Code mort food modal page.tsx.
+- **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-06-27 — Refonte NUTRITION Direction B + bugs [PROD]
+
+### Contexte
+Aligner NutritionTab sur Direction B (briques ui/ : cardStyle, ModalHeader, SectionTitle),
+comme Home et Training. Discipline : audit → diff → device → commit, 1 sous-chantier/commit.
+
+### Bugs réparés (matin)
+- FoodSearch portalisé via RailOverlay (444b7dc) — modal "Ajouter un aliment" passait sous la nav.
+- Images exercice : format réel 9/16 PORTRAIT (pas 16/9). Conteneurs aspectRatio 9/16 + maxHeight 55vh
+  + objectFit cover sur 3 modals (d915c72 ExerciseLibrary, 7a2aad8 detail/info). Miniatures 48x48 intactes.
+- Athena FAB global (83458a3) : monogramme "A" + sparkle, bottom 136px, ouvre coachIA. Condition
+  !workoutSession && activeTab !== 'coachIA'. Au-dessus du FAB bug report (80px).
+
+### Refonte Nutrition (10 commits, 3119e36 → b9a8afc)
+| Hash | Sous-chantier |
+|---|---|
+| 3119e36 | Cards de repas → cardStyle + titre fonts.headline (pattern Training) |
+| 224e120 | photoCapture + savedMeals → ModalHeader |
+| 8858af9 | editingMeal → ModalHeader (padding conteneur restructuré, body wrappé) |
+| 1de492e | Padding anti-FAB sous-onglet today (calc 160px + safe-area) |
+| e3db43c | ShoppingList portalisé via RailOverlay (était piégé hors rail), 1050→Z_MODAL |
+| 451911f | Popups saveMeal/copyMeal → titres Direction B (barre dorée + titre doré fonts.alt) |
+| 1660ab1 | Titres meals + prefs → SectionTitle (prefs avec icon SlidersHorizontal) |
+| 3896632 | Padding anti-FAB autres sous-onglets (plan-active/coach, prefs, recipes, meals) |
+| bc08a2e | Boutons d'action par repas allégés (border:none ×4, fond uniforme rgba blanc 0.06) |
+| b9a8afc | FIX clavier : FoodSearch ancré en haut (top safe-area, translateX, maxHeight 100dvh) — validé iPhone |
+
+### Décisions
+- ModalHeader appliqué aux 3 modals "header complet" (photoCapture/savedMeals/editingMeal).
+  Popups compacts saveMeal/copyMeal : titre Direction B seulement (ModalHeader complet inadapté).
+- Écrans d'état centrés (coachManaged/noPlan) NON migrés en SectionTitle (centrés, inadapté).
+- Boutons par repas : 4 conservés (fonctionnalité), au même niveau discret (pas de hiérarchie).
+
+### Dettes consignées
+- Doublon archi : modal 'food' (page.tsx) + useFoodLog ≠ mort, c'est un système d'ajout actif
+  doublon de FoodSearch (le moderne). Désentrelacement risqué (8 réexports), sprint dédié.
+- Titre Nutrition : sous-titre = nom du plan actif (pattern Training) NON fait.
+- Vue détail FoodSearch (L132) : même souci clavier probable (centrée, sans maxHeight), à vérifier.
+
+## 2026-06-27 — Sprint B STREAK serveur (def B) [PROD]
+
+### Contexte
+Aligner les 3 systèmes qui calculent le streak sur def B (repos prévu prolonge le streak) :
+client (déjà fait 26/06), cron, badges. Repos projeté par-user via le programme actif.
+
+### Commits (dcaa2aa → d919546)
+| Hash | Contenu |
+|---|---|
+| dcaa2aa | B1 cron : helper zurichDayIndexFor(date), projection repos 60j (toZurichDate + getSessionForDay), computeStreak avec restDates. zurichDayIndex existant intact. Validé 8/3. |
+| 07d1265 | B2a badges : créé lib/project-rest-days.ts (projectRestDates, fuseau navigateur). check-badges case 'streak_days' charge custom_programs en parallèle, passe restDates. Validé 8/3. |
+| d919546 | B2b DRY : useClientDashboard projection inline remplacée par projectRestDates(planningDays), import getSessionForDay retiré. No-op prouvé device (streak=8). |
+
+### Décision
+3 systèmes (client/cron/badges) calculent le même streak def B. Cron garde SA projection Zurich
+(serveur batch), client/badges fuseau navigateur — divergence légitime documentée. Sprint B complet.
 
 ## 2026-06-27 — Sprint Z-INDEX (partiel) + 2 bugs "modal sous la nav" réparés [PROD]
 
