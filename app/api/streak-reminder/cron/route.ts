@@ -55,6 +55,13 @@ function zurichDayIndex(): number {
   return map[dayStr] ?? 0
 }
 
+/** Monday-first day index for an arbitrary date in Europe/Zurich */
+function zurichDayIndexFor(d: Date): number {
+  const dayStr = d.toLocaleDateString('en-US', { timeZone: 'Europe/Zurich', weekday: 'long' })
+  const map: Record<string, number> = { Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6 }
+  return map[dayStr] ?? 0
+}
+
 export async function POST(req: NextRequest) {
   // 1. AUTH via CRON_SECRET
   const auth = req.headers.get('authorization') || ''
@@ -169,8 +176,17 @@ export async function POST(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(200)
 
+    const restDates: string[] = []
+    if (program.days?.length) {
+      for (let i = 0; i < 60; i++) {
+        const d = new Date(Date.now() - i * 86400000)
+        if (getSessionForDay(program.days, zurichDayIndexFor(d)).type === 'rest') {
+          restDates.push(toZurichDate(d))
+        }
+      }
+    }
     const streakDates = (sessions || []).map(s => toZurichDate(new Date(s.created_at)))
-    const streak = computeStreak(streakDates, todayZurich)
+    const streak = computeStreak(streakDates, todayZurich, restDates)
     const locale = user.preferred_locale || 'fr'
     const sessionName = todaySession.name
 
