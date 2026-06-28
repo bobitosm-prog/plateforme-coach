@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight, ChevronDown, Globe } from 'lucide-react'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight, ChevronDown, Globe, Clock } from 'lucide-react'
 import LocaleSelector from '@/components/LocaleSelector'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 import { colors, fonts } from '../../../lib/design-tokens'
@@ -23,6 +23,10 @@ interface AccountTabProps {
   userId?: string
   onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback') => void
   onLogout: () => void
+  isInTrial?: boolean
+  trialDaysLeft?: number
+  isInBeta?: boolean
+  betaDaysLeft?: number
 }
 
 const sectionLabel: React.CSSProperties = {
@@ -54,6 +58,7 @@ const divider: React.CSSProperties = {
 
 export default function AccountTab({
   firstName, displayAvatar, unreadCount, supabase, userId, onNavigate, onLogout,
+  isInTrial, trialDaysLeft, isInBeta, betaDaysLeft,
 }: AccountTabProps) {
   const t = useTranslations('account')
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
@@ -101,6 +106,24 @@ export default function AccountTab({
             </div>
           </div>
         </div>
+
+        {isInBeta && (
+          <div style={{
+            background: colors.surface2, borderRadius: 14, padding: '14px 16px',
+            marginBottom: 24, border: `1px solid ${GOLD}`,
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <Clock size={18} color={GOLD} />
+            <div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: GOLD, textTransform: 'uppercase' }}>
+                {t('betaAccess')}
+              </div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY, marginTop: 2 }}>
+                {t('daysLeft', { count: betaDaysLeft ?? 0 })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── COACHING ── */}
         <div style={sectionLabel}>{t('coaching')}</div>
