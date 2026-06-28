@@ -91,6 +91,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const today = new Date().toISOString().split('T')[0]
   const [selectedDate, setSelectedDate] = useState(today)
   const [daysWithMeals, setDaysWithMeals] = useState<Set<string>>(new Set())
+  const [waterToday, setWaterToday] = useState(0)
   const calendarDays = React.useMemo(() => {
     const d: string[] = []
     for (let i = -30; i <= 7; i++) { const dt = new Date(); dt.setDate(dt.getDate() + i); d.push(dt.toISOString().split('T')[0]) }
@@ -114,6 +115,19 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
   // Reload meals when date changes
   useEffect(() => { fetchDailyLogs() }, [selectedDate])
+
+  // Load water intake for selected date
+  useEffect(() => {
+    if (!userId) return
+    supabase.from('water_intake').select('amount_ml').eq('user_id', userId).eq('date', selectedDate).limit(50)
+      .then(({ data }: any) => setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0)))
+  }, [userId, selectedDate])
+
+  async function addWater(ml: number) {
+    if (!userId) return
+    await supabase.from('water_intake').insert({ user_id: userId, amount_ml: ml, date: today })
+    setWaterToday(prev => prev + ml)
+  }
 
   // Fetch saved meals for "Mes Repas" tab
   useEffect(() => {
