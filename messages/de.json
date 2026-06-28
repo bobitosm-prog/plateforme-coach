@@ -2163,6 +2163,7 @@
       "configureCta": "Meine Einstellungen konfigurieren"
     },
     "chrome": {
+      "calorieGoal": "Ziel {kcal} kcal/Tag",
       "coachManaged": "Ernährung von deinem Coach verwaltet",
       "noPlan": "Kein Ernährungsplan",
       "noPlanForDay": "Kein Plan für {day}.",
