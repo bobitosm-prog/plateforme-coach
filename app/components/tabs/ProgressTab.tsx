@@ -7,7 +7,7 @@ import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import type { Locale } from 'date-fns'
 import { useTranslations, useLocale } from 'next-intl'
-import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight, Star, Info, Clock, User } from 'lucide-react'
+import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight, Star, Trophy, Info, Clock, User } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
@@ -91,6 +91,7 @@ export default function ProgressTab({
   const [activePill, setActivePill] = useState<PillSection>('poids')
   const sectionRefs = { poids: React.useRef<HTMLDivElement>(null), records: React.useRef<HTMLDivElement>(null), photos: React.useRef<HTMLDivElement>(null), mensurations: React.useRef<HTMLDivElement>(null), bienetre: React.useRef<HTMLDivElement>(null), graphiques: React.useRef<HTMLDivElement>(null) }
   const [weightPeriod, setWeightPeriod] = useState<'7' | '30' | '90' | 'all'>('30')
+  const [recordsLimit, setRecordsLimit] = useState(10)
   const [showAssessment, setShowAssessment] = useState(false)
   const [showCompare, setShowCompare] = useState(false)
   const [compareIdx, setCompareIdx] = useState<[number, number]>([0, 0])
@@ -410,6 +411,26 @@ export default function ProgressTab({
   // Total volume in tonnes
   const totalVolume = useMemo(() => weeklyVolume.reduce((s, w) => s + w.volume, 0), [weeklyVolume])
 
+  const groupedRecords = useMemo(() => {
+    const priorityExercises = ['developpe couche', 'bench press', 'squat', 'deadlift', 'souleve de terre', 'overhead press', 'developpe militaire', 'rowing', 'barbell row']
+    const byExercise: Record<string, { name: string; maxWeight: number | null; oneRm: number | null; date: string; unit: string }> = {}
+    for (const pr of personalRecords) {
+      const key = pr.exercise_name
+      if (!byExercise[key]) byExercise[key] = { name: key, maxWeight: null, oneRm: null, date: pr.achieved_at, unit: pr.unit || 'kg' }
+      if (pr.record_type === 'max_weight') byExercise[key].maxWeight = pr.value
+      if (pr.record_type === '1rm') byExercise[key].oneRm = pr.value
+      if (pr.achieved_at > byExercise[key].date) byExercise[key].date = pr.achieved_at
+    }
+    return Object.values(byExercise).sort((a, b) => {
+      const aP = priorityExercises.findIndex(e => a.name.toLowerCase().includes(e))
+      const bP = priorityExercises.findIndex(e => b.name.toLowerCase().includes(e))
+      if (aP !== -1 && bP === -1) return -1
+      if (aP === -1 && bP !== -1) return 1
+      if (aP !== -1 && bP !== -1) return aP - bP
+      return (b.maxWeight ?? b.oneRm ?? 0) - (a.maxWeight ?? a.oneRm ?? 0)
+    })
+  }, [personalRecords])
+
   // Scroll to section on pill tap
   function scrollToSection(section: PillSection) {
     setActivePill(section)
@@ -530,23 +551,32 @@ export default function ProgressTab({
 
       {/* ═══ SECTION 5 — RECORDS PERSONNELS ═══ */}
       <div ref={sectionRefs.records} style={{ scrollMarginTop: 20 }}>
-        <SectionTitle noPadding title={t('tab.personalRecords')} trailing={t('weight.prCount', { count: personalRecords.length })} />
+        <SectionTitle noPadding title={t('tab.personalRecords')} trailing={t('weight.prCount', { count: groupedRecords.length })} />
         <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
-          {personalRecords.length > 0 ? personalRecords.slice(0, 10).map((pr: any, i: number) => (
-            <div key={pr.id || i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < Math.min(personalRecords.length, 10) - 1 ? `0.5px solid ${colors.goldDim}` : 'none' }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Star size={14} color={colors.gold} fill={colors.gold} />
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+            {[10, 50, 100].map(n => (
+              <button key={n} onClick={() => setRecordsLimit(n)} style={{ padding: '5px 14px', borderRadius: 20, border: recordsLimit === n ? `1px solid ${colors.gold}` : `1px solid ${colors.goldDim}`, background: recordsLimit === n ? colors.goldDim : 'transparent', color: recordsLimit === n ? colors.gold : colors.textMuted, fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{n}</button>
+            ))}
+          </div>
+          {groupedRecords.length > 0 ? groupedRecords.slice(0, recordsLimit).map((r, i) => {
+            const principal = r.maxWeight ?? r.oneRm
+            return (
+              <div key={r.name + i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < Math.min(groupedRecords.length, recordsLimit) - 1 ? `0.5px solid ${colors.goldDim}` : 'none' }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Trophy size={14} color={colors.gold} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getExerciseName({ name: r.name }, locale as 'fr' | 'en' | 'de')}</div>
+                  <div style={{ ...mutedStyle, fontSize: 9 }}>{r.date ? format(new Date(r.date), 'd MMM yyyy', { locale: dateLocale }) : ''}</div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.gold }}>{principal}</span>
+                  <span style={{ ...mutedStyle, fontSize: 9, marginLeft: 2 }}>{r.unit}</span>
+                  {r.oneRm && r.maxWeight ? <div style={{ ...mutedStyle, fontSize: 9, marginTop: 1 }}>{t('analytics.estimated1rmValue', { value: r.oneRm, unit: r.unit })}</div> : null}
+                </div>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getExerciseName({ name: pr.exercise_name }, locale as 'fr' | 'en' | 'de')}</div>
-                <div style={{ ...mutedStyle, fontSize: 9 }}>{pr.achieved_at ? format(new Date(pr.achieved_at), 'd MMM yyyy', { locale: dateLocale }) : ''}</div>
-              </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.gold }}>{pr.value}</span>
-                <span style={{ ...mutedStyle, fontSize: 9, marginLeft: 2 }}>KG</span>
-              </div>
-            </div>
-          )) : (
+            )
+          }) : (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
               <Star size={28} color={colors.textDim} style={{ marginBottom: 6 }} />
               <p style={{ ...mutedStyle, fontSize: 12, margin: 0 }}>{t('tab.firstRecord')}</p>
