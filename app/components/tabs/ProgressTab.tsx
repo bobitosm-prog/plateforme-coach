@@ -13,7 +13,7 @@ import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
 import {
   colors, fonts,
-  titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove,
+  titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, cardTitleAbove,
   radii,
 } from '../../../lib/design-tokens'
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
@@ -424,7 +424,14 @@ export default function ProgressTab({
     <div style={{ padding: '20px 20px 120px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
 
       {/* ═══ SECTION 1 — HEADER ═══ */}
-      <h1 style={{ ...pageTitleStyle, margin: '0 0 16px' }}>ANALYTICS</h1>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
+          ANALYTICS
+        </div>
+        <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
+          {t('headerSubtitle', { sessions: wSessions.length, records: personalRecords.length })}
+        </div>
+      </div>
 
       {/* ═══ SECTION 2 — 3 STATS RÉSUMÉ ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
