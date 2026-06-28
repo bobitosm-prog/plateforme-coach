@@ -13,7 +13,7 @@ import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
 import {
   colors, fonts,
-  titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, cardTitleAbove,
+  titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle,
   radii,
 } from '../../../lib/design-tokens'
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
@@ -606,13 +606,15 @@ export default function ProgressTab({
 
       {/* ═══ SECTION 6.5 — ANALYSE IA ═══ */}
       <div style={{ scrollMarginTop: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>{t('tab.aiSection')}</span>
-          <div style={titleLineStyle} />
-          <span style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.goldContainer}1a`, border: `1px solid ${colors.goldRule}`, borderRadius: 999, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Sparkles size={8} /> BETA
-          </span>
-        </div>
+        <SectionTitle
+          noPadding
+          title={t('tab.aiSection')}
+          trailingNode={
+            <span style={{ fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.goldContainer}1a`, border: `1px solid ${colors.goldRule}`, borderRadius: 999, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Sparkles size={8} /> BETA
+            </span>
+          }
+        />
         <div style={{ ...cardStyle, padding: 16, marginBottom: 12 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
