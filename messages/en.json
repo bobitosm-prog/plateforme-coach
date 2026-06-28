@@ -2111,6 +2111,9 @@
     "preferences": "Preferences",
     "language": "Language",
     "accountSection": "ACCOUNT",
+    "betaAccess": "Beta access",
+    "trialPeriod": "Trial period",
+    "daysLeft": "{count, plural, one {# day left} other {# days left}}",
     "signOut": "Sign out"
   },
   "nutrition_tab": {

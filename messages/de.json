@@ -2111,6 +2111,9 @@
     "preferences": "Einstellungen",
     "language": "Sprache",
     "accountSection": "KONTO",
+    "betaAccess": "Beta-Zugang",
+    "trialPeriod": "Testphase",
+    "daysLeft": "{count, plural, one {# Tag übrig} other {# Tage übrig}}",
     "signOut": "Abmelden"
   },
   "nutrition_tab": {
