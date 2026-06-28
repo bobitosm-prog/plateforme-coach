@@ -23,6 +23,7 @@ import BodyAssessment from '../progress/BodyAssessment'
 import AnalysisDisplay from './progress/AnalysisDisplay'
 import ActionBtn from './progress/ActionBtn'
 import { computeAlignment, type Alignment } from '../../../lib/photo-align'
+import { getExerciseName } from '../../../lib/i18n-exercise'
 
 const MEASURE_FIELDS_KEYS = [
   { key: 'waist', labelKey: 'waist', unit: 'cm', dbKey: 'waist' },
@@ -532,16 +533,16 @@ export default function ProgressTab({
         </div>
         <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
           {personalRecords.length > 0 ? personalRecords.slice(0, 10).map((pr: any, i: number) => (
-            <div key={pr.exercise || i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < Math.min(personalRecords.length, 10) - 1 ? `0.5px solid ${colors.goldDim}` : 'none' }}>
+            <div key={pr.id || i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < Math.min(personalRecords.length, 10) - 1 ? `0.5px solid ${colors.goldDim}` : 'none' }}>
               <div style={{ width: 32, height: 32, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Star size={14} color={colors.gold} fill={colors.gold} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pr.exercise}</div>
-                <div style={{ ...mutedStyle, fontSize: 9 }}>{pr.date ? format(new Date(pr.date), 'd MMM yyyy', { locale: dateLocale }) : ''}</div>
+                <div style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getExerciseName({ name: pr.exercise_name }, locale as 'fr' | 'en' | 'de')}</div>
+                <div style={{ ...mutedStyle, fontSize: 9 }}>{pr.achieved_at ? format(new Date(pr.achieved_at), 'd MMM yyyy', { locale: dateLocale }) : ''}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.gold }}>{pr.weight || pr.value}</span>
+                <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.gold }}>{pr.value}</span>
                 <span style={{ ...mutedStyle, fontSize: 9, marginLeft: 2 }}>KG</span>
               </div>
             </div>
