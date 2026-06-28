@@ -24,17 +24,17 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Z-index sprint partiel (échelle + 5 zones, 2 bugs nav réparés) ✅ 27 juin
 - [x] Sprint B streak serveur (cron + badges def B, 3 systèmes alignés) ✅ 27 juin
 - [x] Refonte Nutrition Direction B (10 sous-chantiers, FoodSearch/images/Athena) ✅ 27 juin
-- [ ] **Feature "jours restants" dans l'app** (PRIORITAIRE)
+- [x] Feature "jours restants" (carte beta dans Compte, trial via bandeau existant) ✅ 28 juin
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
 ## Prochaines tâches
 
-### PRIORITAIRE — Feature compte à rebours "jours restants"
-L'user beta/trial doit voir sa durée restante dans l'app (AccountTab ou
-HomeTab). useClientDashboard expose déjà trialDaysLeft ; manque
-l'équivalent beta (subscription_end_date) + l'affichage UI.
-Phase A souhaitable pour campagne honnête.
+### ✅ FAIT (28/06) — Feature "jours restants"
+Hook expose isInBeta + betaDaysLeft (symétrique trialDaysLeft). Carte dans AccountTab
+affichée pour les BETA uniquement (« ACCÈS BETA · N jours restants », i18n FR/EN/DE avec
+ICU plural). Le TRIAL garde son bandeau global existant (page.tsx L592, avec urgence ≤3j
++ CTA S'abonner) — pas de doublon. 4 commits (hook, i18n, carte, props). Testé device beta+trial.
 
 ### Bug — Records Personnels : noms d'exercices vides
 Analytics → Records Personnels : 50 PR listés avec poids mais colonne nom
