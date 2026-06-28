@@ -2164,6 +2164,9 @@
     },
     "chrome": {
       "calorieGoal": "Ziel {kcal} kcal/Tag",
+      "hydration": "WASSER",
+      "addWater250": "+250ML",
+      "addWater500": "+500ML",
       "coachManaged": "Ernährung von deinem Coach verwaltet",
       "noPlan": "Kein Ernährungsplan",
       "noPlanForDay": "Kein Plan für {day}.",
