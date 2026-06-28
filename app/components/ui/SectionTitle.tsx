@@ -6,11 +6,12 @@ interface SectionTitleProps {
   title: string
   action?: { label: string; onClick: () => void }
   trailing?: string
+  trailingNode?: React.ReactNode
   noPadding?: boolean
   icon?: React.ReactNode
 }
 
-export default function SectionTitle({ title, action, trailing, noPadding, icon }: SectionTitleProps) {
+export default function SectionTitle({ title, action, trailing, trailingNode, noPadding, icon }: SectionTitleProps) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 28, marginBottom: 20, padding: noPadding ? 0 : '0 20px' }}>
       <div style={{ width: 3, height: 16, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
@@ -28,6 +29,8 @@ export default function SectionTitle({ title, action, trailing, noPadding, icon 
           textTransform: 'uppercase', cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, padding: 0,
         }}>{action.label}</button>
+      ) : trailingNode ? (
+        <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>{trailingNode}</span>
       ) : trailing ? (
         <span style={{
           fontFamily: fonts.alt, fontSize: 11, fontWeight: 600,
