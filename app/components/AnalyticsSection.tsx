@@ -5,7 +5,6 @@ import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
-import { getExerciseName } from '../../lib/i18n-exercise'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, Cell,
@@ -141,19 +140,6 @@ export default function AnalyticsSection({
   }, [personalRecords])
 
   // -- PR records grouped: show 1rm only, prioritize compound lifts --
-  const prRecords = useMemo(() => {
-    const priorityExercises = ['developpe couche', 'bench press', 'squat', 'deadlift', 'souleve de terre', 'overhead press', 'developpe militaire', 'rowing', 'barbell row']
-    const rmRecords = personalRecords.filter(pr => pr.record_type === '1rm')
-    return rmRecords.sort((a, b) => {
-      const aP = priorityExercises.findIndex(e => a.exercise_name.toLowerCase().includes(e))
-      const bP = priorityExercises.findIndex(e => b.exercise_name.toLowerCase().includes(e))
-      if (aP !== -1 && bP === -1) return -1
-      if (aP === -1 && bP !== -1) return 1
-      if (aP !== -1 && bP !== -1) return aP - bP
-      return new Date(b.achieved_at).getTime() - new Date(a.achieved_at).getTime()
-    })
-  }, [personalRecords])
-
   // -- CSV export --
   function exportAnalytics() {
     const rows: (string | number | null)[][] = []
@@ -329,49 +315,6 @@ export default function AnalyticsSection({
               <Bar dataKey="litres" fill={LIGHT_BLUE} fillOpacity={0.6} radius={[2, 2, 0, 0]} name={t('waterL')} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* PERSONAL RECORDS */}
-      {prRecords.length > 0 && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <Trophy size={16} color={colors.gold} />
-            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('myRecords')}</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-            {prRecords.map(pr => {
-              const diff = pr.previous_value ? Math.round((pr.value - pr.previous_value) * 10) / 10 : null
-              return (
-                <div key={pr.id} style={{
-                  background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16,
-                  padding: '14px 12px', borderLeft: `3px solid ${colors.gold}`,
-                }}>
-                  <div style={{ fontSize: '0.65rem', fontFamily: fonts.body, color: colors.textMuted, fontWeight: 400, marginBottom: 4, lineHeight: 1.3 }}>
-                    {getExerciseName({ name: pr.exercise_name }, locale)}
-                  </div>
-                  <div style={{ fontFamily: fonts.headline, fontSize: '1.4rem', fontWeight: 700, color: colors.gold, lineHeight: 1 }}>
-                    {pr.value} <span style={{ fontSize: '0.7rem', fontWeight: 600 }}>{pr.unit}</span>
-                  </div>
-                  <div style={{ fontSize: '0.55rem', fontFamily: fonts.alt, color: colors.textMuted, marginTop: 2 }}>
-                    {t('estimated1rm')}
-                  </div>
-                  {diff !== null && diff > 0 ? (
-                    <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.success, fontWeight: 700, marginTop: 4 }}>
-                      +{diff} {pr.unit} {t('vsPrevious')}
-                    </div>
-                  ) : diff === null ? (
-                    <div style={{ fontSize: '0.6rem', fontFamily: fonts.alt, color: colors.gold, fontWeight: 700, marginTop: 4 }}>
-                      {t('firstRecord')}
-                    </div>
-                  ) : null}
-                  <div style={{ fontSize: '0.5rem', fontFamily: fonts.body, color: colors.textDim, marginTop: 4 }}>
-                    {t('achievedOn', { date: format(new Date(pr.achieved_at), 'd MMM yyyy', { locale: dateLocale }) })}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
         </div>
       )}
 
