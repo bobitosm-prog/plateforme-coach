@@ -4,17 +4,61 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-27
-- **HEAD** : b9a8afc (fix(nutrition): anchor FoodSearch to top so keyboard doesn't hide search field)
+- **Date** : 2026-06-28
+- **HEAD** : 94c63a7 (refactor(analytics): remove duplicate records block)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 27/06 — TRIPLE sprint : z-index partiel + Sprint B streak serveur (def B) + refonte Nutrition Direction B (10 sous-chantiers). FoodSearch/images/Athena en bonus matin.
+- **Dernière session** : 28/06 — Jours restants beta + hydratation (double anneau) + cohérence Nutrition header/calendrier + Analytics (bug Records + cohérence complète + records appariés + doublon supprimé) + AUDIT Analytics consigné dans NEXT.md.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-06-28 — Jours restants beta + Hydratation + cohérence Nutrition/Analytics [PROD]
+### Contexte
+Suite cohérence Direction B (après Nutrition le 27). Cible : feature jours restants beta,
+hydratation visuelle Nutrition, finalisation Nutrition, et passe complète sur Analytics
+(bugs + cohérence + refonte Records). Discipline audit→diff→device→commit respectée.
+
+### Feature "jours restants" beta (5 commits)
+- Hook useClientDashboard : subEndsAt + isInBeta + betaDaysLeft (symétrique trialDaysLeft).
+- Carte AccountTab affichée BETA uniquement (« ACCÈS BETA · N jours restants »). Trial déjà
+  couvert par bandeau global page.tsx L592 → pas de doublon.
+- i18n FR/EN/DE (account.betaAccess/trialPeriod/daysLeft ICU plural). Testé device beta+trial.
+
+### Hydratation Nutrition — double anneau Apple Watch (3 commits)
+- Système eau existait (table water_intake, écriture HomeTab). Ajout dans Nutrition.
+- State autonome dans NutritionTab : waterToday lu sur selectedDate, addWater écrit sur today,
+  boutons actifs si selectedDate===today (canAddWater).
+- Visuel : ring kcal (extérieur doré, existant) + anneau eau concentrique intérieur (bleu
+  #6FB7E8→#3D7EA6, waterRadius=67, stroke 10) avec pulsation nutWaterPulse 2.5s (effet liquide).
+  Ligne « 💧 X.XL / Y.YL · X% » + boutons +250ML/+500ML bleutés. i18n nutrition_tab.chrome.
+  ⚠️ Pulsation iPhone non confirmée explicitement. Filtre désactivation jour passé idem.
+
+### Nutrition — finalisation cohérence (2 commits)
+- Header NUTRITION → titre or (style Training) + sous-titre « Objectif {kcal} kcal/jour ». i18n calorieGoal.
+- Calendrier strip : flèches glass ‹ › (scrollBy calScrollRef) + bouton AUJOURD'HUI en glassBtn,
+  aligné Training. Strip scrollable conservé (paradigme différent justifié).
+
+### Analytics (ProgressTab) — passe complète (10 commits)
+- BUG Records Personnels CORRIGÉ : ProgressTab lisait pr.exercise/pr.date/pr.weight (ancien
+  schéma) au lieu de exercise_name/achieved_at/value. + key pr.id (collision exercise_name).
+  + i18n via getExerciseName. (Le bon fichier était ProgressTab, pas AnalyticsSection.)
+- Header ANALYTICS → titre or + sous-titre « {sessions} séances · {records} PR ». i18n headerSubtitle.
+- 7 titres section → SectionTitle (barre dorée). ANALYSE IA migré via nouvelle prop trailingNode
+  (badge BETA custom préservé). SectionTitle étendu (trailingNode?: ReactNode, non-breaking).
+  Imports morts nettoyés (pageTitleStyle, cardTitleAbove, titleLineStyle).
+- Records refondus : appariement par exercice (max_weight principal + 1rm mention « 1RM ~X kg »),
+  liste 1 col aérée Trophy, filtre 10/50/100 (défaut 10), tri priorité gros lifts. groupedRecords useMemo.
+  Résout doublon 1rm/max_weight (chaque exo avait 2 records). trailing = groupedRecords.length.
+- Doublon supprimé : bloc « MES RECORDS » (grille) retiré d'AnalyticsSection (+ prRecords mort).
+
+### Données découvertes (pour audit, voir NEXT.md)
+- workout_sets a un champ rir (intensité). cardio_sessions complet (type/duration_min/calories_burned)
+  mais 0% exploité. exercises_db a muscle_group (volume par muscle faisable). exercise_feedback =
+  revue vidéo coach (pas du RIR). Audit Analytics complet consigné dans NEXT.md.
 
 ## 2026-06-27 — Refonte NUTRITION Direction B + bugs [PROD]
 
