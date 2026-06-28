@@ -1887,6 +1887,7 @@
     }
   },
   "progress": {
+    "headerSubtitle": "{sessions} Einheiten · {records} PR",
     "pills": {
       "poids": "GEWICHT",
       "records": "REKORDE",

@@ -1887,6 +1887,7 @@
     }
   },
   "progress": {
+    "headerSubtitle": "{sessions} séances · {records} PR",
     "pills": {
       "poids": "POIDS",
       "records": "RECORDS",
