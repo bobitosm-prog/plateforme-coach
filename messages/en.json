@@ -2029,6 +2029,7 @@
       "days": "days",
       "goal": "Goal",
       "estimated1rm": "Estimated 1RM",
+      "estimated1rmValue": "1RM ~{value} {unit}",
       "vsPrevious": "vs previous",
       "firstRecord": "First record",
       "achievedOn": "Achieved on {date}",

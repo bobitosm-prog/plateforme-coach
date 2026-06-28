@@ -2029,6 +2029,7 @@
       "days": "jours",
       "goal": "Objectif",
       "estimated1rm": "1RM estime",
+      "estimated1rmValue": "1RM ~{value} {unit}",
       "vsPrevious": "vs precedent",
       "firstRecord": "Premier record",
       "achievedOn": "Atteint le {date}",
