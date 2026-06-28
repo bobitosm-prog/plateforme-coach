@@ -23,6 +23,7 @@ import BodyAssessment from '../progress/BodyAssessment'
 import AnalysisDisplay from './progress/AnalysisDisplay'
 import ActionBtn from './progress/ActionBtn'
 import { computeAlignment, type Alignment } from '../../../lib/photo-align'
+import SectionTitle from '../ui/SectionTitle'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 
 const MEASURE_FIELDS_KEYS = [
@@ -476,11 +477,7 @@ export default function ProgressTab({
 
       {/* ═══ SECTION 4 — ÉVOLUTION DU POIDS ═══ */}
       <div ref={sectionRefs.poids} style={{ scrollMarginTop: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>{t('weight.title')}</span>
-          <div style={titleLineStyle} />
-          <span style={{ ...mutedStyle, fontSize: 10 }}>{weightPeriod === 'all' ? 'TOUT' : `${weightPeriod}J`}</span>
-        </div>
+        <SectionTitle noPadding title={t('weight.title')} trailing={weightPeriod === 'all' ? 'TOUT' : `${weightPeriod}J`} />
         <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
@@ -533,11 +530,7 @@ export default function ProgressTab({
 
       {/* ═══ SECTION 5 — RECORDS PERSONNELS ═══ */}
       <div ref={sectionRefs.records} style={{ scrollMarginTop: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>{t('tab.personalRecords')}</span>
-          <div style={titleLineStyle} />
-          <span style={{ ...mutedStyle, fontSize: 10 }}>{t('weight.prCount', { count: personalRecords.length })}</span>
-        </div>
+        <SectionTitle noPadding title={t('tab.personalRecords')} trailing={t('weight.prCount', { count: personalRecords.length })} />
         <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
           {personalRecords.length > 0 ? personalRecords.slice(0, 10).map((pr: any, i: number) => (
             <div key={pr.id || i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < Math.min(personalRecords.length, 10) - 1 ? `0.5px solid ${colors.goldDim}` : 'none' }}>
@@ -567,11 +560,7 @@ export default function ProgressTab({
         <BodyAssessment supabase={supabase} session={session} profile={profile} onClose={() => setShowAssessment(false)} onRefresh={onRefresh} />
       )}
       <div ref={sectionRefs.photos} style={{ scrollMarginTop: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>{t('tab.transformation')}</span>
-          <div style={titleLineStyle} />
-          <span style={{ ...mutedStyle, fontSize: 10 }}>PHOTOS</span>
-        </div>
+        <SectionTitle noPadding title={t('tab.transformation')} trailing="PHOTOS" />
         <div style={{ ...cardStyle, padding: 16, marginBottom: 12 }}>
           {progressPhotos.length >= 2 ? (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
@@ -794,10 +783,7 @@ export default function ProgressTab({
 
       {/* ═══ SECTION 7 — MENSURATIONS ═══ */}
       <div ref={sectionRefs.mensurations} style={{ scrollMarginTop: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>{t('tab.measurementsSection')}</span>
-          <div style={titleLineStyle} />
-        </div>
+        <SectionTitle noPadding title={t('tab.measurementsSection')} />
         <div style={{ ...cardStyle, padding: 16, marginBottom: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
@@ -830,10 +816,7 @@ export default function ProgressTab({
 
       {/* ═══ SECTION 7.5 — MON BIEN-ÊTRE ═══ */}
       <div ref={sectionRefs.bienetre} style={{ scrollMarginTop: 20, marginTop: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>{t('tab.myWellness')}</span>
-          <div style={titleLineStyle} />
-        </div>
+        <SectionTitle noPadding title={t('tab.myWellness')} />
         {/* Period selector */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
           {[{ v: 7, l: '7J' }, { v: 30, l: '30J' }, { v: 90, l: '90J' }].map(p => (
@@ -944,10 +927,7 @@ export default function ProgressTab({
 
       {/* ═══ SECTION 8 — GRAPHIQUES ═══ */}
       <div ref={sectionRefs.graphiques} style={{ scrollMarginTop: 20, marginTop: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={cardTitleAbove}>{t('tab.charts')}</span>
-          <div style={titleLineStyle} />
-        </div>
+        <SectionTitle noPadding title={t('tab.charts')} />
         <AnalyticsSection
           personalRecords={personalRecords}
           weeklyCalories={weeklyCalories}
