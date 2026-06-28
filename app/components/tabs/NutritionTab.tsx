@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays, Beef, Wheat, Droplet, X } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays, Beef, Wheat, Droplet, Droplets, X } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
@@ -690,11 +690,19 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         const ringRadius = (ringSize - ringStroke) / 2
         const ringCircum = 2 * Math.PI * ringRadius
         const ringOffset = ringCircum - (pctKcal / 100) * ringCircum
+        const waterGoal = profile?.water_goal || 3000
+        const pctWater = Math.min(100, Math.round((waterToday / waterGoal) * 100))
+        const waterStroke = 10
+        const waterRadius = ringRadius - ringStroke - 5
+        const waterCircum = 2 * Math.PI * waterRadius
+        const waterOffset = waterCircum - (pctWater / 100) * waterCircum
+        const canAddWater = selectedDate === today
         const MEAL_ICONS: Record<string, React.ComponentType<any>> = { petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon }
         const glassBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 
         return (
           <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
+            <style>{`@keyframes nutWaterPulse { 0%, 100% { filter: drop-shadow(0 0 4px rgba(111,183,232,0.4)); } 50% { filter: drop-shadow(0 0 9px rgba(111,183,232,0.85)); } }`}</style>
             {/* ═══ CALENDAR STRIP ═══ */}
             <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -742,15 +750,31 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       <stop offset="0%" stopColor="#E8C97A" />
                       <stop offset="100%" stopColor="#D4A843" />
                     </linearGradient>
+                    <linearGradient id="nutWaterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#6FB7E8" />
+                      <stop offset="100%" stopColor="#3D7EA6" />
+                    </linearGradient>
                   </defs>
                   <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke={colors.surfaceHigh} strokeWidth={ringStroke} />
                   <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke="url(#nutRingGrad)" strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', filter: `drop-shadow(0 0 8px ${colors.goldRule})` }} />
+                  <circle cx={ringSize/2} cy={ringSize/2} r={waterRadius} fill="none" stroke={colors.surfaceHigh} strokeWidth={waterStroke} />
+                  <circle cx={ringSize/2} cy={ringSize/2} r={waterRadius} fill="none" stroke="url(#nutWaterGrad)" strokeWidth={waterStroke} strokeLinecap="butt" strokeDasharray={waterCircum} strokeDashoffset={waterOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', animation: 'nutWaterPulse 2.5s ease-in-out infinite' }} />
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ ...statStyle, fontSize: 40, color: colors.gold, lineHeight: 1 }}>{consumed.kcal}</span>
                   <span style={{ ...mutedStyle, fontSize: 11 }}>/ {targetKcal} kcal</span>
                   <span style={{ ...mutedStyle, fontSize: 10, marginTop: 2 }}>{nt('chrome.remaining', { count: remaining })}</span>
                 </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12 }}>
+                <Droplets size={15} color="#6FB7E8" />
+                <span style={{ fontFamily: fonts.headline, fontSize: 15, color: '#6FB7E8' }}>
+                  {(waterToday/1000).toFixed(1)}L <span style={{ ...mutedStyle, fontSize: 11 }}>/ {(waterGoal/1000).toFixed(1)}L · {pctWater}%</span>
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button onClick={() => canAddWater && addWater(250)} disabled={!canAddWater} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(111,183,232,0.12)', backdropFilter: 'blur(8px)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4, transition: 'all 0.15s' }}>{nt('chrome.addWater250')}</button>
+                <button onClick={() => canAddWater && addWater(500)} disabled={!canAddWater} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(111,183,232,0.12)', backdropFilter: 'blur(8px)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4, transition: 'all 0.15s' }}>{nt('chrome.addWater500')}</button>
               </div>
             </div>
 
