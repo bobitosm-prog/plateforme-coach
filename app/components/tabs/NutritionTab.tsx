@@ -14,7 +14,7 @@ import { RailOverlay } from '../ui/RailOverlay'
 import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
 import {
-  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, Z_MODAL,
+  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, cardTitleAbove, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
@@ -593,7 +593,12 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     <div style={{ minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       {/* PAGE TITLE */}
       <div style={{ padding: '16px 24px 0' }}>
-        <h1 style={{ ...pageTitleStyle, margin: 0 }}>NUTRITION</h1>
+        <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
+          NUTRITION
+        </div>
+        <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
+          {nt('chrome.calorieGoal', { kcal: profile?.calorie_goal || 2000 })}
+        </div>
       </div>
 
       {/* PILLS NAVIGATION */}
