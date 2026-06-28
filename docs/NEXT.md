@@ -25,6 +25,9 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Sprint B streak serveur (cron + badges def B, 3 systèmes alignés) ✅ 27 juin
 - [x] Refonte Nutrition Direction B (10 sous-chantiers, FoodSearch/images/Athena) ✅ 27 juin
 - [x] Feature "jours restants" (carte beta dans Compte, trial via bandeau existant) ✅ 28 juin
+- [x] Hydratation Nutrition (double anneau kcal+eau, boutons +250/+500) ✅ 28 juin
+- [x] Cohérence Nutrition finalisée (header or + calendrier glass aligné Training) ✅ 28 juin
+- [x] Analytics : bug Records corrigé + cohérence complète (header, 7 SectionTitle, records appariés) ✅ 28 juin
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
@@ -36,10 +39,45 @@ affichée pour les BETA uniquement (« ACCÈS BETA · N jours restants », i18n 
 ICU plural). Le TRIAL garde son bandeau global existant (page.tsx L592, avec urgence ≤3j
 + CTA S'abonner) — pas de doublon. 4 commits (hook, i18n, carte, props). Testé device beta+trial.
 
-### Bug — Records Personnels : noms d'exercices vides
-Analytics → Records Personnels : 50 PR listés avec poids mais colonne nom
-vide. Probable : exercise_id non résolu par getExerciseName / i18n, ou
-champ name vide en DB. À diagnostiquer.
+### ✅ FAIT (28/06) — Bug Records Personnels + refonte
+Cause : ProgressTab lisait pr.exercise/pr.date/pr.weight (ancien schéma) au lieu de
+exercise_name/achieved_at/value + key non unique. Corrigé + i18n getExerciseName + key pr.id.
+Puis refonte : appariement par exercice (max_weight + 1rm), liste aérée Trophy, filtre 10/50/100.
+Doublon « MES RECORDS » d'AnalyticsSection supprimé.
+
+## 🔍 AUDIT ANALYTICS (28/06) — roadmap data athlète
+
+Constat : Analytics est riche en POIDS + NUTRITION mais PAUVRE côté ENTRAÎNEMENT (seul le
+volume hebdo agrégé). Grosses données dormantes en base. Audit complet ci-dessous.
+
+### Données disponibles non exploitées
+- workout_sets : weight, reps, completed, **rir** (intensité!), exercise_name, created_at, session_id
+- cardio_sessions : type, duration_min, calories_burned, exercises (jsonb), completed_at — **0% affiché**
+- exercises_db : **muscle_group** + secondary_muscles (pivot volume/muscle)
+- workout_sessions / completed_sessions : séances détaillées (durée, date) — count seulement
+- daily_checkins / daily_habits : récup, habitudes — partiel/jamais
+- user_xp / achievements / badges : gamification — jamais dans Analytics
+- NB : exercise_feedback = revue vidéo coach (PAS du RIR).
+
+### Opportunités priorisées (impact × effort × faisabilité)
+| # | Ajout | Données | Effort | Impact | Faisable |
+|---|---|---|---|---|---|
+| 1 | Volume par groupe musculaire | workout_sets × exercises_db.muscle_group | Moyen | ⭐⭐⭐ | ✅ |
+| 2 | Cardio (temps/calories/séances) | cardio_sessions | Faible | ⭐⭐ | ✅ |
+| 3 | Progression charge par exercice (courbe) | workout_sets weight/reps/date | Moyen | ⭐⭐⭐ | ✅ |
+| 4 | Tendance RIR (intensité/effort) | workout_sets.rir | Faible-Moyen | ⭐⭐⭐ diff. | ✅ |
+| 5 | Fréquence/régularité (heatmap) | workout_sessions | Moyen | ⭐⭐ | ✅ |
+| 6 | Rationaliser doublon poids (section+graphique) | — | Faible | ⭐ | ✅ |
+
+### Reco d'ordre
+#2 Cardio (quick win, comble vide total) → #1 Volume/muscle (métrique muscu #1, Strong/Hevy) →
+#4 RIR (différenciateur, peu d'apps le montrent, moteur déjà construit) → #3 progression/exo →
+#5 heatmap → #6 doublon poids (au passage).
+
+### Points de vigilance
+- Pivot workout_sets.exercise_name (texte) → exercises_db.muscle_group : matcher par nom via
+  lib/exercise-matching.ts (slug). Exercices non matchés / custom → bucket "autre".
+- Volume actuel limité 4 sem / 500 sets : analyses longues (progression 6 mois) = requêtes dédiées.
 
 ### Chantier #1 — Notifications robustes
 - [x] (a) Cron streak. Validé device 15/06.
@@ -122,6 +160,14 @@ d'entrée direct UI. → Désentrelacement risqué, sprint dédié. NE PAS suppr
 Visuels SEEDANCE + prompts pub Insta/TikTok. PAS avant que Phase A soit cochée.
 
 ## Dettes consignées (non bloquantes)
+
+### Dettes mineures (28/06)
+- Doublon affichage poids : section poids ProgressTab + graphique poids AnalyticsSection (rationaliser).
+- Commentaire orphelin AnalyticsSection (~L140 « PR records grouped ») après suppression prRecords.
+- Hydratation : pulsation nutWaterPulse iPhone à confirmer ; désactivation boutons jour passé à confirmer device.
+- Filtre records 50/100 à valider device (testé visuellement à 10).
+
+### Historique
 - Bloc D : created_at vs date (streak/badges), await sans check
 - exercise_id FK manquant
 - Comparaison sub par endpoint seul (pas clés p256dh/auth) — angle mort résiduel mineur
