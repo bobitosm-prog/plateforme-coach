@@ -389,7 +389,6 @@ export default function OnboardingV2Content() {
               protein_goal: macrosCalc.protein,
               carbs_goal: macrosCalc.carbs,
               fat_goal: macrosCalc.fat,
-              ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
               onboarding_completed: true,
               onboarding_completed_at: new Date().toISOString(),
               // Premier diagnostic hebdomadaire dans 7 jours
@@ -398,6 +397,11 @@ export default function OnboardingV2Content() {
               needs_initial_generation: true,
             }, supabase)
             if (err11) { console.error('Save solo step 12:', err11); return false }
+            // Poser trial_ends_at via RPC (bypass trigger guard_profile_sensitive_columns)
+            if (trialEndsAt) {
+              const { error: trialErr } = await supabase.rpc('set_initial_trial', { p_days: 14 })
+              if (trialErr) console.error('set_initial_trial failed:', trialErr)
+            }
             invalidateProfileCache()
             cache.remove(`dashboard_${userId}`)
             break
