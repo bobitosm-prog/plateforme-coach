@@ -4,17 +4,55 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-28
-- **HEAD** : 94c63a7 (refactor(analytics): remove duplicate records block)
+- **Date** : 2026-06-29
+- **HEAD** : 839b875 (fix(onboarding): set trial via set_initial_trial RPC)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 28/06 — Jours restants beta + hydratation (double anneau) + cohérence Nutrition header/calendrier + Analytics (bug Records + cohérence complète + records appariés + doublon supprimé) + AUDIT Analytics consigné dans NEXT.md.
+- **Dernière session** : 29/06 — INCIDENT prod : onboarding solo bloqué (trigger sécurité vs trial_ends_at). Hotfix RPC set_initial_trial. Client débloqué. Parrainage consigné en idée (voir NEXT.md).
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-06-29 — INCIDENT onboarding solo + hotfix [PROD]
+### Symptôme
+Vrai client (Tiago) bloqué au step 12 de l'onboarding (« ON EST PRÊT » → DÉMARRER sans effet,
+reste sur la page). Bug systématique sur TOUS les clients solo (auto-inscription sans promo).
+
+### Cause racine
+Le trigger guard_profile_sensitive_columns (BEFORE UPDATE sur profiles, sprint sécurité) lève une
+exception 42501 si un user authenticated modifie trial_ends_at (colonne sensible, anti auto-octroi
+d'abonnement). L'onboarding solo posait trial_ends_at via updateProfile client direct (case 12,
+OnboardingV2Content.tsx) → rejeté → err11 → return false → handleNext ne redirige pas (if !saved return)
+→ bloqué. Les BETA passaient car claim_beta_slot (RPC SECURITY DEFINER) pose subscription_* et met
+trialEndsAt=null → l'update ne touchait pas trial_ends_at. Seul le solo (trial 14j) cassait.
+
+### Diagnostic (méthode)
+Schéma OK (colonnes existent), macrosCalc OK (macros affichées donc non-null). Isolé l'update L386
+via état DB de Tiago (calorie_goal rempli mais tdee/trial/onboarding null = update jamais réussi).
+Trigger trouvé via information_schema.triggers → prosrc montre raise exception sur trial_ends_at.
+
+### Fix
+- RPC set_initial_trial(p_days=14) SECURITY DEFINER (modèle claim_beta_slot) : pose trial_ends_at
+  côté serveur (bypass trigger). Gardes : refuse si non-auth, si déjà beta/lifetime/invited, si
+  trial déjà posé (anti re-prolongation), jours bornés 1-30. GRANT authenticated.
+- Step 12 (OnboardingV2Content.tsx) : trial_ends_at RETIRÉ de l'updateProfile (ne contient plus que
+  colonnes non-sensibles). Après l'update, si trialEndsAt non-null (pas de slot beta) →
+  await supabase.rpc('set_initial_trial', { p_days: 14 }). Pas de return false sur échec RPC (onboarding
+  déjà complété). claim_beta_slot inchangé.
+- Tiago débloqué manuellement (SQL admin postgres bypass trigger) : trial_ends_at +14j + macros
+  (depuis sa capture) + onboarding_completed=true. isInTrial=true (trial_ends_at>now) → accès OK.
+
+### Validé
+Parcours solo complet device (marko.rosa basculé solo via subscription_type=null) : onboarding
+aboutit, redirige, trial_ends_at posé en DB (vérifié). Hotfix poussé 839b875.
+
+### Règle / dette
+- trial_ends_at, subscription_type, subscription_status, subscription_end_date, subscription_price,
+  role, status : JAMAIS en update client direct (trigger rejette). TOUJOURS via RPC SECURITY DEFINER.
+- À vérifier : aucun autre endroit du code ne pose ces colonnes en update client (même piège potentiel).
 
 ## 2026-06-28 — Jours restants beta + Hydratation + cohérence Nutrition/Analytics [PROD]
 ### Contexte
