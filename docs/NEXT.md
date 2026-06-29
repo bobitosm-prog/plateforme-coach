@@ -28,6 +28,7 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Hydratation Nutrition (double anneau kcal+eau, boutons +250/+500) ✅ 28 juin
 - [x] Cohérence Nutrition finalisée (header or + calendrier glass aligné Training) ✅ 28 juin
 - [x] Analytics : bug Records corrigé + cohérence complète (header, 7 SectionTitle, records appariés) ✅ 28 juin
+- [x] HOTFIX onboarding solo bloqué (trigger vs trial_ends_at → RPC set_initial_trial) ✅ 29 juin
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
@@ -161,6 +162,13 @@ Visuels SEEDANCE + prompts pub Insta/TikTok. PAS avant que Phase A soit cochée.
 
 ## Dettes consignées (non bloquantes)
 
+### Règle critique (29/06) — colonnes profiles protégées
+Le trigger guard_profile_sensitive_columns rejette tout UPDATE client (authenticated) sur :
+trial_ends_at, subscription_type, subscription_status, subscription_end_date, subscription_price,
+role, status. → Ces colonnes ne se posent QUE via RPC SECURITY DEFINER (ex. set_initial_trial,
+claim_beta_slot). Ne JAMAIS les mettre dans un updateProfile côté client.
+TODO : auditer le code pour vérifier qu'aucun autre endroit ne tombe dans ce piège.
+
 ### Dettes mineures (28/06)
 - Doublon affichage poids : section poids ProgressTab + graphique poids AnalyticsSection (rationaliser).
 - Commentaire orphelin AnalyticsSection (~L140 « PR records grouped ») après suppression prRecords.
@@ -185,6 +193,37 @@ Visuels SEEDANCE + prompts pub Insta/TikTok. PAS avant que Phase A soit cochée.
   replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min).
 - **Timezone created_at** : colonnes timestamp WITHOUT time zone = UTC sans Z,
   convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
+
+## 💡 IDÉE — Système de parrainage (à concevoir)
+
+### Règle produit (validée 29/06)
+- Parrain ET filleul gagnent chacun 1 mois offert.
+- Crédité QUAND le filleul PAIE (devient client payant) — pas à l'inscription (anti-abus).
+- "Filleul actif" = a payé (suffit). Vérifier qu'il est bien client payant avant de créditer.
+
+### Point technique CLÉ (sensible — argent réel)
+- Les 2 bénéficiaires ont payé → ont un abonnement Stripe actif. "1 mois offert" = vraie
+  mensualité → DOIT passer par Stripe (coupon / crédit / skip facture), PAS juste un champ DB.
+  Prolonger trial_ends_at ne sert à rien pour un abonné payant actif (Stripe le facture quand même).
+- Découpler : tracking DB (simple, traçable) ↔ application du crédit Stripe (sensible, à faire avec soin).
+
+### Modèle de données pressenti (à valider)
+- Table referral_codes (ou champ profiles.referral_code) : code unique par parrain.
+- Table referrals : parrain_id, filleul_id, statut (pending/validated), created_at, validated_at.
+- Crédit appliqué via RPC SECURITY DEFINER (cohérent avec set_initial_trial/claim_beta_slot).
+
+### Flux pressenti
+1. Parrain partage son code/lien. 2. Filleul s'inscrit avec le code (stocké en pending).
+3. Filleul paie → webhook Stripe "premier paiement" → valide le parrainage → crédite 1 mois aux 2
+   (via Stripe). 4. Anti-abus : 1 validation par filleul, filleul = vrai payant.
+
+### À trancher en session dédiée
+- Mécanisme Stripe exact (coupon 100% 1 mois ? crédit balance ? skip prochaine facture ?).
+- Limite de parrainages par parrain (illimité vs plafond).
+- UI : où le parrain voit son code + ses parrainages (Compte ? section dédiée ?).
+- Cas limites : filleul qui annule après crédit, parrain qui se parraine lui-même, etc.
+
+NE PAS coder à l'arrache : feature argent réel, session dédiée.
 
 ## Notes test
 - f.marco (UUID 00a8a3a6) : sub saine après test re-sync 17/06.
