@@ -30,6 +30,7 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Analytics : bug Records corrigé + cohérence complète (header, 7 SectionTitle, records appariés) ✅ 28 juin
 - [x] HOTFIX onboarding solo bloqué (trigger vs trial_ends_at → RPC set_initial_trial) ✅ 29 juin
 - [x] AUDIT sécurité colonnes protégées + déblocage inscription coach (handle_new_user role depuis metadata) ✅ 30 juin
+- [x] Analytics #3 — Progression par exercice (courbe e1RM Epley, dropdown trié par fréquence, depuis wSessions sans re-fetch, i18n fr/en/de) ✅ 30 juin
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
@@ -80,6 +81,22 @@ volume hebdo agrégé). Grosses données dormantes en base. Audit complet ci-des
 - Pivot workout_sets.exercise_name (texte) → exercises_db.muscle_group : matcher par nom via
   lib/exercise-matching.ts (slug). Exercices non matchés / custom → bucket "autre".
 - Volume actuel limité 4 sem / 500 sets : analyses longues (progression 6 mois) = requêtes dédiées.
+
+### ⛔ BLOQUÉ — Analytics #1 Volume par groupe musculaire (et #4 RIR par muscle)
+Cause : la jointure série→exercice se fait sur workout_sets.exercise_name (TEXTE LIBRE) contre
+exercises_db.name, pas via un exercise_id (FK). Sur le compte réel f.marco (1196 sets) :
+- match exact (e.name = ws.exercise_name) : 351/1196 = ~29%
+- match normalisé (lower + translate accents, unaccent absent sur cette instance) : 582/1216 = ~48%
+Donc >50% des séries ne se relient à aucun muscle → tout volume/muscle serait massivement faux.
+Causes du non-match : accents manquants, variantes d'orthographe (ex. "Face pull" vs "Face pulls"),
+noms libres saisis à la main, exercices absents de exercises_db.
+PRÉREQUIS avant #1 et #4 : régler le lien exercice. Options :
+- (a) backfill d'un exercise_id (FK) sur workout_sets + corriger la source qui écrit exercise_name
+  pour qu'elle pose l'id canonique (fix structurel correct, plus lourd) ;
+- (b) table de mapping nom_libre → exercise_id (intermédiaire) ;
+- (c) installer l'extension unaccent + normalisation poussée (ne résout pas les variantes/absences).
+À traiter en session dédiée. NB : exercises_db a name/name_en/name_de — vérifier si une de ces
+colonnes matche mieux.
 
 ### Chantier #1 — Notifications robustes
 - [x] (a) Cron streak. Validé device 15/06.
@@ -180,6 +197,10 @@ les set_role inertes ; valider une inscription CLIENT (non refaite après le net
 - Commentaire orphelin AnalyticsSection (~L140 « PR records grouped ») après suppression prRecords.
 - Hydratation : pulsation nutWaterPulse iPhone à confirmer ; désactivation boutons jour passé à confirmer device.
 - Filtre records 50/100 à valider device (testé visuellement à 10).
+- Navigation pendant render : warning React "Cannot update a component (Router) while rendering
+  CoachApp" (app/page.tsx) + "Navigated to /login" → un router.push (probablement garde d'auth)
+  est appelé hors useEffect pendant le render. Sans rapport avec Analytics (constaté pendant #3).
+  À corriger : déplacer le push dans un useEffect. Passe dédiée.
 
 ### Historique
 - Bloc D : created_at vs date (streak/badges), await sans check
