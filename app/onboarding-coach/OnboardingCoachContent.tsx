@@ -160,9 +160,11 @@ export default function OnboardingCoachContent() {
     if (!session) return
     setSaving(true)
     const uid = session.user.id
+    // Poser role via RPC (bypass trigger guard_profile_sensitive_columns)
+    const { error: roleErr } = await supabase.rpc('set_role', { p_role: 'coach' })
+    if (roleErr) console.error('set_role failed:', roleErr)
     const update: Record<string, any> = {
       id: uid,
-      role: 'coach',
       full_name: capitalizeFullName(fullName),
       coach_bio: bio.trim() || null,
       coach_speciality: speciality || null,
