@@ -29,6 +29,7 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Cohérence Nutrition finalisée (header or + calendrier glass aligné Training) ✅ 28 juin
 - [x] Analytics : bug Records corrigé + cohérence complète (header, 7 SectionTitle, records appariés) ✅ 28 juin
 - [x] HOTFIX onboarding solo bloqué (trigger vs trial_ends_at → RPC set_initial_trial) ✅ 29 juin
+- [x] AUDIT sécurité colonnes protégées + déblocage inscription coach (handle_new_user role depuis metadata) ✅ 30 juin
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
@@ -168,6 +169,11 @@ trial_ends_at, subscription_type, subscription_status, subscription_end_date, su
 role, status. → Ces colonnes ne se posent QUE via RPC SECURITY DEFINER (ex. set_initial_trial,
 claim_beta_slot). Ne JAMAIS les mettre dans un updateProfile côté client.
 TODO : auditer le code pour vérifier qu'aucun autre endroit ne tombe dans ce piège.
+MISE À JOUR 30/06 : audit complet effectué. Seul bug actif trouvé = inscription coach (corrigé).
+Le role est désormais posé par handle_new_user depuis raw_user_meta_data (CASE client/coach, jamais
+admin). Les set_role côté client (callback, useClientDashboard) sont des filets désormais inertes
+(role jamais null). Note : profiles.role garde un DEFAULT 'client' (filet). TODO mineur : nettoyer
+les set_role inertes ; valider une inscription CLIENT (non refaite après le nettoyage).
 
 ### Dettes mineures (28/06)
 - Doublon affichage poids : section poids ProgressTab + graphique poids AnalyticsSection (rationaliser).
@@ -224,6 +230,27 @@ TODO : auditer le code pour vérifier qu'aucun autre endroit ne tombe dans ce pi
 - Cas limites : filleul qui annule après crédit, parrain qui se parraine lui-même, etc.
 
 NE PAS coder à l'arrache : feature argent réel, session dédiée.
+
+## 💡 IDÉE — Abonnement coach payant (à concevoir)
+
+### Règle produit (validée 30/06)
+- Coach s'inscrit → essaie (essai gratuit limité) → paie un abonnement mensuel récurrent.
+- Réutilise le système d'abonnement client (trial / subscription_type / Stripe).
+- Prérequis : inscription coach fonctionnelle ✅ (débloquée le 30/06).
+
+### Existant
+- Stripe Connect EXISTE (api/stripe/connect, stripe_account_id) : le coach REÇOIT les paiements de
+  SES clients (commission 3%). C'est le coach = VENDEUR.
+- Abonnement coach SaaS (coach = ACHETEUR de MoovX) N'EXISTE PAS → à construire.
+
+### À concevoir (session dédiée — argent réel, Stripe)
+- Checkout/subscription Stripe où le coach est l'acheteur (distinct de Connect).
+- Quel prix, mensuel/annuel, durée d'essai coach.
+- Gating : coach en essai vs payant (accès dashboard coach), quand couper l'accès si non payé.
+- subscription_type pour un coach (réutiliser trial/payant ? un type dédié ?).
+- Webhook Stripe pour activer/désactiver l'abonnement coach.
+
+NE PAS coder à l'arrache : feature argent réel, session dédiée (comme le parrainage).
 
 ## Notes test
 - f.marco (UUID 00a8a3a6) : sub saine après test re-sync 17/06.
