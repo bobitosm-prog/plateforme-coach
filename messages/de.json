@@ -2043,7 +2043,12 @@
       "csvProtein": "Eiweiß (g)",
       "csvCarbs": "Kohlenhydrate (g)",
       "csvFat": "Fett (g)",
-      "csvWater": "Wasser (L)"
+      "csvWater": "Wasser (L)",
+      "exerciseProgressTitle": "Fortschritt pro Übung",
+      "exerciseProgressTrailing": "GESCH. 1RM",
+      "exerciseProgressSelect": "Übung auswählen",
+      "exerciseProgressEmpty": "Nicht genügend Daten für diese Übung",
+      "exerciseProgress1rm": "Gesch. 1RM"
     },
     "bodyAssessment": {
       "title": "VOLLSTÄNDIGE KÖRPERANALYSE",

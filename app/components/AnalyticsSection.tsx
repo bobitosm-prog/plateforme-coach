@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { format, type Locale } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
@@ -57,6 +57,39 @@ export default function AnalyticsSection({
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const PERIOD_LABELS: Record<WeightPeriod, string> = { '30j': t('period30'), '60j': t('period60'), '90j': t('period90'), 'tout': t('periodAll') }
   const [weightPeriod, setWeightPeriod] = useState<WeightPeriod>('30j')
+  const [selectedExercise, setSelectedExercise] = useState('')
+
+  // -- Exercise progression (e1RM Epley) --
+  const { exerciseList, byExercise } = useMemo(() => {
+    const map: Record<string, Map<string, { e1rm: number; weight: number; reps: number }>> = {}
+    for (const sess of wSessions) {
+      for (const s of (sess.workout_sets || [])) {
+        if (!s.completed || !s.weight || s.weight <= 0 || !s.reps || s.reps <= 0) continue
+        const name = s.exercise_name
+        if (!name) continue
+        const date = (s.created_at || sess.created_at || '').slice(0, 10)
+        if (!date) continue
+        const e1rm = Math.round(s.weight * (1 + s.reps / 30) * 10) / 10
+        if (!map[name]) map[name] = new Map()
+        const prev = map[name].get(date)
+        if (!prev || e1rm > prev.e1rm) map[name].set(date, { e1rm, weight: s.weight, reps: s.reps })
+      }
+    }
+    const list = Object.keys(map).sort((a, b) => (map[b].size) - (map[a].size))
+    const byEx: Record<string, { date: string; e1rm: number; weight: number; reps: number }[]> = {}
+    for (const name of list) {
+      byEx[name] = Array.from(map[name].entries())
+        .map(([date, v]) => ({ date, ...v }))
+        .sort((a, b) => a.date.localeCompare(b.date))
+    }
+    return { exerciseList: list, byExercise: byEx }
+  }, [wSessions])
+
+  useEffect(() => {
+    if (exerciseList.length > 0 && !exerciseList.includes(selectedExercise)) {
+      setSelectedExercise(exerciseList[0])
+    }
+  }, [exerciseList])
 
   // -- Weight chart data --
   const weightData = useMemo(() => {
@@ -315,6 +348,49 @@ export default function AnalyticsSection({
               <Bar dataKey="litres" fill={LIGHT_BLUE} fillOpacity={0.6} radius={[2, 2, 0, 0]} name={t('waterL')} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* EXERCISE PROGRESSION */}
+      {exerciseList.length > 0 && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <Dumbbell size={16} color={colors.gold} />
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('exerciseProgressTitle')}</span>
+            <div style={{ flex: 1 }} />
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', color: colors.textMuted, textTransform: 'uppercase' }}>{t('exerciseProgressTrailing')}</span>
+          </div>
+          <select
+            value={selectedExercise}
+            onChange={e => setSelectedExercise(e.target.value)}
+            style={{
+              width: '100%', padding: '10px 14px', marginBottom: 12, borderRadius: 12,
+              background: colors.surface2, border: `1px solid ${colors.divider}`,
+              color: colors.text, fontFamily: fonts.body, fontSize: '0.82rem',
+              appearance: 'none', cursor: 'pointer',
+            }}
+          >
+            {exerciseList.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+          {selectedExercise && (byExercise[selectedExercise]?.length ?? 0) >= 2 ? (
+            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '16px 8px 8px' }}>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={byExercise[selectedExercise].map(d => ({ ...d, label: format(new Date(d.date + 'T12:00:00'), 'd MMM', { locale: dateLocale }) }))}>
+                  <CartesianGrid stroke={`${colors.divider}`} strokeDasharray="3 3" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} />
+                  <YAxis tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} unit="kg" />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line type="monotone" dataKey="e1rm" stroke={colors.gold} strokeWidth={2} dot={{ r: 3, fill: colors.gold }} name={t('exerciseProgress1rm')} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '24px 0', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.82rem' }}>
+              {t('exerciseProgressEmpty')}
+            </div>
+          )}
         </div>
       )}
 

@@ -2043,7 +2043,12 @@
       "csvProtein": "Proteines (g)",
       "csvCarbs": "Glucides (g)",
       "csvFat": "Lipides (g)",
-      "csvWater": "Eau (L)"
+      "csvWater": "Eau (L)",
+      "exerciseProgressTitle": "Progression par exercice",
+      "exerciseProgressTrailing": "1RM ESTIMÉ",
+      "exerciseProgressSelect": "Choisir un exercice",
+      "exerciseProgressEmpty": "Pas assez de données pour cet exercice",
+      "exerciseProgress1rm": "1RM estimé"
     },
     "bodyAssessment": {
       "title": "BILAN CORPOREL COMPLET",

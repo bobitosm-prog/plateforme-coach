@@ -2043,7 +2043,12 @@
       "csvProtein": "Protein (g)",
       "csvCarbs": "Carbs (g)",
       "csvFat": "Fat (g)",
-      "csvWater": "Water (L)"
+      "csvWater": "Water (L)",
+      "exerciseProgressTitle": "Exercise progression",
+      "exerciseProgressTrailing": "EST. 1RM",
+      "exerciseProgressSelect": "Select an exercise",
+      "exerciseProgressEmpty": "Not enough data for this exercise",
+      "exerciseProgress1rm": "Est. 1RM"
     },
     "bodyAssessment": {
       "title": "FULL BODY ASSESSMENT",
