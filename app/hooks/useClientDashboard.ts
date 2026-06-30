@@ -171,11 +171,11 @@ export default function useClientDashboard() {
     ])
 
     if (!profRes.data) { router.replace('/onboarding-v2'); return }
-    // If role is missing but user_metadata has it (RLS blocked the UPDATE at signup), fix it now
+    // If role is missing but user_metadata has it (trigger guard_profile_sensitive_columns blocks client role updates), fix via RPC
     const metaRole = session?.user?.user_metadata?.role
     if (!profRes.data.role && metaRole) {
-      await updateProfile(uid, { role: metaRole }, supabase)
-      profRes.data.role = metaRole
+      const { error: roleErr } = await supabase.rpc('set_role', { p_role: metaRole })
+      if (!roleErr) profRes.data.role = metaRole
     }
     if (profRes.data.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com')) {
       // Admin users skip all onboarding → proceed to dashboard

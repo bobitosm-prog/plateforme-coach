@@ -115,7 +115,6 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     if (data?.user) {
       const uid = data.user.id
       const profileData: Record<string, string> = {
-        role: selectedRole,
         email: email.trim(),
       }
       if (selectedRole === 'coach') {
