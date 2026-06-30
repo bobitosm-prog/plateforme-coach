@@ -4,17 +4,64 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-29
-- **HEAD** : 839b875 (fix(onboarding): set trial via set_initial_trial RPC)
+- **Date** : 2026-06-30
+- **HEAD** : 50816ac (fix(auth): role set from metadata in handle_new_user; coach signup unblocked)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 29/06 — INCIDENT prod : onboarding solo bloqué (trigger sécurité vs trial_ends_at). Hotfix RPC set_initial_trial. Client débloqué. Parrainage consigné en idée (voir NEXT.md).
+- **Dernière session** : 30/06 : audit sécurité colonnes protégées → a révélé l'inscription coach cassée (4 causes empilées). Fix racine handle_new_user (role depuis metadata). 5 migrations versionnées.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-06-30 — Audit sécurité colonnes protégées + déblocage inscription coach [PROD]
+### Contexte
+TODO de NEXT (suite incident onboarding solo 29/06) : auditer tout le code pour écritures client
+de colonnes protégées par le trigger guard_profile_sensitive_columns (role, status, subscription_*,
+trial_ends_at).
+
+### Audit — résultat
+La plupart des occurrences sont des lectures (sans risque) ou des écritures via routes API service_role
+(OK : admin/users/[id]/subscription, admin/users/[id]/role, assign-coach). MAIS l'audit a débusqué un
+bug actif : l'INSCRIPTION COACH était cassée.
+
+### Bug inscription coach — 4 causes empilées (qui se masquaient)
+1. role:'coach' dans l'update client (OnboardingCoachContent) → rejeté par le trigger guard.
+2. Colonnes coach_max_clients + coach_available_days écrites par le code mais INEXISTANTES en DB
+   (schema drift) → erreur 42703.
+3. Types coach_speciality (était ARRAY) et coach_experience_years (était integer) ≠ ce que le code
+   envoie (labels texte) → l'update échouait.
+4. CAUSE RACINE : la colonne profiles.role a un DEFAULT 'client'. handle_new_user créait le profil
+   sans role → DEFAULT 'client' s'appliquait → TOUT coach devenait 'client'. Et set_role (garde
+   "role null only") ne pouvait jamais corriger (role jamais null). Routage → onboarding client.
+
+### Fix
+- RPC set_role (SECURITY DEFINER, gardes own-row/client-coach-only/role-null-only/invited≠coach).
+- Migration colonnes manquantes (coach_max_clients integer, coach_available_days text[]).
+- Migration types (coach_speciality + coach_experience_years → text).
+- FIX RACINE : handle_new_user lit le role depuis raw_user_meta_data->>'role' (CASE client/coach
+  sinon client ; ON CONFLICT role=COALESCE(profiles.role, EXCLUDED.role) anti-écrasement ; jamais
+  admin via metadata). Le role est désormais correct dès la création du profil.
+- OnboardingCoachContent : role retiré de l'update (déjà commité 87af3f6 ce matin, via set_role).
+- register-client : role retiré de profileData (handle_new_user s'en charge). callback +
+  useClientDashboard : update role → set_role (filets, désormais inertes car role jamais null).
+- 5 migrations versionnées dans supabase/migrations/20260630*.
+
+### Validé
+Inscription coach complète device (compte recréé marko.rosa en coach) : role='coach' dès le signup
+(handle_new_user), routage → onboarding-coach, finalisation OK, dashboard coach. Tous les champs coach
+persistés. Commit 50816ac poussé.
+
+### Dettes / suite
+- set_role dans callback + useClientDashboard : désormais inertes (handle_new_user pose toujours un
+  role). À nettoyer un jour (non urgent).
+- Le DEFAULT 'client' sur profiles.role est conservé (filet). À garder en tête : un profil sans role
+  explicite reste 'client'.
+- Test inscription CLIENT post-nettoyage PAS refait (risque faible : handle_new_user gère les 2 rôles
+  pareil + filet assign-coach). À valider au 1er inscrit client.
+- Compte test marko.rosa : recréé en coach pendant les tests (à nettoyer/reset si besoin).
 
 ## 2026-06-29 — INCIDENT onboarding solo + hotfix [PROD]
 ### Symptôme
