@@ -98,6 +98,40 @@ PRÉREQUIS avant #1 et #4 : régler le lien exercice. Options :
 À traiter en session dédiée. NB : exercises_db a name/name_en/name_de — vérifier si une de ces
 colonnes matche mieux.
 
+### ⛔ DIAGNOSTIC — Fragmentation des noms d'exercices (racine commune)
+Constaté 30/06. workout_sets.exercise_name est du TEXTE LIBRE généré par l'IA sans référentiel :
+generate-program (app/api/generate-program/route.ts + lib/training/generate-program.ts) ne lit JAMAIS
+exercises_db — l'IA invente les noms (avec/sans accents, pluriels, variantes). Rien ne normalise à
+l'écriture. Résultat : un même exercice existe en plusieurs orthographes.
+Preuve (compte réel f.marco) : "Developpe couche barre" (3 sessions) vs "Développé couché barre" (8) ;
+"Face pull poulie"/"Face pulls"/"Face pulls poulie" (3 entrées) ; "Fentes bulgares"/"Fentes Bulgares" ;
+"Curl marteau"/"Curl marteau halteres"/"Curl marteau haltères" ; etc.
+
+SYMPTÔMES (même racine) :
+1. Mémoire du poids absente pour CERTAINS exercices : TrainingExerciseCard.tsx (~L67) et
+   WorkoutSession.tsx (~L362) cherchent l'historique via .eq('exercise_name', name) EXACT → ne
+   retrouvent pas les variantes → pas de "Précédent", pas de poids pré-rempli.
+2. Progression/RIR semble inactive : sans historique retrouvé, computeProgression reçoit [] → null →
+   aucune suggestion. (Le moteur lib/training/compute-progression.ts fonctionne, il est juste privé de données.)
+3. Volume par muscle (#1) bloqué : même non-matching exercise_name ↔ exercises_db.name (voir bloc dédié).
+
+PLAN (session dédiée, ordre par risque croissant) :
+- A. Rattrapage lecture (faible risque, soulage symptômes 1 et 2) : remplacer le .eq() exact par un
+  matching normalisé (sans accents/casse/pluriel) dans TrainingExerciseCard + WorkoutSession. Pas de
+  modif données. NB : il existe déjà lib/i18n-exercise.ts, lib/normalizeCoachProgram.ts (format only,
+  pas les noms), lib/training/equipment-normalize.ts, lib/exercise-matching.ts (slug) — auditer avant
+  de réécrire une normalisation.
+- B. Fix source (structurel) : fournir le catalogue exercises_db dans le prompt de generate-program,
+  consigne stricte "choisir uniquement dans cette liste". Stoppe la création de nouvelles variantes.
+  Tester soigneusement (touche la génération).
+- C. Backfill historique (gros chantier, débloque aussi #1 volume/muscle) : normaliser les
+  exercise_name existants ou poser un exercise_id (FK) sur workout_sets.
+
+À TRANCHER SÉPARÉMENT (conception, pas un bug) — Modèle RIR : computeProgression fait progresser quand
+TOUS les sets atteignent la cible reps (allReachedTarget) ; le RIR ne fait que MODULER (RIR<=1 → hold,
+RIR>=4 → accéléré, 2-3 → step normal). L'utilisateur attendait que le RIR seul (ex. 2 reps en réserve)
+déclenche une hausse. Écart modèle mental vs code. À rediscuter APRÈS l'étape A (sur historique fiable).
+
 ### Chantier #1 — Notifications robustes
 - [x] (a) Cron streak. Validé device 15/06.
 - [x] (c) Re-sync push au boot. Validé device 17/06.
