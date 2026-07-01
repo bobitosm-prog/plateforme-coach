@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getExerciseName } from '../../../../lib/i18n-exercise'
+import { normalizeExerciseName } from '../../../../lib/exercise-matching'
 import { getMuscleLabel } from '../../../../lib/i18n-muscle'
 import { Check, Plus, MoreHorizontal, Timer, Video, RefreshCw, Info, BarChart2 } from 'lucide-react'
 import {
@@ -63,13 +64,26 @@ export default function TrainingExerciseCard({
   useEffect(() => {
     if (!supabase || !userId || !ex.name || fetchedRef.current) return
     fetchedRef.current = true
+    const target = normalizeExerciseName(ex.name)
     supabase
       .from('workout_sets')
-      .select('weight, reps, set_number, session_id, completed, created_at, rir')
+      .select('exercise_name')
       .eq('user_id', userId)
-      .eq('exercise_name', ex.name)
-      .order('created_at', { ascending: false })
-      .limit(30)
+      .then(({ data: allSets }: any) => {
+        const candidates = new Set<string>()
+        for (const row of (allSets || [])) {
+          if (row.exercise_name) candidates.add(row.exercise_name)
+        }
+        const matchingNames = Array.from(candidates).filter(c => normalizeExerciseName(c) === target)
+        if (matchingNames.length === 0) matchingNames.push(ex.name)
+        return supabase
+          .from('workout_sets')
+          .select('weight, reps, set_number, session_id, completed, created_at, rir')
+          .eq('user_id', userId)
+          .in('exercise_name', matchingNames)
+          .order('created_at', { ascending: false })
+          .limit(30)
+      })
       .then(({ data }: any) => {
         if (!data || data.length === 0) return
         // Identify the 2 most recent distinct session_ids

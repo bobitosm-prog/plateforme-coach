@@ -4,6 +4,7 @@ import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Sear
 import { toast } from 'sonner'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../lib/i18n-exercise'
+import { normalizeExerciseName } from '../../lib/exercise-matching'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
@@ -355,14 +356,27 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       const { data: userData } = await supabase.auth.getUser()
       const userId = userData?.user?.id
       if (!userId) return
+      // Fetch distinct exercise_name for this user once, to enable normalized matching
+      const { data: allUserSets } = await supabase
+        .from('workout_sets')
+        .select('exercise_name')
+        .eq('user_id', userId)
+      const allCandidates = new Set<string>()
+      for (const row of (allUserSets || [])) {
+        if (row.exercise_name) allCandidates.add(row.exercise_name)
+      }
+
       const newPrev: Record<string, { weight: number; reps: number }[]> = {}
       const newPrevSessions: Record<string, PrevSessionSet[][]> = {}
       for (const name of missing) {
+        const target = normalizeExerciseName(name)
+        const matchingNames = Array.from(allCandidates).filter(c => normalizeExerciseName(c) === target)
+        if (matchingNames.length === 0) matchingNames.push(name)
         const { data } = await supabase
           .from('workout_sets')
           .select('weight, reps, set_number, session_id, completed, created_at, rir')
           .eq('user_id', userId)
-          .eq('exercise_name', name)
+          .in('exercise_name', matchingNames)
           .order('created_at', { ascending: false })
           .limit(30)
         if (data?.length) {
