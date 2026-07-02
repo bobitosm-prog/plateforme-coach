@@ -76,6 +76,33 @@ la génération. Même pattern que marko.rosa (06/06). Court-circuite paywall/St
   n'affecte que le provisionnement, pas les lectures/écritures sur instance existante.
   Migrations B0/B1a appliquées sans incident.
 
+### C — Backfill historique (3dcddb9) [PROD]
+Script scripts/backfill-exercise-id.ts (npx tsx, dry-run par défaut, --apply).
+Résolution via le MÊME findExerciseMatch que la génération (zéro divergence de logique).
+Dry-run complet : 185 noms / 2046 sets → EXACT 97/1376, PREFIX 38/328, UNRESOLVED 50/342.
+Review manuelle des 38 PREFIX : 31 validés, 7 EXCLUS (exercices biomécaniquement distincts,
+fusion aurait pollué la progression : Développé militaire haltères assis, Squat bulgare
+haltères, 3 variantes de prise au tirage vertical, Élévations latérales câble/unilatérale).
+Exclusion list en dur dans le script (traçabilité review 02/07).
+APPLY : 1633 sets mis à jour. Post-contrôle : 1657/2070 with_id (1633 + sets B1c),
+413 null (71 exclus + 342 unresolved, exercise_name intact), 0 orphelin FK.
+PIÈGE ATTRAPÉ : 1er dry-run tronqué à exactement 1000 sets (plafond pagination
+supabase-js par défaut) — même famille que le bug wSessions tronqué du 21/06.
+Fix : boucle .range() par pages. RÈGLE : tout select massif via supabase-js doit
+paginer et VÉRIFIER le count total chargé vs count SQL.
+
+### Débloqué par C
+- Analytics #1 (volume par groupe musculaire) : jointure workout_sets.exercise_id →
+  exercises_db.muscle_group désormais propre sur 80% des sets (vs 29-48% par texte).
+- Analytics #4 (RIR par muscle) : idem.
+- À terme : lecteurs d'historique (étape A) pourront matcher par exercise_id ;
+  A devient le filet pour les 342 unresolved uniquement.
+
+### Reste
+- Discussion conception RIR (modulateur vs déclencheur) — reportée après A, abordable.
+- Optionnel : mapping manuel des 50 unresolved (synonymes type "Rowing un bras haltère"
+  vs "Rowing haltère un bras") si le volume le justifie un jour. Non bloquant.
+
 ## 2026-06-30 — Audit sécurité colonnes protégées + déblocage inscription coach [PROD]
 ### Contexte
 TODO de NEXT (suite incident onboarding solo 29/06) : auditer tout le code pour écritures client
