@@ -190,6 +190,114 @@ describe('computeProgression', () => {
     expect(result!.weight).toBe(roundToStep(50 * 0.9, 1.25)) // 45
   })
 
+  // ── RIR quasi-succès (2b/2c) ──
+
+  it('2b: quasi (cible-1) + 2 premiers sets rir=2 → progress step normal', () => {
+    const result = computeProgression(
+      [[s(60, 10, true, 2), s(60, 9, true, 2), s(60, 9, true, 1)]],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('progress')
+    expect(result!.weight).toBe(62.5) // 60 + 2.5
+    expect(result!.reason).toContain('premiers sets')
+    expect(result!.step).toBe(2.5) // step normal, pas accéléré
+  })
+
+  it('2b: quasi + 2 premiers sets rir=3 → progress', () => {
+    const result = computeProgression(
+      [[s(60, 10, true, 3), s(60, 9, true, 3), s(60, 9, true, 0)]],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('progress')
+    expect(result!.weight).toBe(62.5)
+  })
+
+  it('2b: quasi + set1 rir=2, set2 rir=1 → hold (les DEUX premiers requis)', () => {
+    const result = computeProgression(
+      [[s(60, 10, true, 2), s(60, 9, true, 1), s(60, 9, true, 2)]],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('hold')
+    expect(result!.weight).toBe(60)
+  })
+
+  it('2b: quasi + 2 premiers rir=null → hold (RIR non saisi = comportement actuel)', () => {
+    const result = computeProgression(
+      [[s(60, 10, true, null), s(60, 9, true, null), s(60, 9, true, null)]],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('hold')
+    expect(result!.weight).toBe(60)
+  })
+
+  it('2c: quasi + dernier set rir=2 cette séance ET précédente → progress', () => {
+    const result = computeProgression(
+      [
+        [s(60, 10, true, 1), s(60, 9, true, 1), s(60, 9, true, 2)],
+        [s(60, 10, true, 1), s(60, 9, true, 1), s(60, 9, true, 3)],
+      ],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('progress')
+    expect(result!.weight).toBe(62.5)
+    expect(result!.reason).toContain('Deux séances')
+  })
+
+  it('2c: quasi + dernier set rir=2 cette séance, précédente rir=1 → hold', () => {
+    const result = computeProgression(
+      [
+        [s(60, 10, true, 1), s(60, 9, true, 1), s(60, 9, true, 2)],
+        [s(57.5, 10, true, 1), s(57.5, 9, true, 1), s(57.5, 9, true, 1)],
+      ],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('hold')
+    expect(result!.weight).toBe(60)
+  })
+
+  it('garde-fou: un set à cible-2 + 2 premiers rir=3 → hold (pas quasi)', () => {
+    const result = computeProgression(
+      [[s(60, 10, true, 3), s(60, 10, true, 3), s(60, 8, true, 3)]],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('hold')
+    expect(result!.weight).toBe(60)
+  })
+
+  it('échec franc prioritaire: set <5 + 2 premiers rir=3 → deload', () => {
+    const result = computeProgression(
+      [[s(60, 10, true, 3), s(60, 10, true, 3), s(60, 4, true, 3)]],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('deload')
+    expect(result!.reason).toContain('légère')
+  })
+
+  it('non-régression: allReachedTarget + rir=4 → progress accéléré', () => {
+    const result = computeProgression(
+      [[s(60, 10, true, 4), s(60, 10, true, 4), s(60, 10, true, 4)]],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('progress')
+    expect(result!.step).toBe(5) // accéléré (2.5 → 5)
+    expect(result!.reason).toContain('accélère')
+  })
+
+  it('2b déclenché 2x même poids → progress (PAS deload stagnation)', () => {
+    // Séance courante : quasi + 2 premiers rir=2 → 2b progress
+    // Séance précédente : aussi quasi (hold dans le passé, mais maintenant 2b le débloque)
+    // Le compteur de stagnation ne doit PAS intervenir car 2b retourne avant d'y arriver
+    const result = computeProgression(
+      [
+        [s(60, 10, true, 2), s(60, 9, true, 2), s(60, 9, true, 1)],
+        [s(60, 10, true, 2), s(60, 9, true, 2), s(60, 9, true, 1)],
+      ],
+      10, 'Bench Press'
+    )
+    expect(result!.status).toBe('progress')
+    expect(result!.weight).toBe(62.5)
+  })
+
   it('warmup OK + failed heavy: [43x10, 50x8, 50x4] target 10 → deload, refWeight=43 (set a cible)', () => {
     const result = computeProgression(
       [[s(43, 10), s(50, 8), s(50, 4)]],

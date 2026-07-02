@@ -1,8 +1,8 @@
 // ── Table d'autorégulation RIR (À VALIDER PAR UN COACH) ──
 // RIR = reps en réserve sur le dernier set. 0 = échec, 4+ = très facile.
-// Approche : le RIR module une progression déjà méritée par les reps. Ne crée jamais de progress.
 const RIR_SAFETY_MAX = 1   // RIR <= 1 sur un statut progress → bascule en hold (ne pas charger un user épuisé)
 const RIR_ACCEL_MIN  = 4   // RIR >= 4 → accélère le step
+const RIR_FRESH_MIN  = 2   // RIR >= 2 sur les sets frais → débloque le quasi-succès (À VALIDER PAR UN COACH)
 
 function acceleratedStep(step: number): number {
   if (step <= 1.25) return 2.5
@@ -113,6 +113,39 @@ export function computeProgression(
       status: 'progress',
       reason: 'Tous tes sets validés, monte la charge',
       step,
+    }
+  }
+
+  // 2b/2c. Quasi-succès débloqué par RIR (tous les sets à cible ou cible-1, aucun échec franc)
+  const quasiReached = lastSession.every(s => s.reps >= targetReps - 1)
+  if (quasiReached) {
+    // 2b. RIR frais : les 2 premiers sets complétés ont rir >= RIR_FRESH_MIN → signal fort
+    if (lastSession.length >= 2 &&
+        lastSession[0].rir != null && lastSession[0].rir >= RIR_FRESH_MIN &&
+        lastSession[1].rir != null && lastSession[1].rir >= RIR_FRESH_MIN) {
+      return {
+        weight: refWeight + step,
+        status: 'progress',
+        reason: 'De la réserve sur tes premiers sets, monte la charge',
+        step,
+      }
+    }
+
+    // 2c. Tendance confirmée : dernier set rir >= RIR_FRESH_MIN sur 2 séances consécutives
+    const completedWithRir = lastSession.filter(s => s.rir != null)
+    const lastRir = completedWithRir.length > 0 ? completedWithRir[completedWithRir.length - 1].rir : null
+    const prevSession2c = prevSessions[1]?.filter(s => s.completed) ?? []
+    const prevCompletedWithRir = prevSession2c.filter(s => s.rir != null)
+    const prevLastRir = prevCompletedWithRir.length > 0 ? prevCompletedWithRir[prevCompletedWithRir.length - 1].rir : null
+
+    if (lastRir != null && lastRir >= RIR_FRESH_MIN &&
+        prevLastRir != null && prevLastRir >= RIR_FRESH_MIN) {
+      return {
+        weight: refWeight + step,
+        status: 'progress',
+        reason: 'Deux séances avec de la réserve, monte la charge',
+        step,
+      }
     }
   }
 
