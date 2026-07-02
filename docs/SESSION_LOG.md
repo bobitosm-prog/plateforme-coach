@@ -98,8 +98,17 @@ paginer et VÉRIFIER le count total chargé vs count SQL.
 - À terme : lecteurs d'historique (étape A) pourront matcher par exercise_id ;
   A devient le filet pour les 342 unresolved uniquement.
 
+### Modèle RIR fresh-sets [PROD] (suite de session)
+Discussion conception reportée depuis le 30/06, tranchée : le RIR passe de pur
+modulateur à co-déclencheur conditionnel. Insight produit Marco : le RIR des
+premiers sets vaut plus que le dernier (fatigue). Implémentation 2b/2c entre
+allReachedTarget et hold, garde-fou cible-1, step normal jamais accéléré,
+non-régression RIR-null par construction. 10 tests ajoutés (93/93), dont
+anti-deload-stagnation sur quasi-succès répété. Validé device : cycle complet
+50x9 RIR2 → +2,5 (2b tire) puis 52,5x10 RIR1 → Garder (safety guard intact).
+Dette coach élargie (4 seuils + modèle à valider avant launch).
+
 ### Reste
-- Discussion conception RIR (modulateur vs déclencheur) — reportée après A, abordable.
 - Optionnel : mapping manuel des 50 unresolved (synonymes type "Rowing un bras haltère"
   vs "Rowing haltère un bras") si le volume le justifie un jour. Non bloquant.
 

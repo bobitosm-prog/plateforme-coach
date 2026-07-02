@@ -96,12 +96,13 @@ résolus · B1c (0334adf) propagation programme→sets · C (3dcddb9) backfill 1
 La source ne fragmente plus. Détail complet : SESSION_LOG 02/07.
 RESTE (non bloquant) : mapping manuel des 50 unresolved si volume le justifie un jour.
 
-### ⏳ Conception RIR (désormais ouvrable)
-computeProgression fait progresser quand allReachedTarget ; RIR ne fait que MODULER.
-Marco attendait que le RIR seul déclenche. Écart modèle mental vs code.
-Étape A faite (historique fiable) → discussion RIR désormais ouvrable. Bon sujet
-d'ouverture prochaine session (conception pure, puis petit batch compute-progression.ts).
-Ne pas oublier la dette liée : seuils RIR_SAFETY_MAX/ACCEL_MIN à valider par un coach.
+### ✅ FAIT (02/07) — Modèle RIR fresh-sets (le RIR débloque le quasi-succès)
+Décision produit tranchée : le RIR des PREMIERS sets (non pollués par la fatigue)
+peut débloquer une progression sur quasi-succès. 2 cas ajoutés entre
+allReachedTarget et hold : 2b (2 premiers sets RIR>=2 + toutes séries >= cible-1
+→ progress step normal) et 2c (dernier set RIR>=2 sur 2 séances → progress).
+RIR null = comportement antérieur strict. Corrige le deload stagnation injuste.
+Validé device cycle complet (déblocage + safety guard). 93/93 tests.
 
 ### Chantier #1 — Notifications robustes
 - [x] (a) Cron streak. Validé device 15/06.
@@ -141,9 +142,10 @@ badges (07d1265) : lib/project-rest-days.ts + check-badges case streak_days alig
 DRY (d919546) : useClientDashboard utilise projectRestDates. 3 systèmes alignés (cron Zurich,
 client/badges navigateur — divergence légitime). Validé 8/3. Voir SESSION_LOG 27/06.
 
-### ⚠️ Valider seuils RIR avec un coach
-RIR_SAFETY_MAX, RIR_ACCEL_MIN, deload -10% dans lib/training/compute-progression.ts. Justesse
-méthodologique = expertise coach, pas dev. AVANT d'ouvrir la feature RIR aux vrais users.
+### ⚠️ Valider seuils RIR avec un coach (AVANT launch — dette ÉLARGIE 02/07)
+RIR_SAFETY_MAX=1, RIR_ACCEL_MIN=4, deload -10%, RIR_FRESH_MIN=2 + le modèle
+fresh-sets lui-même (2b/2c). Justesse méthodologique = expertise coach, pas dev.
+Risque connu : les novices surestiment leur RIR de 2-4 reps.
 
 ### Petits
 - Nettoyer toast.error technique insert cardio (message i18n propre, pas brut Supabase).
