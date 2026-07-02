@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
 import { generateProgram } from '../../../lib/training/generate-program'
+import { loadExerciseCatalog } from '../../../lib/training/load-exercise-catalog'
 
 export const maxDuration = 300
 
@@ -59,9 +60,10 @@ export async function POST(req: NextRequest) {
           }
         }, 5000)
         try {
+          const catalog = await loadExerciseCatalog(supabaseAuth)
           const program = await generateProgram({
             objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
-          }, apiKey)
+          }, apiKey, catalog)
           clearInterval(heartbeat)
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', program })}\n\n`))
           controller.close()

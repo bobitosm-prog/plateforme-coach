@@ -5,6 +5,7 @@
 import { getPrefatigueInstructions } from '../prefatigue-mapping'
 import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { PROGRAM_GENERATION_PROMPT } from '../coach-knowledge'
+import { findExerciseMatch } from '../exercise-matching'
 
 export interface GenerateProgramInput {
   objective: string
@@ -143,7 +144,7 @@ REGLES SCIENTIFIQUES OBLIGATOIRES :
  * Pure function: no auth, no request, no rate-limit.
  * Throws on error (caller handles).
  */
-export async function generateProgram(input: GenerateProgramInput, apiKey: string): Promise<any> {
+export async function generateProgram(input: GenerateProgramInput, apiKey: string, catalog: { id: string; name: string }[] = []): Promise<any> {
   const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender } = input
 
   const gender = bodyGender || 'male'
@@ -162,6 +163,13 @@ ${getPrefatigueInstructions()}
 
 ${programStructure}
 
+${catalog.length > 0 ? `
+RÉFÉRENTIEL D'EXERCICES (${catalog.length} exercices) :
+Choisis le nom de chaque exercice EXACTEMENT dans cette liste quand le mouvement y figure.
+N'invente pas de variante orthographique (accents, pluriels, casse).
+Si un mouvement n'existe pas dans la liste, nomme-le clairement.
+${catalog.map(c => c.name).join(', ')}
+` : ''}
 Structure obligatoire pour ${days} jours/semaine.
 Adapte au niveau ${level || 'intermediaire'} et objectif ${objective || 'renforcement musculaire'}.
 Duree cible par seance : ${duration || 60} minutes.
@@ -185,7 +193,7 @@ JSON obligatoire :
       "muscle_groups": ["chest", "shoulders", "triceps"],
       "exercises": [
         {
-          "custom_name": "Developpe couche barre",
+          "custom_name": "Développé couché barre",
           "muscle_primary": "Poitrine",
           "sets": 4,
           "reps": 8,
@@ -290,6 +298,21 @@ IMPORTANT :
   }
 
   const program = unwrapToolInput(toolUseBlock.input)
+
+  // Post-process: resolve exercise names against catalog + set exercise_id
+  if (catalog.length > 0 && program?.days) {
+    for (const day of program.days) {
+      for (const ex of (day.exercises || [])) {
+        const match = findExerciseMatch(catalog, ex.custom_name)
+        if (match) {
+          ex.custom_name = match.name
+          ex.exercise_id = match.id
+        } else {
+          ex.exercise_id = null
+        }
+      }
+    }
+  }
 
   return program
 }

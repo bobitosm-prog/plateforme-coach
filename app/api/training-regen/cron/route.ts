@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { generateProgram } from '@/lib/training/generate-program'
+import { loadExerciseCatalog } from '@/lib/training/load-exercise-catalog'
 
 // Vercel : Hobby clamp 60s, Pro 300s. La génération programme ~50s/user.
 // Capacité réelle : ~1 user/run sur Hobby (60s), ~5-6 users/run sur Pro (300s).
@@ -52,6 +53,8 @@ export async function POST(req: NextRequest) {
   // 5. GENERATE FOR EACH USER (batch parallel, concurrency=3)
   // Concurrency 3 : génération programme ~50s, compromis vitesse / rate limit.
   const CONCURRENCY = 3
+  // Load exercise catalog once for all users
+  const catalog = await loadExerciseCatalog(supabaseAdmin)
   const startTime = Date.now()
   const results = {
     total: users?.length || 0,
@@ -69,7 +72,7 @@ export async function POST(req: NextRequest) {
         const params = buildProgramParams(profile, {
           notes: 'Varie les exercices et la structure par rapport au programme precedent pour eviter la stagnation, tout en respectant le meme objectif et niveau.',
         })
-        const program = await generateProgram(params, apiKey)
+        const program = await generateProgram(params, apiKey, catalog)
         if (!program) throw new Error('No program generated')
 
         // Deactivate old + insert new
