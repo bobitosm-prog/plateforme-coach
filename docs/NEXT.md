@@ -31,6 +31,7 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] HOTFIX onboarding solo bloqué (trigger vs trial_ends_at → RPC set_initial_trial) ✅ 29 juin
 - [x] AUDIT sécurité colonnes protégées + déblocage inscription coach (handle_new_user role depuis metadata) ✅ 30 juin
 - [x] Analytics #3 — Progression par exercice (courbe e1RM Epley, dropdown trié par fréquence, depuis wSessions sans re-fetch, i18n fr/en/de) ✅ 30 juin
+- [x] Chantier fragmentation noms d'exercices COMPLET A→C (7 commits, analytics #1+#4 débloquées) ✅ 02/07
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
@@ -82,56 +83,25 @@ volume hebdo agrégé). Grosses données dormantes en base. Audit complet ci-des
   lib/exercise-matching.ts (slug). Exercices non matchés / custom → bucket "autre".
 - Volume actuel limité 4 sem / 500 sets : analyses longues (progression 6 mois) = requêtes dédiées.
 
-### ⛔ BLOQUÉ — Analytics #1 Volume par groupe musculaire (et #4 RIR par muscle)
-Cause : la jointure série→exercice se fait sur workout_sets.exercise_name (TEXTE LIBRE) contre
-exercises_db.name, pas via un exercise_id (FK). Sur le compte réel f.marco (1196 sets) :
-- match exact (e.name = ws.exercise_name) : 351/1196 = ~29%
-- match normalisé (lower + translate accents, unaccent absent sur cette instance) : 582/1216 = ~48%
-Donc >50% des séries ne se relient à aucun muscle → tout volume/muscle serait massivement faux.
-Causes du non-match : accents manquants, variantes d'orthographe (ex. "Face pull" vs "Face pulls"),
-noms libres saisis à la main, exercices absents de exercises_db.
-PRÉREQUIS avant #1 et #4 : régler le lien exercice. Options :
-- (a) backfill d'un exercise_id (FK) sur workout_sets + corriger la source qui écrit exercise_name
-  pour qu'elle pose l'id canonique (fix structurel correct, plus lourd) ;
-- (b) table de mapping nom_libre → exercise_id (intermédiaire) ;
-- (c) installer l'extension unaccent + normalisation poussée (ne résout pas les variantes/absences).
-À traiter en session dédiée. NB : exercises_db a name/name_en/name_de — vérifier si une de ces
-colonnes matche mieux.
+### ✅ DÉBLOQUÉ (02/07) — Analytics #1 Volume/muscle et #4 RIR/muscle
+Le blocage (jointure texte 29-48%) est levé : workout_sets.exercise_id (FK) →
+exercises_db.muscle_group couvre 80% des sets (1657/2070). Les 413 null = 7 noms
+exclus en review + 50 synonymes unresolved (exercise_name intact, étape A les sert
+en lecture). #1 et #4 sont désormais implémentables en session normale.
 
-### ⛔ DIAGNOSTIC — Fragmentation des noms d'exercices (racine commune)
-Constaté 30/06. workout_sets.exercise_name est du TEXTE LIBRE généré par l'IA sans référentiel :
-generate-program (app/api/generate-program/route.ts + lib/training/generate-program.ts) ne lit JAMAIS
-exercises_db — l'IA invente les noms (avec/sans accents, pluriels, variantes). Rien ne normalise à
-l'écriture. Résultat : un même exercice existe en plusieurs orthographes.
-Preuve (compte réel f.marco) : "Developpe couche barre" (3 sessions) vs "Développé couché barre" (8) ;
-"Face pull poulie"/"Face pulls"/"Face pulls poulie" (3 entrées) ; "Fentes bulgares"/"Fentes Bulgares" ;
-"Curl marteau"/"Curl marteau halteres"/"Curl marteau haltères" ; etc.
+### ✅ FAIT (02/07) — Fragmentation noms d'exercices : chantier COMPLET A→C
+A (8d8dfdb) lecture normalisée · B0 (f0bfe3a) dédup catalogue 176 · B1a (8b31971)
+colonne FK exercise_id · B1b (10665d2) génération contrainte au catalogue, 27/27
+résolus · B1c (0334adf) propagation programme→sets · C (3dcddb9) backfill 1633/2046.
+La source ne fragmente plus. Détail complet : SESSION_LOG 02/07.
+RESTE (non bloquant) : mapping manuel des 50 unresolved si volume le justifie un jour.
 
-SYMPTÔMES (même racine) :
-1. Mémoire du poids absente pour CERTAINS exercices : TrainingExerciseCard.tsx (~L67) et
-   WorkoutSession.tsx (~L362) cherchent l'historique via .eq('exercise_name', name) EXACT → ne
-   retrouvent pas les variantes → pas de "Précédent", pas de poids pré-rempli.
-2. Progression/RIR semble inactive : sans historique retrouvé, computeProgression reçoit [] → null →
-   aucune suggestion. (Le moteur lib/training/compute-progression.ts fonctionne, il est juste privé de données.)
-3. Volume par muscle (#1) bloqué : même non-matching exercise_name ↔ exercises_db.name (voir bloc dédié).
-
-### ✅ FAIT (02/07) — Fragmentation noms d'exercices : étapes A + B livrées
-- A (8d8dfdb) : matching normalisé en lecture (accent/casse), 2 lecteurs d'historique. Soulage symptômes 1+2.
-- B0 (f0bfe3a) : dédup catalogue (176 lignes).
-- B1a (8b31971) : colonne workout_sets.exercise_id FK nullable.
-- B1b (10665d2) : générateur contraint au catalogue + post-process résolution id. 27/27 résolus.
-- B1c (0334adf) : propagation exercise_id programme → workout_sets. Validé device.
-→ La source ne fragmente PLUS. Nouveaux sets portent un exercise_id canonique.
-
-### ⏳ RESTE — Étape C : backfill historique (débloque aussi #1 volume/muscle)
-2003 sets existants ont exercise_id null. Résoudre les 122 vieux noms distincts → ids
-canoniques (via findExerciseMatch sur le catalogue). One-shot. Débloque Analytics #1
-(volume par groupe musculaire) qui était bloqué par le non-matching exercise_name↔db.
-Audit terrain d'abord : combien des 2003 résolvables, faux-positifs sur historique libre.
-
-### ⏳ RESTE — Conception RIR (reportée après A, désormais abordable)
+### ⏳ Conception RIR (désormais ouvrable)
 computeProgression fait progresser quand allReachedTarget ; RIR ne fait que MODULER.
-Marco attendait que le RIR seul déclenche. Écart modèle mental vs code. À rediscuter.
+Marco attendait que le RIR seul déclenche. Écart modèle mental vs code.
+Étape A faite (historique fiable) → discussion RIR désormais ouvrable. Bon sujet
+d'ouverture prochaine session (conception pure, puis petit batch compute-progression.ts).
+Ne pas oublier la dette liée : seuils RIR_SAFETY_MAX/ACCEL_MIN à valider par un coach.
 
 ### Chantier #1 — Notifications robustes
 - [x] (a) Cron streak. Validé device 15/06.
