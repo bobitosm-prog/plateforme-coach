@@ -348,7 +348,7 @@ export default function useClientDashboard() {
         exo.sets.forEach((s: any, i: number) => {
           setsToInsert.push({
             session_id: sess.id, user_id: session.user.id,
-            exercise_name: exo.name, set_number: i + 1,
+            exercise_name: exo.name, exercise_id: exo.exerciseId ?? null, set_number: i + 1,
             reps: Number(s.reps) || 0,
             weight: Number(s.weight) || 0,
             completed: true,
