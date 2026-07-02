@@ -115,22 +115,23 @@ SYMPTÔMES (même racine) :
    aucune suggestion. (Le moteur lib/training/compute-progression.ts fonctionne, il est juste privé de données.)
 3. Volume par muscle (#1) bloqué : même non-matching exercise_name ↔ exercises_db.name (voir bloc dédié).
 
-PLAN (session dédiée, ordre par risque croissant) :
-- A. Rattrapage lecture (faible risque, soulage symptômes 1 et 2) : remplacer le .eq() exact par un
-  matching normalisé (sans accents/casse/pluriel) dans TrainingExerciseCard + WorkoutSession. Pas de
-  modif données. NB : il existe déjà lib/i18n-exercise.ts, lib/normalizeCoachProgram.ts (format only,
-  pas les noms), lib/training/equipment-normalize.ts, lib/exercise-matching.ts (slug) — auditer avant
-  de réécrire une normalisation.
-- B. Fix source (structurel) : fournir le catalogue exercises_db dans le prompt de generate-program,
-  consigne stricte "choisir uniquement dans cette liste". Stoppe la création de nouvelles variantes.
-  Tester soigneusement (touche la génération).
-- C. Backfill historique (gros chantier, débloque aussi #1 volume/muscle) : normaliser les
-  exercise_name existants ou poser un exercise_id (FK) sur workout_sets.
+### ✅ FAIT (02/07) — Fragmentation noms d'exercices : étapes A + B livrées
+- A (8d8dfdb) : matching normalisé en lecture (accent/casse), 2 lecteurs d'historique. Soulage symptômes 1+2.
+- B0 (f0bfe3a) : dédup catalogue (176 lignes).
+- B1a (8b31971) : colonne workout_sets.exercise_id FK nullable.
+- B1b (10665d2) : générateur contraint au catalogue + post-process résolution id. 27/27 résolus.
+- B1c (0334adf) : propagation exercise_id programme → workout_sets. Validé device.
+→ La source ne fragmente PLUS. Nouveaux sets portent un exercise_id canonique.
 
-À TRANCHER SÉPARÉMENT (conception, pas un bug) — Modèle RIR : computeProgression fait progresser quand
-TOUS les sets atteignent la cible reps (allReachedTarget) ; le RIR ne fait que MODULER (RIR<=1 → hold,
-RIR>=4 → accéléré, 2-3 → step normal). L'utilisateur attendait que le RIR seul (ex. 2 reps en réserve)
-déclenche une hausse. Écart modèle mental vs code. À rediscuter APRÈS l'étape A (sur historique fiable).
+### ⏳ RESTE — Étape C : backfill historique (débloque aussi #1 volume/muscle)
+2003 sets existants ont exercise_id null. Résoudre les 122 vieux noms distincts → ids
+canoniques (via findExerciseMatch sur le catalogue). One-shot. Débloque Analytics #1
+(volume par groupe musculaire) qui était bloqué par le non-matching exercise_name↔db.
+Audit terrain d'abord : combien des 2003 résolvables, faux-positifs sur historique libre.
+
+### ⏳ RESTE — Conception RIR (reportée après A, désormais abordable)
+computeProgression fait progresser quand allReachedTarget ; RIR ne fait que MODULER.
+Marco attendait que le RIR seul déclenche. Écart modèle mental vs code. À rediscuter.
 
 ### Chantier #1 — Notifications robustes
 - [x] (a) Cron streak. Validé device 15/06.

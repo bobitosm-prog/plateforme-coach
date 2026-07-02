@@ -4,17 +4,77 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-06-30
-- **HEAD** : 50816ac (fix(auth): role set from metadata in handle_new_user; coach signup unblocked)
+- **Date** : 2026-07-02
+- **HEAD** : 0334adf (feat(training): propagate exercise_id from program to workout_sets insert)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 30/06 : audit sécurité colonnes protégées → a révélé l'inscription coach cassée (4 causes empilées). Fix racine handle_new_user (role depuis metadata). 5 migrations versionnées.
+- **Dernière session** : 02/07 — Chantier fragmentation noms d'exercices : étapes A + B (matching normalisé, dédup catalogue, exercise_id FK, générateur contraint, propagation sets). 5 commits.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-07-02 — Chantier fragmentation noms d'exercices : étapes A + B [PROD]
+
+### Contexte
+Suite du diagnostic 30/06 (workout_sets.exercise_name = texte libre généré par l'IA
+sans référentiel → fragmentation accent/casse/pluriel/synonyme → historique fragmenté,
+mémoire du poids absente, progression/RIR privée de données). 5 commits, A→B1c.
+
+### A — Matching normalisé en lecture (8d8dfdb) [PROD]
+Les 2 lecteurs d'historique (TrainingExerciseCard L70, WorkoutSession L365) faisaient
+.eq('exercise_name', name) EXACT → ratait les variantes. Remplacé par matching normalisé :
+fetch des exercise_name distincts de l'user → filtre normalizeExerciseName(c) === target
+(égalité STRICTE, pas de prefix) → .in(matchingNames). Réutilise normalizeExerciseName
+(lib/exercise-matching). Anti-faux-positif par construction (Curl barre ≠ Curl barre EZ).
+Validé device : "Élévations latérales haltères" (2 orthographes) affiche son historique
+fusionné + suggestion progression. Ne résout QUE l'orthographe (accent/casse/espaces/
+parenthèses) ; synonymes/mots-en-plus relèvent de B+C.
+
+### B0 — Dédup catalogue (f0bfe3a) [PROD]
+exercises_db avait 2 doublons casse-only (Curl barre EZ / Curl Barre EZ ; Good morning /
+Good Morning). Migration idempotente FK-safe (boucle information_schema repointe les FK
+avant DELETE — 0 FK entrante confirmée). 178 → 176 lignes, 0 doublon normalisé restant.
+
+### B1a — Colonne exercise_id FK (8b31971) [PROD]
+workout_sets n'avait pas de exercise_id (dette "exercise_id FK manquant" depuis mai).
+Ajout colonne uuid NULLABLE + FK → exercises_db(id) ON DELETE SET NULL + index. Design
+souple : exercise_id = lien canonique, exercise_name = nom d'affichage riche conservé.
+Migration idempotente. 2003 sets existants → exercise_id null (backfill = étape C).
+
+### B1b — Générateur contraint au catalogue + résolution id (10665d2) [PROD]
+generate-program ne lisait JAMAIS exercises_db (l'exemple L188 enseignait même la faute :
+"Developpe couche barre" sans accents). Fix : (1) catalogue canonique injecté dans le
+prompt comme guide de nommage + consigne stricte ; (2) exemple L188 réparé (accentué) ;
+(3) post-process déterministe : findExerciseMatch(catalog, custom_name) pose nom canonique
++ exercise_id sur chaque exercice. Voie 2 (l'IA manipule des noms, pas des uuid ; id posé
+en code). input_schema tool_use NON modifié. generateProgram reste pure (catalogue passé
+en 3e param). Helper loadExerciseCatalog (best-effort). Catalogue chargé 1× côté cron.
+TEST RUNTIME : régénération sur marco.ferreira@bluemail.ch → 27/27 résolus, 0 faux-positif,
+latence 42s (nominale).
+
+### B1c — Propagation exercise_id jusqu'aux sets (0334adf) [PROD]
+Le champ exercise_id (posé par B1b dans le programme) se perdait à l'entrée de séance :
+WorkoutSession L250 ne lisait pas e.exercise_id. Fix : type Exo + exerciseId, construction
+L250 (+ CustomBuilder L694 = null pour séance libre), onFinish L636 (le maillon critique :
+le .map avant onFinish droppait le champ), insert setsToInsert L351. TEST device : séance
+depuis programme régénéré → workout_sets.exercise_id peuplé non-null (Leg Curl Couché,
+Romanian deadlift barre, Kickbacks poulie). Chaîne complète prouvée end-to-end.
+
+### Note test
+marco.ferreira@bluemail.ch (fd3f4544) passé en subscription_type='lifetime' (SQL direct,
+rôle postgres = bypass légitime du trigger guard_profile_sensitive_columns) pour tester
+la génération. Même pattern que marko.rosa (06/06). Court-circuite paywall/Stripe (assumé).
+
+### Reste
+- Étape C : backfill des 2003 sets historiques (exercise_id null) → résoudre les 122 vieux
+  noms vers ids canoniques. One-shot, la source ne fragmente plus. Session dédiée.
+- Discussion conception RIR (modulateur vs déclencheur) : reportée après A, désormais abordable.
+- Incident infra Supabase (capacity constraints régions) en cours pendant la session —
+  n'affecte que le provisionnement, pas les lectures/écritures sur instance existante.
+  Migrations B0/B1a appliquées sans incident.
 
 ## 2026-06-30 — Audit sécurité colonnes protégées + déblocage inscription coach [PROD]
 ### Contexte
