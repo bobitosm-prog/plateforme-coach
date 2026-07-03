@@ -21,9 +21,9 @@ function mapActivityScore(score: number): string {
 }
 
 function mapGoalToObjective(goal: string): string {
-  if (goal === 'Perdre du poids') return 'weight_loss'
+  if (goal === 'Perdre du poids') return 'cut'
   if (goal === 'Prendre du muscle') return 'mass'
-  return 'maintenance'
+  return 'maintain'
 }
 
 const slideVariants = {
@@ -49,7 +49,7 @@ export default function OnboardingContent() {
   const [weight, setWeight] = useState('')
   const [height, setHeight] = useState('')
   const [goalWeight, setGoalWeight] = useState('')
-  const [objective, setObjective] = useState('maintenance')
+  const [objective, setObjective] = useState('maintain')
   const [activityLevel, setActivityLevel] = useState('moderate')
   const [dietaryType, setDietaryType] = useState('omnivore')
   const [allergies, setAllergies] = useState<string[]>([])
@@ -102,7 +102,7 @@ export default function OnboardingContent() {
     const mult = ACTIVITY_LEVELS.find(l => l.id === activityLevel)?.mult || 1.55
     const tdee = Math.round(bmr * mult)
     let adjusted = tdee
-    if (objective === 'weight_loss') adjusted = tdee - 300
+    if (objective === 'cut') adjusted = tdee - 300
     else if (objective === 'mass') adjusted = tdee + 300
     const proteinG = Math.round(2 * w)
     const fatG = Math.round((adjusted * 0.25) / 9)

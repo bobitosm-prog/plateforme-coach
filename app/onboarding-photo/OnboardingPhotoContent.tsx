@@ -104,7 +104,7 @@ export default function OnboardingPhotoContent() {
       dietary_type: profileData.dietary_type || 'omnivore',
       allergies: profileData.allergies || [],
       disliked_foods: profileData.meal_preferences?.disliked_foods || [],
-      objective_mode: profileData.objective === 'weight_loss' ? 'seche' : profileData.objective === 'mass' ? 'bulk' : 'maintien',
+      objective_mode: profileData.objective === 'cut' ? 'seche' : profileData.objective === 'mass' ? 'bulk' : 'maintien',
       caloric_adjustment: (profileData.calorie_goal || 0) - (profileData.tdee || profileData.calorie_goal || 0),
       tdee: profileData.tdee,
       activity_level: profileData.activity_level,

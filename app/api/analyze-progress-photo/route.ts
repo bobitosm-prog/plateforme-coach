@@ -195,16 +195,16 @@ RÈGLES ABSOLUES :
 
     // Coherence flags
     const coherenceFlags: string[] = []
-    if (p.objective?.includes('masse') && surplusDeficit !== null && surplusDeficit < -100) {
+    if (p.objective === 'mass' && surplusDeficit !== null && surplusDeficit < -100) {
       coherenceFlags.push(`⚠️ Objectif prise de masse MAIS déficit calorique de ${surplusDeficit} kcal — incohérent`)
     }
-    if (p.objective?.includes('perte') && surplusDeficit !== null && surplusDeficit > 200) {
+    if (p.objective === 'cut' && surplusDeficit !== null && surplusDeficit > 200) {
       coherenceFlags.push(`⚠️ Objectif perte de poids MAIS surplus calorique de +${surplusDeficit} kcal — incohérent`)
     }
     if (currentWeight > 0 && proteinGoal > 0 && proteinGoal / currentWeight < 1.4) {
       coherenceFlags.push(`⚠️ Protéines faibles : ${proteinGoal}g/jour = ${(proteinGoal / currentWeight).toFixed(1)}g/kg (recommandé : ≥1.6g/kg)`)
     }
-    if (p.weight_trend === 'gaining' && p.objective?.includes('perte')) {
+    if (p.weight_trend === 'gaining' && p.objective === 'cut') {
       coherenceFlags.push(`⚠️ Objectif perte de poids MAIS tendance +${p.weight_delta_30d}kg sur 30j`)
     }
 

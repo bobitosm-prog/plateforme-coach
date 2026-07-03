@@ -401,8 +401,8 @@ export default function HomeTab({
     return { label, value: trainedDays.has(ds) ? 1 : 0, isToday: ds === todayZ }
   })
   // Objective label
-  const objLabel = profile?.objective === 'weight_loss' || profile?.objective === 'seche' ? 'cut'
-    : profile?.objective === 'mass' || profile?.objective === 'bulk' ? 'bulk' : 'maintain'
+  const objLabel = profile?.objective === 'cut' ? 'cut'
+    : profile?.objective === 'mass' ? 'bulk' : 'maintain'
 
   // Daily quote from translations (deterministic per day)
   const quoteCategory = objLabel === 'bulk' ? 'mass' : objLabel
