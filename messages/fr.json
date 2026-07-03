@@ -1383,14 +1383,17 @@
     "categorySocial": "SOCIAL",
     "badgeUnlocked": "BADGE DÉBLOQUÉ !",
     "continue": "CONTINUER",
-    "levels": {
-      "beginner": "Débutant",
-      "initiated": "Initié",
-      "confirmed": "Confirmé",
-      "advanced": "Avancé",
-      "expert": "Expert",
-      "master": "Master",
-      "legend": "Légende"
+    "levelTitles": {
+      "1": "DÉBUTANT",
+      "2": "INITIÉ",
+      "3": "SPORTIF",
+      "4": "ATHLÈTE",
+      "5": "GUERRIER",
+      "6": "CHAMPION",
+      "7": "ÉLITE",
+      "8": "MAÎTRE",
+      "9": "LÉGENDE",
+      "10": "TITAN"
     },
     "items": {
       "first_workout": { "name": "Premier Pas", "desc": "1ère séance complétée" },

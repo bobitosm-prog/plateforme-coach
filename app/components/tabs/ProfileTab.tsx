@@ -16,7 +16,8 @@ import PaymentHistory from './profile/PaymentHistory'
 import DeleteAccountSection from './profile/DeleteAccountSection'
 import BadgesModal from '../BadgesModal'
 import BadgeCelebration from '../BadgeCelebration'
-import { checkAndUnlockBadges, getLevelInfo, type Badge } from '../../../lib/check-badges'
+import { checkAndUnlockBadges, type Badge } from '../../../lib/check-badges'
+import { getLevelFromXP } from '../../../lib/gamification'
 
 const supabasePush = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -502,7 +503,7 @@ export default function ProfileTab({
         const earnedBadges = allBadges.filter(b => unlockedBadgeIds.has(b.id))
         const lastThree = earnedBadges.slice(-3)
         const EMOJIS: Record<string, string> = { star: '⭐', grid: '📊', home: '🏠', clock: '⏱️', 'star-big': '🌟', chart: '📈', doc: '📝', list: '📋', scan: '📷', target: '🎯', flame: '🔥', 'flame-plus': '💪', 'flame-star': '🏆', 'flame-crown': '👑', 'flame-legend': '🏅', camera: '📸', share: '🔗', users: '👥', crown: '👑' }
-        const level = getLevelInfo(totalXp)
+        const level = getLevelFromXP(totalXp)
         return (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -516,7 +517,7 @@ export default function ProfileTab({
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 800, color: colors.gold }}>LV.{level.level}</span>
                 <div style={{ flex: 1, height: 4, background: `${colors.gold}1a`, borderRadius: 999, overflow: 'hidden' }}>
-                  <div style={{ width: `${Math.min(100, Math.round(((totalXp - level.minXp) / (level.maxXp - level.minXp)) * 100))}%`, height: '100%', background: colors.gold, borderRadius: 999 }} />
+                  <div style={{ width: `${Math.round(level.progress * 100)}%`, height: '100%', background: colors.gold, borderRadius: 999 }} />
                 </div>
                 <span style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.gold }}>{totalXp} XP</span>
               </div>

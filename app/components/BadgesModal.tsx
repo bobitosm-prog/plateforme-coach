@@ -4,7 +4,8 @@ import { RailOverlay } from './ui/RailOverlay'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, titleLineStyle, cardStyle, cardTitleAbove, mutedStyle, radii } from '../../lib/design-tokens'
-import { getLevelInfo, getProgress, type Badge } from '../../lib/check-badges'
+import { getProgress, type Badge } from '../../lib/check-badges'
+import { getLevelFromXP } from '../../lib/gamification'
 
 const BADGE_EMOJIS: Record<string, string> = {
   star: '⭐', grid: '📊', home: '🏠', clock: '⏱️', 'star-big': '🌟', chart: '📈',
@@ -33,10 +34,8 @@ interface BadgesModalProps {
 export default function BadgesModal({ allBadges, unlockedIds, totalXp, currentValues, onClose }: BadgesModalProps) {
   const t = useTranslations('badges')
   const [filter, setFilter] = useState('all')
-  const level = getLevelInfo(totalXp)
-  const xpInLevel = totalXp - level.minXp
-  const xpNeeded = level.maxXp - level.minXp
-  const xpPct = Math.min(100, Math.round((xpInLevel / xpNeeded) * 100))
+  const level = getLevelFromXP(totalXp)
+  const xpPct = Math.round(level.progress * 100)
   const earnedCount = allBadges.filter(b => unlockedIds.has(b.id)).length
   const lockedCount = allBadges.length - earnedCount
   const almostBadges = allBadges.filter(b => !unlockedIds.has(b.id) && getProgress(b.condition_value, currentValues[b.condition_type] || 0) >= 50)
@@ -59,14 +58,14 @@ export default function BadgesModal({ allBadges, unlockedIds, totalXp, currentVa
         <div style={{ ...cardStyle, padding: 20, textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 9, color: colors.textMuted, letterSpacing: '0.1em', fontFamily: fonts.headline, fontWeight: 700, marginBottom: 4 }}>{t('globalLevel')}</div>
           <div style={{ fontFamily: fonts.headline, fontSize: 36, fontWeight: 800, color: colors.gold, lineHeight: 1 }}>{t('levelPrefix', { level: level.level })}</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>{t(`levels.${level.nameKey}`)}</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>{t(`levelTitles.${Math.min(level.level, 10)}`)}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <div style={{ flex: 1, height: 6, background: 'rgba(230,195,100,0.1)', borderRadius: 999, overflow: 'hidden' }}>
               <div style={{ width: `${xpPct}%`, height: '100%', background: `linear-gradient(90deg, ${colors.goldContainer}, ${colors.gold})`, borderRadius: 999 }} />
             </div>
             <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold }}>{totalXp} XP</span>
           </div>
-          <div style={{ ...mutedStyle, fontSize: 9, marginBottom: 14 }}>{t('nextLevel', { maxXp: level.maxXp })}</div>
+          <div style={{ ...mutedStyle, fontSize: 9, marginBottom: 14 }}>{t('nextLevel', { maxXp: level.xpForNext })}</div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
             <div><span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.gold }}>{earnedCount}</span><div style={{ fontSize: 8, color: colors.textMuted, fontFamily: fonts.headline, letterSpacing: '0.08em' }}>{t('statEarned')}</div></div>
             <div><span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: 'rgba(255,255,255,0.2)' }}>{lockedCount}</span><div style={{ fontSize: 8, color: colors.textMuted, fontFamily: fonts.headline, letterSpacing: '0.08em' }}>{t('statLocked')}</div></div>

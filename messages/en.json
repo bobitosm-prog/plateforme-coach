@@ -1383,14 +1383,17 @@
     "categorySocial": "SOCIAL",
     "badgeUnlocked": "BADGE UNLOCKED!",
     "continue": "CONTINUE",
-    "levels": {
-      "beginner": "Beginner",
-      "initiated": "Initiated",
-      "confirmed": "Confirmed",
-      "advanced": "Advanced",
-      "expert": "Expert",
-      "master": "Master",
-      "legend": "Legend"
+    "levelTitles": {
+      "1": "BEGINNER",
+      "2": "INITIATE",
+      "3": "ATHLETE",
+      "4": "WARRIOR",
+      "5": "FIGHTER",
+      "6": "CHAMPION",
+      "7": "ELITE",
+      "8": "MASTER",
+      "9": "LEGEND",
+      "10": "TITAN"
     },
     "items": {
       "first_workout": { "name": "First Step", "desc": "1st workout completed" },

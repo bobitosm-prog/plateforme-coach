@@ -1,6 +1,7 @@
 // Gamification: badge checking, XP, levels
 import { computeStreak } from './streak'
 import { projectRestDates } from './project-rest-days'
+import { getLevelFromXP, getLevelTitle } from './gamification'
 
 export interface Badge {
   id: string
@@ -12,27 +13,6 @@ export interface Badge {
   condition_type: string
   condition_value: number
   sort_order: number
-}
-
-export interface LevelInfo {
-  level: number
-  nameKey: string
-  minXp: number
-  maxXp: number
-}
-
-const LEVELS: LevelInfo[] = [
-  { level: 1, nameKey: 'beginner', minXp: 0, maxXp: 100 },
-  { level: 2, nameKey: 'initiated', minXp: 100, maxXp: 250 },
-  { level: 3, nameKey: 'confirmed', minXp: 250, maxXp: 500 },
-  { level: 4, nameKey: 'advanced', minXp: 500, maxXp: 1000 },
-  { level: 5, nameKey: 'expert', minXp: 1000, maxXp: 2000 },
-  { level: 6, nameKey: 'master', minXp: 2000, maxXp: 4000 },
-  { level: 7, nameKey: 'legend', minXp: 4000, maxXp: 99999 },
-]
-
-export function getLevelInfo(totalXp: number): LevelInfo {
-  return LEVELS.find(l => totalXp >= l.minXp && totalXp < l.maxXp) || LEVELS[0]
 }
 
 export function getProgress(conditionValue: number, currentValue: number): number {
@@ -153,9 +133,9 @@ export async function checkAndUnlockBadges(userId: string, supabase: any): Promi
     const xpGained = (allBadges as Badge[]).filter(b => newlyUnlockedIds.includes(b.id)).reduce((s, b) => s + b.xp_reward, 0)
     const { data: xpRow } = await supabase.from('user_xp').select('*').eq('user_id', userId).maybeSingle()
     const newTotal = (xpRow?.total_xp || 0) + xpGained
-    const levelInfo = getLevelInfo(newTotal)
+    const levelData = getLevelFromXP(newTotal)
     await supabase.from('user_xp').upsert(
-      { user_id: userId, total_xp: newTotal, level: levelInfo.level, level_name: levelInfo.nameKey },
+      { user_id: userId, total_xp: newTotal, level: levelData.level, level_name: getLevelTitle(levelData.level).toLowerCase() },
       { onConflict: 'user_id' }
     )
   } else {

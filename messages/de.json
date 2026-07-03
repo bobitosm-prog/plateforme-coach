@@ -1383,14 +1383,17 @@
     "categorySocial": "SOZIAL",
     "badgeUnlocked": "ABZEICHEN FREIGESCHALTET!",
     "continue": "WEITER",
-    "levels": {
-      "beginner": "Anfänger",
-      "initiated": "Einsteiger",
-      "confirmed": "Fortgeschritten",
-      "advanced": "Erfahren",
-      "expert": "Experte",
-      "master": "Meister",
-      "legend": "Legende"
+    "levelTitles": {
+      "1": "ANFÄNGER",
+      "2": "EINSTEIGER",
+      "3": "SPORTLER",
+      "4": "ATHLET",
+      "5": "KRIEGER",
+      "6": "CHAMPION",
+      "7": "ELITE",
+      "8": "MEISTER",
+      "9": "LEGENDE",
+      "10": "TITAN"
     },
     "items": {
       "first_workout": { "name": "Erster Schritt", "desc": "1. Training abgeschlossen" },
