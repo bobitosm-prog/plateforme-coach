@@ -5,16 +5,52 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-07-03
-- **HEAD** : (pending commit — R4a canonicalize objective)
+- **HEAD** : (pending commit — R4b GoalsSection + ObjectiveModal i18n)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 03/07 — Analytics muscle (duo backfill C) + refonte Compte R0→R4a (XP unifié, hub Direction B, pages Préférences + Compte extraites, objective canonisé).
+- **Dernière session** : 03/07 soir — R4b page Objectifs + résurrection ObjectiveModal (typo carb_goal) + i18n wizard + canonisation writer NutritionPreferences.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-07-03 (soir) — R4b : page Objectifs + résurrection ObjectiveModal [PROD]
+
+### R4b — Goals construite
+GoalsSection (pattern R2/R3) : Mon objectif (délégué au wizard global setModal —
+zéro modal dupliqué, les modals vivent dans page.tsx) → Cibles (calorie_goal
+éditable + mention "recalculé/ajusté", water_goal PREMIÈRE édition de cette
+colonne) → Macros lecture seule. Les 3 rows objectif/poids cible/activité
+QUITTENT Mon profil (identité/corps seul, stat card conservée en read-only).
+Hub : alert('bientôt disponible') morte, item navigue.
+
+### BUG MAJEUR découvert et fixé — le wizard mort-né
+ObjectiveModal écrivait carb_goal (sans s) ; la colonne DB est carbs_goal.
+PostgREST rejette un UPDATE contenant une colonne inconnue EN ENTIER →
+handleConfirm échouait TOUJOURS, silencieusement (pas de message, modal
+restait ouvert) → le wizard 4 étapes (Mifflin-St Jeor, comparaison macros
+avant/après) n'a JAMAIS sauvegardé depuis sa création. Fix = 1 caractère.
+Preuve device : première écriture réussie (cut/70/moderate/1891/175/161/60,
+carbs_goal enfin peuplé). LEÇON : un save silencieusement échoué est
+indétectable sans test device du chemin d'écriture complet.
+
+### Fixes attrapes au passage
+- NutritionPreferences L231 : objMap ré-injectait weight_loss/maintenance à
+  chaque save (défaisait la canonisation R4a user par user). → mapping canonique.
+- ObjectiveModal jamais i18n-isé (antérieur au sprint mai, masqué jusqu'à ce
+  que Goals l'expose en premier plan) : ~30 clés objectiveModal ×3 JSON,
+  logique octet-identique. Même famille que les labels RIR de R2.
+- 3 writers de macros identifiés et coordonnés : ObjectiveModal (base au
+  changement d'objectif), NutritionPreferences, Weekly Diagnostic (ajustements).
+  La lecture seule de la section Macros est justifiée par cette triple écriture.
+
+### Reste — chantier Compte
+R5 (ramassage final) : dette notifs (re-sync push subscriptions au boot),
+warnings Recharts (charts montés en tab caché width 0), CHECK constraint
+objective (possible maintenant : plus aucun writer déviant), dette FAB UX,
+colonne profiles.goal morte à supprimer.
 
 ## 2026-07-03 — Analytics muscle (duo backfill C) + refonte Compte R0→R4a [PROD]
 

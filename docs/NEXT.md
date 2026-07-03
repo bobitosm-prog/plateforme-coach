@@ -39,9 +39,10 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] Analytics #1 Volume/muscle + #4 Intensité RIR/muscle ✅ 03/07 (duo backfill C clos)
 - [x] Refonte Compte R0→R4a ✅ 03/07 : XP unifié, hub Direction B, pages Préférences
   + Compte extraites (ProfileTab -273 lignes), objective canonisé cut/mass/maintain
-- [ ] R4b — page Objectifs (audit complet fait, terrain cartographié, ObjectiveModal
-  à réutiliser, macros lecture seule) — PROCHAINE SESSION
-- [ ] R5 — dette notifs + Recharts tab caché + CHECK objective
+- [x] R4b — page Objectifs ✅ 03/07 soir (wizard ObjectiveModal RESSUSCITÉ :
+  typo carb_goal le tuait silencieusement depuis sa création)
+- [ ] R5 — ramassage : re-sync push au boot, Recharts tab caché, CHECK objective,
+  drop profiles.goal, dette FAB
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
