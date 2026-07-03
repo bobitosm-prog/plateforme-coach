@@ -32,6 +32,10 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
 - [x] AUDIT sécurité colonnes protégées + déblocage inscription coach (handle_new_user role depuis metadata) ✅ 30 juin
 - [x] Analytics #3 — Progression par exercice (courbe e1RM Epley, dropdown trié par fréquence, depuis wSessions sans re-fetch, i18n fr/en/de) ✅ 30 juin
 - [x] Chantier fragmentation noms d'exercices COMPLET A→C (7 commits, analytics #1+#4 débloquées) ✅ 02/07
+- [x] #1 Volume par groupe musculaire ✅ 03/07 — bar chart 28j sets+tonnage,
+  première feature exploitant le backfill C. #4 RIR/muscle = quasi-clone (~30 min).
+- [x] #4 Intensité (RIR moyen) par muscle ✅ 03/07 — quasi-clone de #1, tri RIR
+  croissant, seuil 5 sets notés, échelle fixe 0-4. Duo analytics du backfill C clos.
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 
