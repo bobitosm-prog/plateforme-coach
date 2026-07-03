@@ -5,8 +5,9 @@ import { useTranslations } from 'next-intl'
 import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight, ChevronDown, Globe, Clock } from 'lucide-react'
 import LocaleSelector from '@/components/LocaleSelector'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
-import { colors, fonts } from '../../../lib/design-tokens'
+import { colors, fonts, cardStyle, radii } from '../../../lib/design-tokens'
 import { getLevelFromXP } from '../../../lib/gamification'
+import SectionTitle from '../ui/SectionTitle'
 
 const GOLD = colors.gold
 const TEXT_PRIMARY = colors.text
@@ -29,16 +30,8 @@ interface AccountTabProps {
   betaDaysLeft?: number
 }
 
-const sectionLabel: React.CSSProperties = {
-  fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
-  letterSpacing: '0.18em', color: TEXT_DIM,
-  textTransform: 'uppercase', marginBottom: 8, paddingLeft: 4,
-}
-
-const cardGroup: React.CSSProperties = {
-  background: colors.surface2,
-  borderRadius: 14,
-  border: `1px solid ${colors.divider}`,
+const menuCard: React.CSSProperties = {
+  ...cardStyle,
   marginBottom: 24,
   overflow: 'hidden',
 }
@@ -80,8 +73,8 @@ export default function AccountTab({
 
         {/* ── User card ── */}
         <div style={{
-          background: colors.surface2, borderRadius: 16, padding: 20,
-          marginBottom: 24, border: `1px solid ${colors.divider}`,
+          ...cardStyle, padding: 20,
+          marginBottom: 24,
           display: 'flex', alignItems: 'center', gap: 14,
         }}>
           <div style={{
@@ -109,7 +102,7 @@ export default function AccountTab({
 
         {isInBeta && (
           <div style={{
-            background: colors.surface2, borderRadius: 14, padding: '14px 16px',
+            ...cardStyle, padding: '14px 16px',
             marginBottom: 24, border: `1px solid ${GOLD}`,
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
@@ -126,8 +119,8 @@ export default function AccountTab({
         )}
 
         {/* ── COACHING ── */}
-        <div style={sectionLabel}>{t('coaching')}</div>
-        <div style={cardGroup}>
+        <SectionTitle noPadding title={t('coaching')} />
+        <div style={menuCard}>
           <button onClick={() => onNavigate('messages')} style={itemStyle}>
             <MessageCircle size={18} color={GOLD} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('messages')}</span>
@@ -149,8 +142,8 @@ export default function AccountTab({
         </div>
 
         {/* ── PROFIL ── */}
-        <div style={sectionLabel}>{t('profile')}</div>
-        <div style={cardGroup}>
+        <SectionTitle noPadding title={t('profile')} />
+        <div style={menuCard}>
           <button onClick={() => onNavigate('profil')} style={itemStyle}>
             <User size={18} color={GOLD} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('myProfile')}</span>
@@ -197,8 +190,8 @@ export default function AccountTab({
         </div>
 
         {/* ── COMPTE ── */}
-        <div style={sectionLabel}>{t('accountSection')}</div>
-        <div style={cardGroup}>
+        <SectionTitle noPadding title={t('accountSection')} />
+        <div style={menuCard}>
           <button onClick={onLogout} style={itemStyle}>
             <LogOut size={18} color={colors.error} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: colors.error }}>{t('signOut')}</span>
