@@ -41,8 +41,10 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
   + Compte extraites (ProfileTab -273 lignes), objective canonisé cut/mass/maintain
 - [x] R4b — page Objectifs ✅ 03/07 soir (wizard ObjectiveModal RESSUSCITÉ :
   typo carb_goal le tuait silencieusement depuis sa création)
-- [ ] R5 — ramassage : re-sync push au boot, Recharts tab caché, CHECK objective,
-  drop profiles.goal, dette FAB
+- [x] R5 — ramassage ✅ 03/07 : CHECK objective, DROP goal, Recharts fix,
+  push confirmé prod, FAB statu quo documenté
+- [x] Refonte Compte COMPLÈTE R0→R5 ✅ 03/07 — architecture 4 pages, wizard
+  ressuscité, enum verrouillé, console propre. Détail : SESSION_LOG 03/07.
 - [ ] Signup → onboarding → 1ère séance E2E par un tiers
 - [ ] Observabilité minimale
 

@@ -46,11 +46,36 @@ indétectable sans test device du chemin d'écriture complet.
   changement d'objectif), NutritionPreferences, Weekly Diagnostic (ajustements).
   La lecture seule de la section Macros est justifiée par cette triple écriture.
 
-### Reste — chantier Compte
-R5 (ramassage final) : dette notifs (re-sync push subscriptions au boot),
-warnings Recharts (charts montés en tab caché width 0), CHECK constraint
-objective (possible maintenant : plus aucun writer déviant), dette FAB UX,
-colonne profiles.goal morte à supprimer.
+### R5 — ramassage final [PROD] — CHANTIER COMPTE CLOS
+R5a (f22b505) : CHECK profiles_objective_canonical posé (possible : plus aucun
+writer déviant depuis R4a/R4b, garde préalable anti-casse) + DROP profiles.goal
+(morte). Contrôles OK.
+R5b (55d891a) : warnings Recharts width(-1) éliminés. Coupable principal :
+ProgressTab (monté caché par le rail). Pattern extrait en ui/SizedChart
+(useHasSize callback ref + ResizeObserver + check initial offsetWidth,
+SizedContainer placeholder isométrique). Deux vitesses : observer sur les
+2 tabs du rail seulement, hasSize={true} statique sur les 4 pages toujours
+visibles. 0 ResponsiveContainer direct restant.
+R5c : DÉJÀ EN PROD (aecff36, commit oublié dans la dette NEXT) — lib/push-resync
+complet avec 3 gardes absolues (jamais de popup, jamais de création non sollicitée,
+readyWithTimeout 4s anti-blocage), branché page.tsx:285. Confirmé device.
+R5d (FAB) : décision = statu quo documenté. RÈGLE : toute page scrollable doit
+prévoir le padding de fin dégageant FAB + nav (~160px). Masquage au scroll =
+amélioration future si plainte user.
+NOTE console : warnings [Intervention] touchmove = comportement structurel du
+rail (listener non-passif REQUIS pour le swipe, leçon juin). Bénin, ne pas
+"corriger" — le rendre passif casserait le swipe. Visible depuis que R5b a
+nettoyé le bruit Recharts.
+
+### BILAN CHANTIER COMPTE (01-03/07, R0→R5, 9 commits)
+Architecture refondue : Profil (identité/corps seul, -273 lignes) / Objectifs
+(construite) / Préférences / Compte. Butin des déménagements : wizard
+ObjectiveModal RESSUSCITÉ (mort-né depuis création, typo carb_goal), 2 systèmes
+XP réconciliés, enum objective défragmenté + verrouillé DB, 2 gardes mortes
+réparées (analyze-photo), 1 writer dé-canonisant tué, 2 fuites i18n soldées
+(RIR, ObjectiveModal ~30 clés), B2/B3 fixés, dette push soldée (était déjà
+en prod, dette périmée). Leçon majeure : déplacer les meubles révèle ce qui
+était cassé derrière.
 
 ## 2026-07-03 — Analytics muscle (duo backfill C) + refonte Compte R0→R4a [PROD]
 
