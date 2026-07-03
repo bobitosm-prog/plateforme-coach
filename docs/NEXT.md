@@ -45,8 +45,33 @@ Phase A (BLINDER avant la pub). Voir ROADMAP.md.
   push confirmé prod, FAB statu quo documenté
 - [x] Refonte Compte COMPLÈTE R0→R5 ✅ 03/07 — architecture 4 pages, wizard
   ressuscité, enum verrouillé, console propre. Détail : SESSION_LOG 03/07.
-- [ ] Signup → onboarding → 1ère séance E2E par un tiers
-- [ ] Observabilité minimale
+## 🎯 ROADMAP PRÉ-BETA RÉVISÉE (décision 04/07) — approche en vagues
+
+Contexte : pas de cobaye proche disponible → la vague 1 EST l'E2E tiers.
+Conséquence : l'observabilité passe de recommandée à PRÉREQUIS ABSOLU.
+
+### Phase A — Préparer l'accueil (~1 semaine)
+1. [ ] Observabilité minimale (BLOQUANT) : audit de l'existant
+       (api/log-error, api/feedback) → remontée d'erreurs consultable +
+       feedback in-app visible + réflexe quotidien de consultation
+2. [ ] Brique 5 light : créer campagne, voir slots + dernière activité
+       par testeur (détecter les décrocheurs de J1)
+3. [ ] Flux jour-61 testé + chiffrage coût API pour 15 actifs
+4. [ ] Auto-E2E rigoureux : Marco refait signup→onboarding→séance sur
+       un device VIERGE (pas son compte) en notant tout — pas équivalent
+       à un tiers, mais attrape le pire avant la vague
+
+### Phase B — VAGUE 1 : 10-15 places / 30 jours (pas 60)
+- 30 jours suffisent pour le signal bugs/frictions ; 60 jours de vague 1
+  retarderait la vague 2 pour rien
+- Recrutement sans réseau sportif : affiche salle de sport locale,
+  r/geneva, groupes FB fitness Genève/Suisse romande, bouche-à-oreille salle
+- Pendant la vague : fixes guidés par les retours UNIQUEMENT, pas de refonte
+- Critère de sortie : 0 bug P0 ouvert + parcours J1→J7 fluide observé
+
+### Phase C — VAGUE 2 : 45-60 places / 60 jours
+- Lancée sur un produit nettoyé par la vague 1
+- C'est ELLE qui mesure le produit (rétention, conversion jour-61)
 
 ## Prochaines tâches
 
