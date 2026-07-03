@@ -2048,7 +2048,11 @@
       "exerciseProgressTrailing": "GESCH. 1RM",
       "exerciseProgressSelect": "Übung auswählen",
       "exerciseProgressEmpty": "Nicht genügend Daten für diese Übung",
-      "exerciseProgress1rm": "Gesch. 1RM"
+      "exerciseProgress1rm": "Gesch. 1RM",
+      "muscleVolumeTitle": "Volumen pro Muskel",
+      "muscleVolumeTrailing": "28 TAGE",
+      "muscleVolumeEmpty": "Keine Muskeldaten der letzten 28 Tage",
+      "muscleVolumeSets": "{sets} Sätze · {tonnage} kg"
     },
     "bodyAssessment": {
       "title": "VOLLSTÄNDIGE KÖRPERANALYSE",

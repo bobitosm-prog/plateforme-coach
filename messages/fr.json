@@ -2048,7 +2048,11 @@
       "exerciseProgressTrailing": "1RM ESTIMÉ",
       "exerciseProgressSelect": "Choisir un exercice",
       "exerciseProgressEmpty": "Pas assez de données pour cet exercice",
-      "exerciseProgress1rm": "1RM estimé"
+      "exerciseProgress1rm": "1RM estimé",
+      "muscleVolumeTitle": "Volume par muscle",
+      "muscleVolumeTrailing": "28 JOURS",
+      "muscleVolumeEmpty": "Pas de données musculaires sur les 28 derniers jours",
+      "muscleVolumeSets": "{sets} sets · {tonnage} kg"
     },
     "bodyAssessment": {
       "title": "BILAN CORPOREL COMPLET",

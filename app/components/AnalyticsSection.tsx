@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { format, type Locale } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
@@ -9,9 +9,11 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts'
-import { Trophy, TrendingUp, Flame, Dumbbell, Download, Droplets } from 'lucide-react'
+import { Trophy, TrendingUp, Flame, Dumbbell, Download, Droplets, BarChart3 } from 'lucide-react'
 import { downloadCsv } from '../../lib/exportCsv'
 import { colors, fonts } from '../../lib/design-tokens'
+import { getMuscleLabel } from '../../lib/i18n-muscle'
+import { createBrowserClient } from '@supabase/ssr'
 
 const LIGHT_BLUE = '#7DD3FC'
 
@@ -58,6 +60,25 @@ export default function AnalyticsSection({
   const PERIOD_LABELS: Record<WeightPeriod, string> = { '30j': t('period30'), '60j': t('period60'), '90j': t('period90'), 'tout': t('periodAll') }
   const [weightPeriod, setWeightPeriod] = useState<WeightPeriod>('30j')
   const [selectedExercise, setSelectedExercise] = useState('')
+  const [muscleMap, setMuscleMap] = useState<Map<string, string>>(new Map())
+  const tMuscle = useTranslations('muscles')
+
+  // -- Fetch exercise→muscle mapping (once) --
+  const muscleFetchedRef = useRef(false)
+  useEffect(() => {
+    if (muscleFetchedRef.current) return
+    muscleFetchedRef.current = true
+    const sb = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
+    sb.from('exercises_db').select('id, muscle_group').then(({ data }) => {
+      if (!data) return
+      const map = new Map<string, string>()
+      for (const row of data) if (row.id && row.muscle_group) map.set(row.id, row.muscle_group)
+      setMuscleMap(map)
+    })
+  }, [])
 
   // -- Exercise progression (e1RM Epley) --
   const { exerciseList, byExercise } = useMemo(() => {
@@ -90,6 +111,28 @@ export default function AnalyticsSection({
       setSelectedExercise(exerciseList[0])
     }
   }, [exerciseList])
+
+  // -- Volume by muscle (28 days) --
+  const volumeByMuscle = useMemo(() => {
+    if (muscleMap.size === 0) return []
+    const cutoff = Date.now() - 28 * 86400000
+    const agg: Record<string, { sets: number; tonnage: number }> = {}
+    for (const sess of wSessions) {
+      for (const s of (sess.workout_sets || [])) {
+        if (!s.completed || !s.exercise_id) continue
+        const date = new Date(s.created_at || sess.created_at || '').getTime()
+        if (!date || date < cutoff) continue
+        const muscle = muscleMap.get(s.exercise_id)
+        if (!muscle) continue
+        if (!agg[muscle]) agg[muscle] = { sets: 0, tonnage: 0 }
+        agg[muscle].sets += 1
+        agg[muscle].tonnage += (s.weight || 0) * (s.reps || 0)
+      }
+    }
+    return Object.entries(agg)
+      .map(([muscle, v]) => ({ muscle, sets: v.sets, tonnage: Math.round(v.tonnage) }))
+      .sort((a, b) => b.sets - a.sets)
+  }, [wSessions, muscleMap])
 
   // -- Weight chart data --
   const weightData = useMemo(() => {
@@ -393,6 +436,42 @@ export default function AnalyticsSection({
           )}
         </div>
       )}
+
+      {/* MUSCLE VOLUME */}
+      {volumeByMuscle.length > 0 ? (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <BarChart3 size={16} color={colors.gold} />
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('muscleVolumeTitle')}</span>
+            <div style={{ flex: 1 }} />
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', color: colors.textMuted, textTransform: 'uppercase' }}>{t('muscleVolumeTrailing')}</span>
+          </div>
+          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '16px 8px 8px' }}>
+            <ResponsiveContainer width="100%" height={volumeByMuscle.length * 36 + 16}>
+              <BarChart data={volumeByMuscle.map(d => ({ ...d, label: getMuscleLabel(d.muscle, locale, tMuscle) || d.muscle }))} layout="vertical" margin={{ left: 8, right: 8, top: 0, bottom: 0 }}>
+                <CartesianGrid stroke={`${colors.divider}`} strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} />
+                <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} width={90} />
+                <Tooltip content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null
+                  const d = payload[0].payload
+                  return (
+                    <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: '8px 12px', fontSize: '0.72rem', fontFamily: fonts.body }}>
+                      <div style={{ color: colors.gold, fontWeight: 600 }}>{d.label}</div>
+                      <div style={{ color: colors.text }}>{t('muscleVolumeSets', { sets: d.sets, tonnage: d.tonnage.toLocaleString() })}</div>
+                    </div>
+                  )
+                }} />
+                <Bar dataKey="sets" fill={colors.gold} fillOpacity={0.7} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : muscleMap.size > 0 ? (
+        <div style={{ textAlign: 'center', padding: '24px 0', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.82rem' }}>
+          {t('muscleVolumeEmpty')}
+        </div>
+      ) : null}
 
       {/* EXPORT */}
       <button

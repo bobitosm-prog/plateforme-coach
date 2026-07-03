@@ -2048,7 +2048,11 @@
       "exerciseProgressTrailing": "EST. 1RM",
       "exerciseProgressSelect": "Select an exercise",
       "exerciseProgressEmpty": "Not enough data for this exercise",
-      "exerciseProgress1rm": "Est. 1RM"
+      "exerciseProgress1rm": "Est. 1RM",
+      "muscleVolumeTitle": "Volume by muscle",
+      "muscleVolumeTrailing": "28 DAYS",
+      "muscleVolumeEmpty": "No muscle data for the last 28 days",
+      "muscleVolumeSets": "{sets} sets · {tonnage} kg"
     },
     "bodyAssessment": {
       "title": "FULL BODY ASSESSMENT",
