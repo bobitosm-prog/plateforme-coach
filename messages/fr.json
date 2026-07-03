@@ -1374,6 +1374,62 @@
     "logout": "DÉCONNEXION",
     "avatarAlt": "Photo de profil"
   },
+  "goals": {
+    "pageTitle": "OBJECTIFS",
+    "objectiveSection": "MON OBJECTIF",
+    "targetsSection": "CIBLES",
+    "macrosSection": "MACROS",
+    "calorieGoal": "Objectif calorique",
+    "calorieHint": "Recalculé si tu changes d'objectif. Ajusté par ton diagnostic hebdo.",
+    "waterGoal": "Objectif hydratation",
+    "protein": "Protéines (g)",
+    "carbs": "Glucides (g)",
+    "fat": "Lipides (g)",
+    "macrosHint": "Pilotées par ton objectif et ton diagnostic hebdomadaire"
+  },
+  "objectiveModal": {
+    "stepLabel": "ÉTAPE {step}/{total}",
+    "step1Title": "QUEL EST TON NOUVEL OBJECTIF ?",
+    "step2Title": "POIDS ACTUEL & CIBLE",
+    "step3Title": "NIVEAU D'ACTIVITÉ",
+    "step4Title": "CONFIRMATION",
+    "next": "SUIVANT",
+    "back": "RETOUR",
+    "confirm": "CONFIRMER LE CHANGEMENT",
+    "saving": "MISE À JOUR...",
+    "cancel": "ANNULER",
+    "objectives": {
+      "cut": { "label": "SÈCHE", "desc": "Perdre du gras, garder le muscle", "detail": "Déficit calorique · Cardio HIIT" },
+      "mass": { "label": "PRISE DE MASSE", "desc": "Gagner du muscle, augmenter la force", "detail": "Surplus calorique · Hypertrophie" },
+      "maintain": { "label": "MAINTIEN", "desc": "Recomposition corporelle", "detail": "Calories d'équilibre · Polyvalent" }
+    },
+    "activity": {
+      "sedentary": { "label": "Sédentaire", "sub": "1-2x/sem" },
+      "light": { "label": "Léger", "sub": "3x/sem" },
+      "moderate": { "label": "Modéré", "sub": "4-5x/sem" },
+      "active": { "label": "Actif", "sub": "6x/sem" },
+      "extreme": { "label": "Intense", "sub": "2x/jour" }
+    },
+    "currentWeightLabel": "TON POIDS ACTUEL (KG)",
+    "targetWeightLabel": "TON POIDS CIBLE (KG)",
+    "weightHint": {
+      "cut": "Pour une sèche, ton poids cible doit être inférieur à ton poids actuel.",
+      "mass": "Pour une prise de masse, ton poids cible doit être supérieur à ton poids actuel.",
+      "maintain": "Pour un maintien, ton poids cible peut être proche de ton poids actuel."
+    },
+    "validation": {
+      "fillBoth": "Remplis les deux champs",
+      "cutLower": "Pour une sèche, le poids cible doit être inférieur",
+      "massHigher": "Pour une prise de masse, le poids cible doit être supérieur"
+    },
+    "oldToNew": "ANCIEN → NOUVEAU",
+    "summaryObjective": "Objectif",
+    "summaryTargetWeight": "Poids cible",
+    "summaryProtein": "Protéines",
+    "summaryCarbs": "Glucides",
+    "summaryFat": "Lipides",
+    "disclaimer": "Ton plan nutritionnel et tes macros seront recalculés. Ton programme d'entraînement sera adapté à ton nouvel objectif."
+  },
   "badges": {
     "title": "MES BADGES",
     "globalLevel": "NIVEAU GLOBAL",

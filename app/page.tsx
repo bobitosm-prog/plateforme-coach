@@ -34,6 +34,7 @@ import ProfileTab from './components/tabs/ProfileTab'
 import MessagesTab from './components/tabs/MessagesTab'
 import PreferencesSection from './components/tabs/profile/PreferencesSection'
 import AccountSection from './components/tabs/profile/AccountSection'
+import GoalsSection from './components/tabs/profile/GoalsSection'
 import AccountTab from './components/tabs/AccountTab'
 import DesktopDashboard from './(dashboard)/page-desktop'
 
@@ -604,7 +605,7 @@ export default function CoachApp() {
 
       {/* ── TAB CONTENT — rail horizontal (S1 swipe nav) ── */}
       {/* Sous-écrans (hors rail) */}
-      {(h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section') && (
+      {(h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section' || h.activeTab === 'goals') && (
         <main className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <AnimatePresence mode="wait">
             <motion.div key={h.activeTab} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}>
@@ -613,13 +614,14 @@ export default function CoachApp() {
               {h.activeTab === 'feedback' && <FeedbackTab onBack={() => h.setActiveTab('compte')} />}
               {h.activeTab === 'preferences' && <PreferencesSection supabase={h.supabase} session={h.session} profile={h.profile} updateReminderSettings={h.updateReminderSettings} updateRirSettings={h.updateRirSettings} onBack={() => h.setActiveTab('compte')} />}
               {h.activeTab === 'account_section' && <AccountSection supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => h.setActiveTab('compte')} />}
+              {h.activeTab === 'goals' && <GoalsSection supabase={h.supabase} session={h.session} profile={h.profile} goalWeight={h.goalWeight} setModal={h.setModal} fetchAll={h.fetchAll} onBack={() => h.setActiveTab('compte')} />}
             </motion.div>
           </AnimatePresence>
         </main>
       )}
 
       {/* Rail horizontal — 5 onglets racine (lazy keep-alive) */}
-      <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section') ? 'none' : 'flex' }}>
+      <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section' || h.activeTab === 'goals') ? 'none' : 'flex' }}>
         <motion.div
           ref={railDivRef}
           style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: railX, touchAction: 'pan-y' }}

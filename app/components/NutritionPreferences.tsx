@@ -228,7 +228,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   // ─── Save ───
   async function save() {
     setSaving(true)
-    const objMap: Record<ObjectiveType, string> = { cut: 'weight_loss', maintain: 'maintenance', bulk: 'mass' }
+    const objMap: Record<ObjectiveType, string> = { cut: 'cut', maintain: 'maintain', bulk: 'mass' }
     const { data, error } = await updateProfile(userId, {
       calorie_goal: objectiveKcal,
       protein_goal: finalMacros.protein,

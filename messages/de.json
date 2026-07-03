@@ -1374,6 +1374,62 @@
     "logout": "ABMELDEN",
     "avatarAlt": "Profilbild"
   },
+  "goals": {
+    "pageTitle": "ZIELE",
+    "objectiveSection": "MEIN ZIEL",
+    "targetsSection": "ZIELWERTE",
+    "macrosSection": "MAKROS",
+    "calorieGoal": "Kalorienziel",
+    "calorieHint": "Wird bei Zieländerung neu berechnet. Angepasst durch deine Wochendiagnose.",
+    "waterGoal": "Flüssigkeitsziel",
+    "protein": "Protein (g)",
+    "carbs": "Kohlenhydrate (g)",
+    "fat": "Fett (g)",
+    "macrosHint": "Gesteuert durch dein Ziel und deine Wochendiagnose"
+  },
+  "objectiveModal": {
+    "stepLabel": "SCHRITT {step}/{total}",
+    "step1Title": "WAS IST DEIN NEUES ZIEL?",
+    "step2Title": "AKTUELLES & ZIELGEWICHT",
+    "step3Title": "AKTIVITÄTSLEVEL",
+    "step4Title": "BESTÄTIGUNG",
+    "next": "WEITER",
+    "back": "ZURÜCK",
+    "confirm": "ÄNDERUNG BESTÄTIGEN",
+    "saving": "AKTUALISIERUNG...",
+    "cancel": "ABBRECHEN",
+    "objectives": {
+      "cut": { "label": "DEFINITIONSPHASE", "desc": "Fett verlieren, Muskeln behalten", "detail": "Kaloriendefizit · HIIT-Cardio" },
+      "mass": { "label": "AUFBAUPHASE", "desc": "Muskeln aufbauen, Kraft steigern", "detail": "Kalorienüberschuss · Hypertrophie" },
+      "maintain": { "label": "ERHALTUNG", "desc": "Körper-Rekomposition", "detail": "Ausgeglichene Kalorien · Vielseitig" }
+    },
+    "activity": {
+      "sedentary": { "label": "Sitzend", "sub": "1-2x/Woche" },
+      "light": { "label": "Leicht", "sub": "3x/Woche" },
+      "moderate": { "label": "Moderat", "sub": "4-5x/Woche" },
+      "active": { "label": "Aktiv", "sub": "6x/Woche" },
+      "extreme": { "label": "Intensiv", "sub": "2x/Tag" }
+    },
+    "currentWeightLabel": "DEIN AKTUELLES GEWICHT (KG)",
+    "targetWeightLabel": "DEIN ZIELGEWICHT (KG)",
+    "weightHint": {
+      "cut": "Für eine Definitionsphase muss dein Zielgewicht niedriger als dein aktuelles Gewicht sein.",
+      "mass": "Für eine Aufbauphase muss dein Zielgewicht höher als dein aktuelles Gewicht sein.",
+      "maintain": "Für die Erhaltung kann dein Zielgewicht nahe an deinem aktuellen Gewicht liegen."
+    },
+    "validation": {
+      "fillBoth": "Fülle beide Felder aus",
+      "cutLower": "Für eine Definitionsphase muss das Zielgewicht niedriger sein",
+      "massHigher": "Für eine Aufbauphase muss das Zielgewicht höher sein"
+    },
+    "oldToNew": "ALT → NEU",
+    "summaryObjective": "Ziel",
+    "summaryTargetWeight": "Zielgewicht",
+    "summaryProtein": "Protein",
+    "summaryCarbs": "Kohlenhydrate",
+    "summaryFat": "Fett",
+    "disclaimer": "Dein Ernährungsplan und deine Makros werden neu berechnet. Dein Trainingsplan wird an dein neues Ziel angepasst."
+  },
   "badges": {
     "title": "MEINE ABZEICHEN",
     "globalLevel": "GESAMTSTUFE",

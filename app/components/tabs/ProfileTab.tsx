@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Zap, ChevronRight, Crown, Clock, Calendar, User, Cake, Ruler, Target, Activity, ArrowLeft } from 'lucide-react'
+import { Zap, ChevronRight, Crown, Clock, Calendar, User, Cake, Ruler, ArrowLeft } from 'lucide-react'
 import { colors, fonts, titleStyle, titleLineStyle, subtitleStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, radii } from '../../../lib/design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
 import SwissBadge from '../ui/SwissBadge'
@@ -156,9 +156,6 @@ export default function ProfileTab({
           { icon: Cake, label: t('fields.birthDate'), value: profile?.birth_date ? new Date(profile.birth_date).toLocaleDateString(locale) : '—' },
           { icon: User, label: t('fields.gender'), value: profile?.gender === 'male' ? t('fields.male') : profile?.gender === 'female' ? t('fields.female') : '—' },
           { icon: Ruler, label: t('fields.height'), value: profile?.height ? `${profile.height} cm` : '—' },
-          { icon: Target, label: t('fields.goalWeight'), value: goalWeight ? `${goalWeight} kg` : '—' },
-          { icon: Target, label: t('fields.objective'), value: ({ mass: t('fields.objectives.mass'), cut: t('fields.objectives.cut'), maintain: t('fields.objectives.maintain') } as Record<string, string>)[profile?.objective] || profile?.objective || '—', action: 'objective' },
-          { icon: Activity, label: t('fields.activityLevel'), value: ({ sedentary: t('fields.activityLevels.sedentary'), light: t('fields.activityLevels.light'), moderate: t('fields.activityLevels.moderate'), active: t('fields.activityLevels.active'), extreme: t('fields.activityLevels.extreme') } as Record<string, string>)[profile?.activity_level] || profile?.activity_level || '—', action: 'objective' },
         ].map((row, i, arr) => (
           <React.Fragment key={row.label}>
             <div style={rowStyle} onClick={'action' in row ? () => setModal(row.action as string) : undefined}>

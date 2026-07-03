@@ -21,7 +21,7 @@ interface AccountTabProps {
   unreadCount: number
   supabase: any
   userId?: string
-  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section') => void
+  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals') => void
   isInTrial?: boolean
   trialDaysLeft?: number
   isInBeta?: boolean
@@ -160,7 +160,7 @@ export default function AccountTab({
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
           <div style={divider} />
-          <button onClick={() => alert(t('goalsSoon'))} style={itemStyle}>
+          <button onClick={() => onNavigate('goals')} style={itemStyle}>
             <Target size={18} color={GOLD} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('goals')}</span>
             <span style={{ flex: 1 }} />

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import {
   colors, fonts, radii, cardStyle, btnPrimary, btnSecondary, inputStyle,
@@ -18,19 +19,9 @@ interface ObjectiveModalProps {
   onSaved: () => void
 }
 
-const OBJECTIVES = [
-  { id: 'cut', emoji: '🔥', label: 'SÈCHE', desc: 'Perdre du gras, garder le muscle', detail: 'Déficit calorique · Cardio HIIT' },
-  { id: 'mass', emoji: '💪', label: 'PRISE DE MASSE', desc: 'Gagner du muscle, augmenter la force', detail: 'Surplus calorique · Hypertrophie' },
-  { id: 'maintain', emoji: '⚖️', label: 'MAINTIEN', desc: 'Recomposition corporelle', detail: 'Calories d\'équilibre · Polyvalent' },
-] as const
-
-const ACTIVITY_OPTIONS = [
-  { id: 'sedentary', label: 'Sédentaire', sub: '1-2x/sem' },
-  { id: 'light', label: 'Léger', sub: '3x/sem' },
-  { id: 'moderate', label: 'Modéré', sub: '4-5x/sem' },
-  { id: 'active', label: 'Actif', sub: '6x/sem' },
-  { id: 'extreme', label: 'Intense', sub: '2x/jour' },
-] as const
+const OBJECTIVE_IDS = ['cut', 'mass', 'maintain'] as const
+const OBJECTIVE_EMOJIS: Record<string, string> = { cut: '🔥', mass: '💪', maintain: '⚖️' }
+const ACTIVITY_IDS = ['sedentary', 'light', 'moderate', 'active', 'extreme'] as const
 
 function getActivityMult(id: string): number {
   return ACTIVITY_LEVELS.find(a => a.id === id)?.mult || 1.55
@@ -62,6 +53,7 @@ function computeMacros(objective: string, weight: number, height: number, age: n
 }
 
 export default function ObjectiveModal({ profile, currentWeight, goalWeight, supabase, session, onClose, onSaved }: ObjectiveModalProps) {
+  const t = useTranslations('objectiveModal')
   const [step, setStep] = useState(1)
   const [objective, setObjective] = useState<string>(profile?.objective || 'maintain')
   const [weight, setWeight] = useState<string>((currentWeight || profile?.current_weight || '').toString())
@@ -88,14 +80,12 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
     activity
   ), [objective, weight, activity])
 
-  const objLabels: Record<string, string> = { mass: 'Prise de masse', cut: 'Sèche', maintain: 'Maintien' }
-
   function validateWeight(): boolean {
     const w = parseFloat(weight)
     const tw = parseFloat(targetWeight)
-    if (!w || !tw) { setWeightError('Remplis les deux champs'); return false }
-    if (objective === 'cut' && tw >= w) { setWeightError('Pour une sèche, le poids cible doit être inférieur'); return false }
-    if (objective === 'mass' && tw <= w) { setWeightError('Pour une prise de masse, le poids cible doit être supérieur'); return false }
+    if (!w || !tw) { setWeightError(t('validation.fillBoth')); return false }
+    if (objective === 'cut' && tw >= w) { setWeightError(t('validation.cutLower')); return false }
+    if (objective === 'mass' && tw <= w) { setWeightError(t('validation.massHigher')); return false }
     setWeightError('')
     return true
   }
@@ -109,7 +99,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
       activity_level: activity,
       calorie_goal: newMacros.adjusted,
       protein_goal: newMacros.protein,
-      carb_goal: newMacros.carbs,
+      carbs_goal: newMacros.carbs,
       fat_goal: newMacros.fat,
     }, supabase)
 
@@ -133,7 +123,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
     </div>
   )
 
-  const stepLabel = `ÉTAPE ${step}/4`
+  const stepLabel = t('stepLabel', { step, total: 4 })
 
   return (
     <div style={{ ...modalOverlay, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1100 }} onClick={onClose}>
@@ -160,14 +150,14 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 1 — OBJECTIF ═══ */}
         {step === 1 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>QUEL EST TON NOUVEL OBJECTIF ?</div>
+            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step1Title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-              {OBJECTIVES.map(obj => {
-                const selected = objective === obj.id
+              {OBJECTIVE_IDS.map(id => {
+                const selected = objective === id
                 return (
                   <button
-                    key={obj.id}
-                    onClick={() => setObjective(obj.id)}
+                    key={id}
+                    onClick={() => setObjective(id)}
                     style={{
                       ...cardStyle,
                       border: `1px solid ${selected ? `${colors.gold}66` : `${colors.goldContainer}1a`}`,
@@ -179,32 +169,32 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                      <span style={{ fontSize: 18 }}>{obj.emoji}</span>
-                      <span style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: selected ? colors.gold : colors.text, letterSpacing: '0.1em' }}>{obj.label}</span>
+                      <span style={{ fontSize: 18 }}>{OBJECTIVE_EMOJIS[id]}</span>
+                      <span style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: selected ? colors.gold : colors.text, letterSpacing: '0.1em' }}>{t(`objectives.${id}.label`)}</span>
                     </div>
-                    <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>{obj.desc}</div>
-                    <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim }}>{obj.detail}</div>
+                    <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>{t(`objectives.${id}.desc`)}</div>
+                    <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim }}>{t(`objectives.${id}.detail`)}</div>
                   </button>
                 )
               })}
             </div>
-            <button onClick={() => setStep(2)} style={{ ...btnPrimary, width: '100%', padding: '14px 0' }}>SUIVANT</button>
+            <button onClick={() => setStep(2)} style={{ ...btnPrimary, width: '100%', padding: '14px 0' }}>{t('next')}</button>
           </>
         )}
 
         {/* ═══ STEP 2 — POIDS ═══ */}
         {step === 2 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>POIDS ACTUEL & CIBLE</div>
+            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step2Title')}</div>
 
-            <label style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>TON POIDS ACTUEL (KG)</label>
+            <label style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>{t('currentWeightLabel')}</label>
             <input
               type="number" value={weight}
               onChange={e => { setWeight(e.target.value); setWeightError('') }}
               style={{ ...inputStyle, width: '100%', marginBottom: 16 }}
             />
 
-            <label style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>TON POIDS CIBLE (KG)</label>
+            <label style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>{t('targetWeightLabel')}</label>
             <input
               type="number" value={targetWeight}
               onChange={e => { setTargetWeight(e.target.value); setWeightError('') }}
@@ -216,14 +206,12 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
             )}
 
             <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginBottom: 24 }}>
-              {objective === 'cut' && 'Pour une sèche, ton poids cible doit être inférieur à ton poids actuel.'}
-              {objective === 'mass' && 'Pour une prise de masse, ton poids cible doit être supérieur à ton poids actuel.'}
-              {objective === 'maintain' && 'Pour un maintien, ton poids cible peut être proche de ton poids actuel.'}
+              {t(`weightHint.${objective}`)}
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setStep(1)} style={{ ...btnSecondary, flex: 1, padding: '14px 0' }}>RETOUR</button>
-              <button onClick={() => { if (validateWeight()) setStep(3) }} style={{ ...btnPrimary, flex: 1, padding: '14px 0' }}>SUIVANT</button>
+              <button onClick={() => setStep(1)} style={{ ...btnSecondary, flex: 1, padding: '14px 0' }}>{t('back')}</button>
+              <button onClick={() => { if (validateWeight()) setStep(3) }} style={{ ...btnPrimary, flex: 1, padding: '14px 0' }}>{t('next')}</button>
             </div>
           </>
         )}
@@ -231,14 +219,14 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 3 — ACTIVITÉ ═══ */}
         {step === 3 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>NIVEAU D&apos;ACTIVITÉ</div>
+            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step3Title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-              {ACTIVITY_OPTIONS.map(opt => {
-                const selected = activity === opt.id
+              {ACTIVITY_IDS.map(id => {
+                const selected = activity === id
                 return (
                   <button
-                    key={opt.id}
-                    onClick={() => setActivity(opt.id)}
+                    key={id}
+                    onClick={() => setActivity(id)}
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       padding: '14px 16px', borderRadius: radii.button,
@@ -247,16 +235,16 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
                       cursor: 'pointer', transition: 'all 200ms',
                     }}
                   >
-                    <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: selected ? colors.gold : colors.text, letterSpacing: '0.06em' }}>{opt.label}</span>
-                    <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim }}>{opt.sub}</span>
+                    <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: selected ? colors.gold : colors.text, letterSpacing: '0.06em' }}>{t(`activity.${id}.label`)}</span>
+                    <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim }}>{t(`activity.${id}.sub`)}</span>
                   </button>
                 )
               })}
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setStep(2)} style={{ ...btnSecondary, flex: 1, padding: '14px 0' }}>RETOUR</button>
-              <button onClick={() => setStep(4)} style={{ ...btnPrimary, flex: 1, padding: '14px 0' }}>SUIVANT</button>
+              <button onClick={() => setStep(2)} style={{ ...btnSecondary, flex: 1, padding: '14px 0' }}>{t('back')}</button>
+              <button onClick={() => setStep(4)} style={{ ...btnPrimary, flex: 1, padding: '14px 0' }}>{t('next')}</button>
             </div>
           </>
         )}
@@ -264,18 +252,18 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 4 — CONFIRMATION ═══ */}
         {step === 4 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>CONFIRMATION</div>
+            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step4Title')}</div>
 
             {/* Summary card */}
             <div style={{ ...cardStyle, padding: 16, marginBottom: 16 }}>
-              <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.12em', marginBottom: 12 }}>ANCIEN → NOUVEAU</div>
+              <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.12em', marginBottom: 12 }}>{t('oldToNew')}</div>
               {[
-                { label: 'Objectif', old: objLabels[profile?.objective] || '—', new_: objLabels[objective] || '—' },
-                { label: 'Poids cible', old: goalWeight ? `${goalWeight} kg` : '—', new_: `${targetWeight} kg` },
+                { label: t('summaryObjective'), old: t(`objectives.${profile?.objective || 'maintain'}.label`), new_: t(`objectives.${objective}.label`) },
+                { label: t('summaryTargetWeight'), old: goalWeight ? `${goalWeight} kg` : '—', new_: `${targetWeight} kg` },
                 { label: 'TDEE', old: `${oldMacros.adjusted} kcal`, new_: `${newMacros.adjusted} kcal` },
-                { label: 'Protéines', old: `${oldMacros.protein}g`, new_: `${newMacros.protein}g` },
-                { label: 'Glucides', old: `${oldMacros.carbs}g`, new_: `${newMacros.carbs}g` },
-                { label: 'Lipides', old: `${oldMacros.fat}g`, new_: `${newMacros.fat}g` },
+                { label: t('summaryProtein'), old: `${oldMacros.protein}g`, new_: `${newMacros.protein}g` },
+                { label: t('summaryCarbs'), old: `${oldMacros.carbs}g`, new_: `${newMacros.carbs}g` },
+                { label: t('summaryFat'), old: `${oldMacros.fat}g`, new_: `${newMacros.fat}g` },
               ].map(row => (
                 <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid ${colors.goldDim}` }}>
                   <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{row.label}</span>
@@ -290,7 +278,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
 
             {/* Disclaimer */}
             <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, lineHeight: 1.5, marginBottom: 24, textAlign: 'center' }}>
-              Ton plan nutritionnel et tes macros seront recalculés. Ton programme d&apos;entraînement sera adapté à ton nouvel objectif.
+              {t('disclaimer')}
             </div>
 
             <button
@@ -298,9 +286,9 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
               disabled={saving}
               style={{ ...btnPrimary, width: '100%', padding: '14px 0', marginBottom: 10, opacity: saving ? 0.6 : 1 }}
             >
-              {saving ? 'MISE À JOUR...' : 'CONFIRMER LE CHANGEMENT'}
+              {saving ? t('saving') : t('confirm')}
             </button>
-            <button onClick={onClose} style={{ ...btnSecondary, width: '100%', padding: '14px 0' }}>ANNULER</button>
+            <button onClick={onClose} style={{ ...btnSecondary, width: '100%', padding: '14px 0' }}>{t('cancel')}</button>
           </>
         )}
       </div>

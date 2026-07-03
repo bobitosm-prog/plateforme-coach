@@ -1374,6 +1374,62 @@
     "logout": "LOG OUT",
     "avatarAlt": "Profile photo"
   },
+  "goals": {
+    "pageTitle": "GOALS",
+    "objectiveSection": "MY OBJECTIVE",
+    "targetsSection": "TARGETS",
+    "macrosSection": "MACROS",
+    "calorieGoal": "Calorie goal",
+    "calorieHint": "Recalculated when you change your objective. Adjusted by your weekly diagnostic.",
+    "waterGoal": "Hydration goal",
+    "protein": "Protein (g)",
+    "carbs": "Carbs (g)",
+    "fat": "Fat (g)",
+    "macrosHint": "Driven by your objective and weekly diagnostic"
+  },
+  "objectiveModal": {
+    "stepLabel": "STEP {step}/{total}",
+    "step1Title": "WHAT'S YOUR NEW GOAL?",
+    "step2Title": "CURRENT & TARGET WEIGHT",
+    "step3Title": "ACTIVITY LEVEL",
+    "step4Title": "CONFIRMATION",
+    "next": "NEXT",
+    "back": "BACK",
+    "confirm": "CONFIRM CHANGES",
+    "saving": "UPDATING...",
+    "cancel": "CANCEL",
+    "objectives": {
+      "cut": { "label": "CUT", "desc": "Lose fat, keep muscle", "detail": "Caloric deficit · HIIT cardio" },
+      "mass": { "label": "BULK", "desc": "Gain muscle, build strength", "detail": "Caloric surplus · Hypertrophy" },
+      "maintain": { "label": "MAINTAIN", "desc": "Body recomposition", "detail": "Balanced calories · Versatile" }
+    },
+    "activity": {
+      "sedentary": { "label": "Sedentary", "sub": "1-2x/week" },
+      "light": { "label": "Light", "sub": "3x/week" },
+      "moderate": { "label": "Moderate", "sub": "4-5x/week" },
+      "active": { "label": "Active", "sub": "6x/week" },
+      "extreme": { "label": "Intense", "sub": "2x/day" }
+    },
+    "currentWeightLabel": "YOUR CURRENT WEIGHT (KG)",
+    "targetWeightLabel": "YOUR TARGET WEIGHT (KG)",
+    "weightHint": {
+      "cut": "For a cut, your target weight must be lower than your current weight.",
+      "mass": "For a bulk, your target weight must be higher than your current weight.",
+      "maintain": "For maintenance, your target weight can be close to your current weight."
+    },
+    "validation": {
+      "fillBoth": "Fill in both fields",
+      "cutLower": "For a cut, target weight must be lower",
+      "massHigher": "For a bulk, target weight must be higher"
+    },
+    "oldToNew": "OLD → NEW",
+    "summaryObjective": "Objective",
+    "summaryTargetWeight": "Target weight",
+    "summaryProtein": "Protein",
+    "summaryCarbs": "Carbs",
+    "summaryFat": "Fat",
+    "disclaimer": "Your meal plan and macros will be recalculated. Your training program will be adapted to your new goal."
+  },
   "badges": {
     "title": "MY BADGES",
     "globalLevel": "GLOBAL LEVEL",
