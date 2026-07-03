@@ -1264,7 +1264,10 @@
       "reminders": "ERINNERUNGEN",
       "myCoach": "MEIN COACH",
       "subscription": "MEIN ABONNEMENT",
-      "badges": "MEINE ABZEICHEN"
+      "badges": "MEINE ABZEICHEN",
+      "preferences": "EINSTELLUNGEN",
+      "language": "SPRACHE",
+      "effort": "ANSTRENGUNG"
     },
     "fields": {
       "firstName": "Vorname",
@@ -1307,6 +1310,10 @@
       "reminderBefore": "ERINNERUNG VOR EINHEIT",
       "reminderPreview": "Erinnerung um {time} für deine Einheit um {sessionTime}",
       "iosAlert": "Um Benachrichtigungen auf dem iPhone zu aktivieren, füge zuerst MoovX zu deinem Startbildschirm hinzu: Safari > Teilen > Zum Startbildschirm"
+    },
+    "rir": {
+      "tracking": "Anstrengungs-Tracking (RIR)",
+      "advancedScale": "Numerische Skala (erweitert)"
     },
     "coach": {
       "title": "Mein Coach",

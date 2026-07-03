@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight, ChevronDown, Globe, Clock } from 'lucide-react'
-import LocaleSelector from '@/components/LocaleSelector'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight, Clock } from 'lucide-react'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 import { colors, fonts, cardStyle, radii } from '../../../lib/design-tokens'
 import { getLevelFromXP } from '../../../lib/gamification'
@@ -22,7 +21,7 @@ interface AccountTabProps {
   unreadCount: number
   supabase: any
   userId?: string
-  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback') => void
+  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences') => void
   onLogout: () => void
   isInTrial?: boolean
   trialDaysLeft?: number
@@ -55,7 +54,6 @@ export default function AccountTab({
 }: AccountTabProps) {
   const t = useTranslations('account')
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
-  const [showPrefs, setShowPrefs] = useState(false)
 
   useEffect(() => {
     if (!supabase || !userId) return
@@ -170,23 +168,12 @@ export default function AccountTab({
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
           <div style={divider} />
-          <button onClick={() => setShowPrefs(p => !p)} style={itemStyle}>
+          <button onClick={() => onNavigate('preferences')} style={itemStyle}>
             <Settings size={18} color={GOLD} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('preferences')}</span>
             <span style={{ flex: 1 }} />
-            <ChevronDown size={16} color={TEXT_DIM} style={{ transition: 'transform 150ms', transform: showPrefs ? 'rotate(180deg)' : 'none' }} />
+            <ChevronRight size={16} color={TEXT_DIM} />
           </button>
-          {showPrefs && (
-            <div style={{ padding: '12px 16px 16px', borderTop: `1px solid ${colors.divider}` }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Globe size={16} color={GOLD} />
-                  <span style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, color: TEXT_PRIMARY }}>{t('language')}</span>
-                </div>
-                <LocaleSelector />
-              </div>
-            </div>
-          )}
         </div>
 
         {/* ── COMPTE ── */}

@@ -1264,7 +1264,10 @@
       "reminders": "RAPPELS",
       "myCoach": "MON COACH",
       "subscription": "MON ABONNEMENT",
-      "badges": "MES BADGES"
+      "badges": "MES BADGES",
+      "preferences": "PRÉFÉRENCES",
+      "language": "LANGUE",
+      "effort": "EFFORT"
     },
     "fields": {
       "firstName": "Prénom",
@@ -1307,6 +1310,10 @@
       "reminderBefore": "RAPPEL AVANT SÉANCE",
       "reminderPreview": "Rappel à {time} pour ta séance de {sessionTime}",
       "iosAlert": "Pour activer les notifications sur iPhone, ajoute d'abord MoovX a ton ecran d'accueil : Safari > Partager > Sur l'ecran d'accueil"
+    },
+    "rir": {
+      "tracking": "Suivi de l'effort (RIR)",
+      "advancedScale": "Échelle chiffrée (avancé)"
     },
     "coach": {
       "title": "Mon coach",

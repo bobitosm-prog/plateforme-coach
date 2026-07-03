@@ -1264,7 +1264,10 @@
       "reminders": "REMINDERS",
       "myCoach": "MY COACH",
       "subscription": "MY SUBSCRIPTION",
-      "badges": "MY BADGES"
+      "badges": "MY BADGES",
+      "preferences": "PREFERENCES",
+      "language": "LANGUAGE",
+      "effort": "EFFORT"
     },
     "fields": {
       "firstName": "First name",
@@ -1307,6 +1310,10 @@
       "reminderBefore": "REMINDER BEFORE SESSION",
       "reminderPreview": "Reminder at {time} for your {sessionTime} session",
       "iosAlert": "To enable notifications on iPhone, first add MoovX to your home screen: Safari > Share > Add to Home Screen"
+    },
+    "rir": {
+      "tracking": "Effort tracking (RIR)",
+      "advancedScale": "Numeric scale (advanced)"
     },
     "coach": {
       "title": "My coach",
