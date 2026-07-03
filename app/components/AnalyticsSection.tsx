@@ -14,6 +14,7 @@ import { downloadCsv } from '../../lib/exportCsv'
 import { colors, fonts } from '../../lib/design-tokens'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { createBrowserClient } from '@supabase/ssr'
+import { useHasSize, SizedContainer } from './ui/SizedChart'
 
 const LIGHT_BLUE = '#7DD3FC'
 
@@ -53,6 +54,7 @@ export default function AnalyticsSection({
   weightHistoryFull, weightHistory30, wSessions,
   calorieGoal, goalWeight, waterGoal, streak, currentWeight,
 }: AnalyticsSectionProps) {
+  const { rootRef, hasSize } = useHasSize()
   const t = useTranslations('progress.analytics')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
@@ -276,7 +278,7 @@ export default function AnalyticsSection({
   const gridColor = colors.divider
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div ref={rootRef} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
       {/* STATS SUMMARY */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
@@ -320,7 +322,7 @@ export default function AnalyticsSection({
             </div>
           </div>
           {weightData.length > 1 && (
-            <ResponsiveContainer width="100%" height={180}>
+            <SizedContainer hasSize={hasSize} height={180}>
               <LineChart data={weightData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={axisStyle} interval="preserveStartEnd" />
@@ -330,7 +332,7 @@ export default function AnalyticsSection({
                 <Line type="monotone" dataKey="tendance" stroke={`${colors.gold}50`} strokeDasharray="4 4" strokeWidth={1.5} dot={false} name={t('trend')} />
                 <Line type="monotone" dataKey="poids" stroke={colors.gold} strokeWidth={2} dot={{ r: 2, fill: colors.gold }} activeDot={{ r: 4, fill: colors.gold }} name={t('weight')} />
               </LineChart>
-            </ResponsiveContainer>
+            </SizedContainer>
           )}
         </div>
       )}
@@ -339,7 +341,7 @@ export default function AnalyticsSection({
       {calData.length > 0 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>{t('calories7d')}</span>
-          <ResponsiveContainer width="100%" height={160}>
+          <SizedContainer hasSize={hasSize} height={160}>
             <BarChart data={calData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={axisStyle} />
@@ -352,7 +354,7 @@ export default function AnalyticsSection({
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </SizedContainer>
         </div>
       )}
 
@@ -360,7 +362,7 @@ export default function AnalyticsSection({
       {macroData.length > 0 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>{t('macros7d')}</span>
-          <ResponsiveContainer width="100%" height={160}>
+          <SizedContainer hasSize={hasSize} height={160}>
             <BarChart data={macroData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={axisStyle} />
@@ -370,7 +372,7 @@ export default function AnalyticsSection({
               <Bar dataKey="carbs" stackId="macro" fill={colors.blue} radius={[0, 0, 0, 0]} name={t('carbs')} />
               <Bar dataKey="fat" stackId="macro" fill={colors.orange} radius={[2, 2, 0, 0]} name={t('fat')} />
             </BarChart>
-          </ResponsiveContainer>
+          </SizedContainer>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8 }}>
             {[{ label: t('protein'), color: colors.gold }, { label: t('carbs'), color: colors.blue }, { label: t('fat'), color: colors.orange }].map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -386,7 +388,7 @@ export default function AnalyticsSection({
       {volumeData.length > 0 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>{t('trainingVolume')}</span>
-          <ResponsiveContainer width="100%" height={140}>
+          <SizedContainer hasSize={hasSize} height={140}>
             <LineChart data={volumeData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="week" tick={axisStyle} />
@@ -394,7 +396,7 @@ export default function AnalyticsSection({
               <Tooltip content={<CustomTooltip />} />
               <Line type="monotone" dataKey="volume" stroke={colors.gold} strokeWidth={2.5} dot={{ r: 4, fill: colors.gold }} name={t('volumeKg')} />
             </LineChart>
-          </ResponsiveContainer>
+          </SizedContainer>
         </div>
       )}
 
@@ -405,7 +407,7 @@ export default function AnalyticsSection({
             <Droplets size={14} color={LIGHT_BLUE} />
             <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('hydration7d')}</span>
           </div>
-          <ResponsiveContainer width="100%" height={120}>
+          <SizedContainer hasSize={hasSize} height={120}>
             <BarChart data={waterData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={axisStyle} />
@@ -414,7 +416,7 @@ export default function AnalyticsSection({
               <ReferenceLine y={waterGoal / 1000} stroke={LIGHT_BLUE} strokeDasharray="6 4" />
               <Bar dataKey="litres" fill={LIGHT_BLUE} fillOpacity={0.6} radius={[2, 2, 0, 0]} name={t('waterL')} />
             </BarChart>
-          </ResponsiveContainer>
+          </SizedContainer>
         </div>
       )}
 
@@ -443,7 +445,7 @@ export default function AnalyticsSection({
           </select>
           {selectedExercise && (byExercise[selectedExercise]?.length ?? 0) >= 2 ? (
             <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '16px 8px 8px' }}>
-              <ResponsiveContainer width="100%" height={220}>
+              <SizedContainer hasSize={hasSize} height={220}>
                 <LineChart data={byExercise[selectedExercise].map(d => ({ ...d, label: format(new Date(d.date + 'T12:00:00'), 'd MMM', { locale: dateLocale }) }))}>
                   <CartesianGrid stroke={`${colors.divider}`} strokeDasharray="3 3" />
                   <XAxis dataKey="label" tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} />
@@ -451,7 +453,7 @@ export default function AnalyticsSection({
                   <Tooltip content={<CustomTooltip />} />
                   <Line type="monotone" dataKey="e1rm" stroke={colors.gold} strokeWidth={2} dot={{ r: 3, fill: colors.gold }} name={t('exerciseProgress1rm')} />
                 </LineChart>
-              </ResponsiveContainer>
+              </SizedContainer>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '24px 0', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.82rem' }}>
@@ -471,7 +473,7 @@ export default function AnalyticsSection({
             <span style={{ fontFamily: fonts.alt, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', color: colors.textMuted, textTransform: 'uppercase' }}>{t('muscleVolumeTrailing')}</span>
           </div>
           <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '16px 8px 8px' }}>
-            <ResponsiveContainer width="100%" height={volumeByMuscle.length * 36 + 16}>
+            <SizedContainer hasSize={hasSize} height={volumeByMuscle.length * 36 + 16}>
               <BarChart data={volumeByMuscle.map(d => ({ ...d, label: getMuscleLabel(d.muscle, locale, tMuscle) || d.muscle }))} layout="vertical" margin={{ left: 8, right: 8, top: 0, bottom: 0 }}>
                 <CartesianGrid stroke={`${colors.divider}`} strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} />
@@ -488,7 +490,7 @@ export default function AnalyticsSection({
                 }} />
                 <Bar dataKey="sets" fill={colors.gold} fillOpacity={0.7} radius={[0, 4, 4, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </SizedContainer>
           </div>
         </div>
       ) : muscleMap.size > 0 ? (
@@ -507,7 +509,7 @@ export default function AnalyticsSection({
             <span style={{ fontFamily: fonts.alt, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', color: colors.textMuted, textTransform: 'uppercase' }}>{t('muscleRirTrailing')}</span>
           </div>
           <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '16px 8px 8px' }}>
-            <ResponsiveContainer width="100%" height={rirByMuscle.length * 36 + 16}>
+            <SizedContainer hasSize={hasSize} height={rirByMuscle.length * 36 + 16}>
               <BarChart data={rirByMuscle.map(d => ({ ...d, label: getMuscleLabel(d.muscle, locale, tMuscle) || d.muscle }))} layout="vertical" margin={{ left: 8, right: 8, top: 0, bottom: 0 }}>
                 <CartesianGrid stroke={`${colors.divider}`} strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" domain={[0, 4]} tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} />
@@ -524,7 +526,7 @@ export default function AnalyticsSection({
                 }} />
                 <Bar dataKey="avgRir" fill={colors.gold} fillOpacity={0.7} radius={[0, 4, 4, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </SizedContainer>
           </div>
         </div>
       ) : muscleMap.size > 0 ? (

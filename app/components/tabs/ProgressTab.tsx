@@ -16,7 +16,8 @@ import {
   titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle,
   radii,
 } from '../../../lib/design-tokens'
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts'
+import { useHasSize, SizedContainer } from '../ui/SizedChart'
 import AnalyticsSection from '../AnalyticsSection'
 import AbsCalculator from '../progress/AbsCalculator'
 import BodyAssessment from '../progress/BodyAssessment'
@@ -84,6 +85,7 @@ export default function ProgressTab({
   weightHistoryFull, wSessions, calorieGoal, goalWeight, waterGoal,
   streak, currentWeight,
 }: ProgressTabProps) {
+  const { rootRef, hasSize } = useHasSize()
   const t = useTranslations('progress')
   const locale = useLocale()
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
@@ -443,7 +445,7 @@ export default function ProgressTab({
   const deltaPositive = isBulking ? weightDelta > 0 : weightDelta < 0
 
   return (
-    <div style={{ padding: '20px 20px 120px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
+    <div ref={rootRef} style={{ padding: '20px 20px 120px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
 
       {/* ═══ SECTION 1 — HEADER ═══ */}
       <div style={{ marginBottom: 16 }}>
@@ -901,18 +903,16 @@ export default function ProgressTab({
               {/* Mood chart */}
               <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
                 <div style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>{t('tab.mood')}</div>
-                <div style={{ height: 160 }}>
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                    <AreaChart data={chartData}>
-                      <defs><linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={colors.gold} stopOpacity={0.25} /><stop offset="100%" stopColor={colors.gold} stopOpacity={0} /></linearGradient></defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="day" tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} />
-                      <YAxis domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} width={20} tickFormatter={(v: number) => ['', '😴', '😐', '💪', '🔥', '⚡'][v] || ''} />
-                      <Tooltip content={<ChartTip />} />
-                      <Area type="monotone" dataKey="mood" name={t('tab.moodChart')} stroke={colors.gold} strokeWidth={2.5} fill="url(#moodGrad)" dot={{ fill: colors.gold, r: 4, strokeWidth: 0 }} connectNulls />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                <SizedContainer hasSize={hasSize} height={160}>
+                  <AreaChart data={chartData}>
+                    <defs><linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={colors.gold} stopOpacity={0.25} /><stop offset="100%" stopColor={colors.gold} stopOpacity={0} /></linearGradient></defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                    <XAxis dataKey="day" tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} width={20} tickFormatter={(v: number) => ['', '😴', '😐', '💪', '🔥', '⚡'][v] || ''} />
+                    <Tooltip content={<ChartTip />} />
+                    <Area type="monotone" dataKey="mood" name={t('tab.moodChart')} stroke={colors.gold} strokeWidth={2.5} fill="url(#moodGrad)" dot={{ fill: colors.gold, r: 4, strokeWidth: 0 }} connectNulls />
+                  </AreaChart>
+                </SizedContainer>
               </div>
 
               {/* Sleep chart */}
@@ -921,18 +921,16 @@ export default function ProgressTab({
                   <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{t('tab.sleep')}</span>
                   <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>{t('tab.sleepAvg', { avg: sleepAvg })}</span>
                 </div>
-                <div style={{ height: 140 }}>
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                    <BarChart data={chartData} barSize={checkinPeriod <= 7 ? 20 : checkinPeriod <= 30 ? 8 : 4}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="day" tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} />
-                      <YAxis domain={[0, 12]} tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} width={20} />
-                      <Tooltip content={<ChartTip />} />
-                      <ReferenceLine y={8} stroke={colors.gold} strokeDasharray="6 4" strokeWidth={1} />
-                      <Bar dataKey="sleep" name={t('tab.sleepChart')} fill={colors.gold} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <SizedContainer hasSize={hasSize} height={140}>
+                  <BarChart data={chartData} barSize={checkinPeriod <= 7 ? 20 : checkinPeriod <= 30 ? 8 : 4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                    <XAxis dataKey="day" tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 12]} tick={{ fill: colors.textDim, fontSize: 9, fontFamily: fonts.body }} axisLine={false} tickLine={false} width={20} />
+                    <Tooltip content={<ChartTip />} />
+                    <ReferenceLine y={8} stroke={colors.gold} strokeDasharray="6 4" strokeWidth={1} />
+                    <Bar dataKey="sleep" name={t('tab.sleepChart')} fill={colors.gold} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </SizedContainer>
               </div>
 
               {/* Stats grid */}

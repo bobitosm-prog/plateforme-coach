@@ -7,9 +7,10 @@ import {
   Camera, Scale, Ruler, Clock, Zap, Star,
 } from 'lucide-react'
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, Tooltip,
   CartesianGrid, Area, AreaChart, BarChart, Bar, ReferenceLine,
 } from 'recharts'
+import { SizedContainer } from '../components/ui/SizedChart'
 import { colors, fonts } from '../../lib/design-tokens'
 import MuscleHeatMap, { calculateMuscleStatus } from '../components/ui/MuscleHeatMap'
 import { getLevelFromXP, getLevelTitle } from '../../lib/gamification'
@@ -402,8 +403,7 @@ function DashboardView({ weeklyData, weekSessions, weekCalories, weekVolume, wee
             <div key={s.l}><div style={{ fontFamily: BODY, fontSize: 9, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s.l}</div><div style={{ display: 'flex', alignItems: 'baseline', gap: 3, marginTop: 2 }}><span style={{ fontFamily: HEADLINE, fontSize: 20, fontWeight: 800, color: GOLD }}>{s.v}</span><span style={{ fontFamily: BODY, fontSize: 10, color: MUTED }}>{s.u}</span></div></div>
           ))}
         </div>
-        <div style={{ height: 200 }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <SizedContainer hasSize={true} height={200}>
             <AreaChart data={weeklyData.length > 0 ? weeklyData : DAYS_FR.map(d => ({ day: d, calories: 0, volume: 0 }))}>
               <defs><linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={GOLD} stopOpacity={0.3} /><stop offset="100%" stopColor={GOLD} stopOpacity={0} /></linearGradient></defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -413,8 +413,7 @@ function DashboardView({ weeklyData, weekSessions, weekCalories, weekVolume, wee
               <Area type="monotone" dataKey="calories" name="Calories" stroke={GOLD} strokeWidth={2.5} fill="url(#goldGrad)" dot={{ fill: GOLD, r: 4, strokeWidth: 0 }} activeDot={{ r: 6, fill: GOLD, stroke: BG, strokeWidth: 2 }} />
               <Line type="monotone" dataKey="volume" name="Volume (kg)" stroke="rgba(255,255,255,0.35)" strokeWidth={1.5} dot={{ fill: 'rgba(255,255,255,0.35)', r: 3, strokeWidth: 0 }} strokeDasharray="4 4" />
             </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        </SizedContainer>
       </Card>
       <Card span={4} style={{ minHeight: 320, display: 'flex', flexDirection: 'column' }}>
         <CardTitle title="Metriques Cles" />
@@ -608,8 +607,7 @@ function TrainingView({ todaySessionInfo, todaySessionDone, weekProgram, todayKe
       {/* Volume chart */}
       <Card span={12} style={{ minHeight: 200 }}>
         <CardTitle title="Volume par Semaine" />
-        <div style={{ height: 160 }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <SizedContainer hasSize={true} height={160}>
             <BarChart data={weeklyVolume?.length > 0 ? weeklyVolume : [{ week: 'Sem.', volume: 0 }]}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
               <XAxis dataKey="week" tick={{ fill: MUTED, fontSize: 10, fontFamily: BODY }} axisLine={false} tickLine={false} tickFormatter={(v: string) => { const d = new Date(v); return d.getDate ? `S${Math.ceil(d.getDate() / 7)}` : v }} />
@@ -617,8 +615,7 @@ function TrainingView({ todaySessionInfo, todaySessionDone, weekProgram, todayKe
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="volume" name="Volume (kg)" fill={GOLD} radius={[4, 4, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
-        </div>
+        </SizedContainer>
       </Card>
     </div>
   )
@@ -633,8 +630,7 @@ function ProgressView({ weightHistory, currentWeight, goalWeight, bodyFat, bmi, 
       {/* Weight chart */}
       <Card span={8} style={{ minHeight: 320 }}>
         <CardTitle title="Evolution du Poids" />
-        <div style={{ height: 260 }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <SizedContainer hasSize={true} height={260}>
             <AreaChart data={weightHistory?.length > 0 ? weightHistory.map((w: any) => ({ ...w, date: new Date(w.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) })) : [{ date: '-', poids: 0 }]}>
               <defs><linearGradient id="wGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={GOLD} stopOpacity={0.2} /><stop offset="100%" stopColor={GOLD} stopOpacity={0} /></linearGradient></defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -643,8 +639,7 @@ function ProgressView({ weightHistory, currentWeight, goalWeight, bodyFat, bmi, 
               <Tooltip content={<ChartTooltip />} />
               <Area type="monotone" dataKey="poids" name="Poids (kg)" stroke={GOLD} strokeWidth={2.5} fill="url(#wGrad)" dot={{ fill: GOLD, r: 3, strokeWidth: 0 }} />
             </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        </SizedContainer>
       </Card>
       {/* Stats */}
       <Card span={4} style={{ minHeight: 320 }}>
@@ -796,8 +791,7 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
       {/* Weekly calories chart — self-fetched */}
       <Card span={12} style={{ minHeight: 220 }}>
         <CardTitle title="Calories Hebdomadaires" />
-        <div style={{ height: 170 }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <SizedContainer hasSize={true} height={170}>
             <BarChart data={weekChart.length > 0 ? weekChart : [{ day: '-', calories: 0 }]} barSize={32}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(201,168,76,0.08)" />
               <XAxis dataKey="day" tick={{ fill: MUTED, fontSize: 10, fontFamily: BODY }} axisLine={false} tickLine={false} />
@@ -806,8 +800,7 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
               <ReferenceLine y={calorieGoal} stroke={GOLD} strokeDasharray="6 4" strokeWidth={1} label={{ value: `Obj: ${calorieGoal}`, fill: MUTED, fontSize: 9, position: 'right' }} />
               <Bar dataKey="calories" name="Calories" fill={GOLD} radius={[6, 6, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
-        </div>
+        </SizedContainer>
       </Card>
     </div>
   )
@@ -948,3 +941,4 @@ function SettingsView({ profile, onNavigate, setModal }: any) {
     </div>
   )
 }
+

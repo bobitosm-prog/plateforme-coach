@@ -1,8 +1,9 @@
 'use client'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
+  Tooltip,
 } from 'recharts'
+import { SizedContainer } from '../../components/ui/SizedChart'
 
 const MONTH_LABELS = ['Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Dec']
 
@@ -93,8 +94,8 @@ export function RevenueChart({ data, loading }: Props) {
   }))
 
   return (
-    <div className="h-[280px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full">
+      <SizedContainer hasSize={true} height={280}>
         <AreaChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="grossGradient" x1="0" y1="0" x2="0" y2="1">
@@ -155,7 +156,7 @@ export function RevenueChart({ data, loading }: Props) {
             activeDot={{ r: 4, fill: '#34d399', stroke: '#15110B', strokeWidth: 2 }}
           />
         </AreaChart>
-      </ResponsiveContainer>
+      </SizedContainer>
     </div>
   )
 }

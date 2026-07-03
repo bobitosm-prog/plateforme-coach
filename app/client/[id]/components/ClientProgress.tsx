@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, BarChart, Bar, Cell } from 'recharts'
+import { SizedContainer } from '@/app/components/ui/SizedChart'
 import { Scale, Ruler, Camera, Dumbbell } from 'lucide-react'
 import { formatRelativeTime } from '@/lib/formatRelativeTime'
 import { BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_ALT, FONT_BODY, RADIUS_CARD } from '@/lib/design-tokens'
@@ -223,7 +224,7 @@ function HeatmapSection({ sessions, isMobile }: { sessions: { created_at: string
 }
 
 /* ── Top muscles chart ── */
-function TopMusclesSection({ sessions, isMobile }: { sessions: { muscles_worked?: string[] | null }[]; isMobile: boolean }) {
+function TopMusclesSection({ sessions, isMobile, hasSize = true }: { sessions: { muscles_worked?: string[] | null }[]; isMobile: boolean; hasSize?: boolean }) {
   const counts: Record<string, number> = {}
   for (const s of sessions) {
     for (const m of (s.muscles_worked || [])) {
@@ -238,24 +239,22 @@ function TopMusclesSection({ sessions, isMobile }: { sessions: { muscles_worked?
   return (
     <section style={sectionStyle}>
       <h3 style={headingStyle}>TOP MUSCLES TRAVAILLES</h3>
-      <div style={{ height: isMobile ? 140 : 160 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ left: isMobile ? 60 : 80, right: 16, top: 0, bottom: 0 }}>
-            <XAxis type="number" stroke={TEXT_DIM} fontSize={10} allowDecimals={false} />
-            <YAxis type="category" dataKey="name" stroke={TEXT_DIM} fontSize={isMobile ? 9 : 11} width={isMobile ? 55 : 75} />
-            <Tooltip
-              contentStyle={{ background: '#0D0B08', border: `1px solid ${GOLD}`, borderRadius: 8 }}
-              labelStyle={{ color: GOLD }}
-              itemStyle={{ color: TEXT_PRIMARY }}
-            />
-            <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-              {data.map((_, i) => (
-                <Cell key={i} fill={GOLD} fillOpacity={1 - i * 0.15} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <SizedContainer hasSize={true} height={isMobile ? 140 : 160}>
+        <BarChart data={data} layout="vertical" margin={{ left: isMobile ? 60 : 80, right: 16, top: 0, bottom: 0 }}>
+          <XAxis type="number" stroke={TEXT_DIM} fontSize={10} allowDecimals={false} />
+          <YAxis type="category" dataKey="name" stroke={TEXT_DIM} fontSize={isMobile ? 9 : 11} width={isMobile ? 55 : 75} />
+          <Tooltip
+            contentStyle={{ background: '#0D0B08', border: `1px solid ${GOLD}`, borderRadius: 8 }}
+            labelStyle={{ color: GOLD }}
+            itemStyle={{ color: TEXT_PRIMARY }}
+          />
+          <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={GOLD} fillOpacity={1 - i * 0.15} />
+            ))}
+          </Bar>
+        </BarChart>
+      </SizedContainer>
     </section>
   )
 }
@@ -290,31 +289,29 @@ export default function ClientProgress({
       <HeatmapSection sessions={completedSessions} isMobile={isMobile} />
 
       {/* Section 0b — Top muscles */}
-      <TopMusclesSection sessions={completedSessions} isMobile={isMobile} />
+      <TopMusclesSection sessions={completedSessions} isMobile={isMobile} hasSize={true} />
 
       {/* Section 1 — Weight evolution */}
       <section style={sectionStyle}>
         <h3 style={headingStyle}>EVOLUTION DU POIDS</h3>
         {chartData.length > 0 ? (
           <>
-            <div style={{ height: 200 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                  <XAxis dataKey="label" stroke={TEXT_DIM} fontSize={10} />
-                  <YAxis stroke={TEXT_DIM} fontSize={10} domain={['dataMin - 1', 'dataMax + 1']} />
-                  <Tooltip
-                    contentStyle={{ background: '#0D0B08', border: `1px solid ${GOLD}`, borderRadius: 8 }}
-                    labelStyle={{ color: GOLD }}
-                    itemStyle={{ color: TEXT_PRIMARY }}
-                  />
-                  <Line type="monotone" dataKey="poids" stroke={GOLD} strokeWidth={2} dot={{ fill: GOLD, r: 3 }} />
-                  {targetWeight != null && (
-                    <ReferenceLine y={targetWeight} stroke={GOLD} strokeDasharray="6 4" strokeOpacity={0.5} label={{ value: 'Objectif', fill: TEXT_DIM, fontSize: 10, position: 'right' }} />
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <SizedContainer hasSize={true} height={200}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                <XAxis dataKey="label" stroke={TEXT_DIM} fontSize={10} />
+                <YAxis stroke={TEXT_DIM} fontSize={10} domain={['dataMin - 1', 'dataMax + 1']} />
+                <Tooltip
+                  contentStyle={{ background: '#0D0B08', border: `1px solid ${GOLD}`, borderRadius: 8 }}
+                  labelStyle={{ color: GOLD }}
+                  itemStyle={{ color: TEXT_PRIMARY }}
+                />
+                <Line type="monotone" dataKey="poids" stroke={GOLD} strokeWidth={2} dot={{ fill: GOLD, r: 3 }} />
+                {targetWeight != null && (
+                  <ReferenceLine y={targetWeight} stroke={GOLD} strokeDasharray="6 4" strokeOpacity={0.5} label={{ value: 'Objectif', fill: TEXT_DIM, fontSize: 10, position: 'right' }} />
+                )}
+              </LineChart>
+            </SizedContainer>
             <div style={{ display: 'flex', gap: 20, marginTop: 12, fontSize: 12, color: TEXT_MUTED, fontFamily: FONT_BODY, flexWrap: 'wrap' }}>
               {startWeight != null && <span>Initial : <b style={{ color: TEXT_PRIMARY }}>{startWeight} kg</b></span>}
               {currentWeight != null && <span>Actuel : <b style={{ color: TEXT_PRIMARY }}>{currentWeight} kg</b></span>}
