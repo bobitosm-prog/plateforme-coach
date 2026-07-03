@@ -2052,7 +2052,11 @@
       "muscleVolumeTitle": "Volumen pro Muskel",
       "muscleVolumeTrailing": "28 TAGE",
       "muscleVolumeEmpty": "Keine Muskeldaten der letzten 28 Tage",
-      "muscleVolumeSets": "{sets} Sätze · {tonnage} kg"
+      "muscleVolumeSets": "{sets} Sätze · {tonnage} kg",
+      "muscleRirTitle": "Intensität pro Muskel",
+      "muscleRirTrailing": "28 TAGE",
+      "muscleRirEmpty": "Trage deinen RIR im Training ein, um diese Analyse freizuschalten",
+      "muscleRirTooltip": "RIR {rir} · {count} bewertete Sätze"
     },
     "bodyAssessment": {
       "title": "VOLLSTÄNDIGE KÖRPERANALYSE",

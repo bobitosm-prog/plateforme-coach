@@ -2052,7 +2052,11 @@
       "muscleVolumeTitle": "Volume by muscle",
       "muscleVolumeTrailing": "28 DAYS",
       "muscleVolumeEmpty": "No muscle data for the last 28 days",
-      "muscleVolumeSets": "{sets} sets · {tonnage} kg"
+      "muscleVolumeSets": "{sets} sets · {tonnage} kg",
+      "muscleRirTitle": "Intensity by muscle",
+      "muscleRirTrailing": "28 DAYS",
+      "muscleRirEmpty": "Log your RIR during sessions to unlock this analysis",
+      "muscleRirTooltip": "RIR {rir} · {count} rated sets"
     },
     "bodyAssessment": {
       "title": "FULL BODY ASSESSMENT",

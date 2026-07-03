@@ -2052,7 +2052,11 @@
       "muscleVolumeTitle": "Volume par muscle",
       "muscleVolumeTrailing": "28 JOURS",
       "muscleVolumeEmpty": "Pas de données musculaires sur les 28 derniers jours",
-      "muscleVolumeSets": "{sets} sets · {tonnage} kg"
+      "muscleVolumeSets": "{sets} sets · {tonnage} kg",
+      "muscleRirTitle": "Intensité par muscle",
+      "muscleRirTrailing": "28 JOURS",
+      "muscleRirEmpty": "Note ton RIR en séance pour débloquer cette analyse",
+      "muscleRirTooltip": "RIR {rir} · {count} sets notés"
     },
     "bodyAssessment": {
       "title": "BILAN CORPOREL COMPLET",

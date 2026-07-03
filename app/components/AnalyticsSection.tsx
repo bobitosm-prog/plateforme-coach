@@ -9,7 +9,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts'
-import { Trophy, TrendingUp, Flame, Dumbbell, Download, Droplets, BarChart3 } from 'lucide-react'
+import { Trophy, TrendingUp, Flame, Dumbbell, Download, Droplets, BarChart3, Activity } from 'lucide-react'
 import { downloadCsv } from '../../lib/exportCsv'
 import { colors, fonts } from '../../lib/design-tokens'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
@@ -132,6 +132,30 @@ export default function AnalyticsSection({
     return Object.entries(agg)
       .map(([muscle, v]) => ({ muscle, sets: v.sets, tonnage: Math.round(v.tonnage) }))
       .sort((a, b) => b.sets - a.sets)
+  }, [wSessions, muscleMap])
+
+  // -- RIR by muscle (28 days) --
+  const RIR_MIN_SETS_FOR_AVG = 5 // Moyenne non significative sous 5 sets notés — muscle masqué
+  const rirByMuscle = useMemo(() => {
+    if (muscleMap.size === 0) return []
+    const cutoff = Date.now() - 28 * 86400000
+    const agg: Record<string, { sum: number; count: number }> = {}
+    for (const sess of wSessions) {
+      for (const s of (sess.workout_sets || [])) {
+        if (!s.completed || !s.exercise_id || s.rir == null) continue
+        const date = new Date(s.created_at || sess.created_at || '').getTime()
+        if (!date || date < cutoff) continue
+        const muscle = muscleMap.get(s.exercise_id)
+        if (!muscle) continue
+        if (!agg[muscle]) agg[muscle] = { sum: 0, count: 0 }
+        agg[muscle].sum += s.rir
+        agg[muscle].count += 1
+      }
+    }
+    return Object.entries(agg)
+      .filter(([, v]) => v.count >= RIR_MIN_SETS_FOR_AVG)
+      .map(([muscle, v]) => ({ muscle, avgRir: Math.round(v.sum / v.count * 10) / 10, count: v.count }))
+      .sort((a, b) => a.avgRir - b.avgRir)
   }, [wSessions, muscleMap])
 
   // -- Weight chart data --
@@ -470,6 +494,42 @@ export default function AnalyticsSection({
       ) : muscleMap.size > 0 ? (
         <div style={{ textAlign: 'center', padding: '24px 0', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.82rem' }}>
           {t('muscleVolumeEmpty')}
+        </div>
+      ) : null}
+
+      {/* MUSCLE RIR */}
+      {rirByMuscle.length > 0 ? (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <Activity size={16} color={colors.gold} />
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('muscleRirTitle')}</span>
+            <div style={{ flex: 1 }} />
+            <span style={{ fontFamily: fonts.alt, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', color: colors.textMuted, textTransform: 'uppercase' }}>{t('muscleRirTrailing')}</span>
+          </div>
+          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '16px 8px 8px' }}>
+            <ResponsiveContainer width="100%" height={rirByMuscle.length * 36 + 16}>
+              <BarChart data={rirByMuscle.map(d => ({ ...d, label: getMuscleLabel(d.muscle, locale, tMuscle) || d.muscle }))} layout="vertical" margin={{ left: 8, right: 8, top: 0, bottom: 0 }}>
+                <CartesianGrid stroke={`${colors.divider}`} strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" domain={[0, 4]} tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} />
+                <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} width={90} />
+                <Tooltip content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null
+                  const d = payload[0].payload
+                  return (
+                    <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: '8px 12px', fontSize: '0.72rem', fontFamily: fonts.body }}>
+                      <div style={{ color: colors.gold, fontWeight: 600 }}>{d.label}</div>
+                      <div style={{ color: colors.text }}>{t('muscleRirTooltip', { rir: d.avgRir, count: d.count })}</div>
+                    </div>
+                  )
+                }} />
+                <Bar dataKey="avgRir" fill={colors.gold} fillOpacity={0.7} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : muscleMap.size > 0 ? (
+        <div style={{ textAlign: 'center', padding: '24px 0', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.82rem' }}>
+          {t('muscleRirEmpty')}
         </div>
       ) : null}
 
