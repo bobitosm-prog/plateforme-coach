@@ -4,17 +4,70 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-07-02
-- **HEAD** : 0334adf (feat(training): propagate exercise_id from program to workout_sets insert)
+- **Date** : 2026-07-03
+- **HEAD** : (pending commit — R4a canonicalize objective)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 02/07 — Chantier fragmentation noms d'exercices : étapes A + B (matching normalisé, dédup catalogue, exercise_id FK, générateur contraint, propagation sets). 5 commits.
+- **Dernière session** : 03/07 — Analytics muscle (duo backfill C) + refonte Compte R0→R4a (XP unifié, hub Direction B, pages Préférences + Compte extraites, objective canonisé).
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-07-03 — Analytics muscle (duo backfill C) + refonte Compte R0→R4a [PROD]
+
+### Analytics #1 + #4 [PROD]
+#1 Volume par muscle (afba78c) : bar chart 28j sets+tonnage, jointure
+exercise_id→muscle_group — première feature exploitant le backfill C. Sets sans
+id ignorés (pas de bucket Autre v1). Catalogue fetché dans le composant
+(isolation, zéro modif useClientDashboard). Validé device FR+EN, comptes = audit SQL.
+#4 Intensité RIR par muscle (dd36c09) : quasi-clone, tri RIR croissant (muscle le
+plus proche de l'échec en tête), domaine X fixe [0,4], seuil 5 sets notés (Mollets
+masqué à 4 = borne testée). Insight immédiat : RIR moyen 0.2-0.7 partout →
+entraînement à l'échec chronique rendu visible.
+
+### Refonte Compte — audit + R0→R4a [PROD]
+AUDIT complet : ProfileTab = fourre-tout 900 lignes (5/6 catégories de l'app),
+Objectifs = placeholder alert(), 2 systèmes XP divergents, réglages mal rangés.
+Architecture cible validée : Profil / Objectifs / Préférences / Compte.
+R0 (6f800f9) : unification niveau XP sur getLevelFromXP (géométrique x1.3).
+  getLevelInfo/LEVELS supprimés (paliers concurrents, hub NIVEAU 8 vs badges LV.6
+  pour le même total_xp, user_xp.level oscillait selon le writer). 3 consommateurs
+  basculés. Régression i18n titres attrapée en review (getLevelTitle FR en dur →
+  badges.levelTitles x3 JSON).
+R1 (2028654) : hub AccountTab sur le langage Direction B (SectionTitle, cardStyle).
+R2 (b0e66a5) : page Préférences créée — Langue (LocaleSelector déménagé, code
+  intouché) + Rappels (enableNotifications déménagé en entier) + Effort (RIR).
+  ProfileTab -185 lignes. Fix i18n : labels RIR en dur depuis mi-juin, révélés
+  par le déménagement. PIÈGE : messages JSON chargés au boot serveur, pas HMR →
+  restart obligatoire avant de juger le device.
+R3 (a5ea923) : page Compte — abonnement (handleSubscribe à l'identique, zéro
+  Stripe modifié) + paiements + déconnexion (clearAll préservé) + suppression.
+  Doublon Déconnexion résorbé. ProfileTab -88 lignes. Fix B2 (date null ≠
+  expiration : ligne + alerte masquées) + B3 (paiement sans date → 'Tentative').
+R4a : canonisation profiles.objective sur cut/mass/maintain. 4 vocabulaires +
+  texte libre en base (fragmentation exercices version enum). Migration
+  idempotente : 7 profils migrés (contrôle mass 5/cut 3/null 3/maintain 2).
+  Gardes mortes analyze-progress-photo réparées (includes('masse'/'perte') ne
+  matchait RIEN). Writers onboarding corrigés. ObjectiveModal = référence.
+
+### Reste — chantier Compte
+R4b : construire la page Objectifs (ObjectiveModal réutilisé + activity_level
+  déménagés de Mon profil ; cibles target_weight/calorie_goal avec mention
+  diagnostic/water_goal éditables ; macros protein/carbs/fat LECTURE SEULE —
+  pilotées par le Weekly Diagnostic, édition manuelle entrerait en guerre avec
+  le Closed Loop). Trigger guard ne bloque PAS ces colonnes → updateProfile
+R4b — précision Marco 03/07 : Poids cible + Objectif + Niveau d'activité
+  QUITTENT la carte Mon profil (déménagement vers GoalsSection, pas de doublon).
+  Mon profil ne garde que l'identité/corps : prénom, naissance, genre, taille,
+  poids actuel, téléphone.
+  direct OK. Résidu à corriger : NutritionPreferences L231 écrit weight_loss
+  vers meal-plan API. Dette : colonne profiles.goal morte (null partout).
+R5 : dette notifs (re-sync push subscriptions au boot) + warnings Recharts
+  (charts montés en tab caché, width -1) + CHECK constraint objective
+  (après R4b). Dette UX : FAB Athena peut masquer du contenu bas de page.
 
 ## 2026-07-02 — Chantier fragmentation noms d'exercices : étapes A + B [PROD]
 
