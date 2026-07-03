@@ -31,7 +31,7 @@ export default function PaymentHistory({ supabase, userId }: { supabase: any; us
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: BG_BASE, borderRadius: RADIUS_CARD, border: `1px solid ${BORDER}` }}>
                 <div>
                   <div style={{ fontSize: '0.82rem', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 400 }}>CHF {p.amount || 30}</div>
-                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2, fontFamily: FONT_BODY, fontWeight: 300 }}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString(locale) : '—'}</div>
+                  <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2, fontFamily: FONT_BODY, fontWeight: 300 }}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString(locale) : t('noDate')}</div>
                 </div>
                 <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: statusColor, background: `${statusColor}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>{statusLabel}</span>
               </div>

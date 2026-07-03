@@ -1,17 +1,11 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { LogOut, Zap, ChevronRight, Crown, X, Clock, Calendar, User, Cake, Ruler, Target, Activity, ArrowLeft } from 'lucide-react'
-import Paywall from '../Paywall'
-import { RailOverlay } from '../ui/RailOverlay'
-import ClientIntlProvider from '@/components/ClientIntlProvider'
-import { cache } from '../../../lib/cache'
+import { Zap, ChevronRight, Crown, Clock, Calendar, User, Cake, Ruler, Target, Activity, ArrowLeft } from 'lucide-react'
 import { colors, fonts, titleStyle, titleLineStyle, subtitleStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, cardTitleAbove, radii } from '../../../lib/design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
 import SwissBadge from '../ui/SwissBadge'
 import CoachSection from './profile/CoachSection'
-import PaymentHistory from './profile/PaymentHistory'
-import DeleteAccountSection from './profile/DeleteAccountSection'
 import BadgesModal from '../BadgesModal'
 import BadgeCelebration from '../BadgeCelebration'
 import { checkAndUnlockBadges, type Badge } from '../../../lib/check-badges'
@@ -46,7 +40,6 @@ export default function ProfileTab({
   const locale = useLocale()
   const [phoneForm, setPhoneForm] = useState<string>(profile?.phone || '')
   const [phoneEditing, setPhoneEditing] = useState(false)
-  const [showPaywall, setShowPaywall] = useState(false)
   const [unlockedBadgeIds, setUnlockedBadgeIds] = useState<Set<string>>(new Set())
   const [allBadges, setAllBadges] = useState<Badge[]>([])
   const [totalXp, setTotalXp] = useState(0)
@@ -243,79 +236,6 @@ export default function ProfileTab({
         </>
       )}
 
-      {/* ═══ SECTION 8 — MON ABONNEMENT ═══ */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={cardTitleAbove}>{t('sections.subscription')}</span>
-        <div style={titleLineStyle} />
-      </div>
-      <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
-        {(() => {
-          const st = profile?.subscription_status
-          const subType = profile?.subscription_type
-          const days = profile?.subscription_end_date ? Math.max(0, Math.ceil((new Date(profile.subscription_end_date).getTime() - Date.now()) / 86400000)) : 0
-          const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date).toLocaleDateString(locale) : ''
-
-          if (st === 'lifetime') return (
-            <div>
-              <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{t('subscription.lifetime')}</span>
-              <p style={{ fontSize: 12, color: colors.text, margin: 0, lineHeight: 1.6 }}>{t('subscription.lifetimeDesc')}</p>
-            </div>
-          )
-
-          if (st === 'invited' || subType === 'invited') return (
-            <div>
-              <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{t('subscription.coachAccess')}</span>
-              <p style={{ fontSize: 12, color: colors.text, margin: 0 }}>{t('subscription.coachAccessDesc')}</p>
-            </div>
-          )
-
-          if (st === 'active') {
-            const planLabel = subType === 'client_yearly' ? t('subscription.planYearly') : subType === 'coach_monthly' ? t('subscription.planCoach') : t('subscription.planMonthly')
-            return (
-              <div>
-                <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{planLabel}</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 800, color: colors.text }}>{days}</span>
-                  <span style={{ ...mutedStyle, fontSize: 12 }}>{t('subscription.daysRemaining', { days: '' }).trimStart()}</span>
-                </div>
-                <div style={{ ...mutedStyle, fontSize: 10, marginBottom: days <= 7 ? 10 : 0 }}>{t('subscription.renewalDate', { date: endDate })}</div>
-                {days <= 7 && (
-                  <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', borderRadius: 12, padding: 10, marginBottom: 10 }}>
-                    <span style={{ fontSize: 10, color: 'rgba(239,68,68,0.6)' }}>{t('subscription.expiringSoon')}</span>
-                  </div>
-                )}
-                <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: 12, borderRadius: radii.button, background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer', textTransform: 'uppercase' as const, marginTop: 4 }}>
-                  {t('subscription.manageSubscription')}
-                </button>
-              </div>
-            )
-          }
-
-          return (
-            <div>
-              <p style={{ ...mutedStyle, fontSize: 12, margin: '0 0 14px', lineHeight: 1.5 }}>{t('subscription.subscribePrompt')}</p>
-              <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: 14, background: colors.gold, border: 'none', borderRadius: radii.button, color: colors.onGold, fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.08em' }}>
-                {t('subscription.subscribeCta')}
-              </button>
-            </div>
-          )
-        })()}
-      </div>
-
-      {/* Paywall modal */}
-      {showPaywall && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, overflowY: 'auto' }}>
-          <button onClick={() => setShowPaywall(false)} style={{ position: 'fixed', top: 16, right: 16, zIndex: 1001, width: 36, height: 36, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color={colors.textMuted} />
-          </button>
-          <ClientIntlProvider>
-            <Paywall role="client" userId={session?.user?.id} coachId={coachId} onSignOut={() => setShowPaywall(false)} />
-          </ClientIntlProvider>
-        </div>
-      </RailOverlay>)}
-
-      {/* ═══ SECTION 9 — PAIEMENTS ═══ */}
-      <PaymentHistory supabase={supabase} userId={session?.user?.id} />
 
       {/* ═══ SECTION 10 — MES BADGES ═══ */}
       {(() => {
@@ -374,12 +294,6 @@ export default function ProfileTab({
         }} />
       )}
 
-      {/* ═══ SECTION 11 — ZONE DANGER ═══ */}
-      <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
-        style={{ width: '100%', padding: 16, borderRadius: radii.button, background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer', textTransform: 'uppercase' as const, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 24 }}>
-        <LogOut size={16} /> {t('logout')}
-      </button>
-      <DeleteAccountSection session={session} />
     </div>
   )
 }

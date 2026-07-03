@@ -33,6 +33,7 @@ import ProgressTab from './components/tabs/ProgressTab'
 import ProfileTab from './components/tabs/ProfileTab'
 import MessagesTab from './components/tabs/MessagesTab'
 import PreferencesSection from './components/tabs/profile/PreferencesSection'
+import AccountSection from './components/tabs/profile/AccountSection'
 import AccountTab from './components/tabs/AccountTab'
 import DesktopDashboard from './(dashboard)/page-desktop'
 
@@ -603,7 +604,7 @@ export default function CoachApp() {
 
       {/* ── TAB CONTENT — rail horizontal (S1 swipe nav) ── */}
       {/* Sous-écrans (hors rail) */}
-      {(h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences') && (
+      {(h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section') && (
         <main className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <AnimatePresence mode="wait">
             <motion.div key={h.activeTab} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}>
@@ -611,13 +612,14 @@ export default function CoachApp() {
               {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isInvited={perms.isInvited} onBack={() => h.setActiveTab('compte')} />}
               {h.activeTab === 'feedback' && <FeedbackTab onBack={() => h.setActiveTab('compte')} />}
               {h.activeTab === 'preferences' && <PreferencesSection supabase={h.supabase} session={h.session} profile={h.profile} updateReminderSettings={h.updateReminderSettings} updateRirSettings={h.updateRirSettings} onBack={() => h.setActiveTab('compte')} />}
+              {h.activeTab === 'account_section' && <AccountSection supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => h.setActiveTab('compte')} />}
             </motion.div>
           </AnimatePresence>
         </main>
       )}
 
       {/* Rail horizontal — 5 onglets racine (lazy keep-alive) */}
-      <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences') ? 'none' : 'flex' }}>
+      <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section') ? 'none' : 'flex' }}>
         <motion.div
           ref={railDivRef}
           style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: railX, touchAction: 'pan-y' }}
@@ -638,7 +640,7 @@ export default function CoachApp() {
             {visitedTabs.current.has('progress') && <ProgressTab supabase={h.supabase} session={h.session} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} deletePhoto={h.deletePhoto} setModal={h.setModal} chartMin={h.chartMin} chartMax={h.chartMax} onRefresh={h.fetchAll} profile={h.profile} coachId={h.coachId} personalRecords={h.personalRecords} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weeklyVolume={h.weeklyVolume} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} calorieGoal={h.calorieGoal} goalWeight={h.goalWeight} waterGoal={h.profile?.water_goal || 3000} streak={h.streak} currentWeight={h.currentWeight} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} onNavigate={(tab) => h.setActiveTab(tab)} onLogout={async () => { cache.clearAll(); await h.supabase.auth.signOut(); window.location.href = '/login' }} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
+            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} onNavigate={(tab) => h.setActiveTab(tab)} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
           </div>
         </motion.div>
       </main>

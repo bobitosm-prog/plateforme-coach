@@ -1267,7 +1267,8 @@
       "badges": "MY BADGES",
       "preferences": "PREFERENCES",
       "language": "LANGUAGE",
-      "effort": "EFFORT"
+      "effort": "EFFORT",
+      "account": "ACCOUNT"
     },
     "fields": {
       "firstName": "First name",
@@ -1349,7 +1350,8 @@
       "empty": "No payments recorded",
       "statusPaid": "Paid",
       "statusRefunded": "Refunded",
-      "statusFailed": "Failed"
+      "statusFailed": "Failed",
+      "noDate": "Attempt"
     },
     "delete": {
       "button": "Delete my account",

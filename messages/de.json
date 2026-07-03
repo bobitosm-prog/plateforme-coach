@@ -1267,7 +1267,8 @@
       "badges": "MEINE ABZEICHEN",
       "preferences": "EINSTELLUNGEN",
       "language": "SPRACHE",
-      "effort": "ANSTRENGUNG"
+      "effort": "ANSTRENGUNG",
+      "account": "KONTO"
     },
     "fields": {
       "firstName": "Vorname",
@@ -1349,7 +1350,8 @@
       "empty": "Keine Zahlungen verzeichnet",
       "statusPaid": "Bezahlt",
       "statusRefunded": "Erstattet",
-      "statusFailed": "Fehlgeschlagen"
+      "statusFailed": "Fehlgeschlagen",
+      "noDate": "Versuch"
     },
     "delete": {
       "button": "Mein Konto löschen",

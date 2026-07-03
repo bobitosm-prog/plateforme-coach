@@ -1267,7 +1267,8 @@
       "badges": "MES BADGES",
       "preferences": "PRÉFÉRENCES",
       "language": "LANGUE",
-      "effort": "EFFORT"
+      "effort": "EFFORT",
+      "account": "COMPTE"
     },
     "fields": {
       "firstName": "Prénom",
@@ -1349,7 +1350,8 @@
       "empty": "Aucun paiement enregistre",
       "statusPaid": "Paye",
       "statusRefunded": "Rembourse",
-      "statusFailed": "Echoue"
+      "statusFailed": "Echoue",
+      "noDate": "Tentative"
     },
     "delete": {
       "button": "Supprimer mon compte",

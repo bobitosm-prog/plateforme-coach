@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, LogOut, ChevronRight, Clock } from 'lucide-react'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock } from 'lucide-react'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 import { colors, fonts, cardStyle, radii } from '../../../lib/design-tokens'
 import { getLevelFromXP } from '../../../lib/gamification'
@@ -21,8 +21,7 @@ interface AccountTabProps {
   unreadCount: number
   supabase: any
   userId?: string
-  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences') => void
-  onLogout: () => void
+  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section') => void
   isInTrial?: boolean
   trialDaysLeft?: number
   isInBeta?: boolean
@@ -49,7 +48,7 @@ const divider: React.CSSProperties = {
 }
 
 export default function AccountTab({
-  firstName, displayAvatar, unreadCount, supabase, userId, onNavigate, onLogout,
+  firstName, displayAvatar, unreadCount, supabase, userId, onNavigate,
   isInTrial, trialDaysLeft, isInBeta, betaDaysLeft,
 }: AccountTabProps) {
   const t = useTranslations('account')
@@ -179,9 +178,11 @@ export default function AccountTab({
         {/* ── COMPTE ── */}
         <SectionTitle noPadding title={t('accountSection')} />
         <div style={menuCard}>
-          <button onClick={onLogout} style={itemStyle}>
-            <LogOut size={18} color={colors.error} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: colors.error }}>{t('signOut')}</span>
+          <button onClick={() => onNavigate('account_section')} style={itemStyle}>
+            <Settings size={18} color={GOLD} />
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('accountSection')}</span>
+            <span style={{ flex: 1 }} />
+            <ChevronRight size={16} color={TEXT_DIM} />
           </button>
         </div>
 
