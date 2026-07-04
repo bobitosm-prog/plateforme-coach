@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import AnalyticsGate from "@/components/AnalyticsGate";
 import { WebVitals } from "./web-vitals";
+import AppErrorBoundary from "./components/ui/AppErrorBoundary";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -75,7 +76,9 @@ export default function RootLayout({
         ` }} />
       </head>
       <body className="antialiased" style={{ fontFamily: "var(--font-body), 'Outfit', sans-serif", backgroundColor: '#0D0B08', margin: 0 }}>
-        {children}
+        <AppErrorBoundary>
+          {children}
+        </AppErrorBoundary>
         <Toaster position="top-center" richColors theme="dark" />
         <AnalyticsGate />
         <WebVitals />

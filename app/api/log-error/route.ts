@@ -1,52 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 
-function getServiceSupabase() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY required for log-error')
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
-}
+const VALID_LEVELS = new Set(['info', 'warning', 'error', 'critical'])
 
 export async function POST(req: NextRequest) {
   // Rate limit all callers (10 req/min/IP) to prevent spam
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`log-error:${ip}`, 10, 60000)
-  if (!rl.allowed) return NextResponse.json({ error: 'Rate limit' }, { status: 429 })
+  if (!rl.allowed) return NextResponse.json({ ok: false }, { status: 429 })
 
   try {
-    const { level, message, details, page_url } = await req.json()
-    if (!level || !message) return NextResponse.json({ error: 'level and message required' }, { status: 400 })
+    const body = await req.json()
+    const rawLevel = body?.level
+    const rawMessage = body?.message
+    if (!rawMessage) return NextResponse.json({ ok: false }, { status: 400 })
 
-    // Try auth — not required (pre-login errors need logging too)
+    // Validate & bound inputs (client may lie)
+    const level = VALID_LEVELS.has(rawLevel) ? rawLevel : 'error'
+    const message = String(rawMessage).slice(0, 500)
+    const page_url = body?.page_url ? String(body.page_url).slice(0, 500) : null
+    const details = body?.details ? String(body.details).slice(0, 2000) : null
+
+    // Auth client (anon key + cookies) — auth optional (pre-login errors)
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll() } }
+    )
+
+    // Derive user_id server-side only (never from body — anti-spoofing)
     let userId: string | null = null
     let userEmail: string | null = null
     try {
-      const cookieStore = await cookies()
-      const supabaseAuth = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { getAll: () => cookieStore.getAll() } }
-      )
-      const { data: { user } } = await supabaseAuth.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
       userId = user?.id ?? null
       userEmail = user?.email ?? null
     } catch {}
 
-    const supabase = getServiceSupabase()
+    // INSERT via RLS policy app_logs_insert_safe (user_id NULL or auth.uid())
     await supabase.from('app_logs').insert({
-      level, message,
-      details: details ?? null,
+      level, message, details,
       user_id: userId,
       user_email: userEmail,
-      page_url: page_url ?? null,
+      page_url,
     })
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
-    console.error('[log-error]', e.message)
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    // Log server-side only — never leak internal details to client
+    console.error('[log-error]', e?.message)
+    return NextResponse.json({ ok: false }, { status: 500 })
   }
 }
