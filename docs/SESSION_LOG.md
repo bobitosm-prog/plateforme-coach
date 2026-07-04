@@ -4,17 +4,52 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-07-03
-- **HEAD** : (pending commit — R4b GoalsSection + ObjectiveModal i18n)
+- **Date** : 2026-07-04
+- **HEAD** : (pending — SEO + touch fix, 5 commits)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 03/07 soir — R4b page Objectifs + résurrection ObjectiveModal (typo carb_goal) + i18n wizard + canonisation writer NutritionPreferences.
+- **Dernière session** : 04/07 — SEO remediation (hreflang/canonical/sitemap/robots/X-Robots-Tag/410 WordPress) + guard touchmove cancelable.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-07-04 — SEO remediation suite + touch fix [PROD]
+
+### Livré
+- Phase 2 hreflang/canonical : buildAlternates() → {canonical, languages}
+  appliqué landing/blog/privacy/cgu. Sitemap +privacy/cgu (×3 locales).
+- Robots réduit à /api/ + /_next/. X-Robots-Tag noindex,nofollow sur
+  10 routes privées/auth via next.config.ts headers().
+- 410 Gone URLs fantômes WordPress dans proxy.ts (early-return,
+  9 préfixes WP_GHOST_PREFIXES). Chaîne prod : 308 (norm. slash) → 410.
+- Guard e.cancelable sur touchmove (app/page.tsx:179) — silence
+  intervention Chrome (34 logs → 0 sur app.moovx.ch).
+- 5 commits isolés poussés.
+
+### GSC
+- Sitemap déjà à jour (lu 02/07, "Opération effectuée", 21 pages).
+- "Valider la correction" lancé : 5xx (3), bloquée robots (2),
+  indexée malgré robots (1). Validation en cours.
+- NON validé volontairement : redirection (4), détectée non indexée
+  (12), explorée non indexée (4) → résorption naturelle 2-4 sem.
+  via hreflang.
+
+### Diagnostic clé
+Les "3 URLs 5xx" GSC = vestiges WordPress/WooCommerce du précédent
+propriétaire du domaine, PAS un bug de code. Rebond
+moovx.ch/* → app.moovx.ch via getHostRedirect (proxy.ts) → 404.
+
+### NEXT (dette ouverte)
+- [ ] Paths publics sans locale → 404 native brandée au lieu du
+      rebond app.moovx.ch (getHostRedirect proxy.ts). Couvre une
+      partie des "4 redirections" GSC. Priorité moyenne.
+- [ ] Commit AppErrorBoundary.tsx + client-error-reporter.ts +
+      app/layout.tsx (isolé, encore en working dir). Priorité basse.
+- [ ] Vérifier dans 2 sem. : catégories GSC fermées ? Si une URL
+      "bloquée robots" réapparaît, inspecter laquelle.
 
 ## 2026-07-03 (soir) — R4b : page Objectifs + résurrection ObjectiveModal [PROD]
 
