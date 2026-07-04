@@ -410,7 +410,7 @@
     "plan_yearly_save": "−33%",
     "plan_lifetime_label": "Lifetime",
     "plan_lifetime_period": "lebenslang",
-    "client_feat1": "Unbegrenzte Ernährungspläne",
+    "client_feat1": "Personalisierte Ernährungspläne",
     "client_feat2": "PPL 6-Tage-Programm",
     "client_feat3": "Barcode-Scanner + Rezepte",
     "client_feat4": "KI-Coach Athena 24/7",
@@ -1224,7 +1224,7 @@
         "5": "Stripe-Zahlungen"
       },
       "coachClient": {
-        "0": "Unbegrenzte personalisierte Ernährungspläne",
+        "0": "Personalisierte Ernährungspläne",
         "1": "Personalisiertes Trainingsprogramm",
         "2": "Direktnachrichten mit deinem Coach",
         "3": "Vollständige Fortschrittsverfolgung",

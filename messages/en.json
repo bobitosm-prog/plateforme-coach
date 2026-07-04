@@ -410,7 +410,7 @@
     "plan_yearly_save": "−33%",
     "plan_lifetime_label": "Lifetime",
     "plan_lifetime_period": "lifetime",
-    "client_feat1": "Unlimited nutrition plans",
+    "client_feat1": "Personalized nutrition plans",
     "client_feat2": "PPL 6-day program",
     "client_feat3": "Barcode scanner + recipes",
     "client_feat4": "AI Coach Athena 24/7",
@@ -1224,7 +1224,7 @@
         "5": "Stripe payments"
       },
       "coachClient": {
-        "0": "Unlimited personalized nutrition plans",
+        "0": "Personalized nutrition plans",
         "1": "Personalized training program",
         "2": "Direct messaging with your coach",
         "3": "Full progress tracking",
