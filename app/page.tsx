@@ -176,7 +176,7 @@ export default function CoachApp() {
         else if (ay > 16 && ay > ax * 1.5) { s.mode = 'rejected'; return }
         else return
       }
-      e.preventDefault()
+      if (e.cancelable) e.preventDefault()
       const min = -4 * mainSize.w, max = 0
       let x = s.baseX + dx
       if (x > max) x = max + (x - max) * 0.15
