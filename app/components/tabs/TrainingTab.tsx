@@ -46,6 +46,7 @@ import { formatRelativeTime } from '../../../lib/formatRelativeTime'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
+import AiQuotaBadge from '../ui/AiQuotaBadge'
 import ExerciseInfoPopup from '../ExerciseInfoPopup'
 import { useExerciseInfo } from '../../hooks/useExerciseInfo'
 import RecentSessionsList from '../training/RecentSessionsList'
@@ -1383,6 +1384,7 @@ export default function TrainingTab({
 
           {/* Scrollable content */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 100px' }}>
+            <AiQuotaBadge />
             {/* Create + Import buttons */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
               <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ ...btnPrimary, flex: 1, padding: 16 }}>
