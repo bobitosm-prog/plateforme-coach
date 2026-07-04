@@ -5,10 +5,10 @@ Historique des sessions de developpement marathon.
 ## ETAT ACTUEL
 
 - **Date** : 2026-07-04
-- **HEAD** : (pending — SEO + touch fix, 5 commits)
+- **HEAD** : e5c1eb7 (feat: align pricing wording — remove "illimité" plans nutrition)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 04/07 — SEO remediation (hreflang/canonical/sitemap/robots/X-Robots-Tag/410 WordPress) + guard touchmove cancelable.
+- **Dernière session** : 04/07 — SEO + observabilité COMPLÈTE + quota IA + badge proactif + 2 P0 onboarding attrapés. Phase A items 1-3a clos.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
@@ -16,40 +16,65 @@ Historique des sessions de developpement marathon.
 
 ---
 
-## 2026-07-04 — SEO remediation suite + touch fix [PROD]
+## 2026-07-04 (soir) — SEO + observabilité + quota IA [PROD]
 
-### Livré
-- Phase 2 hreflang/canonical : buildAlternates() → {canonical, languages}
-  appliqué landing/blog/privacy/cgu. Sitemap +privacy/cgu (×3 locales).
-- Robots réduit à /api/ + /_next/. X-Robots-Tag noindex,nofollow sur
-  10 routes privées/auth via next.config.ts headers().
-- 410 Gone URLs fantômes WordPress dans proxy.ts (early-return,
-  9 préfixes WP_GHOST_PREFIXES). Chaîne prod : 308 (norm. slash) → 410.
-- Guard e.cancelable sur touchmove (app/page.tsx:179) — silence
-  intervention Chrome (34 logs → 0 sur app.moovx.ch).
-- 5 commits isolés poussés.
+### Livré (tout en prod, commits isolés)
+**SEO / infra**
+- Phase 2 hreflang/canonical (privacy/cgu/blog), sitemap +privacy/cgu,
+  robots réduit /api+/_next, X-Robots-Tag noindex 10 routes privées.
+- 410 Gone URLs fantômes WordPress (proxy.ts early-return, 9 préfixes).
+  Chaîne prod 308→410. GSC : sitemap + validations 5xx/robots lancées.
+- Guard e.cancelable touchmove (app/page.tsx) → 34 logs Chrome → 0.
+  Découverte : AppErrorBoundary monté au root layout.tsx.
+
+**Observabilité (Phase A item 1 — COMPLET)**
+- client-error-reporter + AppErrorBoundary + endpoint /api/log-error
+  DURCI : passé service_role → client anon+RLS (app_logs), no leak
+  e.message, bornes serveur, level aligné (fatal→critical).
+- /admin/logs : filtre level débloqué (était figé admin_action).
+  Erreurs applicatives enfin consultables. Défaut 'error'.
+- /admin/feedback : audité, DÉJÀ fonctionnel (rien à construire).
+
+**Phase A item 2 — COMPLET**
+- Migration beta_campaign_link : profiles.beta_campaign_id + FK +
+  claim_beta_slot RE-VERSIONNÉE (était créée dashboard = dette).
+  Claim validé E2E via f.marco@icloud.com.
+- Badge décrocheur : code couleur last_workout_at dans /admin/users
+  (colonne existait déjà, maintenue par useClientDashboard).
+
+**Phase A item 3a — chiffrage + quota IA COMPLET**
+- Chiffrage 15 testeurs : ~$27/mois attendu, ~$1155 plafond.
+  Rentabilité offre à vie ~13 ans (> seuil 5 ans).
+- Quota GLOBAL 4 générations lourdes/mois (meal+program+photo+body
+  partagés), tous tiers, success=true only, fenêtre 30j.
+  checkAiQuota réutilise ai_usage_logs. 3 couches empilées
+  (burst/horaire/mensuel).
+- Badge proactif AiQuotaBadge Nutrition+Training (endpoint /api/ai-quota
+  auth+RL, cloné OverloadBanner). 429 aiQuotaResponse pédagogique.
+- Pricing aligné : retrait "illimité" plans nutrition fr/en/de
+  (2 clés × 3 langues, EconomicModel.tsx = mort/SKIP ignoré).
+
+### 2 P0 vague beta attrapés par auto-E2E "peau de client"
+- Onboarding step 4 : objective libellé FR violait CHECK canonical.
+  Fix mapping GOAL_TO_OBJECTIVE (id→cut/mass/maintain).
+- claim_beta_slot non versionnée (dashboard). Corrigée.
+
+### Pièges évités par rigueur
+- Migration CC inventait 3 colonnes (duration_days/starts_at/ends_at)
+  → diff vs pg_get_functiondef → corps verbatim imposé.
+- middleware.ts (CC) vs proxy.ts (Next 16) → conflit boot → fusion.
+- Quota codé par-endpoint → refondu global partagé.
+- EconomicModel.tsx (mort) → vrai texte en i18n messages/*.json.
 
 ### GSC
-- Sitemap déjà à jour (lu 02/07, "Opération effectuée", 21 pages).
-- "Valider la correction" lancé : 5xx (3), bloquée robots (2),
-  indexée malgré robots (1). Validation en cours.
-- NON validé volontairement : redirection (4), détectée non indexée
-  (12), explorée non indexée (4) → résorption naturelle 2-4 sem.
-  via hreflang.
+- Sitemap lu 02/07, 21 pages. Validations 5xx/robots lancées.
+- Résorption naturelle 2-4 sem. via hreflang (pas de correction manuelle).
 
-### Diagnostic clé
-Les "3 URLs 5xx" GSC = vestiges WordPress/WooCommerce du précédent
-propriétaire du domaine, PAS un bug de code. Rebond
-moovx.ch/* → app.moovx.ch via getHostRedirect (proxy.ts) → 404.
+### État comptes test
+- f.marco@icloud.com : remis null/inactive (ou beta selon dernier
+  état — À PURGER avant vague). ai_usage_logs test à purger.
 
-### NEXT (dette ouverte)
-- [ ] Paths publics sans locale → 404 native brandée au lieu du
-      rebond app.moovx.ch (getHostRedirect proxy.ts). Couvre une
-      partie des "4 redirections" GSC. Priorité moyenne.
-- [ ] Commit AppErrorBoundary.tsx + client-error-reporter.ts +
-      app/layout.tsx (isolé, encore en working dir). Priorité basse.
-- [ ] Vérifier dans 2 sem. : catégories GSC fermées ? Si une URL
-      "bloquée robots" réapparaît, inspecter laquelle.
+### Détail complet : voir NEXT.md (dette pré-vague consignée)
 
 ## 2026-07-03 (soir) — R4b : page Objectifs + résurrection ObjectiveModal [PROD]
 
