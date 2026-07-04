@@ -4,7 +4,7 @@ import { LogsTable } from './_components/LogsTable'
 import { useLogs } from './_hooks/useLogs'
 
 export default function AdminLogsPage() {
-  const { logs, loading, error, search, setSearch, actionFilter, setActionFilter } = useLogs()
+  const { logs, loading, error, search, setSearch, levelFilter, setLevelFilter, actionFilter, setActionFilter } = useLogs()
 
   return (
     <div className="admin-fade-in">
@@ -18,6 +18,8 @@ export default function AdminLogsPage() {
         error={error}
         search={search}
         onSearchChange={setSearch}
+        levelFilter={levelFilter}
+        onLevelFilterChange={setLevelFilter}
         actionFilter={actionFilter}
         onActionFilterChange={setActionFilter}
       />

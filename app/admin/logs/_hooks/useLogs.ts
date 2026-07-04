@@ -17,6 +17,7 @@ export function useLogs() {
   const [logs, setLogs] = useState<AdminLogRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [levelFilter, setLevelFilter] = useState<string>('error')
   const [actionFilter, setActionFilter] = useState<string>('')
   const [search, setSearch] = useState('')
   const reqIdRef = useRef(0)
@@ -28,7 +29,7 @@ export function useLogs() {
     try {
       const params = new URLSearchParams()
       params.set('limit', '200')
-      params.set('level', 'admin_action')
+      if (levelFilter) params.set('level', levelFilter)
       if (actionFilter) params.set('action', actionFilter)
       if (search.trim()) params.set('search', search.trim())
       const data = await adminFetch<{ logs: AdminLogRow[]; count: number }>(
@@ -42,12 +43,12 @@ export function useLogs() {
     } finally {
       if (myId === reqIdRef.current) setLoading(false)
     }
-  }, [actionFilter, search])
+  }, [levelFilter, actionFilter, search])
 
   useEffect(() => {
     const t = setTimeout(() => { fetch_() }, 200)
     return () => clearTimeout(t)
   }, [fetch_])
 
-  return { logs, loading, error, actionFilter, setActionFilter, search, setSearch, refresh: fetch_ }
+  return { logs, loading, error, levelFilter, setLevelFilter, actionFilter, setActionFilter, search, setSearch, refresh: fetch_ }
 }

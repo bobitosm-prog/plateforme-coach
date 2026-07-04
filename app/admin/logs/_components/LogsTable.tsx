@@ -11,8 +11,20 @@ interface Props {
   error: string | null
   search: string
   onSearchChange: (v: string) => void
+  levelFilter: string
+  onLevelFilterChange: (v: string) => void
   actionFilter: string
   onActionFilterChange: (v: string) => void
+}
+
+function levelColor(level: string): string {
+  switch (level) {
+    case 'critical': return '#fb7185'
+    case 'error': return '#f97316'
+    case 'warning': return '#fbbf24'
+    case 'info': return '#99907e'
+    default: return '#99907e'
+  }
 }
 
 function actionVariant(action: string | undefined): 'gold' | 'emerald' | 'rose' | 'zinc' {
@@ -33,6 +45,7 @@ function extractAction(details: Record<string, unknown> | null): string | undefi
 export function LogsTable({
   logs, loading, error,
   search, onSearchChange,
+  levelFilter, onLevelFilterChange,
   actionFilter, onActionFilterChange,
 }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -60,6 +73,15 @@ export function LogsTable({
             />
           </div>
 
+          <select value={levelFilter} onChange={e => onLevelFilterChange(e.target.value)} className="admin-select" style={{ minWidth: '140px', width: 'auto' }}>
+            <option value="">Tous</option>
+            <option value="error">Erreurs</option>
+            <option value="critical">Critiques</option>
+            <option value="warning">Warnings</option>
+            <option value="info">Info</option>
+            <option value="admin_action">Actions admin</option>
+          </select>
+
           <select value={actionFilter} onChange={e => onActionFilterChange(e.target.value)} className="admin-select" style={{ minWidth: '220px', width: 'auto' }}>
             <option value="">Toutes les actions</option>
             <option value="role_change">Changement de role</option>
@@ -86,7 +108,7 @@ export function LogsTable({
 
         {!error && !loading && logs.length === 0 && (
           <div style={{ textAlign: 'center', padding: '64px 16px', color: '#99907e', fontSize: '0.875rem' }}>
-            Aucune action admin enregistree
+            Aucun log pour ce filtre
           </div>
         )}
 
@@ -108,9 +130,11 @@ export function LogsTable({
                     <span className="shrink-0" style={{ color: '#99907e' }}>
                       {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </span>
-                    <StatusBadge variant={actionVariant(action)}>
-                      {action || log.level}
-                    </StatusBadge>
+                    {action ? (
+                      <StatusBadge variant={actionVariant(action)}>{action}</StatusBadge>
+                    ) : (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${levelColor(log.level)}20`, color: levelColor(log.level), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{log.level}</span>
+                    )}
                     <span className="text-sm truncate flex-1" style={{ color: '#d0c5b2' }}>{log.message}</span>
                     <span className="text-[11px] tabular-nums shrink-0 hidden sm:inline" style={{ color: '#99907e' }}>
                       {formatDateTime(log.created_at)}
