@@ -76,13 +76,27 @@ function detectLocale(request: NextRequest): string {
   return DEFAULT_LOCALE
 }
 
+// ── Vestiges WordPress/WooCommerce (ancien propriétaire du domaine moovx.ch) ──
+// GSC 07/2026 : ces paths généraient des erreurs 404 via chaîne 308→308→404.
+// 410 Gone immédiat = purge accélérée de l'index Google.
+const WP_GHOST_PREFIXES = [
+  '/produit', '/product', '/category', '/mon-compte',
+  '/wp-', '/tag', '/panier', '/commande', '/boutique',
+]
+
 export async function proxy(request: NextRequest) {
+  // Early-return 410 pour les URLs fantômes WordPress — avant toute logique
+  const pathname = request.nextUrl.pathname
+  const normalized = pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname
+  if (WP_GHOST_PREFIXES.some(prefix => normalized.startsWith(prefix))) {
+    return new NextResponse(null, { status: 410, statusText: 'Gone' })
+  }
+
   // Host-based redirect (split landing/app domains)
   const hostRedirect = getHostRedirect(request)
   if (hostRedirect) return hostRedirect
 
   // Skip Supabase middleware for routes that don't need it
-  const pathname = request.nextUrl.pathname
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
