@@ -51,11 +51,49 @@ Contexte : pas de cobaye proche disponible → la vague 1 EST l'E2E tiers.
 Conséquence : l'observabilité passe de recommandée à PRÉREQUIS ABSOLU.
 
 ### Phase A — Préparer l'accueil (~1 semaine)
-1. [ ] Observabilité minimale (BLOQUANT) : audit de l'existant
-       (api/log-error, api/feedback) → remontée d'erreurs consultable +
-       feedback in-app visible + réflexe quotidien de consultation
-2. [ ] Brique 5 light : créer campagne, voir slots + dernière activité
-       par testeur (détecter les décrocheurs de J1)
+
+#### Item 1 — Observabilité
+- [x] Erreurs applicatives consultables ✅ 04/07 : reporter +
+      AppErrorBoundary + endpoint log-error durci (RLS, no leak) +
+      filtre level /admin/logs (défaut error). Chaîne
+      reporter→app_logs→UI prouvée écran (INFO/ERROR/CRITICAL).
+- [x] Feedback in-app visible ✅ 04/07 : chaîne complète auditée —
+      envoi (BugReport.tsx INSERT RLS), lecture admin
+      (/admin/feedback + bug-reports endpoint verifyAdmin), boucle
+      réponse (reply + feedback/mine). Déjà fonctionnel, rien à
+      construire. Validé runtime.
+- [ ] Réflexe quotidien de consultation (organisationnel, pas code).
+#### Item 2 — Brique 5 light (étape 1/3 FAITE ✅ 04/07)
+- [x] Lien data testeur↔campagne : migration beta_campaign_link
+      (profiles.beta_campaign_id + FK ON DELETE SET NULL +
+      claim_beta_slot re-versionnée depuis dashboard + pose du
+      campaign_id). Claim validé bout-en-bout via f.marco@icloud.com
+      (E2E onboarding réel → beta_campaign_id posé). 2 P0 attrapés
+      au passage (voir ci-dessous).
+- [ ] ÉTAPE 2 : endpoint /api/admin/campaigns/[id]/testers.
+      Liste profils où beta_campaign_id = [id], joints à leur
+      DERNIÈRE ACTIVITÉ = max(workout_sessions.created_at,
+      daily_checkins.created_at). Tri par activité la plus ancienne
+      (décrocheurs en haut). verifyAdmin OBLIGATOIRE (expose emails+
+      activité testeurs), colonnes minimales, 500 générique (pas de
+      fuite error.message — pattern récurrent admin à aligner).
+- [ ] ÉTAPE 3 : vue admin drill-down depuis CampaignsTable
+      (clic campagne → liste testeurs + "vu il y a N jours",
+      rouge si > seuil J1).
+
+#### P0 vague beta corrigés 04/07 (attrapés par auto-E2E "peau de client")
+- [x] Onboarding step 4 : objective='Prendre du muscle' (dbLabel FR)
+      violait CHECK profiles_objective_canonical. Fix : mapping
+      GOAL_TO_OBJECTIVE (id→cut/mass/maintain) aux 2 write points.
+      improve_condition + get_back_shape → maintain (décision produit).
+- [x] claim_beta_slot n'était dans AUCUNE migration (créée dashboard).
+      Re-versionnée. Dette d'infra corrigée.
+
+#### Dette à vérifier avant vague
+- [ ] free_days des campagnes test non aligné sur la vraie offre
+      ("Test campagne" avait ~60j). Vérifier les valeurs réelles.
+- [ ] Purge déchets test app_logs + f.marco@icloud.com (compte test).
+
 3. [ ] Flux jour-61 testé + chiffrage coût API pour 15 actifs
 4. [ ] Auto-E2E rigoureux : Marco refait signup→onboarding→séance sur
        un device VIERGE (pas son compte) en notant tout — pas équivalent
@@ -224,6 +262,24 @@ d'entrée direct UI. → Désentrelacement risqué, sprint dédié. NE PAS suppr
 Visuels SEEDANCE + prompts pub Insta/TikTok. PAS avant que Phase A soit cochée.
 
 ## Dettes consignées (non bloquantes)
+
+### Dettes ajoutées 04/07
+- [ ] Ingestion bug_reports sans rate limit (INSERT direct client).
+      RLS empêche spoofing, volume beta faible → mineur. Ajouter
+      rate limit si spam observé.
+- [ ] Purge déchets test app_logs (rl test/smoke/boundary/fallback)
+      AVANT vague beta.
+- [ ] Sous-titre /admin/logs trompeur ("actions admin" alors qu'il
+      montre les erreurs). Reformuler.
+- [ ] Garde admin layout = email client-side (ADMIN_EMAIL) vs
+      role=super_admin RLS server-side. Aligner.
+- [ ] /api/admin/logs : fuite error.message sur 500 + pas de rate
+      limit (faible enjeu, derrière verifyAdmin).
+- [ ] Filtre combiné "Erreurs+" (error+critical) si défaut error
+      seul rate des critical à l'usage.
+- [ ] Paths sans locale → 404 native brandée (SEO, moyenne).
+- [ ] Purge app_logs pg_cron >30j (table sans TTL).
+- [ ] Valider AppErrorBoundary bout-en-bout en arbre authentifié.
 
 ### Règle critique (29/06) — colonnes profiles protégées
 Le trigger guard_profile_sensitive_columns rejette tout UPDATE client (authenticated) sur :
