@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import {
   SITE_URL,
   LOCALES,
-  buildHreflangAlternates,
+  buildAlternates,
   getOgLocale,
   getAlternateOgLocales,
   type Locale,
@@ -35,7 +35,7 @@ export async function generateMetadata({
   return {
     title: c.title,
     description: c.description,
-    alternates: { languages: buildHreflangAlternates(`/blog/${slug}`) },
+    alternates: buildAlternates(`/blog/${slug}`, loc),
     openGraph: {
       title: c.title,
       description: c.description,

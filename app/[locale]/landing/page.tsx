@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import {
   SITE_URL,
-  buildHreflangAlternates,
+  buildAlternates,
   getOgLocale,
   getAlternateOgLocales,
   type Locale,
@@ -45,7 +45,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'metadata' })
 
   const path = '/landing'
-  const canonical = `${SITE_URL}/${locale}${path}`
+  const alternates = buildAlternates(path, locale)
   const ogImage = `${SITE_URL}/og-image.jpg`
 
   return {
@@ -56,13 +56,10 @@ export async function generateMetadata({
     authors: [{ name: 'MoovX SA', url: SITE_URL }],
     creator: 'MoovX SA',
     publisher: 'MoovX SA',
-    alternates: {
-      canonical,
-      languages: buildHreflangAlternates(path),
-    },
+    alternates,
     openGraph: {
       type: 'website',
-      url: canonical,
+      url: alternates.canonical,
       siteName: 'MoovX',
       title: t('ogTitle'),
       description: t('ogDescription'),

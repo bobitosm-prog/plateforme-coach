@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { buildHreflangAlternates, type Locale } from '@/lib/seo'
+import { buildAlternates, type Locale } from '@/lib/seo'
 import { getAllPosts } from '@/content/blog/posts'
 
 export async function generateMetadata({
@@ -19,7 +19,7 @@ export async function generateMetadata({
   return {
     title: titles[loc] || titles.fr,
     description: descriptions[loc] || descriptions.fr,
-    alternates: { languages: buildHreflangAlternates('/blog') },
+    alternates: buildAlternates('/blog', loc),
   }
 }
 

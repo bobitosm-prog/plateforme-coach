@@ -3,13 +3,17 @@ import path from 'path'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { markdownToHtml } from '@/lib/markdown'
+import { buildAlternates, type Locale } from '@/lib/seo'
 
 type Props = { params: Promise<{ locale: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'legal' })
-  return { title: t('privacy.title') + ' | MoovX' }
+  return {
+    title: t('privacy.title') + ' | MoovX',
+    alternates: buildAlternates('/privacy', locale as Locale),
+  }
 }
 
 export default async function PrivacyPage({ params }: Props) {
