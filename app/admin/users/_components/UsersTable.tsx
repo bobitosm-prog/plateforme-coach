@@ -7,6 +7,17 @@ import { formatRelative } from '../../_components/formatters'
 import { RoleDialog } from './RoleDialog'
 import { SubscriptionDialog } from './SubscriptionDialog'
 
+const ACTIVITY_WARN_DAYS = 3
+const ACTIVITY_STALE_DAYS = 7
+
+function activityColor(lastWorkoutAt: string | null): string {
+  if (!lastWorkoutAt) return '#99907e'
+  const days = (Date.now() - new Date(lastWorkoutAt).getTime()) / 86400000
+  if (days > ACTIVITY_STALE_DAYS) return '#e05252'
+  if (days > ACTIVITY_WARN_DAYS) return '#d4a843'
+  return '#4ade80'
+}
+
 interface Props {
   users: AdminUserRow[]
   loading: boolean
@@ -127,7 +138,7 @@ export function UsersTable({
                       )}
                     </div>
                   </td>
-                  <td className="hidden lg:table-cell text-xs tabular-nums" style={{ color: '#d0c5b2' }}>
+                  <td className="hidden lg:table-cell text-xs tabular-nums" style={{ color: activityColor(u.last_workout_at) }}>
                     {formatRelative(u.last_workout_at) || '—'}
                   </td>
                   <td style={{ textAlign: 'right' }}>
