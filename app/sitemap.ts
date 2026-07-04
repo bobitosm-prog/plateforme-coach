@@ -15,6 +15,8 @@ const PAGES: Array<{
     priority: 0.7 as number,
     changeFrequency: 'monthly' as const,
   })),
+  { path: '/privacy', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/cgu', priority: 0.3, changeFrequency: 'yearly' },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

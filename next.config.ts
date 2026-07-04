@@ -27,7 +27,20 @@ const nextConfig: NextConfig = {
       ...(!isDev ? [`upgrade-insecure-requests`] : []),
     ].join('; ')
 
+    // Private/auth routes: noindex via X-Robots-Tag (robots.txt blocks crawl but not indexing)
+    const noindexPaths = [
+      '/login', '/register-client', '/join',
+      '/admin/:path*', '/coach/:path*', '/client/:path*',
+      '/onboarding/:path*', '/onboarding-v2/:path*', '/onboarding-coach/:path*',
+      '/onboarding-fitness/:path*', '/onboarding-photo/:path*',
+      '/weekly-diagnostic/:path*',
+    ]
+
     return [
+      ...noindexPaths.map(source => ({
+        source,
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      })),
       {
         source: '/:path*',
         headers: [
