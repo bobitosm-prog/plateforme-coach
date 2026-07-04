@@ -94,7 +94,28 @@ Conséquence : l'observabilité passe de recommandée à PRÉREQUIS ABSOLU.
       ("Test campagne" avait ~60j). Vérifier les valeurs réelles.
 - [ ] Purge déchets test app_logs + f.marco@icloud.com (compte test).
 
-3. [ ] Flux jour-61 testé + chiffrage coût API pour 15 actifs
+#### Item 3a — Chiffrage + quota IA (FAIT 04/07 soir)
+- [x] Chiffrage 15 testeurs : ~$27/mois attendu, ~$1155/mois plafond.
+      Coût AI = PAS un frein en usage normal.
+- [x] Quota global 4 générations lourdes/mois, tous tiers (rentabilité
+      offre à vie ~13 ans). Backend + badge Nutrition/Training + 429.
+- [x] Pricing aligné : retrait "illimité" plans nutrition (fr/en/de).
+
+#### Dette pré-vague (04/07 soir)
+- [ ] Migrer claude-opus-4-7 → claude-opus-4-8 (6 endpoints). Même
+      prix, meilleure qualité, sort du risque dépréciation.
+- [ ] chat-ai (Athena, Sonnet) : vérifier rate-limit (absent AI_RATE_LIMITS).
+- [ ] EconomicModel.tsx = composant mort (SKIP landing). Supprimer.
+- [ ] Wording badge "Quota atteint" trop sec — ajouter "Tes programmes
+      actuels restent disponibles".
+- [ ] Purge comptes/déchets test avant vague (f.marco@icloud.com,
+      marko.rosa, Marco test, ai_usage_logs, app_logs).
+- [ ] Ajuster ACTIVITY_STALE_DAYS 7→2-3j au lancement (décrocheur J1).
+
+#### Item 3b — Flux jour-61 (NON commencé)
+- [ ] Bascule accès expiré → pricing testée (entrevu aujourd'hui :
+      null/inactive → paywall fonctionne). Chantier neuf, session dédiée.
+
 4. [ ] Auto-E2E rigoureux : Marco refait signup→onboarding→séance sur
        un device VIERGE (pas son compte) en notant tout — pas équivalent
        à un tiers, mais attrape le pire avant la vague
