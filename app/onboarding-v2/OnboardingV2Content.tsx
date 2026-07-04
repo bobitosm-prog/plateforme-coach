@@ -27,7 +27,7 @@ import SoloStep9PhotoBody from './steps/solo/SoloStep9PhotoBody'
 import SoloStep7Equipment from './steps/solo/SoloStep7Equipment'
 import SoloStep12Recap from './steps/solo/SoloStep12Recap'
 import SoloStep11Preferences, { type MealPrefsState } from './steps/solo/SoloStep11Preferences'
-import { GOALS, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS } from '@/lib/onboarding-options'
+import { GOALS, GOAL_TO_OBJECTIVE, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS } from '@/lib/onboarding-options'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -294,7 +294,7 @@ export default function OnboardingV2Content() {
           case 4: {
             if (goal === null) return false
             const { error } = await updateProfile(userId, {
-              objective: GOALS[goal].dbLabel,
+              objective: GOAL_TO_OBJECTIVE[GOALS[goal].id],
             }, supabase)
             if (error) { console.error('Save solo step 4:', error); return false }
             break
@@ -468,7 +468,7 @@ export default function OnboardingV2Content() {
             weight: parseFloat(weight),
             height: parseFloat(height),
             gender,
-            objective: GOALS[goal].dbLabel,
+            objective: GOAL_TO_OBJECTIVE[GOALS[goal].id],
           }
           const res = await fetch('/api/analyze-progress-photo', {
             method: 'POST',

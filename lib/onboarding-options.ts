@@ -13,6 +13,14 @@ export const GOALS: OnboardingOption[] = [
   { id: 'get_back_shape', dbLabel: 'Me remettre en forme', pts: 3, icon: 'refresh' },
 ]
 
+// Mapping id UI → objective canonique (CHECK profiles_objective_canonical, refonte 03/07)
+export const GOAL_TO_OBJECTIVE: Record<string, 'cut' | 'mass' | 'maintain'> = {
+  lose_weight: 'cut',
+  gain_muscle: 'mass',
+  improve_condition: 'maintain',
+  get_back_shape: 'maintain',
+}
+
 export const ACTIVITY_OPTS: OnboardingOption[] = [
   { id: 'sedentary', dbLabel: 'Sedentaire <1x/sem', pts: 1, icon: 'weekend' },
   { id: 'active', dbLabel: 'Actif 1-2x/sem', pts: 3, icon: 'directions_walk' },
