@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
+import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 import { formatFitnessFoodsForPrompt } from '../../../lib/fitness-food-database'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-plan'
@@ -494,6 +494,9 @@ export async function POST(req: NextRequest) {
   // DB-backed hourly rate limit (Sprint 3)
   const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'generate-meal-plan')
   if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+  // Monthly quota (cadrage coût vague beta)
+  const aiQ = await checkAiQuota(supabaseAuth, user.id)
+  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
   await logAiUsage(supabaseAuth, user.id, 'generate-meal-plan')
 
   try {

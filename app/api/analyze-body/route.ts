@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
+import { checkRateLimit, checkAiRateLimit, checkAiQuota, aiRateLimitResponse, aiQuotaResponse, logAiUsage } from '../../../lib/rate-limit'
 import { unwrapToolInput } from '../../../lib/anthropic/unwrap-tool-input'
 
 export async function POST(req: NextRequest) {
@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
   // DB-backed hourly rate limit
   const aiRl = await checkAiRateLimit(supabase, user.id, 'analyze-body')
   if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+  const aiQ = await checkAiQuota(supabase, user.id)
+  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
   await logAiUsage(supabase, user.id, 'analyze-body')
 
   try {

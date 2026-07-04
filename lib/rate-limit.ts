@@ -87,6 +87,88 @@ export async function logAiUsage(
   if (error) console.error('[AiRateLimit] Failed to log usage:', error.message)
 }
 
+// ── Monthly quota (cadrage coût vague beta — compteur GLOBAL générations lourdes) ──
+
+export const HEAVY_AI_ENDPOINTS = [
+  'generate-meal-plan', 'generate-custom-program',
+  'analyze-progress-photo', 'analyze-body',
+] as const
+
+export const MONTHLY_HEAVY_QUOTA = 4 // 4 générations lourdes/mois tous types confondus
+const MONTHLY_WINDOW_SECONDS = 2592000 // 30 jours
+
+export async function checkAiQuota(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<AiRateLimitResult> {
+  const limit = MONTHLY_HEAVY_QUOTA
+  const windowStart = new Date(Date.now() - MONTHLY_WINDOW_SECONDS * 1000).toISOString()
+
+  try {
+    // Count only SUCCESSFUL heavy generations (failed ones don't consume quota)
+    const { count, error } = await supabase
+      .from('ai_usage_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .in('endpoint', HEAVY_AI_ENDPOINTS as unknown as string[])
+      .eq('success', true)
+      .gte('created_at', windowStart)
+
+    // Fail-open on DB error
+    if (error) {
+      console.error('[AiQuota] DB error, failing open:', error.message)
+      return { allowed: true, remaining: limit, limit, resetIn: 0 }
+    }
+
+    const current = count ?? 0
+    if (current < limit) {
+      return { allowed: true, remaining: limit - current, limit, resetIn: 0 }
+    }
+
+    // Calculate resetIn: time until oldest entry in window expires
+    const { data: oldest } = await supabase
+      .from('ai_usage_logs')
+      .select('created_at')
+      .eq('user_id', userId)
+      .in('endpoint', HEAVY_AI_ENDPOINTS as unknown as string[])
+      .eq('success', true)
+      .gte('created_at', windowStart)
+      .order('created_at', { ascending: true })
+      .limit(1)
+
+    const oldestAt = oldest?.[0]?.created_at
+    const resetIn = oldestAt
+      ? Math.max(0, Math.ceil((new Date(oldestAt).getTime() + MONTHLY_WINDOW_SECONDS * 1000 - Date.now()) / 1000))
+      : MONTHLY_WINDOW_SECONDS
+
+    return { allowed: false, remaining: 0, limit, resetIn }
+  } catch {
+    // Fail-open
+    return { allowed: true, remaining: limit, limit, resetIn: 0 }
+  }
+}
+
+export function aiQuotaResponse(limit: number, resetIn: number): Response {
+  const days = Math.ceil(resetIn / 86400)
+  return new Response(
+    JSON.stringify({
+      error: 'Monthly quota exceeded',
+      reason: 'monthly_quota',
+      message: `Tu as utilisé tes ${limit} générations ce mois. Prochaine dispo dans ${days} jour${days > 1 ? 's' : ''}.`,
+      retryAfter: resetIn,
+      limit,
+      remaining: 0,
+    }),
+    {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(resetIn),
+      },
+    }
+  )
+}
+
 export function aiRateLimitResponse(limit: number, resetIn: number): Response {
   return new Response(
     JSON.stringify({

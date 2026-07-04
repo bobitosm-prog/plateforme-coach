@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
+import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
 import { generateProgram } from '../../../lib/training/generate-program'
 import { loadExerciseCatalog } from '../../../lib/training/load-exercise-catalog'
 
@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
   // DB-backed hourly rate limit (Sprint 3)
   const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'generate-custom-program')
   if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+  const aiQ = await checkAiQuota(supabaseAuth, user.id)
+  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
   await logAiUsage(supabaseAuth, user.id, 'generate-custom-program')
 
   try {
