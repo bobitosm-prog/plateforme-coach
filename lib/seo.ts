@@ -21,6 +21,14 @@ export function buildHreflangAlternates(path: string = '/landing') {
   return languages;
 }
 
+/** Canonical self-referential + hreflang alternates for a localized page. */
+export function buildAlternates(path: string, locale: Locale) {
+  return {
+    canonical: `${SITE_URL}/${locale}${path}`,
+    languages: buildHreflangAlternates(path),
+  };
+}
+
 export function getOgLocale(locale: Locale): string {
   return OG_LOCALES[locale];
 }
