@@ -166,6 +166,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   /* ─── AI generate ─── */
   async function generateAI() {
     setAiGenerating(true)
+    const tid = toast.loading(t('toast.generating'))
     try {
       const res = await fetch('/api/generate-custom-program', {
         method: 'POST',
@@ -189,6 +190,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       console.error('[ProgramBuilder] Fetch error:', e)
       toast.error(t('toast.networkError') + ': ' + (e.message || ''))
     }
+    toast.dismiss(tid)
     setAiGenerating(false)
   }
 

@@ -1946,6 +1946,7 @@
         "deleteCancel": "Cancel"
       },
       "toast": {
+        "generating": "Generating your program...",
         "generated": "Program generated!",
         "generationError": "Generation error",
         "networkError": "Network error",
