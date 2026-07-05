@@ -102,8 +102,11 @@ Conséquence : l'observabilité passe de recommandée à PRÉREQUIS ABSOLU.
 - [x] Pricing aligné : retrait "illimité" plans nutrition (fr/en/de).
 
 #### Dette pré-vague (04/07 soir)
-- [ ] Migrer claude-opus-4-7 → claude-opus-4-8 (6 endpoints). Même
-      prix, meilleure qualité, sort du risque dépréciation.
+- [x] Migrer claude-opus-4-7 → claude-opus-4-8 (7 occurrences, 6 fichiers) ✅ 05/07
+- [ ] Uniformiser feedback génération IA : meal-plan utilise
+      setToastMsg (state custom), programme utilise toast.loading
+      (meilleur pattern). Migrer le meal-plan vers toast.loading
+      pour cohérence. Polish, faible priorité.
 - [ ] chat-ai (Athena, Sonnet) : vérifier rate-limit (absent AI_RATE_LIMITS).
 - [ ] EconomicModel.tsx = composant mort (SKIP landing). Supprimer.
 - [ ] Wording badge "Quota atteint" trop sec — ajouter "Tes programmes
