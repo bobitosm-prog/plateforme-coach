@@ -4,17 +4,74 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-07-04
-- **HEAD** : e5c1eb7 (feat: align pricing wording — remove "illimité" plans nutrition)
+- **Date** : 2026-07-05
+- **HEAD** : 59c5e2f (fix(ui): feedback génération programme)
 - **Working tree** : clean
 - **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 04/07 — SEO + observabilité COMPLÈTE + quota IA + badge proactif + 2 P0 onboarding attrapés. Phase A items 1-3a clos.
+- **Dernière session** : 05/07 — Flux jour-61 COMPLET (gating+message beta/trial), Opus 4.7→4.8, fix UX génération programme. Phase A items 1-3b clos. Dette Stripe critique ouverte.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-07-05 (matin) — Flux jour-61 + migration Opus + fix UX [PROD]
+
+### Livré (tout en prod, commits isolés, testé runtime)
+**Item 3b — Flux jour-61 (Phase A) — COMPLET côté gating**
+- Audit : le gating beta expiré → paywall marchait DÉJÀ (via
+  hasPaidSub dans useClientDashboard). Pas de cron d'expiration
+  (calcul client-side), acceptable pour bloquer, base ne bascule
+  pas beta→expired (dette confort, non bloquant).
+- Fix : message d'expiration dédié BETA. Avant, un beta expiré
+  voyait un paywall NU (le message dépendait de trialExpired /
+  trial_ends_at, null pour un beta). Ajout betaExpired dans le hook
+  + message "TON ACCÈS BETA EST TERMINÉ" dans page.tsx.
+- Fix : durée trial dynamique. Le message affichait "10 jours"
+  (vestige avant migration 10→14 du 17/06). Branché sur
+  STANDARD_TRIAL_DAYS. Repéré à l'œil par Marco.
+- Fix build server-only : STANDARD_TRIAL_DAYS vivait dans
+  beta-offer.ts (import 'server-only') → cassait le build quand
+  page.tsx (client) l'importait. Déplacé vers lib/constants.ts
+  (neutre), ré-export depuis beta-offer pour compat serveur.
+  tsc était vert, seul le build l'a attrapé.
+- Commit 2bee66e.
+
+**Migration Opus 4.7 → 4.8**
+- 7 occurrences 'claude-opus-4-7' → 'claude-opus-4-8' (6 fichiers :
+  analyze-body, analyze-progress-photo ×2, generate-meal-plan,
+  generate-program, weekly-diagnostic). Identifiant vérifié docs
+  Anthropic : même prix ($5/$25 MTok), même surface API, sort du
+  risque dépréciation. Validé runtime (appel generate-custom-program
+  success=true en base). Commit 5a83807.
+
+**Fix UX — feedback génération programme**
+- Repéré par Marco (peau de client) : cliquer "Générer un programme"
+  ne montrait qu'un changement de texte du bouton (trop discret),
+  l'user croyait à un bug pendant les 20-30s de l'appel Opus.
+- Ajout toast.loading + toast.dismiss dans ProgramBuilder.generateAI
+  (+ clé toast.generating fr/en/de). Bouton disabled/opacity était
+  déjà en place. Commit 59c5e2f.
+
+### Divergence notée (dette)
+- Le meal-plan (NutritionPreferences) utilise setToastMsg (state
+  custom), le programme utilise maintenant toast.loading (meilleur
+  pattern). À uniformiser → toast.loading partout. Polish, faible prio.
+
+### DETTE CRITIQUE vague (déjà dans NEXT)
+- Boucle paiement Stripe NON testable en local (clé sk_live). Un
+  testeur qui paie et n'est pas réactivé (webhook cassé) = P0
+  silencieux. À tester avant recrutement (env Stripe test ou 1er
+  paiement réel contrôlé). Le gating + message beta sont validés,
+  PAS la réactivation post-paiement.
+
+### État Phase A
+1 Observabilité ✅ | 2 Campagnes+décrocheurs ✅ | 3a Chiffrage+quota ✅
+| 3b Flux jour-61 (gating+message) ✅ | Dette Stripe ⏳ CRITIQUE
+| 4 Auto-E2E ⏳ partiel
+
+### Comptes test : f.marco@icloud.com remis null/inactive + ai_usage_logs purgé.
 
 ## 2026-07-04 (soir) — SEO + observabilité + quota IA [PROD]
 
