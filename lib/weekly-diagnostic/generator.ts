@@ -248,7 +248,7 @@ Pense étape par étape avant de répondre :
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-7',
+        model: 'claude-opus-4-8',
         max_tokens: 2048,
         system: systemPrompt,
         tool_choice: { type: 'tool', name: 'weekly_diagnostic_output' },
@@ -321,7 +321,7 @@ Pense étape par étape avant de répondre :
         exercice_a_ajouter: aiOutput.exercice_a_ajouter,
         objectif_semaine_prochaine: aiOutput.objectif_semaine_prochaine,
         raisonnement: aiOutput.raisonnement,
-        ai_model: 'claude-opus-4-7',
+        ai_model: 'claude-opus-4-8',
         ai_tokens_used: aiTokensUsed,
       })
       .select()

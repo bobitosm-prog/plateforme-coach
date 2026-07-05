@@ -453,7 +453,7 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-7',
+      model: 'claude-opus-4-8',
       max_tokens: 1500,
       system: buildSystemPrompt(params),
       messages: [{ role: 'user', content: userPrompt }],

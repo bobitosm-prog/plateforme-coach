@@ -137,7 +137,7 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-opus-4-7',
+          model: 'claude-opus-4-8',
           max_tokens: 2048,
           system: assessmentSystem,
           messages: [{ role: 'user', content }],
@@ -327,7 +327,7 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-7',
+        model: 'claude-opus-4-8',
         max_tokens: 1024,
         system: systemPrompt,
         messages: [{ role: 'user', content }],
