@@ -4,3 +4,4 @@ export const PLATFORM_OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.m
 export const PLATFORM_COMMISSION_RATE = 0.05 // 5%
 export const SUBSCRIPTION_PRICE_CHF = 30
 export const SUBSCRIPTION_DURATION_DAYS = 30
+export const STANDARD_TRIAL_DAYS = 14 // durée d'essai standard, partagée client/serveur

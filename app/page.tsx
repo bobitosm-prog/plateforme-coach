@@ -10,6 +10,7 @@ import {
 import useClientDashboard, { type Tab } from './hooks/useClientDashboard'
 import useInitialGeneration from './hooks/useInitialGeneration'
 import Paywall from './components/Paywall'
+import { STANDARD_TRIAL_DAYS } from '@/lib/constants'
 import ClientIntlProvider from '../components/ClientIntlProvider'
 import BugReport from './components/BugReport'
 import BadgeCelebration from './components/BadgeCelebration'
@@ -307,12 +308,16 @@ export default function CoachApp() {
   /* ── Trial expired OR no subscription → paywall ── */
   if (h.profile && !h.isSubActive) return (
     <div style={{ minHeight: '100dvh', background: '#0D0B08', display: 'flex', flexDirection: 'column' }}>
-      {h.trialExpired && (
+      {(h.trialExpired || h.betaExpired) && (
         <div style={{ textAlign: 'center', padding: '40px 24px 0' }}>
           <img src="/logo-moovx.png" alt="MoovX Logo" width={56} height={56} style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block' }} />
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(1.6rem,4vw,2.2rem)', letterSpacing: 3, color: '#F8FAFC', margin: '0 0 8px' }}>TA PÉRIODE D&apos;ESSAI EST TERMINÉE</h1>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(1.6rem,4vw,2.2rem)', letterSpacing: 3, color: '#F8FAFC', margin: '0 0 8px' }}>
+            {h.betaExpired ? 'TON ACCÈS BETA EST TERMINÉ' : 'TA PÉRIODE D\'ESSAI EST TERMINÉE'}
+          </h1>
           <p style={{ color: '#555', fontSize: '0.88rem', margin: '0 0 4px', fontFamily: FONT_BODY, fontWeight: 300, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-            Ton essai gratuit de 10 jours est arrivé à son terme. Abonne-toi pour continuer à utiliser MoovX.
+            {h.betaExpired
+              ? 'Ta période d\'accès gratuit MoovX est arrivée à son terme. Abonne-toi pour continuer.'
+              : `Ton essai gratuit de ${STANDARD_TRIAL_DAYS} jours est arrivé à son terme. Abonne-toi pour continuer à utiliser MoovX.`}
           </p>
         </div>
       )}

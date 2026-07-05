@@ -546,6 +546,7 @@ export default function useClientDashboard() {
   const subEndsAt = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null
   const isInBeta = profile?.subscription_type === 'beta' && !!subEndsAt && subEndsAt > now
   const betaDaysLeft = subEndsAt ? Math.max(0, Math.ceil((subEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
+  const betaExpired = profile?.subscription_type === 'beta' && !!subEndsAt && subEndsAt <= now
   const isSubActive = hasPaidSub || isExempt || isInvited || isInTrial
 
   const handleSubscribe = async (planId?: string) => {
@@ -619,7 +620,7 @@ export default function useClientDashboard() {
     todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
     displayAvatar, fullName, firstName,
     // Subscription & trial
-    isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, handleSubscribe, aiAllowed: !isInvited,
+    isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe, aiAllowed: !isInvited,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
     // Calendar / scheduled sessions (from sub-hook)

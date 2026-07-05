@@ -1,5 +1,7 @@
 import 'server-only'
 import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { STANDARD_TRIAL_DAYS } from '@/lib/constants'
+export { STANDARD_TRIAL_DAYS }
 
 export type BetaOffer = { freeDays: number; slotsLeft: number; maxSlots: number }
 
@@ -25,7 +27,6 @@ export async function getActiveBetaOffer(): Promise<BetaOffer | null> {
   }
 }
 
-export const STANDARD_TRIAL_DAYS = 14
 
 /** Durée d'essai à afficher : la campagne beta si active, sinon le standard 14j. */
 export function trialDaysFor(offer: BetaOffer | null): number {
