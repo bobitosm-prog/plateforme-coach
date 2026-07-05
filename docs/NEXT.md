@@ -111,6 +111,12 @@ Conséquence : l'observabilité passe de recommandée à PRÉREQUIS ABSOLU.
 - [ ] Purge comptes/déchets test avant vague (f.marco@icloud.com,
       marko.rosa, Marco test, ai_usage_logs, app_logs).
 - [ ] Ajuster ACTIVITY_STALE_DAYS 7→2-3j au lancement (décrocheur J1).
+- [ ] **CRITIQUE** : Tester le flux paiement COMPLET avant la vague
+      (Stripe est en LIVE, non testable en local). Un testeur qui paie
+      et n'est pas réactivé (webhook checkout.session.completed cassé)
+      = P0 silencieux. Option : env Stripe test, ou 1er abonnement
+      réel contrôlé. Le gating + message beta sont validables en
+      local, PAS la boucle paiement.
 
 #### Item 3b — Flux jour-61 (NON commencé)
 - [ ] Bascule accès expiré → pricing testée (entrevu aujourd'hui :
