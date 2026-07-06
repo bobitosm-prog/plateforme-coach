@@ -95,7 +95,7 @@ export const HEAVY_AI_ENDPOINTS = [
   'analyze-progress-photo', 'analyze-body',
 ] as const
 
-export const MONTHLY_HEAVY_QUOTA = 4 // 4 générations lourdes/mois tous types confondus
+export const MONTHLY_HEAVY_QUOTA = 6 // 6 générations lourdes/mois (4→6 pour la vague beta 06/07 : onboarding consomme déjà 2)
 const MONTHLY_WINDOW_SECONDS = 2592000 // 30 jours
 
 export async function checkAiQuota(
