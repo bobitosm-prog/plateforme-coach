@@ -49,6 +49,9 @@ export async function generateWeeklyDiagnostic(
     // weekStartStr : string YYYY-MM-DD du lundi Geneva (pour colonne `date`)
     const monday = new Date(Date.UTC(tzYear, tzMonth - 1, tzDay))
     monday.setUTCDate(monday.getUTCDate() - daysSinceMonday)
+    // Reculer d'1 semaine : cron quotidien individualisé → toujours analyser
+    // la dernière semaine complète lundi→dimanche révolue, pas la courante.
+    monday.setUTCDate(monday.getUTCDate() - 7)
     const weekStartStr = monday.toISOString().slice(0, 10)
 
     // weekStart : instant absolu du lundi 00:00 Geneva (pour filter completed_at timestamptz)
