@@ -743,20 +743,36 @@ export default function HomeTab({
         <div style={{ height: 20 }} />
       </div>
 
-      {/* ═══ LEVEL MODAL PLACEHOLDER ═══ */}
-      {showLevelModal && (
-        <div style={modalOverlay} onClick={() => setShowLevelModal(false)}>
-          <div style={{ ...modalContainer, padding: 24, maxWidth: 340, margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ ...titleStyle, fontSize: 14 }}>{ht('levelTitle')}</h2>
-            <p style={{ color: colors.textDim, fontSize: 13, textAlign: 'center', margin: 0, fontFamily: fonts.body }}>
-              {ht('levelDesc')}
-            </p>
-            <button onClick={() => setShowLevelModal(false)} style={{ ...btnPrimaryStyle, padding: '12px 32px', fontSize: 13 }}>
-              {ht('levelClose')}
-            </button>
+      {/* ═══ LEVEL MODAL ═══ */}
+      {showLevelModal && (() => {
+        const xp = xpData?.total_xp ?? 0
+        const { level: lvl, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
+        const title = getLevelTitle(lvl)
+        return (
+          <div style={modalOverlay} onClick={() => setShowLevelModal(false)}>
+            <div style={{ ...modalContainer, padding: 24, maxWidth: 340, margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ fontFamily: fonts.headline, fontSize: 36, fontWeight: 400, color: colors.gold, letterSpacing: '0.04em', lineHeight: 1, textTransform: 'uppercase', margin: 0 }}>
+                {ht('levelYourLevel', { level: lvl })}
+              </h2>
+              <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase' }}>
+                {title}
+              </div>
+              <div style={{ width: '100%' }}>
+                <div style={{ height: 6, background: `${colors.gold}1a`, borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.round(progress * 100)}%`, height: '100%', background: colors.gold, borderRadius: 999, transition: 'width 300ms' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                  <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{ht('levelProgress', { current: xpInLevel, next: xpForNext })}</span>
+                  <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>{ht('levelTotalXp', { total: xp })}</span>
+                </div>
+              </div>
+              <button onClick={() => setShowLevelModal(false)} style={{ ...btnPrimaryStyle, padding: '12px 32px', fontSize: 13 }}>
+                {ht('levelClose')}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* ═══ RECOVERY MODAL ═══ */}
       {showRecoveryModal && (
