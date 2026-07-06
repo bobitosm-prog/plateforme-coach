@@ -4,17 +4,93 @@ Historique des sessions de developpement marathon.
 
 ## ETAT ACTUEL
 
-- **Date** : 2026-07-05
-- **HEAD** : 59c5e2f (fix(ui): feedback génération programme)
+- **Date** : 2026-07-06
+- **HEAD** : ca85e34 (fix(onboarding): boucle de génération infinie au boot PWA)
 - **Working tree** : clean
-- **Cap** : Launch beta Genève (ROADMAP.md). Horizon 1 Phase A.
-- **Dernière session** : 05/07 — Flux jour-61 COMPLET (gating+message beta/trial), Opus 4.7→4.8, fix UX génération programme. Phase A items 1-3b clos. Dette Stripe critique ouverte.
+- **Cap** : Launch beta Genève (ROADMAP.md). Phase A COMPLÈTE. GO vague.
+- **Dernière session** : 06/07 — Pré-beta complète : diagnostic -7j, RGPD weekly_diagnostics, purge 6 comptes test, rate limit Athena, config campagne 60j/10 places, quota 6/mois, 2 P0 E2E attrapés (split Safari↔PWA, boucle génération infinie). E2E 5/5 validé. Verdict GO.
 - **Campagne beta** : is_active=false en DB. Activation = toggle UI admin.
 - **Prochaines tâches** : voir docs/NEXT.md.
 - **Dettes** : Bloc D (created_at vs date, await sans check), exercise_id FK. Mineure : comparaison sub par endpoint seul. Mineure : 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin). Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich). AbsCalculator a recabler design-system. weekly_diagnostic obsolete marko.rosa en base. TZ vue coach streak (UTC, pas Zurich — volontaire, un changement à la fois). Stack interne WorkoutSession+TempoExecutor anarchique (fonctionnel). Doublon archi FoodSearch/modal food+useFoodLog (page.tsx). Titre Nutrition sans sous-titre. Vue détail FoodSearch (L132) clavier à vérifier.
 - **Règle** : tout overlay position:fixed dans le rail DOIT être portalisé (RailOverlay ou createPortal interne). Ref : RailOverlay.tsx, SessionDetailModal.tsx. Cache hit hook : tout state du Promise.all de useClientDashboard DOIT être replique dans cache.get ET cache.set (sinon casse au 2e chargement, TTL 5min). Timezone : colonnes timestamp WITHOUT time zone = UTC sans Z, convertir via formatZurichTime/formatZurichDate (lib/format-time.ts).
 
 ---
+
+## 2026-07-06 — Pré-beta complète + 2 P0 E2E [PROD]
+
+### Livré (10 items, ordre chronologique)
+1. **Fix diagnostic hebdo -7j** (ad464ba) : semaine courante → révolue.
+   Validé runtime : week_start=2026-06-29, score 64, card + drill-down OK.
+   Détour : path cron = /api/weekly-diagnostic/cron (PAS /api/cron/...).
+2. **Trou RGPD** (3b6b747) : delete_user_account ne couvrait pas
+   weekly_diagnostics (table post-Phase 3). Migration 20260706100000.
+   CC avait strippé 9 commentaires en re-générant — diff vs
+   pg_get_functiondef obligatoire. RÈGLE : toujours diffrer vs la base.
+3. **Purge base** : 6 comptes test supprimés via RPC delete_user_account
+   (marko.rosa, icloud, bluemail, vapo-premium, design-wordpress,
+   raki-2020) + auth.users dashboard. Base finale : 8 comptes légitimes.
+4. **Rate limit Athena** (dans d1617e1) : chat-ai branché sur
+   checkAiRateLimit DB 20/h/user + logAiUsage. In-memory IP 15/min
+   conservé en 1re ligne. Pattern analyze-body.
+5. **Config campagne "Juillet 2026"** : 60j (décision Marco, vague longue
+   pour signal bugs + rétention), max_slots 60→10. claim_beta_slot
+   auditée : atomique, saine. Prouvé E2E : used_slots 0→1, end_date
+   +60j, beta_campaign_id posé.
+6. **ACTIVITY_STALE_DAYS 7→2** (626c6ba).
+7. **Quota heavy 4→6/mois** (d1617e1) : l'onboarding consomme 2
+   générations légitimes, marge jour 1. Coût plafond ~40$/mois.
+8. **P0 E2E #1 — split Safari↔PWA** : la validation email s'ouvre dans
+   Safari, onboarding fait hors PWA. Flux voulu (register-client L86-87) :
+   callback type=signup → signOut → bannière /login. Fix wording NON
+   tranché — test différé consigné. Le guard d'existence (P0 #2) couvre
+   le dégât.
+9. **P0 E2E #2 — boucle génération infinie** (ca85e34) :
+   useInitialGeneration : clear du flag needs_initial_generation bloqué
+   par le check cancelled (race setProfile pendant ~50s de génération) +
+   erreur updateProfile avalée (returned, jamais thrown). 6 générations
+   pour 1 onboarding. Fix : garde d'existence DB avant génération,
+   clear inconditionnel au lifecycle, erreur loggée via reporter.
+   Validé : flag ré-armé + 3 réouvertures = 0 appel IA, flag auto-clearé.
+10. **E2E complet 5/5** : séance, aliment, Athena, carte 60j, badge.
+    Remise à zéro : compte E2E purgé, used_slots remboursé, is_active=false.
+
+### Verdict
+GO pour la vague. Phase A items 1-4 clos.
+
+## 2026-07-06 — Fix diagnostic hebdomadaire : fenêtre -7j [PROD]
+
+### Symptôme
+Diagnostic de f.marco@me.com généré ce matin avec week_start=2026-07-06 (semaine
+courante, données vides) au lieu de 2026-06-29 (semaine révolue, données pleines).
+Score aberrant sur 0/0.
+
+### Cause racine
+Le calcul de fenêtre dans lib/weekly-diagnostic/generator.ts trouvait le lundi de
+la semaine COURANTE — correct quand le cron tournait le dimanche (ancien système),
+faux depuis la migration au cron quotidien 18h + next_diagnostic_at individualisé
+(20260529140000). Un déclenchement un lundi (ou tout autre jour) analysait la
+semaine qui COMMENCE, pas celle qui vient de finir.
+
+### Fix
+1 ligne : `monday.setUTCDate(monday.getUTCDate() - 7)` après le calcul du lundi
+courant. weekStartStr, weekStart, weekEnd, weekEndStr dérivent tous de `monday` →
+suivent automatiquement. Commit ad464ba.
+
+### Procédure de validation
+- Supprimé le diagnostic buggé week_start=2026-07-06 en SQL Editor.
+- Réarmé next_diagnostic_at = now() en SQL (chaque run avance de +7j, le buggé
+  l'avait déjà poussé → réarmement nécessaire).
+- Invoqué le cron en local : POST /api/weekly-diagnostic/cron (Bearer CRON_SECRET).
+  DÉTOUR : le path est /api/weekly-diagnostic/cron (PAS /api/cron/weekly-diagnostic,
+  404 rencontré avant de trouver le bon).
+- Résultat : {total:1, success:1, errors:0}, week_start=2026-06-29 en base.
+- Score 64 (vs ~8 sur le buggé). Card HomeTab + drill-down validés device.
+- 2e invocation immédiate → already_exists (idempotence intacte).
+
+### Effet de bord connu
+Chaque run (même buggé) avance next_diagnostic_at de 7j. Le réarmement SQL est
+nécessaire pendant les tests manuels. En prod normal, le cron ne tourne qu'une
+fois par fenêtre → pas de problème.
 
 ## 2026-07-05 (matin) — Flux jour-61 + migration Opus + fix UX [PROD]
 

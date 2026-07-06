@@ -90,9 +90,8 @@ Conséquence : l'observabilité passe de recommandée à PRÉREQUIS ABSOLU.
       Re-versionnée. Dette d'infra corrigée.
 
 #### Dette à vérifier avant vague
-- [ ] free_days des campagnes test non aligné sur la vraie offre
-      ("Test campagne" avait ~60j). Vérifier les valeurs réelles.
-- [ ] Purge déchets test app_logs + f.marco@icloud.com (compte test).
+- [x] free_days campagne : 60j confirmé décision produit ✅ 06/07
+- [x] Purge comptes test + app_logs ✅ 06/07
 
 #### Item 3a — Chiffrage + quota IA (FAIT 04/07 soir)
 - [x] Chiffrage 15 testeurs : ~$27/mois attendu, ~$1155/mois plafond.
@@ -107,22 +106,23 @@ Conséquence : l'observabilité passe de recommandée à PRÉREQUIS ABSOLU.
       setToastMsg (state custom), programme utilise toast.loading
       (meilleur pattern). Migrer le meal-plan vers toast.loading
       pour cohérence. Polish, faible priorité.
-- [ ] chat-ai (Athena, Sonnet) : vérifier rate-limit (absent AI_RATE_LIMITS).
+- [x] chat-ai rate limit DB 20/h/user ✅ 06/07
 - [ ] EconomicModel.tsx = composant mort (SKIP landing). Supprimer.
 - [ ] Wording badge "Quota atteint" trop sec — ajouter "Tes programmes
       actuels restent disponibles".
-- [ ] Purge comptes/déchets test avant vague (f.marco@icloud.com,
-      marko.rosa, Marco test, ai_usage_logs, app_logs).
-- [ ] Ajuster ACTIVITY_STALE_DAYS 7→2-3j au lancement (décrocheur J1).
-- [ ] **CRITIQUE** : Tester le flux paiement COMPLET avant la vague
-      (Stripe est en LIVE, non testable en local). Un testeur qui paie
-      et n'est pas réactivé (webhook checkout.session.completed cassé)
-      = P0 silencieux. Option : env Stripe test, ou 1er abonnement
-      réel contrôlé. Le gating + message beta sont validables en
-      local, PAS la boucle paiement.
+- [x] Purge comptes/déchets test ✅ 06/07 (6 comptes RPC + auth.users, 0 orphelin)
+- [x] Ajuster ACTIVITY_STALE_DAYS 7→2 ✅ 06/07
+- [x] Fix diagnostic hebdo : fenêtre -7j (semaine courante → révolue) ✅ 06/07
+- [ ] Garde-fou plancher calorique dans le prompt Opus du generator —
+      les ajustements -100 kcal peuvent s'empiler semaine après semaine
+      sans borne (BMR / -20% TDEE). Conception, pas urgent.
+- [ ] **CRITIQUE — DEADLINE MI-AOÛT** : Tester le flux paiement COMPLET
+      (Stripe LIVE, non testable local). Premiers paywalls beta ~04/09.
+      Un webhook checkout.session.completed cassé = P0 silencieux.
+      Env Stripe test ou 1er paiement réel contrôlé.
 
-#### Item 3b — Flux jour-61 (NON commencé)
-- [ ] Bascule accès expiré → pricing testée (entrevu aujourd'hui :
+#### Item 3b — Flux jour-61 (FAIT ✅ 05/07)
+- [x] Bascule accès expiré → pricing testée (entrevu aujourd'hui :
       null/inactive → paywall fonctionne). Chantier neuf, session dédiée.
 
 4. [ ] Auto-E2E rigoureux : Marco refait signup→onboarding→séance sur
@@ -341,7 +341,7 @@ les set_role inertes ; valider une inscription CLIENT (non refaite après le net
 - 2 PATCH activation simultanés → 23505 possible (inoffensif, 1 admin)
 - Filtrage journee HomeTab (~L187 setHours fuseau navigateur, pas Zurich)
 - AbsCalculator a recabler design-system
-- weekly_diagnostic obsolete marko.rosa en base
+- ~~weekly_diagnostic obsolete marko.rosa en base~~ SOLDÉ 06/07 (0 orphelin, compte purgé)
 
 ## Règles dev permanentes
 - **Overlays dans le rail** : tout position:fixed rendu dans une slide du rail
@@ -403,6 +403,35 @@ NE PAS coder à l'arrache : feature argent réel, session dédiée.
 - Webhook Stripe pour activer/désactiver l'abonnement coach.
 
 NE PAS coder à l'arrache : feature argent réel, session dédiée (comme le parrainage).
+
+## Dettes ajoutées 06/07
+- [ ] i18n aiQuotaResponse/aiRateLimitResponse : messages 429 en français
+      en dur côté serveur (fuite EN/DE). Mineur, vague Genève FR.
+- [ ] Bannière post-validation email : wording "ouvre l'app MoovX" +
+      trancher (a) re-login pas assez explicite vs (b) bug callback.
+      Test : signup + clic lien, observer re-login vs auto-login.
+      Le guard d'existence (P0 #2 fix) couvre le dégât en attendant.
+- [ ] Guard anti-regénération UI : "Voir mon plan" vs "Générer" si
+      plan actif existe. Moins urgent post-ca85e34.
+- [ ] Relecture diff ca85e34 : 123+/95- plus large que les 3 changements
+      annoncés — vérifier qu'aucun code utile n'a été perdu.
+- [ ] Jamais 2 campagnes actives simultanément (claim_beta_slot
+      incrémente TOUTES les campagnes actives). Durcir la RPC un jour.
+
+## Décisions consignées 06/07
+- Lifetime amis (Maria/Nolwen/Raki-2024) : statu quo, revue ~octobre
+  si zéro connexion → suppression ou abandon.
+- Stripe env test : DEADLINE MI-AOÛT (premiers paywalls beta ~04/09).
+  Reste LA dette critique.
+- Campagne "Juillet 2026" : 60j, 10 places (pas 60). Vague longue
+  pour signal bugs + rétention.
+
+## 🚀 CHECKLIST JOUR J (vague beta)
+1. [ ] Supprimer f.marco@icloud.com de auth.users (si pas fait)
+2. [ ] UPDATE beta_campaigns SET is_active=true WHERE id='71daa88c...'
+3. [ ] Vérifier deploy Vercel vert (ca85e34 minimum)
+4. [ ] Publier la vidéo / distribuer le lien
+5. [ ] Routine quotidienne : /admin/logs + /admin/users chaque matin
 
 ## Notes test
 - f.marco (UUID 00a8a3a6) : sub saine après test re-sync 17/06.
