@@ -8,7 +8,7 @@ import { RoleDialog } from './RoleDialog'
 import { SubscriptionDialog } from './SubscriptionDialog'
 
 const ACTIVITY_WARN_DAYS = 3
-const ACTIVITY_STALE_DAYS = 7
+const ACTIVITY_STALE_DAYS = 2
 
 function activityColor(lastWorkoutAt: string | null): string {
   if (!lastWorkoutAt) return '#99907e'
