@@ -77,10 +77,10 @@ export default function CoachProfile({
       {coachProfile && (
         <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {coachProfile.coach_bio && <div><div style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px' }}>Bio</div><div style={{ fontSize: '0.85rem', color: TEXT_PRIMARY, fontFamily: FONT_BODY, marginTop: 4 }}>{coachProfile.coach_bio}</div></div>}
-          {coachProfile.coach_speciality?.length > 0 && (
+          {coachProfile.coach_speciality && (
             <div><div style={{ fontFamily: FONT_ALT, fontSize: '0.65rem', color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 6 }}>Spécialités</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {coachProfile.coach_speciality.map((s: string) => <span key={s} style={{ padding: '3px 10px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}`, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{s}</span>)}
+                <span style={{ padding: '3px 10px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: '0.68rem', fontWeight: 700, background: GOLD_DIM, color: GOLD, border: `1px solid ${GOLD_RULE}`, letterSpacing: '1px', textTransform: 'uppercase' as const }}>{coachProfile.coach_speciality}</span>
               </div>
             </div>
           )}
