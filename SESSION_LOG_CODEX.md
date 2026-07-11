@@ -576,3 +576,197 @@ C'est la troisième tâche P0 de la Phase 1 et le filet de caractérisation requ
 - Temps de session estimé : 75 à 120 minutes.
 - Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
 - Estimation restante pour la prochaine tâche : 1,5 jour concentré.
+
+---
+
+## Session 2026-07-11 — 18:45
+
+### Contexte Git
+
+- Branche : `main`
+- Commit au début : `75bb6b0`
+- Commit à la fin : `75bb6b0`
+- État Git au début : propre ; la sécurisation Stripe Connect et son suivi avaient été commités avant cette session.
+- État Git à la fin : nouveau test `tests/unit/assign-coach-authorization.test.ts`, roadmap et journal modifiés ; route `app/api/assign-coach/route.ts` inchangée.
+
+### Roadmap
+
+- Phase : Phase 1 — Stabilisation et sécurité
+- Priorité : P0
+- Tâche principale : Écrire les tests d'autorisation de `POST /api/assign-coach`.
+- Statut au début : Non commencé ; comportement vulnérable connu mais non figé par des tests dédiés.
+- Statut à la fin : Terminé ; 16 tests de caractérisation réussis et vulnérabilité explicitement démontrée.
+
+### Objectif de la session
+
+Figer le comportement actuel de `POST /api/assign-coach`, en particulier l'obtention arbitraire de l'abonnement `invited`, sans modifier ni corriger la route, les parcours d'inscription, les migrations ou les règles RLS.
+
+### Périmètre prévu
+
+- fichiers ou modules concernés : test unitaire dédié, roadmap et journal ;
+- fichiers explicitement exclus : route `assign-coach`, `/join`, callback auth, inscription client, routes Stripe et migrations ;
+- services externes concernés : Supabase uniquement par mocks isolés ;
+- migrations éventuelles : aucune.
+
+### Travail effectué
+
+1. Lecture de la roadmap, de la dernière entrée du journal et de la demande jointe.
+2. Vérification de la branche `main`, du commit `75bb6b0` et d'un arbre de travail propre.
+3. Analyse de la route `assign-coach`, de `/join`, de l'inscription client, du callback auth et des helpers Supabase.
+4. Analyse des migrations `profiles`, `coach_clients`, abonnements, contraintes uniques, RLS et garde des colonnes sensibles.
+5. Recherche des tests existants ; aucun test dédié à `assign-coach` n'existait.
+6. Création d'un mock du client session et d'un client service-role distincts.
+7. Ajout de 16 tests couvrant authentification, rôles, cible, abonnements, résolution du coach, mutations ordonnées, échecs partiels et configuration.
+8. Vérification explicite que `clientId` du corps est ignoré au profit de `user.id`.
+9. Démonstration explicite qu'un simple `coachId` accorde actuellement `active/invited` sans invitation enregistrée.
+10. Exécution des tests ciblés et complets, de TypeScript, d'ESLint et de `git diff --check`.
+
+### Fichiers créés
+
+- `tests/unit/assign-coach-authorization.test.ts`
+  - 16 tests de caractérisation avec mocks Supabase sans réseau.
+
+### Fichiers modifiés
+
+- `ROADMAP_CODEX.md`
+  - troisième tâche P0 cochée ; compteurs de phase, progression, tâches restantes et tests mis à jour.
+- `SESSION_LOG_CODEX.md`
+  - ajout de la présente entrée.
+
+### Fichiers de production modifiés
+
+Aucun. `app/api/assign-coach/route.ts` est strictement inchangé.
+
+### Fichiers supprimés
+
+Aucun.
+
+### Migrations et base de données
+
+- migration créée : Sans objet
+- migration appliquée localement : Sans objet
+- migration appliquée à distance : Sans objet
+- tables simulées : `profiles` et `coach_clients`
+- compatibilité : aucune modification de comportement ; tests de caractérisation uniquement
+- rollback : supprimer le nouveau fichier de test et rétablir les deux documents ; aucune base à restaurer.
+
+### Tests exécutés
+
+| Commande | Résultat | Détails |
+|---|---|---|
+| `npm test -- tests/unit/assign-coach-authorization.test.ts` | Réussi | 1 fichier, 16 tests réussis. |
+| `npm test` | Réussi | 8 fichiers, 119 tests réussis. |
+| `npx tsc --noEmit` | Réussi | Aucune erreur TypeScript après ajustement du typage des mocks. |
+| `npx eslint tests/unit/assign-coach-authorization.test.ts` | Réussi | Aucune erreur ni avertissement dans le fichier créé. |
+| `npx eslint app/api/assign-coach/route.ts tests/unit/assign-coach-authorization.test.ts` | Échec préexistant documenté | Une erreur `@typescript-eslint/no-explicit-any` sur `app/api/assign-coach/route.ts:78`; la route devait rester inchangée. |
+| `git diff --check` | Réussi | Aucune erreur de format. |
+| Build | Non exécuté | Dépendance réseau Google Fonts connue ; aucun code de production n'a changé. |
+
+### Scénarios caractérisés
+
+- anonyme rejeté en 401 avant création du client service-role ;
+- client standard, invité, lifetime, coach et administrateur authentifiés tous acceptés sans contrôle de rôle ;
+- `clientId` falsifié ignoré, cible réelle égale à `user.id` ;
+- `coachId` arbitraire accepté sans preuve d'invitation ;
+- `coachId` syntaxiquement invalide transmis jusqu'à l'upsert ;
+- `autoAssign: true` remplace même un `coachId` fourni par le coach par défaut et ne modifie que le rôle ;
+- `coachId` absent avec `autoAssign: false` utilise le coach par défaut mais n'inscrit pas `invited_by_coach` ;
+- absence de coach fourni et de coach par défaut renvoie 400 sans mutation ;
+- erreur d'UPDATE `profiles` ignorée, puis upsert exécuté ;
+- erreur d'upsert renvoie 500 après tentative de mutation du profil ;
+- coach inexistant représenté par l'erreur de clé étrangère après mutation du profil ;
+- clé service-role absente renvoie 500 avant le client admin et toute mutation.
+
+### Vulnérabilités et comportements critiques démontrés
+
+- Un utilisateur authentifié sans invitation enregistrée peut fournir un `coachId` et provoquer la mutation service-role suivante sur son propre profil : `subscription_status = 'active'`, `subscription_type = 'invited'`, `trial_ends_at = null`.
+- Aucun contrôle ne vérifie que le `coachId` correspond à un profil coach avant la mutation d'abonnement.
+- Aucun rôle appelant n'est vérifié : client, invited, lifetime, coach et admin suivent le même chemin.
+- Les mutations ne sont pas transactionnelles : l'abonnement peut être modifié alors que la relation coach/client échoue.
+- Une erreur de mise à jour du profil est ignorée et peut conduire à une réponse 200 si l'upsert réussit.
+
+### Décisions prises
+
+- décision : refléter les réponses et mutations actuelles, y compris lorsqu'elles sont vulnérables ;
+- raison : la session est exclusivement un filet de caractérisation avant conception du contrat d'invitation ;
+- alternatives écartées : attentes sécurisées rouges ou correction immédiate de la route ;
+- impact futur : les tests devront être adaptés explicitement lors de l'introduction du contrat sécurisé.
+
+- décision : modéliser le coach inexistant comme une erreur de contrainte lors de l'upsert ;
+- raison : la route n'effectue aucune lecture préalable du profil coach et la base est l'unique validation actuelle ;
+- alternatives écartées : inventer une validation applicative inexistante ;
+- impact futur : le futur contrat devra valider invitation, coach et état avant toute mutation.
+
+### Limitations des tests
+
+- Les tests utilisent des mocks et ne valident pas réellement les contraintes PostgreSQL, les triggers ou les RLS.
+- Le statut de rôle est simulé dans les métadonnées de session uniquement pour prouver que la route ne le consulte pas.
+- Le test de coach inexistant simule le message de contrainte Supabase ; aucune base locale n'est appelée.
+- La route transforme les erreurs JSON et fournisseurs en 500 génériques ; tous les cas de parsing malformé ne sont pas couverts.
+- ESLint global ciblé reste rouge sur un `any` préexistant dans la route, laissé intact par contrainte.
+
+### Travail non terminé
+
+- Aucune correction de la vulnérabilité n'a été commencée.
+- Aucun contrat d'invitation, schéma, token à usage unique ou migration n'a été créé.
+- Aucun build n'a été exécuté à cause de la contrainte Google Fonts connue.
+- Aucun commit n'a été créé.
+
+### Checklist de fin de session
+
+- [x] La tâche respecte son périmètre.
+- [x] La route `assign-coach` est inchangée.
+- [x] Aucun fichier utilisateur non lié n'a été écrasé.
+- [x] TypeScript a été vérifié.
+- [x] Les tests ciblés et complets ont été exécutés.
+- [x] Le nouveau test passe ESLint.
+- [ ] La commande ESLint incluant la route passe — erreur `no-explicit-any` préexistante documentée, correction interdite dans cette session.
+- [ ] Le build a été exécuté — non exécuté, dépendance Google Fonts connue et aucun code de production modifié.
+- [x] `git status` a été vérifié.
+- [x] `ROADMAP_CODEX.md` a été mis à jour.
+- [x] Les vulnérabilités et limitations sont documentées.
+- [x] La prochaine étape est définie.
+
+### Résumé de reprise
+
+La troisième tâche P0 de la Phase 1 est terminée. Seize tests dédiés figent le comportement actuel de `POST /api/assign-coach`. Ils prouvent qu'un utilisateur authentifié, quel que soit son rôle, peut fournir un `coachId` arbitraire et obtenir `subscription_status='active'`, `subscription_type='invited'`, `trial_ends_at=null` sans invitation enregistrée. L'identité client reste correctement imposée par `user.id`, mais le flux présente des mutations partielles et ignore l'erreur de mise à jour du profil. Les 16 tests ciblés et les 119 tests du projet passent, TypeScript passe et le nouveau fichier passe ESLint. La route est inchangée. La commande ESLint incluant la route signale son `catch (error: any)` préexistant. Aucun réseau, migration ou service réel n'a été utilisé.
+
+### Prochaine étape unique
+
+**Action :**
+
+Créer le contrat applicatif d'invitation coach à usage unique, sans encore créer ni appliquer la migration.
+
+**Pourquoi maintenant :**
+
+Les comportements vulnérables sont figés. La quatrième tâche P0 consiste à définir précisément l'autorité, le cycle de vie et les invariants nécessaires avant toute évolution rétrocompatible de la base.
+
+**Fichiers à ouvrir en premier :**
+
+- `app/api/assign-coach/route.ts`
+- `app/join/JoinPageContent.tsx`
+- `app/auth/callback/route.ts`
+- migrations liées à `profiles` et `coach_clients`
+- `tests/unit/assign-coach-authorization.test.ts`
+
+**Livrable attendu :**
+
+- contrat documenté des champs d'une invitation ;
+- états `pending`, `accepted`, `expired`, `revoked` et règles de transition ;
+- preuve que seul le bénéficiaire authentifié peut consommer une invitation valide ;
+- définition de l'idempotence, de l'expiration, du hash/token et de l'audit ;
+- stratégie expand/contract et compatibilité temporaire avec les liens actuels ;
+- aucun SQL ni changement de route pendant cette étape de conception.
+
+**Ne pas faire pendant la prochaine session :**
+
+- ne pas créer ou appliquer de migration ;
+- ne pas corriger immédiatement `assign-coach` ;
+- ne pas modifier `/join`, Stripe, RLS ou un autre domaine ;
+- ne pas appeler Supabase de production.
+
+### Temps
+
+- Temps de session estimé : 75 à 120 minutes.
+- Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
+- Estimation restante pour la prochaine tâche : 2 jours concentrés selon les décisions de compatibilité.
