@@ -197,27 +197,14 @@ describe('one-time coach invitation contract', () => {
       })
     })
 
-    describe('future consume route/RPC — activate after migration and route exist', () => {
+    describe('future consume route — PostgreSQL RPC cases live in integration tests', () => {
       it.todo('rejects an unauthenticated consumer with 401')
-      it.todo('allows an authenticated user whose verified email matches the invitation')
-      it.todo('rejects a different authenticated email with INVITATION_EMAIL_MISMATCH')
-      it.todo('rejects an unverified email with INVITATION_EMAIL_UNVERIFIED')
-      it.todo('derives client_id exclusively from auth.uid()')
       it.todo('ignores or rejects a forged clientId without changing the RPC target')
       it.todo('ignores or rejects a forged coachId and uses invitation.coach_id')
       it.todo('ignores or rejects legacy autoAssign')
       it.todo('ignores or rejects browser-controlled subscription_status')
       it.todo('ignores or rejects browser-controlled subscription_type and trial_ends_at')
-      it.todo('updates the authenticated profile to active invited with no trial end')
-      it.todo('creates the active coach_clients relation with invited_by_coach true')
-      it.todo('marks the invitation consumed with consumed_at populated')
-      it.todo('sets consumed_by to auth.uid()')
-      it.todo('rejects a second consumption with INVITATION_ALREADY_USED')
-      it.todo('allows exactly one of two concurrent consumption attempts')
-      it.todo('rejects an invitation whose coach was deleted, suspended or is not a coach')
       it.todo('returns INVITATION_ALREADY_LINKED without mutation for an existing relation')
-      it.todo('rejects a client already marked invited without moving coaches')
-      it.todo('rejects a lifetime, active beta or active Stripe subscriber without downgrade')
     })
   })
 
@@ -238,41 +225,24 @@ describe('one-time coach invitation contract', () => {
       })
     })
 
-    describe('future PostgreSQL integration — activate with local migration tests', () => {
+    describe('remaining PostgreSQL failure injection cases', () => {
       it.todo('rolls back relation and invitation when the profile update fails')
       it.todo('rolls back profile and invitation when coach_clients upsert fails')
-      it.todo('rolls back profile and relation when the final invitation update fails')
-      it.todo('never exposes a partial mutation after any transaction error')
-      it.todo('locks the invitation row before validating and mutating it')
-      it.todo('permits only one atomic pending to consumed transition under concurrency')
-      it.todo('exposes consumption only through consume_coach_invitation RPC')
-      it.todo('derives auth.uid inside the RPC and accepts no client or coach identifier')
     })
   })
 
   describe('revocation', () => {
-    describe('future revoke route/RPC — activate after revocation exists', () => {
-      it.todo('allows only the coach who owns a pending invitation to revoke it')
+    describe('future revoke route — PostgreSQL ownership cases live in integration tests', () => {
       it.todo('rejects another coach with 403 without revealing invitation details')
       it.todo('allows a super_admin only through a separate audited endpoint with a reason')
       it.todo('rejects revocation of a consumed invitation with 409')
-      it.todo('allows an expired but still pending invitation to be marked revoked for audit')
       it.todo('rejects a second revocation because revoked is terminal')
-      it.todo('makes a revoked token unusable immediately')
     })
   })
 
   describe('rls', () => {
-    describe('future local Supabase matrix — activate after additive migration', () => {
-      it.todo('prevents coach A from listing invitations owned by coach B')
-      it.todo('prevents a standard user from listing coach invitations')
-      it.todo('never exposes token_hash to a coach or recipient projection')
-      it.todo('prevents authenticated users from writing consumed_by directly')
-      it.todo('prevents authenticated users from changing status directly to consumed')
-      it.todo('keeps direct subscription column updates blocked by the existing guard')
-      it.todo('grants consumption RPC execute only to authenticated users')
+    describe('remaining application-level RLS usage', () => {
       it.todo('does not require service_role in frontend or consumption route code')
-      it.todo('uses a fixed safe search_path in every SECURITY DEFINER invitation RPC')
     })
   })
 

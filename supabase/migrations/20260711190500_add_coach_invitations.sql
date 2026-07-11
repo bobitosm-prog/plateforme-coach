@@ -105,6 +105,10 @@ SECURITY INVOKER
 SET search_path TO pg_catalog, public
 AS $function$
 BEGIN
+  IF NEW.status <> 'pending' THEN
+    RETURN NEW;
+  END IF;
+
   -- Serialize the logical (coach, recipient, type) key without persisting an
   -- expired status. hashtextextended is only a lock key, never an authority.
   PERFORM pg_advisory_xact_lock(

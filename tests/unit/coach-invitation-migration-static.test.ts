@@ -25,6 +25,7 @@ describe('coach invitations migration — static security contract', () => {
   })
 
   it('serializes non-expired pending duplicates without persisting expired status', () => {
+    expect(sql).toContain("IF NEW.status <> 'pending' THEN")
     expect(sql).toContain('pg_advisory_xact_lock')
     expect(sql).toContain("invitations.status = 'pending'")
     expect(sql).toContain('invitations.expires_at > clock_timestamp()')
