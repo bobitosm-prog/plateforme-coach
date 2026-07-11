@@ -1126,3 +1126,233 @@ Le modèle, les invariants et tous les scénarios attendus sont figés avant SQL
 - Temps de session estimé : 90 à 120 minutes.
 - Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
 - Estimation restante pour migration + RPC + tests locaux : 2 jours concentrés.
+
+---
+
+## Session 2026-07-11 — 19:09
+
+### Contexte Git
+
+- Branche : `main`
+- Commit au début : `04253d5`
+- Commit à la fin : `04253d5`
+- État Git au début : propre ; contrat et cahier de tests commités.
+- État Git à la fin : une nouvelle migration, un test statique SQL, roadmap et journal modifiés ; aucun frontend ni route applicative modifié.
+
+### Roadmap
+
+- Phase : Phase 1 — Stabilisation et sécurité
+- Priorité : P0
+- Tâche principale : Ajouter la migration rétrocompatible `coach_invitations` et la RPC transactionnelle.
+- Statut au début : Contrat et tests futurs disponibles, aucune persistance.
+- Statut à la fin : Terminé statiquement ; migration additive, RLS, privilèges et RPC écrits. Exécution PostgreSQL locale restant obligatoire avant déploiement.
+- Phase 1 : 5 tâches sur 15 terminées.
+- Tâches P0 restantes : 11.
+
+### Objectif de la session
+
+Créer exclusivement le schéma d'invitation, ses protections et la consommation atomique, sans route API, frontend, suppression legacy ni accès distant.
+
+### Périmètre prévu
+
+- fichiers concernés : nouvelle migration SQL, test statique, roadmap et journal ;
+- fichiers exclus : `app/`, `/join`, callback, `invite-client`, `assign-coach` et anciennes migrations ;
+- services externes : aucun ;
+- application distante : aucune.
+
+### Travail effectué
+
+1. Analyse du schéma reconstructible de `profiles` et `coach_clients`, des RLS et fonctions `SECURITY DEFINER` existantes.
+2. Vérification des outils locaux : `psql` disponible, mais Supabase CLI et Docker absents.
+3. Création additive de `public.coach_invitations` avec champs d'audit et livraison.
+4. Ajout de contraintes sur hash, email, statuts, type, expiration, metadata et cohérence du cycle de vie.
+5. Ajout d'index ciblés sans dupliquer l'index unique de `token_hash`.
+6. Ajout d'une prévention concurrente des doublons pending non expirés par verrou consultatif transactionnel.
+7. Ajout d'un trigger dédié pour `updated_at`.
+8. Ajout d'un trigger de défense empêchant toute transition directe autre que `pending → revoked` par le coach propriétaire.
+9. Activation et forçage RLS ; policies coach exact pour SELECT, INSERT et révocation.
+10. Remplacement des grants larges par des grants par colonne excluant `token_hash` de la lecture.
+11. Création de `consume_coach_invitation(bytea)` en `SECURITY DEFINER`, `search_path` fixe et identité issue de `auth.uid()`.
+12. Ajout du verrouillage de l'invitation et du profil client, des contrôles email/coach/abonnement/relation, puis des trois mutations atomiques.
+13. Révocation de l'exécution publique et anonyme ; grant au seul rôle `authenticated`.
+14. Ajout de neuf tests statiques actifs sur les propriétés de sécurité du SQL.
+15. Exécution des tests applicatifs, TypeScript, ESLint et contrôle de format.
+
+### Fichiers créés
+
+- `supabase/migrations/20260711190500_add_coach_invitations.sql`
+  - table, contraintes, index, triggers, RLS, grants et RPC atomique.
+- `tests/unit/coach-invitation-migration-static.test.ts`
+  - 9 validations statiques actives du contrat SQL.
+
+### Fichiers modifiés
+
+- `ROADMAP_CODEX.md`
+  - migration cochée ; phase, progression, P0 restants et tests mis à jour.
+- `SESSION_LOG_CODEX.md`
+  - ajout de la présente entrée.
+
+### Fichiers explicitement inchangés
+
+- `app/api/assign-coach/route.ts`
+- `app/api/invite-client/route.ts`
+- `app/join/JoinPageContent.tsx`
+- `app/auth/callback/route.ts`
+- tous les autres fichiers frontend et routes
+- toutes les anciennes migrations
+
+### Modèle SQL créé
+
+- `token_hash bytea UNIQUE`, exactement 32 octets ; aucun token brut.
+- Statuts persistés : `pending`, `consumed`, `revoked`.
+- Cycle cohérent imposé par CHECK sur les champs consumed/revoked.
+- Email lowercase/trim, longueur, contrôle de caractères et forme minimale imposés en base ; NFKC reste la responsabilité de la future route.
+- Expiration strictement postérieure à la création.
+- Metadata obligatoirement objet JSON.
+- Livraison séparée du cycle métier : pending/sent/failed/skipped.
+- FKs coach, consumed_by et revoked_by conformes au contrat.
+
+### RLS et privilèges
+
+- RLS `ENABLE` et `FORCE`.
+- Coach exact uniquement, jamais super_admin implicite.
+- Lecture et insertion limitées aux lignes du coach authentifié.
+- Révocation directe limitée au propriétaire et à l'état pending.
+- Trigger invoker empêchant la modification des champs immuables ou le passage direct à consumed.
+- Aucun DELETE accordé.
+- `token_hash` absent du grant SELECT par colonne.
+- Aucun droit table accordé à anon.
+
+### RPC et atomicité
+
+- Signature unique : `consume_coach_invitation(p_token_hash bytea)`.
+- Aucun paramètre client, coach, abonnement ou auto-assign.
+- Client : `auth.uid()` ; coach : ligne d'invitation verrouillée.
+- Email : `auth.users.email` confirmé et normalisé lowercase/trim.
+- Verrou `FOR UPDATE` sur invitation et profil client.
+- Coach vérifié avec rôle exact `coach`.
+- Refus des rôles coach/admin, comptes invited, lifetime, beta actif ou Stripe actif.
+- Refus d'une relation existante.
+- UPDATE profil, INSERT relation et UPDATE invitation dans la même transaction de fonction.
+- Toute exception SQL annule l'appel complet ; aucun catch ne transforme une erreur après mutation en succès.
+- Une seconde consommation observe l'état terminal après le verrou et renvoie `INVITATION_ALREADY_USED`.
+
+### Dette de schéma réparée additivement
+
+La route historique écrit `coach_clients.status`, mais cette colonne n'était pas reconstruite par les migrations versionnées. La nouvelle migration ajoute `status text NOT NULL DEFAULT 'active'` avec `IF NOT EXISTS`, sans modifier les lignes existantes ni imposer une nouvelle contrainte de valeurs.
+
+### Validation exécutée
+
+| Commande | Résultat | Détails |
+|---|---|---|
+| `npm test -- tests/unit/coach-invitation-contract.test.ts` | Réussi | 14 actifs, 79 `todo`. |
+| `npm test -- tests/unit/coach-invitation-migration-static.test.ts` | Réussi | 9 tests statiques SQL réussis. |
+| `npm test` | Réussi | 10 fichiers, 142 actifs réussis, 79 `todo`. |
+| `npx tsc --noEmit` | Réussi | Aucune erreur TypeScript. |
+| `npx eslint tests/unit/coach-invitation-migration-static.test.ts` | Réussi | Aucune erreur ni avertissement. |
+| `git diff --check` | Réussi avant suivi final | Aucun défaut de format. |
+| `supabase db reset` | Non exécuté | Supabase CLI absent. |
+| `supabase test db` | Non exécuté | Supabase CLI absent. |
+| Docker/Supabase local | Non disponible | Docker absent ; aucune base locale démarrable dans cet environnement. |
+| Base distante | Non appelée | Interdiction respectée. |
+
+### Validation SQL réellement obtenue
+
+- Validation statique par 9 tests sur table, hash, cycle, doublons, RLS, grants, signature RPC, identité et verrous.
+- Relecture des migrations antérieures pour compatibilité des colonnes utilisées.
+- Aucune exécution ni analyse sémantique PostgreSQL complète n'a été possible sans base locale.
+- La présence de `psql` seul ne suffit pas sans serveur PostgreSQL cible local autorisé.
+
+### Tests contractuels restant `todo`
+
+Les scénarios d'intégration table/RLS/RPC restent `todo` tant que la migration n'est pas appliquée localement : contraintes réelles, matrices inter-coachs, consommation anonyme, expiration, email différent, succès, seconde consommation, concurrence et rollback injecté.
+
+### Types Supabase
+
+- Aucun fichier de types générés Supabase versionné n'a été identifié.
+- Aucun type n'a été édité manuellement.
+- La génération devra intervenir depuis Supabase local après `db reset`, avant les routes API.
+
+### Risques et limites
+
+- La migration n'a pas encore été parsée ni exécutée par PostgreSQL.
+- Atomicité et concurrence sont garanties par la structure PL/pgSQL mais pas encore prouvées empiriquement.
+- La normalisation Unicode NFKC doit être faite par la future route de création ; PostgreSQL impose lowercase/trim et forme minimale.
+- La prévention des doublons utilise un verrou consultatif hashé ; les collisions sont sans danger fonctionnel mais peuvent sérialiser exceptionnellement deux clés différentes.
+- Les erreurs inattendues de relation ou contrainte remontent comme erreurs PostgreSQL et devront être mappées par la future route vers `INVITATION_CONSUMPTION_FAILED`.
+- La vulnérabilité `assign-coach` reste accessible : cette session n'a ni basculé ni modifié le flux historique.
+
+### Travail non terminé
+
+- Migration non appliquée localement ou à distance.
+- Tests d'intégration PostgreSQL/RLS/concurrence non exécutés.
+- Routes de création, validation, consommation et révocation non créées.
+- Frontend et flux legacy inchangés.
+- Types Supabase non générés.
+- Aucun commit créé.
+
+### Checklist de fin de session
+
+- [x] Migration additive créée sans modification historique.
+- [x] Table, contraintes, index et doublons conformes au contrat.
+- [x] RLS, grants par colonne et révocation contrôlée définis.
+- [x] RPC atomique sans paramètres d'identité.
+- [x] `SECURITY DEFINER`, `search_path`, revoke/grant sécurisés.
+- [x] Aucun token brut ni secret SQL.
+- [x] Aucun frontend ni route modifié.
+- [x] Tests existants, TypeScript et lint ciblé réussis.
+- [x] Impossibilité des tests locaux précisément documentée.
+- [x] Roadmap et journal mis à jour.
+- [x] Prochaine étape unique définie.
+
+### Résumé de reprise
+
+La migration `20260711190500_add_coach_invitations.sql` définit le schéma complet et la RPC atomique. Le hash SHA-256 est un `bytea` de 32 octets jamais lisible via l'API. RLS est forcée, les grants sont limités par colonne et seule la révocation directe pending→revoked est permise au coach propriétaire. La RPC dérive le client de `auth.uid()`, le coach de l'invitation, verrouille invitation et profil, puis modifie profil, relation et invitation dans une transaction unique. Neuf tests statiques SQL passent et la suite atteint 142 tests actifs. Supabase CLI et Docker sont absents : aucun test DB réel n'a encore prouvé parsing, RLS, rollback ou concurrence. Aucun frontend, route ou flux historique n'a changé.
+
+### Prochaine étape unique
+
+**Action :**
+
+Créer les routes API de création, validation, consommation et révocation des invitations coach, sans modifier encore le frontend historique.
+
+**Pourquoi maintenant :**
+
+Le schéma et la RPC sont prêts statiquement. Les routes peuvent maintenant appliquer les schémas Zod, générer/hash les jetons, dériver les identités serveur, mapper les erreurs et préparer la bascule sans toucher `/join`.
+
+**Prérequis impératif avant activation ou déploiement :**
+
+Exécuter la migration sur Supabase local avec `db reset`, puis activer les tests PostgreSQL/RLS/concurrence. Si une future session dispose de Docker/CLI, cette validation passe avant toute utilisation de la RPC par une route activée.
+
+**Fichiers à ouvrir en premier :**
+
+- `docs/COACH_INVITATION_CONTRACT.md`
+- `supabase/migrations/20260711190500_add_coach_invitations.sql`
+- `tests/unit/coach-invitation-contract.test.ts`
+- `lib/supabase/server.ts`
+- `lib/email.ts`
+- `lib/rate-limit.ts`
+
+**Définition de terminé de la prochaine étape :**
+
+- quatre routes minces avec validation Zod stricte ;
+- aucune identité client/coach prise dans le body ;
+- création avec token 256 bits et stockage hashé ;
+- validation publique non énumérable ;
+- consommation via RPC uniquement ;
+- révocation propriétaire contrôlée ;
+- SMTP et Supabase intégralement mockés en tests unitaires ;
+- aucune modification de `/join`, callback ou suppression legacy.
+
+**Ne pas faire pendant la prochaine session :**
+
+- ne pas modifier encore le frontend ;
+- ne pas désactiver `assign-coach` ;
+- ne pas appliquer de migration distante ;
+- ne pas appeler SMTP ou Supabase production.
+
+### Temps
+
+- Temps de session estimé : 90 à 120 minutes.
+- Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
+- Estimation restante pour validation DB locale : 0,5 à 1 jour dès disponibilité de Docker/CLI.
+- Estimation restante pour les quatre routes et tests unitaires : 2 à 3 jours concentrés.
