@@ -1356,3 +1356,148 @@ Exécuter la migration sur Supabase local avec `db reset`, puis activer les test
 - Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
 - Estimation restante pour validation DB locale : 0,5 à 1 jour dès disponibilité de Docker/CLI.
 - Estimation restante pour les quatre routes et tests unitaires : 2 à 3 jours concentrés.
+
+---
+
+## Entrée — 2026-07-11 — Validation PostgreSQL locale de `coach_invitations`
+
+### Travail effectué
+
+- Inventaire confirmé : PostgreSQL 16.14 et `psql` disponibles ; Supabase CLI et Docker absents.
+- Démarrage d'un cluster PostgreSQL temporaire isolé dans `/tmp/moovx-pgdata`, uniquement sur `127.0.0.1:55432`.
+- Tentative de reconstruction de toutes les migrations historiques dans `moovx_history`.
+- Création d'un bootstrap local minimal reproduisant les rôles `anon`, `authenticated`, `service_role`, `auth.uid()`, `auth.users`, `profiles`, `coach_clients`, leurs RLS et le garde des colonnes d'abonnement.
+- Application réelle de `20260711190500_add_coach_invitations.sql` sur une base propre dédiée.
+- Ajout d'une suite SQL déterministe couvrant schéma, contraintes, RLS, privilèges, RPC, refus métier et rollback.
+- Ajout d'un test à deux connexions PostgreSQL réellement concurrentes.
+- Activation de 30 scénarios contractuels désormais couverts par les suites PostgreSQL ; 49 `todo` restent réservés aux routes, au frontend ou aux injections de panne non encore exercées.
+
+### Défaut découvert et correction
+
+L'exécution réelle a montré que `prevent_duplicate_pending_coach_invitation()` appliquait son contrôle à toute nouvelle ligne, y compris `revoked` et `consumed`. Une invitation pending existante empêchait donc l'insertion d'un historique terminal pour la même paire coach/email. La nouvelle migration, non déployée, a été corrigée avec un retour immédiat lorsque `NEW.status <> 'pending'`, puis la base a été reconstruite et toute la suite rejouée.
+
+### Validation PostgreSQL réelle obtenue
+
+- Table, colonnes, valeurs par défaut, clés étrangères, contraintes `CHECK`, unicité du hash, index et triggers vérifiés.
+- RLS activée et forcée ; grants/revokes, propriétaire, signature, `search_path` et privilèges RPC vérifiés.
+- Matrices coach A/coach B/utilisateur standard/anonyme exercées sans `service_role` pour les autorisations utilisateur.
+- Consommation valide vérifiée : identité issue de `auth.uid()`, coach issu de l'invitation, profil `active/invited`, relation active et invitation consommée.
+- Refus vérifiés : anonyme, token absent ou mal formé, expiration, révocation, seconde consommation, email différent/non vérifié, coach supprimé ou non-coach, profil invité/payant/lifetime.
+- Rollback intégral démontré en provoquant localement l'échec de la dernière mutation : aucune modification partielle du profil, de la relation ou de l'invitation.
+- Concurrence réelle démontrée : une réussite, un seul `INVITATION_ALREADY_USED`, une relation et une transition finale, sans deadlock.
+
+### Blocage historique distinct
+
+La reconstruction complète du dépôt depuis zéro échoue avant la nouvelle migration : `supabase/migrations/20260318_messages.sql:9` référence `public.profiles` alors qu'aucune migration antérieure versionnée ne crée cette table. Aucune ancienne migration n'a été modifiée. La migration ciblée est réellement validée sur PostgreSQL, mais le critère global « toutes les migrations depuis une base vide » reste donc incomplet.
+
+### Tests et commandes exécutés
+
+- `initdb`, `pg_ctl`, `createdb`, `dropdb` et `psql` sur le cluster local isolé.
+- Application séquentielle de toutes les migrations dans `moovx_history` : échec historique exact consigné ci-dessus.
+- `psql -v ON_ERROR_STOP=1 -f tests/integration/coach-invitations-bootstrap.sql` : réussi.
+- `psql -v ON_ERROR_STOP=1 -f supabase/migrations/20260711190500_add_coach_invitations.sql` : réussi.
+- `psql -v ON_ERROR_STOP=1 -f tests/integration/coach-invitations-rpc.sql` : 28 assertions réussies.
+- `bash tests/integration/coach-invitations-concurrency.sh` : réussi.
+- Tests unitaires ciblés : 23 réussis, alors 79 `todo` avant activation progressive.
+- `npm test` avant mise à jour contractuelle : 142 réussis, 79 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint ciblé : réussi.
+- `bash -n tests/integration/coach-invitations-concurrency.sh` : réussi.
+- Build non exécuté : aucun code applicatif, route ou frontend n'a été modifié.
+
+### Tâches cochées
+
+Aucune nouvelle tâche de Phase 1 : la migration reste créée et validée, mais la reproductibilité complète de l'historique des migrations constitue une dette séparée.
+
+### Risques ou dette restante
+
+- La baseline initiale du schéma Supabase (`profiles` notamment) n'est pas entièrement versionnée ; un `db reset` complet reste impossible.
+- Le bootstrap de test est fidèle au sous-ensemble nécessaire mais ne remplace pas une reconstruction Supabase intégrale.
+- Les routes API, `/join`, les types Supabase générés et le flux legacy restent inchangés.
+- Les deux injections de panne intermédiaires restantes (profil et upsert relation) demeurent contractuelles `todo` ; le rollback sur la mutation finale prouve néanmoins la transaction globale observée.
+
+### Mesures avant/après
+
+- Intégration PostgreSQL : 0 → 28 assertions SQL + 1 scénario concurrent.
+- Scénarios contractuels `todo` : 79 → 49.
+- Tests unitaires actifs : 142 (inchangé).
+- Défauts réels corrigés dans la nouvelle migration : 1.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer et versionner la baseline de schéma Supabase manquante qui fournit `public.profiles` avant `20260318_messages.sql`, puis reconstruire toutes les migrations depuis une base vide et rejouer les suites d'invitation. Ne pas commencer les routes API avant ce reset complet vert.
+
+---
+
+## Entrée — 2026-07-11 — Baseline Supabase structurelle
+
+### Travail effectué
+
+- Audit de toutes les migrations, usages applicatifs, documents et historique Git liés à `profiles`, `auth.users`, `coach_clients`, rôles, abonnements et onboarding.
+- Confirmation qu'aucune migration présente ou supprimée dans Git ne crée `profiles` et qu'aucun dump/types Supabase canonique n'est versionné.
+- Création de `20260317000000_initial_schema_baseline.sql`, antérieure à la première migration incrémentale et strictement additive.
+- Versionnement des objets initiaux réellement supposés avant leur création tardive : `profiles`, relations coach/client, photos, nutrition, exercices, séances, badges et check-ins.
+- Consolidation compatible des deux schémas historiques divergents de `scheduled_sessions`.
+- Correction syntaxique explicite de `20260521212741_fix_coach_clients_policy_with_security_definer.sql` (`AS $` vers `AS $$`) sans changement sémantique.
+- Ajout d'un bootstrap PostgreSQL des seuls objets plateforme Supabase, d'un runner local protégé contre les URL distantes, de 9 assertions SQL et de 6 tests statiques.
+- Documentation complète dans `docs/SUPABASE_BASELINE_STRATEGY.md` : chronologie, dépendances, stratégies, déploiement, rollback et risques.
+
+### Chronologie des ruptures révélées
+
+1. `20260318_messages.sql` : `profiles` absent.
+2. `20260415_backfill_badge_id.sql` : `badge_id` et `celebrated` utilisés trop tôt.
+3. `20260419_coach_rls_read.sql` : `daily_checkins` utilisé avant sa création.
+4. `20260518180000_add_missing_parent_exercises.sql` : `ON CONFLICT(name)` sans unicité versionnée.
+5. `20260521205152_drop_insecure_meal_rls_policies.sql` : `meal_logs` absent.
+6. `20260521212741_fix_coach_clients_policy_with_security_definer.sql` : délimiteur SQL invalide.
+7. `20260531043341_complete_variant_group.sql` : exige le seed historique non versionné de 178 exercices.
+
+### Stratégie choisie
+
+Une migration baseline historique additive, utilisant `CREATE TABLE IF NOT EXISTS`, est la seule source de vérité pour les nouvelles installations. Elle ne contient ni données, ni `DROP`, ni renommage, ni backfill. Pour une base existante, elle ne devra pas être poussée automatiquement : après comparaison en lecture seule et sauvegarde, sa version sera marquée appliquée via le mécanisme Supabase officiel si le schéma est compatible. Aucun état distant n'a été consulté ou muté pendant cette session.
+
+### Résultat PostgreSQL réel
+
+- Le reset part désormais d'une base vide et franchit toutes les migrations du 17 mars au 30 mai inclus.
+- Les 9 assertions structurelles passent et la baseline peut être réappliquée sans erreur ni mutation de données.
+- Le reset reste bloqué dans `20260531043341_complete_variant_group.sql` : le dépôt ne contient pas les 178 exercices et UUID canoniques exigés par son assertion. Seules les 25 lignes de la migration du 18 mai existent sur une base neuve.
+- L'assertion n'a pas été affaiblie et aucun catalogue fictif n'a été inventé. La tâche reste donc partiellement terminée.
+- Les 28 assertions PostgreSQL d'invitation et le test à deux sessions concurrentes restent verts après les changements.
+
+### Tests exécutés
+
+- Plusieurs reconstructions réelles avec `tests/integration/reset-migrations.sh` sur PostgreSQL 16.14 local, base jetable et `ON_ERROR_STOP=1`.
+- `tests/integration/supabase-baseline-assertions.sql` : 9 assertions réussies.
+- Réapplication de la baseline sur le schéma existant : réussie, uniquement des notices `already exists`.
+- `tests/integration/coach-invitations-rpc.sql` : 28 assertions réussies.
+- `tests/integration/coach-invitations-concurrency.sh` : réussi.
+
+### Tâches cochées
+
+Aucune : « Rendre le reset Supabase local déterministe » appartient à la Phase 2 et reste incomplète tant que le seed canonique n'est pas versionné et que toutes les migrations ne passent pas.
+
+### Risques ou dette restante
+
+- Catalogue initial `exercises_db` de 178 lignes absent du dépôt.
+- État réel et historique de migration des environnements distants inconnus.
+- Déploiement rétroactif de la baseline interdit sans audit de schéma et procédure `migration repair` contrôlée.
+- La baseline reproduit le schéma démontré, pas les données de catalogue manquantes.
+- Aucun frontend, route API ou comportement applicatif n'a été modifié.
+
+### Mesures avant/après
+
+- Première migration atteinte : `20260318_messages.sql` → `20260531043341_complete_variant_group.sql`.
+- Assertions SQL d'intégration : 28 → 37, plus 1 scénario concurrent.
+- Tests unitaires actifs attendus : 142 → 148.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Obtenir une source autorisée et sans données utilisateur du catalogue canonique `exercises_db` de 178 lignes avec ses UUID, la versionner comme seed historique, puis reprendre le reset complet depuis zéro. Ne pas commencer les routes API d'invitation avant un reset intégral vert.

@@ -39,13 +39,13 @@ LANGUAGE sql
 SECURITY DEFINER
 SET search_path = public
 STABLE
-AS $
+AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles
     WHERE id = coach_uuid
       AND role IN ('coach', 'super_admin')
   );
-$;
+$$;
 
 -- Grant execute to authenticated users
 GRANT EXECUTE ON FUNCTION public.is_coach_role(uuid) TO authenticated;
