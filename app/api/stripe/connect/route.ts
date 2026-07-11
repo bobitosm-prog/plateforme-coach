@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { createSupabaseRouteClient } from '@/lib/supabase/server'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -10,16 +11,40 @@ function getServiceSupabase() {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabaseAuth = await createSupabaseRouteClient()
+    const { data: { user } } = await supabaseAuth.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { coachId } = await req.json()
+    if (!coachId) {
+      return NextResponse.json({ error: 'coachId required' }, { status: 400 })
+    }
+    if (coachId !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const { data: profile, error: profileError } = await supabaseAuth
+      .from('profiles')
+      .select('role, email, stripe_account_id')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
+    }
+    if (profile.role !== 'coach') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY.trim())
-    const { coachId, email, existingAccountId } = await req.json()
-    if (!coachId) return NextResponse.json({ error: 'coachId required' }, { status: 400 })
-
     const supabase = getServiceSupabase()
-    let accountId = existingAccountId
+    let accountId = profile.stripe_account_id
 
     // If no existing account, check DB first (dedup), then create with idempotency
     if (!accountId) {
@@ -36,7 +61,7 @@ export async function POST(req: NextRequest) {
         const account = await stripe.accounts.create(
           {
             type: 'express',
-            email: email || undefined,
+            email: profile.email || user.email || undefined,
             country: 'CH',
             capabilities: {
               card_payments: { requested: true },

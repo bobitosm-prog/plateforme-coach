@@ -11,38 +11,52 @@ const mocks = vi.hoisted(() => {
     }
   })
 
-  const profileSingle = vi.fn()
-  const profileMaybeSingle = vi.fn()
-  const profileSelectAfterUpdate = vi.fn(() => ({ maybeSingle: profileMaybeSingle }))
-  const profileIs = vi.fn(() => ({ select: profileSelectAfterUpdate }))
-  const profileEqAfterUpdate = vi.fn(() => ({ is: profileIs }))
-  const profileUpdate = vi.fn(() => ({ eq: profileEqAfterUpdate }))
-  const profileEqAfterSelect = vi.fn(() => ({ single: profileSingle }))
-  const profileSelect = vi.fn(() => ({ eq: profileEqAfterSelect }))
-  const profileFrom = vi.fn(() => ({ select: profileSelect, update: profileUpdate }))
-  const createClient = vi.fn(() => ({ from: profileFrom }))
+  const serviceProfileSingle = vi.fn()
+  const serviceProfileMaybeSingle = vi.fn()
+  const serviceSelectAfterUpdate = vi.fn(() => ({ maybeSingle: serviceProfileMaybeSingle }))
+  const serviceIs = vi.fn(() => ({ select: serviceSelectAfterUpdate }))
+  const serviceEqAfterUpdate = vi.fn(() => ({ is: serviceIs }))
+  const serviceUpdate = vi.fn(() => ({ eq: serviceEqAfterUpdate }))
+  const serviceEqAfterSelect = vi.fn(() => ({ single: serviceProfileSingle }))
+  const serviceSelect = vi.fn(() => ({ eq: serviceEqAfterSelect }))
+  const serviceFrom = vi.fn(() => ({ select: serviceSelect, update: serviceUpdate }))
+  const createClient = vi.fn(() => ({ from: serviceFrom }))
+
+  const authGetUser = vi.fn()
+  const authProfileSingle = vi.fn()
+  const authProfileEq = vi.fn(() => ({ single: authProfileSingle }))
+  const authProfileSelect = vi.fn(() => ({ eq: authProfileEq }))
+  const authFrom = vi.fn(() => ({ select: authProfileSelect }))
+  const authClient = { auth: { getUser: authGetUser }, from: authFrom }
+  const createSupabaseRouteClient = vi.fn(async () => authClient)
 
   return {
     accountsCreate,
     accountLinksCreate,
     stripeConstructor,
-    profileSingle,
-    profileMaybeSingle,
-    profileSelectAfterUpdate,
-    profileIs,
-    profileEqAfterUpdate,
-    profileUpdate,
-    profileEqAfterSelect,
-    profileSelect,
-    profileFrom,
+    serviceProfileSingle,
+    serviceProfileMaybeSingle,
+    serviceEqAfterUpdate,
+    serviceUpdate,
+    serviceFrom,
     createClient,
+    authGetUser,
+    authProfileSingle,
+    authFrom,
+    createSupabaseRouteClient,
   }
 })
 
 vi.mock('stripe', () => ({ default: mocks.stripeConstructor }))
 vi.mock('@supabase/supabase-js', () => ({ createClient: mocks.createClient }))
+vi.mock('@/lib/supabase/server', () => ({
+  createSupabaseRouteClient: mocks.createSupabaseRouteClient,
+}))
 
 import { POST } from '../../app/api/stripe/connect/route'
+
+const OWNER_ID = '00000000-0000-4000-8000-000000000001'
+const OTHER_ID = '00000000-0000-4000-8000-000000000002'
 
 const originalEnv = {
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
@@ -51,43 +65,50 @@ const originalEnv = {
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 }
 
-type CallerCase = {
-  label: string
-  headers?: Record<string, string>
-}
-
-const callerCases: CallerCase[] = [
-  { label: 'anonymous user' },
-  { label: 'authenticated standard user', headers: { cookie: 'sb-session=standard' } },
-  { label: 'owner coach', headers: { cookie: 'sb-session=owner-coach' } },
-  { label: 'non-owner coach', headers: { cookie: 'sb-session=other-coach' } },
-  { label: 'administrator', headers: { authorization: 'Bearer admin-token' } },
-  { label: 'lifetime account', headers: { cookie: 'sb-session=lifetime' } },
-  { label: 'invited user', headers: { cookie: 'sb-session=invited' } },
-]
-
-function request(
-  body: Record<string, unknown>,
-  headers: Record<string, string> = {},
-): NextRequest {
+function request(body: Record<string, unknown>): NextRequest {
   return new Request('http://localhost/api/stripe/connect', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', ...headers },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   }) as NextRequest
 }
 
+function authenticatedAs(id = OWNER_ID, email = 'session@example.test') {
+  mocks.authGetUser.mockResolvedValue({ data: { user: { id, email } } })
+}
+
+function profileAs(
+  role: string,
+  stripeAccountId: string | null = null,
+  email = 'profile@example.test',
+) {
+  mocks.authProfileSingle.mockResolvedValue({
+    data: { role, email, stripe_account_id: stripeAccountId },
+    error: null,
+  })
+}
+
+function expectNoExternalMutation() {
+  expect(mocks.stripeConstructor).not.toHaveBeenCalled()
+  expect(mocks.accountsCreate).not.toHaveBeenCalled()
+  expect(mocks.accountLinksCreate).not.toHaveBeenCalled()
+  expect(mocks.createClient).not.toHaveBeenCalled()
+  expect(mocks.serviceUpdate).not.toHaveBeenCalled()
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
-  process.env.STRIPE_SECRET_KEY = 'sk_test_characterization_only'
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'service_role_characterization_only'
+  process.env.STRIPE_SECRET_KEY = 'sk_test_authorization_only'
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'service_role_authorization_only'
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://supabase.test'
   process.env.NEXT_PUBLIC_APP_URL = 'http://app.test'
 
+  authenticatedAs()
+  profileAs('coach')
   mocks.accountsCreate.mockResolvedValue({ id: 'acct_created' })
   mocks.accountLinksCreate.mockResolvedValue({ url: 'https://connect.test/onboarding' })
-  mocks.profileSingle.mockResolvedValue({ data: { stripe_account_id: null } })
-  mocks.profileMaybeSingle.mockResolvedValue({
+  mocks.serviceProfileSingle.mockResolvedValue({ data: { stripe_account_id: null } })
+  mocks.serviceProfileMaybeSingle.mockResolvedValue({
     data: { stripe_account_id: 'acct_created' },
   })
 })
@@ -99,38 +120,61 @@ afterAll(() => {
   }
 })
 
-describe('POST /api/stripe/connect — current authorization behavior', () => {
-  it.each(callerCases)(
-    'does not distinguish $label and creates an onboarding link for a client-supplied account ID',
-    async ({ headers }) => {
-      const response = await POST(request({
-        coachId: '00000000-0000-4000-8000-000000000001',
-        email: 'caller@example.test',
-        existingAccountId: 'acct_client_supplied',
-      }, headers))
+describe('POST /api/stripe/connect — authorization', () => {
+  it('returns 401 for an anonymous request before any external call', async () => {
+    mocks.authGetUser.mockResolvedValue({ data: { user: null } })
 
-      expect(response.status).toBe(200)
-      await expect(response.json()).resolves.toEqual({
-        url: 'https://connect.test/onboarding',
-        accountId: 'acct_client_supplied',
-      })
-      expect(mocks.accountLinksCreate).toHaveBeenCalledWith({
-        account: 'acct_client_supplied',
-        refresh_url: 'http://app.test/?stripe=refresh',
-        return_url: 'http://app.test/?stripe=success&account=acct_client_supplied',
-        type: 'account_onboarding',
-      })
-      expect(mocks.accountsCreate).not.toHaveBeenCalled()
-      expect(mocks.createClient).toHaveBeenCalledWith(
-        'http://supabase.test',
-        'service_role_characterization_only',
-      )
-    },
-  )
+    const response = await POST(request({ coachId: OWNER_ID }))
 
-  it('allows an anonymous request to create a Stripe account and update the supplied profile ID', async () => {
-    const coachId = '00000000-0000-4000-8000-000000000099'
-    const response = await POST(request({ coachId, email: 'anonymous@example.test' }))
+    expect(response.status).toBe(401)
+    await expect(response.json()).resolves.toEqual({ error: 'Unauthorized' })
+    expectNoExternalMutation()
+  })
+
+  it.each([
+    ['standard user', 'client'],
+    ['invited user', 'invited'],
+    ['lifetime non-coach', 'client'],
+    ['administrator', 'admin'],
+  ])('returns 403 for an authenticated %s', async (_label, role) => {
+    profileAs(role)
+
+    const response = await POST(request({ coachId: OWNER_ID }))
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({ error: 'Forbidden' })
+    expectNoExternalMutation()
+  })
+
+  it('returns 403 when a coach targets another profile', async () => {
+    authenticatedAs(OTHER_ID, 'other-coach@example.test')
+
+    const response = await POST(request({ coachId: OWNER_ID }))
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({ error: 'Forbidden' })
+    expect(mocks.authFrom).not.toHaveBeenCalled()
+    expectNoExternalMutation()
+  })
+
+  it('returns 400 for an authenticated caller when coachId is absent', async () => {
+    const response = await POST(request({}))
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({ error: 'coachId required' })
+    expect(mocks.authFrom).not.toHaveBeenCalled()
+    expectNoExternalMutation()
+  })
+
+  it('ignores a foreign existingAccountId and creates an account using the server-side email', async () => {
+    authenticatedAs(OWNER_ID, 'session@example.test')
+    profileAs('coach', null, 'trusted-profile@example.test')
+
+    const response = await POST(request({
+      coachId: OWNER_ID,
+      email: 'attacker-controlled@example.test',
+      existingAccountId: 'acct_foreign',
+    }))
 
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual({
@@ -139,36 +183,48 @@ describe('POST /api/stripe/connect — current authorization behavior', () => {
     })
     expect(mocks.accountsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: 'express',
-        email: 'anonymous@example.test',
-        metadata: { coachId },
+        email: 'trusted-profile@example.test',
+        metadata: { coachId: OWNER_ID },
       }),
-      { idempotencyKey: `connect-account-${coachId}` },
+      { idempotencyKey: `connect-account-${OWNER_ID}` },
     )
-    expect(mocks.profileUpdate).toHaveBeenCalledWith({ stripe_account_id: 'acct_created' })
-    expect(mocks.profileEqAfterUpdate).toHaveBeenCalledWith('id', coachId)
+    expect(mocks.serviceUpdate).toHaveBeenCalledWith({ stripe_account_id: 'acct_created' })
+    expect(mocks.serviceEqAfterUpdate).toHaveBeenCalledWith('id', OWNER_ID)
+    expect(mocks.accountLinksCreate).toHaveBeenCalledWith(expect.objectContaining({
+      account: 'acct_created',
+    }))
   })
 
-  it('rejects a request without coachId only after constructing the Stripe client', async () => {
-    const response = await POST(request({ email: 'missing-id@example.test' }))
-
-    expect(response.status).toBe(400)
-    await expect(response.json()).resolves.toEqual({ error: 'coachId required' })
-    expect(mocks.stripeConstructor).toHaveBeenCalledOnce()
-    expect(mocks.createClient).not.toHaveBeenCalled()
-    expect(mocks.accountLinksCreate).not.toHaveBeenCalled()
-  })
-
-  it('returns 500 before parsing authorization or input when Stripe is not configured', async () => {
-    delete process.env.STRIPE_SECRET_KEY
+  it('reuses only the Stripe account stored on the authenticated coach profile', async () => {
+    profileAs('coach', 'acct_stored')
 
     const response = await POST(request({
-      coachId: '00000000-0000-4000-8000-000000000001',
+      coachId: OWNER_ID,
+      existingAccountId: 'acct_foreign',
     }))
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      url: 'https://connect.test/onboarding',
+      accountId: 'acct_stored',
+    })
+    expect(mocks.accountsCreate).not.toHaveBeenCalled()
+    expect(mocks.serviceUpdate).not.toHaveBeenCalled()
+    expect(mocks.accountLinksCreate).toHaveBeenCalledWith({
+      account: 'acct_stored',
+      refresh_url: 'http://app.test/?stripe=refresh',
+      return_url: 'http://app.test/?stripe=success&account=acct_stored',
+      type: 'account_onboarding',
+    })
+  })
+
+  it('returns a controlled 500 without mutation when Stripe is not configured', async () => {
+    delete process.env.STRIPE_SECRET_KEY
+
+    const response = await POST(request({ coachId: OWNER_ID }))
 
     expect(response.status).toBe(500)
     await expect(response.json()).resolves.toEqual({ error: 'Stripe non configuré' })
-    expect(mocks.stripeConstructor).not.toHaveBeenCalled()
-    expect(mocks.createClient).not.toHaveBeenCalled()
+    expectNoExternalMutation()
   })
 })

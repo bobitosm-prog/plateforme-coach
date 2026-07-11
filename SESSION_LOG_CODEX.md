@@ -374,3 +374,205 @@ Les tests de caractérisation sont en place et la deuxième tâche P0 de la road
 - Temps de session estimé : 60 à 90 minutes.
 - Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
 - Estimation restante pour la prochaine tâche : 1,5 jour concentré selon les adaptations de mocks nécessaires.
+
+---
+
+## Session 2026-07-11 — 18:36
+
+### Contexte Git
+
+- Branche : `main`
+- Commit au début : `d7972a6`
+- Commit à la fin : `d7972a6`
+- État Git au début : propre ; le commit `d7972a6` contient les tests de caractérisation Stripe Connect et les mises à jour documentaires de la session précédente.
+- État Git à la fin : `app/api/stripe/connect/route.ts`, `tests/unit/stripe-connect-authorization.test.ts`, `ROADMAP_CODEX.md` et `SESSION_LOG_CODEX.md` modifiés ; aucun autre fichier modifié.
+
+### Roadmap
+
+- Phase : Phase 1 — Stabilisation et sécurité
+- Priorité : P0
+- Tâche principale : Sécuriser `POST /api/stripe/connect` pour le coach authentifié propriétaire.
+- Statut au début : Tests de caractérisation terminés ; route vulnérable non corrigée.
+- Statut à la fin : Terminé ; contrôles d'identité et de rôle en place, tests sécurisés réussis.
+
+### Objectif de la session
+
+Limiter Stripe Connect au coach authentifié propriétaire du profil ciblé, sans modifier une autre route Stripe, une migration ou l'architecture Billing. Retirer toute autorité aux champs `email` et `existingAccountId` fournis par le navigateur.
+
+### Périmètre prévu
+
+- fichiers ou modules concernés : route Stripe Connect, tests d'autorisation, roadmap et journal ;
+- fichiers explicitement exclus : checkout plateforme, coach-checkout, webhook, setup-products, assign-coach et autres domaines ;
+- services externes concernés : Stripe et Supabase uniquement via mocks pendant les tests ;
+- migrations éventuelles : aucune.
+
+### Travail effectué
+
+1. Lecture de la roadmap, de la dernière entrée et vérification Git.
+2. Analyse de l'écart de commit : `d7972a6` correspond au commit attendu des tests Stripe Connect de la session précédente.
+3. Relecture de la route, des helpers Supabase serveur, des contrôles de rôle existants et des deux appels frontend.
+4. Ajout de la récupération de session par `createSupabaseRouteClient()` et `auth.getUser()`.
+5. Ajout du rejet anonyme en 401 avant toute construction Stripe ou service-role.
+6. Validation de `coachId`, puis comparaison stricte avec `user.id`.
+7. Lecture serveur du profil authentifié et vérification stricte de `role === 'coach'`.
+8. Déplacement du contrôle de configuration et de la construction Stripe après tous les contrôles d'autorisation.
+9. Suppression de l'autorité de `email` et `existingAccountId` issus du corps.
+10. Utilisation de `profiles.email`, avec fallback sur l'email de session.
+11. Réutilisation exclusive de `profiles.stripe_account_id` ; maintien de la vérification serveur anti-course existante.
+12. Adaptation des 10 tests aux statuts et comportements sécurisés attendus.
+13. Vérification des non-appels Stripe/service-role et des non-mutations pour chaque rejet.
+14. Exécution du test ciblé, de la suite complète, de TypeScript et d'ESLint ciblé.
+
+### Fichiers créés
+
+Aucun.
+
+### Fichiers modifiés
+
+- `app/api/stripe/connect/route.ts`
+  - authentification serveur, contrôle propriétaire, contrôle du rôle coach et sources serveur pour email/compte Stripe.
+- `tests/unit/stripe-connect-authorization.test.ts`
+  - adaptation des 10 tests de caractérisation en tests de sécurité attendus.
+- `ROADMAP_CODEX.md`
+  - deuxième tâche P0 cochée ; statut de phase et compteurs mis à jour.
+- `SESSION_LOG_CODEX.md`
+  - ajout de la présente entrée.
+
+### Fichiers supprimés
+
+Aucun.
+
+### Migrations et base de données
+
+- migration créée : Sans objet
+- migration appliquée localement : Sans objet
+- migration appliquée à distance : Sans objet
+- tables ou fonctions concernées : lecture de `profiles.role`, `profiles.email` et `profiles.stripe_account_id` ; écriture existante de `profiles.stripe_account_id` après autorisation
+- compatibilité : les payloads frontend existants restent acceptés ; `email` et `existingAccountId` sont simplement ignorés comme autorités
+- rollback : rétablir la route et les attentes de tests au commit `d7972a6` ; aucune migration à annuler.
+
+### Tests exécutés
+
+| Commande | Résultat | Détails |
+|---|---|---|
+| `npm test -- tests/unit/stripe-connect-authorization.test.ts` | Réussi | 1 fichier, 10 tests réussis. |
+| `npm test` | Réussi | 7 fichiers, 103 tests réussis. |
+| `npx tsc --noEmit` | Réussi | Aucune erreur TypeScript. |
+| `npx eslint app/api/stripe/connect/route.ts tests/unit/stripe-connect-authorization.test.ts` | Réussi | Aucune erreur ni avertissement. |
+| `git diff --check` | Réussi | Aucune erreur de format détectée avant la mise à jour documentaire. |
+| Build | Non exécuté | L'environnement restreint ne permet pas de garantir le téléchargement des Google Fonts ; les validations ciblées demandées passent. |
+| Vérification manuelle du diff | Réussi | Aucun changement hors route, test et documentation de session. |
+
+### Résultats et mesures
+
+- 10 tests Stripe Connect réussis.
+- 103 tests projet réussis.
+- 401 pour anonyme.
+- 403 pour client, invité, lifetime non coach, admin et coach non propriétaire.
+- 400 pour `coachId` absent après authentification.
+- 200 uniquement pour le coach propriétaire avec profil coach.
+- 0 appel Stripe et 0 client service-role construit avant autorisation.
+- 0 migration et 0 appel externe réel.
+- Tâches P0 restantes : 13.
+
+### Problèmes rencontrés
+
+- problème : le commit initial différait du dernier commit mentionné dans le journal ;
+- cause identifiée : la session précédente avait été commitée dans `d7972a6` avec le message `test(stripe): cover Connect authorization` ;
+- contournement temporaire éventuel : aucun ; commit et diff vérifiés avant modification ;
+- état actuel : cohérent et documenté.
+
+### Décisions prises
+
+- décision : accepter uniquement le rôle exact `coach`, sans exception admin/super-admin ;
+- raison : l'objectif exige que seul le coach propriétaire accède à son onboarding Connect et aucune règle produit contraire n'a été trouvée ;
+- alternatives écartées : exception administrateur, qui élargirait inutilement le périmètre ;
+- impact futur : toute opération administrative Connect devra avoir un flux séparé et explicite.
+
+- décision : ignorer `existingAccountId` du navigateur plutôt que le comparer ;
+- raison : le profil serveur contient déjà la source autoritative et les deux frontends fonctionnent sans dépendre de ce champ ;
+- alternatives écartées : compatibilité temporaire par comparaison, plus complexe sans bénéfice fonctionnel ;
+- impact futur : le champ pourra être retiré des payloads frontend dans un nettoyage ultérieur sans urgence.
+
+- décision : conserver le second contrôle serveur et l'UPDATE conditionnel service-role après autorisation ;
+- raison : préserver l'idempotence et la protection anti-course existantes avec le changement minimal ;
+- alternatives écartées : refactoriser maintenant le service Connect ou modifier les policies RLS ;
+- impact futur : ce flux pourra être extrait lors de la Phase Billing.
+
+### Risques et dette restante
+
+- Le body n'utilise pas encore un schéma Zod ; cela relève de la phase de contrats API.
+- Le profil est lu avec le client de session, puis revérifié avec service-role uniquement si aucun compte n'est stocké dans la première lecture.
+- Les tests utilisent des mocks ; aucun test d'intégration Supabase local ou Stripe test n'a été exécuté.
+- Les payloads frontend contiennent encore `email` et parfois `existingAccountId`, désormais ignorés.
+- Les autres routes Stripe restent hors périmètre et conservent leur état actuel.
+
+### Travail non terminé
+
+- Le nettoyage des champs frontend ignorés n'est pas réalisé, car non nécessaire à la correction et hors objectif unique.
+- Aucun build n'a été exécuté en raison de la dépendance réseau Google Fonts connue dans cet environnement.
+- Aucun commit n'a été créé.
+
+### Checklist de fin de session
+
+- [x] La tâche respecte son périmètre.
+- [x] Aucun fichier utilisateur non lié n'a été écrasé.
+- [x] TypeScript a été vérifié.
+- [x] Les tests pertinents ont été exécutés.
+- [x] Le lint ciblé a été exécuté.
+- [ ] Le build a été exécuté ou son absence est justifiée — environnement restreint et téléchargement Google Fonts non garanti.
+- [x] `git status` a été vérifié.
+- [x] `ROADMAP_CODEX.md` a été mis à jour.
+- [x] Les risques restants sont documentés.
+- [x] La prochaine étape est définie.
+
+### Résumé de reprise
+
+La deuxième tâche P0 de la Phase 1 est terminée. `POST /api/stripe/connect` exige maintenant une session serveur, l'égalité `coachId === user.id` et un profil de rôle coach avant toute construction Stripe ou service-role. L'email et l'identifiant de compte Stripe proviennent exclusivement du serveur ; les champs navigateur correspondants n'ont plus d'autorité. Les 10 tests sécurisés passent, ainsi que les 103 tests du projet, TypeScript et ESLint ciblé. Aucune migration, autre route Stripe ou logique frontend n'a été modifiée. Le build n'a pas été lancé à cause de la dépendance réseau Google Fonts connue. Le commit de départ est `d7972a6` et aucun commit n'a été créé pendant cette session.
+
+### Prochaine étape unique
+
+**Action :**
+
+Ajouter les tests d'autorisation de `POST /api/assign-coach` pour documenter les comportements anonyme, auto-assign, invitation arbitraire et identité imposée par la session, sans corriger encore la route.
+
+**Pourquoi maintenant :**
+
+C'est la troisième tâche P0 de la Phase 1 et le filet de caractérisation requis avant de créer le contrat d'invitation coach à usage unique.
+
+**Fichiers à ouvrir en premier :**
+
+- `app/api/assign-coach/route.ts`
+- `app/join/JoinPageContent.tsx`
+- `app/auth/callback/route.ts`
+- `app/register-client/RegisterClientContent.tsx`
+- `tests/unit/stripe-connect-authorization.test.ts`
+
+**Tests à préparer ou exécuter :**
+
+- `npm test -- tests/unit/assign-coach-authorization.test.ts`
+- scénario anonyme attendu : 401 ;
+- scénario authentifié : l'identité client vient de `user.id`, jamais du corps ;
+- scénario invitation arbitraire actuel : documenter précisément la mutation accordée ;
+- scénario auto-assign : documenter le flux normal sans statut invited.
+
+**Définition de terminé de la prochaine étape :**
+
+- les principaux scénarios d'autorisation et de mutation sont couverts par des mocks isolés ;
+- aucune base, notification ou service production n'est appelé ;
+- la route `assign-coach` reste inchangée ;
+- la suite ciblée, la suite complète, TypeScript et le lint ciblé passent ;
+- les comportements vulnérables actuels sont nommés explicitement dans les tests.
+
+**Ne pas faire pendant la prochaine session :**
+
+- ne pas corriger `assign-coach` ;
+- ne pas créer le contrat ou la migration d'invitation ;
+- ne pas modifier les routes Stripe ;
+- ne pas appeler Supabase de production.
+
+### Temps
+
+- Temps de session estimé : 75 à 120 minutes.
+- Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
+- Estimation restante pour la prochaine tâche : 1,5 jour concentré.
