@@ -190,7 +190,7 @@ Une limite dépassée n'impose pas un découpage mécanique. Elle déclenche une
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P0**
 
-**Statut : En cours — 3 tâches sur 15 terminées**
+**Statut : En cours — 4 tâches sur 15 terminées**
 
 ### Pourquoi
 
@@ -209,7 +209,7 @@ Les refactorings importants ne doivent pas commencer tant que les flux externes 
 | [x] Écrire les tests d'autorisation de `/api/stripe/connect` | 1,5 j | Élevée | Faible | Critique | — |
 | [x] Lier Stripe Connect à l'identité coach serveur | 1,5 j | Élevée | Élevé | Critique | Tests Connect |
 | [x] Écrire les tests d'autorisation de `assign-coach` | 1,5 j | Élevée | Faible | Critique | — |
-| [ ] Créer le contrat d'invitation coach à usage unique | 2 j | Élevée | Moyen | Critique | Tests assignation |
+| [x] [Créer le contrat d'invitation coach à usage unique](docs/COACH_INVITATION_CONTRACT.md) | 2 j | Élevée | Moyen | Critique | Tests assignation |
 | [ ] Ajouter la migration d'invitation rétrocompatible | 2 j | Élevée | Élevé | Critique | Contrat invitation |
 | [ ] Migrer le parcours `/join` vers l'invitation vérifiée | 2 j | Élevée | Élevé | Critique | Migration invitation |
 | [ ] Tester checkout plateforme et coach avec identités étrangères | 2 j | Élevée | Faible | Critique | — |
@@ -726,7 +726,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈3 % | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈4 % | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 12 | 🔴 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |

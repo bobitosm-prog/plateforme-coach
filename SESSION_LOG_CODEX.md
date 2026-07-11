@@ -770,3 +770,180 @@ Les comportements vulnérables sont figés. La quatrième tâche P0 consiste à 
 - Temps de session estimé : 75 à 120 minutes.
 - Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
 - Estimation restante pour la prochaine tâche : 2 jours concentrés selon les décisions de compatibilité.
+
+---
+
+## Session 2026-07-11 — 18:55
+
+### Contexte Git
+
+- Branche : `main`
+- Commit au début : `1072796`
+- Commit à la fin : `1072796`
+- État Git au début : propre ; les tests de caractérisation `assign-coach` étaient commités.
+- État Git à la fin : spécification créée, roadmap et journal modifiés ; aucun fichier applicatif, test ou migration modifié.
+
+### Roadmap
+
+- Phase : Phase 1 — Stabilisation et sécurité
+- Priorité : P0
+- Tâche principale : Créer le contrat d'invitation coach à usage unique.
+- Statut au début : Non commencé ; comportements vulnérables caractérisés.
+- Statut à la fin : Terminé ; spécification normative exploitable sans redéfinition majeure.
+- Compteur de corrections P0 : inchangé à 12 tâches restantes, car aucune vulnérabilité n'a été corrigée pendant cette session documentaire.
+
+### Objectif de la session
+
+Concevoir le contrat complet qui remplacera le `coachId` arbitraire de `POST /api/assign-coach`, sans écrire de SQL, modifier une route, changer une policy ou appeler un service externe.
+
+### Périmètre prévu
+
+- fichiers concernés : `docs/COACH_INVITATION_CONTRACT.md`, roadmap et journal ;
+- fichiers explicitement exclus : toutes les routes, composants, tests, migrations et policies ;
+- services externes concernés : aucun ;
+- migrations éventuelles : aucune.
+
+### Travail effectué
+
+1. Lecture de la demande complète, de la roadmap et de la dernière entrée de session.
+2. Vérification de la branche, du commit et d'un arbre de travail propre.
+3. Relecture de `assign-coach`, de ses 16 tests, de `/join`, de l'inscription, du callback et de `invite-client`.
+4. Analyse des migrations `profiles`, `coach_clients`, garde des colonnes sensibles et policies d'assignation.
+5. Analyse des conventions existantes : `claim_beta_slot`, `set_initial_trial`, `set_role`, helpers Supabase, rate limiter et email.
+6. Définition du modèle `coach_invitations`, de ses contraintes, index et champs d'audit.
+7. Définition des acteurs, permissions, statuts, transitions et règles d'éligibilité.
+8. Choix d'un jeton aléatoire 256 bits Base64URL stocké uniquement sous hash SHA-256.
+9. Choix d'une invitation strictement liée à l'email vérifié du bénéficiaire.
+10. Conception d'une consommation par RPC PostgreSQL transactionnelle avec verrou de ligne.
+11. Définition des quatre contrats API, codes d'erreur, rate limits et protections anti-énumération.
+12. Définition de la coexistence, des feature flags, du traitement des anciens liens et de la séquence expand/contract.
+13. Définition du plan de tests unitaires, intégration/RPC, RLS et E2E à écrire avant implémentation.
+14. Vérification de l'existence des chemins cités et de la présence des 18 sections obligatoires.
+
+### Fichiers créés
+
+- `docs/COACH_INVITATION_CONTRACT.md`
+  - spécification normative de 18 sections couvrant modèle, sécurité, API, atomicité, migration et tests.
+
+### Fichiers modifiés
+
+- `ROADMAP_CODEX.md`
+  - tâche documentaire cochée et liée ; phase à 4 tâches sur 15 ; progression documentaire globale à environ 4 %.
+- `SESSION_LOG_CODEX.md`
+  - ajout de la présente entrée.
+
+### Fichiers applicatifs, tests et migrations
+
+Aucun fichier applicatif, test, migration ou policy n'a été modifié. La vulnérabilité reste volontairement présente jusqu'aux prochaines étapes test-first.
+
+### Décisions normatives
+
+- invitation liée strictement à l'email normalisé et vérifié du compte ;
+- jeton de 32 octets aléatoires, Base64URL sans padding, 256 bits d'entropie ;
+- seul SHA-256 du jeton est stocké dans un `bytea` unique ;
+- durée par défaut de 7 jours ;
+- statuts persistés `pending`, `consumed`, `revoked`, expiration calculée ;
+- rôle exact `coach` requis pour créer ; administrateur non assimilé à un coach ;
+- coach dérivé de l'invitation et client dérivé de `auth.uid()` ;
+- consommation atomique par RPC `SECURITY DEFINER` avec `FOR UPDATE` et `search_path` sûr ;
+- compte lifetime, beta actif, Stripe actif, coach/admin ou déjà invited non éligible ;
+- anciens liens UUID jamais acceptés comme preuve ; réponse `410` après bascule ;
+- assignation au coach par défaut conservée dans un flux séparé sans accès `invited` ;
+- échec SMTP conserve l'invitation pending avec état de livraison failed et réponse 502 ;
+- conservation d'audit proposée à 24 mois avant anonymisation/purge.
+
+### Décisions ouvertes non bloquantes
+
+- La durée, la rétention et l'affichage public du nom du coach pourront évoluer via constantes ou politique produit.
+- Un futur transfert entre coachs nécessitera un contrat séparé ; il est refusé en V1.
+- Une éventuelle création administrative au nom d'un coach nécessitera un endpoint distinct et audité ; elle est refusée en V1.
+
+### Validation effectuée
+
+| Vérification | Résultat | Détails |
+|---|---|---|
+| Présence des 18 sections | Réussi | Sections 1 à 18 détectées. |
+| Chemins cités | Réussi | Tous les fichiers principaux contrôlés existent dans le dépôt. |
+| Cohérence avec le dépôt | Réussi | Contrat aligné sur les RPC, garde de profil, helper email et rate limit existants. |
+| `git diff --check` | Réussi avant suivi final | Aucune erreur de format détectée. |
+| Tests applicatifs | Non exécutés | Seuls des fichiers Markdown sont créés/modifiés ; aucun comportement exécutable n'a changé. |
+| Build | Non exécuté | Documentation uniquement et contrainte Google Fonts connue. |
+
+### Risques et limites restant à traiter
+
+- Le rate limiter mémoire existant n'est pas suffisant seul pour une protection distribuée ; une persistance sera nécessaire avant ouverture large.
+- La future RPC devra accéder à l'email Auth vérifié de manière contrôlée et être testée sur Supabase local.
+- Les contraintes de cohérence et RLS ne sont encore que spécifiées, pas appliquées.
+- Les anciens liens UUID ne peuvent pas être sécurisés rétroactivement faute d'identité destinataire.
+- Les utilisateurs déjà `invited` nécessitent un audit séparé, sans création d'invitations fictives.
+- Le transport du jeton à travers OAuth/callback devra empêcher les fuites dans logs, referer et analytics.
+
+### Travail non terminé
+
+- Aucun test du nouveau contrat n'a encore été écrit.
+- Aucune table, RPC, route, adaptation frontend, migration ou feature flag n'a été créé.
+- Aucune vulnérabilité n'a été corrigée.
+- Aucun commit n'a été créé.
+
+### Checklist de fin de session
+
+- [x] Spécification complète et exploitable.
+- [x] Aucune décision critique non résolue.
+- [x] Modèle, cycle, jeton, acteurs, API et atomicité définis.
+- [x] Compatibilité, migration et rollback décrits.
+- [x] Plan de tests futur défini avant implémentation.
+- [x] Aucun fichier applicatif, test ou migration modifié.
+- [x] Aucun service externe appelé.
+- [x] Roadmap mise à jour avec lien vers le contrat.
+- [x] Compteur des corrections P0 laissé inchangé.
+- [x] Prochaine étape unique définie.
+
+### Résumé de reprise
+
+Le contrat d'invitation coach à usage unique est défini dans `docs/COACH_INVITATION_CONTRACT.md`. Il impose un jeton aléatoire 256 bits hashé en SHA-256, un destinataire lié à un email vérifié, une expiration à 7 jours et une consommation transactionnelle sous `auth.uid()`. Le coach provient exclusivement de l'invitation. Les anciens UUID ne constituent jamais une preuve et devront renvoyer 410 après bascule. La spécification comprend le modèle de données, les statuts, les droits, quatre endpoints, les erreurs, RLS, atomicité, transition expand/contract et le plan complet de tests. Aucun fichier exécutable ou SQL n'a été modifié et aucune vulnérabilité n'a encore été corrigée.
+
+### Prochaine étape unique
+
+**Action :**
+
+Écrire les tests du nouveau contrat d'invitation coach avant de créer la migration ou de modifier `POST /api/assign-coach`.
+
+**Pourquoi maintenant :**
+
+Le contrat est normatif et les comportements actuels sont déjà caractérisés. Les futurs tests peuvent désormais figer les règles sécurisées avant toute implémentation.
+
+**Fichiers à ouvrir en premier :**
+
+- `docs/COACH_INVITATION_CONTRACT.md`
+- `tests/unit/assign-coach-authorization.test.ts`
+- `app/api/assign-coach/route.ts`
+- conventions de tests RPC/RLS disponibles dans le dépôt
+
+**Tests à préparer :**
+
+- services purs de normalisation, génération/hash et validation de token ;
+- contrats API de création, validation, consommation et révocation avec fournisseurs mockés ;
+- spécifications d'intégration de la RPC : atomicité, rollback et concurrence ;
+- matrice RLS inter-coachs, destinataire et accès au hash ;
+- attentes legacy `coachId`, `clientId` et `autoAssign` sans modifier encore la route.
+
+**Définition de terminé de la prochaine étape :**
+
+- tests sécurisés écrits avant SQL et correction ;
+- scénarios création, consommation, révocation, expiration et double usage couverts ;
+- tests RPC/RLS identifiés séparément des mocks unitaires ;
+- aucune migration et aucune route de production modifiée ;
+- suite existante toujours verte ou attentes rouges explicitement isolées comme spécification future.
+
+**Ne pas faire pendant la prochaine session :**
+
+- ne pas créer la migration ;
+- ne pas modifier `assign-coach`, `/join`, callback ou `invite-client` ;
+- ne pas appliquer de SQL local ou distant ;
+- ne pas appeler Supabase, Stripe ou SMTP de production.
+
+### Temps
+
+- Temps de session estimé : 90 à 120 minutes.
+- Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
+- Estimation restante pour les tests du nouveau contrat : 1,5 à 2 jours concentrés.
