@@ -947,3 +947,182 @@ Le contrat est normatif et les comportements actuels sont déjà caractérisés.
 - Temps de session estimé : 90 à 120 minutes.
 - Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
 - Estimation restante pour les tests du nouveau contrat : 1,5 à 2 jours concentrés.
+
+---
+
+## Session 2026-07-11 — 19:00
+
+### Contexte Git
+
+- Branche : `main`
+- Commit au début : `0637f67`
+- Commit à la fin : `0637f67`
+- État Git au début : propre ; contrat documentaire d'invitation commitée.
+- État Git à la fin : nouveau cahier de tests contractuels, roadmap et journal modifiés ; aucun fichier applicatif ou SQL modifié.
+
+### Roadmap
+
+- Phase : Phase 1 — Stabilisation et sécurité
+- Priorité : P0
+- Tâche principale : Écrire les tests du nouveau contrat d'invitation coach avant implémentation.
+- Statut au début : Contrat normatif disponible, aucun test du futur comportement.
+- Statut à la fin : Terminé ; 14 tests purs actifs et 79 scénarios futurs explicitement `todo`.
+- Tâches Phase 1 cochées : inchangées à 4 sur 15 ; aucune migration ou correction n'a été réalisée.
+- Compteur P0 restant : inchangé à 12.
+
+### Objectif de la session
+
+Transformer `docs/COACH_INVITATION_CONTRACT.md` en cahier de tests exécutable, sans implémenter la table, les routes, la RPC, les RLS ou le frontend.
+
+### Périmètre prévu
+
+- fichiers concernés : un test contractuel dédié, roadmap et journal ;
+- fichiers exclus : routes `assign-coach` et `invite-client`, `/join`, callback, migrations, policies et code de production ;
+- services externes : aucun ;
+- migrations : aucune.
+
+### Travail effectué
+
+1. Lecture du contrat complet, des tests de caractérisation, des routes actuelles et de la configuration Vitest.
+2. Définition d'une fixture normative strictement locale au test, signalée comme temporaire et non productive.
+3. Ajout de tests actifs pour normalisation NFKC/lowercase, expiration à 7 jours, jeton Base64URL 256 bits et hash SHA-256.
+4. Ajout de tests actifs pour les entrées autorisées, autorités interdites, statuts, transitions, état final du profil, URLs legacy/token et codes d'erreur.
+5. Ajout de scénarios `todo` structurés par création, validation, consommation, atomicité, révocation, RLS et compatibilité.
+6. Séparation explicite des dépendances d'activation : route de création, endpoint de validation, route/RPC de consommation, migration locale/RLS et frontend/callback.
+7. Exécution des validations ciblées et globales.
+
+### Fichiers créés
+
+- `tests/unit/coach-invitation-contract.test.ts`
+  - 14 tests actifs de cohérence pure ;
+  - 79 tests `todo` décrivant les comportements futurs sans mocks vides ;
+  - aucune importation de route ou de module de production inexistant.
+
+### Fichiers modifiés
+
+- `ROADMAP_CODEX.md`
+  - indicateur de tests porté à 133 actifs et 79 contractuels `todo`.
+- `SESSION_LOG_CODEX.md`
+  - ajout de la présente entrée.
+
+### Fichiers applicatifs, tests existants et SQL
+
+- Routes applicatives modifiées : aucune.
+- Tests existants modifiés ou affaiblis : aucun.
+- Migration, table, RPC ou policy créée : aucune.
+- Frontend et callback modifiés : aucun.
+
+### Organisation et statut des tests
+
+| Domaine | Tests actifs | Tests `todo` | Dépendance d'activation |
+|---|---:|---:|---|
+| Création | 6 | 16 | Service et `POST /api/coach/invitations` |
+| Validation | 2 | 10 | Endpoint de validation |
+| Consommation | 2 | 20 | Route de consommation et RPC |
+| Atomicité | 2 | 8 | Migration et tests PostgreSQL locaux |
+| Révocation | 0 | 7 | Route/RPC de révocation |
+| RLS | 0 | 9 | Table, policies et Supabase local |
+| Compatibilité | 1 | 9 | `/join`, callback et feature flags |
+| Erreurs stables | 1 | 0 | Contrat pur |
+| **Total** | **14** | **79** | — |
+
+Il n'existe aucun `skip`. Les 79 scénarios futurs sont visibles comme `todo` dans Vitest et ne donnent pas une impression de couverture implémentée.
+
+### Validations exécutées
+
+| Commande | Résultat | Détails |
+|---|---|---|
+| `npm test -- tests/unit/coach-invitation-contract.test.ts` | Réussi | 14 actifs réussis, 79 `todo`, 93 cas recensés. |
+| `npm test` | Réussi | 9 fichiers, 133 actifs réussis, 79 `todo`, 212 cas recensés. |
+| `npx tsc --noEmit` | Réussi | Aucune erreur TypeScript. |
+| `npx eslint tests/unit/coach-invitation-contract.test.ts` | Réussi | Aucune erreur ni avertissement. |
+| `git diff --check` | Réussi avant suivi final | Aucun problème de format. |
+| Build | Non exécuté | Aucun code de production modifié et contrainte Google Fonts connue. |
+
+### Règles pures désormais exécutables
+
+- email : trim, NFKC et lowercase sans transformation spécifique aux fournisseurs ;
+- durée : 7 jours exactement ;
+- jeton : 32 octets, 256 bits, Base64URL sans padding, 43 caractères ;
+- hash : SHA-256 de 32 octets, différent du secret transporté ;
+- création : seuls `recipientEmail` et `locale` sont autorisés comme données métier ;
+- consommation : seul `token` est autorisé ; coach/client/autoAssign/abonnements ne sont jamais autorités ;
+- profil final : `client`, `active`, `invited`, `trial_ends_at=null` ;
+- états persistés : `pending`, `consumed`, `revoked` ;
+- transitions : uniquement `pending→consumed` et `pending→revoked` ;
+- expiration : état calculé, jamais persisté ;
+- anciens liens UUID : classés legacy, jamais preuve ;
+- vocabulaire : 14 codes d'erreur stables et non dupliqués.
+
+### Limitations assumées
+
+- Les tests actifs vérifient une fixture contractuelle locale et non une implémentation de production.
+- La robustesse cryptographique de Node n'est pas auditée ; les tests figent format, longueur et algorithme attendus.
+- Les 79 `todo` ne valident encore aucune route, transaction, contrainte ou policy réelle.
+- Atomicité et concurrence nécessiteront PostgreSQL/Supabase local après la migration.
+- Les compteurs de tests distinguent désormais les tests actifs des cas contractuels futurs.
+
+### Travail non terminé
+
+- Aucune migration additive n'a été créée.
+- Aucune RPC transactionnelle n'a été implémentée.
+- Aucun test `todo` dépendant de la base n'a été activé.
+- Aucun comportement vulnérable n'a été corrigé.
+- Aucun commit n'a été créé.
+
+### Checklist de fin de session
+
+- [x] Sections creation, validation, consumption, atomicity, revocation, rls et compatibility présentes.
+- [x] Tests purs actifs et réussis.
+- [x] Tests futurs explicitement `todo`.
+- [x] Aucun test passant artificiellement avec des mocks vides.
+- [x] Aucun test existant affaibli.
+- [x] Suite complète, TypeScript et ESLint réussis.
+- [x] Aucun fichier applicatif ou SQL modifié.
+- [x] Aucun service externe appelé.
+- [x] Roadmap et journal mis à jour.
+- [x] Prochaine étape unique définie.
+
+### Résumé de reprise
+
+Le futur contrat d'invitation est désormais représenté par 93 cas dans `tests/unit/coach-invitation-contract.test.ts` : 14 règles pures actives et 79 scénarios futurs `todo`. La suite normale reste verte avec 133 tests actifs. Les cas futurs couvrent création, validation, consommation, atomicité, révocation, RLS et compatibilité, avec leur dépendance d'activation nommée. Aucun mock vide, aucun fichier de production, aucune route et aucune migration n'ont été ajoutés. La vulnérabilité actuelle reste inchangée.
+
+### Prochaine étape unique
+
+**Action :**
+
+Créer la migration additive `coach_invitations` et la RPC transactionnelle de consommation, sans modifier encore le frontend ni supprimer l'ancien flux.
+
+**Pourquoi maintenant :**
+
+Le modèle, les invariants et tous les scénarios attendus sont figés avant SQL. La prochaine étape peut implémenter la persistance et activer les tests PostgreSQL/RLS correspondants sans redéfinir le métier.
+
+**Fichiers à ouvrir en premier :**
+
+- `docs/COACH_INVITATION_CONTRACT.md`
+- `tests/unit/coach-invitation-contract.test.ts`
+- migrations `guard_profile_sensitive_columns`, `claim_beta_slot`, `set_role` et `coach_clients`
+- configuration Supabase locale et conventions de tests SQL du dépôt
+
+**Définition de terminé de la prochaine étape :**
+
+- migration additive et idempotente ;
+- table, contraintes, index et RLS conformes au contrat ;
+- RPC `SECURITY DEFINER` avec `auth.uid()`, `FOR UPDATE` et `search_path` sûr ;
+- rollback transactionnel prouvé sur Supabase local ;
+- concurrence : exactement une consommation réussie ;
+- tests d'intégration/RLS concernés activés et verts ;
+- aucune modification de `/join`, callback, `invite-client` ou suppression legacy.
+
+**Ne pas faire pendant la prochaine session :**
+
+- ne pas modifier encore le frontend ;
+- ne pas supprimer ou transformer le flux legacy ;
+- ne pas appeler Supabase de production ;
+- ne pas mélanger migration, routes API et bascule produit dans un même chantier.
+
+### Temps
+
+- Temps de session estimé : 90 à 120 minutes.
+- Temps réellement consacré, si fourni par l'utilisateur : Non fourni.
+- Estimation restante pour migration + RPC + tests locaux : 2 jours concentrés.

@@ -733,7 +733,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 119 | 🟠 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 133 actifs + 79 contractuels `todo` | 🟠 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 0 | 🔴 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 0 | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
