@@ -4,7 +4,7 @@
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
 > Dernière mise à jour : **12 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Phase 1 — Stabilisation et sécurité**.  
+> Phase active : **Phase 2 — Filet de sécurité et fondations d'architecture**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -254,6 +254,8 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
+**Statut : En cours — 1 tâche sur 18 terminée ; stratégie de tests documentée, fixtures de rôles à créer**
+
 ### Pourquoi
 
 Une personne ne peut découper sereinement les grands domaines sans tests reproductibles, contrats partagés et accès aux données centralisés.
@@ -262,7 +264,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
-| [ ] Documenter la pyramide de tests MoovX | 0,5 j | Faible | Faible | Moyen | Phase 1 |
+| [x] [Documenter la pyramide de tests MoovX](docs/TESTING_STRATEGY.md) | 0,5 j | Faible | Faible | Moyen | Phase 1 |
 | [ ] Créer les fixtures client, coach, invited, lifetime et admin | 1,5 j | Moyenne | Faible | Élevé | — |
 | [ ] Rendre le reset Supabase local déterministe | 2 j | Élevée | Moyen | Élevé | Fixtures |
 | [ ] Créer les mocks Stripe, Anthropic, SMTP et Web Push | 2,5 j | Élevée | Faible | Élevé | — |
@@ -745,7 +747,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
 | Tests unitaires | 93 | ≥160 | ≥250 | 356 actifs + 3 contractuels `todo` | 🟢 |
-| Tests d'intégration | 0 identifié | ≥20 | ≥50 | 37 assertions SQL + 1 scénario de concurrence | 🟠 |
+| Tests d'intégration | 0 identifié | ≥20 | ≥50 | 53 assertions SQL + 1 scénario de concurrence | 🟠 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5 | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
 | Bundle principal | À mesurer | −15 % | −30 % | À mesurer | ⬜ |

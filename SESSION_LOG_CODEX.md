@@ -2838,3 +2838,53 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Phase 2 : documenter la pyramide de tests MoovX et les commandes unitaires, intégration et E2E distinctes.
+
+## Entrée — 2026-07-12 — Phase 2, stratégie de tests
+
+### Travail effectué
+
+- Inventaire des tests Vitest, intégrations PostgreSQL/RPC, E2E Chromium et vérifications statiques réellement présents.
+- Mesure des compteurs depuis Vitest et les fichiers du dépôt.
+- Création de `docs/TESTING_STRATEGY.md` avec niveaux techniques, intentions de test, commandes, frontières, gardes, cadence et déterminisme.
+- Définition de la matrice minimale de validation par type de changement et d'une pyramide cible réaliste.
+- Recensement des lacunes Phase 2 : fixtures de rôles, matrices RLS, fournisseurs réutilisables, composants et parcours critiques.
+
+### Tâches cochées
+
+- Phase 2 : « Documenter la pyramide de tests MoovX » terminée.
+
+### Décisions prises
+
+- « Contrat », « caractérisation », « régression », « hostile » et « concurrence » décrivent l'objectif d'un test, pas un niveau technique autonome.
+- Un E2E MoovX doit traverser navigateur, interface, route, identité et persistance; les fournisseurs externes sont simulés uniquement à leur frontière réseau.
+- La pyramide cible est guidée par le coût et la fidélité, sans pourcentages arbitraires.
+
+### Problèmes rencontrés
+
+- `npm run test:e2e` n'orchestre pas toutes les frontières fournisseurs optionnelles; les cinq commandes dédiées restent la référence complète.
+- Aucune commande npm dédiée n'existe encore pour l'intégration PostgreSQL, TypeScript ou le lint ciblé.
+
+### Risques ou dette restante
+
+- Les fixtures de rôles sont dupliquées dans les E2E.
+- Les matrices RLS et les tests de composants interactifs sont encore très incomplets.
+- Le lint global contient une dette historique et le build dépend encore du téléchargement de polices Google.
+
+### Tests exécutés
+
+- `npm test` : 25 fichiers, 356 tests actifs verts et 3 `todo`.
+- Inventaire statique : 5 spécifications E2E, 7 cas techniques, 7 fichiers d'intégration, 53 assertions SQL et 1 scénario de concurrence.
+- Commandes documentées vérifiées contre `package.json`, configurations et scripts réels.
+
+### Mesures avant/après
+
+- Documentation centrale de tests : absente → créée.
+- Phase 2 : 0/18 → 1/18 tâche terminée.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer les fixtures client, coach, invited, lifetime et admin.
