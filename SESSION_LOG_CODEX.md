@@ -1623,6 +1623,12 @@ Migrer le parcours `/join` vers l'invitation vérifiée en commençant par lire 
 - Scénarios contractuels `todo` : 49 → 22.
 - Autorité navigateur sur `/join` : `coachId` accepté → aucun identifiant d'autorité accepté.
 
+### Note de diagnostic — redirection onboarding
+
+- L'incident signalé sur un compte existant n'a pas été reproduit en navigation privée.
+- La comparaison avec son parent confirme que le commit `7174e68` n'a pas introduit la décision d'onboarding; celle-ci reste dans `useClientDashboard`.
+- Une tâche P1 documente désormais la distinction future entre erreur de lecture du profil et absence réelle. La prochaine tâche P0 reste prioritaire.
+
 ### Temps passé
 
 Non fourni par l'utilisateur.

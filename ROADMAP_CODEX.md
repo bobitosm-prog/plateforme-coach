@@ -272,6 +272,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 | [ ] Créer le helper commun Zod → erreur HTTP | 1,5 j | Moyenne | Faible | Élevé | Contrat API |
 | [ ] Définir les factories Supabase browser/server/admin | 2 j | Élevée | Moyen | Critique | Types DB |
 | [ ] Créer les repositories profil, identité et abonnement | 3 j | Élevée | Élevé | Critique | Factories |
+| [ ] Distinguer l'erreur de lecture du profil de l'absence réelle de profil dans `useClientDashboard` | 1,5 j | Moyenne | Faible | Élevé | Contrat erreurs + repository profil |
 | [ ] Migrer 10 accès Supabase représentatifs | 3 j | Moyenne | Moyen | Élevé | Repositories |
 | [ ] Définir une stratégie de cache par domaine | 1 j | Élevée | Faible | Moyen | Repositories |
 | [ ] Migrer 8 routes simples vers le contrat route/service/schema | 4 j | Élevée | Moyen | Élevé | Zod + erreurs |
@@ -283,6 +284,14 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 - Fixtures/mocks et contrats TypeScript.
 - Types Supabase et documentation.
 - E2E après disponibilité des fixtures.
+
+### Critères de robustesse du chargement de profil
+
+- `profRes.error` ne redirige jamais vers l'onboarding.
+- Une erreur réseau, RLS ou Supabase affiche un état récupérable.
+- Seul un profil réellement absent déclenche l'onboarding.
+- Un profil existant avec `onboarding_completed = true` ouvre le dashboard.
+- Des tests de non-régression couvrent les erreurs de lecture, le profil absent et le profil complété.
 
 ### Définition de terminé
 
