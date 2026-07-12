@@ -2455,3 +2455,61 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Documenter le rollback applicatif de la Phase 1.
+
+---
+
+## Entrée — 2026-07-12 — Rollback applicatif de la Phase 1
+
+### Travail effectué
+
+- Inventaire documentaire et Git des vingt-cinq commits Phase 1 postérieurs à la baseline `aa53a6e`.
+- Vérification des migrations additives de baseline/seed, invitations coach et réclamation durable du webhook.
+- Création de `docs/PHASE_1_ROLLBACK.md` avec prérequis, sauvegardes, ordre de déploiement, critères go/no-go, procédure d'incident, responsabilités et validation.
+- Documentation séparée de Connect, deux checkouts, webhook, invitations, push, admin, chat, logs structurés et baseline Supabase.
+- Distinction explicite entre rollback applicatif, désactivation fonctionnelle, rollback de configuration, correction SQL vers l'avant et restauration de données.
+
+### Tâches cochées
+
+- Aucun nouvel item de la checklist technique : elle reste à 15/15.
+- Critère de sortie Phase 1 « rollback applicatif documenté » satisfait.
+
+### Décisions prises
+
+- Aucun rollback global vers `aa53a6e` n'est acceptable, car il réintroduirait plusieurs autorités navigateur.
+- Une migration additive déjà appliquée n'est jamais supprimée; toute correction de schéma se fait vers l'avant.
+- Les événements Stripe et `payments.stripe_event_id` sont préservés; les états terminaux `success`/`skipped` ne sont jamais réouverts manuellement.
+- Le flux d'invitation ne peut jamais revenir à `/join?coach=<UUID>` ou `/api/assign-coach`.
+- Les dégradations sûres privilégiées sont l'arrêt temporaire du push et le texte brut pour le chat.
+
+### Problèmes rencontrés
+
+- Le dépôt ne documente aucun outil distant de monitoring ou de sauvegarde; le runbook exige donc un mécanisme approuvé et vérifiable sans en inventer un.
+- Plusieurs commits Phase 1 ont versionné une baseline rétroactive; leur déploiement distant reste soumis à la stratégie de marquage contrôlée existante.
+
+### Risques ou dette restante
+
+- Le runbook n'a pas encore été répété sur un environnement de test dédié.
+- Aucun mécanisme de désactivation fonctionnelle prêt à l'emploi n'existe pour tous les flux; certaines dégradations nécessitent un correctif applicatif minimal.
+- La Phase 1 reste non terminée : les E2E invitation, checkout, push et chat sont toujours absents.
+
+### Tests exécutés
+
+- Vérification des noms exacts de tables, colonnes, index, RPC et statuts contre les migrations et le code.
+- Vérification des liens internes vers les contrats et la stratégie de baseline.
+- `git diff --check` : réussi.
+- Preuve Git : seuls `docs/PHASE_1_ROLLBACK.md`, `ROADMAP_CODEX.md` et `SESSION_LOG_CODEX.md` sont modifiés.
+
+### Mesures avant/après
+
+- Rollback applicatif Phase 1 documenté : non → oui.
+- Domaines Phase 1 avec procédure dédiée : 0 → 9.
+- Parcours E2E intégrés : 0, inchangé.
+- Checklist technique Phase 1 : 15/15, inchangée.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer le premier parcours E2E d'invitation coach vérifiée, de la création à la consommation unique.

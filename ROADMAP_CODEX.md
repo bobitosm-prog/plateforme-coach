@@ -190,7 +190,7 @@ Une limite dépassée n'impose pas un découpage mécanique. Elle déclenche une
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P0**
 
-**Statut : Checklist technique complétée — 15 tâches sur 15, définition de terminé non atteinte (E2E et rollback manquants)**
+**Statut : Checklist technique complétée — 15 tâches sur 15, rollback documenté, définition de terminé non atteinte (E2E manquants)**
 
 ### Pourquoi
 
@@ -243,7 +243,7 @@ Base suffisamment sûre pour modifier les frontières métier et les accès aux 
 - Toutes les matrices anonyme/client/coach/admin sont vertes.
 - Aucun identifiant critique ne provient uniquement du navigateur.
 - Les parcours invitation, checkout, push et chat passent en E2E de test.
-- Le rollback applicatif est documenté.
+- Le rollback applicatif est documenté dans [`docs/PHASE_1_ROLLBACK.md`](docs/PHASE_1_ROLLBACK.md).
 
 ---
 
@@ -768,7 +768,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Domaine | Dette initiale | Cible | Statut actuel |
 |---|---|---|---|
-| Sécurité préalable | Critique | Aucun P0 ouvert | 🟠 — checklist complète, E2E/rollback manquants |
+| Sécurité préalable | Critique | Aucun P0 ouvert | 🟠 — checklist et rollback complets, E2E manquants |
 | Tests | Élevée | Filet unit/intégration/E2E | 🔴 |
 | Données/Supabase | Élevée | Accès centralisés et typés | 🔴 |
 | Training | Élevée | Modèle et UI modulaires | 🔴 |
