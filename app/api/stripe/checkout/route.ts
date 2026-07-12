@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { createSupabaseRouteClient } from '@/lib/supabase/server'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY required for Stripe checkout')
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
 }
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
 
@@ -30,12 +29,26 @@ const PLAN_META: Record<string, { mode: 'subscription' | 'payment'; subType: str
 
 export async function POST(req: NextRequest) {
   try {
-    const { clientId, planId, coachId } = await req.json()
-    if (!clientId || !UUID_RE.test(clientId)) {
-      return NextResponse.json({ error: 'clientId invalide' }, { status: 400 })
-    }
+    const supabaseAuth = await createSupabaseRouteClient()
+    const { data: { user } } = await supabaseAuth.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const resolvedPlanId = planId || 'client_monthly'
+    const body = await req.json()
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    }
+    const keys = Object.keys(body)
+    if (keys.some(key => key !== 'planId') || typeof body.planId !== 'string') {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    }
+    const resolvedPlanId = body.planId
+
+    const { data: profile } = await supabaseAuth
+      .from('profiles')
+      .select('role, subscription_status, subscription_type')
+      .eq('id', user.id)
+      .single()
+    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
     // Check Stripe secret key
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -46,6 +59,10 @@ export async function POST(req: NextRequest) {
     // Resolve plan
     const plan = PLAN_META[resolvedPlanId]
     if (!plan) return NextResponse.json({ error: 'Invalid planId' }, { status: 400 })
+    const requiredRole = resolvedPlanId === 'coach_monthly' ? 'coach' : 'client'
+    if (profile.role !== requiredRole) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     // Resolve price ID — static access, no dynamic process.env[key]
     const priceId = PRICE_MAP[resolvedPlanId]
@@ -76,12 +93,12 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}${successPath}`,
       cancel_url: `${baseUrl}${cancelPath}`,
-      metadata: { clientId, planId: resolvedPlanId, coachId: coachId || 'platform', subType: plan.subType },
+      metadata: { clientId: user.id, planId: resolvedPlanId, coachId: 'platform', subType: plan.subType },
     }
 
     // For subscription mode, set subscription_data
     if (plan.mode === 'subscription') {
-      sessionParams.subscription_data = { metadata: { clientId, subType: plan.subType } }
+      sessionParams.subscription_data = { metadata: { clientId: user.id, subType: plan.subType } }
     }
 
     // If platform owner has Stripe Connect, route payments there
@@ -94,19 +111,19 @@ export async function POST(req: NextRequest) {
       } else {
         sessionParams.payment_intent_data = {
           transfer_data: { destination: ownerStripeAccountId },
-          metadata: { clientId, subType: plan.subType },
+          metadata: { clientId: user.id, subType: plan.subType },
         }
       }
     }
 
     // FIX: Create Stripe session FIRST with idempotency key, THEN insert payment record
-    const idempotencyKey = `checkout-${clientId}-${resolvedPlanId}-${Date.now()}`
+    const idempotencyKey = `checkout-${user.id}-${resolvedPlanId}-${Date.now()}`
     const session = await stripe.checkout.sessions.create(sessionParams, { idempotencyKey })
 
     // Only insert payment record AFTER Stripe session is successfully created
     await getServiceSupabase().from('payments').insert({
-      coach_id: coachId && coachId !== 'platform' ? coachId : null,
-      client_id: clientId,
+      coach_id: null,
+      client_id: user.id,
       stripe_checkout_session_id: session.id,
       amount: plan.amount,
       currency: 'chf',

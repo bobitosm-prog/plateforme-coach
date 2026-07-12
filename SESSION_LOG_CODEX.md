@@ -1820,3 +1820,65 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Sécuriser les checkouts à partir des failles révélées : lier l'identité, le rôle et les relations exclusivement aux données serveur, avec les tests actuels comme filet de caractérisation.
+
+---
+
+## Entrée — 2026-07-12 — Sécurisation des identités checkout
+
+### Travail effectué
+
+- Authentification serveur ajoutée à `POST /api/stripe/checkout` via la session Supabase et `auth.getUser()`.
+- Réduction du contrat plateforme à `{ planId }`, rejet strict des identités `clientId` et `coachId`, puis dérivation de `clientId`, métadonnées et clé d'idempotence depuis `user.id`.
+- Vérification serveur du profil et de la compatibilité offre/rôle : offres client réservées au rôle client, offre coach réservée au rôle coach.
+- Réduction du contrat de `POST /api/stripe/coach-checkout` à un objet vide; identité client dérivée exclusivement de la session.
+- Résolution serveur du coach depuis une relation `coach_clients` active, puis validation du profil coach et de son compte Stripe.
+- Retrait des identifiants devenus inutiles dans les corps POST de `Paywall` et `useClientDashboard`, sans modifier l'affichage de l'offre coach.
+- Transformation des quinze caractérisations vulnérables en dix-neuf tests d'autorisation sécurisée.
+
+### Tâches cochées
+
+- Phase 1 : « Lier tous les checkouts à l'identité et aux relations serveur ».
+
+### Décisions prises
+
+- Toute présence de `clientId` ou `coachId` dans un corps checkout est désormais une entrée invalide (`400`) plutôt qu'une valeur silencieusement ignorée.
+- Le checkout plateforme représente uniquement un achat auprès de la plateforme : `coachId` Stripe vaut `platform` et `payments.coach_id` vaut `null`.
+- Le checkout coach est initié uniquement par le client authentifié pour son coach actif; un coach ne peut pas créer un paiement au nom d'un client.
+- Les contrôles d'autorisation et de relation précèdent toute construction Stripe, création de customer/session ou mise à jour de profil.
+- Les champs d'abonnement sont lus avec le profil plateforme pour conserver une frontière serveur prête aux règles d'éligibilité; dans cette tranche, aucune interdiction commerciale supplémentaire non documentée n'est inventée au-delà de la compatibilité rôle/offre.
+
+### Problèmes rencontrés
+
+- Le lint groupé initial incluait des fichiers consommateurs historiques et a signalé leur dette préexistante (`any`, règles React). Après conservation de leurs signatures publiques, le périmètre réellement modifié passe ESLint; aucune correction hors checkout n'a été engagée.
+
+### Risques ou dette restante
+
+- La création Stripe puis l'insertion `payments` du checkout plateforme ne sont pas transactionnelles; la réconciliation et le replay restent à traiter dans les tâches webhook/Billing.
+- Plusieurs relations coach actives rendraient `maybeSingle()` ambigu; le modèle devrait garantir ou expliciter une relation facturable unique lors de la future centralisation Billing.
+- Les métadonnées webhook existantes doivent encore être testées contre replay, événements désordonnés et divergences entre les deux familles de checkout.
+- Aucun E2E navigateur réel Stripe test n'est intégré; la couverture actuelle est entièrement mockée et ne contacte aucun service externe.
+
+### Tests exécutés
+
+- Matrice checkout ciblée : 19 réussis.
+- `npm test` : 202 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint des deux routes, de `Paywall` et des deux fichiers de test : réussi.
+- Recherche des producteurs : aucun corps POST checkout ne transmet `clientId` ou `coachId`.
+- `git diff --check` : réussi.
+- `npm run build` : lancé deux fois mais n'a pas terminé; Next.js reste sur `Creating an optimized production build ...`, sans produire `.next/BUILD_ID` ni retourner de diagnostic exploitable dans l'environnement courant. Les tests et TypeScript restent verts.
+
+### Mesures avant/après
+
+- Routes checkout authentifiées : 1/2 → 2/2.
+- Routes checkout acceptant une identité utilisateur navigateur : 2/2 → 0/2.
+- Checkouts coach exigeant une relation active vérifiée : 0/1 → 1/1.
+- Tests unitaires actifs : 198 → 202.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Tester les métadonnées et le replay du webhook Stripe avec des mocks complets, sans modifier encore sa logique métier.

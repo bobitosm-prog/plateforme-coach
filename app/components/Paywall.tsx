@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { Check, Crown, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
-import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
+import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../lib/design-tokens'
 
 interface PaywallProps {
   role: 'client' | 'coach'
@@ -12,7 +12,7 @@ interface PaywallProps {
   onSignOut: () => void
 }
 
-export default function Paywall({ role, userId, coachId, onSignOut }: PaywallProps) {
+export default function Paywall({ role, coachId, onSignOut }: PaywallProps) {
   const t = useTranslations('paywall')
   const [loading, setLoading] = useState<string | null>(null)
   const [coachData, setCoachData] = useState<{ name: string; rate: number; id: string } | null>(null)
@@ -56,7 +56,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: userId, planId, coachId: coachId || 'platform' }),
+        body: JSON.stringify({ planId }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -78,7 +78,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
       const res = await fetch('/api/stripe/coach-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: userId, coachId: coachData.id }),
+        body: JSON.stringify({}),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))

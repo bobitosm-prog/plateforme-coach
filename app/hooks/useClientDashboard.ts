@@ -553,7 +553,7 @@ export default function useClientDashboard() {
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: session?.user?.id, planId: planId || 'client_monthly', coachId: coachId || 'platform' }),
+        body: JSON.stringify({ planId: planId || 'client_monthly' }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))

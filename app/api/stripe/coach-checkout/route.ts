@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY.trim())
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!serviceKey) {
       console.error('[coach-checkout] SUPABASE_SERVICE_ROLE_KEY missing')
@@ -31,17 +30,41 @@ export async function POST(req: NextRequest) {
       serviceKey
     )
 
-    const { clientId, coachId } = await req.json()
-    if (!clientId || !coachId) return NextResponse.json({ error: 'clientId et coachId requis' }, { status: 400 })
+    const body = await req.json()
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length > 0) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    }
+
+    const { data: callerProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    if (!callerProfile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (callerProfile.role !== 'client') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const { data: relation } = await supabaseAdmin
+      .from('coach_clients')
+      .select('coach_id')
+      .eq('client_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle()
+    if (!relation?.coach_id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const clientId = user.id
+    const coachId = relation.coach_id
 
     // Fetch coach profile
     const { data: coach } = await supabaseAdmin
       .from('profiles')
-      .select('stripe_account_id, coach_monthly_rate, full_name, email')
+      .select('role, stripe_account_id, coach_monthly_rate, full_name, email')
       .eq('id', coachId)
       .single()
 
-    if (!coach?.stripe_account_id) {
+    if (!coach) return NextResponse.json({ error: 'Coach not found' }, { status: 404 })
+    if (coach.role !== 'coach') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!coach.stripe_account_id) {
       return NextResponse.json({ error: "Le coach n'a pas encore configuré Stripe" }, { status: 400 })
     }
 
@@ -68,6 +91,9 @@ export async function POST(req: NextRequest) {
       .select('email, full_name, stripe_customer_id')
       .eq('id', clientId)
       .single()
+
+    if (!client) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY.trim())
 
     // Get or create Stripe customer
     let customerId = client?.stripe_customer_id
