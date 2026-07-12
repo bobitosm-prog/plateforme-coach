@@ -1,6 +1,7 @@
 import 'server-only'
 import webpush from 'web-push'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { requireNotificationDestination } from './notifications/destination'
 
 let vapidConfigured = false
 
@@ -25,6 +26,7 @@ export async function sendPushToUser(
   userId: string,
   message: { title: string; body: string; url?: string; tag?: string }
 ): Promise<{ sent: number; failed: number }> {
+  const url = requireNotificationDestination(message.url ?? '/')
   if (!ensureVapid()) {
     console.error('[push-server] VAPID keys missing')
     return { sent: 0, failed: 0 }
@@ -41,7 +43,7 @@ export async function sendPushToUser(
   const payload = JSON.stringify({
     title: message.title,
     body: message.body,
-    url: message.url || '/',
+    url,
     tag: message.tag || 'moovx-msg',
   })
 
@@ -53,9 +55,12 @@ export async function sendPushToUser(
     try {
       await webpush.sendNotification(sub.subscription, payload)
       sent++
-    } catch (err: any) {
+    } catch (err: unknown) {
       failed++
-      if (err.statusCode === 410 || err.statusCode === 404) {
+      const statusCode = typeof err === 'object' && err !== null && 'statusCode' in err
+        ? (err as { statusCode?: unknown }).statusCode
+        : undefined
+      if (statusCode === 410 || statusCode === 404) {
         toDelete.push(sub.id)
       }
     }

@@ -1,11 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
+import { parseNotificationDestination } from './destination'
 
 export const userPushRequestSchema = z.object({
   userId: z.string().uuid(),
   title: z.string().trim().min(1).max(120),
   body: z.string().trim().min(1).max(500),
-  url: z.string().min(1).max(2048).optional(),
+  url: z.string().max(2048).refine(value => parseNotificationDestination(value).ok, {
+    message: 'Notification destination must be an internal path',
+  }),
   tag: z.string().trim().min(1).max(100).optional(),
 }).strict()
 

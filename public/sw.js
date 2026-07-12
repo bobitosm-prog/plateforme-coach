@@ -25,7 +25,7 @@ self.addEventListener('push', function (event) {
   var data = {};
   try {
     data = event.data.json();
-  } catch (e) {
+  } catch {
     // Fallback if payload is not valid JSON
   }
   var title = data.title || 'MoovX';
@@ -39,9 +39,26 @@ self.addEventListener('push', function (event) {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
+function safeNotificationDestination(value) {
+  if (typeof value !== 'string') return '/';
+  var layer = value;
+  for (var depth = 0; depth < 5; depth++) {
+    if (!layer || layer !== layer.trim() || /\s/.test(layer) || /[\u0000-\u001f\u007f-\u009f]/.test(layer)) return '/';
+    if (layer.indexOf('\\') !== -1 || layer.charAt(0) !== '/' || layer.indexOf('//') === 0) return '/';
+    try {
+      var decoded = decodeURIComponent(layer);
+      if (decoded === layer) return value;
+      layer = decoded;
+    } catch {
+      return '/';
+    }
+  }
+  return '/';
+}
+
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  var url = (event.notification.data && event.notification.data.url) || '/';
+  var url = safeNotificationDestination(event.notification.data && event.notification.data.url);
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
       for (var i = 0; i < clientList.length; i++) {

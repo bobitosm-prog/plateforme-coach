@@ -51,6 +51,7 @@ vi.mock('web-push', () => ({
 }))
 
 import { POST } from '../../app/api/send-notification/route'
+import { sendPushToUser } from '../../lib/push-server'
 
 const CALLER_ID = '00000000-0000-4000-8000-000000000001'
 const TARGET_ID = '00000000-0000-4000-8000-000000000002'
@@ -198,6 +199,8 @@ describe('POST /api/send-notification — secured authorization', () => {
     [{ userId: 'not-a-uuid' }, 'invalid recipient'],
     [{ title: '' }, 'empty title'],
     [{ body: '' }, 'empty body'],
+    [{ url: undefined }, 'missing URL'],
+    [{ url: { pathname: '/coach' } }, 'non-text URL'],
     [{ unexpected: true }, 'unknown property'],
   ])('returns 400 for %s before privileged lookups', async (payload, label) => {
     expect(label).toBeTruthy()
@@ -223,14 +226,37 @@ describe('POST /api/send-notification — secured authorization', () => {
   })
 })
 
-describe('POST /api/send-notification — producer compatibility and deferred URL policy', () => {
-  it.each(['/internal/path', 'https://evil.example/phishing', 'javascript:alert(1)'])(
-    'still forwards URL %s unchanged for the next roadmap task', async url => {
+describe('POST /api/send-notification — internal URL policy and producer compatibility', () => {
+  it.each(['/internal/path', '/coach?tab=messages#latest'])(
+    'forwards legitimate internal URL %s', async url => {
       const response = await POST(request({ url }))
       expect(response.status).toBe(200)
       expect(JSON.parse(mocks.sendNotification.mock.calls[0][1] as string)).toMatchObject({ url })
     }
   )
+
+  it.each([
+    'https://evil.example', 'http://evil.example', '//evil.example',
+    'javascript:alert(1)', 'data:text/html,evil', 'file:///tmp/evil',
+    '/safe\\evil', '/safe\nexternal', ' /safe', '/safe ',
+    '/%2F%2Fevil.example', '/%252F%252Fevil.example',
+  ])('returns 400 for hostile URL %s before subscriptions or delivery', async url => {
+    const response = await POST(request({ url }))
+    expect(response.status).toBe(400)
+    expect(mocks.from).not.toHaveBeenCalled()
+    expectNoSubscriptionOrDelivery()
+  })
+
+  it('rejects a hostile destination in the shared server transport before reading subscriptions', async () => {
+    const admin = { from: mocks.from }
+    await expect(sendPushToUser(
+      admin as unknown as Parameters<typeof sendPushToUser>[0],
+      TARGET_ID,
+      { title: 'Server push', body: 'Body', url: 'https://evil.example' }
+    )).rejects.toThrow('Invalid notification destination')
+    expect(mocks.from).not.toHaveBeenCalled()
+    expect(mocks.sendNotification).not.toHaveBeenCalled()
+  })
 
   it('keeps all four browser producers compatible with the secured request contract', () => {
     const sources = [
@@ -243,5 +269,13 @@ describe('POST /api/send-notification — producer compatibility and deferred UR
     expect(sources).toContain('JSON.stringify({ userId: coachId,')
     expect(sources).toContain('JSON.stringify({ userId: nsClientId,')
     expect(sources).toContain('JSON.stringify({ userId: selectedClient.client_id,')
+  })
+
+  it('keeps the weekly diagnostic and streak reminder on validated internal destinations', () => {
+    const diagnostic = readFileSync(resolve(process.cwd(), 'lib/weekly-diagnostic/generator.ts'), 'utf8')
+    const streak = readFileSync(resolve(process.cwd(), 'app/api/streak-reminder/cron/route.ts'), 'utf8')
+    expect(diagnostic).toContain('url: `/weekly-diagnostic/${diagnosticId}`')
+    expect(streak).toContain("url: '/'")
+    expect(streak).toContain('sendPushToUser(supabaseAdmin, uid,')
   })
 })

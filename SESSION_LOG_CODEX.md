@@ -2140,3 +2140,67 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Contraindre les URLs de notification à des chemins internes.
+
+---
+
+## Entrée — 2026-07-12 — Destinations internes des notifications
+
+### Travail effectué
+
+- Inventaire final des quatre producteurs navigateur, des deux producteurs serveur, du transport Web Push partagé, des notifications locales et du service worker.
+- Ajout du contrat pur `parseNotificationDestination` et de sa variante stricte `requireNotificationDestination`.
+- Application du contrat au schéma Zod de la route publique avant toute autorisation, lecture d'abonnement ou livraison.
+- Application du contrat au transport `sendPushToUser`, couvrant la route publique et le cron streak avec une destination interne par défaut uniquement pour ce transport serveur contrôlé.
+- Conservation du diagnostic hebdomadaire sur sa destination construite côté serveur `/weekly-diagnostic/{id}`, qui ne dépend d'aucune entrée navigateur.
+- Ajout d'une défense autonome dans `notificationclick` : toute ancienne notification dont la destination est absente, non textuelle ou hostile ouvre `/`.
+- Ajout de cinquante nouveaux tests actifs couvrant le contrat, la route, le transport serveur et le service worker.
+
+### Tâches cochées
+
+- Phase 1 : « Contraindre les URLs de notification à des chemins internes ».
+
+### Décisions prises
+
+- Une destination valide est une chaîne non vide commençant par exactement un `/`, sans espace, caractère de contrôle ni antislash, et restant interne après chaque niveau de décodage URI.
+- Les chemins internes avec query string et fragment sont acceptés sans réécriture.
+- Aucune normalisation ambiguë n'est tentée : une entrée navigateur invalide retourne `400` au lieu d'être remplacée par `/`.
+- Le transport serveur partagé peut utiliser `/` lorsque son appelant interne omet volontairement l'URL; le service worker utilise aussi `/` comme confinement pour les anciennes notifications déjà reçues.
+- Le diagnostic hebdomadaire reste un producteur serveur contrôlé avec un préfixe interne constant; son refactoring complet et sa dette TypeScript restent hors de cette tranche.
+
+### Problèmes rencontrés
+
+- Le premier lint incluant le générateur hebdomadaire a remonté sa dette `any` historique, sans lien avec les destinations. Le changement d'import initialement ajouté a été retiré : le fichier est revenu strictement à son état Git, tout en conservant sa destination interne construite côté serveur.
+- Le transport push contenait un `catch (err: any)` historique dans la zone modifiée; il a été remplacé par une lecture typée de `statusCode` depuis `unknown`.
+
+### Risques ou dette restante
+
+- Le service worker embarque une petite défense équivalente au contrat TypeScript, car le fichier statique ne peut pas importer directement le module serveur; les deux matrices partagent les mêmes cas hostiles.
+- Les anciennes notifications hostiles ne sont pas supprimées, mais leur clic est confiné vers `/`.
+- Le diagnostic hebdomadaire conserve un transport Web Push dupliqué et des types `any` historiques.
+- Les erreurs fournisseur restent sans file de retry durable et aucun E2E Web Push réel n'est encore intégré.
+
+### Tests exécutés
+
+- Tests ciblés contrat, route et service worker : 73 réussis.
+- `npm test` : 299 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint de tous les fichiers effectivement modifiés : réussi sans erreur ni avertissement.
+- Recherche finale de toutes les créations/livraisons de payload push et de `notificationclick` : effectuée; les six flux légitimes restent internes et le consommateur PWA est confiné.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Producteurs navigateur rejetant une destination externe avant Supabase/Web Push : 0/4 → 4/4.
+- Producteurs passant par un transport serveur validant la destination : 0/5 flux → 5/5 flux (quatre navigateur et streak).
+- Producteur diagnostic à destination construite exclusivement côté serveur : 1/1, inchangé et couvert.
+- Consommateurs PWA confinant les anciennes destinations : 0/1 → 1/1.
+- Tests unitaires actifs : 249 → 299.
+- Tâches Phase 1 terminées : 11/15 → 12/15.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Remplacer l'autorisation lifetime de `setup-products` par le contrat admin, en commençant par ses tests d'autorisation.
