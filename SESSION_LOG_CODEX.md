@@ -1882,3 +1882,63 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Tester les métadonnées et le replay du webhook Stripe avec des mocks complets, sans modifier encore sa logique métier.
+
+---
+
+## Entrée — 2026-07-12 — Caractérisation des métadonnées et replays webhook Stripe
+
+### Travail effectué
+
+- Lecture intégrale de `app/api/stripe/webhook/route.ts`, de la migration `20260517120000_stripe_webhook_dedup.sql` et du validateur `lib/stripe/metadata.ts`.
+- Inventaire des cinq événements traités : `checkout.session.completed`, `customer.subscription.updated`, `invoice.payment_succeeded`, `customer.subscription.deleted` et `account.updated`.
+- Comparaison des métadonnées consommées avec les producteurs sécurisés plateforme (`clientId`, `planId`, `coachId=platform`, `subType`) et coach (`clientId`, `coachId`, `type=coach_subscription`).
+- Ajout d'une matrice de vingt-deux tests avec Stripe, Supabase et déduplication entièrement simulés, sans aucun appel externe.
+- Couverture des signatures, métadonnées valides et invalides, identité étrangère, offre/rôle incompatible, événement non supporté, doublon, replay séquentiel, échec de réservation et échec après réservation.
+- Vérification explicite du replay après traitement incomplet et après exception de traitement.
+
+### Tâches cochées
+
+- Phase 1 : « Tester les metadata et le replay du webhook Stripe ».
+
+### Décisions prises
+
+- Les tests nomment et attendent les comportements vulnérables actuels afin de rester verts sans corriger la production dans cette tranche.
+- La réservation dans `stripe_webhook_events` est considérée séparément du succès métier : son défaut SQL `success` ne prouve pas que le traitement a abouti.
+- Les cinq branches prises en charge et les événements inconnus sont couverts dans une même suite pour figer l'inventaire actuel.
+
+### Problèmes rencontrés
+
+Aucun. Les mocks reproduisent les chaînes Supabase utilisées par la route et contrôlent séparément réservation, mutations métier et marquage `failed`.
+
+### Risques ou dette restante
+
+- Une exception après insertion de l'événement marque la ligne `failed`, mais un replay du même `event.id` rencontre ensuite `23505` et est ignoré définitivement sans consulter `processing_status`.
+- Des métadonnées absentes ou invalides sont acquittées `200` après réservation, sans passage à `failed`; la ligne conserve donc le statut SQL par défaut `success` alors qu'aucune mutation métier n'a eu lieu.
+- Un échec non-duplicate de l'insertion de déduplication retourne `200`, empêchant Stripe de retenter alors qu'aucun traitement n'a eu lieu.
+- Le validateur accepte tout `clientId` UUID bien formé sans vérifier que la session Stripe appartient à ce profil ou que l'offre correspond à son rôle.
+- `coach_monthly` sans `type=coach_subscription` active l'offre coach du profil fourni sans vérifier son rôle; inversement le flux coach dépend uniquement des métadonnées Stripe refetchées.
+- Les événements non pris en charge sont réservés avec le statut par défaut `success`, sans statut explicite `skipped`.
+
+### Tests exécutés
+
+- Tests webhook ciblés : 22 réussis.
+- `npm test` : 224 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint du nouveau fichier de test : réussi.
+- `git diff --exit-code -- app/api/stripe/webhook/route.ts supabase/migrations` : réussi; webhook et migrations inchangés.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Tests unitaires actifs : 202 → 224.
+- Types d'événements webhook caractérisés : 0/5 → 5/5.
+- Scénarios explicites de replay/déduplication : 0 → 6.
+- Contrats de métadonnées checkout comparés au webhook : 0/2 → 2/2.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Corriger le webhook Stripe pour rendre la réservation et le traitement rejouables : distinguer `processing`, `success`, `failed` et `skipped`, valider l'autorité des métadonnées côté serveur et retourner un statut retentable lorsque le traitement n'est pas durablement terminé.
