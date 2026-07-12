@@ -190,7 +190,7 @@ Une limite dépassée n'impose pas un découpage mécanique. Elle déclenche une
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P0**
 
-**Statut : Checklist technique complétée — 15 tâches sur 15, rollback documenté, E2E invitation vert, définition de terminé non atteinte (E2E checkout, push et chat manquants)**
+**Statut : Checklist technique complétée — 15 tâches sur 15, rollback documenté, E2E invitation et checkout plateforme verts, définition de terminé non atteinte (E2E checkout coach, push et chat manquants)**
 
 ### Pourquoi
 
@@ -245,7 +245,7 @@ Base suffisamment sûre pour modifier les frontières métier et les accès aux 
 - Les parcours invitation, checkout, push et chat passent en E2E de test.
 - Le rollback applicatif est documenté dans [`docs/PHASE_1_ROLLBACK.md`](docs/PHASE_1_ROLLBACK.md).
 
-Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARNESS.md`](docs/E2E_INVITATION_HARNESS.md). Il traverse Chromium, Next.js, Supabase Auth/PostgREST/PostgreSQL, la RPC de consommation et Mailpit local. Checkout, push et chat restent à couvrir.
+Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARNESS.md`](docs/E2E_INVITATION_HARNESS.md). Le checkout plateforme est documenté dans [`docs/E2E_CHECKOUT_HARNESS.md`](docs/E2E_CHECKOUT_HARNESS.md). Le checkout coach, push et chat restent à couvrir.
 
 ---
 
@@ -746,7 +746,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
 | Tests unitaires | 93 | ≥160 | ≥250 | 347 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 37 assertions SQL + 1 scénario de concurrence | 🟠 |
-| Parcours E2E intégrés | 0 | ≥8 | ≥15 | 1 | 🔴 |
+| Parcours E2E intégrés | 0 | ≥8 | ≥15 | 2 | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
 | Bundle principal | À mesurer | −15 % | −30 % | À mesurer | ⬜ |
 | LCP p75 mobile | À mesurer | −10 % | −20 % | À mesurer | ⬜ |

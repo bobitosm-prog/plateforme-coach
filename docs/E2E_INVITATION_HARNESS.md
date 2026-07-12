@@ -31,6 +31,7 @@ npm run supabase:local:start
 npm run supabase:local:status
 npm run supabase:local:reset
 npm run test:e2e:invitation
+npm run test:e2e:checkout
 npm run supabase:local:stop
 ```
 

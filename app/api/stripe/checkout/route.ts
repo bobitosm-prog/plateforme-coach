@@ -12,6 +12,17 @@ function getServiceSupabase() {
 
 const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
 
+function createStripeClient(secretKey: string) {
+  const endpoint = process.env.STRIPE_E2E_BASE_URL
+  if (!endpoint) return new Stripe(secretKey)
+  if (process.env.MOOVX_E2E !== '1') throw new Error('Stripe E2E endpoint requires MOOVX_E2E=1')
+  const url = new URL(endpoint)
+  if (url.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(url.hostname) || url.pathname !== '/') {
+    throw new Error('Stripe E2E endpoint must be a local HTTP origin')
+  }
+  return new Stripe(secretKey, { host: url.hostname, port: Number(url.port), protocol: 'http' })
+}
+
 // Static Price ID map — explicit access so Next.js can resolve at build time
 const PRICE_MAP: Record<string, string | undefined> = {
   client_monthly:  process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY,
@@ -71,7 +82,7 @@ export async function POST(req: NextRequest) {
       return audit.reject(NextResponse.json({ error: 'Price ID non configuré pour ce plan' }, { status: 500 }), { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'PRICE_NOT_CONFIGURED', status: 500, context: { requested_plan: resolvedPlanId } })
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+    const stripe = createStripeClient(process.env.STRIPE_SECRET_KEY)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
 
     // Get the platform owner's Stripe Connect account for receiving payments

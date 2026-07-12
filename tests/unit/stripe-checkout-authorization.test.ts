@@ -39,7 +39,7 @@ import { POST } from '../../app/api/stripe/checkout/route'
 
 const USER_ID = '00000000-0000-4000-8000-000000000001'
 const FOREIGN_ID = '00000000-0000-4000-8000-000000000002'
-const originalEnv = { STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL }
+const originalEnv = { STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL, MOOVX_E2E: process.env.MOOVX_E2E, STRIPE_E2E_BASE_URL: process.env.STRIPE_E2E_BASE_URL }
 
 function request(body: Record<string, unknown>): NextRequest {
   return new Request('http://localhost/api/stripe/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }) as NextRequest
@@ -62,6 +62,8 @@ beforeEach(() => {
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'service_role_checkout_secure'
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://supabase.test'
   process.env.NEXT_PUBLIC_APP_URL = 'http://app.test'
+  delete process.env.MOOVX_E2E
+  delete process.env.STRIPE_E2E_BASE_URL
   authenticatedAs()
   mocks.ownerMaybeSingle.mockResolvedValue({ data: null, error: null })
   mocks.sessionsCreate.mockResolvedValue({ id: 'cs_platform', url: 'https://checkout.test/platform' })
@@ -120,6 +122,31 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
   it('returns 400 for an unknown offer before mutation', async () => {
     const response = await POST(request({ planId: 'foreign_plan' }))
     expect(response.status).toBe(400)
+    expectNoMutation()
+  })
+
+  it('allows a local Stripe transport only in explicit E2E mode', async () => {
+    process.env.MOOVX_E2E = '1'
+    process.env.STRIPE_E2E_BASE_URL = 'http://127.0.0.1:55326/'
+    const response = await POST(request({ planId: 'client_monthly' }))
+    expect(response.status).toBe(200)
+    expect(mocks.stripeConstructor).toHaveBeenCalledWith('sk_test_checkout_secure', {
+      host: '127.0.0.1', port: 55326, protocol: 'http',
+    })
+  })
+
+  it.each(['https://api.stripe.com/', 'http://evil.example/', 'http://127.0.0.1:55326/v1'])('refuses an unsafe Stripe E2E endpoint: %s', async endpoint => {
+    process.env.MOOVX_E2E = '1'
+    process.env.STRIPE_E2E_BASE_URL = endpoint
+    const response = await POST(request({ planId: 'client_monthly' }))
+    expect(response.status).toBe(500)
+    expectNoMutation()
+  })
+
+  it('refuses the local Stripe transport outside explicit E2E mode', async () => {
+    process.env.STRIPE_E2E_BASE_URL = 'http://127.0.0.1:55326/'
+    const response = await POST(request({ planId: 'client_monthly' }))
+    expect(response.status).toBe(500)
     expectNoMutation()
   })
 })

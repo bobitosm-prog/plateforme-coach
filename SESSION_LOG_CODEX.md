@@ -2637,3 +2637,56 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer le parcours E2E du checkout plateforme avec Stripe intégralement simulé et Supabase local.
+
+## Entrée — 2026-07-12 — E2E checkout plateforme local
+
+### Travail effectué
+
+- Ajout d'une frontière Stripe HTTP locale sur `127.0.0.1:55326`, limitée à la création de session Checkout réellement utilisée.
+- Ajout d'une redirection serveur du SDK Stripe active uniquement avec `MOOVX_E2E=1`, refusant toute origine non locale.
+- Généralisation du runner E2E pour démarrer et arrêter Next.js, Playwright et le faux Stripe par groupes de processus.
+- Ajout d'un parcours Chromium traversant Auth Supabase locale, le paywall réel et `POST /api/stripe/checkout`.
+- Vérification des paramètres Stripe, de l'identité serveur, des refus avant Stripe et de l'absence d'écriture après panne.
+
+### Tâches cochées
+
+- Aucun item technique supplémentaire de Phase 1 : la checklist était déjà à 15/15.
+- Critère E2E checkout partiellement satisfait : checkout plateforme couvert, checkout coach encore absent.
+
+### Décisions prises
+
+- Conserver le SDK Stripe réel et remplacer uniquement son hôte HTTP final.
+- Ne rendre la destination locale configurable que dans l'environnement serveur E2E.
+- Conserver les contrats HTTP et les montants de production inchangés.
+
+### Problèmes rencontrés
+
+- L'attente initiale de connexion du second contexte acceptait prématurément la valeur `next=/`; elle vérifie désormais le pathname réel.
+- Le SDK Stripe retente une erreur `500`; le faux serveur maintient donc son état de panne jusqu'au reset explicite.
+- Le garde réseau devait inclure Supabase local sur `55321` en plus de Next.js et Stripe local.
+
+### Risques ou dette restante
+
+- Le garde prouve les origines navigateur et la redirection explicite du SDK Stripe, mais ne constitue pas un bac à sable réseau système général.
+- Le checkout coach, push et chat restent sans E2E.
+- Les avertissements `getSession()` et qualités d'images observés durant le dashboard restent hors périmètre.
+
+### Tests exécutés
+
+- Reset Supabase local : 134/134 migrations appliquées.
+- E2E checkout plateforme : deux exécutions consécutives réussies, environ 13,2 s chacune.
+- Refus couverts : anonyme, `clientId`, `coachId`, plan inconnu, rôle incompatible et identité étrangère.
+- Panne Stripe locale : `500` attendu, aucun paiement incohérent écrit.
+
+### Mesures avant/après
+
+- Parcours E2E intégrés : 1 → 2.
+- Checkout plateforme E2E : absent → navigateur/Auth/Next.js/PostgreSQL/SDK Stripe local couverts.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer l'E2E local du checkout coach avec relation coach/client active et compte Connect synthétique.
