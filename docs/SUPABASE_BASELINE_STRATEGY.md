@@ -21,12 +21,15 @@ Supabase, le SQL Editor ou un bootstrap non conservé.
 | 20260415 | `backfill_badge_id` utilise `user_badges.badge_id` et `celebrated` avant leur ajout versionné; le “master RLS fix” crée tardivement plusieurs tables déjà utilisées. |
 | 20260419 | Une policy utilise `daily_checkins` avant la migration qui crée cette table. |
 | 20260521 | Une migration contient un délimiteur de fonction invalide `AS $ ... $;`. |
-| 20260531 | La migration `complete_variant_group` exige un catalogue préexistant de 178 exercices, mais aucun seed canonique de ces 178 lignes n'est versionné. |
+| 20260531 | La migration `complete_variant_group` exige un catalogue préexistant de 178 exercices; ce catalogue est désormais versionné avant les migrations incrémentales. |
 
 La recherche Git (`-S 'CREATE TABLE profiles'`) ne trouve aucune définition
 historique supprimée. Aucun dump de schéma, types Supabase générés ou snapshot de
-production n'est versionné. Les documents confirment un catalogue de 178 exercices,
-mais n'en contiennent pas le seed complet.
+production n'est versionné. Les documents confirmaient un catalogue de 178 exercices
+sans en contenir le seed complet. Une lecture REST autorisée de la seule table
+catalogue a fourni les 176 lignes canoniques actuelles; les deux doublons historiques
+supprimés en juillet sont restaurés depuis les UUID et paires explicitement consignés
+par la migration de déduplication.
 
 ## Dépendances antérieures à leur définition versionnée
 
@@ -73,13 +76,16 @@ policies restent définies par les migrations historiques.
 `20260317000000_initial_schema_baseline.sql` est une baseline historique additive.
 Elle précède la première migration et définit le schéma réellement supposé par les
 migrations précoces. Elle n'effectue aucun `DROP`, aucun renommage, aucun backfill et
-aucune modification de données.
+aucune modification de données existantes. Le seed historique séparé
+`20260317010000_seed_exercises_catalog.sql` ne s'exécute que lorsque
+`exercises_db` est vide.
 
 ### Base vide
 
-La baseline crée les objets initiaux, puis toutes les migrations incrémentales sont
-exécutées dans leur ordre lexical. Le reset réel atteint actuellement
-`20260531043341_complete_variant_group.sql`.
+La baseline crée les objets initiaux, le seed restaure les 178 exercices avec leurs
+UUID, équipements legacy et groupes de variantes, puis toutes les migrations
+incrémentales sont exécutées dans leur ordre lexical. Le reset réel atteint et
+valide désormais la dernière migration versionnée.
 
 ### Base existante
 
@@ -95,8 +101,10 @@ futur devra donc :
 4. sinon produire une migration corrective additive séparée ;
 5. ne jamais lancer automatiquement `db push` avec cette version rétroactive.
 
-L'état distant n'a pas été interrogé pendant cette session. Aucune correspondance
-avec la production n'est donc revendiquée.
+Seuls le catalogue applicatif et les métadonnées OpenAPI nécessaires aux objets
+historiques ont été lus; aucune donnée utilisateur ou financière n'a été exportée,
+et aucun état distant n'a été muté. Une correspondance générale du schéma ou de
+l'historique distant n'est donc pas revendiquée.
 
 ## Correction historique explicite
 
@@ -129,18 +137,16 @@ Le script refuse toute URL ne contenant ni `127.0.0.1` ni `localhost`.
 
 ## Risques ouverts
 
-- Le seed canonique des 178 exercices n'est pas versionné. Les migrations ne peuvent
-  donc pas encore être exécutées intégralement depuis zéro sans inventer des données
-  ou affaiblir une assertion métier.
 - Le schéma distant et son historique de versions restent inconnus.
 - Les deux modèles historiques de `scheduled_sessions` sont conservés sous forme de
   superset compatible; leur consolidation métier doit rester un chantier séparé.
-- La baseline structurelle est prouvée localement jusqu'au 31 mai, mais la tâche de
-  reset complet reste partiellement terminée tant que le seed n'est pas récupéré et
-  versionné.
+- Le seed ne contient que les champs nécessaires aux migrations historiques; les
+  enrichissements descriptifs restent la responsabilité des migrations suivantes.
+- Toute adoption distante de la baseline rétroactive reste soumise à l'audit et à
+  la procédure de marquage contrôlée décrits ci-dessus.
 
 ## Prochaine action technique
 
-Obtenir une source autorisée et sans données utilisateur du catalogue canonique
-`exercises_db` (dump de référence ou export de la table de catalogue), la versionner
-comme seed historique avec ses UUID, puis reprendre le reset complet depuis zéro.
+Migrer le parcours `/join` vers l'invitation vérifiée, conformément à la prochaine
+tâche P0 de la Phase 1. La baseline rétroactive ne doit pas être déployée sans audit
+de schéma et procédure de marquage contrôlée.

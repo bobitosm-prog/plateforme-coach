@@ -2,7 +2,7 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **11 juillet 2026**.  
+> Dernière mise à jour : **12 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase active : **Phase 1 — Stabilisation et sécurité**.  
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
@@ -733,7 +733,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 148 actifs + 49 contractuels `todo` | 🟠 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 151 actifs + 49 contractuels `todo` | 🟠 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 37 assertions SQL + 1 scénario de concurrence | 🟠 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 0 | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |

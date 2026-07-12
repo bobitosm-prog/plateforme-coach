@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   meal_preferences jsonb,
   onboarding_completed boolean NOT NULL DEFAULT false,
   coach_onboarding_complete boolean NOT NULL DEFAULT false,
+  coach_speciality text,
+  coach_experience_years text,
   subscription_status text,
   subscription_end_date timestamptz,
   stripe_customer_id text,
@@ -84,6 +86,37 @@ CREATE TABLE IF NOT EXISTS public.exercises_db (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE,
   muscle_group text,
+  equipment text,
+  variant_group text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Historically created through the Supabase dashboard before the first
+-- versioned policy and RPC migrations started depending on it.
+CREATE TABLE IF NOT EXISTS public.beta_campaigns (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  free_days integer NOT NULL CHECK (free_days > 0),
+  max_slots integer NOT NULL CHECK (max_slots > 0),
+  used_slots integer NOT NULL DEFAULT 0 CHECK (used_slots >= 0),
+  is_active boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (used_slots <= max_slots)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_beta_one_active
+  ON public.beta_campaigns (is_active)
+  WHERE is_active = true;
+
+ALTER TABLE public.beta_campaigns ENABLE ROW LEVEL SECURITY;
+
+-- Financial ledger table also predated its first versioned RLS migration.
+-- Its contract is sourced from the canonical REST OpenAPI schema; no rows are seeded.
+CREATE TABLE IF NOT EXISTS public.commissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  coach_id uuid REFERENCES public.profiles(id),
+  amount numeric NOT NULL,
+  status text DEFAULT 'pending',
   created_at timestamptz DEFAULT now()
 );
 

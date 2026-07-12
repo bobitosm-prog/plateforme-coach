@@ -13,6 +13,9 @@ BEGIN
 END;
 $$;
 
+GRANT USAGE ON SCHEMA test TO authenticated;
+GRANT EXECUTE ON FUNCTION test.assert(boolean, text) TO authenticated;
+
 SELECT test.assert(to_regclass('public.profiles') IS NOT NULL, 'profiles must exist');
 SELECT test.assert(to_regclass('public.messages') IS NOT NULL, 'messages must exist');
 SELECT test.assert(to_regclass('public.coach_clients') IS NOT NULL, 'coach_clients must exist');

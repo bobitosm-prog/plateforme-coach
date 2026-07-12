@@ -1501,3 +1501,70 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Obtenir une source autorisée et sans données utilisateur du catalogue canonique `exercises_db` de 178 lignes avec ses UUID, la versionner comme seed historique, puis reprendre le reset complet depuis zéro. Ne pas commencer les routes API d'invitation avant un reset intégral vert.
+
+---
+
+## Entrée — 2026-07-12 — Reset Supabase intégral reproductible
+
+### Travail effectué
+
+- Reprise stricte de la prochaine action enregistrée depuis le commit `a1525c2`, sans commencer les routes API ni le parcours `/join`.
+- Export REST en lecture seule de la table catalogue `exercises_db` : 176 lignes actuelles, 176 UUID uniques, aucune donnée utilisateur.
+- Reconstruction du catalogue historique de 178 exercices avec les deux doublons et UUID explicitement documentés par `20260701200000_dedup_exercises_db.sql`.
+- Versionnement de `20260317010000_seed_exercises_catalog.sql`, protégé par un garde qui ne touche jamais un catalogue existant non vide.
+- Conservation des équipements historiques depuis `equipment_legacy` et des 46 groupes de variantes canoniques afin de satisfaire les migrations de normalisation sans affaiblir leurs assertions.
+- Complément de la baseline pour les objets réels créés historiquement hors Git : `beta_campaigns`, `commissions`, `profiles.coach_speciality` et `profiles.coach_experience_years`.
+- Contrat `commissions` obtenu depuis les seules métadonnées OpenAPI Supabase, sans lire de ligne financière.
+- Alignement du bootstrap local sur les privilèges de tables/séquences accordés par défaut aux rôles API Supabase; accès au schéma d'assertions accordé au rôle `authenticated`.
+- Mise à jour de la stratégie de baseline et du tableau de bord de tests.
+
+### Tâches cochées
+
+Aucune nouvelle case de Phase 1. La dette de reset déterministe qui bloquait la validation de la migration d'invitation est résolue; la prochaine tâche P0 reste la migration de `/join` vers l'invitation vérifiée.
+
+### Décisions prises
+
+- Le seed ne contient que des données de catalogue nécessaires à l'historique : UUID, nom, groupe musculaire, équipement legacy et groupe de variante.
+- Les deux lignes absentes de l'état courant ne sont pas inventées : identité issue de la migration de déduplication et champs métier repris de leur paire canonique documentée.
+- La baseline rétroactive demeure additive. Son déploiement distant reste interdit sans audit de schéma, sauvegarde et marquage contrôlé de la version.
+- Les différences de privilèges du PostgreSQL brut sont corrigées dans le bootstrap de plateforme, pas en affaiblissant les RLS métier.
+
+### Problèmes rencontrés
+
+- Le premier export contient 176 lignes et non 178, expliqué par les deux suppressions case-only de juillet.
+- Les premiers seeds incomplets ont révélé successivement les dépendances historiques `equipment` puis `variant_group`.
+- Le reset a ensuite révélé trois objets hors historique : `beta_campaigns`, deux colonnes coach et `commissions`.
+- Le harnais brut ne reproduisait pas les privilèges Supabase et n'exposait pas `test.assert` à `authenticated`; les deux écarts locaux ont été corrigés explicitement.
+
+### Risques ou dette restante
+
+- L'historique et la compatibilité générale du schéma distant restent à auditer avant toute adoption de la baseline rétroactive.
+- Le seed restaure le minimum historique requis, pas tous les enrichissements descriptifs actuels; ceux-ci restent appliqués par les migrations suivantes.
+- Les routes API, `/join`, les types Supabase générés et le flux legacy restent inchangés.
+- Les 49 scénarios contractuels `todo` restent ouverts conformément à leur activation progressive.
+
+### Tests exécutés
+
+- Reconstruction depuis une base PostgreSQL locale vide avec toutes les migrations jusqu'à `20260711190500_add_coach_invitations.sql` : réussie.
+- Normalisation équipement : 178/178 valides; variantes : 178/178, 0 NULL et 46 groupes distincts.
+- `tests/integration/supabase-baseline-assertions.sql` : 9 assertions réussies.
+- `tests/integration/coach-invitations-rpc.sql` : 28 assertions réussies.
+- `tests/integration/coach-invitations-concurrency.sh` : réussi.
+- `npm test` : 151 réussis, 49 `todo`.
+- `npx tsc --noEmit` : réussi.
+- `git diff --check` : réussi avant documentation finale.
+
+### Mesures avant/après
+
+- Première migration atteinte depuis zéro : `20260531043341_complete_variant_group.sql` → dernière migration versionnée.
+- Catalogue historique versionné : 0 → 178 lignes/UUID uniques.
+- Tests unitaires actifs : 148 → 151.
+- Assertions d'intégration : 37 + 1 scénario concurrent, toutes vertes depuis une base vide.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Migrer le parcours `/join` vers l'invitation vérifiée en commençant par lire le flux et ses tests, conformément à la Phase 1. Ne commencer aucune autre tâche P0 ou de Phase 2 en parallèle.
