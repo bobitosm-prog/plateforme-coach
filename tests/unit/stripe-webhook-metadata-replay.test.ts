@@ -26,15 +26,26 @@ const mocks = vi.hoisted(() => {
   const profileSelectEq = vi.fn(() => ({ maybeSingle: profileMaybeSingle }))
   const profileSelect = vi.fn(() => ({ eq: profileSelectEq }))
   const paymentInsert = vi.fn()
+  const paymentUpsert = vi.fn()
   const paymentUpdateEq = vi.fn()
   const paymentUpdate = vi.fn(() => ({ eq: paymentUpdateEq }))
+  const paymentMaybeSingle = vi.fn()
+  const paymentSelectEq = vi.fn(() => ({ maybeSingle: paymentMaybeSingle }))
+  const paymentSelect = vi.fn(() => ({ eq: paymentSelectEq }))
+  const relationMaybeSingle = vi.fn()
+  const relationStatusEq = vi.fn(() => ({ maybeSingle: relationMaybeSingle }))
+  const relationCoachEq = vi.fn(() => ({ eq: relationStatusEq }))
+  const relationClientEq = vi.fn(() => ({ eq: relationCoachEq }))
+  const relationSelect = vi.fn(() => ({ eq: relationClientEq }))
+  const rpc = vi.fn()
   const from = vi.fn((table: string) => {
     if (table === 'stripe_webhook_events') return { insert: dedupInsert, update: webhookEventUpdate }
     if (table === 'profiles') return { update: profileUpdate, select: profileSelect }
-    if (table === 'payments') return { insert: paymentInsert, update: paymentUpdate }
+    if (table === 'payments') return { insert: paymentInsert, upsert: paymentUpsert, update: paymentUpdate, select: paymentSelect }
+    if (table === 'coach_clients') return { select: relationSelect }
     throw new Error(`Unexpected table: ${table}`)
   })
-  const createClient = vi.fn(() => ({ from }))
+  const createClient = vi.fn(() => ({ from, rpc }))
 
   return {
     constructEvent,
@@ -49,8 +60,12 @@ const mocks = vi.hoisted(() => {
     profileUpdateEq,
     profileMaybeSingle,
     paymentInsert,
+    paymentUpsert,
     paymentUpdate,
     paymentUpdateEq,
+    paymentMaybeSingle,
+    relationMaybeSingle,
+    rpc,
     from,
     createClient,
   }
@@ -107,6 +122,7 @@ function session(metadata: Record<string, string> | null = {
 function expectNoBusinessMutation() {
   expect(mocks.profileUpdate).not.toHaveBeenCalled()
   expect(mocks.paymentInsert).not.toHaveBeenCalled()
+  expect(mocks.paymentUpsert).not.toHaveBeenCalled()
   expect(mocks.paymentUpdate).not.toHaveBeenCalled()
 }
 
@@ -117,13 +133,21 @@ beforeEach(() => {
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'service_role_webhook_characterization'
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://supabase.test'
   mocks.constructEvent.mockReturnValue(event())
+  mocks.rpc.mockImplementation(async (name: string) => {
+    if (name === 'claim_stripe_webhook_event') return { data: 'claimed', error: null }
+    if (name === 'finalize_stripe_webhook_event') return { data: true, error: null }
+    throw new Error(`Unexpected RPC: ${name}`)
+  })
   mocks.dedupInsert.mockResolvedValue({ error: null })
   mocks.checkoutRetrieve.mockResolvedValue(session())
   mocks.subscriptionRetrieve.mockResolvedValue({ id: 'sub_1', customer: 'cus_1', status: 'active' })
   mocks.invoiceRetrieve.mockResolvedValue({ id: 'in_1', billing_reason: 'subscription_cycle', customer: 'cus_1', amount_paid: 1000, currency: 'chf' })
-  mocks.profileMaybeSingle.mockResolvedValue({ data: { id: CLIENT_ID, subscription_type: 'client_monthly' }, error: null })
+  mocks.profileMaybeSingle.mockResolvedValue({ data: { id: CLIENT_ID, role: 'client', subscription_type: 'client_monthly' }, error: null })
+  mocks.paymentMaybeSingle.mockResolvedValue({ data: { client_id: CLIENT_ID, coach_id: null }, error: null })
+  mocks.relationMaybeSingle.mockResolvedValue({ data: { coach_id: COACH_ID }, error: null })
   mocks.profileUpdateEq.mockResolvedValue({ error: null })
   mocks.paymentInsert.mockResolvedValue({ error: null })
+  mocks.paymentUpsert.mockResolvedValue({ error: null })
   mocks.paymentUpdateEq.mockResolvedValue({ error: null })
   mocks.webhookEventUpdateEq.mockResolvedValue({ error: null })
 })
@@ -140,14 +164,14 @@ describe('POST /api/stripe/webhook — signatures and event inventory', () => {
     const response = await POST(request(null))
     expect(response.status).toBe(400)
     expect(mocks.constructEvent).not.toHaveBeenCalled()
-    expect(mocks.dedupInsert).not.toHaveBeenCalled()
+    expect(mocks.rpc).not.toHaveBeenCalled()
   })
 
   it('returns 400 for an invalid signature without reserving an event', async () => {
     mocks.constructEvent.mockImplementation(() => { throw new Error('invalid signature') })
     const response = await POST(request('invalid'))
     expect(response.status).toBe(400)
-    expect(mocks.dedupInsert).not.toHaveBeenCalled()
+    expect(mocks.rpc).not.toHaveBeenCalled()
   })
 
   it.each([
@@ -162,14 +186,15 @@ describe('POST /api/stripe/webhook — signatures and event inventory', () => {
     mocks.constructEvent.mockReturnValue(current)
     const response = await POST(request())
     expect(response.status).toBe(200)
-    expect(mocks.dedupInsert).toHaveBeenCalledWith(expect.objectContaining({ event_id: current.id, event_type: type }))
+    expect(mocks.rpc).toHaveBeenCalledWith('claim_stripe_webhook_event', expect.objectContaining({ p_event_id: current.id, p_event_type: type }))
   })
 
   it('reserves an unsupported event and returns received without business mutation', async () => {
     mocks.constructEvent.mockReturnValue(event('payment_intent.created', 'evt_unsupported'))
     const response = await POST(request())
     expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toEqual({ received: true })
+    await expect(response.json()).resolves.toEqual({ received: true, skipped: true })
+    expect(mocks.rpc).toHaveBeenCalledWith('finalize_stripe_webhook_event', expect.objectContaining({ p_status: 'skipped' }))
     expectNoBusinessMutation()
   })
 })
@@ -183,52 +208,53 @@ describe('POST /api/stripe/webhook — checkout metadata behavior', () => {
   })
 
   it('accepts the secured coach checkout metadata and records its coach', async () => {
-    mocks.checkoutRetrieve.mockResolvedValue(session({ clientId: CLIENT_ID, coachId: COACH_ID, type: 'coach_subscription' }))
+    mocks.checkoutRetrieve.mockResolvedValue(session({ clientId: CLIENT_ID, coachId: COACH_ID, subType: 'coach_monthly', type: 'coach_subscription' }))
     const response = await POST(request())
     expect(response.status).toBe(200)
     expect(mocks.profileUpdate).toHaveBeenCalledWith(expect.objectContaining({ subscription_type: 'coach_paid' }))
-    expect(mocks.paymentInsert).toHaveBeenCalledWith(expect.objectContaining({ client_id: CLIENT_ID, coach_id: COACH_ID }))
+    expect(mocks.paymentUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ client_id: CLIENT_ID, coach_id: COACH_ID, stripe_event_id: EVENT_ID }),
+      { onConflict: 'stripe_event_id', ignoreDuplicates: true }
+    )
   })
 
   it.each([
     ['absent metadata', null],
     ['incomplete metadata', { subType: 'client_monthly' }],
     ['invalid client identity', { clientId: 'not-a-uuid', subType: 'client_monthly' }],
-  ])('reserves then silently acknowledges %s as success', async (_label, metadata) => {
+  ])('rejects %s and records a retryable failure', async (_label, metadata) => {
     mocks.checkoutRetrieve.mockResolvedValue(session(metadata as Record<string, string> | null))
     const response = await POST(request())
-    expect(response.status).toBe(200)
-    expect(mocks.dedupInsert).toHaveBeenCalledOnce()
-    expect(mocks.webhookEventUpdate).not.toHaveBeenCalled()
+    expect(response.status).toBe(500)
+    expect(mocks.rpc).toHaveBeenCalledWith('finalize_stripe_webhook_event', expect.objectContaining({ p_status: 'failed' }))
     expectNoBusinessMutation()
   })
 
-  it('accepts a foreign but well-formed clientId without checking the profile role or checkout ownership', async () => {
+  it('rejects a foreign but well-formed clientId whose payment ownership does not match', async () => {
     mocks.checkoutRetrieve.mockResolvedValue(session({ clientId: FOREIGN_CLIENT_ID, subType: 'coach_monthly', coachId: 'platform' }))
     const response = await POST(request())
-    expect(response.status).toBe(200)
-    expect(mocks.profileUpdateEq).toHaveBeenCalledWith('id', FOREIGN_CLIENT_ID)
+    expect(response.status).toBe(500)
+    expectNoBusinessMutation()
   })
 
-  it('accepts an offer incompatible with the target role because no role is read', async () => {
+  it('rejects an offer incompatible with the beneficiary role', async () => {
     mocks.checkoutRetrieve.mockResolvedValue(session({ clientId: CLIENT_ID, subType: 'coach_monthly', coachId: 'platform' }))
     const response = await POST(request())
-    expect(response.status).toBe(200)
-    expect(mocks.profileUpdate).toHaveBeenCalledWith(expect.objectContaining({ subscription_type: 'coach_monthly', coach_subscription_active: true }))
-    expect(mocks.profileMaybeSingle).not.toHaveBeenCalled()
+    expect(response.status).toBe(500)
+    expectNoBusinessMutation()
   })
 
   it('documents that both secured checkout producers emit the metadata keys consumed by the webhook', () => {
     const platform = readFileSync(resolve(process.cwd(), 'app/api/stripe/checkout/route.ts'), 'utf8')
     const coach = readFileSync(resolve(process.cwd(), 'app/api/stripe/coach-checkout/route.ts'), 'utf8')
     expect(platform).toContain("clientId: user.id, planId: resolvedPlanId, coachId: 'platform', subType: plan.subType")
-    expect(coach).toContain("metadata: { clientId, coachId, type: 'coach_subscription' }")
+    expect(coach).toContain("metadata: { clientId, coachId, subType: 'coach_monthly', type: 'coach_subscription' }")
   })
 })
 
 describe('POST /api/stripe/webhook — deduplication and replay behavior', () => {
-  it('returns 200 without processing an event already reserved', async () => {
-    mocks.dedupInsert.mockResolvedValue({ error: { code: '23505', message: 'duplicate' } })
+  it('returns 200 without processing an event already completed successfully', async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: 'already_success', error: null })
     const response = await POST(request())
     expect(response.status).toBe(200)
     expect(mocks.checkoutRetrieve).not.toHaveBeenCalled()
@@ -236,19 +262,21 @@ describe('POST /api/stripe/webhook — deduplication and replay behavior', () =>
   })
 
   it('processes the first delivery and skips a sequential replay of the same event.id', async () => {
-    mocks.dedupInsert
-      .mockResolvedValueOnce({ error: null })
-      .mockResolvedValueOnce({ error: { code: '23505', message: 'duplicate' } })
+    let claims = 0
+    mocks.rpc.mockImplementation(async (name: string) => {
+      if (name === 'claim_stripe_webhook_event') return { data: claims++ === 0 ? 'claimed' : 'already_success', error: null }
+      return { data: true, error: null }
+    })
     await POST(request())
     await POST(request())
     expect(mocks.checkoutRetrieve).toHaveBeenCalledOnce()
     expect(mocks.profileUpdate).toHaveBeenCalledOnce()
   })
 
-  it('returns 200 and never processes when dedup reservation fails for a non-duplicate reason', async () => {
-    mocks.dedupInsert.mockResolvedValue({ error: { code: '08006', message: 'database unavailable' } })
+  it('returns 503 and never processes when reservation fails', async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: null, error: { code: '08006', message: 'database unavailable' } })
     const response = await POST(request())
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(503)
     expect(mocks.checkoutRetrieve).not.toHaveBeenCalled()
     expectNoBusinessMutation()
   })
@@ -256,34 +284,59 @@ describe('POST /api/stripe/webhook — deduplication and replay behavior', () =>
   it('marks a reserved event failed when processing throws', async () => {
     mocks.checkoutRetrieve.mockRejectedValue(new Error('Stripe retrieve failed'))
     const response = await POST(request())
-    expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toEqual({ received: true, processing_error: true })
-    expect(mocks.webhookEventUpdate).toHaveBeenCalledWith({ processing_status: 'failed', error_message: 'Stripe retrieve failed' })
-    expect(mocks.webhookEventUpdateEq).toHaveBeenCalledWith('event_id', EVENT_ID)
+    expect(response.status).toBe(500)
+    expect(mocks.rpc).toHaveBeenCalledWith('finalize_stripe_webhook_event', expect.objectContaining({ p_status: 'failed', p_error_message: 'Stripe retrieve failed' }))
   })
 
-  it('permanently skips replay after a reserved event failed during processing', async () => {
+  it('reclaims and successfully replays an event failed during processing', async () => {
     mocks.checkoutRetrieve.mockRejectedValueOnce(new Error('transient failure'))
-    mocks.dedupInsert
-      .mockResolvedValueOnce({ error: null })
-      .mockResolvedValueOnce({ error: { code: '23505', message: 'duplicate' } })
+    let claims = 0
+    mocks.rpc.mockImplementation(async (name: string) => {
+      if (name === 'claim_stripe_webhook_event') return { data: claims++ === 0 ? 'claimed' : 'claimed_retry', error: null }
+      return { data: true, error: null }
+    })
+    mocks.checkoutRetrieve.mockResolvedValueOnce(session())
     const first = await POST(request())
     const retry = await POST(request())
-    expect(first.status).toBe(200)
+    expect(first.status).toBe(500)
     expect(retry.status).toBe(200)
-    expect(mocks.checkoutRetrieve).toHaveBeenCalledOnce()
-    expect(mocks.profileUpdate).not.toHaveBeenCalled()
+    expect(mocks.checkoutRetrieve).toHaveBeenCalledTimes(2)
+    expect(mocks.profileUpdate).toHaveBeenCalledOnce()
   })
 
-  it('cannot retry an incomplete metadata event because its reservation remains successful', async () => {
-    mocks.checkoutRetrieve.mockResolvedValue(session(null))
-    mocks.dedupInsert
-      .mockResolvedValueOnce({ error: null })
-      .mockResolvedValueOnce({ error: { code: '23505', message: 'duplicate' } })
-    await POST(request())
-    mocks.checkoutRetrieve.mockResolvedValue(session())
-    await POST(request())
-    expect(mocks.checkoutRetrieve).toHaveBeenCalledOnce()
+  it('returns 409 without processing when the event is already processing', async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: 'already_processing', error: null })
+    const response = await POST(request())
+    expect(response.status).toBe(409)
+    expect(mocks.checkoutRetrieve).not.toHaveBeenCalled()
     expectNoBusinessMutation()
+  })
+
+  it('allows only one of two concurrent deliveries to execute business mutations', async () => {
+    let resolveRetrieve!: (value: ReturnType<typeof session>) => void
+    const pendingRetrieve = new Promise<ReturnType<typeof session>>(resolve => { resolveRetrieve = resolve })
+    let claims = 0
+    mocks.rpc.mockImplementation(async (name: string) => {
+      if (name === 'claim_stripe_webhook_event') return { data: claims++ === 0 ? 'claimed' : 'already_processing', error: null }
+      return { data: true, error: null }
+    })
+    mocks.checkoutRetrieve.mockReturnValue(pendingRetrieve)
+    const firstPromise = POST(request())
+    await vi.waitFor(() => expect(mocks.checkoutRetrieve).toHaveBeenCalledOnce())
+    const second = await POST(request())
+    resolveRetrieve(session())
+    const first = await firstPromise
+    expect(first.status).toBe(200)
+    expect(second.status).toBe(409)
+    expect(mocks.profileUpdate).toHaveBeenCalledOnce()
+  })
+
+  it('returns 503 when the durable final status cannot be persisted', async () => {
+    mocks.rpc.mockImplementation(async (name: string) => {
+      if (name === 'claim_stripe_webhook_event') return { data: 'claimed', error: null }
+      return { data: false, error: { message: 'finalization unavailable' } }
+    })
+    const response = await POST(request())
+    expect(response.status).toBe(503)
   })
 })

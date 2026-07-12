@@ -65,7 +65,7 @@ describe('POST /api/stripe/coach-checkout — secured authorization', () => {
   it('creates checkout for the authenticated client and its active server relation', async () => {
     const response = await POST(request())
     expect(response.status).toBe(200)
-    expect(mocks.sessionsCreate).toHaveBeenCalledWith(expect.objectContaining({ metadata: { clientId: CLIENT_ID, coachId: COACH_ID, type: 'coach_subscription' } }), expect.objectContaining({ idempotencyKey: expect.stringContaining(CLIENT_ID) }))
+    expect(mocks.sessionsCreate).toHaveBeenCalledWith(expect.objectContaining({ metadata: { clientId: CLIENT_ID, coachId: COACH_ID, subType: 'coach_monthly', type: 'coach_subscription' } }), expect.objectContaining({ idempotencyKey: expect.stringContaining(CLIENT_ID) }))
   })
 
   it.each([['clientId', FOREIGN_ID], ['coachId', FOREIGN_ID]])('returns 400 when %s is injected', async (key, value) => { const response = await POST(request({ [key]: value })); expect(response.status).toBe(400); expectNoMutation() })

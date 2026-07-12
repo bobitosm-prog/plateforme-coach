@@ -30,8 +30,7 @@ type ParseFail = { ok: false; reason: string }
  *
  * Rules:
  * - clientId: required UUID (profiles.id is always UUID v4)
- * - subType: metadata.subType ?? metadata.planId; absent → default
- *   'client_monthly' (compat pre-launch sessions); present but unknown → reject
+ * - subType: metadata.subType is required and must be known
  *   (prevents arbitrary strings landing in profiles.subscription_type)
  * - isCoachSubscription: strict equality on metadata.type
  * - coachId: 'platform' or absent → null; otherwise must be UUID
@@ -49,16 +48,11 @@ export function parseCheckoutMetadata(
   }
 
   // ── subType ──
-  const rawSubType = metadata.subType ?? metadata.planId
-  let subType: SubType
-  if (!rawSubType) {
-    // Absent metadata → backward-compatible default for pre-launch sessions
-    subType = 'client_monthly'
-  } else if ((VALID_SUB_TYPES as readonly string[]).includes(rawSubType)) {
-    subType = rawSubType as SubType
-  } else {
-    return { ok: false, reason: `unknown subType: ${rawSubType.slice(0, 50)}` }
+  const rawSubType = metadata.subType
+  if (!rawSubType || !(VALID_SUB_TYPES as readonly string[]).includes(rawSubType)) {
+    return { ok: false, reason: `unknown subType: ${String(rawSubType).slice(0, 50)}` }
   }
+  const subType = rawSubType as SubType
 
   // ── isCoachSubscription ──
   const isCoachSubscription = metadata.type === 'coach_subscription'
@@ -71,6 +65,13 @@ export function parseCheckoutMetadata(
       return { ok: false, reason: `invalid coachId: ${rawCoachId.slice(0, 50)}` }
     }
     coachId = rawCoachId
+  }
+
+  if (isCoachSubscription && (subType !== 'coach_monthly' || !coachId)) {
+    return { ok: false, reason: 'coach subscription metadata mismatch' }
+  }
+  if (!isCoachSubscription && coachId) {
+    return { ok: false, reason: 'unexpected coachId for platform checkout' }
   }
 
   return { ok: true, clientId, subType, isCoachSubscription, coachId }

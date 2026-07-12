@@ -1942,3 +1942,67 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Corriger le webhook Stripe pour rendre la réservation et le traitement rejouables : distinguer `processing`, `success`, `failed` et `skipped`, valider l'autorité des métadonnées côté serveur et retourner un statut retentable lorsque le traitement n'est pas durablement terminé.
+
+---
+
+## Entrée — 2026-07-12 — Sécurisation durable du webhook Stripe
+
+### Travail effectué
+
+- Remplacement de la réservation applicative en plusieurs étapes par les RPC atomiques `claim_stripe_webhook_event` et `finalize_stripe_webhook_event`.
+- Ajout des états explicites `processing`, `success`, `failed` et `skipped`, avec compteur de tentatives et horodatages de début/fin.
+- Reprise atomique des événements `failed` et des traitements `processing` abandonnés depuis plus de cinq minutes, sans contourner l'unicité de `event_id`.
+- Distinction HTTP entre doublon terminé (`200`), traitement concurrent (`409`) et panne de réservation, traitement ou finalisation (`5xx`).
+- Validation stricte des métadonnées checkout, relecture du profil et du rôle bénéficiaire, de la propriété du paiement plateforme et de la relation coach/client active.
+- Ajout de `subType=coach_monthly` au checkout coach afin que les deux producteurs satisfassent le contrat strict du webhook.
+- Ajout d'une clé d'idempotence `payments.stripe_event_id` et utilisation d'upserts pour empêcher qu'un replay après mutation partielle duplique un paiement créé par le webhook.
+- Transformation de la matrice de caractérisation en vingt-quatre tests de comportements sécurisés et ajout d'assertions PostgreSQL réelles sur la machine d'états.
+
+### Tâches cochées
+
+Aucune tâche supplémentaire : cette correction consolide la tâche déjà cochée « Tester les metadata et le replay du webhook Stripe » sans satisfaire une autre ligne officielle de Phase 1.
+
+### Décisions prises
+
+- La clé primaire `stripe_webhook_events.event_id` reste le verrou de concurrence; la réclamation est effectuée par une seule instruction conditionnelle dans une fonction PostgreSQL `SECURITY DEFINER` accessible uniquement au `service_role`.
+- Un événement non pris en charge est durablement classé `skipped`; il n'est ni assimilé à un succès métier ni retraité indéfiniment.
+- Toute métadonnée absente, inconnue ou incohérente provoque un échec retentable avant mutation.
+- Un checkout plateforme doit correspondre à un paiement serveur du même client sans coach; un checkout coach exige un client, l'offre `coach_monthly` et une relation active avec le coach annoncé.
+- La migration est additive et compatible avec l'application précédente : les anciennes valeurs d'état restent admises et les nouvelles colonnes ont des valeurs par défaut. Le rollback applicatif peut précéder le retrait ultérieur des RPC, colonnes et index, après vérification qu'aucune ligne `processing` n'est active.
+
+### Problèmes rencontrés
+
+- Le premier appel `psql` par URL a été bloqué par le sandbox local; la même assertion a été exécutée avec l'accès local explicitement autorisé et a réussi.
+- L'ajout du champ strict `subType` au checkout coach a nécessité l'alignement de son test d'autorisation existant.
+
+### Risques ou dette restante
+
+- Le délai de réclamation d'un traitement abandonné est fixé à cinq minutes; il devra être confronté à la durée réelle des webhooks en préproduction.
+- Les mutations profil et paiement ne forment pas une transaction unique avec la finalisation de l'événement. Les créations de paiements sont maintenant idempotentes, mais une réconciliation Billing complète reste nécessaire.
+- Les branches abonnement, facture et compte Stripe utilisent encore des identifiants d'objets Stripe relus pour retrouver les profils; leur couverture métier exhaustive et les événements désordonnés relèvent de la Phase 6.
+- Aucun E2E Stripe test réel n'est encore intégré.
+
+### Tests exécutés
+
+- Tests webhook ciblés : 24 réussis.
+- Reset complet des migrations sur `moovx_full_reset` : réussi, migration `20260712143000_harden_stripe_webhook_claims.sql` incluse.
+- Assertions PostgreSQL `stripe-webhook-claims.sql` : réussies (claim, exclusion `processing`, `failed` → retry, `success`, `skipped`, écriture terminale tardive refusée).
+- `npm test` : 226 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint ciblé des routes, du validateur et des tests modifiés : réussi.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- États webhook explicites : 3 implicites/incomplets → 4 explicites.
+- Événements `failed` rejouables : 0 % → 100 % via réclamation atomique.
+- Livraisons concurrentes autorisées à muter pour un même `event.id` : potentiellement plusieurs → 1.
+- Tests unitaires actifs : 224 → 226.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Restreindre les notifications aux relations autorisées, en commençant par les tests d'autorisation des routes Web Push avant toute modification de production.

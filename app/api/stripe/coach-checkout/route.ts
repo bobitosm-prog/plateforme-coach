@@ -129,11 +129,11 @@ export async function POST(req: NextRequest) {
       subscription_data: {
         application_fee_percent: 3,
         transfer_data: { destination: coach.stripe_account_id },
-        metadata: { clientId, coachId, type: 'coach_subscription' },
+        metadata: { clientId, coachId, subType: 'coach_monthly', type: 'coach_subscription' },
       },
       success_url: `${appUrl}/?payment=success`,
       cancel_url: `${appUrl}/?payment=canceled`,
-      metadata: { clientId, coachId, type: 'coach_subscription' },
+      metadata: { clientId, coachId, subType: 'coach_monthly', type: 'coach_subscription' },
     }, { idempotencyKey })
 
     return NextResponse.json({ url: session.url })
