@@ -1,5 +1,6 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { expect, test, type Page } from '@playwright/test'
+import { createRunSuffix, personaForRun } from '../tests/fixtures/personas'
+import { cleanupLocalPersonas, createLocalAdminClient, createLocalPersona, upsertCoachClientRelation } from '../tests/fixtures/supabase'
 
 const supabaseUrl = process.env.API_URL!
 const serviceKey = process.env.SERVICE_ROLE_KEY!
@@ -7,16 +8,6 @@ const stripeUrl = 'http://127.0.0.1:55326'
 const password = 'Local-E2E-Password-42!'
 type StripeCall = { path: string; params: Record<string, string> }
 
-async function fixture(admin: SupabaseClient, email: string, role: 'client' | 'coach', extra = {}) {
-  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { role } })
-  if (error || !data.user) throw new Error('Unable to create coach checkout fixture')
-  const { error: profileError } = await admin.from('profiles').upsert({
-    id: data.user.id, email, full_name: role === 'coach' ? 'Coach Checkout E2E' : 'Client Checkout E2E', role,
-    onboarding_completed: role === 'client', coach_onboarding_complete: role === 'coach', subscription_status: null, subscription_type: null, ...extra,
-  })
-  if (profileError) throw new Error('Unable to create coach checkout profile')
-  return data.user.id
-}
 async function login(page: Page, email: string) {
   await page.goto('/login?next=/'); await page.locator('input[type="email"]').fill(email); await page.locator('input[type="password"]').fill(password)
   await page.locator('button.gold-btn').click(); await expect.poll(() => new URL(page.url()).pathname, { timeout: 20_000 }).toBe('/')
@@ -28,20 +19,30 @@ async function post(page: Page, body: Record<string, unknown> = {}) {
 
 test('checkout coach: relation active, Connect local et isolation serveur', async ({ browser, page }) => {
   test.setTimeout(120_000)
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-  const run = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
+  const admin = createLocalAdminClient({ url: supabaseUrl, serviceRoleKey: serviceKey, mode: 'e2e' })
+  const run = createRunSuffix()
+  const client = personaForRun('client', `coach-checkout-${run}`)
+  const coach = personaForRun('coach', `coach-checkout-${run}`)
+  const foreignCoach = personaForRun('secondCoach', `coach-checkout-${run}`)
+  const foreignClient = personaForRun('secondClient', `coach-checkout-${run}`)
+  const invited = personaForRun('invited', `coach-checkout-${run}`)
+  const lifetime = personaForRun('lifetime', `coach-checkout-${run}`)
+  const configuredAdmin = personaForRun('admin', `coach-checkout-${run}`)
   const ids: string[] = []
   try {
     await fetch(`${stripeUrl}/__requests`, { method: 'DELETE' })
-    const clientId = await fixture(admin, `coach-checkout-client-${run}@example.test`, 'client'); ids.push(clientId)
-    const coachId = await fixture(admin, `coach-checkout-coach-${run}@example.test`, 'coach', { stripe_account_id: 'acct_local_coach', coach_monthly_rate: 75 }); ids.push(coachId)
-    const foreignCoachId = await fixture(admin, `coach-checkout-foreign-coach-${run}@example.test`, 'coach', { stripe_account_id: 'acct_local_foreign', coach_monthly_rate: 90 }); ids.push(foreignCoachId)
-    const foreignClientId = await fixture(admin, `coach-checkout-foreign-client-${run}@example.test`, 'client'); ids.push(foreignClientId)
-    await admin.from('coach_clients').insert({ coach_id: coachId, client_id: clientId, status: 'active' })
+    const clientId = await createLocalPersona(admin, client, password, { subscription_status: null, subscription_type: null }); ids.push(clientId)
+    const coachId = await createLocalPersona(admin, coach, password, { subscription_status: null, subscription_type: null, stripe_account_id: 'acct_local_coach', coach_monthly_rate: 75 }); ids.push(coachId)
+    const foreignCoachId = await createLocalPersona(admin, foreignCoach, password, { subscription_status: null, subscription_type: null, stripe_account_id: 'acct_local_foreign', coach_monthly_rate: 90 }); ids.push(foreignCoachId)
+    const foreignClientId = await createLocalPersona(admin, foreignClient, password, { subscription_status: null, subscription_type: null }); ids.push(foreignClientId)
+    ids.push(await createLocalPersona(admin, invited, password))
+    ids.push(await createLocalPersona(admin, lifetime, password))
+    ids.push(await createLocalPersona(admin, configuredAdmin, password))
+    await upsertCoachClientRelation(admin, coachId, clientId, 'active')
 
     const anonymous = await browser.newContext()
     try { expect((await anonymous.request.post('/api/stripe/coach-checkout', { data: {} })).status()).toBe(401); expect(await calls()).toHaveLength(0) } finally { await anonymous.close() }
-    await login(page, `coach-checkout-client-${run}@example.test`)
+    await login(page, client.email)
 
     for (const body of [{ clientId: foreignClientId }, { coachId: foreignCoachId }, { stripeAccountId: 'acct_local_foreign' }]) {
       expect(await post(page, body)).toBe(400); expect(await calls()).toHaveLength(0)
@@ -65,7 +66,7 @@ test('checkout coach: relation active, Connect local et isolation serveur', asyn
 
     const foreignContext = await browser.newContext()
     try {
-      const foreignPage = await foreignContext.newPage(); await login(foreignPage, `coach-checkout-foreign-client-${run}@example.test`)
+      const foreignPage = await foreignContext.newPage(); await login(foreignPage, foreignClient.email)
       expect(await post(foreignPage)).toBe(403); expect(await calls()).toHaveLength(0)
     } finally { await foreignContext.close() }
 
@@ -94,8 +95,8 @@ test('checkout coach: relation active, Connect local et isolation serveur', asyn
     const paymentCount = await admin.from('payments').select('id', { count: 'exact', head: true }).eq('client_id', clientId)
     expect(paymentCount.count).toBe(0)
   } finally {
-    await admin.from('payments').delete().in('client_id', ids); await admin.from('coach_clients').delete().or(ids.map(id => `client_id.eq.${id},coach_id.eq.${id}`).join(','))
-    await admin.from('profiles').delete().in('id', ids); for (const id of ids.reverse()) await admin.auth.admin.deleteUser(id)
+    await admin.from('payments').delete().in('client_id', ids)
+    await cleanupLocalPersonas(admin, ids)
     await fetch(`${stripeUrl}/__requests`, { method: 'DELETE' }).catch(() => undefined)
   }
 })

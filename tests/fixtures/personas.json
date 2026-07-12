@@ -1,0 +1,65 @@
+{
+  "client": {
+    "id": "71000000-0000-4000-8000-000000000001",
+    "email": "client@moovx.example.test",
+    "role": "client",
+    "subscriptionType": "client_monthly",
+    "subscriptionStatus": "active",
+    "onboardingCompleted": true,
+    "admin": false
+  },
+  "coach": {
+    "id": "71000000-0000-4000-8000-000000000002",
+    "email": "coach@moovx.example.test",
+    "role": "coach",
+    "subscriptionType": "coach_monthly",
+    "subscriptionStatus": "active",
+    "onboardingCompleted": false,
+    "admin": false
+  },
+  "invited": {
+    "id": "71000000-0000-4000-8000-000000000003",
+    "email": "invited@moovx.example.test",
+    "role": "client",
+    "subscriptionType": "invited",
+    "subscriptionStatus": "active",
+    "onboardingCompleted": true,
+    "admin": false
+  },
+  "lifetime": {
+    "id": "71000000-0000-4000-8000-000000000004",
+    "email": "lifetime@moovx.example.test",
+    "role": "client",
+    "subscriptionType": "lifetime",
+    "subscriptionStatus": "lifetime",
+    "onboardingCompleted": true,
+    "admin": false
+  },
+  "admin": {
+    "id": "71000000-0000-4000-8000-000000000005",
+    "email": "admin@moovx.example.test",
+    "role": "client",
+    "subscriptionType": "client_monthly",
+    "subscriptionStatus": "active",
+    "onboardingCompleted": true,
+    "admin": true
+  },
+  "secondClient": {
+    "id": "71000000-0000-4000-8000-000000000006",
+    "email": "second-client@moovx.example.test",
+    "role": "client",
+    "subscriptionType": "client_monthly",
+    "subscriptionStatus": "active",
+    "onboardingCompleted": true,
+    "admin": false
+  },
+  "secondCoach": {
+    "id": "71000000-0000-4000-8000-000000000007",
+    "email": "second-coach@moovx.example.test",
+    "role": "coach",
+    "subscriptionType": "coach_monthly",
+    "subscriptionStatus": "active",
+    "onboardingCompleted": false,
+    "admin": false
+  }
+}

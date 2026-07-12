@@ -2888,3 +2888,58 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer les fixtures client, coach, invited, lifetime et admin.
+
+## Entrée — 2026-07-12 — Phase 2, fixtures de personas
+
+### Travail effectué
+
+- Confirmation des contrats réels : rôles `client`/`coach`, abonnements `invited`/`lifetime`, autorisation admin par e-mail configuré.
+- Création d'un manifeste JSON central pour sept personas synthétiques, avec API TypeScript typée.
+- Ajout des helpers locaux Auth, profil, relation, abonnement, suffixe unique et nettoyage compensatoire.
+- Génération d'une représentation SQL synchronisée avec fonctions de seed, relation active/inactive et nettoyage.
+- Réutilisation dans un test unitaire existant, l'intégration de baseline et l'E2E checkout coach.
+- Documentation des capacités, interdictions, catégories de données et règles de sécurité locale.
+
+### Tâches cochées
+
+- Phase 2 : « Créer les fixtures client, coach, invited, lifetime et admin » terminée.
+
+### Décisions prises
+
+- Le manifeste JSON est la source de vérité; le SQL versionné est généré et comparé octet par octet en test.
+- Les UUID stables servent aux tests SQL; les E2E génèrent UUID et suffixes d'e-mail uniques.
+- La création Auth est non idempotente et échoue explicitement; profils, relations et seed SQL sont idempotents.
+- Le persona admin reste un profil client ordinaire et n'est admin que si son e-mail correspond exactement à la configuration du processus de test.
+
+### Problèmes rencontrés
+
+- Node ESM exigeait un attribut `type: json` pour charger le manifeste depuis Playwright; l'import a été rendu explicite.
+
+### Risques ou dette restante
+
+- Seul l'E2E checkout coach utilise actuellement l'API complète; les autres E2E migreront progressivement.
+- Les fixtures ne remplacent pas encore une matrice RLS multi-domaines.
+- Le mot de passe reste fourni par chaque scénario comme secret local éphémère jusqu'à centralisation du harnais.
+
+### Tests exécutés
+
+- Reset Supabase local : 135/135 migrations.
+- Tests unitaires ciblés personas/admin : verts.
+- Intégration baseline/personas : double seed, relations active/inactive et nettoyage verts.
+- E2E checkout coach adapté : vert, 15,5 s.
+- Nettoyage final lu en base : 0 compte Auth, 0 profil et 0 relation synthétique résiduelle.
+- Suite complète : 26 fichiers, 366 tests actifs verts et 3 `todo`.
+- TypeScript, ESLint ciblé, synchronisation JSON/SQL et `git diff --check` : verts.
+
+### Mesures avant/après
+
+- Fixtures partagées : absentes → 7 personas TypeScript/SQL.
+- Phase 2 : 1/18 → 2/18 tâches terminées.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Rendre le reset Supabase local déterministe.

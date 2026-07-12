@@ -13,6 +13,48 @@ BEGIN
 END;
 $$;
 
+\ir test-personas.sql
+
+SELECT test.assert((SELECT count(*) = 7 FROM test.personas), 'shared personas count mismatch');
+SELECT test.assert(
+  (SELECT role = 'client' AND subscription_type = 'invited' AND NOT is_admin FROM test.personas WHERE persona_name = 'invited'),
+  'invited persona must be a client subscription state'
+);
+SELECT test.assert(
+  (SELECT role = 'client' AND subscription_type = 'lifetime' AND subscription_status = 'lifetime' AND NOT is_admin FROM test.personas WHERE persona_name = 'lifetime'),
+  'lifetime persona must be a client subscription state'
+);
+SELECT test.assert(
+  (SELECT role = 'client' AND is_admin FROM test.personas WHERE persona_name = 'admin'),
+  'admin authority must remain distinct from profile role'
+);
+
+SELECT test.seed_personas();
+SELECT test.seed_personas(); -- profile/Auth seed is explicitly idempotent
+SELECT test.set_persona_relation('coach', 'client', 'active');
+SELECT test.assert(
+  EXISTS (
+    SELECT 1 FROM public.coach_clients relation
+    JOIN test.personas coach ON coach.id = relation.coach_id AND coach.persona_name = 'coach'
+    JOIN test.personas client ON client.id = relation.client_id AND client.persona_name = 'client'
+    WHERE relation.status = 'active'
+  ),
+  'active shared persona relation missing'
+);
+SELECT test.set_persona_relation('coach', 'client', 'inactive');
+SELECT test.assert(
+  EXISTS (
+    SELECT 1 FROM public.coach_clients relation
+    JOIN test.personas coach ON coach.id = relation.coach_id AND coach.persona_name = 'coach'
+    JOIN test.personas client ON client.id = relation.client_id AND client.persona_name = 'client'
+    WHERE relation.status = 'inactive'
+  ),
+  'inactive shared persona relation missing'
+);
+SELECT test.cleanup_personas();
+SELECT test.assert(NOT EXISTS (SELECT 1 FROM public.profiles WHERE id IN (SELECT id FROM test.personas)), 'persona profiles survived cleanup');
+SELECT test.assert(NOT EXISTS (SELECT 1 FROM auth.users WHERE id IN (SELECT id FROM test.personas)), 'persona Auth users survived cleanup');
+
 GRANT USAGE ON SCHEMA test TO authenticated;
 GRANT EXECUTE ON FUNCTION test.assert(boolean, text) TO authenticated;
 

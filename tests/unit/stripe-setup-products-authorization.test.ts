@@ -32,6 +32,7 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 import { POST } from '../../app/api/stripe/setup-products/route'
 import { ADMIN_EMAIL } from '../../lib/constants'
+import { TEST_PERSONAS } from '../fixtures/personas'
 
 const originalStripeKey = process.env.STRIPE_SECRET_KEY
 
@@ -142,10 +143,10 @@ describe('POST /api/stripe/setup-products — shared admin authorization', () =>
   })
 
   it.each([
-    ['standard client', 'client@example.test'],
-    ['standard coach', 'coach@example.test'],
-    ['invited user', 'invited@example.test'],
-    ['lifetime non-admin', 'lifetime@example.test'],
+    ['standard client', TEST_PERSONAS.client.email],
+    ['standard coach', TEST_PERSONAS.coach.email],
+    ['invited user', TEST_PERSONAS.invited.email],
+    ['lifetime non-admin', TEST_PERSONAS.lifetime.email],
   ])('returns 403 for a %s regardless of subscription data', async (_label, email) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     authenticatedAs(email)
