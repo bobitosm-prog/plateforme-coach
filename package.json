@@ -11,8 +11,12 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:invitation": "playwright test e2e/coach-invitation.spec.ts",
+    "test:e2e": "node scripts/run-invitation-e2e.mjs",
+    "test:e2e:invitation": "node scripts/run-invitation-e2e.mjs",
+    "supabase:local:start": "node scripts/supabase-local.mjs start",
+    "supabase:local:status": "node scripts/supabase-local.mjs status",
+    "supabase:local:reset": "node scripts/supabase-local.mjs reset",
+    "supabase:local:stop": "node scripts/supabase-local.mjs stop",
     "i18n:check": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
@@ -68,6 +72,7 @@
     "eslint-config-next": "16.1.6",
     "jsdom": "^29.0.1",
     "sharp": "^0.34.5",
+    "supabase": "^2.109.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.2"

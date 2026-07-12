@@ -22,20 +22,25 @@ interface SendResult {
 export async function sendEmail({
   to, subject, html, replyTo, fromName = 'MoovX',
 }: SendEmailOptions): Promise<SendResult> {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  const localSmtp = process.env.MOOVX_E2E_LOCAL_SMTP === '1'
+  const smtpHost = process.env.SMTP_HOST || 'mail.infomaniak.com'
+  if (localSmtp && !['127.0.0.1', 'localhost'].includes(smtpHost)) {
+    throw new Error('Local E2E SMTP must target localhost')
+  }
+  if (!localSmtp && (!process.env.SMTP_USER || !process.env.SMTP_PASS)) {
     console.warn('[email] SMTP non configure, envoi skipped')
     return { success: true, method: 'skipped' }
   }
 
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'mail.infomaniak.com',
+      host: smtpHost,
       port: Number(process.env.SMTP_PORT) || 465,
-      secure: true,
-      auth: {
+      secure: !localSmtp,
+      ...(localSmtp ? {} : { auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
-      },
+      } }),
     })
 
     await transporter.sendMail({

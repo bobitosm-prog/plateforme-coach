@@ -1,41 +1,72 @@
 # Harnais E2E — invitation coach vérifiée
 
-## État du socle
+## Architecture locale
 
-Le dépôt dispose maintenant d'un harnais Playwright isolé des tests Vitest. Il démarre Next.js sur `http://127.0.0.1:3210`, refuse toute valeur `MOOVX_E2E_APP_URL` non locale et neutralise SMTP dans le processus de test.
+Le parcours utilise exclusivement des services Docker locaux gérés par la CLI Supabase installée dans les dépendances de développement :
 
-Le test exécutable actuel traverse réellement Chromium et la page `/join`. Il vérifie que le lien historique `/join?coach=<UUID>` est nettoyé et qu'aucun appel à `/api/assign-coach` n'est produit. Ce test est un prérequis navigateur, pas le parcours E2E d'invitation complet.
+| Service | URL ou port local |
+|---|---|
+| Application Next.js | `http://127.0.0.1:3210` |
+| API, Auth et PostgREST Supabase | `http://127.0.0.1:55321` |
+| PostgreSQL | `127.0.0.1:55322` |
+| Mailpit HTTP | `http://127.0.0.1:55324` |
+| Mailpit SMTP | `127.0.0.1:55325` |
 
-## Blocage du parcours complet
+Les scripts refusent une URL configurée hors de `127.0.0.1` ou `localhost`. Aucun `supabase link`, `db push` ou projet hébergé n'est utilisé. Les clés locales générées sont écrites avec le mode `0600` dans `.env.e2e.local`, ignoré par Git.
 
-Le harnais d'intégration existant initialise uniquement PostgreSQL avec `psql`. Le dépôt ne contient ni `supabase/config.toml`, ni configuration locale Auth/PostgREST, ni transport SMTP de test. La machine auditée ne fournit pas les commandes `supabase` ou `docker`.
+La CLI Docker publie techniquement ses ports sur `0.0.0.0` et `[::]` et ne fournit pas d'option de bind dans la version `2.109.1`. Les URLs, gardes et consommateurs du harnais restent locaux, mais cette limite doit être prise en compte sur un réseau non fiable.
 
-Or les frontières réelles du parcours utilisent :
+## Migrations historiques
 
-- Supabase Auth pour les sessions coach et client ;
-- PostgREST/RPC pour `profiles`, `coach_invitations` et `consume_coach_invitation` ;
-- un transport SMTP capturable pour récupérer le lien contenant le jeton.
+Le dépôt contient 23 groupes de migrations partageant un préfixe date, ce que la clé primaire de `supabase_migrations.schema_migrations` de la CLI refuse. Les fichiers ne sont pas renommés afin de préserver leur identité historique.
 
-Les intercepter globalement dans Playwright donnerait un test d'interface simulé, pas la preuve demandée. Le parcours invitation reste donc non couvert et la Phase 1 reste ouverte.
+`scripts/supabase-local.mjs` laisse la CLI reconstruire les schémas internes puis applique les 134 fichiers SQL originaux dans l'ordre lexical avec `psql -v ON_ERROR_STOP=1`. Chaque fichier appliqué est enregistré dans `supabase_migrations.local_applied_files`. Aucun SQL ou test d'assertion n'est modifié ou ignoré.
 
-## Exécution locale
+Le mode local `api.auto_expose_new_tables = true` reproduit le comportement Supabase historique attendu par les migrations MoovX, qui resserrent ensuite explicitement RLS et privilèges. La CLI annonce la suppression future de cette option ; les grants initiaux devront alors être rendus explicites dans une future migration compatible.
 
-Installer le navigateur Chromium une fois :
-
-```bash
-npx playwright install chromium
-```
-
-Lancer le socle invitation :
+## Commandes
 
 ```bash
+npm run supabase:local:start
+npm run supabase:local:status
+npm run supabase:local:reset
 npm run test:e2e:invitation
+npm run supabase:local:stop
 ```
 
-Le serveur de développement normal n'est pas modifié. Les traces et captures ne sont conservées qu'en cas d'échec et ne doivent jamais contenir de jeton d'invitation.
+Après un reset, les assertions SQL peuvent être lancées contre :
 
-## Architecture requise pour le parcours complet
+```text
+postgresql://postgres:postgres@127.0.0.1:55322/postgres
+```
 
-La prochaine tranche doit ajouter une stack Supabase locale reproductible comprenant Auth, API et PostgreSQL, puis un transport SMTP local capturable. Elle devra créer des comptes synthétiques, extraire le lien sans l'imprimer, nettoyer comptes/invitations/relations dans un `finally`, et refuser au démarrage toute URL non locale.
+Le mot de passe est la valeur locale par défaut de la stack jetable, pas un secret distant.
 
-Le parcours ne pourra être compté comme E2E qu'après deux exécutions réussies couvrant création via `POST /api/coach/invitations`, validation navigateur, authentification client, consommation unique, relation créée, refus du second usage et absence des routes legacy.
+## Parcours couvert
+
+Le test principal :
+
+1. crée trois comptes synthétiques via Supabase Auth local et leurs profils locaux ;
+2. connecte le coach par l'interface `/login` ;
+3. ouvre `/coach` et utilise le formulaire réel d'invitation ;
+4. observe le vrai `POST /api/coach/invitations` ;
+5. vérifie la persistance du seul `token_hash` ;
+6. capture le message livré par Nodemailer au SMTP Mailpit local ;
+7. extrait le jeton uniquement en mémoire ;
+8. ouvre `/join`, observe la validation réelle puis authentifie le client ;
+9. vérifie la consommation RPC, la relation `coach_clients` active et le statut `consumed` ;
+10. vérifie le refus du second usage et du réemploi par un autre compte ;
+11. prouve l'absence de `/api/assign-coach` et de `/join?coach=` ;
+12. supprime invitations, relations, profils et comptes Auth dans un bloc `finally`.
+
+Le runner force un worker unique, désactive traces et captures, et remplace toute chaîne compatible avec un jeton d'invitation par `[REDACTED_TOKEN]` avant stdout/stderr. Le serveur Next.js est arrêté dans un `finally` de groupe de processus.
+
+## Validations observées
+
+- reset complet : 134 migrations appliquées ;
+- assertions de baseline PostgreSQL : vertes ;
+- matrice SQL invitation/RLS/RPC : verte ;
+- E2E : deux exécutions consécutives, `2 passed` à chaque exécution ;
+- durée observée du parcours complet : environ 21 secondes par exécution.
+
+Les erreurs `GET /api/feedback/mine 500`, les avertissements `getSession()` et les avertissements de qualité d'image apparaissent pendant le dashboard coach mais n'empêchent pas le parcours invitation. Ils restent des dettes distinctes.

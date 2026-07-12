@@ -2572,3 +2572,68 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Ajouter une stack Supabase locale reproductible avec Auth/PostgREST et un transport SMTP capturable, puis brancher le parcours invitation complet sur ce harnais.
+
+---
+
+## Entrée — 2026-07-12 — E2E complet de l'invitation coach vérifiée
+
+### Travail effectué
+
+- Ajout de la CLI Supabase `2.109.1` comme dépendance locale et création d'une stack Docker dédiée sur les ports `55320–55327`.
+- Configuration d'Auth/PostgREST sur `55321`, PostgreSQL sur `55322` et Mailpit HTTP/SMTP sur `55324/55325`.
+- Ajout de scripts gardés pour démarrer, contrôler, reconstruire et arrêter la stack sans projet distant.
+- Diagnostic des collisions de versions courtes dans 23 groupes de migrations historiques; création d'un runner appliquant les 134 fichiers originaux dans l'ordre avec arrêt au premier échec.
+- Ajout d'un transport Nodemailer local explicite, sans authentification SMTP et refusant tout hôte non local.
+- Extension du test Playwright avec comptes Auth synthétiques, profils, formulaire coach, API réelle, persistance, capture Mailpit, validation, connexion client, consommation RPC, relation, refus du réemploi et nettoyage.
+- Ajout d'un runner Next.js/Playwright déterministe qui filtre les jetons et arrête le groupe de processus serveur.
+
+### Tâches cochées
+
+- Critère Phase 1 : parcours E2E invitation coach vérifiée couvert.
+- La Phase 1 reste ouverte : checkout, push et chat n'ont pas encore de parcours E2E.
+
+### Décisions prises
+
+- Aucun fichier de migration historique n'est renommé et aucun SQL n'est affaibli.
+- Les clés locales générées restent dans `.env.e2e.local` en mode `0600`, hors Git.
+- Les traces et captures Playwright sont désactivées pour empêcher la persistance du jeton; stdout/stderr sont redacted.
+- Les trois identités et toutes les relations sont supprimées en `finally`, même en cas d'échec.
+
+### Problèmes rencontrés
+
+- La CLI Supabase refuse les migrations partageant un préfixe date; le runner local contourne uniquement l'enregistreur de versions courtes et applique chaque fichier complet.
+- Le nouveau défaut de privilèges par défaut de la CLI cassait une assertion historique; `api.auto_expose_new_tables = true` aligne la stack locale sur le comportement historique, avec avertissement de dépréciation.
+- Le premier scénario ouvrait le lien avec la session coach et a correctement reçu `INVITATION_EMAIL_MISMATCH`; les contextes coach/client sont désormais isolés.
+- Le `webServer` Playwright laissait un enfant Next.js; un runner propriétaire du groupe de processus assure maintenant l'arrêt.
+
+### Risques ou dette restante
+
+- Docker publie les ports locaux sur `0.0.0.0`/`[::]`; la CLI ne propose pas d'option de bind, bien que toutes les URLs et gardes visent `127.0.0.1`.
+- `api.auto_expose_new_tables` sera supprimé après 2026-10-30; les grants initiaux devront être explicités.
+- Le dashboard déclenche des `GET /api/feedback/mine` en `500` et des avertissements Supabase `getSession()` hors périmètre.
+- Checkout, push et chat restent sans E2E.
+
+### Tests exécutés
+
+- Reset Supabase local : 134/134 migrations appliquées.
+- Assertions de baseline PostgreSQL : réussies.
+- Assertions invitation/RLS/RPC : réussies.
+- E2E invitation : deux exécutions consécutives, 2 tests réussis à chaque fois; parcours principal environ 21 s.
+- `npm test` : 347 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint ciblé du test, des runners, du transport SMTP et de la configuration Playwright : réussi sans erreur ni avertissement.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Stack locale Auth/PostgREST/PostgreSQL/Mailpit : absente → opérationnelle.
+- Parcours E2E intégrés : 0 → 1.
+- Frontières réelles traversées par l'E2E invitation : navigateur, Next.js, Auth, PostgREST, PostgreSQL/RPC et SMTP local.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer le parcours E2E du checkout plateforme avec Stripe intégralement simulé et Supabase local.

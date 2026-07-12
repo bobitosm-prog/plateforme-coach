@@ -1,11 +1,17 @@
 import { defineConfig, devices } from '@playwright/test'
+import { config as loadEnv } from 'dotenv'
+
+loadEnv({ path: '.env.e2e.local', quiet: true })
 
 const appUrl = process.env.MOOVX_E2E_APP_URL || 'http://127.0.0.1:3210'
 const parsedAppUrl = new URL(appUrl)
+const supabaseUrl = process.env.API_URL || ''
+const parsedSupabaseUrl = new URL(supabaseUrl)
 
-if (!['127.0.0.1', 'localhost'].includes(parsedAppUrl.hostname)) {
-  throw new Error('MOOVX_E2E_APP_URL must target localhost')
+if (![parsedAppUrl, parsedSupabaseUrl].every(url => ['127.0.0.1', 'localhost'].includes(url.hostname))) {
+  throw new Error('E2E application and Supabase URLs must target localhost')
 }
+if (!process.env.ANON_KEY || !process.env.SERVICE_ROLE_KEY) throw new Error('Local Supabase keys are unavailable; run npm run supabase:local:reset')
 
 export default defineConfig({
   testDir: './e2e',
@@ -15,24 +21,8 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: appUrl,
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
+    trace: 'off',
+    screenshot: 'off',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: 'npm run dev:webpack -- --hostname 127.0.0.1 --port 3210',
-    url: appUrl,
-    reuseExistingServer: false,
-    timeout: 120_000,
-    env: {
-      MOOVX_E2E: '1',
-      NEXT_PUBLIC_APP_URL: appUrl,
-      NEXT_PUBLIC_SITE_URL: appUrl,
-      NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'e2e-local-placeholder',
-      SUPABASE_SERVICE_ROLE_KEY: 'e2e-local-placeholder',
-      SMTP_USER: '',
-      SMTP_PASS: '',
-    },
-  },
 })

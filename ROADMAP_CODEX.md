@@ -190,7 +190,7 @@ Une limite dépassée n'impose pas un découpage mécanique. Elle déclenche une
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P0**
 
-**Statut : Checklist technique complétée — 15 tâches sur 15, rollback documenté, socle Playwright local créé, définition de terminé non atteinte (E2E métier manquants)**
+**Statut : Checklist technique complétée — 15 tâches sur 15, rollback documenté, E2E invitation vert, définition de terminé non atteinte (E2E checkout, push et chat manquants)**
 
 ### Pourquoi
 
@@ -245,7 +245,7 @@ Base suffisamment sûre pour modifier les frontières métier et les accès aux 
 - Les parcours invitation, checkout, push et chat passent en E2E de test.
 - Le rollback applicatif est documenté dans [`docs/PHASE_1_ROLLBACK.md`](docs/PHASE_1_ROLLBACK.md).
 
-Le socle navigateur Playwright est documenté dans [`docs/E2E_INVITATION_HARNESS.md`](docs/E2E_INVITATION_HARNESS.md). Il vérifie la coupure du lien legacy, mais ne compte pas comme parcours invitation E2E : la stack locale Auth/PostgREST et le transport SMTP capturable restent à fournir.
+Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARNESS.md`](docs/E2E_INVITATION_HARNESS.md). Il traverse Chromium, Next.js, Supabase Auth/PostgREST/PostgreSQL, la RPC de consommation et Mailpit local. Checkout, push et chat restent à couvrir.
 
 ---
 
@@ -746,7 +746,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
 | Tests unitaires | 93 | ≥160 | ≥250 | 347 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 37 assertions SQL + 1 scénario de concurrence | 🟠 |
-| Parcours E2E intégrés | 0 | ≥8 | ≥15 | 0 | 🔴 |
+| Parcours E2E intégrés | 0 | ≥8 | ≥15 | 1 | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
 | Bundle principal | À mesurer | −15 % | −30 % | À mesurer | ⬜ |
 | LCP p75 mobile | À mesurer | −10 % | −20 % | À mesurer | ⬜ |
@@ -770,7 +770,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Domaine | Dette initiale | Cible | Statut actuel |
 |---|---|---|---|
-| Sécurité préalable | Critique | Aucun P0 ouvert | 🟠 — checklist et rollback complets, E2E manquants |
+| Sécurité préalable | Critique | Aucun P0 ouvert | 🟠 — checklist, rollback et E2E invitation complets ; checkout, push et chat manquants |
 | Tests | Élevée | Filet unit/intégration/E2E | 🔴 |
 | Données/Supabase | Élevée | Accès centralisés et typés | 🔴 |
 | Training | Élevée | Modèle et UI modulaires | 🔴 |

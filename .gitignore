@@ -50,6 +50,7 @@ yarn-error.log*
 .next-e2e/
 playwright-report/
 test-results/
+.env.e2e.local
 
 # video generation assets (raw downloads, not served by app)
 /videos/
