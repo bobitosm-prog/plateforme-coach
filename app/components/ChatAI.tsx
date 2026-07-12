@@ -96,6 +96,7 @@ export default function ChatAI({ profile, externalOpen, onExternalClose, hideFlo
   return (
     <AnimatePresence>
       <motion.div
+        data-testid="chat-ai-panel"
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 40 }}
@@ -210,7 +211,7 @@ export default function ChatAI({ profile, externalOpen, onExternalClose, hideFlo
                   <Bot size={14} color={colors.gold} />
                 </div>
               )}
-              <div>
+              <div data-testid={`chat-message-${msg.role}`}>
                 {msg.role === 'assistant' ? (
                   <div style={{ maxWidth: 280, padding: '12px 14px', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '4px 14px 14px 14px' }}>
                     <div style={{ ...bodyStyle, fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, wordBreak: 'break-word' }}>
@@ -264,7 +265,7 @@ export default function ChatAI({ profile, externalOpen, onExternalClose, hideFlo
           borderTop: `1px solid ${colors.goldBorder}`,
           flexShrink: 0,
         }}>
-          <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+          <textarea data-testid="chat-input" ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
             placeholder={t('input.placeholder')}
             rows={1}
@@ -278,7 +279,7 @@ export default function ChatAI({ profile, externalOpen, onExternalClose, hideFlo
               resize: 'none', maxHeight: 80,
             }}
           />
-          <button onClick={() => handleSend()} disabled={!input.trim() || sending}
+          <button data-testid="chat-send" onClick={() => handleSend()} disabled={!input.trim() || sending}
             style={{
               width: 44, height: 44, borderRadius: 14,
               background: input.trim() && !sending ? `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})` : `${colors.gold}1a`,

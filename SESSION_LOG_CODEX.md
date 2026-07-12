@@ -2782,3 +2782,59 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer l'E2E local du chat avec rendu Markdown sûr et charges hostiles.
+
+## Entrée — 2026-07-12 — E2E chat local et clôture Phase 1
+
+### Travail effectué
+
+- Ajout d'une frontière Anthropic HTTP locale, déterministe et strictement limitée à `POST /v1/messages`.
+- Ajout de la redirection serveur protégée par `MOOVX_E2E=1`, hôte local et chemin exact.
+- Traversée Chromium mobile de l'interface Athena, Auth/PostgREST/PostgreSQL, route réelle et persistance réelle.
+- Vérification du contexte profil serveur, de l'isolation d'historique et du bornage à 500 caractères.
+- Vérification en navigateur du rendu Markdown autorisé et de charges HTML/Markdown hostiles inertes.
+- Couverture locale de l'anonyme, invited, quota, erreurs Anthropic `429`/`500` et JSON malformé.
+
+### Tâches cochées
+
+- E2E chat couvert selon les frontières documentées.
+- Définition de terminé de Phase 1 satisfaite avec invitation, deux checkouts, push, chat et rollback.
+
+### Décisions prises
+
+- Conserver l'URL Anthropic de production inchangée hors mode E2E.
+- Ne pas simuler une panne PostgREST dans Playwright : l'ordre d'insertion reste contractuel et la limite est documentée.
+- Utiliser le viewport mobile, seul chemin produit qui expose actuellement `ChatAI` dans le dashboard client.
+
+### Problèmes rencontrés
+
+- La fixture initiale utilisait un objectif non canonique ; elle a été alignée sur `cut`.
+- Le premier passage Chromium utilisait le dashboard desktop sans Athena ; le viewport mobile a été rendu explicite.
+
+### Risques ou dette restante
+
+- Le garde réseau n'est pas un bac à sable réseau système général.
+- Les pannes forcées d'insertion user/assistant ne sont pas injectées en E2E afin de préserver PostgREST et le schéma réels.
+- Les avertissements `getSession()`, les `GET /api/feedback/mine 500` et les qualités d'images restent hors périmètre.
+
+### Tests exécutés
+
+- Reset Supabase local : 135/135 migrations.
+- TypeScript, ESLint ciblé et 22 tests unitaires hostiles : verts.
+- Chat E2E : deux passages complets verts, 2 tests en 16,7 s puis 15,5 s.
+- Régression E2E : invitation 2 tests verts (22,2 s), checkout plateforme vert (12,6 s), checkout coach vert (12,9 s), push vert (11,7 s).
+- Assertions PostgreSQL de baseline et invitation/RLS/RPC, puis concurrence invitation : vertes.
+- Suite complète : 25 fichiers, 356 tests actifs verts et 3 tests contractuels `todo`.
+- `npx tsc --noEmit`, ESLint ciblé et `git diff --check` : verts.
+
+### Mesures avant/après
+
+- Parcours E2E intégrés : 4 → 5.
+- Phase 1 : dernier critère E2E manquant → définition de terminé satisfaite.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Phase 2 : documenter la pyramide de tests MoovX et les commandes unitaires, intégration et E2E distinctes.

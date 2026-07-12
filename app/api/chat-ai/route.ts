@@ -3,6 +3,14 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { COACH_SYSTEM_PROMPT } from '../../../lib/coach-knowledge'
+import { getChatAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
+
+type ChatProfile = {
+  full_name?: string | null; current_weight?: number | null; target_weight?: number | null; height?: number | null
+  gender?: string | null; tdee?: number | null; calorie_goal?: number | null; protein_goal?: number | null
+  carbs_goal?: number | null; fat_goal?: number | null; fitness_level?: string | null; fitness_score?: number | null
+  objective?: string | null; activity_level?: string | null; dietary_type?: string | null; onboarding_answers?: unknown
+}
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -44,8 +52,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cette fonctionnalité est gérée par ton coach. Contacte-le directement.' }, { status: 403 })
     }
 
-    const p = profile || {} as any
-    const onboarding = p.onboarding_answers || {}
+    const p: ChatProfile = profile || {}
+    const onboarding = p && 'onboarding_answers' in p && p.onboarding_answers && typeof p.onboarding_answers === 'object'
+      ? p.onboarding_answers as Record<string, unknown>
+      : {}
     const systemPrompt = `${COACH_SYSTEM_PROMPT}
 
 PROFIL DU CLIENT :
@@ -75,8 +85,8 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
       .order('created_at', { ascending: false })
       .limit(10)
 
-    const historyMessages = (dbHistory || []).reverse().map((m: any) => ({
-      role: m.role as 'user' | 'assistant',
+    const historyMessages = (dbHistory || []).reverse().map((m: { role: string; content: string }) => ({
+      role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
       content: m.content,
     }))
 
@@ -97,7 +107,7 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
       { role: 'user' as const, content: trimmedMessage },
     ]
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(getChatAnthropicMessagesUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

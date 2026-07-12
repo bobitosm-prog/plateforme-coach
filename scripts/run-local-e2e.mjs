@@ -7,15 +7,17 @@ loadEnv({ path: '.env.e2e.local', quiet: true })
 const args = process.argv.slice(2)
 const withStripe = args.includes('--stripe')
 const withPush = args.includes('--push')
-const specs = args.filter(value => !['--stripe', '--push'].includes(value))
+const withAnthropic = args.includes('--anthropic')
+const specs = args.filter(value => !['--stripe', '--push', '--anthropic'].includes(value))
 const appUrl = 'http://127.0.0.1:3210'
 const stripeUrl = 'http://127.0.0.1:55326/'
 const pushControlUrl = 'http://127.0.0.1:55329/'
+const anthropicUrl = 'http://127.0.0.1:55330/'
 const supabaseUrl = process.env.API_URL || ''
 const tsconfigPath = new URL('../tsconfig.json', import.meta.url)
 const originalTsconfig = readFileSync(tsconfigPath, 'utf8')
 
-for (const value of [appUrl, supabaseUrl, ...(withStripe ? [stripeUrl] : []), ...(withPush ? [pushControlUrl] : [])]) {
+for (const value of [appUrl, supabaseUrl, ...(withStripe ? [stripeUrl] : []), ...(withPush ? [pushControlUrl] : []), ...(withAnthropic ? [anthropicUrl] : [])]) {
   if (!['127.0.0.1', 'localhost'].includes(new URL(value).hostname)) throw new Error('E2E services must target localhost')
 }
 if (!process.env.ANON_KEY || !process.env.SERVICE_ROLE_KEY) throw new Error('Run npm run supabase:local:reset first')
@@ -37,6 +39,7 @@ async function ready(url) {
 let code = 1
 try {
   if (withStripe) { start(process.execPath, ['scripts/fake-stripe-server.mjs']); await ready(`${stripeUrl}__requests`) }
+  if (withAnthropic) { start(process.execPath, ['scripts/fake-anthropic-server.mjs']); await ready(`${anthropicUrl}__requests`) }
   let vapid = null
   if (withPush) {
     const webpush = (await import('web-push')).default
@@ -49,6 +52,7 @@ try {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SERVICE_ROLE_KEY, MOOVX_E2E_LOCAL_SMTP: '1', SMTP_HOST: '127.0.0.1', SMTP_PORT: '55325',
     ...(withStripe ? { STRIPE_E2E_BASE_URL: stripeUrl, STRIPE_SECRET_KEY: 'sk_test_local_only', NEXT_PUBLIC_PRICE_CLIENT_MONTHLY: 'price_local_client_monthly' } : {}),
     ...(withPush ? { NODE_TLS_REJECT_UNAUTHORIZED: '0', NEXT_PUBLIC_VAPID_PUBLIC_KEY: vapid.publicKey, VAPID_PRIVATE_KEY: vapid.privateKey, VAPID_SUBJECT: 'mailto:e2e@localhost' } : {}),
+    ...(withAnthropic ? { ANTHROPIC_API_KEY: 'local-e2e-key', ANTHROPIC_E2E_MESSAGES_URL: `${anthropicUrl}v1/messages` } : {}),
   }
   start('./node_modules/.bin/next', ['dev', '--webpack', '--hostname', '127.0.0.1', '--port', '3210'], env)
   await ready(appUrl)

@@ -190,7 +190,7 @@ Une limite dépassée n'impose pas un découpage mécanique. Elle déclenche une
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P0**
 
-**Statut : Checklist technique complétée — 15 tâches sur 15, rollback documenté, E2E invitation, checkouts et push verts, définition de terminé non atteinte (E2E chat manquant)**
+**Statut : Phase 1 terminée — 15 tâches sur 15, rollback documenté et cinq parcours E2E locaux verts (invitation, checkout plateforme, checkout coach, push et chat)**
 
 ### Pourquoi
 
@@ -245,7 +245,7 @@ Base suffisamment sûre pour modifier les frontières métier et les accès aux 
 - Les parcours invitation, checkout, push et chat passent en E2E de test.
 - Le rollback applicatif est documenté dans [`docs/PHASE_1_ROLLBACK.md`](docs/PHASE_1_ROLLBACK.md).
 
-Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARNESS.md`](docs/E2E_INVITATION_HARNESS.md), les checkouts dans [`docs/E2E_CHECKOUT_HARNESS.md`](docs/E2E_CHECKOUT_HARNESS.md) et le push dans [`docs/E2E_PUSH_HARNESS.md`](docs/E2E_PUSH_HARNESS.md). Le chat reste à couvrir.
+Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARNESS.md`](docs/E2E_INVITATION_HARNESS.md), les checkouts dans [`docs/E2E_CHECKOUT_HARNESS.md`](docs/E2E_CHECKOUT_HARNESS.md), le push dans [`docs/E2E_PUSH_HARNESS.md`](docs/E2E_PUSH_HARNESS.md) et le chat dans [`docs/E2E_CHAT_HARNESS.md`](docs/E2E_CHAT_HARNESS.md).
 
 ---
 
@@ -746,7 +746,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
 | Tests unitaires | 93 | ≥160 | ≥250 | 356 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 37 assertions SQL + 1 scénario de concurrence | 🟠 |
-| Parcours E2E intégrés | 0 | ≥8 | ≥15 | 4 | 🔴 |
+| Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5 | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
 | Bundle principal | À mesurer | −15 % | −30 % | À mesurer | ⬜ |
 | LCP p75 mobile | À mesurer | −10 % | −20 % | À mesurer | ⬜ |
@@ -770,7 +770,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Domaine | Dette initiale | Cible | Statut actuel |
 |---|---|---|---|
-| Sécurité préalable | Critique | Aucun P0 ouvert | 🟠 — checklist, rollback, invitation, checkouts et push E2E complets ; chat manquant |
+| Sécurité préalable | Critique | Aucun P0 ouvert | 🟢 — checklist, rollback et cinq parcours E2E locaux complets |
 | Tests | Élevée | Filet unit/intégration/E2E | 🔴 |
 | Données/Supabase | Élevée | Accès centralisés et typés | 🔴 |
 | Training | Élevée | Modèle et UI modulaires | 🔴 |
