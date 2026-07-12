@@ -190,7 +190,7 @@ Une limite dépassée n'impose pas un découpage mécanique. Elle déclenche une
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P0**
 
-**Statut : Checklist technique complétée — 15 tâches sur 15, rollback documenté, définition de terminé non atteinte (E2E manquants)**
+**Statut : Checklist technique complétée — 15 tâches sur 15, rollback documenté, socle Playwright local créé, définition de terminé non atteinte (E2E métier manquants)**
 
 ### Pourquoi
 
@@ -244,6 +244,8 @@ Base suffisamment sûre pour modifier les frontières métier et les accès aux 
 - Aucun identifiant critique ne provient uniquement du navigateur.
 - Les parcours invitation, checkout, push et chat passent en E2E de test.
 - Le rollback applicatif est documenté dans [`docs/PHASE_1_ROLLBACK.md`](docs/PHASE_1_ROLLBACK.md).
+
+Le socle navigateur Playwright est documenté dans [`docs/E2E_INVITATION_HARNESS.md`](docs/E2E_INVITATION_HARNESS.md). Il vérifie la coupure du lien legacy, mais ne compte pas comme parcours invitation E2E : la stack locale Auth/PostgREST et le transport SMTP capturable restent à fournir.
 
 ---
 

@@ -2513,3 +2513,62 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer le premier parcours E2E d'invitation coach vérifiée, de la création à la consommation unique.
+
+---
+
+## Entrée — 2026-07-12 — Socle E2E navigateur pour l'invitation coach
+
+### Travail effectué
+
+- Audit des dépendances, scripts, fixtures Auth/Supabase, environnements locaux et mécanismes SMTP.
+- Confirmation que le harnais existant initialise seulement PostgreSQL avec `psql`; aucune stack locale Auth/PostgREST, configuration Supabase CLI ou capture SMTP n'est présente.
+- Ajout de Playwright comme dépendance de développement directe et de commandes npm séparées de Vitest.
+- Création d'une configuration Chromium déterministe sur le port dédié `3210`, avec répertoire Next.js isolé et refus des URLs applicatives non locales.
+- Ajout d'un test navigateur traversant réellement `/join?coach=<UUID>`, vérifiant le nettoyage de l'URL et l'absence d'appel à `/api/assign-coach`.
+- Documentation de l'architecture, de l'exécution locale et du blocage empêchant de revendiquer le parcours complet.
+
+### Tâches cochées
+
+- Aucune. Le parcours invitation E2E complet n'est pas couvert et la Phase 1 reste ouverte.
+
+### Décisions prises
+
+- Les frontières Supabase ne sont pas interceptées globalement dans Playwright : cela masquerait Auth, PostgREST, RLS et RPC et produirait un test d'interface simulé.
+- Le socle utilise uniquement des valeurs locales synthétiques et neutralise SMTP; il ne contacte aucun service externe.
+- Le test legacy est compté comme prérequis navigateur, pas comme parcours E2E métier.
+
+### Problèmes rencontrés
+
+- Les commandes `supabase` et `docker` sont absentes et le dépôt ne contient pas `supabase/config.toml`.
+- Un serveur Next.js de développement existant utilise `.next`; le harnais emploie donc `.next-e2e` sans modifier le comportement du développement normal.
+- La première exécution en sandbox n'a pas pu ouvrir le port local; les deux exécutions de validation ont ensuite été autorisées sur localhost.
+
+### Risques ou dette restante
+
+- Création, envoi/capture du lien, authentification client, consommation unique, relation coach/client et refus du réemploi ne sont pas encore traversés par navigateur.
+- Il manque une stack locale Supabase complète et un transport SMTP capturable avec nettoyage robuste des données synthétiques.
+- Les avertissements Next.js sur certaines qualités d'images préexistent et sont hors périmètre.
+- Checkout, push et chat restent également sans E2E.
+
+### Tests exécutés
+
+- `npm run test:e2e:invitation` : 1 test Chromium réussi, exécuté deux fois consécutivement.
+- `npm test` : 347 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint de la configuration Playwright, du test E2E et de la configuration Next.js : réussi sans erreur ni avertissement.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Moteur E2E direct configuré : non → Playwright Chromium.
+- Tests navigateur exécutables : 0 → 1 prérequis legacy.
+- Parcours E2E invitation complet : 0, inchangé.
+- Parcours E2E intégrés comptabilisés dans la roadmap : 0, inchangé.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Ajouter une stack Supabase locale reproductible avec Auth/PostgREST et un transport SMTP capturable, puis brancher le parcours invitation complet sur ce harnais.
