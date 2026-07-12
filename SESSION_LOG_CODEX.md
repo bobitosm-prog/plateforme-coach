@@ -1763,3 +1763,60 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Tester les checkouts plateforme et coach avec des identités étrangères, prochaine tâche P0 non terminée de la Phase 1, sans commencer leur correction dans la même tranche.
+
+---
+
+## Entrée — 2026-07-12 — Caractérisation des autorisations checkout
+
+### Travail effectué
+
+- Inventaire des deux producteurs de sessions Stripe Checkout : `POST /api/stripe/checkout` pour les offres plateforme et `POST /api/stripe/coach-checkout` pour l'abonnement à un coach.
+- Traçage des identités provenant du navigateur (`clientId`, `coachId`, `planId`), de l'identité de session disponible et des lectures service-role.
+- Ajout d'une matrice de quinze tests couvrant appel anonyme, client légitime, client étranger, coach propriétaire, coach étranger, rôles incorrects et identifiants étrangers injectés.
+- Simulation intégrale de Stripe, Supabase service-role, Supabase Auth et cookies; aucun réseau ni service externe n'est accessible aux tests.
+- Conservation stricte des routes de production, vérifiée par un diff Git ciblé vide.
+
+### Tâches cochées
+
+- Phase 1 : « Tester checkout plateforme et coach avec identités étrangères ».
+
+### Décisions prises
+
+- Les tests décrivent le comportement réel vulnérable comme un succès lorsque la route crée aujourd'hui une session pour une identité étrangère; ils ne formulent pas encore le comportement sécurisé attendu.
+- Les offres plateforme et coach restent testées séparément car leurs modèles d'authentification divergent : aucune authentification pour la première, authentification sans autorisation métier pour la seconde.
+- Aucune correction, validation Zod, vérification de rôle ou relation coach/client n'est introduite dans cette tranche.
+
+### Problèmes rencontrés
+
+Aucun. Les variables de Price ID sont initialisées dans le mock avant l'import de la route afin de respecter leur lecture statique au chargement du module.
+
+### Risques ou dette restante
+
+- `POST /api/stripe/checkout` n'appelle pas `auth.getUser()` : une requête anonyme peut créer un checkout et une ligne `payments` pour tout `clientId` UUID fourni.
+- Cette route accepte également `coachId` et `planId`, y compris `coach_monthly`, sans vérifier l'identité ou le rôle de l'appelant ni une relation coach/client.
+- `POST /api/stripe/coach-checkout` exige une session, mais ne vérifie ni le rôle, ni `clientId === user.id`, ni que le coach ciblé appartient à la relation du client.
+- Un client, un coach étranger, un admin ou un autre rôle authentifié peut donc injecter des identités étrangères dans les métadonnées et l'idempotency key actuelles.
+- Les insertions Supabase et créations Stripe restent susceptibles de mutations partielles; ce point relève des tranches de sécurisation et de replay ultérieures.
+
+### Tests exécutés
+
+- Tests checkout ciblés : 15 réussis.
+- `npm test` : 198 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint des deux nouveaux fichiers de test : réussi.
+- `git diff --exit-code -- app/api/stripe/checkout/route.ts app/api/stripe/coach-checkout/route.ts` : réussi, routes inchangées.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Tests unitaires actifs : 183 → 198.
+- Routes checkout couvertes par une matrice d'autorisation dédiée : 0/2 → 2/2.
+- Scénarios checkout d'identités étrangères automatisés : 0 → 15 scénarios totaux de matrice.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Sécuriser les checkouts à partir des failles révélées : lier l'identité, le rôle et les relations exclusivement aux données serveur, avec les tests actuels comme filet de caractérisation.
