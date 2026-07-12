@@ -2327,3 +2327,66 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Assainir le rendu Markdown du chat et ajouter les tests hostiles.
+
+---
+
+## Entrée — 2026-07-12 — Rendu Markdown sûr du chat
+
+### Travail effectué
+
+- Caractérisation du rendu historique de `ChatAI` : construction d'HTML par remplacements de chaînes puis injection avec `dangerouslySetInnerHTML`.
+- Écriture préalable d'une matrice de vingt-deux tests couvrant le sous-ensemble Markdown légitime, les charges hostiles, les entrées malformées et les messages utilisateur.
+- Ajout d'un petit parseur déterministe ligne par ligne produisant exclusivement des nœuds React et des chaînes automatiquement échappées.
+- Conservation des titres `##`/`###`, listes simples `-`, segments gras `**...**`, texte normal, paragraphes et retours à la ligne.
+- Suppression de `renderMarkdown`, de la construction d'HTML et de `dangerouslySetInnerHTML` dans le rendu des messages.
+- Passage explicite des messages utilisateur par un composant texte pur sans interprétation Markdown.
+- Correction locale des types, imports et ordres de hooks préexistants dans `ChatAI` afin que tous les fichiers modifiés passent ESLint.
+
+### Tâches cochées
+
+- Phase 1 : « Assainir le rendu Markdown du chat et ajouter les tests hostiles ».
+
+### Décisions prises
+
+- Seuls quatre marqueurs sont interprétés : `## ` et `### ` en début de ligne, `- ` en début de ligne et les paires `**...**`.
+- Aucun lien, image, iframe, SVG, script, attribut HTML ou HTML brut n'est interprété.
+- Les marqueurs mal fermés restent visibles comme texte; aucune tentative de réparation ambiguë n'est effectuée.
+- Les entités HTML ne sont pas décodées par le parseur et restent du texte visible.
+- Les styles des anciens titres, listes et segments gras sont conservés via des propriétés React typées.
+
+### Problèmes rencontrés
+
+- Une première assertion hostile interdisait les mots `onerror`, `onclick` ou `style` même dans le texte échappé; elle a été resserrée pour interdire uniquement leur création comme attribut DOM.
+- ESLint a révélé un retour anticipé historique qui rendait les hooks conditionnels pour un compte invité ouvert, ainsi qu'une synchronisation d'état dans un effet. L'ouverture est désormais dérivée de l'état interne ou de `externalOpen`, sans changer l'API publique.
+
+### Risques ou dette restante
+
+- Le parseur est volontairement minimal et ne prend pas en charge l'échappement Markdown, les listes imbriquées, les liens ou d'autres dialectes.
+- Une chaîne extrêmement longue reste rendue intégralement; le test à 100 000 caractères confirme l'absence de crash, mais aucune limite produit n'est ajoutée dans cette tranche.
+- Les pages légales continuent d'utiliser `lib/markdown.ts` et leurs propres injections HTML; elles sont explicitement hors périmètre.
+- Aucun E2E navigateur du chat n'est encore intégré.
+
+### Tests exécutés
+
+- Tests ciblés du rendu Markdown : 22 réussis.
+- `npm test` : 338 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint de `ChatAI`, du parseur et des tests : réussi sans erreur ni avertissement.
+- Recherche finale : aucune injection `dangerouslySetInnerHTML`, aucun `renderMarkdown` et aucun `__html` dans le code du chat; seule l'assertion négative du test nomme encore l'API dangereuse.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Rendus de messages chat utilisant `dangerouslySetInnerHTML` : 1 → 0.
+- Sous-ensembles HTML arbitraires interprétés dans le chat : illimités → aucun.
+- Scénarios automatisés de rendu Markdown/chat : 0 → 22.
+- Tests unitaires actifs : 316 → 338.
+- Tâches Phase 1 terminées : 13/15 → 14/15.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Ajouter des journaux structurés aux rejets critiques.
