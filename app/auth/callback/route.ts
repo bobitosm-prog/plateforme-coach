@@ -7,7 +7,10 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const type = searchParams.get('type')      // 'signup' = force re-login post-confirmation
-  const next = searchParams.get('next') || '/'
+  const requestedNext = searchParams.get('next') || '/'
+  const next = requestedNext.startsWith('/') && !requestedNext.startsWith('//')
+    ? requestedNext
+    : '/'
 
   if (code) {
     const cookieStore = await cookies()
@@ -35,16 +38,6 @@ export async function GET(request: NextRequest) {
         if (prof && !prof.role) {
           await supabase.rpc('set_role', { p_role: metaRole })
         }
-      }
-
-      // Coach invitation link (?coach=uuid) — server API to bypass RLS
-      const coachId = searchParams.get('coach')
-      if (coachId && data.session) {
-        await fetch(`${origin}/api/assign-coach`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachId, clientId: data.session.user.id }),
-        })
       }
 
       // Self-signup flow → force re-login + banner sur /login

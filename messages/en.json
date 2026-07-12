@@ -826,10 +826,23 @@
       "loginLink": "Sign in",
       "features": "✓ Free access · ✓ Coached by your trainer · ✓ All features",
       "invalidLink": "Invalid invitation link.",
+      "states": {
+        "validating": "Validating invitation...",
+        "consuming": "Activating your invitation...",
+        "success": "Invitation activated. Redirecting...",
+        "invalid": "This invitation is invalid. Ask your coach for a new link.",
+        "legacy": "This old link is no longer valid. Ask your coach for a new invitation.",
+        "expired": "This invitation has expired. Ask your coach for a new link.",
+        "revoked": "This invitation is no longer available. Ask your coach for a new link.",
+        "used": "This invitation has already been used.",
+        "forbidden": "Sign in with the email address that received the invitation.",
+        "temporary": "A temporary error prevented activation. Please try again shortly."
+      },
       "emailSent": {
         "title": "CHECK YOUR INBOX",
         "message": "A confirmation email has been sent to",
-        "instruction": "Click the link to activate your account and get started."
+        "instruction": "Click the link to activate your account and get started.",
+        "messageWithEmail": "A confirmation email was sent to {email}. The invitation will resume after confirmation."
       },
       "errors": {
         "emailRequired": "Email required",

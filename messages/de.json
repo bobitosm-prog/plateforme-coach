@@ -826,10 +826,23 @@
       "loginLink": "Anmelden",
       "features": "✓ Kostenloser Zugang · ✓ Von deinem Coach betreut · ✓ Alle Funktionen",
       "invalidLink": "Ungültiger Einladungslink.",
+      "states": {
+        "validating": "Einladung wird geprüft...",
+        "consuming": "Einladung wird aktiviert...",
+        "success": "Einladung aktiviert. Weiterleitung...",
+        "invalid": "Diese Einladung ist ungültig. Bitte deinen Coach um einen neuen Link.",
+        "legacy": "Dieser alte Link ist nicht mehr gültig. Bitte deinen Coach um eine neue Einladung.",
+        "expired": "Diese Einladung ist abgelaufen. Bitte deinen Coach um einen neuen Link.",
+        "revoked": "Diese Einladung ist nicht mehr verfügbar. Bitte deinen Coach um einen neuen Link.",
+        "used": "Diese Einladung wurde bereits verwendet.",
+        "forbidden": "Melde dich mit der E-Mail-Adresse an, an die die Einladung gesendet wurde.",
+        "temporary": "Ein vorübergehender Fehler verhindert die Aktivierung. Versuche es gleich erneut."
+      },
       "emailSent": {
         "title": "ÜBERPRÜFE DEIN POSTFACH",
         "message": "Eine Bestätigungs-E-Mail wurde gesendet an",
-        "instruction": "Klicke auf den Link, um dein Konto zu aktivieren und loszulegen."
+        "instruction": "Klicke auf den Link, um dein Konto zu aktivieren und loszulegen.",
+        "messageWithEmail": "Eine Bestätigungs-E-Mail wurde an {email} gesendet. Die Einladung wird nach der Bestätigung fortgesetzt."
       },
       "errors": {
         "emailRequired": "E-Mail erforderlich",

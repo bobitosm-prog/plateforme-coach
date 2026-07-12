@@ -502,7 +502,19 @@ Le contrat ne contient aucune décision critique bloquante. Les décisions produ
 
 Valeurs normatives par défaut : Option A email strict, SHA-256, token 256 bits, expiration calculée, RPC transactionnelle, rôle exact coach, anciens liens UUID refusés.
 
-## 18. Définition de terminé de l'implémentation future
+## 18. Bascule applicative de `/join` — 12 juillet 2026
+
+Le parcours public accepte désormais `token` comme paramètre principal et `invitation` comme alias de compatibilité. Le jeton brut est copié uniquement dans `sessionStorage`, sous la clé `moovx_coach_invitation`, puis retiré immédiatement de l'URL. Il n'est placé ni dans `localStorage`, ni dans les métadonnées Auth, ni dans les journaux. Ce stockage vit au plus pendant l'onglet courant : il est supprimé après consommation réussie ou erreur terminale et conservé uniquement lors d'une erreur temporaire afin de permettre une reprise.
+
+La validation passe par `POST /api/coach/invitations/validate` afin de ne pas placer le secret dans une URL serveur. La route calcule le SHA-256 côté serveur, utilise une projection minimale et renvoie une réponse publique uniforme pour les invitations absentes ou terminales. La consommation passe par `POST /api/coach/invitations/consume` : l'identité client vient exclusivement de `auth.getUser()` et la mutation atomique reste déléguée à `consume_coach_invitation`.
+
+Après email/password ou OAuth, le callback n'accepte qu'un chemin interne sûr et reprend `/join`; le jeton reste limité au stockage de session du navigateur. Les anciens liens `?coach=<UUID>` sont explicitement refusés et ne déclenchent jamais `/api/assign-coach`.
+
+Les producteurs historiques de liens UUID dans l'onboarding et le dashboard coach ne sont pas modifiés dans cette tranche. Leurs liens sont désormais refusés par `/join`; leur remplacement appartient au futur flux borné de création et d'envoi d'invitations vérifiées.
+
+Rollback applicatif : rétablir les composants `/join` et callback précédents ainsi que retirer les deux nouvelles routes. La table et la RPC additives peuvent rester déployées sans trafic. Ce rollback réouvre toutefois le risque d'autorité portée par `coachId` et ne doit être utilisé qu'en urgence, pour une durée limitée. Le flux distinct d'assignation automatique du coach par défaut reste inchangé.
+
+## 19. Définition de terminé de l'implémentation future
 
 La tâche d'implémentation ne sera terminée que lorsque :
 

@@ -1568,3 +1568,65 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Migrer le parcours `/join` vers l'invitation vérifiée en commençant par lire le flux et ses tests, conformément à la Phase 1. Ne commencer aucune autre tâche P0 ou de Phase 2 en parallèle.
+
+---
+
+## Entrée — 2026-07-12 — Bascule `/join` vers l'invitation vérifiée
+
+### Travail effectué
+
+- Remplacement de l'autorité `?coach=<UUID>` par un jeton opaque vérifié, avec `token` comme paramètre principal et `invitation` comme alias compatible.
+- Ajout de routes serveur minces de validation et de consommation, d'un contrat Zod strict et du hash SHA-256 côté serveur.
+- Liaison de la consommation à `auth.getUser()` puis à la RPC transactionnelle `consume_coach_invitation`, sans accepter d'identité coach ou client fournie par le navigateur.
+- Conservation temporaire du jeton dans `sessionStorage`, retrait immédiat de l'URL et reprise de `/join` après email/password ou OAuth via un paramètre `next` interne contrôlé.
+- Refus explicite des anciens liens UUID sans appel à `/api/assign-coach`.
+- Ajout des tests de routes et de bascule statique, des textes français, anglais et allemands, et documentation du stockage temporaire et du rollback.
+
+### Tâches cochées
+
+- Phase 1 : « Migrer le parcours `/join` vers l'invitation vérifiée ».
+
+### Décisions prises
+
+- Le jeton brut ne quitte le navigateur que dans le corps d'une requête POST et n'est jamais ajouté aux métadonnées Auth ou aux journaux.
+- La validation publique utilise une projection minimale et une réponse générique pour ne pas exposer le statut interne de l'invitation.
+- Une erreur terminale supprime le jeton de session; une erreur temporaire le conserve pour permettre la reprise dans le même onglet.
+- Le flux distinct `autoAssign` du coach par défaut reste inchangé.
+
+### Problèmes rencontrés
+
+- Le build de production ne peut pas terminer dans l'environnement réseau restreint : Next.js ne peut pas télécharger Anton, Barlow Condensed, Bebas Neue, DM Sans et Outfit depuis Google Fonts.
+
+### Risques ou dette restante
+
+- Les producteurs historiques de liens `?coach=<UUID>` dans l'onboarding et le dashboard coach restent à remplacer par un flux serveur de création et d'envoi d'invitations vérifiées; leurs liens sont maintenant refusés.
+- Aucun E2E navigateur complet n'est encore intégré. La reprise Auth est protégée par les tests de contrat et de source, les tests unitaires et les tests RPC PostgreSQL.
+- Le build doit être rejoué dans un environnement autorisant le téléchargement des polices ou après leur auto-hébergement.
+- Aucun fichier Stripe, coach dashboard ou envoi SMTP n'a été modifié dans cette tranche.
+
+### Tests exécutés
+
+- Tests ciblés invitations : 61 réussis, 22 `todo`.
+- `npm test` : 182 réussis, 22 `todo`.
+- `npx tsc --noEmit` : réussi.
+- `npm run i18n:check` : 2 188 clés alignées dans les trois locales.
+- ESLint ciblé : aucune erreur; avertissements `@next/next/no-img-element` préexistants sur les images des écrans concernés.
+- Reset PostgreSQL depuis une base vide : toutes les migrations réussies.
+- `tests/integration/supabase-baseline-assertions.sql` : 9 assertions réussies.
+- `tests/integration/coach-invitations-rpc.sql` : 28 assertions réussies.
+- `tests/integration/coach-invitations-concurrency.sh` : réussi.
+- `npm run build` : bloqué uniquement par le téléchargement réseau des polices Google.
+
+### Mesures avant/après
+
+- Tests unitaires actifs : 151 → 182.
+- Scénarios contractuels `todo` : 49 → 22.
+- Autorité navigateur sur `/join` : `coachId` accepté → aucun identifiant d'autorité accepté.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer le flux coach de création et d'envoi des invitations vérifiées, en remplaçant les producteurs historiques de liens UUID et l'ancien endpoint SMTP insuffisamment autorisé. Ne commencer aucune autre tâche P0 ou de Phase 2 en parallèle.

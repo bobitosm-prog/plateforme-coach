@@ -2,6 +2,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, GOLD, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../lib/design-tokens'
@@ -15,6 +16,8 @@ export default function LoginPageContent() {
   const t = useTranslations('auth.login')
   const router = useRouter()
   const searchParams = useSearchParams()
+  const rawNext = searchParams.get('next') || '/'
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/'
   const [confirmedVisible, setConfirmedVisible] = useState(false)
   const [checking, setChecking] = useState(true)
   const [email, setEmail] = useState('')
@@ -38,12 +41,14 @@ export default function LoginPageContent() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) { router.replace('/'); return }
+      if (session) { router.replace(next); return }
       setChecking(false)
     })
-  }, [])
+  }, [next, router])
 
-  const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback'
+  const redirectUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+    : `/auth/callback?next=${encodeURIComponent(next)}`
 
   async function handleEmailLogin() {
     if (!email.trim()) { setError(t('errors.emailRequired')); return }
@@ -66,7 +71,9 @@ export default function LoginPageContent() {
       if (!profile?.role && role) {
         await supabase.from('profiles').update({ role }).eq('id', data.session.user.id)
       }
-      const target = role === 'coach' && !profile?.coach_onboarding_complete ? '/onboarding-coach' : '/'
+      const target = next !== '/'
+        ? next
+        : role === 'coach' && !profile?.coach_onboarding_complete ? '/onboarding-coach' : '/'
       supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_REDIRECT', details: { target, userId: data.session.user.id, role: profile?.role }, page_url: '/login' })
       // Sync locale from DB → cookie (cross-device consistency)
       try { await fetch('/api/user/sync-locale', { method: 'POST' }) } catch {}
@@ -117,13 +124,13 @@ export default function LoginPageContent() {
 
           {/* Mobile logo + back link */}
           <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-            <a href="/fr/landing" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
+            <Link href="/fr/landing" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
               <img src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
               <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
-            </a>
-            <a href="/fr/landing" style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
+            </Link>
+            <Link href="/fr/landing" style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
               {t('backToHome')}
-            </a>
+            </Link>
           </div>
           <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
 

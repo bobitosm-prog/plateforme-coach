@@ -190,7 +190,7 @@ Une limite dépassée n'impose pas un découpage mécanique. Elle déclenche une
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P0**
 
-**Statut : En cours — 5 tâches sur 15 terminées**
+**Statut : En cours — 6 tâches sur 15 terminées**
 
 ### Pourquoi
 
@@ -211,7 +211,7 @@ Les refactorings importants ne doivent pas commencer tant que les flux externes 
 | [x] Écrire les tests d'autorisation de `assign-coach` | 1,5 j | Élevée | Faible | Critique | — |
 | [x] [Créer le contrat d'invitation coach à usage unique](docs/COACH_INVITATION_CONTRACT.md) | 2 j | Élevée | Moyen | Critique | Tests assignation |
 | [x] Ajouter la migration d'invitation rétrocompatible | 2 j | Élevée | Élevé | Critique | Contrat invitation |
-| [ ] Migrer le parcours `/join` vers l'invitation vérifiée | 2 j | Élevée | Élevé | Critique | Migration invitation |
+| [x] Migrer le parcours `/join` vers l'invitation vérifiée | 2 j | Élevée | Élevé | Critique | Migration invitation |
 | [ ] Tester checkout plateforme et coach avec identités étrangères | 2 j | Élevée | Faible | Critique | — |
 | [ ] Lier tous les checkouts à l'identité et aux relations serveur | 2,5 j | Élevée | Élevé | Critique | Tests checkout |
 | [ ] Tester les metadata et le replay du webhook Stripe | 2 j | Élevée | Moyen | Élevé | Mocks Stripe |
@@ -727,13 +727,13 @@ Mettre à jour ce tableau chaque vendredi.
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
 | Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈5 % | 🟠 |
-| Tâches P0 restantes | 15 | 0 | 0 | 11 | 🔴 |
+| Tâches P0 restantes | 15 | 0 | 0 | 9 | 🔴 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 151 actifs + 49 contractuels `todo` | 🟠 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 182 actifs + 22 contractuels `todo` | 🟠 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 37 assertions SQL + 1 scénario de concurrence | 🟠 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 0 | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |

@@ -923,10 +923,23 @@
       "loginLink": "Se connecter",
       "features": "✓ Acces gratuit · ✓ Suivi par ton coach · ✓ Toutes les fonctionnalites",
       "invalidLink": "Lien d'invitation invalide.",
+      "states": {
+        "validating": "Validation de l'invitation...",
+        "consuming": "Activation de ton invitation...",
+        "success": "Invitation activée. Redirection en cours...",
+        "invalid": "Cette invitation n'est pas valide. Demande un nouveau lien à ton coach.",
+        "legacy": "Cet ancien lien n'est plus valide. Demande une nouvelle invitation à ton coach.",
+        "expired": "Cette invitation a expiré. Demande un nouveau lien à ton coach.",
+        "revoked": "Cette invitation n'est plus disponible. Demande un nouveau lien à ton coach.",
+        "used": "Cette invitation a déjà été utilisée.",
+        "forbidden": "Connecte-toi avec l'adresse email à laquelle l'invitation a été envoyée.",
+        "temporary": "Une erreur temporaire empêche l'activation. Réessaie dans quelques instants."
+      },
       "emailSent": {
         "title": "VERIFIE TA BOITE MAIL",
         "message": "Un email de confirmation a ete envoye a",
-        "instruction": "Clique sur le lien pour activer ton compte et commencer."
+        "instruction": "Clique sur le lien pour activer ton compte et commencer.",
+        "messageWithEmail": "Un email de confirmation a été envoyé à {email}. L'invitation reprendra après confirmation."
       },
       "errors": {
         "emailRequired": "Email requis",

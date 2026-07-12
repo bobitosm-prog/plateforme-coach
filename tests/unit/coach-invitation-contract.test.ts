@@ -164,18 +164,8 @@ describe('one-time coach invitation contract', () => {
       })
     })
 
-    describe('future validation endpoint — activate after validate route exists', () => {
-      it.todo('returns valid true for a well-formed pending non-expired token')
-      it.todo('returns the same valid false envelope for an unknown token')
-      it.todo('returns the same valid false envelope for a malformed token')
-      it.todo('returns the same valid false envelope for an expired invitation')
-      it.todo('returns the same valid false envelope for a revoked invitation')
-      it.todo('returns the same valid false envelope for a consumed invitation')
-      it.todo('never returns recipient_email, coach_id, token_hash or internal status')
-      it.todo('does not reveal whether the recipient email belongs to an existing account')
-      it.todo('derives the coach only from the invitation record')
-      it.todo('returns 410 LEGACY_INVITATION_DISABLED for a UUID-only link after cutover')
-    })
+    // Validation route and legacy cutover are covered by
+    // coach-invitation-routes.test.ts and coach-invitation-join-cutover.test.ts.
   })
 
   describe('consumption', () => {
@@ -197,15 +187,8 @@ describe('one-time coach invitation contract', () => {
       })
     })
 
-    describe('future consume route — PostgreSQL RPC cases live in integration tests', () => {
-      it.todo('rejects an unauthenticated consumer with 401')
-      it.todo('ignores or rejects a forged clientId without changing the RPC target')
-      it.todo('ignores or rejects a forged coachId and uses invitation.coach_id')
-      it.todo('ignores or rejects legacy autoAssign')
-      it.todo('ignores or rejects browser-controlled subscription_status')
-      it.todo('ignores or rejects browser-controlled subscription_type and trial_ends_at')
-      it.todo('returns INVITATION_ALREADY_LINKED without mutation for an existing relation')
-    })
+    // The authenticated route boundary is covered by coach-invitation-routes.test.ts;
+    // atomic business cases remain covered by the PostgreSQL integration suite.
   })
 
   describe('atomicity', () => {
@@ -240,12 +223,6 @@ describe('one-time coach invitation contract', () => {
     })
   })
 
-  describe('rls', () => {
-    describe('remaining application-level RLS usage', () => {
-      it.todo('does not require service_role in frontend or consumption route code')
-    })
-  })
-
   describe('compatibility', () => {
     describe('active contract rules', () => {
       it('keeps default coach assignment outside the invitation contract', () => {
@@ -254,17 +231,8 @@ describe('one-time coach invitation contract', () => {
       })
     })
 
-    describe('future frontend/callback — activate after tokenized join flow exists', () => {
-      it.todo('refuses /join?coach=<UUID> with a clear renewal message after cutover')
-      it.todo('recognizes /join?invitation=<token> as the tokenized flow')
-      it.todo('redirects an unauthenticated recipient to authentication and resumes afterward')
-      it.todo('lets an already authenticated recipient continue directly to consumption')
-      it.todo('preserves the token through email/password and OAuth callback without logging it')
-      it.todo('keeps default coach auto-assignment in a separate non-invited flow')
-      it.todo('does not change existing users who are already marked invited')
-      it.todo('returns 410 LEGACY_INVITATION_DISABLED for non-migratable old links')
-      it.todo('removes the token from browser history after successful consumption')
-    })
+    // Browser persistence, callback resumption, legacy refusal and default-coach
+    // non-regression are covered by coach-invitation-join-cutover.test.ts.
   })
 
   describe('stable business errors', () => {
