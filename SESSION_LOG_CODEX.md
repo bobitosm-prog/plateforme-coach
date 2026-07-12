@@ -2006,3 +2006,73 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Restreindre les notifications aux relations autorisées, en commençant par les tests d'autorisation des routes Web Push avant toute modification de production.
+
+---
+
+## Entrée — 2026-07-12 — Caractérisation des autorisations Web Push
+
+### Travail effectué
+
+- Lecture de la route `/api/send-notification`, du transport `lib/push-server.ts`, du push du diagnostic hebdomadaire et du cron de rappel de streak.
+- Recherche exhaustive des producteurs de `/api/send-notification` et des appels directs à Web Push.
+- Analyse des migrations de `push_subscriptions` et `coach_clients`, y compris la RLS propriétaire des abonnements et le statut actif ajouté aux relations coach/client.
+- Ajout d'une matrice de seize tests de caractérisation avec session Supabase, client `service_role`, abonnements push et fournisseur Web Push entièrement simulés.
+- Couverture de l'anonymat, de l'auto-notification, de toutes les combinaisons coach/client autorisées ou étrangères, de l'injection du destinataire, de l'absence d'abonnement, de l'erreur fournisseur et du passage inchangé des URLs internes, externes ou dangereuses.
+
+### Tâches cochées
+
+Aucune. « Restreindre les notifications aux relations autorisées » reste ouverte car cette tranche caractérise la production vulnérable sans la corriger.
+
+### Décisions prises
+
+- Les tests conservent explicitement les attentes vulnérables actuelles afin de fournir un filet vert avant la correction.
+- La session authentifiée prouve seulement l'identité de l'appelant; elle ne prouve ni son rôle ni son droit de cibler le `userId` fourni dans le corps.
+- La RLS `push_subscriptions_own` protège les accès directs du navigateur, mais ne constitue pas une autorisation pour la route car son client administratif la contourne volontairement.
+- La validation des URLs est seulement caractérisée dans cette tranche; sa correction reste la tâche Phase 1 suivante dédiée.
+
+### Inventaire des producteurs
+
+- `app/client/[id]/hooks/useClientDetail.ts` : coach authentifié vers le client affiché; identifiant provenant du paramètre de page; relation attendue coach/client active; titre « Nouveau message », extrait du message ou photo, URL `/`.
+- `app/coach/hooks/useCoachDashboard.ts` (message) : coach authentifié vers `selectedClient.client_id`; relation attendue active; titre « Nouveau message », extrait du message ou photo, URL `/`.
+- `app/coach/hooks/useCoachDashboard.ts` (rendez-vous) : coach authentifié vers `nsClientId` choisi dans le dashboard; relation attendue active; titre « Nouvelle séance planifiée », type/date/heure, URL `/`.
+- `app/hooks/useMessages.ts` : client authentifié vers `coachId` chargé par le dashboard; relation attendue active; titre « Nouveau message client », extrait du message ou photo, URL `/coach`.
+- `lib/weekly-diagnostic/generator.ts` : producteur serveur vers le même `userId` que le diagnostic géné; autorité issue du job/session appelant; contenu fixe avec score, URL interne `/weekly-diagnostic/{id}`.
+- `app/api/streak-reminder/cron/route.ts` : cron authentifié par secret vers chaque client éligible lu côté serveur; contenu localisé lié à la séance et au streak; transport via `sendPushToUser`.
+
+### Problèmes rencontrés
+
+- Le paquet sentinelle `server-only` n'est pas résolu dans Vitest; il a été neutralisé uniquement dans le test, sans modifier la production.
+- Les rôles ne peuvent pas être paramétrés réellement dans la route actuelle puisqu'aucune lecture de profil n'existe; les cas de rôle documentent donc que tout utilisateur authentifié suit exactement le même chemin.
+
+### Risques ou dette restante
+
+- Tout utilisateur authentifié peut fournir l'UUID de n'importe quel tiers et faire lire ses abonnements par le client `service_role`, puis lui envoyer un push.
+- Aucun rôle n'est lu et aucune relation `coach_clients` n'est vérifiée, active ou non, avant la lecture des abonnements ou l'appel Web Push.
+- Client→client, coach→coach, client→coach étranger et coach→client étranger sont indistinguables des parcours légitimes.
+- Le titre, le corps, le tag et l'URL sont contrôlés par le navigateur; les URLs externes et le schéma `javascript:` sont transmis tels quels dans le payload signé.
+- Une panne Web Push est acquittée avec HTTP 200 et comptée dans `failed`; aucun retry durable n'existe.
+- Le diagnostic hebdomadaire duplique le transport Web Push au lieu de réutiliser `sendPushToUser`; les deux producteurs serveur restent toutefois hors du vecteur d'injection navigateur de la route.
+
+### Tests exécutés
+
+- Tests ciblés `/api/send-notification` : 16 réussis.
+- `npm test` : 242 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint du nouveau fichier de test : réussi.
+- Preuve Git ciblée : aucun diff dans `app/api/send-notification/route.ts`, `lib/push-server.ts`, `lib/weekly-diagnostic/generator.ts`, leurs producteurs et les migrations analysées.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Producteurs push inventoriés : 0 → 6 flux (4 appels route navigateur, 2 producteurs serveur).
+- Scénarios d'autorisation push automatisés : 0 → 13, plus 3 variantes d'URL.
+- Tests unitaires actifs : 226 → 242.
+- Routes push vérifiant une relation métier : 0/1, inchangé volontairement.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Sécuriser l'identité, le rôle et les relations coach/client du flux `/api/send-notification` à partir de cette matrice, avant toute lecture d'abonnement ou livraison Web Push.
