@@ -2204,3 +2204,64 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Remplacer l'autorisation lifetime de `setup-products` par le contrat admin, en commençant par ses tests d'autorisation.
+
+---
+
+## Entrée — 2026-07-12 — Caractérisation de l'autorisation `setup-products`
+
+### Travail effectué
+
+- Lecture de la route `app/api/stripe/setup-products/route.ts`, de toutes les routes `app/api/admin`, du helper `lib/admin/auth.ts`, du client admin, des migrations de profils et des tests Stripe existants.
+- Recherche exhaustive des usages de `subscription_type === "lifetime"` comme autorisation et des producteurs de `/api/stripe/setup-products`.
+- Identification du contrat admin réellement partagé par les routes admin : Bearer token validé côté serveur par `supabaseAdmin.auth.getUser`, puis comparaison stricte de l'e-mail authentifié à `ADMIN_EMAIL`.
+- Ajout d'une matrice de onze tests de caractérisation avec Stripe, Supabase SSR et cookies entièrement mockés.
+- Vérification de la création répétée : deux appels autorisés créent quatre produits et huit prix, sans déduplication.
+- Aucun fichier de production n'a été modifié et la tâche Phase 1 reste ouverte.
+
+### Tâches cochées
+
+- Aucune : « Remplacer l'autorisation lifetime de `setup-products` par le contrat admin » reste ouverte jusqu'à la correction de production.
+
+### Décisions prises
+
+- La source de vérité du contrat admin HTTP existant n'est actuellement ni `profiles.role`, ni `subscription_type`, mais l'e-mail du user Supabase authentifié comparé à `ADMIN_EMAIL` par `verifyAdmin`.
+- Les valeurs `admin` et `super_admin` observées dans le schéma, les routes de gestion et les RPC/RLS constituent une divergence historique, mais elles ne sont pas consultées par les routes `app/api/admin`.
+- La future correction devra réutiliser `verifyAdmin` côté serveur afin d'aligner `setup-products` sur les autres routes admin, sans faire confiance à des données navigateur.
+- Aucun producteur applicatif de `/api/stripe/setup-products` n'existe : l'endpoint est appelé manuellement et ne reçoit aucun corps permettant d'injecter un rôle.
+
+### Problèmes rencontrés
+
+- Le commentaire « lifetime (admin) » de la route ne correspond pas au contrat admin central existant.
+- Le dépôt conserve trois vocabulaires distincts : abonnement `lifetime`, rôle de profil `admin` dans la route de gestion, et rôle `super_admin` dans plusieurs migrations/RPC.
+
+### Risques ou dette restante
+
+- Tout utilisateur authentifié dont le profil porte `subscription_type = lifetime` peut encore créer les produits et prix Stripe, indépendamment de son rôle et de son e-mail.
+- Un administrateur reconnu par `verifyAdmin` reste refusé si son profil n'est pas `lifetime`.
+- Une erreur de lecture du profil est confondue avec une interdiction `403`.
+- La route n'est pas idempotente : chaque nouvel appel autorisé crée de nouvelles ressources Stripe.
+- La correction de production et ses nouveaux tests sécurisés restent à réaliser dans la tranche suivante.
+
+### Tests exécutés
+
+- Test ciblé `stripe-setup-products-authorization.test.ts` : 11 réussis.
+- `npm test` : 310 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint du nouveau test : réussi sans erreur ni avertissement.
+- Preuve Git : aucun diff dans `app/api/stripe/setup-products/route.ts` ni dans les autres fichiers de production.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Scénarios automatisés de `setup-products` : 0 → 11.
+- Tests unitaires actifs : 299 → 310.
+- Producteurs applicatifs de `/api/stripe/setup-products` : 0 identifié.
+- Tâches Phase 1 terminées : 12/15, inchangé.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Remplacer l'autorisation `lifetime` par le contrat admin côté serveur.
