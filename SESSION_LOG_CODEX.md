@@ -2738,3 +2738,47 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer l'E2E local des notifications push, incluant livraison simulée et clic service worker.
+
+## Entrée — 2026-07-12 — E2E notifications push local
+
+### Travail effectué
+
+- Ajout d'une terminaison Web Push HTTPS locale et de clés VAPID éphémères.
+- Traversée du producteur réel de messagerie coach, de la route, de l'autorisation, de la lecture des souscriptions et de `web-push`.
+- Exécution du véritable service worker et de son handler `notificationclick` dans le contexte Worker Chromium.
+- Couverture des statuts succès, expiration `410` et panne `500`.
+
+### Tâches cochées
+
+- Critère E2E push satisfait selon les frontières documentées.
+- Phase 1 maintenue ouverte pour le chat.
+
+### Décisions prises
+
+- Refuser tout endpoint Web Push non local en mode E2E.
+- Ne pas prétendre automatiser le clic système : l'événement est dispatché dans le worker réel.
+
+### Problèmes rencontrés
+
+- Chromium headless refuse l'affichage système sans permission et refuse `focus()` sans activation utilisateur ; la navigation du vrai handler reste vérifiée.
+
+### Risques ou dette restante
+
+- La terminaison locale ne déchiffre pas le payload ; le contenu attendu est vérifié au contrat producteur, tandis que la livraison chiffrée est prouvée par les métadonnées réseau.
+- Le chat reste le dernier E2E requis de Phase 1.
+
+### Tests exécutés
+
+- Push E2E : deux succès consécutifs, 12,1 s et 11,5 s.
+
+### Mesures avant/après
+
+- Parcours E2E intégrés : 3 → 4.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer l'E2E local du chat avec rendu Markdown sûr et charges hostiles.

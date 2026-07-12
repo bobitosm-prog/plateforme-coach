@@ -53,6 +53,12 @@ export async function sendPushToUser(
 
   for (const sub of rows) {
     try {
+      if (process.env.MOOVX_E2E === '1') {
+        const endpoint = new URL(sub.subscription.endpoint)
+        if (endpoint.protocol !== 'https:' || !['127.0.0.1', 'localhost'].includes(endpoint.hostname)) {
+          throw new Error('E2E push endpoint must be local HTTPS')
+        }
+      }
       await webpush.sendNotification(sub.subscription, payload)
       sent++
     } catch (err: unknown) {
