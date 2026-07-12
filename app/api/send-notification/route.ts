@@ -5,6 +5,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { sendPushToUser } from '../../../lib/push-server'
+import { authorizeUserPush, userPushRequestSchema } from '../../../lib/notifications/authorize-user-push'
 
 export async function POST(req: NextRequest) {
   // Auth check (session-based — for user-initiated pushes)
@@ -21,7 +22,23 @@ export async function POST(req: NextRequest) {
   if (!serviceKey) return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
   const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
 
-  const { userId, title, body, url, tag } = await req.json()
+  let json: unknown
+  try {
+    json = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+  const parsed = userPushRequestSchema.safeParse(json)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid notification payload' }, { status: 400 })
+  }
+
+  const { userId, title, body, url, tag } = parsed.data
+  const authorization = await authorizeUserPush(supabaseAdmin, user.id, userId)
+  if (!authorization.allowed) {
+    return NextResponse.json({ error: authorization.reason }, { status: authorization.status })
+  }
+
   const result = await sendPushToUser(supabaseAdmin, userId, { title, body, url, tag })
   return NextResponse.json(result)
 }

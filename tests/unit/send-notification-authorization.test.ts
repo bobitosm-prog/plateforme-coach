@@ -1,5 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const mocks = vi.hoisted(() => {
   const getUser = vi.fn()
@@ -7,23 +9,36 @@ const mocks = vi.hoisted(() => {
   const getAll = vi.fn(() => [])
   const cookies = vi.fn(async () => ({ getAll }))
 
-  const limit = vi.fn()
-  const eq = vi.fn(() => ({ limit }))
-  const select = vi.fn(() => ({ eq }))
+  const profileMaybeSingle = vi.fn()
+  const profileEq = vi.fn(() => ({ maybeSingle: profileMaybeSingle }))
+  const profileSelect = vi.fn(() => ({ eq: profileEq }))
+
+  const relationMaybeSingle = vi.fn()
+  const relationStatusEq = vi.fn(() => ({ maybeSingle: relationMaybeSingle }))
+  const relationClientEq = vi.fn(() => ({ eq: relationStatusEq }))
+  const relationCoachEq = vi.fn(() => ({ eq: relationClientEq }))
+  const relationSelect = vi.fn(() => ({ eq: relationCoachEq }))
+
+  const pushLimit = vi.fn()
+  const pushEq = vi.fn(() => ({ limit: pushLimit }))
+  const pushSelect = vi.fn(() => ({ eq: pushEq }))
   const deleteIn = vi.fn()
   const deleteRows = vi.fn(() => ({ in: deleteIn }))
+
   const from = vi.fn((table: string) => {
-    if (table !== 'push_subscriptions') throw new Error(`Unexpected table: ${table}`)
-    return { select, delete: deleteRows }
+    if (table === 'profiles') return { select: profileSelect }
+    if (table === 'coach_clients') return { select: relationSelect }
+    if (table === 'push_subscriptions') return { select: pushSelect, delete: deleteRows }
+    throw new Error(`Unexpected table: ${table}`)
   })
   const createClient = vi.fn(() => ({ from }))
-
   const setVapidDetails = vi.fn()
   const sendNotification = vi.fn()
 
   return {
-    getUser, createServerClient, cookies, createClient, from, select, eq, limit,
-    deleteRows, deleteIn, setVapidDetails, sendNotification,
+    getUser, createServerClient, cookies, createClient, from,
+    profileMaybeSingle, profileEq, relationMaybeSingle, relationCoachEq, relationClientEq, relationStatusEq,
+    pushEq, pushLimit, deleteIn, setVapidDetails, sendNotification,
   }
 })
 
@@ -32,10 +47,7 @@ vi.mock('@supabase/supabase-js', () => ({ createClient: mocks.createClient }))
 vi.mock('next/headers', () => ({ cookies: mocks.cookies }))
 vi.mock('server-only', () => ({}))
 vi.mock('web-push', () => ({
-  default: {
-    setVapidDetails: mocks.setVapidDetails,
-    sendNotification: mocks.sendNotification,
-  },
+  default: { setVapidDetails: mocks.setVapidDetails, sendNotification: mocks.sendNotification },
 }))
 
 import { POST } from '../../app/api/send-notification/route'
@@ -56,27 +68,23 @@ function request(overrides: Record<string, unknown> = {}): NextRequest {
   return new Request('http://localhost/api/send-notification', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      userId: TARGET_ID,
-      title: 'Nouveau message',
-      body: 'Contenu contrôlé par le navigateur',
-      url: '/',
-      tag: 'test',
-      ...overrides,
-    }),
+    body: JSON.stringify({ userId: TARGET_ID, title: 'Nouveau message', body: 'Contenu', url: '/', tag: 'test', ...overrides }),
   }) as NextRequest
 }
 
-function authenticate(id = CALLER_ID) {
-  mocks.getUser.mockResolvedValue({ data: { user: { id } }, error: null })
+function roles(caller: string, recipient: string | null = 'client') {
+  mocks.profileMaybeSingle.mockReset()
+  mocks.profileMaybeSingle
+    .mockResolvedValueOnce({ data: { role: caller }, error: null })
+    .mockResolvedValueOnce({ data: recipient ? { role: recipient } : null, error: null })
 }
 
-function subscription(id = 'push-1') {
-  return { id, subscription: { endpoint: `https://push.test/${id}`, keys: { auth: 'auth', p256dh: 'key' } } }
+function subscription() {
+  return { id: 'push-1', subscription: { endpoint: 'https://push.test/1', keys: { auth: 'auth', p256dh: 'key' } } }
 }
 
-function expectNoPushLookupOrDelivery() {
-  expect(mocks.from).not.toHaveBeenCalled()
+function expectNoSubscriptionOrDelivery() {
+  expect(mocks.from).not.toHaveBeenCalledWith('push_subscriptions')
   expect(mocks.sendNotification).not.toHaveBeenCalled()
 }
 
@@ -87,8 +95,10 @@ beforeEach(() => {
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-test'
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = 'public-test'
   process.env.VAPID_PRIVATE_KEY = 'private-test'
-  authenticate()
-  mocks.limit.mockResolvedValue({ data: [subscription()], error: null })
+  mocks.getUser.mockResolvedValue({ data: { user: { id: CALLER_ID } }, error: null })
+  roles('coach', 'client')
+  mocks.relationMaybeSingle.mockResolvedValue({ data: { id: 'relation-1' }, error: null })
+  mocks.pushLimit.mockResolvedValue({ data: [subscription()], error: null })
   mocks.sendNotification.mockResolvedValue({ statusCode: 201 })
   mocks.deleteIn.mockResolvedValue({ error: null })
 })
@@ -100,60 +110,112 @@ afterAll(() => {
   }
 })
 
-describe('POST /api/send-notification — current authorization boundaries', () => {
-  it('safely rejects an anonymous call before reading subscriptions or sending push', async () => {
+describe('POST /api/send-notification — secured authorization', () => {
+  it('returns 401 anonymously before any privileged lookup or delivery', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: null }, error: null })
     const response = await POST(request())
     expect(response.status).toBe(401)
-    expectNoPushLookupOrDelivery()
+    expect(mocks.from).not.toHaveBeenCalled()
+    expectNoSubscriptionOrDelivery()
   })
 
-  it('allows an authenticated user to notify themselves', async () => {
+  it('returns 403 for self-notification because no browser producer requires it', async () => {
     const response = await POST(request({ userId: CALLER_ID }))
+    expect(response.status).toBe(403)
+    expect(mocks.profileMaybeSingle).not.toHaveBeenCalled()
+    expectNoSubscriptionOrDelivery()
+  })
+
+  it('allows a coach to notify an active client', async () => {
+    const response = await POST(request())
     expect(response.status).toBe(200)
-    expect(mocks.eq).toHaveBeenCalledWith('user_id', CALLER_ID)
+    expect(mocks.relationCoachEq).toHaveBeenCalledWith('coach_id', CALLER_ID)
+    expect(mocks.relationClientEq).toHaveBeenCalledWith('client_id', TARGET_ID)
+    expect(mocks.relationStatusEq).toHaveBeenCalledWith('status', 'active')
+    expect(mocks.pushEq).toHaveBeenCalledWith('user_id', TARGET_ID)
+    expect(mocks.sendNotification).toHaveBeenCalledOnce()
+  })
+
+  it('allows a client to notify their active coach', async () => {
+    vi.clearAllMocks()
+    mocks.getUser.mockResolvedValue({ data: { user: { id: CALLER_ID } }, error: null })
+    roles('client', 'coach')
+    mocks.relationMaybeSingle.mockResolvedValue({ data: { id: 'relation-1' }, error: null })
+    mocks.pushLimit.mockResolvedValue({ data: [subscription()], error: null })
+    mocks.sendNotification.mockResolvedValue({ statusCode: 201 })
+    const response = await POST(request())
+    expect(response.status).toBe(200)
+    expect(mocks.relationCoachEq).toHaveBeenCalledWith('coach_id', TARGET_ID)
+    expect(mocks.relationClientEq).toHaveBeenCalledWith('client_id', CALLER_ID)
     expect(mocks.sendNotification).toHaveBeenCalledOnce()
   })
 
   it.each([
-    ['coach to active client', 'coach', TARGET_ID],
-    ['coach to foreign client', 'coach', FOREIGN_ID],
-    ['client to active coach', 'client', TARGET_ID],
-    ['client to foreign coach', 'client', FOREIGN_ID],
-    ['client to another client', 'client', FOREIGN_ID],
-    ['coach to another coach', 'coach', FOREIGN_ID],
-    ['incorrect invited role', 'invited', FOREIGN_ID],
-  ])('vulnerably allows %s because role and relation are never queried', async (_label, _role, targetId) => {
-    const response = await POST(request({ userId: targetId }))
-    expect(response.status).toBe(200)
-    expect(mocks.eq).toHaveBeenCalledWith('user_id', targetId)
-    expect(mocks.from).toHaveBeenCalledTimes(1)
-    expect(mocks.from).toHaveBeenCalledWith('push_subscriptions')
-    expect(mocks.sendNotification).toHaveBeenCalledOnce()
+    ['coach to foreign client', 'coach', 'client'],
+    ['coach to inactive client', 'coach', 'client'],
+    ['client to foreign coach', 'client', 'coach'],
+  ])('returns 403 for %s before subscriptions or Web Push', async (_label, callerRole, recipientRole) => {
+    vi.clearAllMocks()
+    mocks.getUser.mockResolvedValue({ data: { user: { id: CALLER_ID } }, error: null })
+    roles(callerRole, recipientRole)
+    mocks.relationMaybeSingle.mockResolvedValue({ data: null, error: null })
+    const response = await POST(request({ userId: FOREIGN_ID }))
+    expect(response.status).toBe(403)
+    expectNoSubscriptionOrDelivery()
   })
 
-  it('vulnerably accepts an injected arbitrary recipient from the request body', async () => {
+  it.each([
+    ['client to another client', 'client', 'client'],
+    ['coach to another coach', 'coach', 'coach'],
+    ['invited caller', 'invited', 'client'],
+    ['incorrect admin caller', 'admin', 'client'],
+  ])('returns 403 for %s before relation and delivery', async (_label, callerRole, recipientRole) => {
+    vi.clearAllMocks()
+    mocks.getUser.mockResolvedValue({ data: { user: { id: CALLER_ID } }, error: null })
+    roles(callerRole, recipientRole)
     const response = await POST(request({ userId: FOREIGN_ID }))
-    expect(response.status).toBe(200)
-    expect(mocks.eq).toHaveBeenCalledWith('user_id', FOREIGN_ID)
-  })
-
-  it('vulnerably behaves identically when a relation is nonexistent or inactive', async () => {
-    const response = await POST(request({ userId: FOREIGN_ID }))
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(403)
     expect(mocks.from).not.toHaveBeenCalledWith('coach_clients')
-    expect(mocks.sendNotification).toHaveBeenCalledOnce()
+    expectNoSubscriptionOrDelivery()
   })
 
-  it('returns zero delivery when the recipient has no push subscription', async () => {
-    mocks.limit.mockResolvedValue({ data: [], error: null })
+  it('returns 403 for an injected recipient without an active relation', async () => {
+    mocks.relationMaybeSingle.mockResolvedValue({ data: null, error: null })
+    const response = await POST(request({ userId: FOREIGN_ID }))
+    expect(response.status).toBe(403)
+    expectNoSubscriptionOrDelivery()
+  })
+
+  it('returns 403 without revealing that a recipient does not exist', async () => {
+    mocks.profileMaybeSingle.mockReset()
+    roles('coach', null)
+    const response = await POST(request({ userId: FOREIGN_ID }))
+    expect(response.status).toBe(403)
+    expectNoSubscriptionOrDelivery()
+  })
+
+  it.each([
+    [{ userId: 'not-a-uuid' }, 'invalid recipient'],
+    [{ title: '' }, 'empty title'],
+    [{ body: '' }, 'empty body'],
+    [{ unexpected: true }, 'unknown property'],
+  ])('returns 400 for %s before privileged lookups', async (payload, label) => {
+    expect(label).toBeTruthy()
+    const response = await POST(request(payload))
+    expect(response.status).toBe(400)
+    expect(mocks.from).not.toHaveBeenCalled()
+    expectNoSubscriptionOrDelivery()
+  })
+
+  it('returns zero delivery when the authorized recipient has no subscription', async () => {
+    mocks.pushLimit.mockResolvedValue({ data: [], error: null })
     const response = await POST(request())
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual({ sent: 0, failed: 0 })
     expect(mocks.sendNotification).not.toHaveBeenCalled()
   })
 
-  it('reports a Web Push provider failure without making an external call in the test', async () => {
+  it('reports a mocked Web Push provider failure after authorization', async () => {
     mocks.sendNotification.mockRejectedValue({ statusCode: 500, message: 'provider unavailable' })
     const response = await POST(request())
     expect(response.status).toBe(200)
@@ -161,15 +223,25 @@ describe('POST /api/send-notification — current authorization boundaries', () 
   })
 })
 
-describe('POST /api/send-notification — current URL passthrough', () => {
-  it.each([
-    ['/internal/path', 'internal path'],
-    ['https://evil.example/phishing', 'external URL'],
-    ['javascript:alert(1)', 'dangerous scheme'],
-  ])('vulnerably forwards an %s unchanged in the signed push payload', async (url) => {
-    const response = await POST(request({ url }))
-    expect(response.status).toBe(200)
-    const payload = mocks.sendNotification.mock.calls[0][1] as string
-    expect(JSON.parse(payload)).toMatchObject({ url })
+describe('POST /api/send-notification — producer compatibility and deferred URL policy', () => {
+  it.each(['/internal/path', 'https://evil.example/phishing', 'javascript:alert(1)'])(
+    'still forwards URL %s unchanged for the next roadmap task', async url => {
+      const response = await POST(request({ url }))
+      expect(response.status).toBe(200)
+      expect(JSON.parse(mocks.sendNotification.mock.calls[0][1] as string)).toMatchObject({ url })
+    }
+  )
+
+  it('keeps all four browser producers compatible with the secured request contract', () => {
+    const sources = [
+      'app/client/[id]/hooks/useClientDetail.ts',
+      'app/hooks/useMessages.ts',
+      'app/coach/hooks/useCoachDashboard.ts',
+    ].map(file => readFileSync(resolve(process.cwd(), file), 'utf8')).join('\n')
+    expect(sources.match(/fetch\('\/api\/send-notification'/g)).toHaveLength(4)
+    expect(sources).toContain('JSON.stringify({ userId: id,')
+    expect(sources).toContain('JSON.stringify({ userId: coachId,')
+    expect(sources).toContain('JSON.stringify({ userId: nsClientId,')
+    expect(sources).toContain('JSON.stringify({ userId: selectedClient.client_id,')
   })
 })

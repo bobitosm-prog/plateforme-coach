@@ -2076,3 +2076,67 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Sécuriser l'identité, le rôle et les relations coach/client du flux `/api/send-notification` à partir de cette matrice, avant toute lecture d'abonnement ou livraison Web Push.
+
+---
+
+## Entrée — 2026-07-12 — Autorisation relationnelle des notifications Web Push
+
+### Travail effectué
+
+- Transformation de la matrice vulnérable en vingt-trois tests de comportement sécurisé.
+- Validation stricte du corps avec Zod : UUID destinataire, titre et corps non vides et bornés, URL/tag typés et rejet des propriétés inconnues.
+- Conservation de l'identité de l'appelant depuis `supabaseAuth.auth.getUser()` uniquement.
+- Ajout d'un helper d'autorisation qui relit les rôles réels des deux profils puis exige une relation `coach_clients` avec `status = active` dans le bon sens.
+- Refus de l'auto-notification, puisqu'aucun des quatre producteurs navigateur n'en dépend.
+- Refus avant lecture de `push_subscriptions` de tous les rôles, couples ou relations non autorisés.
+- Maintien sans modification des quatre producteurs navigateur et des deux producteurs serveur autonomes.
+- Conservation volontaire du passage des URLs externes ou dangereuses pour la prochaine tâche dédiée.
+
+### Tâches cochées
+
+- Phase 1 : « Restreindre les notifications aux relations autorisées ».
+
+### Décisions prises
+
+- Seuls les couples `coach → client` et `client → coach` disposant de la même relation active sont autorisés.
+- Les rôles `invited`, `admin` et toute valeur non reconnue sont refusés; client→client et coach→coach sont refusés sans requête relationnelle.
+- Un destinataire absent retourne `403` comme un destinataire étranger afin de ne pas fournir d'oracle d'existence de compte.
+- Le `userId` du navigateur reste une adresse demandée, jamais une autorité : il n'est utilisé pour lire les abonnements qu'après validation des profils et de la relation.
+- Les producteurs existants transmettent déjà les identifiants correspondant à leurs relations actives; aucun changement frontend n'est requis.
+
+### Problèmes rencontrés
+
+- Les mocks Supabase historiques ne représentaient que `push_subscriptions`; ils ont été étendus aux lectures successives de profils et à la chaîne relationnelle active.
+- Un premier passage global a signalé uniquement une incompatibilité de signature TypeScript dans un test paramétré; elle a été corrigée sans modification de production.
+
+### Risques ou dette restante
+
+- Le titre, le corps, le tag et surtout l'URL restent fournis par le navigateur; les URLs externes et schémas dangereux sont encore acceptés jusqu'à la prochaine tâche Phase 1.
+- Les erreurs du fournisseur Web Push restent retournées dans un résultat HTTP 200 sans file de retry durable.
+- `lib/weekly-diagnostic/generator.ts` conserve son transport Web Push dupliqué; il n'est pas exposé à la route publique et sa mutualisation n'était pas nécessaire pour fermer la faille d'autorisation.
+- Aucun E2E navigateur Web Push n'est encore intégré.
+
+### Tests exécutés
+
+- Tests push ciblés : 23 réussis.
+- `npm test` : 249 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi après correction du test paramétré.
+- ESLint de la route, du helper et du test : réussi sans erreur ni avertissement.
+- Recherche finale : exactement quatre appels navigateur à `/api/send-notification`, tous couverts par le test de compatibilité.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Routes push lisant le rôle appelant côté serveur : 0/1 → 1/1.
+- Routes push vérifiant une relation active avant les abonnements : 0/1 → 1/1.
+- Couples de rôles inter-comptes autorisés : tous les utilisateurs authentifiés → uniquement coach/client reliés activement.
+- Tests unitaires actifs : 242 → 249.
+- Tâches Phase 1 terminées : 10/15 → 11/15.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Contraindre les URLs de notification à des chemins internes.
