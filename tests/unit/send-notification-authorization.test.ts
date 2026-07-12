@@ -181,9 +181,12 @@ describe('POST /api/send-notification — secured authorization', () => {
   })
 
   it('returns 403 for an injected recipient without an active relation', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.relationMaybeSingle.mockResolvedValue({ data: null, error: null })
     const response = await POST(request({ userId: FOREIGN_ID }))
     expect(response.status).toBe(403)
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('RELATION_FORBIDDEN')
     expectNoSubscriptionOrDelivery()
   })
 

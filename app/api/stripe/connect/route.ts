@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { createSecurityAudit } from '@/lib/security/audit-log'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -10,11 +11,12 @@ function getServiceSupabase() {
 }
 
 export async function POST(req: NextRequest) {
+  const audit = createSecurityAudit(req)
   try {
     const supabaseAuth = await createSupabaseRouteClient()
     const { data: { user } } = await supabaseAuth.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return audit.reject(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), { event: 'STRIPE_CONNECT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/connect', outcome: 'rejected', reason: 'AUTH_REQUIRED', status: 401 })
     }
 
     const { coachId } = await req.json()
@@ -22,7 +24,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'coachId required' }, { status: 400 })
     }
     if (coachId !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'STRIPE_CONNECT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/connect', outcome: 'rejected', reason: 'IDENTITY_MISMATCH', status: 403 })
     }
 
     const { data: profile, error: profileError } = await supabaseAuth
@@ -32,10 +34,10 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
+      return audit.reject(NextResponse.json({ error: 'Profile not found' }, { status: 403 }), { event: 'STRIPE_CONNECT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/connect', outcome: 'rejected', reason: 'PROFILE_UNAVAILABLE', status: 403 })
     }
     if (profile.role !== 'coach') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'STRIPE_CONNECT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/connect', outcome: 'rejected', reason: 'ROLE_FORBIDDEN', status: 403 })
     }
 
     if (!process.env.STRIPE_SECRET_KEY) {

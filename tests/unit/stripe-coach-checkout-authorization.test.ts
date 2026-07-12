@@ -72,7 +72,7 @@ describe('POST /api/stripe/coach-checkout — secured authorization', () => {
 
   it.each(['coach', 'admin', 'invited'])('returns 403 for role %s before Stripe or mutation', async role => { mocks.profileSingle.mockReset(); profiles(role); const response = await POST(request()); expect(response.status).toBe(403); expectNoMutation() })
 
-  it('returns 403 when no active coach relation exists', async () => { mocks.relationMaybeSingle.mockResolvedValue({ data: null, error: null }); const response = await POST(request()); expect(response.status).toBe(403); expectNoMutation() })
+  it('returns 403 when no active coach relation exists', async () => { const warn = vi.spyOn(console, 'warn').mockImplementation(() => {}); mocks.relationMaybeSingle.mockResolvedValue({ data: null, error: null }); const response = await POST(request()); expect(response.status).toBe(403); expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/); expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('RELATION_FORBIDDEN'); expectNoMutation() })
 
   it('returns 404 when the related coach no longer exists', async () => { mocks.profileSingle.mockReset(); profiles('client', false); const response = await POST(request()); expect(response.status).toBe(404); expectNoMutation() })
 

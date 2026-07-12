@@ -64,7 +64,7 @@ export function handleAdminAuthError(err: unknown): NextResponse {
       { status: err.status }
     )
   }
-  console.error('[admin-auth] Unexpected error:', err)
+  console.error('[admin-auth] Unexpected error')
   return NextResponse.json(
     { error: 'Internal server error' },
     { status: 500 }

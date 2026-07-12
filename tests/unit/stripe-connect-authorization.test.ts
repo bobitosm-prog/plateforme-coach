@@ -122,11 +122,14 @@ afterAll(() => {
 
 describe('POST /api/stripe/connect — authorization', () => {
   it('returns 401 for an anonymous request before any external call', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.authGetUser.mockResolvedValue({ data: { user: null } })
 
     const response = await POST(request({ coachId: OWNER_ID }))
 
     expect(response.status).toBe(401)
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('AUTH_REQUIRED')
     await expect(response.json()).resolves.toEqual({ error: 'Unauthorized' })
     expectNoExternalMutation()
   })
@@ -137,11 +140,14 @@ describe('POST /api/stripe/connect — authorization', () => {
     ['lifetime non-coach', 'client'],
     ['administrator', 'admin'],
   ])('returns 403 for an authenticated %s', async (_label, role) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     profileAs(role)
 
     const response = await POST(request({ coachId: OWNER_ID }))
 
     expect(response.status).toBe(403)
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('ROLE_FORBIDDEN')
     await expect(response.json()).resolves.toEqual({ error: 'Forbidden' })
     expectNoExternalMutation()
   })

@@ -147,11 +147,14 @@ describe('POST /api/stripe/setup-products — shared admin authorization', () =>
     ['invited user', 'invited@example.test'],
     ['lifetime non-admin', 'lifetime@example.test'],
   ])('returns 403 for a %s regardless of subscription data', async (_label, email) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     authenticatedAs(email)
 
     const response = await POST(request('Bearer non-admin-token'))
 
     expect(response.status).toBe(403)
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('ADMIN_REQUIRED')
     expect(mocks.from).not.toHaveBeenCalled()
     expectNoStripeCreation()
   })

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { createSecurityAudit } from '@/lib/security/audit-log'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -28,10 +29,11 @@ const PLAN_META: Record<string, { mode: 'subscription' | 'payment'; subType: str
 }
 
 export async function POST(req: NextRequest) {
+  const audit = createSecurityAudit(req)
   try {
     const supabaseAuth = await createSupabaseRouteClient()
     const { data: { user } } = await supabaseAuth.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) return audit.reject(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), { event: 'PLATFORM_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'rejected', reason: 'AUTH_REQUIRED', status: 401 })
 
     const body = await req.json()
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -52,8 +54,7 @@ export async function POST(req: NextRequest) {
 
     // Check Stripe secret key
     if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('[checkout] STRIPE_SECRET_KEY is missing')
-      return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
+      return audit.reject(NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 }), { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'SERVER_MISCONFIGURED', status: 500 })
     }
 
     // Resolve plan
@@ -61,14 +62,13 @@ export async function POST(req: NextRequest) {
     if (!plan) return NextResponse.json({ error: 'Invalid planId' }, { status: 400 })
     const requiredRole = resolvedPlanId === 'coach_monthly' ? 'coach' : 'client'
     if (profile.role !== requiredRole) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'PLATFORM_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'rejected', reason: 'ROLE_FORBIDDEN', status: 403, context: { requested_plan: resolvedPlanId } })
     }
 
     // Resolve price ID — static access, no dynamic process.env[key]
     const priceId = PRICE_MAP[resolvedPlanId]
     if (!priceId) {
-      console.error('[checkout] Price ID missing for plan:', resolvedPlanId, 'Available:', Object.entries(PRICE_MAP).map(([k, v]) => `${k}=${v ? 'SET' : 'MISSING'}`))
-      return NextResponse.json({ error: 'Price ID non configuré pour ce plan' }, { status: 500 })
+      return audit.reject(NextResponse.json({ error: 'Price ID non configuré pour ce plan' }, { status: 500 }), { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'PRICE_NOT_CONFIGURED', status: 500, context: { requested_plan: resolvedPlanId } })
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -132,9 +132,7 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Checkout error'
-    console.error('[stripe/checkout] ERROR:', { message })
-    return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
+  } catch {
+    return audit.reject(NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 }), { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'CHECKOUT_FAILED', status: 500 })
   }
 }

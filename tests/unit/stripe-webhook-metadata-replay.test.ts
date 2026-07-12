@@ -223,9 +223,12 @@ describe('POST /api/stripe/webhook — checkout metadata behavior', () => {
     ['incomplete metadata', { subType: 'client_monthly' }],
     ['invalid client identity', { clientId: 'not-a-uuid', subType: 'client_monthly' }],
   ])('rejects %s and records a retryable failure', async (_label, metadata) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.checkoutRetrieve.mockResolvedValue(session(metadata as Record<string, string> | null))
     const response = await POST(request())
     expect(response.status).toBe(500)
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('INVALID_METADATA')
     expect(mocks.rpc).toHaveBeenCalledWith('finalize_stripe_webhook_event', expect.objectContaining({ p_status: 'failed' }))
     expectNoBusinessMutation()
   })
@@ -305,9 +308,12 @@ describe('POST /api/stripe/webhook — deduplication and replay behavior', () =>
   })
 
   it('returns 409 without processing when the event is already processing', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.rpc.mockResolvedValueOnce({ data: 'already_processing', error: null })
     const response = await POST(request())
     expect(response.status).toBe(409)
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('WEBHOOK_ALREADY_PROCESSING')
     expect(mocks.checkoutRetrieve).not.toHaveBeenCalled()
     expectNoBusinessMutation()
   })

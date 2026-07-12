@@ -3,8 +3,10 @@ import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { createSecurityAudit } from '@/lib/security/audit-log'
 
 export async function POST(req: NextRequest) {
+  const audit = createSecurityAudit(req)
   // Auth check
   const cookieStore = await cookies()
   const supabaseAuth = createServerClient(
@@ -13,7 +15,7 @@ export async function POST(req: NextRequest) {
     { cookies: { getAll: () => cookieStore.getAll() } }
   )
   const { data: { user } } = await supabaseAuth.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user) return audit.reject(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: 'AUTH_REQUIRED', status: 401 })
 
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -22,8 +24,7 @@ export async function POST(req: NextRequest) {
 
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!serviceKey) {
-      console.error('[coach-checkout] SUPABASE_SERVICE_ROLE_KEY missing')
-      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+      return audit.reject(NextResponse.json({ error: 'Server misconfigured' }, { status: 500 }), { event: 'COACH_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'failed', reason: 'SERVER_MISCONFIGURED', status: 500 })
     }
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       .single()
     if (!callerProfile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     if (callerProfile.role !== 'client') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: 'ROLE_FORBIDDEN', status: 403 })
     }
 
     const { data: relation } = await supabaseAdmin
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
       .eq('client_id', user.id)
       .eq('status', 'active')
       .maybeSingle()
-    if (!relation?.coach_id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!relation?.coach_id) return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: 'RELATION_FORBIDDEN', status: 403 })
     const clientId = user.id
     const coachId = relation.coach_id
 
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (!coach) return NextResponse.json({ error: 'Coach not found' }, { status: 404 })
-    if (coach.role !== 'coach') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (coach.role !== 'coach') return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: 'ROLE_FORBIDDEN', status: 403 })
     if (!coach.stripe_account_id) {
       return NextResponse.json({ error: "Le coach n'a pas encore configuré Stripe" }, { status: 400 })
     }
@@ -137,9 +138,7 @@ export async function POST(req: NextRequest) {
     }, { idempotencyKey })
 
     return NextResponse.json({ url: session.url })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Coach checkout error'
-    console.error('[stripe/coach-checkout] ERROR:', { message })
-    return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
+  } catch {
+    return audit.reject(NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 }), { event: 'COACH_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'failed', reason: 'CHECKOUT_FAILED', status: 500 })
   }
 }

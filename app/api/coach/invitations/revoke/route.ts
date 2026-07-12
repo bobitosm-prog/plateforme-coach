@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { revokeCoachInvitationSchema } from '@/lib/coach-invitations/create'
 import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { createSecurityAudit } from '@/lib/security/audit-log'
 
 function failure(code: string, status: number) {
   return NextResponse.json(
@@ -10,9 +11,10 @@ function failure(code: string, status: number) {
 }
 
 export async function POST(request: Request) {
+  const audit = createSecurityAudit(request)
   const supabase = await createSupabaseRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return failure('AUTH_REQUIRED', 401)
+  if (!user) return audit.reject(failure('AUTH_REQUIRED', 401), { event: 'COACH_INVITATION_REJECTED', domain: 'coach_invitations', operation: 'revoke', outcome: 'rejected', reason: 'AUTH_REQUIRED', status: 401 })
 
   const parsed = revokeCoachInvitationSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return failure('INVITATION_INVALID', 400)
@@ -23,8 +25,8 @@ export async function POST(request: Request) {
     .eq('id', parsed.data.invitationId)
     .maybeSingle()
   if (readError) return failure('INVITATION_REVOCATION_FAILED', 500)
-  if (!invitation || invitation.coach_id !== user.id) return failure('INVITATION_NOT_FOUND', 404)
-  if (invitation.status !== 'pending') return failure('INVITATION_TERMINAL', 409)
+  if (!invitation || invitation.coach_id !== user.id) return audit.reject(failure('INVITATION_NOT_FOUND', 404), { event: 'COACH_INVITATION_REJECTED', domain: 'coach_invitations', operation: 'revoke', outcome: 'rejected', reason: 'RELATION_FORBIDDEN', status: 404 })
+  if (invitation.status !== 'pending') return audit.reject(failure('INVITATION_TERMINAL', 409), { event: 'COACH_INVITATION_REJECTED', domain: 'coach_invitations', operation: 'revoke', outcome: 'rejected', reason: 'INVITATION_TERMINAL', status: 409 })
 
   const { data: revoked, error: updateError } = await supabase
     .from('coach_invitations')

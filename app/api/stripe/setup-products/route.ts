@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { verifyAdmin, handleAdminAuthError } from '@/lib/admin/auth'
+import { createSecurityAudit } from '@/lib/security/audit-log'
 
 function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
 
 export async function POST(req: Request) {
+  const audit = createSecurityAudit(req)
   try {
     await verifyAdmin(req)
   } catch (error) {
-    return handleAdminAuthError(error)
+    const response = handleAdminAuthError(error)
+    return audit.reject(response, { event: 'ADMIN_OPERATION_REJECTED', domain: 'admin', operation: 'POST /api/stripe/setup-products', outcome: response.status >= 500 ? 'failed' : 'rejected', reason: response.status === 401 ? 'AUTH_REQUIRED' : response.status === 403 ? 'ADMIN_REQUIRED' : 'ADMIN_AUTH_FAILED', status: response.status })
   }
 
   try {

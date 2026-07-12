@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { parseCheckoutMetadata } from '../../../../lib/stripe/metadata'
+import { createSecurityAudit } from '@/lib/security/audit-log'
 
 function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
 function getServiceSupabase() {
@@ -32,11 +33,12 @@ function assertDb(result: { error?: { message?: string } | null }, operation: st
 }
 
 export async function POST(req: NextRequest) {
+  const audit = createSecurityAudit(req)
   // ── 1. Verify Stripe signature ──
   const sig = req.headers.get('stripe-signature')
   const body = await req.text()
   if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
+    return audit.reject(NextResponse.json({ error: 'Missing signature' }, { status: 400 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/webhook', outcome: 'rejected', reason: 'SIGNATURE_REQUIRED', status: 400 })
   }
 
   let event: Stripe.Event
@@ -44,8 +46,7 @@ export async function POST(req: NextRequest) {
     event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Signature verification failed'
-    console.error('[stripe_webhook] Signature invalid', { error: message })
-    return NextResponse.json({ error: message }, { status: 400 })
+    return audit.reject(NextResponse.json({ error: message }, { status: 400 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/webhook', outcome: 'rejected', reason: 'SIGNATURE_INVALID', status: 400 })
   }
 
   // ── 2. Atomic claim/reclaim. event_id remains the concurrency lock. ──
@@ -59,10 +60,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Webhook reservation failed' }, { status: 503 })
   }
   if (claim === 'already_success' || claim === 'already_skipped') {
-    return NextResponse.json({ received: true, duplicate: true })
+    return audit.reject(NextResponse.json({ received: true, duplicate: true }), { event: 'STRIPE_WEBHOOK_REPLAY_SKIPPED', domain: 'stripe', operation: 'claim_webhook', outcome: 'skipped', reason: 'WEBHOOK_ALREADY_PROCESSED', status: 200, context: { event_type: event.type } })
   }
   if (claim === 'already_processing') {
-    return NextResponse.json({ error: 'Webhook already processing' }, { status: 409 })
+    return audit.reject(NextResponse.json({ error: 'Webhook already processing' }, { status: 409 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'claim_webhook', outcome: 'rejected', reason: 'WEBHOOK_ALREADY_PROCESSING', status: 409, context: { event_type: event.type } })
   }
 
   if (!SUPPORTED_EVENTS.has(event.type)) {
@@ -227,11 +228,6 @@ export async function POST(req: NextRequest) {
             stripe_event_id: event.id,
           }, { onConflict: 'stripe_event_id', ignoreDuplicates: true })
           assertDb(paymentResult, 'renewal payment insert')
-        } else {
-          console.error('[stripe_webhook] invoice.payment_succeeded: client not found', {
-            event_id: event.id,
-            customer: invoice.customer,
-          })
         }
       }
     }
@@ -265,16 +261,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown processing error'
-    console.error('[stripe_webhook] Processing failed', {
-      event_id: event.id,
-      event_type: event.type,
-      error: message,
-    })
+    const reason = message.startsWith('Invalid checkout metadata') || message === 'Invalid coach checkout metadata' ? 'INVALID_METADATA' : 'WEBHOOK_PROCESSING_FAILED'
     try {
       await finalizeEvent(supabase, event.id, 'failed', message)
     } catch {
-      return NextResponse.json({ error: 'Webhook processing and finalization failed' }, { status: 503 })
+      return audit.reject(NextResponse.json({ error: 'Webhook processing and finalization failed' }, { status: 503 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'process_webhook', outcome: 'failed', reason, status: 503, context: { event_type: event.type, finalization_failed: true } })
     }
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
+    return audit.reject(NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'process_webhook', outcome: 'failed', reason, status: 500, context: { event_type: event.type } })
   }
 }

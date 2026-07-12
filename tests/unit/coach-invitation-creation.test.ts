@@ -115,12 +115,15 @@ describe('POST /api/coach/invitations', () => {
   })
 
   it('returns 409 for a pending duplicate and 429 with Retry-After', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.limit.mockResolvedValueOnce({ data: [{ id: 'existing' }], count: 1, error: null })
     expect((await createInvitation(request({ recipientEmail: 'client@example.com' }))).status).toBe(409)
     mocks.limit.mockResolvedValue({ data: [], count: 0, error: null })
     mocks.checkRateLimit.mockReturnValue({ allowed: false, remaining: 0, retryAfter: 42 })
     const limited = await createInvitation(request({ recipientEmail: 'other@example.com' }))
     expect(limited.status).toBe(429)
+    expect(limited.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/)
+    expect(JSON.parse(String(warn.mock.calls.at(-1)?.[0])).reason).toBe('RATE_LIMITED')
     expect(limited.headers.get('Retry-After')).toBe('42')
   })
 

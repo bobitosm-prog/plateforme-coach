@@ -2390,3 +2390,68 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Ajouter des journaux structurés aux rejets critiques.
+
+---
+
+## Entrée — 2026-07-12 — Journaux structurés des rejets critiques
+
+### Travail effectué
+
+- Inventaire des rejets `401`, `403`, conflits de relation, rate limits, métadonnées Stripe invalides, replay webhook et autorisation admin des flux Phase 1.
+- Écartement de `lib/logger.ts`, transport navigateur, et de `lib/admin/logger.ts`, qui persiste des e-mails, pour ce contrat de sécurité sans donnée personnelle.
+- Ajout d'un contrat serveur central JSON avec timestamp ISO, niveau, événement stable, domaine, opération, résultat, code de raison, correlation ID et contexte technique filtré.
+- Validation stricte des correlation IDs entrants sur 8 à 64 caractères ASCII (`A-Z`, `a-z`, chiffres, `.`, `_`, `-`); génération UUID sinon.
+- Propagation de `x-request-id` sur les réponses instrumentées et déduplication à un journal maximum par contexte de requête.
+- Couverture de Stripe Connect, checkout plateforme, checkout coach, webhook Stripe, création/validation/consommation/révocation des invitations, push et `setup-products`.
+- Suppression des anciens logs du périmètre contenant messages d'exception, identifiants Stripe/client ou objets d'erreur détaillés.
+
+### Tâches cochées
+
+- Phase 1 : « Ajouter des journaux structurés aux rejets critiques ».
+- Checklist technique Phase 1 : 15/15 tâches cochées.
+
+### Décisions prises
+
+- Les journaux de sécurité sont émis sur la sortie serveur sous forme d'une seule ligne JSON; aucune table ou migration n'est ajoutée.
+- Le contexte est fermé aux primitives bornées et supprime toute clé évoquant token, secret, signature, cookie, session, e-mail, body, payload, URL, abonnement, autorisation, hash ou clé.
+- Aucun identifiant acteur brut ou pseudonymisé n'est nécessaire dans cette tranche; la corrélation repose uniquement sur l'identifiant de requête.
+- Les refus attendus utilisent le niveau `warning` et ne sont pas transformés en exceptions bruyantes.
+- Les statuts et corps HTTP existants restent identiques; seul le header `x-request-id` est ajouté aux réponses critiques instrumentées.
+
+### Problèmes rencontrés
+
+- La sentinelle `server-only` n'est pas installée dans l'environnement Vitest et faisait échouer sept suites à l'import. Le module reste exclusivement serveur par ses dépendances (`node:crypto`, `NextResponse`) et ses seuls consommateurs, tous des route handlers.
+- Les anciens logs Stripe pouvaient inclure un message fournisseur ou des identifiants événement/client; ils ont été remplacés par des codes stables sans détails sensibles.
+
+### Risques ou dette restante
+
+- Les logs sont actuellement confiés à la collecte de la sortie serveur; aucune politique de rétention, alerte ou agrégation n'est encore définie.
+- Le contrat couvre les principaux refus P0, pas toutes les erreurs `400/500` de l'application.
+- `lib/admin/logger.ts` conserve son contrat historique avec e-mails pour les actions administratives réussies; il n'est pas utilisé pour les rejets de sécurité et devra être revu séparément.
+- La checklist technique Phase 1 est complète, mais sa définition de terminé ne l'est pas : les parcours E2E invitation, checkout, push et chat sont absents, et le rollback applicatif Phase 1 n'est pas documenté.
+
+### Tests exécutés
+
+- Tests ciblés du logger et des routes critiques : 154 réussis.
+- `npm test` : 347 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint de tous les fichiers techniques et tests modifiés : réussi sans erreur ni avertissement.
+- Recherche des anciens logs sensibles : aucun message d'exception, identifiant événement/client ou détail de signature n'est encore journalisé dans les routes Phase 1 instrumentées.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Route handlers P0 prioritaires avec rejets structurés : 0 → 10 (Connect, deux checkouts, webhook, quatre opérations invitation, push, admin).
+- Réponses critiques propagant un correlation ID : 0 → toutes les branches instrumentées.
+- Tests unitaires actifs : 338 → 347.
+- Tâches Phase 1 terminées : 14/15 → 15/15.
+- Critères E2E de Phase 1 satisfaits : non, 0 parcours E2E intégré.
+- Rollback applicatif Phase 1 documenté : non.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Documenter le rollback applicatif de la Phase 1.
