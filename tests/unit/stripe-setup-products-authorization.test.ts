@@ -10,55 +10,50 @@ const mocks = vi.hoisted(() => {
     }
   })
   const authGetUser = vi.fn()
-  const profileSingle = vi.fn()
-  const profileEq = vi.fn(() => ({ single: profileSingle }))
-  const profileSelect = vi.fn(() => ({ eq: profileEq }))
-  const from = vi.fn(() => ({ select: profileSelect }))
-  const createServerClient = vi.fn(() => ({
-    auth: { getUser: authGetUser },
-    from,
-  }))
-  const cookies = vi.fn(async () => ({ getAll: vi.fn(() => []) }))
+  const from = vi.fn()
 
   return {
     authGetUser,
-    cookies,
-    createServerClient,
     from,
     pricesCreate,
     productsCreate,
-    profileSelect,
-    profileSingle,
     stripeConstructor,
   }
 })
 
+vi.mock('server-only', () => ({}))
 vi.mock('stripe', () => ({ default: mocks.stripeConstructor }))
-vi.mock('@supabase/ssr', () => ({ createServerClient: mocks.createServerClient }))
-vi.mock('next/headers', () => ({ cookies: mocks.cookies }))
+vi.mock('@/lib/supabase/admin', () => ({
+  supabaseAdmin: {
+    auth: { getUser: mocks.authGetUser },
+    from: mocks.from,
+  },
+}))
 
 import { POST } from '../../app/api/stripe/setup-products/route'
+import { ADMIN_EMAIL } from '../../lib/constants'
 
-const originalEnv = {
-  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-}
+const originalStripeKey = process.env.STRIPE_SECRET_KEY
 
-type CharacterizedProfile = {
-  role: 'client' | 'coach' | 'invited' | 'admin'
-  subscription_type: string | null
-}
-
-function authenticatedAs(email = 'user@example.test') {
-  mocks.authGetUser.mockResolvedValue({
-    data: { user: { id: '00000000-0000-4000-8000-000000000001', email } },
-    error: null,
+function request(authorization?: string) {
+  const headers = new Headers()
+  if (authorization !== undefined) headers.set('authorization', authorization)
+  return new Request('http://localhost/api/stripe/setup-products', {
+    method: 'POST',
+    headers,
   })
 }
 
-function profile(data: CharacterizedProfile | null, error: Error | null = null) {
-  mocks.profileSingle.mockResolvedValue({ data, error })
+function authenticatedAs(email: string | null = ADMIN_EMAIL) {
+  mocks.authGetUser.mockResolvedValue({
+    data: {
+      user: {
+        id: '00000000-0000-4000-8000-000000000001',
+        email,
+      },
+    },
+    error: null,
+  })
 }
 
 function expectNoStripeCreation() {
@@ -69,11 +64,8 @@ function expectNoStripeCreation() {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  process.env.STRIPE_SECRET_KEY = 'sk_test_setup_products_characterization'
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://supabase.test'
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'anon_test'
+  process.env.STRIPE_SECRET_KEY = 'sk_test_setup_products_secure'
   authenticatedAs()
-  profile({ role: 'client', subscription_type: null })
   mocks.productsCreate
     .mockResolvedValueOnce({ id: 'prod_client_1' })
     .mockResolvedValueOnce({ id: 'prod_coach_1' })
@@ -85,100 +77,139 @@ beforeEach(() => {
 })
 
 afterAll(() => {
-  for (const [key, value] of Object.entries(originalEnv)) {
-    if (value === undefined) delete process.env[key]
-    else process.env[key] = value
-  }
+  if (originalStripeKey === undefined) delete process.env.STRIPE_SECRET_KEY
+  else process.env.STRIPE_SECRET_KEY = originalStripeKey
 })
 
-describe('POST /api/stripe/setup-products — vulnerable authorization characterization', () => {
-  it('returns 401 anonymously before reading a profile or creating Stripe resources', async () => {
-    mocks.authGetUser.mockResolvedValue({ data: { user: null }, error: null })
-
-    const response = await POST()
+describe('POST /api/stripe/setup-products — shared admin authorization', () => {
+  it('returns 401 when the Authorization header is absent', async () => {
+    const response = await POST(request())
 
     expect(response.status).toBe(401)
-    expect(mocks.from).not.toHaveBeenCalled()
+    await expect(response.json()).resolves.toEqual({
+      error: 'Missing or invalid Authorization header',
+    })
+    expect(mocks.authGetUser).not.toHaveBeenCalled()
+    expectNoStripeCreation()
+  })
+
+  it('returns 401 when the Authorization scheme is not Bearer', async () => {
+    const response = await POST(request('Basic credentials'))
+
+    expect(response.status).toBe(401)
+    expect(mocks.authGetUser).not.toHaveBeenCalled()
+    expectNoStripeCreation()
+  })
+
+  it('returns 401 when the Bearer token is empty', async () => {
+    const response = await POST(request('Bearer '))
+
+    expect(response.status).toBe(401)
+    expect(mocks.authGetUser).not.toHaveBeenCalled()
+    expectNoStripeCreation()
+  })
+
+  it('returns 401 when Supabase rejects the token', async () => {
+    mocks.authGetUser.mockResolvedValue({
+      data: { user: null },
+      error: new Error('invalid token'),
+    })
+
+    const response = await POST(request('Bearer invalid-token'))
+
+    expect(response.status).toBe(401)
+    expect(mocks.authGetUser).toHaveBeenCalledWith('invalid-token')
+    expectNoStripeCreation()
+  })
+
+  it('returns 401 when Supabase returns no user without an error', async () => {
+    mocks.authGetUser.mockResolvedValue({ data: { user: null }, error: null })
+
+    const response = await POST(request('Bearer anonymous-token'))
+
+    expect(response.status).toBe(401)
+    expectNoStripeCreation()
+  })
+
+  it('returns 500 when the shared Supabase admin lookup throws', async () => {
+    mocks.authGetUser.mockRejectedValue(new Error('Supabase unavailable'))
+
+    const response = await POST(request('Bearer admin-token'))
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({ error: 'Internal server error' })
     expectNoStripeCreation()
   })
 
   it.each([
-    ['standard client', { role: 'client', subscription_type: 'client_monthly' }],
-    ['standard coach', { role: 'coach', subscription_type: 'coach_monthly' }],
-    ['invited user', { role: 'invited', subscription_type: 'invited' }],
-  ] satisfies Array<[string, CharacterizedProfile]>)('returns 403 for a %s before Stripe creation', async (_label, currentProfile) => {
-    profile(currentProfile)
+    ['standard client', 'client@example.test'],
+    ['standard coach', 'coach@example.test'],
+    ['invited user', 'invited@example.test'],
+    ['lifetime non-admin', 'lifetime@example.test'],
+  ])('returns 403 for a %s regardless of subscription data', async (_label, email) => {
+    authenticatedAs(email)
 
-    const response = await POST()
+    const response = await POST(request('Bearer non-admin-token'))
+
+    expect(response.status).toBe(403)
+    expect(mocks.from).not.toHaveBeenCalled()
+    expectNoStripeCreation()
+  })
+
+  it('returns 403 when the authenticated user has no email', async () => {
+    authenticatedAs(null)
+
+    const response = await POST(request('Bearer no-email-token'))
 
     expect(response.status).toBe(403)
     expectNoStripeCreation()
   })
 
-  it('VULNERABLE: allows a lifetime non-admin and creates products and prices', async () => {
-    profile({ role: 'client', subscription_type: 'lifetime' })
+  it.each([
+    ['different case', ADMIN_EMAIL.toUpperCase()],
+    ['surrounding whitespace', ` ${ADMIN_EMAIL} `],
+  ])('returns 403 for an admin email with %s because the shared contract compares exactly', async (_label, email) => {
+    authenticatedAs(email)
 
-    const response = await POST()
+    const response = await POST(request('Bearer malformed-admin-token'))
+
+    expect(response.status).toBe(403)
+    expectNoStripeCreation()
+  })
+
+  it('authorizes the configured admin without reading a profile or subscription', async () => {
+    const response = await POST(request('Bearer admin-token'))
 
     expect(response.status).toBe(200)
-    expect(mocks.profileSelect).toHaveBeenCalledWith('subscription_type')
+    expect(mocks.authGetUser).toHaveBeenCalledWith('admin-token')
+    expect(mocks.from).not.toHaveBeenCalled()
     expect(mocks.productsCreate).toHaveBeenCalledTimes(2)
     expect(mocks.pricesCreate).toHaveBeenCalledTimes(4)
   })
 
-  it('VULNERABLE: rejects an existing-contract admin without lifetime', async () => {
-    authenticatedAs('bobitosm@gmail.com')
-    profile({ role: 'admin', subscription_type: 'client_monthly' })
+  it('authorizes the configured admin independently of a lifetime subscription', async () => {
+    authenticatedAs(ADMIN_EMAIL)
 
-    const response = await POST()
+    const response = await POST(request('Bearer admin-with-lifetime-token'))
 
-    expect(response.status).toBe(403)
-    expectNoStripeCreation()
+    expect(response.status).toBe(200)
+    expect(mocks.from).not.toHaveBeenCalled()
+    expect(mocks.productsCreate).toHaveBeenCalledTimes(2)
+    expect(mocks.pricesCreate).toHaveBeenCalledTimes(4)
   })
 
-  it('allows an existing-contract admin only when the profile is lifetime', async () => {
-    authenticatedAs('bobitosm@gmail.com')
-    profile({ role: 'admin', subscription_type: 'lifetime' })
+  it('uses the existing hard-coded fallback when admin configuration is absent', async () => {
+    expect(ADMIN_EMAIL).toBe(process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com')
+    authenticatedAs(ADMIN_EMAIL)
 
-    const response = await POST()
+    const response = await POST(request('Bearer fallback-admin-token'))
 
     expect(response.status).toBe(200)
     expect(mocks.productsCreate).toHaveBeenCalledTimes(2)
     expect(mocks.pricesCreate).toHaveBeenCalledTimes(4)
   })
 
-  it('returns 403 when the authenticated user has no profile', async () => {
-    profile(null)
-
-    const response = await POST()
-
-    expect(response.status).toBe(403)
-    expectNoStripeCreation()
-  })
-
-  it('VULNERABLE: collapses a profile read error into 403', async () => {
-    profile(null, new Error('profiles read failed'))
-
-    const response = await POST()
-
-    expect(response.status).toBe(403)
-    expectNoStripeCreation()
-  })
-
-  it('has no browser role input: authorization ignores authenticated user email and profile role', async () => {
-    authenticatedAs('attacker@example.test')
-    profile({ role: 'invited', subscription_type: 'lifetime' })
-
-    const response = await POST()
-
-    expect(response.status).toBe(200)
-    expect(mocks.profileSelect).toHaveBeenCalledWith('subscription_type')
-    expect(mocks.productsCreate).toHaveBeenCalledTimes(2)
-    expect(mocks.pricesCreate).toHaveBeenCalledTimes(4)
-  })
-
-  it('VULNERABLE: repeated authorized calls create duplicate products and prices', async () => {
-    profile({ role: 'client', subscription_type: 'lifetime' })
+  it('preserves the current non-idempotent creation behavior for repeated admin calls', async () => {
     mocks.productsCreate
       .mockResolvedValueOnce({ id: 'prod_client_2' })
       .mockResolvedValueOnce({ id: 'prod_coach_2' })
@@ -188,8 +219,8 @@ describe('POST /api/stripe/setup-products — vulnerable authorization character
       .mockResolvedValueOnce({ id: 'price_lifetime_2' })
       .mockResolvedValueOnce({ id: 'price_coach_2' })
 
-    const first = await POST()
-    const second = await POST()
+    const first = await POST(request('Bearer admin-token'))
+    const second = await POST(request('Bearer admin-token'))
 
     expect(first.status).toBe(200)
     expect(second.status).toBe(200)

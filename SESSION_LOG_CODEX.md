@@ -2265,3 +2265,65 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Remplacer l'autorisation `lifetime` par le contrat admin côté serveur.
+
+---
+
+## Entrée — 2026-07-12 — Contrat admin de `setup-products`
+
+### Travail effectué
+
+- Remplacement de l'authentification Supabase SSR par le helper commun `verifyAdmin(req)` déjà utilisé sous `app/api/admin`.
+- Adaptation de `POST` pour recevoir la requête et exiger un header `Authorization: Bearer ...`.
+- Suppression complète de la lecture de `profiles` et du contrôle `subscription_type = lifetime`.
+- Conservation inchangée des deux produits, des quatre prix, des montants et des réponses Stripe.
+- Transformation de la matrice vulnérable en dix-sept scénarios sécurisés couvrant headers, token, Supabase, e-mail admin, utilisateurs non-admin et création répétée.
+- Remplacement du `catch any` historique par une lecture typée de l'erreur Stripe.
+
+### Tâches cochées
+
+- Phase 1 : « Remplacer l'autorisation lifetime de `setup-products` par le contrat admin ».
+
+### Décisions prises
+
+- `setup-products` applique désormais exactement le contrat HTTP admin existant : Bearer token validé via `supabaseAdmin.auth.getUser`, puis comparaison stricte de l'e-mail authentifié à `ADMIN_EMAIL`.
+- Les rôles de profil et les abonnements ne participent plus à l'autorisation de cette route.
+- Les erreurs du contrat commun conservent leurs réponses : `401` pour header/token absent ou invalide, `403` pour un e-mail différent ou absent, `500` pour une erreur inattendue.
+- L'absence d'idempotence est volontairement conservée hors périmètre.
+
+### Problèmes rencontrés
+
+- `ADMIN_EMAIL` provient toujours de `NEXT_PUBLIC_ADMIN_EMAIL` avec le repli codé en dur `bobitosm@gmail.com`; le helper commun ne valide ni la présence ni le format de cette configuration.
+- La comparaison d'e-mail est stricte et sensible à la casse et aux espaces. Cette ambiguïté commune aux routes admin a été caractérisée sans refactorer le domaine admin.
+
+### Risques ou dette restante
+
+- Chaque appel administrateur réussi crée encore deux nouveaux produits et quatre nouveaux prix Stripe.
+- Le contrat admin repose sur une adresse e-mail exposée via une variable `NEXT_PUBLIC_*` et un repli codé en dur; sa migration vers une configuration serveur obligatoire ou un rôle canonique reste à traiter séparément.
+- Aucun producteur applicatif n'appelle cette route; son invocation manuelle doit désormais fournir le Bearer token administrateur.
+- Aucun E2E Stripe réel n'a été exécuté; tous les accès Stripe et Supabase sont mockés.
+
+### Tests exécutés
+
+- Tests ciblés `setup-products` : 17 réussis.
+- `npm test` : 316 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint de la route et du test modifiés : réussi sans erreur ni avertissement.
+- Recherche finale : aucune occurrence de `subscription_type`, de lecture `profiles` ou de client Supabase SSR dans `setup-products`; les seules références lifetime restantes décrivent le prix produit conservé.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Contrôles d'accès `setup-products` utilisant `verifyAdmin` : 0/1 → 1/1.
+- Lectures de profil pour autoriser `setup-products` : 1 → 0.
+- Utilisateurs `lifetime` non-admin pouvant atteindre Stripe : oui → non.
+- Administrateurs sans abonnement `lifetime` pouvant atteindre Stripe : non → oui.
+- Tests unitaires actifs : 310 → 316.
+- Tâches Phase 1 terminées : 12/15 → 13/15.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Assainir le rendu Markdown du chat et ajouter les tests hostiles.
