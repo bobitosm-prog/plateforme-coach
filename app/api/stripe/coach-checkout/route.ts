@@ -5,6 +5,17 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createSecurityAudit } from '@/lib/security/audit-log'
 
+function createStripeClient(secretKey: string) {
+  const endpoint = process.env.STRIPE_E2E_BASE_URL
+  if (!endpoint) return new Stripe(secretKey)
+  if (process.env.MOOVX_E2E !== '1') throw new Error('Stripe E2E endpoint requires MOOVX_E2E=1')
+  const url = new URL(endpoint)
+  if (url.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(url.hostname) || url.pathname !== '/') {
+    throw new Error('Stripe E2E endpoint must be a local HTTP origin')
+  }
+  return new Stripe(secretKey, { host: url.hostname, port: Number(url.port), protocol: 'http' })
+}
+
 export async function POST(req: NextRequest) {
   const audit = createSecurityAudit(req)
   // Auth check
@@ -94,7 +105,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (!client) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY.trim())
+    const stripe = createStripeClient(process.env.STRIPE_SECRET_KEY.trim())
 
     // Get or create Stripe customer
     let customerId = client?.stripe_customer_id

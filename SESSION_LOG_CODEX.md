@@ -2690,3 +2690,51 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer l'E2E local du checkout coach avec relation coach/client active et compte Connect synthétique.
+
+## Entrée — 2026-07-12 — E2E checkout coach local
+
+### Travail effectué
+
+- Ajout du parcours Chromium du checkout coach via le `Paywall`, Auth locale, relation active, route réelle et faux Stripe.
+- Extension du faux Stripe à la création de client, sans journaliser l'autorisation.
+- Réutilisation des gardes locaux du transport Stripe dans la route coach.
+- Ajout de la migration additive manquante pour `profiles.coach_monthly_rate`.
+
+### Tâches cochées
+
+- Critère E2E checkout satisfait pour les variantes plateforme et coach.
+- Phase 1 maintenue ouverte pour push et chat.
+
+### Décisions prises
+
+- Les relations multiples échouent fermées via `maybeSingle()` et sont caractérisées en `403`.
+- Aucune ligne `payments` n'est créée avant webhook dans le checkout coach ; le test conserve ce contrat réel.
+
+### Problèmes rencontrés
+
+- Le schéma versionné ne contenait pas `coach_monthly_rate` malgré son usage en production ; une migration additive était nécessaire à la reconstruction.
+
+### Risques ou dette restante
+
+- Le profil client conserve le customer Stripe créé avant une éventuelle panne ultérieure de session ; aucun paiement n'est toutefois écrit.
+- Push et chat restent sans E2E.
+
+### Tests exécutés
+
+- Reset local : 135/135 migrations.
+- Checkout coach : deux succès consécutifs, 12,3 s et 12,9 s.
+- Checkout plateforme : vert, 13,0 s.
+- Invitation : 2 tests verts, 19,8 s.
+
+### Mesures avant/après
+
+- Parcours E2E intégrés : 2 → 3.
+- Migrations versionnées : 134 → 135.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer l'E2E local des notifications push, incluant livraison simulée et clic service worker.

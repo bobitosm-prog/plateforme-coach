@@ -34,7 +34,7 @@ import { POST } from '../../app/api/stripe/coach-checkout/route'
 const CLIENT_ID = '00000000-0000-4000-8000-000000000001'
 const COACH_ID = '00000000-0000-4000-8000-000000000003'
 const FOREIGN_ID = '00000000-0000-4000-8000-000000000004'
-const originalEnv = { STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL }
+const originalEnv = { STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL, MOOVX_E2E: process.env.MOOVX_E2E, STRIPE_E2E_BASE_URL: process.env.STRIPE_E2E_BASE_URL }
 
 function request(body: Record<string, unknown> = {}): NextRequest { return new Request('http://localhost/api/stripe/coach-checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }) as NextRequest }
 function authenticatedAs(id = CLIENT_ID) { mocks.authGetUser.mockResolvedValue({ data: { user: { id, email: 'user@example.test' } } }) }
@@ -50,6 +50,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.profileSingle.mockReset()
   process.env.STRIPE_SECRET_KEY = 'sk_test_coach_checkout_secure'; process.env.SUPABASE_SERVICE_ROLE_KEY = 'service_role_secure'; process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://supabase.test'; process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'anon_test'; process.env.NEXT_PUBLIC_APP_URL = 'http://app.test'
+  delete process.env.MOOVX_E2E; delete process.env.STRIPE_E2E_BASE_URL
   authenticatedAs(); profiles(); mocks.relationMaybeSingle.mockResolvedValue({ data: { coach_id: COACH_ID }, error: null }); mocks.sessionsCreate.mockResolvedValue({ id: 'cs_coach', url: 'https://checkout.test/coach' }); mocks.profileUpdateEq.mockResolvedValue({ error: null })
 })
 afterAll(() => {
@@ -77,4 +78,15 @@ describe('POST /api/stripe/coach-checkout — secured authorization', () => {
   it('returns 404 when the related coach no longer exists', async () => { mocks.profileSingle.mockReset(); profiles('client', false); const response = await POST(request()); expect(response.status).toBe(404); expectNoMutation() })
 
   it('never uses a foreign caller as client identity', async () => { authenticatedAs(FOREIGN_ID); mocks.relationMaybeSingle.mockResolvedValue({ data: null, error: null }); const response = await POST(request()); expect(response.status).toBe(403); expect(mocks.relationMaybeSingle).toHaveBeenCalled(); expectNoMutation() })
+
+  it('uses the guarded local Stripe transport in explicit E2E mode', async () => {
+    process.env.MOOVX_E2E = '1'; process.env.STRIPE_E2E_BASE_URL = 'http://127.0.0.1:55326/'
+    expect((await POST(request())).status).toBe(200)
+    expect(mocks.stripeConstructor).toHaveBeenCalledWith('sk_test_coach_checkout_secure', { host: '127.0.0.1', port: 55326, protocol: 'http' })
+  })
+
+  it.each(['https://api.stripe.com/', 'http://evil.example/', 'http://127.0.0.1:55326/v1'])('refuses unsafe Stripe E2E endpoint %s', async endpoint => {
+    process.env.MOOVX_E2E = '1'; process.env.STRIPE_E2E_BASE_URL = endpoint
+    expect((await POST(request())).status).toBe(500); expectNoMutation()
+  })
 })

@@ -20,7 +20,7 @@ const server = createServer((request, response) => {
   if (request.method === 'GET' && request.url?.startsWith('/checkout/')) {
     response.writeHead(200, { 'content-type': 'text/html' }); return response.end('<h1>Local Stripe checkout</h1>')
   }
-  if (request.method !== 'POST' || request.url !== '/v1/checkout/sessions') return json(response, 404, { error: 'unsupported fake Stripe operation' })
+  if (request.method !== 'POST' || !['/v1/checkout/sessions', '/v1/customers'].includes(request.url)) return json(response, 404, { error: 'unsupported fake Stripe operation' })
 
   let body = ''
   request.on('data', chunk => { body += chunk })
@@ -28,6 +28,7 @@ const server = createServer((request, response) => {
     const params = Object.fromEntries(new URLSearchParams(body))
     requests.push({ method: request.method, path: request.url, params })
     if (failure) return json(response, 500, { error: { type: 'api_error', message: 'Local Stripe failure' } })
+    if (request.url === '/v1/customers') return json(response, 200, { id: `cus_test_local_${requests.length}`, object: 'customer' })
     const id = `cs_test_local_${requests.length}`
     return json(response, 200, { id, object: 'checkout.session', url: `http://${host}:${port}/checkout/${id}` })
   })

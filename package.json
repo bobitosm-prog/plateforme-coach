@@ -14,6 +14,7 @@
     "test:e2e": "node scripts/run-local-e2e.mjs",
     "test:e2e:invitation": "node scripts/run-invitation-e2e.mjs",
     "test:e2e:checkout": "node scripts/run-local-e2e.mjs e2e/platform-checkout.spec.ts --stripe",
+    "test:e2e:coach-checkout": "node scripts/run-local-e2e.mjs e2e/coach-checkout.spec.ts --stripe",
     "supabase:local:start": "node scripts/supabase-local.mjs start",
     "supabase:local:status": "node scripts/supabase-local.mjs status",
     "supabase:local:reset": "node scripts/supabase-local.mjs reset",
