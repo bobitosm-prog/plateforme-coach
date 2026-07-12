@@ -18,9 +18,6 @@ interface ClientsListProps {
   setSearch: (s: string) => void
   showInvite: boolean
   setShowInvite: (v: boolean | ((prev: boolean) => boolean)) => void
-  inviteLink: string
-  copied: boolean
-  copyInviteLink: () => void
   unreadCounts: Record<string, number>
   setSection: (s: 'accueil' | 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
   openChat: (c: ClientRow) => void
@@ -36,7 +33,7 @@ interface ClientsListProps {
 
 export default function ClientsList({
   filtered, loading, search, setSearch,
-  showInvite, setShowInvite, inviteLink, copied, copyInviteLink,
+  showInvite, setShowInvite,
   unreadCounts, setSection, openChat, setShowNewSession,
   coachInitials,
   scheduledSessions, clients, SESSION_COLORS,

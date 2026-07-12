@@ -1636,3 +1636,69 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer le flux coach de création et d'envoi des invitations vérifiées, en remplaçant les producteurs historiques de liens UUID et l'ancien endpoint SMTP insuffisamment autorisé. Ne commencer aucune autre tâche P0 ou de Phase 2 en parallèle.
+
+---
+
+## Entrée — 2026-07-12 — Flux coach d'invitations vérifiées
+
+### Travail effectué
+
+- Ajout de `POST /api/coach/invitations` avec identité serveur, rôle coach, schéma strict, normalisation email, limites persistantes coach/destinataire et défense locale coach/IP.
+- Génération d'un jeton de 256 bits, persistance exclusive du SHA-256 et construction serveur de `/join?token=<token>`.
+- Ajout d'un template email échappé et retrait des adresses et erreurs SMTP brutes des journaux génériques.
+- Ajout de `POST /api/coach/invitations/revoke`, borné au propriétaire et aux invitations `pending`.
+- Bascule des formulaires email du dashboard coach vers le nouvel endpoint et ajout de la révocation de l'invitation créée.
+- Suppression de tous les producteurs et boutons de copie `/join?coach=<UUID>` dans le dashboard, son hook et l'onboarding coach.
+- Transformation de `/api/invite-client` en tombstone `410 LEGACY_INVITATION_DISABLED` sans envoi SMTP.
+- Conservation des ajouts documentaires P1 sur la robustesse du chargement de profil; aucune tâche de Phase 2 n'a été commencée.
+
+### Tâches cochées
+
+- Phase 1 : « Restreindre et limiter les invitations SMTP ».
+
+### Décisions prises
+
+- Une invitation coach exige toujours un email destinataire; aucun lien générique copiable n'est compatible avec le contrat strict.
+- Le navigateur ne reçoit ni jeton ni hash et ne fournit ni coach, nom du coach, URL, expiration ou statut.
+- L'échec SMTP conserve l'invitation pour audit et renvoi futur; il ne supprime jamais la ligne.
+- La révocation d'une invitation appartenant à un autre coach répond comme une ressource introuvable afin de ne pas confirmer son existence.
+
+### Problèmes rencontrés
+
+- Le lint global reste rouge sur la dette historique du dépôt : 941 erreurs et 1 871 avertissements, principalement `no-explicit-any`, règles React et fichiers générés/temporaires. Le lint limité aux nouvelles routes, services et tests passe.
+
+### Risques ou dette restante
+
+- L'interface permet de révoquer l'invitation créée pendant la session courante; une liste complète et un renvoi contrôlé restent à réaliser ultérieurement.
+- La limite IP utilise le helper mémoire existant comme défense complémentaire; les limites coach et destinataire sont calculées depuis les invitations persistées.
+- L'ancien système `assign-coach` reste présent pour le coach par défaut et doit être nettoyé séparément après vérification de ses usages morts.
+- Les deux injections de panne transactionnelle PostgreSQL et la révocation administrative auditée restent contractuellement `todo`.
+
+### Tests exécutés
+
+- Tests ciblés création/révocation/producteurs : 14 réussis.
+- Tests ciblés invitation complets : 59 réussis avant activation des scénarios contractuels livrés.
+- `npm test` : 196 réussis, 3 `todo`.
+- `npx tsc --noEmit` : réussi.
+- ESLint nouvelles routes/services/tests : réussi.
+- `npm run lint` : exécuté, échec sur la dette globale préexistante (941 erreurs, 1 871 avertissements).
+- Reset PostgreSQL depuis une base vide : toutes les migrations réussies.
+- Assertions baseline : 9 réussies.
+- Tests RPC invitation : 28 réussis.
+- Test de concurrence de consommation : réussi.
+- `git diff --check` : réussi après documentation finale.
+
+### Mesures avant/après
+
+- Tests unitaires actifs : 182 → 196.
+- Scénarios contractuels `todo` : 22 → 3.
+- Producteurs applicatifs `/join?coach=` : 3 → 0.
+- Endpoints SMTP acceptant un lien navigateur : 1 → 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Nettoyer définitivement l'ancien système `assign-coach` et supprimer les chemins morts lorsqu'ils ne sont plus utilisés. Ne commencer aucune autre tâche P0 ou de Phase 2 en parallèle.

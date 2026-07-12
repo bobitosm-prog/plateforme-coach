@@ -23,7 +23,7 @@ export async function sendEmail({
   to, subject, html, replyTo, fromName = 'MoovX',
 }: SendEmailOptions): Promise<SendResult> {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('[email] SMTP non configure, envoi skipped pour:', to)
+    console.warn('[email] SMTP non configure, envoi skipped')
     return { success: true, method: 'skipped' }
   }
 
@@ -48,7 +48,7 @@ export async function sendEmail({
 
     return { success: true, method: 'sent' }
   } catch (err) {
-    console.error('[email] Erreur envoi:', err)
+    console.error('[email] Erreur SMTP')
     return {
       success: false,
       method: 'error',

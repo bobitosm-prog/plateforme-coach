@@ -3,7 +3,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ChevronLeft, Check, Camera, CreditCard, Upload, Copy, Sparkles, LayoutDashboard } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Check, Camera, CreditCard, Upload, Sparkles, LayoutDashboard } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, GREEN } from '../../lib/design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
@@ -52,12 +52,10 @@ export default function OnboardingCoachContent() {
   const [hoursFrom, setHoursFrom] = useState('08:00')
   const [hoursTo, setHoursTo] = useState('20:00')
   const [followUpModes, setFollowUpModes] = useState<string[]>([])
-  const [inviteLinkCopied2, setInviteLinkCopied2] = useState(false)
 
   const [stripeConnected, setStripeConnected] = useState(false)
   const [stripeLoading, setStripeLoading] = useState(false)
 
-  const [linkCopied, setLinkCopied] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -146,14 +144,6 @@ export default function OnboardingCoachContent() {
 
   function toggleFollowUp(mode: string) {
     setFollowUpModes(prev => prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode])
-  }
-
-  async function copyInviteLink() {
-    if (!session) return
-    const link = `${window.location.origin}/join?coach=${session.user.id}`
-    await navigator.clipboard.writeText(link)
-    setLinkCopied(true)
-    setTimeout(() => setLinkCopied(false), 2000)
   }
 
   async function finish() {
@@ -339,21 +329,6 @@ export default function OnboardingCoachContent() {
                 <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_PRIMARY, lineHeight: 1.6, margin: 0, opacity: 0.85 }}>{t('business.businessModelDesc')}</p>
               </div>
 
-              {session && (
-                <div>
-                  <label style={labelStyle}>{t('business.inviteLinkLabel')}</label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="text" readOnly value={`${typeof window !== 'undefined' ? window.location.origin : 'https://app.moovx.ch'}/join?coach=${session.user.id}`}
-                      style={{ ...inputStyle, flex: 1, fontSize: '0.82rem', color: GOLD, background: BG_BASE }} />
-                    <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/join?coach=${session.user.id}`); setInviteLinkCopied2(true); setTimeout(() => setInviteLinkCopied2(false), 2000) }}
-                      style={{ padding: '12px 18px', background: inviteLinkCopied2 ? GREEN : GOLD, border: 'none', borderRadius: 12, color: BG_BASE, fontFamily: FONT_ALT, fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', transition: 'background 200ms', whiteSpace: 'nowrap' }}>
-                      {inviteLinkCopied2 ? t('business.inviteLinkCopied') : t('business.inviteLinkCopy')}
-                    </button>
-                  </div>
-                  <p style={{ fontSize: '0.72rem', color: TEXT_DIM, margin: '6px 0 0', fontStyle: 'italic', fontFamily: FONT_BODY, fontWeight: 300 }}>{t('business.inviteLinkNote')}</p>
-                </div>
-              )}
-
               <div style={{ marginTop: 'auto', paddingTop: 8 }}>
                 <NextBtn onClick={goNext} label={t('nav.next')} />
               </div>
@@ -445,18 +420,6 @@ export default function OnboardingCoachContent() {
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
                 style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button onClick={copyInviteLink}
-                  style={{ width: '100%', padding: '14px 16px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', transition: 'border-color 200ms' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Copy size={18} color={GOLD} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{t('welcome.inviteTitle')}</div>
-                    <div style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{linkCopied ? t('welcome.inviteCopied') : t('welcome.inviteDesc')}</div>
-                  </div>
-                  {linkCopied && <Check size={18} color={GREEN} />}
-                </button>
-
                 <div style={{ padding: '14px 16px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Sparkles size={18} color={GOLD} />

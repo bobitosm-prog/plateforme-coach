@@ -126,24 +126,8 @@ describe('one-time coach invitation contract', () => {
       })
     })
 
-    describe('future API — activate after creation route/service exists', () => {
-      it.todo('rejects an anonymous creator with 401 before persistence or SMTP')
-      it.todo('rejects an authenticated non-coach creator with 403')
-      it.todo('allows a valid authenticated coach to create a pending invitation')
-      it.todo('derives coach_id exclusively from the authenticated server session')
-      it.todo('rejects a body containing coachId instead of treating it as authority')
-      it.todo('requires recipientEmail')
-      it.todo('persists the normalized recipient email')
-      it.todo('rejects a malformed or overlong recipient email')
-      it.todo('does not require the recipient to own a verified account at creation time')
-      it.todo('uses the server-side default expiration and rejects client-controlled expiration')
-      it.todo('returns the raw token only to the internal delivery step and never in list responses')
-      it.todo('stores only the SHA-256 token hash and never the raw token')
-      it.todo('returns 409 INVITATION_ALREADY_PENDING for a non-expired duplicate')
-      it.todo('returns 429 with Retry-After when coach or recipient rate limits are exceeded')
-      it.todo('keeps the invitation pending with delivery_status failed when SMTP fails')
-      it.todo('returns 502 INVITATION_DELIVERY_FAILED without logging token or email')
-    })
+    // Creation permissions, normalization, hashing, delivery, duplicates and
+    // rate limits are covered by coach-invitation-creation.test.ts.
   })
 
   describe('validation', () => {
@@ -215,11 +199,8 @@ describe('one-time coach invitation contract', () => {
   })
 
   describe('revocation', () => {
-    describe('future revoke route — PostgreSQL ownership cases live in integration tests', () => {
-      it.todo('rejects another coach with 403 without revealing invitation details')
+    describe('remaining administrative revocation case', () => {
       it.todo('allows a super_admin only through a separate audited endpoint with a reason')
-      it.todo('rejects revocation of a consumed invitation with 409')
-      it.todo('rejects a second revocation because revoked is terminal')
     })
   })
 

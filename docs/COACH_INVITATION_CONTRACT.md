@@ -514,7 +514,19 @@ Les producteurs historiques de liens UUID dans l'onboarding et le dashboard coac
 
 Rollback applicatif : rétablir les composants `/join` et callback précédents ainsi que retirer les deux nouvelles routes. La table et la RPC additives peuvent rester déployées sans trafic. Ce rollback réouvre toutefois le risque d'autorité portée par `coachId` et ne doit être utilisé qu'en urgence, pour une durée limitée. Le flux distinct d'assignation automatique du coach par défaut reste inchangé.
 
-## 19. Définition de terminé de l'implémentation future
+## 19. Flux coach vérifié — 12 juillet 2026
+
+`POST /api/coach/invitations` est l'unique producteur applicatif d'invitations coach. La route exige `auth.getUser()`, vérifie le rôle `coach` dans `profiles`, normalise et valide l'email, applique les limites persistantes coach/destinataire ainsi qu'une défense locale coach/IP, puis délègue au service serveur. Le service génère 32 octets aléatoires, ne persiste que leur SHA-256 et envoie exclusivement `/join?token=<token>`.
+
+La réponse de création contient seulement `invitationId`, `expiresAt` et `deliveryStatus`. Un échec SMTP conserve la ligne `pending`, marque la livraison `failed` et renvoie `502` sans détail fournisseur. Les journaux génériques de `lib/email.ts` n'incluent plus l'adresse destinataire ni l'erreur SMTP brute.
+
+`POST /api/coach/invitations/revoke` accepte un identifiant d'invitation et un motif non autoritatif optionnel. La session, la RLS et une vérification explicite de propriété bornent la révocation au coach propriétaire et à l'état `pending`; les états terminaux renvoient `409`.
+
+Le dashboard coach conserve son design et envoie désormais uniquement `{ recipientEmail, locale }`. Il permet de révoquer l'invitation créée. Tous les blocs générant ou copiant `/join?coach=<UUID>` ont été retirés du dashboard, de son hook et de l'onboarding coach. L'ancien endpoint `/api/invite-client` est conservé comme tombstone `410 LEGACY_INVITATION_DISABLED` et n'envoie plus aucun email fourni par le navigateur.
+
+Rollback applicatif : désactiver l'entrée UI et les deux routes nouvelles sans supprimer la table ni la RPC. Ne jamais réactiver l'envoi d'un lien UUID ou d'un `inviteLink` fourni par le navigateur.
+
+## 20. Définition de terminé de l'implémentation future
 
 La tâche d'implémentation ne sera terminée que lorsque :
 
