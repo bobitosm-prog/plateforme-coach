@@ -332,14 +332,9 @@ type ApiFailure = { success: false; error: { code: string; message: string } }
 
 ### Sort de `POST /api/assign-coach`
 
-La route est conservée temporairement comme adaptateur uniquement pour l'assignation au coach par défaut, sous un contrat séparé ne donnant jamais `invited`. Elle ne doit plus accepter le mode invitation. Le nouveau frontend appelle `/consume`.
+La route a été supprimée après la bascule complète vers les invitations vérifiées. Aucun payload navigateur ne peut donc attribuer un coach arbitraire ou accorder l'abonnement `invited`.
 
-Pendant la coexistence :
-
-- payload avec `token` : peut être redirigé serveur vers le nouveau service si nécessaire ;
-- payload avec `coachId` et `autoAssign !== true` : `410 LEGACY_INVITATION_DISABLED` après activation du flag ;
-- `autoAssign: true` : migré vers un endpoint/RPC distinct dérivant le coach par défaut côté serveur ;
-- après absence de trafic legacy vérifiée, supprimer l'adaptateur.
+L'attribution du coach par défaut reste un mécanisme distinct : au premier chargement authentifié du dashboard, `get_default_coach_id` résout le coach configuré et la policy RLS `coach_clients_self_insert_safe` limite l'insertion au client courant et à un profil de rôle coach. Ce chemin ne modifie aucun champ d'abonnement.
 
 ## 13. Codes d'erreur métier
 
@@ -546,7 +541,7 @@ La tâche d'implémentation ne sera terminée que lorsque :
 - [ ] un E2E complet et la réutilisation refusée passent ;
 - [ ] les métriques et logs ne contiennent aucun secret ;
 - [ ] le rollback et les feature flags sont documentés et répétés ;
-- [ ] `POST /api/assign-coach` ne peut plus accorder `invited` depuis un `coachId`.
+- [x] `POST /api/assign-coach` ne peut plus accorder `invited` depuis un `coachId` (route supprimée).
 
 ## Décisions normatives résumées
 

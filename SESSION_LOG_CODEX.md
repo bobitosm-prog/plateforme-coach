@@ -1702,3 +1702,64 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Nettoyer définitivement l'ancien système `assign-coach` et supprimer les chemins morts lorsqu'ils ne sont plus utilisés. Ne commencer aucune autre tâche P0 ou de Phase 2 en parallèle.
+
+---
+
+## Entrée — 2026-07-12 — Suppression de l'ancien système `assign-coach`
+
+### Travail effectué
+
+- Inventaire exhaustif des usages de `assign-coach`, `/api/assign-coach`, `autoAssign`, `coachId` et des mécanismes historiques d'attribution.
+- Distinction confirmée entre l'ancien mode invitation arbitraire et l'attribution encore active du coach par défaut via `get_default_coach_id`, `coach_clients` et la policy RLS `coach_clients_self_insert_safe`.
+- Ajout préalable de tests de coupure; ils ont échoué sur la route et l'appel d'inscription encore présents, puis réussi après suppression.
+- Suppression de `POST /api/assign-coach`, de son appel depuis l'inscription client et de ses anciens tests de caractérisation vulnérable.
+- Conservation intacte du parcours vérifié `/join?token=<token>` et du mécanisme RLS du coach par défaut, qui ne modifie aucun abonnement.
+- Mise à jour du contrat pour documenter la suppression effective de l'adaptateur.
+
+### Tâches cochées
+
+Aucune nouvelle tâche officielle : la tranche clôt une dette de transition enregistrée comme prochaine action, sans modifier le compteur de Phase 1.
+
+### Décisions prises
+
+- Aucun endpoint de remplacement n'est créé : l'attribution du coach par défaut existe déjà au premier chargement authentifié du dashboard.
+- L'inscription ne transmet plus `clientId`, `coachId` ou `autoAssign`; l'identité reste imposée par `auth.uid()` dans la policy RLS.
+- Les occurrences `coachId` propres aux invitations vérifiées et aux autres domaines restent légitimes lorsqu'elles sont dérivées côté serveur ou sans rapport avec l'ancien parcours.
+
+### Problèmes rencontrés
+
+- Après suppression de la route, `npx tsc --noEmit` a d'abord lu une référence périmée dans `.next/types`; `npx next typegen` a régénéré les types, puis TypeScript a réussi.
+- ESLint ciblé sur `RegisterClientContent.tsx` reste rouge sur trois erreurs préexistantes hors des lignes modifiées (`set-state-in-effect` et deux liens internes en `<a>`) ainsi que quatre avertissements préexistants. Les nouveaux tests passent ESLint.
+
+### Risques ou dette restante
+
+- L'attribution du coach par défaut est déclenchée au chargement du dashboard et non pendant l'inscription; elle dépend donc d'une première session authentifiée et des migrations RPC/RLS déjà validées.
+- Aucun E2E navigateur complet ne couvre encore inscription, premier dashboard et création de la relation par défaut.
+- Les mentions historiques de `assign-coach` dans le journal et les décisions du contrat sont conservées pour la traçabilité; les occurrences restantes dans les tests sont des interdictions explicites, pas des producteurs.
+
+### Tests exécutés
+
+- Test de caractérisation avant suppression : 7 réussis, 2 échecs attendus prouvant la route et l'appel encore actifs.
+- Tests ciblés après suppression : 48 réussis, 3 `todo`.
+- `npm test` : 183 réussis, 3 `todo`.
+- `npx next typegen` : réussi.
+- `npx tsc --noEmit` : réussi après régénération des types Next.
+- ESLint des deux tests modifiés/créés : réussi.
+- ESLint de `RegisterClientContent.tsx` : échec sur 3 erreurs et 4 avertissements préexistants, sans nouvelle alerte sur la suppression.
+- Recherche finale applicative : aucun producteur ni appel `/api/assign-coach`; `autoAssign` ne subsiste que dans les assertions qui l'interdisent.
+- `git diff --check` : réussi.
+
+### Mesures avant/après
+
+- Routes applicatives `assign-coach` : 1 → 0.
+- Appels applicatifs `/api/assign-coach` : 1 → 0.
+- Tests actifs : 196 → 183, soit suppression des 16 caractérisations du code vulnérable et ajout de 3 protections de coupure.
+- Producteurs `/join?coach=` : reste à 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Tester les checkouts plateforme et coach avec des identités étrangères, prochaine tâche P0 non terminée de la Phase 1, sans commencer leur correction dans la même tranche.

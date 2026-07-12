@@ -8,6 +8,7 @@ const joinPage = read('app/join/page.tsx')
 const callback = read('app/auth/callback/route.ts')
 const login = read('app/login/LoginPageContent.tsx')
 const registerClient = read('app/register-client/RegisterClientContent.tsx')
+const clientDashboard = read('app/hooks/useClientDashboard.ts')
 const validateRoute = read('app/api/coach/invitations/validate/route.ts')
 const consumeRoute = read('app/api/coach/invitations/consume/route.ts')
 
@@ -44,9 +45,14 @@ describe('/join verified invitation cutover', () => {
     expect(callback).toContain("!requestedNext.startsWith('//')")
   })
 
-  it('sets no-referrer while preserving default-coach auto assignment as a separate flow', () => {
+  it('sets no-referrer while preserving default-coach assignment as a separate RLS-protected flow', () => {
     expect(joinPage).toContain("referrer: 'no-referrer'")
-    expect(registerClient).toContain("JSON.stringify({ clientId: uid, autoAssign: true })")
+    expect(clientDashboard).toContain("supabase.rpc('get_default_coach_id'")
+    expect(clientDashboard).toContain("client_id: uid")
+    expect(clientDashboard).toContain("coach_id: defaultCoachId")
+    expect(registerClient).not.toContain('/api/assign-coach')
+    expect(registerClient).not.toContain('autoAssign')
+    expect(registerClient).not.toContain('coachId')
   })
 
   it('never logs invitation secrets from either route or the browser flow', () => {

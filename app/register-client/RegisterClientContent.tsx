@@ -128,13 +128,6 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
         await new Promise(r => setTimeout(r, 1000))
         await supabase.from('profiles').upsert({ id: uid, ...profileData })
       }
-      if (selectedRole === 'client') {
-        await fetch('/api/assign-coach', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientId: uid, autoAssign: true }),
-        })
-      }
     }
     setSubmitting(false)
     setEmailSent(true)
