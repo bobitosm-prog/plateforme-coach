@@ -49,6 +49,7 @@ psql postgresql://postgres:postgres@127.0.0.1:55322/postgres -v ON_ERROR_STOP=1 
 psql postgresql://postgres:postgres@127.0.0.1:55322/postgres -v ON_ERROR_STOP=1 -f tests/integration/coach-invitations-rpc.sql
 psql postgresql://postgres:postgres@127.0.0.1:55322/postgres -v ON_ERROR_STOP=1 -f tests/integration/stripe-webhook-claims.sql
 MOOVX_TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres bash tests/integration/coach-invitations-concurrency.sh
+npm run test:integration:rls
 ```
 
 Pour prouver une reconstruction sur un PostgreSQL vide indépendant, créer une base locale jetable puis lancer :
@@ -254,3 +255,4 @@ On ajoute un test au niveau le plus bas capable de détecter fidèlement la rég
 - [Roadmap Codex](../ROADMAP_CODEX.md)
 - [Fixtures de personas](./TEST_FIXTURES.md)
 - [Mocks de fournisseurs Vitest](./TEST_PROVIDER_MOCKS.md)
+- [Matrices RLS automatisées](./RLS_TEST_MATRIX.md)

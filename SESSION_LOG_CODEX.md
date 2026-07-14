@@ -3055,3 +3055,60 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Ajouter les premières matrices RLS automatisées.
+
+## Entrée — 2026-07-14 — Phase 2, premières matrices RLS automatisées
+
+### Travail effectué
+
+- Audit des politiques, grants, fonctions privilégiées et contrats réels de `profiles`, `coach_clients`, `coach_invitations`, `push_subscriptions` et `payments`.
+- Création d'une matrice SQL transactionnelle utilisant les personas partagés, les rôles PostgreSQL `anon`/`authenticated` et des JWT locaux contrôlés.
+- Ajout d'un lanceur local protégé qui exécute la matrice puis traverse réellement Supabase Auth et PostgREST avec un compte synthétique éphémère.
+- Documentation des droits attendus, des limites de la matrice et des écarts de sécurité ou de contrat observés sans modifier les politiques de production.
+
+### Tâches cochées
+
+- Phase 2 : « Ajouter les premières matrices RLS automatisées » terminée.
+
+### Décisions prises
+
+- Les attentes de sécurité établies sont bloquantes; les vulnérabilités et incohérences déjà présentes sont émises comme `RLS_KNOWN_GAP` afin de rester visibles sans faire passer un comportement vulnérable pour une règle attendue.
+- Les contrôles SQL s'exécutent sous `SECURITY INVOKER` avec les vrais rôles de la Data API; la service-role n'est utilisée que pour préparer et nettoyer le compte du contrôle PostgREST.
+- Toute la matrice SQL reste dans une transaction annulée, et le compte PostgREST est supprimé dans un bloc `finally`.
+- Aucun changement de policy, migration ou comportement applicatif n'est inclus dans cette tranche de caractérisation.
+
+### Problèmes rencontrés
+
+- Le trigger `guard_profile_sensitive_columns` référence la colonne inexistante `subscription_price`, ce qui empêche actuellement les mises à jour de profil authentifiées, y compris une mise à jour non sensible.
+- Les grants de `coach_invitations` sont volontairement plus restrictifs que les grants génériques des autres tables; les assertions ont dû distinguer absence de ligne et refus SQL.
+
+### Risques ou dette restante
+
+- Critique : un coach peut insérer, modifier et supprimer un paiement portant son propre `coach_id`, même pour un client sans relation autorisée.
+- Élevé : un coach peut créer une relation avec un client arbitraire, et un client peut s'auto-associer à n'importe quel profil coach réel.
+- Élevé : un coach lié ne peut pas lire le profil client alors qu'une policy lui permet de le modifier; le contrat produit et la policy divergent.
+- Moyen : une relation inactive permet encore au client de lire le profil du coach.
+- La matrice initiale couvre cinq tables critiques; les autres tables RLS restent à intégrer progressivement.
+
+### Tests exécutés
+
+- Reset Supabase canonique avant et après validation : 135/135 migrations, empreinte `b0f477c76cda936495e44c84d6d280a1`.
+- Matrice RLS exécutée deux fois de suite puis sur base fraîche : 42 attentes bloquantes vertes, 8 écarts connus signalés et 1 contrôle Auth/PostgREST vert.
+- Tests RPC invitation et scénario de concurrence : verts.
+- E2E invitation : 2 tests Chromium verts avec un worker.
+- Suite complète : 29 fichiers, 382 tests actifs verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+- Nettoyage final : aucun compte, profil, relation, invitation, abonnement push ou paiement synthétique résiduel.
+- `git diff --check` : vert.
+
+### Mesures avant/après
+
+- Tables critiques couvertes par une matrice RLS automatisée : 0 → 5.
+- Assertions de sécurité RLS bloquantes : 0 → 42, complétées par 8 écarts connus non masqués.
+- Phase 2 : 4/18 → 5/18 tâches terminées.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Intégrer 5 parcours E2E critiques.

@@ -22,6 +22,7 @@
     "supabase:local:reset": "node scripts/supabase-local.mjs reset",
     "supabase:local:verify": "node scripts/supabase-local.mjs verify",
     "supabase:local:fingerprint": "node scripts/supabase-local.mjs fingerprint",
+    "test:integration:rls": "node scripts/run-rls-integration.mjs",
     "supabase:local:stop": "node scripts/supabase-local.mjs stop",
     "i18n:check": "node scripts/check-i18n.mjs"
   },
