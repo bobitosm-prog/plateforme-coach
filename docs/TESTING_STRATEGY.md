@@ -1,6 +1,6 @@
 # Stratégie de tests MoovX
 
-> État mesuré le 12 juillet 2026 après ajout des fixtures partagées de Phase 2. Cette stratégie décrit le dépôt réel puis la cible. Aucun test ne doit contacter la production.
+> État mesuré le 12 juillet 2026 après ajout des fixtures partagées et du reset Supabase local canonique de Phase 2. Cette stratégie décrit le dépôt réel puis la cible. Aucun test ne doit contacter la production.
 
 ## 1. Pyramide réelle et vocabulaire
 
@@ -161,6 +161,33 @@ Les resets de base, E2E Chromium et tests de concurrence sont volontairement plu
 - Attendre un état observable avec timeout borné (`expect`, polling de santé), jamais un délai arbitraire comme preuve de réussite.
 - Contrôler dates, identifiants, réponses et ordre lorsque la règle dépend de l'horloge, de l'idempotence ou de la concurrence; sinon utiliser des identifiants uniques par exécution.
 - Nettoyer lignes métier, profils et comptes Auth; une seconde exécution doit réussir après reset.
+
+### Reset Supabase local canonique
+
+`npm run supabase:local:reset` est l'unique reconstruction de référence pour Auth, PostgREST, PostgreSQL et Mailpit. Elle utilise le binaire Supabase installé dans le dépôt, démarre la pile si nécessaire, exécute `supabase db reset --no-seed`, puis applique les migrations SQL par nom de fichier en ordre lexical. Le compteur et l'ordre enregistrés sont comparés aux fichiers présents : une migration ajoutée, absente ou réordonnée fait échouer `status`, `ensure`, `verify` et les E2E tant qu'un reset n'a pas été effectué.
+
+Le reset :
+
+- refuse les URLs non locales et tout contexte CLI portant `SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN` ou `SUPABASE_DB_URL` ;
+- exige Docker et les ports définis par `supabase/config.toml` (API 55321, PostgreSQL 55322, Mailpit HTTP/SMTP 55324/55325) ;
+- sérialise les exécutions avec `.supabase-local-reset.lock`, supprimé même après échec ;
+- applique les 135 migrations actuelles avec `ON_ERROR_STOP`, sans seed implicite ;
+- exécute la baseline structurelle, les fixtures SQL puis leur nettoyage, et vérifie l'absence de comptes, profils, relations, paiements et invitations ;
+- vide Mailpit et régénère `.env.e2e.local` en mode `0600`, sans afficher les clés ;
+- publie une empreinte stable des relations, colonnes, contraintes, index, fonctions, policies et migrations.
+
+Commandes :
+
+```bash
+npm run supabase:local:reset       # reconstruction destructive strictement locale
+npm run supabase:local:status      # pile active + liste de migrations exacte
+npm run supabase:local:verify      # contrat de migrations + assertions structurelles
+npm run supabase:local:fingerprint # empreinte comparable entre deux resets
+```
+
+Les lanceurs E2E appellent `ensure` via `scripts/run-local-e2e.mjs`. Ils vérifient ainsi le même contrat et régénèrent l'environnement local, sans réimplémenter le reset. `tests/integration/reset-migrations.sh` reste réservé aux bases PostgreSQL locales isolées qui ne fournissent pas Auth/PostgREST/Mailpit; il ne constitue pas le reset E2E canonique.
+
+La reproductibilité attendue est : état arrêté ou actif → même empreinte; données synthétiques contaminantes → reset → même empreinte; deuxième reset concurrent → refus immédiat. Toute empreinte différente doit être expliquée par une modification versionnée du schéma ou de la liste des migrations.
 
 ## 8. Sécurité des tests
 

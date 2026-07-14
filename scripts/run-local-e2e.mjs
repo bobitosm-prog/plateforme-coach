@@ -1,9 +1,11 @@
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { config as loadEnv } from 'dotenv'
 import { createInterface } from 'node:readline'
 import { readFileSync, writeFileSync } from 'node:fs'
 
-loadEnv({ path: '.env.e2e.local', quiet: true })
+const contract = spawnSync(process.execPath, ['scripts/supabase-local.mjs', 'ensure'], { stdio: 'inherit' })
+if (contract.status !== 0) throw new Error('Canonical local Supabase contract is unavailable; run npm run supabase:local:reset')
+loadEnv({ path: '.env.e2e.local', quiet: true, override: true })
 const args = process.argv.slice(2)
 const withStripe = args.includes('--stripe')
 const withPush = args.includes('--push')

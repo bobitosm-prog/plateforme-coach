@@ -2943,3 +2943,60 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Rendre le reset Supabase local déterministe.
+
+## Entrée — 2026-07-12 — Phase 2, reset Supabase local déterministe
+
+### Travail effectué
+
+- Consolidation de `npm run supabase:local:reset` comme reconstruction canonique de la pile CLI locale Auth/PostgREST/PostgreSQL/Mailpit.
+- Ajout des gardes localhost et contexte non lié, du verrou exclusif, du contrôle exact des migrations et d'un environnement E2E local en mode `0600`.
+- Ajout des assertions de propreté, de l'empreinte structurelle stable et des commandes `verify`/`fingerprint`.
+- Raccordement du lanceur E2E au contrat canonique par `ensure`, sans duplication du reset.
+- Conservation du reset PostgreSQL brut pour les tests d'intégration ciblés uniquement.
+
+### Tâches cochées
+
+- Phase 2 : « Rendre le reset Supabase local déterministe » terminée.
+
+### Décisions prises
+
+- Les 135 migrations historiques restent appliquées en ordre lexical de nom complet, car plusieurs préfixes de version sont dupliqués.
+- Le registre local conserve un ordinal et un nom de fichier; toute divergence de nombre ou d'ordre bloque les consommateurs.
+- L'empreinte couvre le schéma et les migrations, mais exclut données volatiles, OID et horodatages.
+- Un E2E vérifie le contrat actif; il ne déclenche pas silencieusement un reset destructif.
+
+### Problèmes rencontrés
+
+- Le socket Docker est inaccessible dans le bac à sable et a nécessité l'autorisation d'exécuter les validations locales.
+- La première insertion psql du nom de migration utilisait une substitution incompatible avec `-c`; elle a été remplacée par un nom prévalidé strictement.
+
+### Risques ou dette restante
+
+- Les sorties des 135 migrations sont volumineuses et pourraient être rendues plus synthétiques ultérieurement sans masquer les erreurs.
+- Le garde applicatif ne remplace pas un bac à sable réseau système général.
+- L'avertissement Supabase `api.auto_expose_new_tables` reste à traiter dans une tranche de configuration distincte.
+
+### Tests exécutés
+
+- Reset depuis pile arrêtée puis démarrage automatique : vert.
+- Reset actif après contamination par personas : vert; comptes, profils et relation supprimés.
+- Trois reconstructions : 135/135 migrations et empreinte identique `b0f477c76cda936495e44c84d6d280a1`.
+- Tentative de reset concurrente : refus immédiat; premier reset terminé et verrou nettoyé.
+- Gardes URL distante, contexte lié, ordre/pending migrations et verrou : 4 tests unitaires verts.
+- Baseline structurelle, RPC invitation et concurrence invitation : verts.
+- E2E checkout coach raccordé au contrat canonique : 1 test Chromium vert en 13,2 s.
+- Suite complète : 27 fichiers, 370 tests actifs verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+- Nettoyage final : 0 compte Auth, profil, relation, invitation et paiement.
+
+### Mesures avant/après
+
+- Reset canonique vérifiable : partiel → pile complète, assertions et empreinte reproductible.
+- Phase 2 : 2/18 → 3/18 tâches terminées.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer les mocks Stripe, Anthropic, SMTP et Web Push réutilisables.

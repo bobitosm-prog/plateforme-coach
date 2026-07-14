@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 2 tâches sur 18 terminées ; stratégie et fixtures de personas partagées disponibles**
+**Statut : En cours — 3 tâches sur 18 terminées ; stratégie, fixtures partagées et reset Supabase local déterministe disponibles**
 
 ### Pourquoi
 
@@ -266,7 +266,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 |---|---:|---|---|---|---|
 | [x] [Documenter la pyramide de tests MoovX](docs/TESTING_STRATEGY.md) | 0,5 j | Faible | Faible | Moyen | Phase 1 |
 | [x] [Créer les fixtures client, coach, invited, lifetime et admin](docs/TEST_FIXTURES.md) | 1,5 j | Moyenne | Faible | Élevé | — |
-| [ ] Rendre le reset Supabase local déterministe | 2 j | Élevée | Moyen | Élevé | Fixtures |
+| [x] [Rendre le reset Supabase local déterministe](docs/TESTING_STRATEGY.md#reset-supabase-local-canonique) | 2 j | Élevée | Moyen | Élevé | Fixtures |
 | [ ] Créer les mocks Stripe, Anthropic, SMTP et Web Push | 2,5 j | Élevée | Faible | Élevé | — |
 | [ ] Ajouter les premières matrices RLS automatisées | 2 j | Élevée | Moyen | Élevé | Supabase local |
 | [ ] Intégrer 5 parcours E2E critiques | 3 j | Élevée | Moyen | Élevé | Fixtures |
