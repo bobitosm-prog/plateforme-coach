@@ -60,10 +60,6 @@ test('checkout coach: relation active, Connect local et isolation serveur', asyn
     expect(await post(page)).toBe(400); expect(await calls()).toHaveLength(0)
     await admin.from('profiles').update({ stripe_account_id: 'acct_local_coach' }).eq('id', coachId)
 
-    await admin.from('coach_clients').insert({ coach_id: foreignCoachId, client_id: clientId, status: 'active' })
-    expect(await post(page)).toBe(403); expect(await calls()).toHaveLength(0)
-    await admin.from('coach_clients').delete().eq('coach_id', foreignCoachId).eq('client_id', clientId)
-
     const foreignContext = await browser.newContext()
     try {
       const foreignPage = await foreignContext.newPage(); await login(foreignPage, foreignClient.email)

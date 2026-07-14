@@ -3178,3 +3178,63 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Sécuriser la création de relations `coach_clients` pour imposer l'invitation vérifiée et empêcher les associations arbitraires (risque élevé).
+
+## Entrée — 2026-07-14 — Correctif P0, création des relations `coach_clients`
+
+### Travail effectué
+
+- Audit des policies, grants, helpers privilégiés et producteurs de `coach_clients`, incluant invitation vérifiée, attribution automatique et déconnexion client.
+- Ajout de la migration additive `20260714224500_harden_coach_clients_writes.sql` : suppression des policies INSERT, révocation des mutations `authenticated`, suppression de `is_coach_role` et `get_default_coach_id`, unicité d’une relation active par client et RPC service-role atomique pour le coach par défaut.
+- Remplacement de l’upsert navigateur par `POST /api/coach/default-assignment`, sans body autoritatif, avec client issu de la session et coach issu de `DEFAULT_COACH_EMAIL` côté serveur.
+- Passage de la déconnexion existante par une route serveur bodyless afin qu’aucun composant navigateur ne mute directement `coach_clients`.
+- Conversion des deux écarts RLS de création arbitraire en attentes bloquantes, extension PostgREST et ajout d’un E2E dédié.
+
+### Tâches cochées
+
+- Aucune tâche Phase 2 supplémentaire : correctif de sécurité P0 hors séquence.
+
+### Décisions prises
+
+- Seules `consume_coach_invitation(bytea)` et `assign_default_coach(uuid, uuid)` créent désormais une relation hors service applicatif direct.
+- L’invitation conserve son contrat token/email et ses mutations d’abonnement atomiques; l’attribution par défaut ne touche jamais l’abonnement.
+- La configuration absente, ambiguë ou ne visant pas exactement un profil coach échoue fermée.
+- Une relation existante n’est ni remplacée ni réactivée; les appels répétés sont idempotents et l’index partiel interdit plusieurs relations actives.
+- Rollback uniquement vers l’avant : les anciennes policies et fonctions publiques ne doivent pas être restaurées.
+
+### Problèmes rencontrés
+
+- Révoquer SELECT à `anon` sur `coach_clients` cassait indirectement la policy anonyme de `profiles`; SELECT a donc été conservé avec RLS, tandis que toutes les mutations restent sans grant.
+- Le checkout coach testait auparavant une ambiguïté par deux relations actives; ce scénario est devenu impossible grâce à la contrainte et a été retiré du E2E.
+- Les autres E2E sans `DEFAULT_COACH_EMAIL` déclenchent volontairement un `503` non bloquant au chargement du dashboard; aucune relation n’est créée.
+
+### Risques ou dette restante
+
+- Élevé : `guard_profile_sensitive_columns` référence toujours `subscription_price` absent et bloque les mises à jour authentifiées de profil.
+- Élevé : un coach lié ne peut toujours pas lire le profil de son client malgré le contrat produit.
+- Moyen : une relation inactive permet encore au client de lire le profil du coach.
+- La route de déconnexion serveur reste minimale et devra rejoindre le futur repository de relations coach/client.
+
+### Tests exécutés
+
+- Reset canonique : 137/137 migrations; empreinte stable `3357bbe75ad9dffd76891cb3302c72ce`.
+- Matrice RLS : 80 attentes bloquantes, 3 écarts documentés, preuve PostgREST de refus client/coach et mutations service-role vertes.
+- RPC invitation et concurrence : vertes.
+- Tests unitaires complets : 31 fichiers, 390 tests actifs verts et 3 `todo`; TypeScript vert.
+- E2E Chromium : attribution par défaut 1/1, invitation 2/2, checkout plateforme 1/1 et checkout coach 1/1 verts.
+- ESLint des nouveaux modules, routes et tests : vert. Le lint des deux fichiers frontend historiques modifiés remonte leur dette `any`/hooks préexistante (36 erreurs, 6 avertissements), sans nouvelle catégorie introduite par cette tranche.
+- Nettoyage E2E en `finally`; aucune mutation `coach_clients` directe restante dans les composants ou hooks navigateur.
+
+### Mesures avant/après
+
+- Policies de mutation `coach_clients` pour utilisateurs : 2 → 0.
+- Helpers privilégiés exposés au navigateur : 2 → 0.
+- Écarts RLS connus : 5 → 3.
+- Migrations : 136 → 137; Phase 2 reste à 5/18 tâches terminées.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Corriger `guard_profile_sensitive_columns` afin qu’une mise à jour sûre de profil ne référence plus la colonne inexistante `subscription_price` (risque élevé).

@@ -274,17 +274,19 @@ export default function useClientDashboard() {
   }
 
   async function resolveCoachLink(uid: string) {
-    const defaultEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
-    const { data: defaultCoachId } = await supabase.rpc('get_default_coach_id', { coach_email: defaultEmail })
-
-    const { data: coachLink } = await supabase.from('coach_clients').select('coach_id').eq('client_id', uid).maybeSingle()
+    const { data: coachLink } = await supabase.from('coach_clients').select('coach_id').eq('client_id', uid).eq('status', 'active').maybeSingle()
     if (coachLink?.coach_id) {
       setCoachId(coachLink.coach_id)
-      setIsDefaultCoach(!!defaultCoachId && coachLink.coach_id === defaultCoachId)
-    } else if (defaultCoachId) {
-      await supabase.from('coach_clients').upsert({ coach_id: defaultCoachId, client_id: uid }, { onConflict: 'coach_id,client_id', ignoreDuplicates: true }).select().maybeSingle()
-      setCoachId(defaultCoachId)
-      setIsDefaultCoach(true)
+      return
+    }
+
+    const response = await fetch('/api/coach/default-assignment', { method: 'POST' })
+    if (response.ok) {
+      const payload = await response.json()
+      if (payload?.data?.coachId && payload.data.isDefault === true) {
+        setCoachId(payload.data.coachId)
+        setIsDefaultCoach(true)
+      }
     }
   }
 

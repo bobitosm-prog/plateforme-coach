@@ -44,17 +44,21 @@ try {
   if (clientRead.error || clientRead.data?.length !== 1 || clientRead.data[0]?.client_id !== clientId) throw clientRead.error || new Error('PostgREST client payment ownership failed')
   const clientWrite = await clientBrowser.from('payments').insert({ client_id: clientId, coach_id: coachId, amount: 1, stripe_event_id: 'evt_forged_postgrest' })
   if (!clientWrite.error) throw new Error('PostgREST authenticated payment insert unexpectedly succeeded')
+  const clientRelationWrite = await clientBrowser.from('coach_clients').insert({ client_id: clientId, coach_id: coachId, status: 'active' })
+  if (!clientRelationWrite.error) throw new Error('PostgREST client relationship insert unexpectedly succeeded')
 
   const coachBrowser = createClient(apiUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } })
   const coachSigned = await coachBrowser.auth.signInWithPassword({ email: coachEmail, password })
   if (coachSigned.error || !coachSigned.data.session) throw coachSigned.error || new Error('PostgREST coach login failed')
   const activeRead = await coachBrowser.from('payments').select('client_id,coach_id')
   if (activeRead.error || activeRead.data?.length !== 1 || activeRead.data[0]?.coach_id !== coachId) throw activeRead.error || new Error('PostgREST active coach payment read failed')
+  const coachRelationWrite = await coachBrowser.from('coach_clients').insert({ client_id: clientId, coach_id: coachId, status: 'active' })
+  if (!coachRelationWrite.error) throw new Error('PostgREST coach relationship insert unexpectedly succeeded')
   const deactivated = await admin.from('coach_clients').update({ status: 'inactive' }).eq('client_id', clientId).eq('coach_id', coachId)
   if (deactivated.error) throw deactivated.error
   const inactiveRead = await coachBrowser.from('payments').select('id')
   if (inactiveRead.error || inactiveRead.data?.length !== 0) throw inactiveRead.error || new Error('PostgREST inactive coach retained payment access')
-  console.log('RLS_POSTGREST_OK [payments/client-read/auth-write-denied/active-coach-read/inactive-coach-denied]')
+  console.log('RLS_POSTGREST_OK [payments/client-read/auth-write-denied/coach-clients-auth-write-denied/active-coach-read/inactive-coach-denied]')
 } finally {
   if (userIds.length) {
     await admin.from('payments').delete().in('client_id', userIds)

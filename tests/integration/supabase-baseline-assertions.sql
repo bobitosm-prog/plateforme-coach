@@ -107,11 +107,11 @@ SELECT test.assert(
 );
 
 SELECT test.assert(
-  EXISTS (
+  NOT EXISTS (
     SELECT 1 FROM pg_proc
-    WHERE oid = 'public.is_coach_role(uuid)'::regprocedure
+    WHERE oid = to_regprocedure('public.is_coach_role(uuid)')
   ),
-  'historical SECURITY DEFINER helper must parse and exist'
+  'obsolete browser-authority helper must be removed'
 );
 
 SELECT 'Supabase structural baseline assertions passed' AS result;

@@ -81,6 +81,19 @@ SELECT test.rls_assert(
   0,
   'payments/catalog/no-authenticated-mutation-grant'
 );
+SELECT test.rls_assert((
+  SELECT count(*) FROM pg_policies
+  WHERE schemaname = 'public' AND tablename = 'coach_clients' AND cmd <> 'SELECT'
+), 0, 'coach_clients/catalog/no-mutation-policy');
+SELECT test.rls_assert(
+  (has_table_privilege('authenticated', 'public.coach_clients', 'INSERT')
+   OR has_table_privilege('authenticated', 'public.coach_clients', 'UPDATE')
+   OR has_table_privilege('authenticated', 'public.coach_clients', 'DELETE'))::int,
+  0,
+  'coach_clients/catalog/no-authenticated-mutation-grant'
+);
+SELECT test.rls_assert(has_function_privilege('authenticated', 'public.assign_default_coach(uuid,uuid)', 'EXECUTE')::int, 0, 'coach_clients/default-rpc-not-authenticated');
+SELECT test.rls_assert(has_function_privilege('service_role', 'public.assign_default_coach(uuid,uuid)', 'EXECUTE')::int, 1, 'coach_clients/default-rpc-service-role-only');
 
 SELECT test.seed_personas();
 SELECT test.set_persona_relation('coach', 'client', 'active');
@@ -122,8 +135,9 @@ SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET full_name
 SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.profiles WHERE id = ''' || :'client' || ''''), 0, 'profiles/client-owner/delete-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'client'), 1, 'coach_clients/client-endpoint/select');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'second_client'), 0, 'coach_clients/client/select-foreign');
-SELECT test.rls_assert(test.rls_exec_count('UPDATE public.coach_clients SET coach_id = ''' || :'second_coach' || ''' WHERE client_id = ''' || :'client' || ''''), 0, 'coach_clients/client/update-owner');
-SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.coach_clients WHERE client_id = ''' || :'client' || ''''), 0, 'coach_clients/client/delete');
+SELECT test.rls_expect_error('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'second_coach' || ''',''' || :'client' || ''',''active'')', 'coach_clients/client/insert-denied');
+SELECT test.rls_expect_error('UPDATE public.coach_clients SET coach_id = ''' || :'second_coach' || ''' WHERE client_id = ''' || :'client' || '''', 'coach_clients/client/update-denied');
+SELECT test.rls_expect_error('DELETE FROM public.coach_clients WHERE client_id = ''' || :'client' || '''', 'coach_clients/client/delete-denied');
 SELECT test.rls_assert((SELECT count(*) FROM public.push_subscriptions WHERE user_id = :'client'), 1, 'push_subscriptions/client/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.push_subscriptions WHERE user_id = :'second_client'), 0, 'push_subscriptions/client/select-foreign');
 SELECT test.rls_expect_error('UPDATE public.push_subscriptions SET user_id = ''' || :'second_client' || ''' WHERE user_id = ''' || :'client' || '''', 'push_subscriptions/client/change-owner');
@@ -145,6 +159,9 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', :'coach', true);
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'client'), 1, 'coach_clients/active-coach/select-linked');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'second_client'), 0, 'coach_clients/active-coach/select-foreign');
+SELECT test.rls_expect_error('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'coach' || ''',''' || :'second_client' || ''',''active'')', 'coach_clients/coach/insert-denied');
+SELECT test.rls_expect_error('UPDATE public.coach_clients SET status=''inactive'' WHERE coach_id = ''' || :'coach' || '''', 'coach_clients/coach/update-denied');
+SELECT test.rls_expect_error('DELETE FROM public.coach_clients WHERE coach_id = ''' || :'coach' || '''', 'coach_clients/coach/delete-denied');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_invitations WHERE coach_id = :'coach'), 1, 'coach_invitations/owner-coach/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_invitations WHERE coach_id = :'second_coach'), 0, 'coach_invitations/owner-coach/select-foreign');
 SELECT test.rls_expect_error('INSERT INTO public.coach_invitations (coach_id, recipient_email, token_hash, expires_at) VALUES (''' || :'second_coach' || ''',''forged@moovx.example.test'',decode(repeat(''33'',32),''hex''),now()+interval ''1 day'')', 'coach_invitations/owner-coach/insert-foreign-owner');
@@ -172,6 +189,14 @@ RESET ROLE;
 
 -- Server path: service_role retains the ledger mutations required by checkout/webhook.
 SET LOCAL ROLE service_role;
+SELECT test.rls_assert((public.assign_default_coach(:'lifetime', :'coach')->>'success' = 'true')::int, 1, 'coach_clients/default-rpc/assign');
+SELECT test.rls_assert((public.assign_default_coach(:'lifetime', :'coach')->>'assigned' = 'false')::int, 1, 'coach_clients/default-rpc/idempotent');
+SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'lifetime' AND coach_id = :'coach' AND status = 'active'), 1, 'coach_clients/default-rpc/one-active');
+SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'lifetime' AND subscription_type = 'lifetime' AND subscription_status = 'lifetime'), 1, 'coach_clients/default-rpc/subscription-unchanged');
+SELECT test.rls_expect_error('INSERT INTO public.coach_clients (client_id,coach_id,status) VALUES (''' || :'lifetime' || ''',''' || :'second_coach' || ''',''active'')', 'coach_clients/one-active/concurrent-guard');
+SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.coach_clients WHERE client_id=''' || :'lifetime' || ''''), 1, 'coach_clients/default-rpc/cleanup');
+SELECT test.rls_assert(test.rls_exec_count('INSERT INTO public.coach_clients (client_id,coach_id,status) VALUES (''' || :'invited' || ''',''' || :'coach' || ''',''active'')'), 1, 'coach_clients/service-role/insert');
+SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.coach_clients WHERE client_id=''' || :'invited' || ''''), 1, 'coach_clients/service-role/delete');
 SELECT test.rls_assert(test.rls_exec_count('INSERT INTO public.payments (client_id,coach_id,amount,status,stripe_id,stripe_event_id) VALUES (''' || :'client' || ''',''' || :'coach' || ''',70,''pending'',''pi_service'',''evt_service'')'), 1, 'payments/service-role/insert');
 SELECT test.rls_assert(test.rls_exec_count('UPDATE public.payments SET status=''paid'' WHERE stripe_event_id=''evt_service'''), 1, 'payments/service-role/update-status');
 SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.payments WHERE stripe_event_id=''evt_service'''), 1, 'payments/service-role/delete');
@@ -183,9 +208,11 @@ SELECT set_config('request.jwt.claim.sub', :'invited', true);
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'invited'), 1, 'profiles/invited/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'client'), 0, 'profiles/invited/select-foreign');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_invitations), 0, 'coach_invitations/recipient/no-direct-visibility');
+SELECT test.rls_expect_error('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'coach' || ''',''' || :'invited' || ''',''active'')', 'coach_clients/invited/insert-denied');
 SELECT set_config('request.jwt.claim.sub', :'lifetime', true);
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'lifetime'), 1, 'profiles/lifetime/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.payments), 0, 'payments/lifetime/no-elevation');
+SELECT test.rls_expect_error('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'coach' || ''',''' || :'lifetime' || ''',''active'')', 'coach_clients/lifetime/insert-denied');
 SELECT set_config('request.jwt.claim.sub', :'admin', true);
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'admin'), 1, 'profiles/email-admin/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id <> :'admin'), 0, 'profiles/email-admin/no-database-elevation');
@@ -203,16 +230,6 @@ SELECT test.rls_known_gap(
   (SELECT count(*) = 0 FROM public.profiles WHERE id = :'client'),
   'profiles/active-coach/cannot-select-client; severity=high; impact=product-contract-mismatch'
 );
-SELECT test.rls_known_gap(
-  test.rls_exec_count('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'coach' || ''',''' || :'second_client' || ''',''active'')') = 1,
-  'coach_clients/coach/can-create-foreign-relation; severity=high; impact=unauthorized-relationship'
-);
-SELECT set_config('request.jwt.claim.sub', :'client', true);
-SELECT test.rls_known_gap(
-  test.rls_exec_count('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'second_coach' || ''',''' || :'client' || ''',''active'')') = 1,
-  'coach_clients/client/can-self-register-any-real-coach; severity=high; impact=unauthorized-relationship'
-);
-SELECT set_config('request.jwt.claim.sub', :'coach', true);
 RESET ROLE;
 
 ROLLBACK;

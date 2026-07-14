@@ -3,7 +3,7 @@
 > Statut : spécification normative prête à implémenter.  
 > Version : 1.0 — 11 juillet 2026.  
 > Portée : invitations permettant à un coach de rattacher un client et de lui accorder l'accès `invited`.  
-> Hors portée : assignation automatique au coach par défaut, facturation, migration SQL et modification des routes existantes.
+> L’assignation automatique, distincte et sans droit d’abonnement, est documentée dans [`DEFAULT_COACH_ASSIGNMENT.md`](./DEFAULT_COACH_ASSIGNMENT.md).
 
 ## 1. Problème actuel
 
@@ -88,7 +88,7 @@ Contraintes de cohérence recommandées :
 - `consumed` implique `consumed_at` et `consumed_by` non nuls, révocation nulle.
 - `revoked` implique `revoked_at` et `revoked_by` non nuls, consommation nulle.
 - Une seule invitation `pending` non expirée par couple `(coach_id, recipient_email, invitation_type)` est imposée par la logique transactionnelle de création. Une contrainte d'exclusion temporelle serait disproportionnée ; les tests de concurrence restent obligatoires.
-- Une relation active unique est déjà soutenue par l'unicité `(coach_id, client_id)` de `coach_clients`.
+- Une relation active unique par client est imposée par l’index partiel `coach_clients_one_active_per_client_idx`; l’unicité `(coach_id, client_id)` empêche aussi les doublons de paire.
 
 `recipient_email` reste du `text` normalisé plutôt que `citext`, afin de ne pas ajouter une extension uniquement pour ce contrat.
 

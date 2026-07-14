@@ -24,11 +24,27 @@ describe('legacy assign-coach removal', () => {
       dashboard.indexOf('/* ── Handlers ── */'),
     )
 
-    expect(resolver).toContain("rpc('get_default_coach_id'")
-    expect(resolver).toContain("from('coach_clients').upsert")
-    expect(resolver).toContain('client_id: uid')
+    expect(resolver).toContain("fetch('/api/coach/default-assignment', { method: 'POST' })")
+    expect(resolver).not.toContain("rpc('get_default_coach_id'")
+    expect(resolver).not.toMatch(/from\('coach_clients'\)\.(?:insert|upsert|update|delete)/)
+    expect(resolver).not.toContain('client_id: uid')
     expect(resolver).not.toContain('subscription_type')
     expect(resolver).not.toContain('subscription_status')
     expect(resolver).not.toContain('invited_by_coach')
+  })
+
+  it('keeps browser authority out of the default assignment route', () => {
+    const route = read('app/api/coach/default-assignment/route.ts')
+    expect(route).toContain('auth.auth.getUser()')
+    expect(route).toContain('process.env.DEFAULT_COACH_EMAIL')
+    expect(route).not.toContain('NEXT_PUBLIC_COACH_EMAIL')
+    expect(route).not.toContain('clientId =')
+  })
+
+  it('contains no direct browser mutation of coach_clients', () => {
+    const dashboard = read('app/hooks/useClientDashboard.ts')
+    const coachSection = read('app/components/tabs/profile/CoachSection.tsx')
+    expect(`${dashboard}\n${coachSection}`).not.toMatch(/from\('coach_clients'\)\.(?:insert|upsert|update|delete)/)
+    expect(coachSection).toContain("fetch('/api/coach/disconnect', { method: 'POST' })")
   })
 })

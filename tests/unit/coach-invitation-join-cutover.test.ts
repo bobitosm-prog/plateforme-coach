@@ -45,11 +45,10 @@ describe('/join verified invitation cutover', () => {
     expect(callback).toContain("!requestedNext.startsWith('//')")
   })
 
-  it('sets no-referrer while preserving default-coach assignment as a separate RLS-protected flow', () => {
+  it('sets no-referrer while preserving default-coach assignment as a separate server flow', () => {
     expect(joinPage).toContain("referrer: 'no-referrer'")
-    expect(clientDashboard).toContain("supabase.rpc('get_default_coach_id'")
-    expect(clientDashboard).toContain("client_id: uid")
-    expect(clientDashboard).toContain("coach_id: defaultCoachId")
+    expect(clientDashboard).toContain("fetch('/api/coach/default-assignment', { method: 'POST' })")
+    expect(clientDashboard).not.toContain("supabase.rpc('get_default_coach_id'")
     expect(registerClient).not.toContain('/api/assign-coach')
     expect(registerClient).not.toContain('autoAssign')
     expect(registerClient).not.toContain('coachId')

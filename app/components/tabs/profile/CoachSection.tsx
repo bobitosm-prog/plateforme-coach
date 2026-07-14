@@ -21,7 +21,7 @@ export default function CoachSection({ supabase, session, coachId }: { supabase:
   async function leaveCoach() {
     if (!coachId || !session?.user?.id) return
     setLeaving(true)
-    await supabase.from('coach_clients').delete().eq('client_id', session.user.id).eq('coach_id', coachId)
+    await fetch('/api/coach/disconnect', { method: 'POST' })
     setLeaving(false)
     window.location.reload()
   }
