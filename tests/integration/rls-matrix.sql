@@ -57,12 +57,30 @@ EXCEPTION WHEN OTHERS THEN
   RETURN false;
 END $$;
 
-GRANT USAGE ON SCHEMA test TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION test.rls_assert(bigint, bigint, text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION test.rls_exec_count(text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION test.rls_expect_error(text, text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION test.rls_known_gap(boolean, text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION test.rls_statement_succeeds(text) TO anon, authenticated;
+GRANT USAGE ON SCHEMA test TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION test.rls_assert(bigint, bigint, text) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION test.rls_exec_count(text) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION test.rls_expect_error(text, text) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION test.rls_known_gap(boolean, text) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION test.rls_statement_succeeds(text) TO anon, authenticated, service_role;
+
+SELECT test.rls_assert((
+  SELECT count(*) FROM pg_policies
+  WHERE schemaname = 'public' AND tablename = 'payments'
+    AND policyname IN ('payments_client_select_own', 'payments_coach_select_active_clients')
+    AND cmd = 'SELECT'
+), 2, 'payments/catalog/exact-read-policies');
+SELECT test.rls_assert((
+  SELECT count(*) FROM pg_policies
+  WHERE schemaname = 'public' AND tablename = 'payments' AND cmd <> 'SELECT'
+), 0, 'payments/catalog/no-mutation-policy');
+SELECT test.rls_assert(
+  (has_table_privilege('authenticated', 'public.payments', 'INSERT')
+   OR has_table_privilege('authenticated', 'public.payments', 'UPDATE')
+   OR has_table_privilege('authenticated', 'public.payments', 'DELETE'))::int,
+  0,
+  'payments/catalog/no-authenticated-mutation-grant'
+);
 
 SELECT test.seed_personas();
 SELECT test.set_persona_relation('coach', 'client', 'active');
@@ -86,7 +104,7 @@ SELECT test.rls_assert((SELECT count(*) FROM public.profiles), 0, 'profiles/anon
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients), 0, 'coach_clients/anon/select');
 SELECT test.rls_expect_error('SELECT id FROM public.coach_invitations', 'coach_invitations/anon/select-no-grant');
 SELECT test.rls_assert((SELECT count(*) FROM public.push_subscriptions), 0, 'push_subscriptions/anon/select');
-SELECT test.rls_assert((SELECT count(*) FROM public.payments), 0, 'payments/anon/select');
+SELECT test.rls_expect_error('SELECT id FROM public.payments', 'payments/anon/select-no-grant');
 RESET ROLE;
 
 -- Client owner: own profile/subscription/payment visibility, no foreign mutation.
@@ -114,8 +132,12 @@ SELECT test.rls_assert(test.rls_exec_count('UPDATE public.push_subscriptions SET
 SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.push_subscriptions WHERE id = ''73000000-0000-4000-8000-000000000003'''), 1, 'push_subscriptions/client/delete-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.payments WHERE client_id = :'client'), 1, 'payments/client/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.payments WHERE client_id = :'second_client'), 0, 'payments/client/select-foreign');
-SELECT test.rls_assert(test.rls_exec_count('UPDATE public.payments SET amount = 1 WHERE client_id = ''' || :'client' || ''''), 0, 'payments/client/update-denied');
-SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.payments WHERE client_id = ''' || :'client' || ''''), 0, 'payments/client/delete-denied');
+SELECT test.rls_expect_error('INSERT INTO public.payments (client_id,amount,status,stripe_id) VALUES (''' || :'client' || ''',1,''completed'',''pi_client_forged'')', 'payments/client/insert-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET amount = 1 WHERE client_id = ''' || :'client' || '''', 'payments/client/update-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET client_id = ''' || :'second_client' || ''' WHERE client_id = ''' || :'client' || '''', 'payments/client/change-client-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET coach_id = ''' || :'second_coach' || ''' WHERE client_id = ''' || :'client' || '''', 'payments/client/change-coach-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET stripe_event_id = ''evt_forged'' WHERE client_id = ''' || :'client' || '''', 'payments/client/change-stripe-event-denied');
+SELECT test.rls_expect_error('DELETE FROM public.payments WHERE client_id = ''' || :'client' || '''', 'payments/client/delete-denied');
 RESET ROLE;
 
 -- Active coach endpoint and foreign coach isolation.
@@ -131,6 +153,28 @@ SELECT test.rls_assert(test.rls_exec_count('UPDATE public.coach_invitations SET 
 SELECT test.rls_expect_error('DELETE FROM public.coach_invitations WHERE coach_id = ''' || :'coach' || '''', 'coach_invitations/owner-coach/delete-no-grant');
 SELECT test.rls_assert((SELECT count(*) FROM public.payments WHERE coach_id = :'coach'), 1, 'payments/active-coach/select-linked-row');
 SELECT test.rls_assert((SELECT count(*) FROM public.payments WHERE coach_id = :'second_coach'), 0, 'payments/active-coach/select-foreign');
+SELECT test.rls_expect_error('INSERT INTO public.payments (client_id,coach_id,amount,status,stripe_id) VALUES (''' || :'second_client' || ''',''' || :'coach' || ''',1,''completed'',''pi_coach_forged'')', 'payments/active-coach/insert-foreign-client-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET amount=2 WHERE coach_id = ''' || :'coach' || '''', 'payments/active-coach/update-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET client_id=''' || :'second_client' || ''' WHERE coach_id = ''' || :'coach' || '''', 'payments/active-coach/change-client-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET coach_id=''' || :'second_coach' || ''' WHERE coach_id = ''' || :'coach' || '''', 'payments/active-coach/change-coach-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET stripe_event_id=''evt_coach_forged'' WHERE coach_id = ''' || :'coach' || '''', 'payments/active-coach/change-stripe-event-denied');
+SELECT test.rls_expect_error('DELETE FROM public.payments WHERE coach_id = ''' || :'coach' || '''', 'payments/active-coach/delete-denied');
+RESET ROLE;
+
+-- Inactive coach: even its own historical coach_id does not grant visibility or mutation.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', :'second_coach', true);
+SELECT test.rls_assert((SELECT count(*) FROM public.payments WHERE coach_id = :'second_coach'), 0, 'payments/inactive-coach/select-denied');
+SELECT test.rls_assert((SELECT count(*) FROM public.payments WHERE coach_id = :'coach'), 0, 'payments/foreign-coach/select-denied');
+SELECT test.rls_expect_error('UPDATE public.payments SET amount=2 WHERE coach_id = ''' || :'second_coach' || '''', 'payments/inactive-coach/update-denied');
+SELECT test.rls_expect_error('DELETE FROM public.payments WHERE coach_id = ''' || :'second_coach' || '''', 'payments/inactive-coach/delete-denied');
+RESET ROLE;
+
+-- Server path: service_role retains the ledger mutations required by checkout/webhook.
+SET LOCAL ROLE service_role;
+SELECT test.rls_assert(test.rls_exec_count('INSERT INTO public.payments (client_id,coach_id,amount,status,stripe_id,stripe_event_id) VALUES (''' || :'client' || ''',''' || :'coach' || ''',70,''pending'',''pi_service'',''evt_service'')'), 1, 'payments/service-role/insert');
+SELECT test.rls_assert(test.rls_exec_count('UPDATE public.payments SET status=''paid'' WHERE stripe_event_id=''evt_service'''), 1, 'payments/service-role/update-status');
+SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.payments WHERE stripe_event_id=''evt_service'''), 1, 'payments/service-role/delete');
 RESET ROLE;
 
 -- Invited, lifetime and email-admin retain ordinary client RLS authority.
@@ -169,18 +213,6 @@ SELECT test.rls_known_gap(
   'coach_clients/client/can-self-register-any-real-coach; severity=high; impact=unauthorized-relationship'
 );
 SELECT set_config('request.jwt.claim.sub', :'coach', true);
-SELECT test.rls_known_gap(
-  test.rls_exec_count('INSERT INTO public.payments (client_id,coach_id,amount,status,stripe_id) VALUES (''' || :'second_client' || ''',''' || :'coach' || ''',1,''completed'',''pi_rls_gap'')') = 1,
-  'payments/coach/can-write-foreign-client-payment; severity=critical; impact=billing-integrity'
-);
-SELECT test.rls_known_gap(
-  test.rls_exec_count('UPDATE public.payments SET amount=2 WHERE stripe_id=''pi_rls_gap''') = 1,
-  'payments/coach/can-update-payment; severity=critical; impact=billing-integrity'
-);
-SELECT test.rls_known_gap(
-  test.rls_exec_count('DELETE FROM public.payments WHERE stripe_id=''pi_rls_gap''') = 1,
-  'payments/coach/can-delete-payment; severity=critical; impact=billing-integrity'
-);
 RESET ROLE;
 
 ROLLBACK;

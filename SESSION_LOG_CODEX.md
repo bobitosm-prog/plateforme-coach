@@ -3112,3 +3112,69 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Intégrer 5 parcours E2E critiques.
+
+## Entrée — 2026-07-14 — Correctif P0, écritures RLS `payments`
+
+### Travail effectué
+
+- Interruption bornée de la Phase 2 après découverte par la matrice RLS d'une mutation arbitraire des paiements par un coach authentifié.
+- Audit des policies, grants, fonctions privilégiées, producteurs serveur et lecteurs client, coach et admin de `payments`.
+- Ajout de la migration additive `20260714211500_harden_payments_rls.sql` supprimant `payments_coach_all`, retirant les grants de mutation navigateur et créant deux policies SELECT descriptives.
+- Conversion des trois écarts critiques `payments` en attentes bloquantes, avec couverture des relations actives/inactives, des champs d'autorité, du catalogue PostgreSQL et de la service-role.
+- Extension de la preuve PostgREST aux lectures client/coach, au refus d'écriture authentifiée et à la révocation d'accès après désactivation de la relation.
+- Documentation du contrat, de la compatibilité de déploiement et du rollback uniquement vers l'avant.
+
+### Tâches cochées
+
+- Aucune tâche Phase 2 supplémentaire : correctif de sécurité P0 hors séquence.
+
+### Décisions prises
+
+- Les paiements constituent un ledger serveur : aucun JWT `authenticated` ne peut INSERT, UPDATE ou DELETE directement.
+- Le client conserve uniquement la lecture de ses lignes; le coach conserve uniquement la lecture des paiements dont le client possède avec lui une relation `active`.
+- Les checkouts, le webhook Stripe et l'administration utilisent déjà la service-role; la suppression de compte utilise sa RPC privilégiée existante. Aucune nouvelle fonction `SECURITY DEFINER` n'est nécessaire.
+- L'autorité admin reste le contrat serveur `ADMIN_EMAIL` suivi de la service-role; aucune valeur navigateur ni `profiles.role` n'élève les droits PostgreSQL.
+- Une éventuelle écriture authentifiée future devra être ajoutée par migration vers l'avant via une RPC ou une policy strictement bornée; l'ancienne policy `payments_coach_all` ne doit pas être restaurée.
+
+### Problèmes rencontrés
+
+- Les grants historiques donnaient tous les privilèges de table à `anon` et `authenticated`; la migration révoque explicitement les droits inutiles au lieu de dépendre uniquement de la RLS.
+- La première assertion anonyme attendait zéro ligne, mais l'absence désormais volontaire du grant SELECT produit un refus SQL; le test a été aligné sur ce contrat plus strict.
+- Les helpers SQL de matrice n'accordaient pas l'usage du schéma `test` à `service_role`; ce privilège de test a été ajouté pour vérifier les mutations serveur légitimes.
+
+### Risques ou dette restante
+
+- Élevé : `guard_profile_sensitive_columns` référence toujours la colonne inexistante `subscription_price` et bloque les mises à jour de profil authentifiées.
+- Élevé : un coach peut encore créer une relation vers un client arbitraire et un client peut s'auto-associer à n'importe quel coach réel.
+- Élevé : un coach lié ne peut toujours pas lire le profil de son client malgré une policy UPDATE.
+- Moyen : une relation inactive permet encore au client de lire le profil du coach.
+- Les colonnes utilisées par certains producteurs Stripe mais absentes de la reconstruction locale historique restent une dette de schéma distincte, non modifiée dans ce correctif RLS.
+
+### Tests exécutés
+
+- Reset canonique final : 136/136 migrations appliquées; empreinte stable `68bdfc969a4728b9fda1c63f6dd7b67b` avant/après vérification et après reconstruction.
+- Matrice RLS complète sur base fraîche : 62 attentes bloquantes vertes, 5 écarts connus restants et contrôle PostgREST `payments` vert.
+- RPC PostgreSQL de claim/replay webhook : verte.
+- Tests Stripe ciblés checkout plateforme, checkout coach et webhook : 3 fichiers, 52 tests verts.
+- Suite complète : 29 fichiers, 382 tests actifs verts et 3 `todo`.
+- E2E checkout plateforme : 1 test Chromium vert en 14,7 s.
+- E2E checkout coach : 1 test Chromium vert en 14,8 s.
+- TypeScript et ESLint ciblé : verts.
+- Nettoyage final : zéro compte Auth, profil, relation, invitation, abonnement push et paiement synthétique.
+- `git diff --check` : vert.
+
+### Mesures avant/après
+
+- Policies `payments` permissives de mutation : 1 → 0.
+- Privilèges INSERT/UPDATE/DELETE pour `authenticated` : présents → révoqués.
+- Écarts RLS connus : 8 → 5; les 3 écarts critiques `payments` sont devenus des refus bloquants.
+- Empreinte canonique : `b0f477c76cda936495e44c84d6d280a1` sur 135 migrations → `68bdfc969a4728b9fda1c63f6dd7b67b` sur 136 migrations.
+- Phase 2 : reste à 5/18 tâches terminées.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Sécuriser la création de relations `coach_clients` pour imposer l'invitation vérifiée et empêcher les associations arbitraires (risque élevé).
