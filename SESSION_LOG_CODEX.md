@@ -3238,3 +3238,60 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Corriger `guard_profile_sensitive_columns` afin qu’une mise à jour sûre de profil ne référence plus la colonne inexistante `subscription_price` (risque élevé).
+
+## Entrée — 2026-07-14 — Correctif P0, garde des colonnes sensibles `profiles`
+
+### Travail effectué
+
+- Audit des 68 colonnes canoniques de `profiles`, des migrations additives, des écritures navigateur, service-role, webhooks et RPC `SECURITY DEFINER`.
+- Confirmation que `subscription_price` n’est créée par aucune migration canonique; elle subsiste seulement dans des lecteurs historiques et dans l’ancien bootstrap invitation.
+- Ajout de `20260714233000_fix_profile_sensitive_columns_guard.sql`, qui remplace les références statiques OLD/NEW par une comparaison `to_jsonb` sur une liste d’autorités explicite.
+- Alignement du bootstrap invitation sur le vrai schéma canonique, sans `subscription_price` artificielle.
+- Extension de la matrice RLS et de PostgREST aux mises à jour normales, champs sensibles, combinaison atomique, compatibilité ancienne, service-role, RPC et isolation inter-profils.
+
+### Tâches cochées
+
+- Aucune tâche Phase 2 supplémentaire : correctif de sécurité P0 hors séquence.
+
+### Décisions prises
+
+- `subscription_price` reste absente du schéma canonique. Si une ancienne base la possède, le garde JSONB la protège sans code conditionnel ni SQL dynamique.
+- Les champs protégés sont `role`, `status`, abonnements, essai, `beta_campaign_id`, références Stripe et les clés historiques optionnelles `subscription_price` et `stripe_onboarding_complete`.
+- Le SQLSTATE `42501` et le message par colonne restent stables.
+- Les utilisateurs peuvent modifier les champs de présentation autorisés; PostgreSQL, service-role et les RPC contrôlées conservent leur bypass.
+
+### Problèmes rencontrés
+
+- Le premier scénario `subscription_status` écrivait sa valeur déjà présente `active`; il a été corrigé vers une vraie tentative de changement `canceled`.
+- La première exécution de l’empreinte sans élévation a été bloquée par les permissions du socket Docker; la commande autorisée a ensuite confirmé l’empreinte.
+- Des lecteurs applicatifs demandent encore `subscription_price` et `stripe_onboarding_complete` alors que ces colonnes sont absentes du schéma local; cette incohérence de lecture reste une dette distincte, sans justification pour inventer les colonnes ici.
+
+### Risques ou dette restante
+
+- Élevé : un coach lié ne peut toujours pas lire le profil de son client malgré le contrat produit.
+- Moyen : une relation inactive permet encore au client de lire le profil du coach.
+- Les lecteurs historiques de colonnes absentes doivent être inventoriés lors d’une future tranche de contrat/types Supabase.
+
+### Tests exécutés
+
+- Reset canonique : 138/138 migrations; empreinte stable `2cef15199454c0d92df4b2b1f9811370`.
+- Matrice RLS : 97 attentes bloquantes vertes, 2 écarts restants et contrôle PostgREST profil/paiements/relations vert.
+- RPC invitation et concurrence : vertes; le bootstrap ne crée plus `subscription_price`.
+- Tests ciblés garde, invitation, checkout et webhook : 5 fichiers, 80 tests verts.
+- Suite complète : 32 fichiers, 393 tests actifs verts et 3 `todo`; TypeScript vert.
+- E2E checkout plateforme 1/1 et checkout coach 1/1 verts.
+
+### Mesures avant/après
+
+- Mises à jour normales de profil sous `authenticated` : cassées → vertes.
+- Références statiques à une colonne absente dans le garde effectif : 1 → 0.
+- Attentes RLS bloquantes : 80 → 97; écarts connus : 3 → 2.
+- Migrations : 137 → 138; Phase 2 reste à 5/18 tâches terminées.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Autoriser un coach à lire uniquement le profil des clients auxquels il est activement lié, sans élargir l’accès aux relations inactives.

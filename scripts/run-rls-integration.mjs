@@ -40,6 +40,12 @@ try {
   const clientBrowser = createClient(apiUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } })
   const clientSigned = await clientBrowser.auth.signInWithPassword({ email: clientEmail, password })
   if (clientSigned.error || !clientSigned.data.session) throw clientSigned.error || new Error('PostgREST client login failed')
+  const safeProfileUpdate = await clientBrowser.from('profiles').update({ full_name: 'PostgREST Safe Profile' }).eq('id', clientId).select('id,full_name').single()
+  if (safeProfileUpdate.error || safeProfileUpdate.data?.full_name !== 'PostgREST Safe Profile') throw safeProfileUpdate.error || new Error('PostgREST safe profile update failed')
+  const sensitiveProfileUpdate = await clientBrowser.from('profiles').update({ role: 'coach' }).eq('id', clientId)
+  if (!sensitiveProfileUpdate.error) throw new Error('PostgREST sensitive profile update unexpectedly succeeded')
+  const foreignProfileUpdate = await clientBrowser.from('profiles').update({ full_name: 'Foreign' }).eq('id', coachId).select('id')
+  if (foreignProfileUpdate.error || foreignProfileUpdate.data?.length !== 0) throw foreignProfileUpdate.error || new Error('PostgREST foreign profile update leaked')
   const clientRead = await clientBrowser.from('payments').select('client_id,coach_id,stripe_event_id')
   if (clientRead.error || clientRead.data?.length !== 1 || clientRead.data[0]?.client_id !== clientId) throw clientRead.error || new Error('PostgREST client payment ownership failed')
   const clientWrite = await clientBrowser.from('payments').insert({ client_id: clientId, coach_id: coachId, amount: 1, stripe_event_id: 'evt_forged_postgrest' })
@@ -58,7 +64,7 @@ try {
   if (deactivated.error) throw deactivated.error
   const inactiveRead = await coachBrowser.from('payments').select('id')
   if (inactiveRead.error || inactiveRead.data?.length !== 0) throw inactiveRead.error || new Error('PostgREST inactive coach retained payment access')
-  console.log('RLS_POSTGREST_OK [payments/client-read/auth-write-denied/coach-clients-auth-write-denied/active-coach-read/inactive-coach-denied]')
+  console.log('RLS_POSTGREST_OK [profiles/safe-update/sensitive-denied/foreign-isolated; payments/client-read/auth-write-denied; coach-clients/auth-write-denied; active-coach-read/inactive-coach-denied]')
 } finally {
   if (userIds.length) {
     await admin.from('payments').delete().in('client_id', userIds)

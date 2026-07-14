@@ -31,7 +31,6 @@ CREATE TABLE public.profiles (
   subscription_type text,
   subscription_status text,
   subscription_end_date timestamptz,
-  subscription_price numeric,
   stripe_subscription_id text,
   trial_ends_at timestamptz
 );
@@ -71,22 +70,27 @@ CREATE OR REPLACE FUNCTION public.guard_profile_sensitive_columns()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY INVOKER
+SET search_path TO pg_catalog, public
 AS $$
+DECLARE
+  old_row jsonb := to_jsonb(OLD);
+  new_row jsonb := to_jsonb(NEW);
+  protected_column text;
 BEGIN
   IF current_user NOT IN ('authenticated', 'anon') THEN
     RETURN NEW;
   END IF;
 
-  IF NEW.role IS DISTINCT FROM OLD.role
-    OR NEW.status IS DISTINCT FROM OLD.status
-    OR NEW.subscription_type IS DISTINCT FROM OLD.subscription_type
-    OR NEW.subscription_status IS DISTINCT FROM OLD.subscription_status
-    OR NEW.subscription_end_date IS DISTINCT FROM OLD.subscription_end_date
-    OR NEW.subscription_price IS DISTINCT FROM OLD.subscription_price
-    OR NEW.trial_ends_at IS DISTINCT FROM OLD.trial_ends_at
-  THEN
-    RAISE EXCEPTION 'PROFILE_SENSITIVE_COLUMN_FORBIDDEN' USING ERRCODE = '42501';
-  END IF;
+  FOREACH protected_column IN ARRAY ARRAY[
+    'role', 'status', 'subscription_type', 'subscription_status',
+    'subscription_end_date', 'subscription_price', 'trial_ends_at',
+    'stripe_customer_id', 'stripe_subscription_id', 'stripe_account_id',
+    'stripe_onboarding_complete', 'beta_campaign_id'
+  ] LOOP
+    IF (new_row -> protected_column) IS DISTINCT FROM (old_row -> protected_column) THEN
+      RAISE EXCEPTION 'Colonne protégée non modifiable: %', protected_column USING ERRCODE = '42501';
+    END IF;
+  END LOOP;
 
   RETURN NEW;
 END;

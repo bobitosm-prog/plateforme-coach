@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 5 tâches sur 18 terminées ; matrices RLS actives et correctifs P0 `payments` et `coach_clients` livrés, sans tâche Phase 2 supplémentaire cochée**
+**Statut : En cours — 5 tâches sur 18 terminées ; matrices RLS actives et correctifs P0 `payments`, `coach_clients` et garde `profiles` livrés, sans tâche Phase 2 supplémentaire cochée**
 
 ### Pourquoi
 

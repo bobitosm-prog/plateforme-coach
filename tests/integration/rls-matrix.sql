@@ -110,6 +110,20 @@ INSERT INTO public.payments (id, client_id, coach_id, amount, status, stripe_id)
   ('74000000-0000-4000-8000-000000000001', :'client', :'coach', 50, 'completed', 'pi_rls_client'),
   ('74000000-0000-4000-8000-000000000002', :'second_client', :'second_coach', 60, 'completed', 'pi_rls_second');
 
+-- Isolated compatibility schema: canonical profiles intentionally has no
+-- subscription_price, while an older database that still has the key remains
+-- protected by the same JSONB-based trigger function.
+CREATE TEMP TABLE compatibility_profiles (
+  id uuid PRIMARY KEY,
+  full_name text,
+  subscription_price numeric
+);
+INSERT INTO compatibility_profiles VALUES (:'client', 'Compatibility Client', 10);
+CREATE TRIGGER compatibility_profiles_sensitive_guard
+  BEFORE UPDATE ON compatibility_profiles
+  FOR EACH ROW EXECUTE FUNCTION public.guard_profile_sensitive_columns();
+GRANT UPDATE ON compatibility_profiles TO authenticated;
+
 -- Anonymous: no target table exposes rows or mutations.
 SET LOCAL ROLE anon;
 SELECT set_config('request.jwt.claim.sub', '', true);
@@ -126,11 +140,22 @@ SELECT set_config('request.jwt.claim.sub', :'client', true);
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'client'), 1, 'profiles/client-owner/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'second_client'), 0, 'profiles/client-owner/select-foreign');
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'coach'), 1, 'profiles/client-owner/select-active-coach');
-SELECT test.rls_known_gap(
-  NOT test.rls_statement_succeeds('UPDATE public.profiles SET full_name = ''Client Updated'' WHERE id = ''' || :'client' || ''''),
-  'profiles/client-owner/safe-update-broken-trigger; severity=high; impact=all-authenticated-profile-updates'
-);
-SELECT test.rls_assert(test.rls_statement_succeeds('UPDATE public.profiles SET role = ''coach'' WHERE id = ''' || :'client' || '''')::int, 0, 'profiles/client-owner/change-authority-denied');
+SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET full_name = ''Client Updated'' WHERE id = ''' || :'client' || ''''), 1, 'profiles/client-owner/update-presentation');
+SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET full_name = ''Client Normal'', phone = ''+41000000000'', calorie_goal = 2400 WHERE id = ''' || :'client' || ''''), 1, 'profiles/client-owner/update-multiple-normal-fields');
+SELECT test.rls_expect_error('UPDATE public.profiles SET role = ''coach'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-role-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET status = ''disabled'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-status-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET subscription_type = ''lifetime'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-subscription-type-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET subscription_status = ''canceled'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-subscription-status-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET subscription_end_date = now() + interval ''1 year'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-subscription-end-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET trial_ends_at = now() + interval ''30 days'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-trial-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET stripe_customer_id = ''cus_forged'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-stripe-customer-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET stripe_subscription_id = ''sub_forged'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-stripe-subscription-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET stripe_account_id = ''acct_forged'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-stripe-account-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET beta_campaign_id = gen_random_uuid() WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-beta-campaign-denied');
+SELECT test.rls_expect_error('UPDATE public.profiles SET full_name = ''Mixed'', role = ''coach'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/mixed-normal-sensitive-denied');
+SELECT test.rls_expect_error('UPDATE compatibility_profiles SET subscription_price = 1 WHERE id = ''' || :'client' || '''', 'profiles/compatibility/subscription-price-denied-when-present');
+SELECT test.rls_assert((public.set_initial_trial(14)->>'set' = 'true')::int, 1, 'profiles/client-owner/security-definer-trial-rpc');
+SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'client' AND trial_ends_at IS NOT NULL), 1, 'profiles/client-owner/security-definer-trial-persisted');
 SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET full_name = ''Foreign'' WHERE id = ''' || :'second_client' || ''''), 0, 'profiles/client-owner/update-foreign');
 SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.profiles WHERE id = ''' || :'client' || ''''), 0, 'profiles/client-owner/delete-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'client'), 1, 'coach_clients/client-endpoint/select');
@@ -189,6 +214,8 @@ RESET ROLE;
 
 -- Server path: service_role retains the ledger mutations required by checkout/webhook.
 SET LOCAL ROLE service_role;
+SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET stripe_customer_id=''cus_service_rls'' WHERE id=''' || :'client' || ''''), 1, 'profiles/service-role/sensitive-update');
+SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET stripe_customer_id=NULL WHERE id=''' || :'client' || ''''), 1, 'profiles/service-role/sensitive-update-cleanup');
 SELECT test.rls_assert((public.assign_default_coach(:'lifetime', :'coach')->>'success' = 'true')::int, 1, 'coach_clients/default-rpc/assign');
 SELECT test.rls_assert((public.assign_default_coach(:'lifetime', :'coach')->>'assigned' = 'false')::int, 1, 'coach_clients/default-rpc/idempotent');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'lifetime' AND coach_id = :'coach' AND status = 'active'), 1, 'coach_clients/default-rpc/one-active');
