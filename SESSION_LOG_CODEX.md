@@ -3000,3 +3000,58 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer les mocks Stripe, Anthropic, SMTP et Web Push réutilisables.
+
+## Entrée — 2026-07-14 — Phase 2, mocks fournisseurs réutilisables
+
+### Travail effectué
+
+- Audit des imports et opérations Stripe, Anthropic SDK/fetch, Nodemailer et Web Push dans l'application, les scripts et les tests.
+- Création de quatre contrats TypeScript sous `tests/mocks`, avec configuration explicite, historique inspectable et reset automatique Vitest.
+- Migration de deux suites Stripe, de la suite de sécurité Push et ajout d'une suite SMTP au niveau `createTransport`/`sendMail`.
+- Ajout de tests de contrat couvrant succès, erreurs, replay webhook, réponses Anthropic structurées/malformées, statuts Push et expurgation.
+- Documentation de la séparation entre mocks Vitest, fixtures métier, adaptateurs de production et faux serveurs E2E.
+
+### Tâches cochées
+
+- Phase 2 : « Créer les mocks Stripe, Anthropic, SMTP et Web Push » terminée.
+
+### Décisions prises
+
+- Toute opération fournisseur non configurée échoue explicitement; aucun succès implicite ne peut masquer un appel nouveau.
+- Les mocks enregistrent uniquement les surfaces réellement utilisées, sans reproduire les SDK complets.
+- Le prompt système Anthropic et la clé VAPID privée sont expurgés; toutes les identités et destinations sont synthétiques.
+- Les faux serveurs Stripe, Anthropic, Web Push et Mailpit restent inchangés afin que les E2E traversent les transports réels.
+
+### Problèmes rencontrés
+
+- Aucun test unitaire de route Anthropic existant n'était disponible à migrer; le nouveau contrat démontre séparément le SDK et le `fetch` direct.
+- L'état module `vapidConfigured` de production impose de conserver la suite Push dans un seul module chargé, comme auparavant.
+
+### Risques ou dette restante
+
+- Trois suites Stripe utilisent encore leur ancien pseudo-SDK local et migreront seulement lors d'une prochaine modification de leur domaine.
+- Les appels Anthropic directs restent dispersés dans le code de production; leur centralisation appartient à la Phase 7.
+- Les mocks empêchent les appels réseau par construction dans leurs surfaces, mais ne constituent pas un bac à sable réseau général du processus Vitest.
+
+### Tests exécutés
+
+- Contrats fournisseurs et suites migrées : 5 fichiers, 81 tests verts lors de la validation ciblée.
+- Suite complète : 29 fichiers, 382 tests actifs verts et 3 `todo`.
+- TypeScript et ESLint ciblé : verts sans avertissement après correction.
+- Reset Supabase canonique : 135/135 migrations, empreinte `b0f477c76cda936495e44c84d6d280a1`.
+- E2E Push : 1 test Chromium vert en 14,0 s, avec le vrai SDK Web Push et la terminaison HTTPS locale.
+- `git diff --check` : vert.
+
+### Mesures avant/après
+
+- Mocks fournisseurs partagés : 0 → 4.
+- Pseudo-SDK Stripe ad hoc dans les suites : 5 → 3.
+- Phase 2 : 3/18 → 4/18 tâches terminées.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Ajouter les premières matrices RLS automatisées.

@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { webPushMock } from '../mocks/web-push'
 
 const mocks = vi.hoisted(() => {
   const getUser = vi.fn()
@@ -32,13 +33,11 @@ const mocks = vi.hoisted(() => {
     throw new Error(`Unexpected table: ${table}`)
   })
   const createClient = vi.fn(() => ({ from }))
-  const setVapidDetails = vi.fn()
-  const sendNotification = vi.fn()
 
   return {
     getUser, createServerClient, cookies, createClient, from,
     profileMaybeSingle, profileEq, relationMaybeSingle, relationCoachEq, relationClientEq, relationStatusEq,
-    pushEq, pushLimit, deleteIn, setVapidDetails, sendNotification,
+    pushEq, pushLimit, deleteIn,
   }
 })
 
@@ -46,9 +45,10 @@ vi.mock('@supabase/ssr', () => ({ createServerClient: mocks.createServerClient }
 vi.mock('@supabase/supabase-js', () => ({ createClient: mocks.createClient }))
 vi.mock('next/headers', () => ({ cookies: mocks.cookies }))
 vi.mock('server-only', () => ({}))
-vi.mock('web-push', () => ({
-  default: { setVapidDetails: mocks.setVapidDetails, sendNotification: mocks.sendNotification },
-}))
+vi.mock('web-push', async () => {
+  const { webPushMock } = await import('../mocks/web-push')
+  return { default: { setVapidDetails: webPushMock.setVapidDetails, sendNotification: webPushMock.sendNotification } }
+})
 
 import { POST } from '../../app/api/send-notification/route'
 import { sendPushToUser } from '../../lib/push-server'
@@ -86,7 +86,7 @@ function subscription() {
 
 function expectNoSubscriptionOrDelivery() {
   expect(mocks.from).not.toHaveBeenCalledWith('push_subscriptions')
-  expect(mocks.sendNotification).not.toHaveBeenCalled()
+  expect(webPushMock.sendNotification).not.toHaveBeenCalled()
 }
 
 beforeEach(() => {
@@ -100,7 +100,7 @@ beforeEach(() => {
   roles('coach', 'client')
   mocks.relationMaybeSingle.mockResolvedValue({ data: { id: 'relation-1' }, error: null })
   mocks.pushLimit.mockResolvedValue({ data: [subscription()], error: null })
-  mocks.sendNotification.mockResolvedValue({ statusCode: 201 })
+  webPushMock.succeed()
   mocks.deleteIn.mockResolvedValue({ error: null })
 })
 
@@ -134,7 +134,7 @@ describe('POST /api/send-notification — secured authorization', () => {
     expect(mocks.relationClientEq).toHaveBeenCalledWith('client_id', TARGET_ID)
     expect(mocks.relationStatusEq).toHaveBeenCalledWith('status', 'active')
     expect(mocks.pushEq).toHaveBeenCalledWith('user_id', TARGET_ID)
-    expect(mocks.sendNotification).toHaveBeenCalledOnce()
+    expect(webPushMock.sendNotification).toHaveBeenCalledOnce()
   })
 
   it('allows a client to notify their active coach', async () => {
@@ -143,12 +143,12 @@ describe('POST /api/send-notification — secured authorization', () => {
     roles('client', 'coach')
     mocks.relationMaybeSingle.mockResolvedValue({ data: { id: 'relation-1' }, error: null })
     mocks.pushLimit.mockResolvedValue({ data: [subscription()], error: null })
-    mocks.sendNotification.mockResolvedValue({ statusCode: 201 })
+    webPushMock.succeed()
     const response = await POST(request())
     expect(response.status).toBe(200)
     expect(mocks.relationCoachEq).toHaveBeenCalledWith('coach_id', TARGET_ID)
     expect(mocks.relationClientEq).toHaveBeenCalledWith('client_id', CALLER_ID)
-    expect(mocks.sendNotification).toHaveBeenCalledOnce()
+    expect(webPushMock.sendNotification).toHaveBeenCalledOnce()
   })
 
   it.each([
@@ -218,11 +218,11 @@ describe('POST /api/send-notification — secured authorization', () => {
     const response = await POST(request())
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual({ sent: 0, failed: 0 })
-    expect(mocks.sendNotification).not.toHaveBeenCalled()
+    expect(webPushMock.sendNotification).not.toHaveBeenCalled()
   })
 
   it('reports a mocked Web Push provider failure after authorization', async () => {
-    mocks.sendNotification.mockRejectedValue({ statusCode: 500, message: 'provider unavailable' })
+    webPushMock.reset(); webPushMock.fail(500)
     const response = await POST(request())
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual({ sent: 0, failed: 1 })
@@ -234,7 +234,7 @@ describe('POST /api/send-notification — internal URL policy and producer compa
     'forwards legitimate internal URL %s', async url => {
       const response = await POST(request({ url }))
       expect(response.status).toBe(200)
-      expect(JSON.parse(mocks.sendNotification.mock.calls[0][1] as string)).toMatchObject({ url })
+      expect(JSON.parse(webPushMock.sendNotification.mock.calls[0][1] as string)).toMatchObject({ url })
     }
   )
 
@@ -258,7 +258,7 @@ describe('POST /api/send-notification — internal URL policy and producer compa
       { title: 'Server push', body: 'Body', url: 'https://evil.example' }
     )).rejects.toThrow('Invalid notification destination')
     expect(mocks.from).not.toHaveBeenCalled()
-    expect(mocks.sendNotification).not.toHaveBeenCalled()
+    expect(webPushMock.sendNotification).not.toHaveBeenCalled()
   })
 
   it('keeps all four browser producers compatible with the secured request contract', () => {

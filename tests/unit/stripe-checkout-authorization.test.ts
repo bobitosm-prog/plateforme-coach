@@ -1,13 +1,10 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
+import { stripeMock } from '../mocks/stripe'
 
 const mocks = vi.hoisted(() => {
   process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY = 'price_client_monthly_test'
   process.env.NEXT_PUBLIC_PRICE_COACH_MONTHLY = 'price_coach_monthly_test'
-  const sessionsCreate = vi.fn()
-  const stripeConstructor = vi.fn(function StripeMock() {
-    return { checkout: { sessions: { create: sessionsCreate } } }
-  })
   const authGetUser = vi.fn()
   const authProfileSingle = vi.fn()
   const authProfileEq = vi.fn(() => ({ single: authProfileSingle }))
@@ -26,12 +23,12 @@ const mocks = vi.hoisted(() => {
     : { insert: paymentsInsert })
   const createClient = vi.fn(() => ({ from: serviceFrom }))
   return {
-    sessionsCreate, stripeConstructor, authGetUser, authProfileSingle, authFrom,
+    authGetUser, authProfileSingle, authFrom,
     createSupabaseRouteClient, ownerMaybeSingle, paymentsInsert, serviceFrom, createClient,
   }
 })
 
-vi.mock('stripe', () => ({ default: mocks.stripeConstructor }))
+vi.mock('stripe', async () => ({ default: (await import('../mocks/stripe')).stripeMock.constructor }))
 vi.mock('@supabase/supabase-js', () => ({ createClient: mocks.createClient }))
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseRouteClient: mocks.createSupabaseRouteClient }))
 
@@ -51,8 +48,8 @@ function authenticatedAs(id = USER_ID, role = 'client') {
 }
 
 function expectNoMutation() {
-  expect(mocks.stripeConstructor).not.toHaveBeenCalled()
-  expect(mocks.sessionsCreate).not.toHaveBeenCalled()
+  expect(stripeMock.constructor).not.toHaveBeenCalled()
+  expect(stripeMock.calls['checkout.sessions.create']).not.toHaveBeenCalled()
   expect(mocks.paymentsInsert).not.toHaveBeenCalled()
 }
 
@@ -66,7 +63,7 @@ beforeEach(() => {
   delete process.env.STRIPE_E2E_BASE_URL
   authenticatedAs()
   mocks.ownerMaybeSingle.mockResolvedValue({ data: null, error: null })
-  mocks.sessionsCreate.mockResolvedValue({ id: 'cs_platform', url: 'https://checkout.test/platform' })
+  stripeMock.succeed('checkout.sessions.create', { id: 'cs_platform', url: 'https://checkout.test/platform' })
   mocks.paymentsInsert.mockResolvedValue({ error: null })
 })
 
@@ -88,7 +85,7 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
   it('creates a client checkout from the authenticated server identity', async () => {
     const response = await POST(request({ planId: 'client_monthly' }))
     expect(response.status).toBe(200)
-    expect(mocks.sessionsCreate).toHaveBeenCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ clientId: USER_ID, coachId: 'platform' }) }), expect.objectContaining({ idempotencyKey: expect.stringContaining(USER_ID) }))
+    expect(stripeMock.calls['checkout.sessions.create']).toHaveBeenCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ clientId: USER_ID, coachId: 'platform' }) }), expect.objectContaining({ idempotencyKey: expect.stringContaining(USER_ID) }))
     expect(mocks.paymentsInsert).toHaveBeenCalledWith(expect.objectContaining({ client_id: USER_ID, coach_id: null }))
   })
 
@@ -96,7 +93,7 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
     authenticatedAs(USER_ID, 'coach')
     const response = await POST(request({ planId: 'coach_monthly' }))
     expect(response.status).toBe(200)
-    expect(mocks.sessionsCreate).toHaveBeenCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ clientId: USER_ID, planId: 'coach_monthly' }) }), expect.any(Object))
+    expect(stripeMock.calls['checkout.sessions.create']).toHaveBeenCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ clientId: USER_ID, planId: 'coach_monthly' }) }), expect.any(Object))
   })
 
   it.each([
@@ -130,7 +127,7 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
     process.env.STRIPE_E2E_BASE_URL = 'http://127.0.0.1:55326/'
     const response = await POST(request({ planId: 'client_monthly' }))
     expect(response.status).toBe(200)
-    expect(mocks.stripeConstructor).toHaveBeenCalledWith('sk_test_checkout_secure', {
+    expect(stripeMock.constructor).toHaveBeenCalledWith('sk_test_checkout_secure', {
       host: '127.0.0.1', port: 55326, protocol: 'http',
     })
   })

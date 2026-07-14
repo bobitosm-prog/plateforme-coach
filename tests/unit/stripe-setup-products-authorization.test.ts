@@ -1,28 +1,18 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { stripeMock } from '../mocks/stripe'
 
 const mocks = vi.hoisted(() => {
-  const productsCreate = vi.fn()
-  const pricesCreate = vi.fn()
-  const stripeConstructor = vi.fn(function StripeMock() {
-    return {
-      products: { create: productsCreate },
-      prices: { create: pricesCreate },
-    }
-  })
   const authGetUser = vi.fn()
   const from = vi.fn()
 
   return {
     authGetUser,
     from,
-    pricesCreate,
-    productsCreate,
-    stripeConstructor,
   }
 })
 
 vi.mock('server-only', () => ({}))
-vi.mock('stripe', () => ({ default: mocks.stripeConstructor }))
+vi.mock('stripe', async () => ({ default: (await import('../mocks/stripe')).stripeMock.constructor }))
 vi.mock('@/lib/supabase/admin', () => ({
   supabaseAdmin: {
     auth: { getUser: mocks.authGetUser },
@@ -58,23 +48,17 @@ function authenticatedAs(email: string | null = ADMIN_EMAIL) {
 }
 
 function expectNoStripeCreation() {
-  expect(mocks.stripeConstructor).not.toHaveBeenCalled()
-  expect(mocks.productsCreate).not.toHaveBeenCalled()
-  expect(mocks.pricesCreate).not.toHaveBeenCalled()
+  expect(stripeMock.constructor).not.toHaveBeenCalled()
+  expect(stripeMock.calls['products.create']).not.toHaveBeenCalled()
+  expect(stripeMock.calls['prices.create']).not.toHaveBeenCalled()
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
   process.env.STRIPE_SECRET_KEY = 'sk_test_setup_products_secure'
   authenticatedAs()
-  mocks.productsCreate
-    .mockResolvedValueOnce({ id: 'prod_client_1' })
-    .mockResolvedValueOnce({ id: 'prod_coach_1' })
-  mocks.pricesCreate
-    .mockResolvedValueOnce({ id: 'price_monthly_1' })
-    .mockResolvedValueOnce({ id: 'price_yearly_1' })
-    .mockResolvedValueOnce({ id: 'price_lifetime_1' })
-    .mockResolvedValueOnce({ id: 'price_coach_1' })
+  stripeMock.succeed('products.create', { id: 'prod_client_1' }); stripeMock.succeed('products.create', { id: 'prod_coach_1' })
+  for (const id of ['price_monthly_1', 'price_yearly_1', 'price_lifetime_1', 'price_coach_1']) stripeMock.succeed('prices.create', { id })
 })
 
 afterAll(() => {
@@ -187,8 +171,8 @@ describe('POST /api/stripe/setup-products — shared admin authorization', () =>
     expect(response.status).toBe(200)
     expect(mocks.authGetUser).toHaveBeenCalledWith('admin-token')
     expect(mocks.from).not.toHaveBeenCalled()
-    expect(mocks.productsCreate).toHaveBeenCalledTimes(2)
-    expect(mocks.pricesCreate).toHaveBeenCalledTimes(4)
+    expect(stripeMock.calls['products.create']).toHaveBeenCalledTimes(2)
+    expect(stripeMock.calls['prices.create']).toHaveBeenCalledTimes(4)
   })
 
   it('authorizes the configured admin independently of a lifetime subscription', async () => {
@@ -198,8 +182,8 @@ describe('POST /api/stripe/setup-products — shared admin authorization', () =>
 
     expect(response.status).toBe(200)
     expect(mocks.from).not.toHaveBeenCalled()
-    expect(mocks.productsCreate).toHaveBeenCalledTimes(2)
-    expect(mocks.pricesCreate).toHaveBeenCalledTimes(4)
+    expect(stripeMock.calls['products.create']).toHaveBeenCalledTimes(2)
+    expect(stripeMock.calls['prices.create']).toHaveBeenCalledTimes(4)
   })
 
   it('uses the existing hard-coded fallback when admin configuration is absent', async () => {
@@ -209,26 +193,20 @@ describe('POST /api/stripe/setup-products — shared admin authorization', () =>
     const response = await POST(request('Bearer fallback-admin-token'))
 
     expect(response.status).toBe(200)
-    expect(mocks.productsCreate).toHaveBeenCalledTimes(2)
-    expect(mocks.pricesCreate).toHaveBeenCalledTimes(4)
+    expect(stripeMock.calls['products.create']).toHaveBeenCalledTimes(2)
+    expect(stripeMock.calls['prices.create']).toHaveBeenCalledTimes(4)
   })
 
   it('preserves the current non-idempotent creation behavior for repeated admin calls', async () => {
-    mocks.productsCreate
-      .mockResolvedValueOnce({ id: 'prod_client_2' })
-      .mockResolvedValueOnce({ id: 'prod_coach_2' })
-    mocks.pricesCreate
-      .mockResolvedValueOnce({ id: 'price_monthly_2' })
-      .mockResolvedValueOnce({ id: 'price_yearly_2' })
-      .mockResolvedValueOnce({ id: 'price_lifetime_2' })
-      .mockResolvedValueOnce({ id: 'price_coach_2' })
+    stripeMock.succeed('products.create', { id: 'prod_client_2' }); stripeMock.succeed('products.create', { id: 'prod_coach_2' })
+    for (const id of ['price_monthly_2', 'price_yearly_2', 'price_lifetime_2', 'price_coach_2']) stripeMock.succeed('prices.create', { id })
 
     const first = await POST(request('Bearer admin-token'))
     const second = await POST(request('Bearer admin-token'))
 
     expect(first.status).toBe(200)
     expect(second.status).toBe(200)
-    expect(mocks.productsCreate).toHaveBeenCalledTimes(4)
-    expect(mocks.pricesCreate).toHaveBeenCalledTimes(8)
+    expect(stripeMock.calls['products.create']).toHaveBeenCalledTimes(4)
+    expect(stripeMock.calls['prices.create']).toHaveBeenCalledTimes(8)
   })
 })

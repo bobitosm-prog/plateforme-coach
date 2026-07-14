@@ -8,13 +8,13 @@ Un **niveau technique** indique quelles couches et quels processus sont exécut�
 
 | Niveau technique actuel | Outil et emplacement | Mesure actuelle | Ce qui est réellement exécuté |
 |---|---|---:|---|
-| Tests unitaires et de modules | Vitest, `tests/unit/**/*.test.ts` | 26 fichiers, 366 actifs, 3 `todo` | Fonctions pures, validation, autorisation isolée, modules serveur, contrats statiques et routes chargées avec dépendances simulées. |
+| Tests unitaires et de modules | Vitest, `tests/unit/**/*.test.ts` | 29 fichiers, 382 actifs, 3 `todo` | Fonctions pures, validation, autorisation isolée, modules serveur, contrats statiques et routes chargées avec dépendances simulées. |
 | Test de rendu React | Vitest + `renderToStaticMarkup`, `chat-markdown-renderer.test.ts` | 1 fichier inclus dans les 25 | Rendu serveur de `ChatMarkdown`; pas de navigateur, d'événement DOM ou de suite de composants interactive. |
 | Intégration PostgreSQL/RPC | `tests/integration` | 8 fichiers; 49 appels `test.assert`, 12 `ASSERT` SQL, 1 scénario de concurrence | Migrations sur base vide, personas, schéma, droits, RLS, RPC, rollback transactionnel, claims Stripe et concurrence invitation. |
 | E2E Chromium | Playwright, `e2e/*.spec.ts` | 5 fichiers, 7 cas techniques, 5 parcours produit | Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux; fournisseurs simulés seulement à leur frontière réseau. |
 | Vérifications statiques | TypeScript, ESLint, i18n, build | commandes séparées | Contrats TypeScript, règles ESLint, parité des traductions et compilation Next.js. |
 
-Les 366 tests Vitest comprennent donc des objectifs différents : tests purs, caractérisation du comportement existant, contrats de sécurité, tests hostiles et tests de routes. Leur présence sous `tests/unit` décrit le runner et l'isolation technique, pas nécessairement la nature métier.
+Les 382 tests Vitest comprennent donc des objectifs différents : tests purs, caractérisation du comportement existant, contrats de sécurité, tests hostiles et tests de routes. Leur présence sous `tests/unit` décrit le runner et l'isolation technique, pas nécessairement la nature métier.
 
 ## 2. Commandes vérifiées
 
@@ -233,9 +233,9 @@ On ajoute un test au niveau le plus bas capable de détecter fidèlement la rég
 
 ## 12. Lacunes prioritaires
 
-- Pas de fixtures partagées client, coach, `invited`, lifetime et admin; les E2E recréent encore leurs comptes localement.
+- Les fixtures partagées existent, mais plusieurs anciens E2E recréent encore leurs comptes localement et migreront progressivement.
 - Matrices RLS automatisées limitées principalement aux invitations; les domaines profil, training, nutrition, messaging et billing restent incomplets.
-- Faux fournisseurs utiles mais encore spécifiques aux parcours; il manque des adaptateurs/mocks réutilisables Stripe, Anthropic, SMTP et Web Push pour les tests de routes.
+- Les mocks Vitest Stripe, Anthropic, SMTP et Web Push sont partagés; les anciennes suites Stripe restantes migreront seulement lorsqu'elles seront modifiées.
 - Une seule caractérisation de rendu React et aucune vraie suite de composants interactifs.
 - Pas de commandes npm distinctes pour intégration PostgreSQL, E2E complet orchestré, TypeScript ou lint ciblé.
 - `npm run test:e2e` ne démarre pas simultanément toutes les frontières optionnelles.
@@ -253,3 +253,4 @@ On ajoute un test au niveau le plus bas capable de détecter fidèlement la rég
 - [Harnais chat](./E2E_CHAT_HARNESS.md)
 - [Roadmap Codex](../ROADMAP_CODEX.md)
 - [Fixtures de personas](./TEST_FIXTURES.md)
+- [Mocks de fournisseurs Vitest](./TEST_PROVIDER_MOCKS.md)
