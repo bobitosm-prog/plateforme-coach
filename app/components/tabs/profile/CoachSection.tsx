@@ -13,7 +13,7 @@ export default function CoachSection({ supabase, session, coachId }: { supabase:
 
   useEffect(() => {
     if (!coachId) return
-    supabase.from('profiles').select('full_name').eq('id', coachId).single().then(({ data }: any) => {
+    supabase.from('active_related_profiles').select('full_name').eq('id', coachId).single().then(({ data }: any) => {
       if (data?.full_name) setCoachName(data.full_name)
     })
   }, [coachId])

@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 5 tâches sur 18 terminées ; matrices RLS actives et correctifs P0 `payments`, `coach_clients` et garde `profiles` livrés, sans tâche Phase 2 supplémentaire cochée**
+**Statut : En cours — 5 tâches sur 18 terminées ; matrice RLS initiale sans écart connu après les correctifs P0 `payments`, `coach_clients`, garde et visibilité projetée de `profiles`, sans tâche Phase 2 supplémentaire cochée**
 
 ### Pourquoi
 
@@ -746,8 +746,8 @@ Mettre à jour ce tableau chaque vendredi.
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 366 actifs + 3 contractuels `todo` | 🟢 |
-| Tests d'intégration | 0 identifié | ≥20 | ≥50 | 61 assertions SQL + 1 scénario de concurrence | 🟠 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 396 actifs + 3 contractuels `todo` | 🟢 |
+| Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5 | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
 | Bundle principal | À mesurer | −15 % | −30 % | À mesurer | ⬜ |

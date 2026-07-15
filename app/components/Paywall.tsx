@@ -25,9 +25,9 @@ export default function Paywall({ role, coachId, onSignOut }: PaywallProps) {
         (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
         (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
       )
-      sb.from('profiles').select('full_name, coach_monthly_rate, stripe_account_id').eq('id', coachId).maybeSingle()
+      sb.from('active_related_profiles').select('full_name, coach_monthly_rate').eq('id', coachId).maybeSingle()
         .then(({ data }) => {
-          if (data?.stripe_account_id) {
+          if (data) {
             setCoachData({ name: data.full_name || 'Coach', rate: data.coach_monthly_rate || 50, id: coachId })
           }
         })

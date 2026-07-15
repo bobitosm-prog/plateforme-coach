@@ -421,7 +421,7 @@ export default function HomeTab({
       .then(async ({ data }: any) => {
         if (data && data.length > 0) {
           setNextAppt(data[0]); setApptCount(data.length)
-          const { data: coach } = await supabase.from('profiles').select('full_name').eq('id', data[0].coach_id).maybeSingle()
+          const { data: coach } = await supabase.from('active_related_profiles').select('full_name').eq('id', data[0].coach_id).maybeSingle()
           if (coach?.full_name) setApptCoachName(coach.full_name)
         } else { setNextAppt(null); setApptCount(0) }
       })

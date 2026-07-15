@@ -3295,3 +3295,60 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Autoriser un coach à lire uniquement le profil des clients auxquels il est activement lié, sans élargir l’accès aux relations inactives.
+
+## Entrée — 2026-07-14 — Contrat symétrique de visibilité des profils
+
+### Travail effectué
+
+- Audit des 68 colonnes `profiles`, des policies `profiles`/`coach_clients` et des consommateurs dashboard, analytics, détail client, affichage coach et checkout.
+- Ajout de la migration additive `20260715001000_secure_related_profile_visibility.sql` : suppression du SELECT client→coach trop large, projection symétrique `active_related_profiles`, UPDATE coach limité aux relations actives et RPC bornée `update_active_client_profile`.
+- Migration des consommateurs coach et client vers la projection; le paywall ne lit plus `stripe_account_id` dans le navigateur.
+- Conversion des deux derniers écarts connus en attentes bloquantes SQL et PostgREST.
+
+### Tâches cochées
+
+- Aucune tâche Phase 2 supplémentaire : correctif de sécurité P0/P1 hors séquence.
+
+### Décisions prises
+
+- Une policy RLS ne pouvant pas masquer des colonnes, aucun accès croisé direct à `profiles` n’est accordé.
+- La vue projetée exige exclusivement une relation `coach_clients.status = 'active'` dans les deux sens et exclut rôle, autorités d’abonnement, essai, campagne bêta et références Stripe.
+- `subscription_type` et `status` restent lisibles dans la projection pour les consommateurs existants, mais ne sont pas modifiables par la frontière coach.
+- Les mises à jour coach passent par une RPC `SECURITY DEFINER` à `search_path` vide, relation active et liste fermée de dix champs; les clés inattendues échouent avec `42501`.
+- Invited et lifetime ne tirent aucun droit de leur abonnement; seule une relation active réelle compte.
+
+### Problèmes rencontrés
+
+- PostgreSQL exige une visibilité SELECT de la ligne pour qu’un UPDATE direct puisse la cibler. Accorder cette visibilité aurait exposé les 68 colonnes; une RPC étroite a donc remplacé les écritures directes du détail client.
+- Le lint ciblant les gros fichiers historiques remonte 102 erreurs et 54 avertissements préexistants (`any`, hooks et variables inutilisées). Les fichiers propres de la tranche passent le lint et TypeScript ne signale aucune erreur.
+- Les E2E continuent d’émettre les avertissements Next Image historiques sur les qualités non configurées, sans échec.
+
+### Risques ou dette restante
+
+- La matrice initiale des cinq tables ne comporte plus d’écart connu, mais elle ne couvre pas encore Training, Nutrition, Messaging, Realtime ni toutes les tables Billing.
+- La vue projetée et la RPC devront rejoindre les futurs repositories typés de profils et relations.
+- Le champ `status` reste présenté comme éditable dans le détail client historique alors qu’il demeure une autorité serveur; cette dette UI n’a pas été élargie dans ce correctif de sécurité.
+
+### Tests exécutés
+
+- Reset canonique : 139/139 migrations; empreinte stable deux fois `96e08867f266a1a36fa8f2b94ef78fc6`.
+- Matrice RLS : 114 attentes SQL bloquantes, aucun `RLS_KNOWN_GAP`, et PostgREST réel vert pour projection active symétrique, refus inactive, exclusion Stripe et RPC de mise à jour.
+- Tests de contrat ciblés : 6/6 verts; suite complète : 33 fichiers, 396 tests actifs verts et 3 `todo`.
+- TypeScript vert; ESLint vert sur analytics, paywall, runner PostgREST et nouveau test de contrat.
+- E2E Chromium : checkout coach 1/1 et attribution coach par défaut 1/1 verts.
+- `git diff --check` vert; nettoyage des scénarios assuré par rollback/finally.
+
+### Mesures avant/après
+
+- Colonnes de profil accessibles directement à une relation : 68 → 0; projection explicite : 29 colonnes.
+- Écarts RLS connus dans la matrice initiale : 2 → 0.
+- Attentes RLS bloquantes : 97 → 114.
+- Migrations : 138 → 139; Phase 2 reste à 5/18 tâches terminées.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Intégrer canoniquement les cinq parcours E2E critiques existants dans la commande et le suivi de Phase 2.

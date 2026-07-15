@@ -60,11 +60,12 @@ export default function useCoachAnalytics(coachId: string | null) {
     if (!coachId) return
     setLoading(true)
 
-    // 1. Fetch clients + profiles en un seul join (FK coach_clients → profiles)
+    // 1. Fetch active relationships, then the explicit cross-profile projection.
     const { data: coachClientsRaw, error: ccError } = await supabase
       .from('coach_clients')
-      .select('client_id, profiles!coach_clients_client_id_fkey(id, full_name, email, avatar_url, subscription_type, created_at)')
+      .select('client_id')
       .eq('coach_id', coachId)
+      .eq('status', 'active')
 
     if (ccError) {
       console.warn('[useCoachAnalytics] coach_clients query error:', ccError.message)
@@ -78,10 +79,18 @@ export default function useCoachAnalytics(coachId: string | null) {
       return
     }
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const rawProfiles = coachClientsRaw.map((cc: any) => cc.profiles).filter((p: any) => p !== null && typeof p === 'object')
-    const clientIds = rawProfiles.map((p: any) => p.id)
-    /* eslint-enable @typescript-eslint/no-explicit-any */
+    const relatedClientIds = coachClientsRaw.map(cc => cc.client_id)
+    const { data: rawProfiles, error: profilesError } = await supabase
+      .from('active_related_profiles')
+      .select('id, full_name, email, avatar_url, subscription_type, created_at')
+      .in('id', relatedClientIds)
+
+    if (profilesError) {
+      console.warn('[useCoachAnalytics] related profiles query error:', profilesError.message)
+      setLoading(false)
+      return
+    }
+    const clientIds = (rawProfiles || []).map(profile => profile.id)
 
     // 2-4. Fetch en parallèle : sessions 30j, weight 7j, meal tracking 7j
     const [sessionsRes, weightsRes, mealsRes] = await Promise.all([

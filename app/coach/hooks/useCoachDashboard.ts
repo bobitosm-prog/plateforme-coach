@@ -448,6 +448,7 @@ export default function useCoachDashboard(initialSession?: any) {
       .from('coach_clients')
       .select('id, client_id, created_at, invited_by_coach')
       .eq('coach_id', coachId)
+      .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(100)
 
@@ -455,7 +456,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
     const clientIds = links.map(l => l.client_id)
     const { data: profiles } = await supabase
-      .from('profiles')
+      .from('active_related_profiles')
       .select('id, full_name, email, avatar_url, current_weight, calorie_goal')
       .in('id', clientIds)
       .limit(100)

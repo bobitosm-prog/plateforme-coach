@@ -40,14 +40,6 @@ BEGIN
   RAISE EXCEPTION 'RLS_MATRIX_FAILED [%]: statement unexpectedly succeeded', scenario;
 END $$;
 
-CREATE OR REPLACE FUNCTION test.rls_known_gap(exposed boolean, scenario text)
-RETURNS void LANGUAGE plpgsql AS $$
-BEGIN
-  IF exposed THEN RAISE WARNING 'RLS_KNOWN_GAP [%]', scenario;
-  ELSE RAISE NOTICE 'RLS_GAP_FIXED [%]', scenario;
-  END IF;
-END $$;
-
 CREATE OR REPLACE FUNCTION test.rls_statement_succeeds(statement text)
 RETURNS boolean LANGUAGE plpgsql SECURITY INVOKER AS $$
 BEGIN
@@ -61,7 +53,6 @@ GRANT USAGE ON SCHEMA test TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION test.rls_assert(bigint, bigint, text) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION test.rls_exec_count(text) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION test.rls_expect_error(text, text) TO anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION test.rls_known_gap(boolean, text) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION test.rls_statement_succeeds(text) TO anon, authenticated, service_role;
 
 SELECT test.rls_assert((
@@ -94,6 +85,9 @@ SELECT test.rls_assert(
 );
 SELECT test.rls_assert(has_function_privilege('authenticated', 'public.assign_default_coach(uuid,uuid)', 'EXECUTE')::int, 0, 'coach_clients/default-rpc-not-authenticated');
 SELECT test.rls_assert(has_function_privilege('service_role', 'public.assign_default_coach(uuid,uuid)', 'EXECUTE')::int, 1, 'coach_clients/default-rpc-service-role-only');
+SELECT test.rls_assert(has_table_privilege('anon', 'public.active_related_profiles', 'SELECT')::int, 0, 'profiles/projection/no-anon-grant');
+SELECT test.rls_assert(has_table_privilege('authenticated', 'public.active_related_profiles', 'SELECT')::int, 1, 'profiles/projection/authenticated-select-grant');
+SELECT test.rls_assert((SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'active_related_profiles' AND column_name IN ('role', 'subscription_status', 'subscription_end_date', 'trial_ends_at', 'stripe_customer_id', 'stripe_subscription_id', 'stripe_account_id', 'beta_campaign_id')), 0, 'profiles/projection/no-authority-or-stripe-columns');
 
 SELECT test.seed_personas();
 SELECT test.set_persona_relation('coach', 'client', 'active');
@@ -139,7 +133,9 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', :'client', true);
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'client'), 1, 'profiles/client-owner/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'second_client'), 0, 'profiles/client-owner/select-foreign');
-SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'coach'), 1, 'profiles/client-owner/select-active-coach');
+SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'coach'), 0, 'profiles/client-owner/direct-active-coach-denied');
+SELECT test.rls_assert((SELECT count(*) FROM public.active_related_profiles WHERE id = :'coach'), 1, 'profiles/client-owner/projected-active-coach');
+SELECT test.rls_assert((SELECT count(*) FROM public.active_related_profiles WHERE id = :'second_coach'), 0, 'profiles/client-owner/projected-foreign-coach-denied');
 SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET full_name = ''Client Updated'' WHERE id = ''' || :'client' || ''''), 1, 'profiles/client-owner/update-presentation');
 SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET full_name = ''Client Normal'', phone = ''+41000000000'', calorie_goal = 2400 WHERE id = ''' || :'client' || ''''), 1, 'profiles/client-owner/update-multiple-normal-fields');
 SELECT test.rls_expect_error('UPDATE public.profiles SET role = ''coach'' WHERE id = ''' || :'client' || '''', 'profiles/client-owner/change-role-denied');
@@ -182,6 +178,12 @@ RESET ROLE;
 -- Active coach endpoint and foreign coach isolation.
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', :'coach', true);
+SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'client'), 0, 'profiles/active-coach/direct-client-denied');
+SELECT test.rls_assert((SELECT count(*) FROM public.active_related_profiles WHERE id = :'client'), 1, 'profiles/active-coach/projected-client');
+SELECT test.rls_assert((SELECT count(*) FROM public.active_related_profiles WHERE id = :'second_client'), 0, 'profiles/active-coach/projected-foreign-client-denied');
+SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET calorie_goal=2450 WHERE id=''' || :'client' || ''''), 0, 'profiles/active-coach/direct-update-hidden-row-denied');
+SELECT test.rls_assert((public.update_active_client_profile(:'client', '{"calorie_goal":2450}'::jsonb)->>'calorie_goal')::int, 2450, 'profiles/active-coach/rpc-update-normal-field');
+SELECT test.rls_expect_error('SELECT public.update_active_client_profile(''' || :'client' || ''', ''{"role":"coach"}''::jsonb)', 'profiles/active-coach/rpc-update-sensitive-field-denied');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'client'), 1, 'coach_clients/active-coach/select-linked');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_clients WHERE client_id = :'second_client'), 0, 'coach_clients/active-coach/select-foreign');
 SELECT test.rls_expect_error('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'coach' || ''',''' || :'second_client' || ''',''active'')', 'coach_clients/coach/insert-denied');
@@ -206,6 +208,9 @@ RESET ROLE;
 -- Inactive coach: even its own historical coach_id does not grant visibility or mutation.
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', :'second_coach', true);
+SELECT test.rls_assert((SELECT count(*) FROM public.active_related_profiles WHERE id = :'second_client'), 0, 'profiles/inactive-coach/projected-client-denied');
+SELECT test.rls_assert(test.rls_exec_count('UPDATE public.profiles SET calorie_goal=2500 WHERE id=''' || :'second_client' || ''''), 0, 'profiles/inactive-coach/direct-update-client-denied');
+SELECT test.rls_expect_error('SELECT public.update_active_client_profile(''' || :'second_client' || ''', ''{"calorie_goal":2500}''::jsonb)', 'profiles/inactive-coach/rpc-update-client-denied');
 SELECT test.rls_assert((SELECT count(*) FROM public.payments WHERE coach_id = :'second_coach'), 0, 'payments/inactive-coach/select-denied');
 SELECT test.rls_assert((SELECT count(*) FROM public.payments WHERE coach_id = :'coach'), 0, 'payments/foreign-coach/select-denied');
 SELECT test.rls_expect_error('UPDATE public.payments SET amount=2 WHERE coach_id = ''' || :'second_coach' || '''', 'payments/inactive-coach/update-denied');
@@ -223,7 +228,6 @@ SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'lifeti
 SELECT test.rls_expect_error('INSERT INTO public.coach_clients (client_id,coach_id,status) VALUES (''' || :'lifetime' || ''',''' || :'second_coach' || ''',''active'')', 'coach_clients/one-active/concurrent-guard');
 SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.coach_clients WHERE client_id=''' || :'lifetime' || ''''), 1, 'coach_clients/default-rpc/cleanup');
 SELECT test.rls_assert(test.rls_exec_count('INSERT INTO public.coach_clients (client_id,coach_id,status) VALUES (''' || :'invited' || ''',''' || :'coach' || ''',''active'')'), 1, 'coach_clients/service-role/insert');
-SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.coach_clients WHERE client_id=''' || :'invited' || ''''), 1, 'coach_clients/service-role/delete');
 SELECT test.rls_assert(test.rls_exec_count('INSERT INTO public.payments (client_id,coach_id,amount,status,stripe_id,stripe_event_id) VALUES (''' || :'client' || ''',''' || :'coach' || ''',70,''pending'',''pi_service'',''evt_service'')'), 1, 'payments/service-role/insert');
 SELECT test.rls_assert(test.rls_exec_count('UPDATE public.payments SET status=''paid'' WHERE stripe_event_id=''evt_service'''), 1, 'payments/service-role/update-status');
 SELECT test.rls_assert(test.rls_exec_count('DELETE FROM public.payments WHERE stripe_event_id=''evt_service'''), 1, 'payments/service-role/delete');
@@ -234,10 +238,12 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', :'invited', true);
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'invited'), 1, 'profiles/invited/select-own');
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'client'), 0, 'profiles/invited/select-foreign');
+SELECT test.rls_assert((SELECT count(*) FROM public.active_related_profiles WHERE id = :'coach'), 1, 'profiles/invited/active-relation-projects-coach');
 SELECT test.rls_assert((SELECT count(*) FROM public.coach_invitations), 0, 'coach_invitations/recipient/no-direct-visibility');
 SELECT test.rls_expect_error('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'coach' || ''',''' || :'invited' || ''',''active'')', 'coach_clients/invited/insert-denied');
 SELECT set_config('request.jwt.claim.sub', :'lifetime', true);
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'lifetime'), 1, 'profiles/lifetime/select-own');
+SELECT test.rls_assert((SELECT count(*) FROM public.active_related_profiles), 0, 'profiles/lifetime/no-relation-no-projection');
 SELECT test.rls_assert((SELECT count(*) FROM public.payments), 0, 'payments/lifetime/no-elevation');
 SELECT test.rls_expect_error('INSERT INTO public.coach_clients (coach_id,client_id,status) VALUES (''' || :'coach' || ''',''' || :'lifetime' || ''',''active'')', 'coach_clients/lifetime/insert-denied');
 SELECT set_config('request.jwt.claim.sub', :'admin', true);
@@ -245,19 +251,12 @@ SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'admin'
 SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id <> :'admin'), 0, 'profiles/email-admin/no-database-elevation');
 RESET ROLE;
 
--- Known contract gaps: observable, documented, but not normalized as secure expectations.
+-- Inactive relation is symmetric: neither endpoint receives a projected profile.
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', :'second_client', true);
-SELECT test.rls_known_gap(
-  (SELECT count(*) = 1 FROM public.profiles WHERE id = :'second_coach'),
-  'profiles/inactive-client/can-read-inactive-coach; severity=medium; exposed=coach-profile'
-);
-SELECT set_config('request.jwt.claim.sub', :'coach', true);
-SELECT test.rls_known_gap(
-  (SELECT count(*) = 0 FROM public.profiles WHERE id = :'client'),
-  'profiles/active-coach/cannot-select-client; severity=high; impact=product-contract-mismatch'
-);
+SELECT test.rls_assert((SELECT count(*) FROM public.profiles WHERE id = :'second_coach'), 0, 'profiles/inactive-client/direct-coach-denied');
+SELECT test.rls_assert((SELECT count(*) FROM public.active_related_profiles WHERE id = :'second_coach'), 0, 'profiles/inactive-client/projected-coach-denied');
 RESET ROLE;
 
 ROLLBACK;
-SELECT 'RLS matrix completed with secured expectations and explicit known gaps' AS result;
+SELECT 'RLS matrix completed with secured expectations and no known gaps' AS result;

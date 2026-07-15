@@ -416,7 +416,7 @@ export default function useClientDetail() {
     setLoading(true); setError(null)
 
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes, customProgsRes] = await Promise.all([
-      supabase.from('profiles').select('id,full_name,email,current_weight,start_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
+      supabase.from('active_related_profiles').select('id,full_name,email,current_weight,start_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(100),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id).eq('completed', true),
       supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
@@ -706,7 +706,7 @@ export default function useClientDetail() {
       mealPlanId
         ? supabase.from('client_meal_plans').update(payload).eq('id', mealPlanId)
         : supabase.from('client_meal_plans').insert(payload).select('id').single().then(({ data }) => { if (data?.id) setMealPlanId(data.id) }),
-      supabase.from('profiles').update({ calorie_goal: calorieTarget }).eq('id', id),
+      supabase.rpc('update_active_client_profile', { target_client_id: id, changes: { calorie_goal: calorieTarget } }),
     ])
     setProfile(p => p ? { ...p, calorie_goal: calorieTarget } : p)
     setMealPlanSaving(false); setMealPlanSaved(true); showToast('Plan alimentaire sauvegardé'); setTimeout(() => setMealPlanSaved(false), 2000)
@@ -726,9 +726,9 @@ export default function useClientDetail() {
       full_name: editName ? capitalizeFullName(editName) : null, phone: editPhone || null, birth_date: editBirth || null, gender: editGender || null,
       current_weight: editWeight ? parseFloat(editWeight) : null, height: editHeight ? parseFloat(editHeight) : null,
       target_weight: editTargetW ? parseFloat(editTargetW) : null, body_fat_pct: editBodyFat ? parseFloat(editBodyFat) : null,
-      status: editStatus, objective: editObj || null,
+      objective: editObj || null,
     }
-    const { error } = await supabase.from('profiles').update(updates).eq('id', id)
+    const { error } = await supabase.rpc('update_active_client_profile', { target_client_id: id, changes: updates })
     if (error) { console.error('[saveProfile] Supabase error:', error); showToast(`Erreur : ${error.message}`); return }
     if (editWeight) {
       const newWeight = parseFloat(editWeight)
@@ -745,7 +745,7 @@ export default function useClientDetail() {
   async function saveCalorieGoal() {
     const val = parseInt(calGoalInput)
     if (!val || val <= 0) return
-    const { error } = await supabase.from('profiles').update({ calorie_goal: val }).eq('id', id)
+    const { error } = await supabase.rpc('update_active_client_profile', { target_client_id: id, changes: { calorie_goal: val } })
     if (error) { console.error('[saveCalorieGoal] Supabase error:', error); showToast(`Erreur : ${error.message}`); return }
     setProfile(p => p ? { ...p, calorie_goal: val } : p)
     setEditingCalGoal(false); showToast('Objectif calorique mis à jour')
@@ -754,7 +754,7 @@ export default function useClientDetail() {
   /* ── Save target weight ─────────────────────────────────────── */
   async function saveTargetWeight(val: number) {
     if (!profile || isNaN(val) || val < 20) return
-    const { error } = await supabase.from('profiles').update({ target_weight: val }).eq('id', id)
+    const { error } = await supabase.rpc('update_active_client_profile', { target_client_id: id, changes: { target_weight: val } })
     if (error) { console.error('[saveTargetWeight] error:', error); return }
     setProfile(p => p ? { ...p, target_weight: val } : p)
   }
@@ -762,7 +762,7 @@ export default function useClientDetail() {
   /* ── Save objective text ──────────────────────────────────────── */
   async function saveObjective(val: string | null) {
     if (!profile) return
-    const { error } = await supabase.from('profiles').update({ objective: val }).eq('id', id)
+    const { error } = await supabase.rpc('update_active_client_profile', { target_client_id: id, changes: { objective: val } })
     if (error) { console.error('[saveObjective] error:', error); return }
     setProfile(p => p ? { ...p, objective: val } : p)
   }
