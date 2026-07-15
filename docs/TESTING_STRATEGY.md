@@ -1,6 +1,6 @@
 # Stratégie de tests MoovX
 
-> État mesuré le 12 juillet 2026 après ajout des fixtures partagées et du reset Supabase local canonique de Phase 2. Cette stratégie décrit le dépôt réel puis la cible. Aucun test ne doit contacter la production.
+> État mesuré le 15 juillet 2026 après intégration de la suite E2E critique canonique de Phase 2. Cette stratégie décrit le dépôt réel puis la cible. Aucun test ne doit contacter la production.
 
 ## 1. Pyramide réelle et vocabulaire
 
@@ -8,13 +8,13 @@ Un **niveau technique** indique quelles couches et quels processus sont exécut�
 
 | Niveau technique actuel | Outil et emplacement | Mesure actuelle | Ce qui est réellement exécuté |
 |---|---|---:|---|
-| Tests unitaires et de modules | Vitest, `tests/unit/**/*.test.ts` | 29 fichiers, 382 actifs, 3 `todo` | Fonctions pures, validation, autorisation isolée, modules serveur, contrats statiques et routes chargées avec dépendances simulées. |
-| Test de rendu React | Vitest + `renderToStaticMarkup`, `chat-markdown-renderer.test.ts` | 1 fichier inclus dans les 25 | Rendu serveur de `ChatMarkdown`; pas de navigateur, d'événement DOM ou de suite de composants interactive. |
-| Intégration PostgreSQL/RPC | `tests/integration` | 8 fichiers; 49 appels `test.assert`, 12 `ASSERT` SQL, 1 scénario de concurrence | Migrations sur base vide, personas, schéma, droits, RLS, RPC, rollback transactionnel, claims Stripe et concurrence invitation. |
+| Tests unitaires et de modules | Vitest, `tests/unit/**/*.test.ts` | 34 fichiers, 400 actifs, 3 `todo` | Fonctions pures, validation, autorisation isolée, modules serveur, contrats statiques et routes chargées avec dépendances simulées. |
+| Test de rendu React | Vitest + `renderToStaticMarkup`, `chat-markdown-renderer.test.ts` | 1 fichier inclus dans les 34 | Rendu serveur de `ChatMarkdown`; pas de navigateur, d'événement DOM ou de suite de composants interactive. |
+| Intégration PostgreSQL/RPC | `tests/integration` | 11 fichiers; 114 attentes RLS bloquantes, assertions structurelles et 1 scénario de concurrence | Migrations sur base vide, personas, schéma, droits, RLS, RPC, rollback transactionnel, claims Stripe et concurrence invitation. |
 | E2E Chromium | Playwright, `e2e/*.spec.ts` | 5 fichiers, 7 cas techniques, 5 parcours produit | Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux; fournisseurs simulés seulement à leur frontière réseau. |
 | Vérifications statiques | TypeScript, ESLint, i18n, build | commandes séparées | Contrats TypeScript, règles ESLint, parité des traductions et compilation Next.js. |
 
-Les 382 tests Vitest comprennent donc des objectifs différents : tests purs, caractérisation du comportement existant, contrats de sécurité, tests hostiles et tests de routes. Leur présence sous `tests/unit` décrit le runner et l'isolation technique, pas nécessairement la nature métier.
+Les 400 tests Vitest comprennent donc des objectifs différents : tests purs, caractérisation du comportement existant, contrats de sécurité, tests hostiles et tests de routes. Leur présence sous `tests/unit` décrit le runner et l'isolation technique, pas nécessairement la nature métier.
 
 ## 2. Commandes vérifiées
 
@@ -63,6 +63,7 @@ Le script refuse une URL qui ne contient ni `127.0.0.1` ni `localhost`. La proc�
 ### E2E locaux
 
 ```bash
+npm run test:e2e:critical
 npm run test:e2e:invitation
 npm run test:e2e:checkout
 npm run test:e2e:coach-checkout
@@ -70,7 +71,23 @@ npm run test:e2e:push
 npm run test:e2e:chat
 ```
 
-`npm run test:e2e` lance toutes les spécifications, mais sans démarrer automatiquement toutes les frontières fournisseurs optionnelles. Tant que le runner n'orchestre pas Stripe, Push et Anthropic ensemble, utiliser les cinq commandes dédiées pour la validation complète.
+`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les cinq parcours avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
+
+### Suite E2E critique canonique
+
+Prérequis : Docker actif, dépendances installées et ports locaux libres. La commande refuse tout contexte Supabase lié ou distant, sérialise les exécutions avec `.critical-e2e.lock`, vérifie automatiquement les **139 migrations actuelles** et laisse la stack Supabase locale active à la fin, comme les autres lanceurs locaux.
+
+L'ordre est stable : invitation, checkout plateforme, checkout coach, push, puis chat. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
+
+Après le cinquième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena ou usage IA, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
+
+Preuves du 15 juillet 2026 :
+
+- stack arrêtée : cinq parcours verts en **184,7 s**;
+- stack déjà active, immédiatement après : cinq parcours verts en **159,7 s**;
+- les cinq commandes individuelles restent vertes; le push renforcé nettoie aussi ses fixtures dans un `afterEach` après timeout.
+
+Le reset initial est volontairement destructif pour la stack locale. Pour une itération sur un seul parcours, lancer sa commande dédiée; pour une modification transverse, une correction de sécurité, une fusion ou un déploiement, lancer la suite critique complète.
 
 ### Vérifications de livraison
 
@@ -104,7 +121,7 @@ Un test n'est appelé **E2E MoovX** que si ses frontières principales — navig
 - Les transports Stripe, Push et Anthropic valident mode E2E, protocole, hôte et chemin autorisés côté serveur; le navigateur ne choisit pas leur destination.
 - Les spécifications observent les origines navigateur attendues lorsque le parcours l'exige.
 - Le reset et les scripts PostgreSQL refusent les URLs non locales.
-- Les traces et captures Playwright sont désactivées; le runner expurge les chaînes assimilables à des jetons.
+- Les traces et captures Playwright sont désactivées par défaut; la suite critique les conserve uniquement après échec. Les runners expurgent jetons, cookies, clés et champs sensibles.
 
 Ces gardes réduisent le risque mais ne constituent pas un bac à sable réseau système. Aucune clé réelle, URL hébergée ou configuration production ne doit être présente dans l'environnement de test.
 
@@ -145,7 +162,7 @@ Cette boucle doit rester rapide, locale et sans Docker lorsque le comportement n
 
 - suite unitaire complète;
 - reconstruction et assertions PostgreSQL concernées;
-- cinq E2E dédiés pour une modification transverse de sécurité ou d'infrastructure;
+- `npm run test:e2e:critical` pour une modification transverse de sécurité ou d'infrastructure;
 - `npm run i18n:check`;
 - build dans un environnement pouvant résoudre les polices externes;
 - procédure de rollback et migrations vérifiées.
@@ -172,7 +189,7 @@ Le reset :
 - refuse les URLs non locales et tout contexte CLI portant `SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN` ou `SUPABASE_DB_URL` ;
 - exige Docker et les ports définis par `supabase/config.toml` (API 55321, PostgreSQL 55322, Mailpit HTTP/SMTP 55324/55325) ;
 - sérialise les exécutions avec `.supabase-local-reset.lock`, supprimé même après échec ;
-- applique les 135 migrations actuelles avec `ON_ERROR_STOP`, sans seed implicite ;
+- applique les 139 migrations actuelles avec `ON_ERROR_STOP`, sans seed implicite ;
 - exécute la baseline structurelle, les fixtures SQL puis leur nettoyage, et vérifie l'absence de comptes, profils, relations, paiements et invitations ;
 - vide Mailpit et régénère `.env.e2e.local` en mode `0600`, sans afficher les clés ;
 - publie une empreinte stable des relations, colonnes, contraintes, index, fonctions, policies et migrations.
@@ -238,8 +255,8 @@ On ajoute un test au niveau le plus bas capable de détecter fidèlement la rég
 - Matrices RLS automatisées limitées principalement aux invitations; les domaines profil, training, nutrition, messaging et billing restent incomplets.
 - Les mocks Vitest Stripe, Anthropic, SMTP et Web Push sont partagés; les anciennes suites Stripe restantes migreront seulement lorsqu'elles seront modifiées.
 - Une seule caractérisation de rendu React et aucune vraie suite de composants interactifs.
-- Pas de commandes npm distinctes pour intégration PostgreSQL, E2E complet orchestré, TypeScript ou lint ciblé.
-- `npm run test:e2e` ne démarre pas simultanément toutes les frontières optionnelles.
+- Pas de commandes npm distinctes pour TypeScript ou lint ciblé; l'intégration RLS et la suite E2E critique possèdent désormais leurs commandes.
+- `npm run test:e2e` reste générique et ne démarre pas toutes les frontières optionnelles; `test:e2e:critical` est le point d'entrée transverse.
 - Parcours critiques encore absents : séance/reprise mobile, nutrition, messaging/realtime, onboarding, abonnement/webhook complet et administration.
 - Mesure du taux de tests intermittents et build hermétique aux polices non encore disponibles.
 

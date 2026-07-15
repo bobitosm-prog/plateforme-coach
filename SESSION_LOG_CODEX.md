@@ -3352,3 +3352,67 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Intégrer canoniquement les cinq parcours E2E critiques existants dans la commande et le suivi de Phase 2.
+
+## Entrée — 2026-07-15 — Suite canonique des cinq parcours E2E critiques
+
+### Travail effectué
+
+- Audit des cinq harnais Playwright, de leurs ports, frontières locales, prérequis et nettoyages.
+- Ajout de `scripts/run-critical-e2e.mjs` et de `npm run test:e2e:critical` : verrou exclusif, Docker, reset/verify Supabase, ordre stable, un worker, fournisseurs isolés par scénario, résumé et classification des échecs.
+- Centralisation des gardes localhost, de l’expurgation des sorties et du contrôle des ports temporaires dans `scripts/e2e-local-contract.mjs`.
+- Ajout d’un audit final sur Auth, profils, relations, invitations, paiements, push, messages, historique Athena, Mailpit et ports temporaires; Supabase reste volontairement active.
+- Conservation des traces/captures uniquement après échec via Playwright, dans un répertoire propre à chaque scénario.
+- Alignement du parcours push sur la navigation Messagerie issue de la projection sécurisée des profils et ajout d’un `afterEach` de nettoyage indépendant du timeout du corps du test.
+- Documentation de la commande, de l’ordre, de l’état final, des diagnostics et des usages dédiés/transverses dans `docs/TESTING_STRATEGY.md`.
+
+### Tâches cochées
+
+- Phase 2 : « Intégrer 5 parcours E2E critiques » — terminée.
+- Progression Phase 2 : 5/18 → 6/18 tâches.
+
+### Décisions prises
+
+- Un reset canonique unique est exécuté au début; les scénarios restent responsables de leur isolation et de leur nettoyage.
+- Les cinq scénarios sont séquentiels et utilisent explicitement `--workers=1`; une seconde suite simultanée est refusée par `.critical-e2e.lock`.
+- Next.js et chaque faux fournisseur sont arrêtés après leur scénario; Stripe, Push et Anthropic ne coexistent pas inutilement.
+- Les proxies externes sont neutralisés et seules les origines de boucle locale sont acceptées. Les frontières principales restent réelles; seuls SMTP, Stripe, Web Push et Anthropic se terminent sur leurs serveurs locaux documentés.
+- Une suite verte supprime ses artefacts. Une suite en échec conserve uniquement les traces du scénario en échec, avec sorties expurgées.
+
+### Problèmes rencontrés
+
+- La première exécution depuis stack arrêtée a révélé un timeout push : le test cherchait l’ancien libellé `Sans nom` puis cliquait la carte client du tableau de bord après le changement de visibilité des profils. Le parcours ouvre désormais explicitement `MESSAGERIE` puis sélectionne le client projeté.
+- Ce timeout avait interrompu le nettoyage du corps du test après deux suppressions Auth. Un `afterEach` autonome nettoie et vérifie maintenant toutes les fixtures push même après expiration du test.
+- L’interruption manuelle du diagnostic a laissé temporairement Next et le faux serveur push actifs; ils ont été arrêtés, et les audits finaux confirment tous les ports temporaires fermés.
+- `supabase/.temp/cli-latest` reste modifié uniquement par une différence de fin de ligne préexistante à cette session; il n’appartient pas à la tranche.
+
+### Risques ou dette restante
+
+- La suite utilise le serveur de développement Next.js et Chromium local; elle ne remplace pas un build de production ni un environnement de préproduction.
+- Les avertissements historiques Next Image, Supabase `getSession()` et `/api/feedback/mine` restent visibles sans affecter les assertions.
+- `npm run test:e2e` reste un lanceur générique sans toutes les frontières; la validation transverse doit utiliser `test:e2e:critical`.
+- Les parcours séance/reprise, nutrition, messaging/realtime complet, onboarding, webhook d’abonnement et administration restent absents.
+
+### Tests exécutés
+
+- Suite canonique finale depuis stack arrêtée : invitation 35,6 s; checkout plateforme 27,0 s; checkout coach 25,1 s; push 24,1 s; chat 28,6 s; total 184,7 s — cinq verts, avec audit complet après chaque scénario.
+- Seconde suite finale consécutive depuis stack active : invitation 35,1 s; checkout plateforme 25,0 s; checkout coach 24,5 s; push 24,0 s; chat 28,7 s; total 159,7 s — cinq verts, avec audit complet après chaque scénario.
+- Commandes individuelles : invitation 2/2, checkout plateforme 1/1, checkout coach 1/1, push 1/1 et chat 2/2 vertes.
+- Reset/verify : 139/139 migrations; empreinte stable deux fois `96e08867f266a1a36fa8f2b94ef78fc6`.
+- Matrice RLS : 114 attentes SQL et contrôle PostgREST verts, aucun écart connu.
+- Suite complète : 34 fichiers, 400 tests actifs verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+- `git diff --check` vert; audit PostgreSQL final à zéro sur neuf catégories, Mailpit vide et ports temporaires fermés.
+
+### Mesures avant/après
+
+- Commandes nécessaires pour valider les cinq parcours : 5 → 1 canonique.
+- Exécutions canoniques consécutives validées : 0 → 2.
+- Parcours couverts par le résumé unique : 0 → 5.
+- Tâches Phase 2 terminées : 5/18 → 6/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Générer ou centraliser les types Supabase.

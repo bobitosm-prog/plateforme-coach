@@ -32,6 +32,14 @@ async function cleanupStale(admin: SupabaseClient) {
   for (const user of users) await admin.auth.admin.deleteUser(user.id)
 }
 
+test.afterEach(async () => {
+  const admin = createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
+  await cleanupStale(admin)
+  await fetch(`${controlUrl}/__deliveries`, { method: 'DELETE' }).catch(() => undefined)
+  const { data } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+  expect(data.users.filter(user => /^push-(coach|client|foreign|invited)-.*@example\.test$/.test(user.email || ''))).toHaveLength(0)
+})
+
 async function dispatchNotificationClick(context: BrowserContext, url: string) {
   const worker = context.serviceWorkers().find(item => item.url().endsWith('/sw.js'))
   if (!worker) throw new Error('Real service worker target unavailable')
@@ -70,7 +78,8 @@ test('push local: producteur coach, autorisation, livraison et clic du vrai serv
 
     let producerPayload: unknown
     page.on('request', request => { if (request.url().endsWith('/api/send-notification') && request.method() === 'POST') producerPayload = request.postDataJSON() })
-    await page.getByText('ENVOYER UN MESSAGE').first().click(); await page.getByText('Sans nom').first().click()
+    await page.getByRole('button', { name: 'MESSAGERIE' }).click()
+    await page.getByText('client Push E2E', { exact: true }).click()
     const textarea = page.locator('input[placeholder^="Message à"]'); await textarea.fill('Message E2E')
     const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/send-notification') && response.request().method() === 'POST')
     await textarea.locator('xpath=following-sibling::button').click(); const response = await responsePromise

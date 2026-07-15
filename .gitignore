@@ -52,6 +52,7 @@ playwright-report/
 test-results/
 .env.e2e.local
 .supabase-local-reset.lock
+.critical-e2e.lock
 
 # video generation assets (raw downloads, not served by app)
 /videos/

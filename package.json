@@ -17,6 +17,7 @@
     "test:e2e:coach-checkout": "node scripts/run-local-e2e.mjs e2e/coach-checkout.spec.ts --stripe",
     "test:e2e:push": "node scripts/run-local-e2e.mjs e2e/push-notification.spec.ts --push",
     "test:e2e:chat": "node scripts/run-local-e2e.mjs e2e/chat-ai.spec.ts --anthropic",
+    "test:e2e:critical": "node scripts/run-critical-e2e.mjs",
     "test:e2e:default-coach": "node scripts/run-local-e2e.mjs e2e/default-coach-assignment.spec.ts",
     "supabase:local:start": "node scripts/supabase-local.mjs start",
     "supabase:local:status": "node scripts/supabase-local.mjs status",

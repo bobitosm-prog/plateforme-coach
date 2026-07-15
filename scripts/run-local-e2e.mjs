@@ -2,6 +2,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { config as loadEnv } from 'dotenv'
 import { createInterface } from 'node:readline'
 import { readFileSync, writeFileSync } from 'node:fs'
+import { assertLocalE2eUrl, redactE2eOutput } from './e2e-local-contract.mjs'
 
 const contract = spawnSync(process.execPath, ['scripts/supabase-local.mjs', 'ensure'], { stdio: 'inherit' })
 if (contract.status !== 0) throw new Error('Canonical local Supabase contract is unavailable; run npm run supabase:local:reset')
@@ -19,15 +20,13 @@ const supabaseUrl = process.env.API_URL || ''
 const tsconfigPath = new URL('../tsconfig.json', import.meta.url)
 const originalTsconfig = readFileSync(tsconfigPath, 'utf8')
 
-for (const value of [appUrl, supabaseUrl, ...(withStripe ? [stripeUrl] : []), ...(withPush ? [pushControlUrl] : []), ...(withAnthropic ? [anthropicUrl] : [])]) {
-  if (!['127.0.0.1', 'localhost'].includes(new URL(value).hostname)) throw new Error('E2E services must target localhost')
-}
+for (const value of [appUrl, supabaseUrl, ...(withStripe ? [stripeUrl] : []), ...(withPush ? [pushControlUrl] : []), ...(withAnthropic ? [anthropicUrl] : [])]) assertLocalE2eUrl(value)
 if (!process.env.ANON_KEY || !process.env.SERVICE_ROLE_KEY) throw new Error('Run npm run supabase:local:reset first')
 
 const children = []
 const wait = child => new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', code => resolve(code ?? 1)) })
 function output(stream, target) {
-  createInterface({ input: stream }).on('line', line => target.write(`${line.replace(/[A-Za-z0-9_-]{43}/g, '[REDACTED_TOKEN]')}\n`))
+  createInterface({ input: stream }).on('line', line => target.write(`${redactE2eOutput(line)}\n`))
 }
 function start(command, commandArgs, env = process.env) {
   const child = spawn(command, commandArgs, { stdio: ['ignore', 'pipe', 'pipe'], detached: true, env })
@@ -59,7 +58,7 @@ try {
   }
   start('./node_modules/.bin/next', ['dev', '--webpack', '--hostname', '127.0.0.1', '--port', '3210'], env)
   await ready(appUrl)
-  const playwright = start('./node_modules/.bin/playwright', ['test', ...(specs.length ? specs : ['e2e'])])
+  const playwright = start('./node_modules/.bin/playwright', ['test', '--workers=1', ...(specs.length ? specs : ['e2e'])], env)
   code = await wait(playwright)
 } finally {
   for (const child of children.reverse()) { try { process.kill(-child.pid, 'SIGTERM') } catch {} }

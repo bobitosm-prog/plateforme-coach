@@ -7,6 +7,7 @@ const appUrl = process.env.MOOVX_E2E_APP_URL || 'http://127.0.0.1:3210'
 const parsedAppUrl = new URL(appUrl)
 const supabaseUrl = process.env.API_URL || ''
 const parsedSupabaseUrl = new URL(supabaseUrl)
+const retainFailure = process.env.MOOVX_E2E_RETAIN_FAILURE === '1'
 
 if (![parsedAppUrl, parsedSupabaseUrl].every(url => ['127.0.0.1', 'localhost'].includes(url.hostname))) {
   throw new Error('E2E application and Supabase URLs must target localhost')
@@ -21,8 +22,9 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: appUrl,
-    trace: 'off',
-    screenshot: 'off',
+    trace: retainFailure ? 'retain-on-failure' : 'off',
+    screenshot: retainFailure ? 'only-on-failure' : 'off',
   },
+  outputDir: process.env.MOOVX_E2E_ARTIFACTS_DIR || 'test-results',
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 })
