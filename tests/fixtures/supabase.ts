@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database, TablesInsert } from '../../lib/supabase/types'
 import type { TestPersona } from './personas'
 
 export type FixtureMode = 'test' | 'e2e'
@@ -13,13 +14,13 @@ export function assertLocalFixtureEnvironment(url: string, mode: FixtureMode | u
   return parsed
 }
 
-export function createLocalAdminClient(options: { url: string; serviceRoleKey: string; mode: FixtureMode }): SupabaseClient {
+export function createLocalAdminClient(options: { url: string; serviceRoleKey: string; mode: FixtureMode }): SupabaseClient<Database> {
   assertLocalFixtureEnvironment(options.url, options.mode)
   if (!options.serviceRoleKey) throw new Error('Local service-role key is required')
-  return createClient(options.url, options.serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } })
+  return createClient<Database>(options.url, options.serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } })
 }
 
-export async function createLocalAuthUser(admin: SupabaseClient, persona: TestPersona, password: string): Promise<string> {
+export async function createLocalAuthUser(admin: SupabaseClient<Database>, persona: TestPersona, password: string): Promise<string> {
   if (!password) throw new Error('An ephemeral local password is required')
   const { data, error } = await admin.auth.admin.createUser({
     id: persona.id,
@@ -32,7 +33,7 @@ export async function createLocalAuthUser(admin: SupabaseClient, persona: TestPe
   return data.user.id
 }
 
-export async function upsertLocalProfile(admin: SupabaseClient, persona: TestPersona, extra: Record<string, unknown> = {}): Promise<void> {
+export async function upsertLocalProfile(admin: SupabaseClient<Database>, persona: TestPersona, extra: Partial<TablesInsert<'profiles'>> = {}): Promise<void> {
   const { error } = await admin.from('profiles').upsert({
     id: persona.id,
     email: persona.email,
@@ -47,7 +48,7 @@ export async function upsertLocalProfile(admin: SupabaseClient, persona: TestPer
   if (error) throw new Error(`Unable to upsert synthetic profile: ${error.message}`)
 }
 
-export async function createLocalPersona(admin: SupabaseClient, persona: TestPersona, password: string, extra: Record<string, unknown> = {}): Promise<string> {
+export async function createLocalPersona(admin: SupabaseClient<Database>, persona: TestPersona, password: string, extra: Partial<TablesInsert<'profiles'>> = {}): Promise<string> {
   const id = await createLocalAuthUser(admin, persona, password)
   try {
     await upsertLocalProfile(admin, persona, extra)
@@ -58,7 +59,7 @@ export async function createLocalPersona(admin: SupabaseClient, persona: TestPer
   }
 }
 
-export async function upsertCoachClientRelation(admin: SupabaseClient, coachId: string, clientId: string, status: RelationStatus = 'active'): Promise<void> {
+export async function upsertCoachClientRelation(admin: SupabaseClient<Database>, coachId: string, clientId: string, status: RelationStatus = 'active'): Promise<void> {
   const { error } = await admin.from('coach_clients').upsert(
     { coach_id: coachId, client_id: clientId, status },
     { onConflict: 'coach_id,client_id' },
@@ -66,12 +67,12 @@ export async function upsertCoachClientRelation(admin: SupabaseClient, coachId: 
   if (error) throw new Error(`Unable to upsert synthetic coach/client relation: ${error.message}`)
 }
 
-export async function setPersonaSubscription(admin: SupabaseClient, id: string, subscriptionType: string | null, subscriptionStatus: string | null): Promise<void> {
+export async function setPersonaSubscription(admin: SupabaseClient<Database>, id: string, subscriptionType: string | null, subscriptionStatus: string | null): Promise<void> {
   const { error } = await admin.from('profiles').update({ subscription_type: subscriptionType, subscription_status: subscriptionStatus }).eq('id', id)
   if (error) throw new Error(`Unable to update synthetic subscription: ${error.message}`)
 }
 
-export async function cleanupLocalPersonas(admin: SupabaseClient, ids: string[]): Promise<void> {
+export async function cleanupLocalPersonas(admin: SupabaseClient<Database>, ids: string[]): Promise<void> {
   const uniqueIds = [...new Set(ids)]
   if (!uniqueIds.length) return
   const errors: string[] = []

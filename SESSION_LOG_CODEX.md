@@ -3416,3 +3416,67 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Générer ou centraliser les types Supabase.
+
+## Entrée — 2026-07-15 — Types Supabase générés et centralisés
+
+### Travail effectué
+
+- Audit complet des types existants, 82 créations de clients Supabase, 590 accès `.from()`/`.rpc()`, vues, fonctions exposées, types locaux et contournements `any`.
+- Génération de `lib/supabase/database.types.ts` depuis le schéma `public` de la stack locale reconstruite par 139 migrations, avec en-tête interdisant l’édition manuelle.
+- Ajout de `scripts/generate-supabase-types.mjs` et des commandes `supabase:types:generate`/`supabase:types:check`, avec gardes locales, contrôle des migrations, comparaison temporaire et nettoyage garanti.
+- Ajout du module manuel `lib/supabase/types.ts`, qui réexporte `Database`, `Tables`, `TablesInsert`, `TablesUpdate`, `Enums`, `Views`, arguments et retours RPC sans recopier les structures générées.
+- Typage des fixtures partagées avec `SupabaseClient<Database>` et `TablesInsert<'profiles'>` pour démontrer l’utilisation réelle aux niveaux TypeScript et E2E.
+- Ajout des contrats positifs et négatifs sur cinq tables, la vue `active_related_profiles` et quatre RPC critiques.
+- Documentation des commandes, règles de régénération, limites et divergences dans `docs/SUPABASE_TYPES.md`.
+
+### Tâches cochées
+
+- Phase 2 : « Générer ou centraliser les types Supabase » — terminée.
+- Progression Phase 2 : 6/18 → 7/18 tâches.
+
+### Décisions prises
+
+- Seul le schéma `public` est généré; `auth` reste hors de l’artefact versionné.
+- Le fichier généré n’est jamais édité manuellement et est exclu d’ESLint; le script, les alias et les consommateurs restent lintés.
+- `supabase/.temp` n’est pas une source de vérité. La CLI locale installée interroge uniquement la base canonique vérifiée par `supabase-local.mjs ensure`.
+- Les clients browser/server/admin applicatifs ne sont pas tous paramétrés dans cette tranche afin de ne pas anticiper la tâche dédiée aux factories et aux dix accès migrés.
+- Les colonnes absentes révélées par les types ne sont ni inventées dans le fichier généré ni ajoutées au schéma sans décision métier.
+
+### Problèmes rencontrés
+
+- La première consultation de l’aide CLI a été bloquée par l’écriture de télémétrie hors sandbox; l’exécution locale autorisée et `SUPABASE_TELEMETRY_DISABLED=1` dans le script ont résolu ce point.
+- La première génération a téléchargé l’image locale `postgres-meta:v0.96.6`; aucune API ni base distante n’a été utilisée.
+- Les types révèlent des divergences actives : `payments.stripe_checkout_session_id`, `paid_at` et `description`; `profiles.stripe_onboarding_complete`, `coach_bio`, `cgu_accepted_at` et `subscription_price` sont utilisés par le code mais absents du schéma canonique.
+
+### Risques ou dette restante
+
+- Risque élevé Billing : les producteurs Stripe écrivent plusieurs colonnes `payments` absentes; une reconstruction locale honnête peut donc refuser ces mutations réelles.
+- `stripe_onboarding_complete` et `coach_bio` semblent fonctionnellement nécessaires mais n’ont aucune migration canonique; leur autorité et leur historique doivent être tranchés avant migration des clients applicatifs.
+- `subscription_price` reste une dette historique à analyser, pas une colonne à recréer automatiquement.
+- Les retours JSON des RPC sont correctement typés `Json`, mais nécessiteront des contrats métier structurés séparés.
+- Les 886 occurrences de `any`, dont au moins 62 sur une ligne d’accès Supabase, seront réduites progressivement par les factories, repositories et migrations représentatives ultérieures.
+
+### Tests exécutés
+
+- Reset Supabase canonique : 139/139 migrations; empreinte `96e08867f266a1a36fa8f2b94ef78fc6`.
+- Génération exécutée deux fois : SHA-256 identique `12bbecbfd021b099c2a172f47229ef8e9d4d1ad207be7a1d444cb0221e86cfd1`.
+- `npm run supabase:types:check` vert avant et après reset.
+- Contrats de types ciblés : tables `profiles`, `coach_clients`, `coach_invitations`, `payments`, `push_subscriptions`; vue projetée; quatre RPC critiques; champs absents et obligations d’insertion.
+- Matrice RLS : 114 attentes SQL et contrôle PostgREST verts, aucun écart connu.
+- Suite complète : 35 fichiers, 403 tests actifs verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+- E2E checkout coach : 1/1 vert en 14,7 s avec fixtures typées.
+
+### Mesures avant/après
+
+- Sources centrales générées du schéma : 0 → 1.
+- Commandes canoniques de génération/vérification : 0 → 2.
+- Fixtures Supabase partagées paramétrées par `Database` : 0 → 1 module.
+- Tâches Phase 2 terminées : 6/18 → 7/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Définir le contrat commun de réponse API.

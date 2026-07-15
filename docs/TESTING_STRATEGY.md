@@ -273,3 +273,4 @@ On ajoute un test au niveau le plus bas capable de détecter fidèlement la rég
 - [Fixtures de personas](./TEST_FIXTURES.md)
 - [Mocks de fournisseurs Vitest](./TEST_PROVIDER_MOCKS.md)
 - [Matrices RLS automatisées](./RLS_TEST_MATRIX.md)
+- [Types Supabase canoniques](./SUPABASE_TYPES.md)

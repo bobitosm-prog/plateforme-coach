@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 6 tâches sur 18 terminées ; suite canonique des cinq parcours E2E critique verte deux fois, depuis stack arrêtée puis active**
+**Statut : En cours — 7 tâches sur 18 terminées ; types `public` générés depuis les 139 migrations locales, reproductibles et vérifiés**
 
 ### Pourquoi
 
@@ -270,7 +270,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 | [x] [Créer les mocks Stripe, Anthropic, SMTP et Web Push](docs/TEST_PROVIDER_MOCKS.md) | 2,5 j | Élevée | Faible | Élevé | — |
 | [x] [Ajouter les premières matrices RLS automatisées](docs/RLS_TEST_MATRIX.md) | 2 j | Élevée | Moyen | Élevé | Supabase local |
 | [x] [Intégrer 5 parcours E2E critiques](docs/TESTING_STRATEGY.md#suite-e2e-critique-canonique) | 3 j | Élevée | Moyen | Élevé | Fixtures |
-| [ ] Générer ou centraliser les types Supabase | 1,5 j | Moyenne | Faible | Élevé | — |
+| [x] [Générer ou centraliser les types Supabase](docs/SUPABASE_TYPES.md) | 1,5 j | Moyenne | Faible | Élevé | — |
 | [ ] Définir le contrat commun de réponse API | 1 j | Moyenne | Moyen | Élevé | — |
 | [ ] Définir la taxonomie d'erreurs | 1 j | Moyenne | Faible | Élevé | Contrat API |
 | [ ] Créer le helper commun Zod → erreur HTTP | 1,5 j | Moyenne | Faible | Élevé | Contrat API |
@@ -746,7 +746,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 400 actifs + 3 contractuels `todo` | 🟢 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 403 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
