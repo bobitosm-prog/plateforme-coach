@@ -34,6 +34,11 @@ export function isValidCorrelationId(value: string | null): value is string {
   return typeof value === 'string' && CORRELATION_ID_PATTERN.test(value)
 }
 
+export function resolveCorrelationId(request: Request): string {
+  const incoming = request.headers.get('x-request-id')
+  return isValidCorrelationId(incoming) ? incoming : randomUUID()
+}
+
 function safeContext(input: SecurityAuditEvent['context']) {
   const output: Record<string, string | number | boolean | null> = {}
   for (const [key, value] of Object.entries(input ?? {})) {
@@ -46,8 +51,7 @@ function safeContext(input: SecurityAuditEvent['context']) {
 }
 
 export function createSecurityAudit(request: Request) {
-  const incoming = request.headers.get('x-request-id')
-  const correlationId = isValidCorrelationId(incoming) ? incoming : randomUUID()
+  const correlationId = resolveCorrelationId(request)
   let logged = false
 
   return {

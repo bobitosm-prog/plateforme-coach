@@ -3480,3 +3480,60 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Définir le contrat commun de réponse API.
+
+## Entrée — 2026-07-15 — Contrat commun de réponse API
+
+### Travail effectué
+
+- Audit des 52 fichiers de route, 55 handlers HTTP, 287 constructions de réponse et 62 appels locaux `/api/` présents dans 30 fichiers consommateurs.
+- Création du contrat générique discriminé `ApiSuccess`/`ApiFailure`/`ApiResponse` et de helpers purs pour succès, erreur et réponse `204`.
+- Réutilisation stricte du correlation ID Phase 1 par extraction additive de `resolveCorrelationId()` dans le module d'audit existant.
+- Validation avant sérialisation : rejet des valeurs non JSON, dates implicites, cycles, détails sensibles, traces et messages d'erreur non contrôlés.
+- Documentation de l'état actuel, de la cible, des exceptions SSE/webhook/204 et de la coexistence route par route dans `docs/API_RESPONSE_CONTRACT.md`.
+- Aucun handler ni consommateur n'a été migré dans cette tranche.
+
+### Tâches cochées
+
+- Phase 2 : « Définir le contrat commun de réponse API » — terminée.
+- Progression Phase 2 : 7/18 → 8/18 tâches.
+
+### Décisions prises
+
+- `ok` est l'unique discriminant; le statut HTTP reste l'autorité et les erreurs possèdent un code machine stable ainsi qu'un message public contrôlé.
+- Le `requestId` est présent dans l'en-tête et dans le corps produit par les helpers; le format existant n'est ni dupliqué ni élargi.
+- Les dates doivent être sérialisées explicitement en chaînes et les détails d'erreur sont absents par défaut.
+- Les flux SSE, corps binaires, redirections et vrais `204` ne sont pas enveloppés; leurs erreurs JSON ou événements nécessitent un contrat adapté.
+- Chaque route conservera son ancien format pendant au moins une release de transition; aucune migration globale n'est autorisée.
+
+### Problèmes rencontrés
+
+- Le premier passage TypeScript a signalé un littéral `BigInt` incompatible avec la cible actuelle; le test utilise désormais `BigInt(1)` sans modifier la configuration.
+- La mesure syntaxique des formes de corps se chevauche; le document distingue explicitement sites mesurés et classification manuelle.
+
+### Risques ou dette restante
+
+- Les 278 réponses JSON existantes n'utilisent pas encore le contrat; plusieurs routes exposent encore `detail` ou un message fournisseur et seront migrées séparément.
+- La taxonomie complète des erreurs, le mapping Zod et les huit migrations route/service/schema restent à réaliser.
+- Les deux flux SSE ont besoin d'un contrat d'événements distinct avant migration.
+
+### Tests exécutés
+
+- Tests ciblés du contrat et de l'audit : 26 assertions vertes au premier passage.
+- Suite complète : 36 fichiers, 420 tests actifs verts et 3 `todo`.
+- TypeScript `npx tsc --noEmit` et ESLint ciblé verts.
+- Contrôle des liens internes, `git diff --check` et preuve d'absence de modification sous `app/api` et des consommateurs applicatifs : verts lors de la validation finale.
+
+### Mesures avant/après
+
+- Contrats communs de réponse API : 0 → 1.
+- Helpers typés de réponse : 0 → 5 exports opérationnels.
+- Tests actifs : 403 → 420 depuis la précédente tranche.
+- Tâches Phase 2 terminées : 7/18 → 8/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Définir la taxonomie d'erreurs.
