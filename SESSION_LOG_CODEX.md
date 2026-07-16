@@ -3703,3 +3703,60 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer les repositories profil, identité et abonnement.
+
+## Entrée — 2026-07-16 — Repositories profil, identité et abonnement
+
+### Travail effectué
+
+- Audit des accès profils, identité, rôle, abonnements, Stripe et de `useClientDashboard` sans modification de consommateur.
+- Création d'un résultat repository discriminé et d'erreurs internes expurgées.
+- Repository profil avec projections explicites, lecture courante/relationnelle et mises à jour non sensibles typées.
+- Repository identité fondé exclusivement sur `auth.getUser()`.
+- Repository abonnement avec horloge injectée, normalisation invited/lifetime/essai et mutation d'autorité isolée `server-only`.
+- Tests unitaires et intégration SQL locale avec personas partagés et rollback transactionnel.
+- Documentation dans `docs/SUPABASE_REPOSITORIES.md`.
+
+### Tâches cochées
+
+- Phase 2 : « Créer les repositories profil, identité et abonnement » — terminée.
+- Progression Phase 2 : 11/18 → 12/18 tâches.
+
+### Décisions prises
+
+- Absence, anonymat et échec ne sont jamais confondus.
+- Les erreurs brutes sont réduites à une catégorie et un code technique borné.
+- Les profils liés passent par `active_related_profiles`; aucun accès croisé aux 68 colonnes.
+- Les mutations d'abonnement utilisent uniquement les quatre colonnes canoniques et restent dans un module serveur distinct.
+
+### Problèmes rencontrés
+
+- Le test du module d'autorité a nécessité le mock explicite de `server-only` sous Vitest.
+- Les divergences `subscription_price` et colonnes Stripe restent exclues conformément aux types canoniques.
+
+### Risques ou dette restante
+
+- Aucun consommateur n'utilise encore ces repositories; la compatibilité réelle sera validée tranche par tranche.
+- Injecter un client admin reste une capacité technique, jamais une autorisation.
+- Les dix accès représentatifs et les repositories métier ultérieurs restent ouverts.
+
+### Tests exécutés
+
+- Tests unitaires repositories : 12 assertions vertes.
+- Suite complète : 40 fichiers, 484 tests actifs verts et 3 `todo`.
+- TypeScript et ESLint ciblé verts; types Supabase canoniques à jour.
+- Matrice RLS/PostgREST verte; intégration repositories locale verte avec rollback.
+- Empreinte de tout `app/`, liens internes et `git diff --check` verts lors de la validation finale.
+
+### Mesures avant/après
+
+- Frontières repository centrales : 0 → 3 domaines.
+- Tests actifs : 472 → 484.
+- Tâches Phase 2 terminées : 11/18 → 12/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Distinguer l'erreur de lecture du profil de son absence réelle dans `useClientDashboard`.

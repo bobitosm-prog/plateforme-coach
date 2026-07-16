@@ -65,4 +65,4 @@ Posséder la service-role n'est jamais une preuve d'autorisation. La route doit 
 
 Les créations existantes seront migrées par tranches : caractérisation, remplacement par la factory appropriée, suppression de la lecture d'environnement locale, typecheck tables/vues/RPC, puis tests RLS/E2E. Les dix accès représentatifs et les repositories sont des tâches distinctes. Un client session ne devient jamais admin par migration mécanique.
 
-La stratégie locale est décrite dans [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md).
+La stratégie locale est décrite dans [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md). Les frontières de données injectées sont documentées dans [`SUPABASE_REPOSITORIES.md`](SUPABASE_REPOSITORIES.md).
