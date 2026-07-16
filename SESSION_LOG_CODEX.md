@@ -3537,3 +3537,59 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Définir la taxonomie d'erreurs.
+
+## Entrée — 2026-07-15 — Taxonomie des erreurs API
+
+### Travail effectué
+
+- Audit exhaustif des statuts, raisons de logs, messages publics et fuites de causes dans les 52 routes et leurs tests.
+- Création de `lib/api/errors.ts` avec une union littérale de 27 codes, un registre typé exhaustif, des descriptors et un mapping legacy.
+- Définition des catégories, statuts par défaut, messages publics, retry client/serveur, niveaux de log, politique `details`, anti-énumération et domaines.
+- Documentation complète dans `docs/API_ERROR_TAXONOMY.md`, liée aux contrats réponse, invitation, Stripe, push, fournisseurs et logs.
+- Aucun handler, consommateur, statut ou corps existant n'a été modifié.
+
+### Tâches cochées
+
+- Phase 2 : « Définir la taxonomie d'erreurs » — terminée.
+- Progression Phase 2 : 8/18 → 9/18 tâches.
+
+### Décisions prises
+
+- MoovX conserve `400` pour validation syntaxique et sémantique; `422` n'est pas introduit sans besoin consommateur.
+- `404` peut remplacer `403` uniquement pour une anti-énumération explicitement documentée, notamment invitation et surfaces admin non découvrables.
+- `429` distingue rate limit et quota; `Retry-After` est requis lorsque la reprise est calculable.
+- Le replay Stripe terminé est acquitté en `200`; concurrence et échec retentable restent distingués en `409` et `503`.
+- `details` est interdit par défaut et autorisé uniquement sous forme publique contrôlée pour `VALIDATION_ERROR`.
+
+### Problèmes rencontrés
+
+- Les 236 statuts littéraux ne représentent pas toutes les branches construites dynamiquement; la documentation présente donc la mesure comme syntaxique.
+- Plusieurs routes répercutent actuellement le statut ou le message brut d'un fournisseur; elles sont consignées comme prioritaires mais restent inchangées.
+
+### Risques ou dette restante
+
+- Les routes exposant `error.message`, `detail`, SQL ou Anthropic restent à migrer séparément avec leurs consommateurs.
+- Le mapping legacy couvre les principaux contrats Phase 1, pas chaque phrase historique non contractualisée.
+- Le helper Zod → HTTP reste à créer et devra produire seulement des détails de validation publics.
+
+### Tests exécutés
+
+- Tests ciblés taxonomie + contrat réponse : 49 assertions vertes.
+- Suite complète : 37 fichiers, 452 tests actifs verts et 3 `todo`.
+- TypeScript `npx tsc --noEmit` et ESLint ciblé verts.
+- Liens internes valides; empreinte SHA des 52 routes strictement identique avant/après; `git diff --check` vert.
+
+### Mesures avant/après
+
+- Codes canoniques : 0 → 27.
+- Mappings legacy centraux : 0 → 8.
+- Tests actifs : 420 → 452.
+- Tâches Phase 2 terminées : 8/18 → 9/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer le helper commun Zod → erreur HTTP.
