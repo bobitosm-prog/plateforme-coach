@@ -116,3 +116,5 @@ Les tests du socle se trouvent dans [`tests/unit/api-response-contract.test.ts`]
 ## Frontière avec les autres contrats
 
 Ce contrat transporte un résultat; il ne définit ni les règles métier, ni la validation d'entrée, ni l'autorisation. Le futur helper Zod transformera une erreur de validation vers la taxonomie commune, sans exposer l'objet Zod brut. Les rejets critiques continuent d'utiliser les [journaux structurés et le rollback Phase 1](PHASE_1_ROLLBACK.md#58-journaux-structurés-de-sécurité). La stratégie générale de validation reste décrite dans [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md).
+
+La frontière Zod commune est désormais documentée dans [`API_VALIDATION.md`](API_VALIDATION.md). Son adoption reste route par route; ce contrat ne signifie pas que les routes existantes sont déjà migrées.

@@ -3593,3 +3593,59 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer le helper commun Zod → erreur HTTP.
+
+## Entrée — 2026-07-16 — Frontière Zod vers erreur HTTP
+
+### Travail effectué
+
+- Audit de Zod 4.3.6, des routes Zod et des validations manuelles body, query, route params et headers dans les 52 routes.
+- Création de `lib/api/validation.ts` avec `validateValue`, `validateJsonBody`, `validateQuery` et `validateRouteParams`.
+- Production directe d'un `ApiFailure<ValidationDetails>` canonique avec statut 400, code `VALIDATION_ERROR` et correlation ID cohérent.
+- Normalisation déterministe et bornée des issues sans valeur reçue, message custom, objet Zod brut ni chemin sensible.
+- Documentation des contrats, exemples, limites et stratégie de migration dans `docs/API_VALIDATION.md`.
+- Aucun handler ou consommateur n'a été migré.
+
+### Tâches cochées
+
+- Phase 2 : « Créer le helper commun Zod → erreur HTTP » — terminée.
+- Progression Phase 2 : 9/18 → 10/18 tâches.
+
+### Décisions prises
+
+- Petits helpers séparés plutôt qu'une abstraction HTTP unique.
+- `application/json` ou `+json` requis par défaut; corps vide et JSON malformé restent distingués publiquement.
+- Limite applicative par défaut de 1 Mo, sans prétendre remplacer la limite d'infrastructure.
+- Query répétée convertie en tableau; aucune coercition hors schéma Zod explicite.
+- Maximum 8 issues, 12 segments et 120 caractères par chemin; champs sensibles expurgés.
+
+### Problèmes rencontrés
+
+- Une parenthèse manquante dans le premier test a été détectée par le transform Vitest avant exécution puis corrigée.
+- Les validations actuelles sont majoritairement manuelles et hétérogènes; leur migration reste volontairement hors périmètre.
+
+### Risques ou dette restante
+
+- La limite après lecture protège l'application mais ne prévient pas l'allocation initiale; l'infrastructure demeure la première barrière.
+- Les headers privés d'authentification ne disposent volontairement pas d'un helper générique afin d'éviter leur exposition en détails.
+- Les huit routes simples restent à migrer après les factories et contrats requis par la roadmap.
+
+### Tests exécutés
+
+- Tests ciblés validation, réponse et taxonomie : 60 assertions vertes.
+- Suite complète : 38 fichiers, 463 tests actifs verts et 3 `todo`.
+- TypeScript `npx tsc --noEmit` et ESLint ciblé verts.
+- Liens internes valides; empreinte SHA des 52 routes identique avant/après; consommateurs inchangés; `git diff --check` vert.
+
+### Mesures avant/après
+
+- Helpers de validation communs : 0 → 4.
+- Tests actifs : 452 → 463.
+- Tâches Phase 2 terminées : 9/18 → 10/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Définir les factories Supabase browser/server/admin.
