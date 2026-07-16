@@ -3760,3 +3760,60 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Distinguer l'erreur de lecture du profil de son absence réelle dans `useClientDashboard`.
+
+## Entrée — 2026-07-16 — Chargement de profil client récupérable
+
+### Travail effectué
+
+- Remplacement de la décision implicite `!profRes.data` par le résultat discriminé du repository profil.
+- Ajout des états `idle`, `loading`, `ready`, `not_found` et `error`, avec redirection onboarding réservée à l'absence confirmée.
+- Ajout d'une page d'erreur plein écran conservant la session et proposant une nouvelle tentative contrôlée.
+- Protection contre les lectures concurrentes, réponses obsolètes, changements d'utilisateur et mises à jour après démontage.
+- Liaison du cache dashboard à `ownerUserId` et rejet des caches legacy ou appartenant à une autre identité.
+- Conservation d'un profil déjà confirmé lorsqu'un rafraîchissement serveur échoue.
+
+### Tâches cochées
+
+- Phase 2 : « Distinguer l'erreur de lecture du profil de l'absence réelle de profil dans `useClientDashboard` » — terminée.
+- Progression Phase 2 : 12/18 → 13/18 tâches.
+
+### Décisions prises
+
+- Seul `RepositoryResult.kind === 'not_found'` prouve l'absence et autorise `/onboarding-v2`.
+- Les erreurs repository et les échecs de la lecture agrégée ne déclenchent jamais l'onboarding.
+- Les autres requêtes du dashboard restent sur leur chemin historique; leur migration appartient à la tranche suivante.
+- Une nouvelle tentative est manuelle et sans boucle automatique; une requête identique déjà active n'est pas doublée.
+
+### Problèmes rencontrés
+
+- Le passage au client browser central typé a exposé des divergences historiques dans les nombreuses requêtes legacy du hook. La factory centrale est utilisée, mais la surface locale reste temporairement large jusqu'à la migration progressive des accès.
+- ESLint complet des deux gros fichiers modifiés conserve la dette historique `any` déjà documentée, sans nouvelle erreur : hook 33 erreurs avant/après, page 11 erreurs avant/après. Les nouveaux modules et tests sont sans erreur ESLint.
+
+### Risques ou dette restante
+
+- La lecture agrégée du profil utilise encore `select('*')` après la confirmation d'existence; elle sera traitée avec les accès Supabase représentatifs.
+- Le hook reste supérieur à 500 lignes et orchestre plusieurs domaines.
+- L'E2E valide le profil complété et le dashboard réel; l'injection navigateur déterministe d'une panne PostgREST reste couverte au niveau repository/décision plutôt que par interception réseau E2E.
+
+### Tests exécutés
+
+- Tests ciblés chargement profil et repositories : 32 assertions vertes; suite complète à 42 fichiers, 504 tests actifs verts et 3 `todo`.
+- TypeScript vert; ESLint vert sur le nouveau module de décision et ses tests, et comparaison ciblée sans nouvelle erreur sur les deux fichiers legacy modifiés.
+- Reset Supabase canonique vert : 139/139 migrations, empreinte `96e08867f266a1a36fa8f2b94ef78fc6` stable.
+- Intégration repository SQL, vérification Supabase locale et types générés vertes.
+- E2E Chromium `default-coach-assignment` vert : 1 parcours en 10,0 s, avec chargement réel du dashboard.
+- `git diff --check` vert lors de la validation finale.
+
+### Mesures avant/après
+
+- États de chargement profil explicites : 0 → 5.
+- Tests actifs : 484 → 504.
+- Tâches Phase 2 terminées : 12/18 → 13/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Migrer 10 accès Supabase représentatifs.

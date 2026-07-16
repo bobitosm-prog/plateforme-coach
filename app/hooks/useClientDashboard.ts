@@ -1,5 +1,4 @@
 'use client'
-import { createBrowserClient } from '@supabase/ssr'
 import { toDateStr } from '../../lib/schedule-utils'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -18,9 +17,10 @@ import { computeStreak } from '../../lib/streak'
 import { projectRestDates } from '../../lib/project-rest-days'
 import { checkAndUnlockBadges, type Badge } from '../../lib/check-badges'
 import { addXP, updateStreak } from '../../lib/gamification'
-
-const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
-const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
+import { getSupabaseBrowserClient } from '../../lib/supabase/browser'
+import { createProfileRepository } from '../../lib/repositories/profile'
+import { decideProfileRead, isDashboardCacheOwnedBy, ProfileLoadCoordinator, type ProfileLoadStatus } from '../../lib/client-dashboard/profile-load-state'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 export type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'compte' | 'profil' | 'messages' | 'coachIA' | 'feedback' | 'preferences' | 'account_section' | 'goals'
 
@@ -50,6 +50,7 @@ export default function useClientDashboard() {
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [profileLoadStatus, setProfileLoadStatus] = useState<ProfileLoadStatus>('idle')
 
   const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[]; startedAt?: string; weekdayKey?: string } | null>(() => {
     if (typeof window === 'undefined') return null
@@ -71,13 +72,22 @@ export default function useClientDashboard() {
 
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
+  const mountedRef = useRef(false)
+  const activeUserRef = useRef<string | null>(null)
+  const profileLoadCoordinator = useRef(new ProfileLoadCoordinator()).current
+  const confirmedProfileUserRef = useRef<string | null>(null)
+  const onboardingRedirectUserRef = useRef<string | null>(null)
   const clientProgramIdRef = useRef<string | null>(null)
   const coachOfProgramIdRef = useRef<string | null>(null)
   const [completedThisWeek, setCompletedThisWeek] = useState<Map<number, string>>(new Map())
   const [nextSession, setNextSession] = useState<SuggestedSession | null>(null)
 
   const mainRef = useRef<HTMLElement>(null)
-  const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
+  // The shared factory centralizes configuration; this legacy orchestrator remains
+  // intentionally loose until its individual data accesses are migrated.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = useRef(getSupabaseBrowserClient()).current
+  const profileRepository = useRef(createProfileRepository(supabase)).current
 
   // --- Sub-hooks ---
   const userId = session?.user?.id
@@ -94,34 +104,67 @@ export default function useClientDashboard() {
   /* ── Auth ── */
   useEffect(() => {
     setMounted(true)
+    mountedRef.current = true
     let alive = true
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    supabase.auth.getSession().then(({ data: { session: s } }: { data: { session: Session | null } }) => {
       supabase.from('app_logs').insert({ level: 'info', message: 'CLIENT_DASH_SESSION', details: { hasSession: !!s, userId: s?.user?.id, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/' })
       if (alive) { setSession(s); setLoading(false) }
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, s: Session | null) => {
       supabase.from('app_logs').insert({ level: 'info', message: 'CLIENT_DASH_AUTH_CHANGE', details: { event: _event, hasSession: !!s, userId: s?.user?.id }, page_url: '/' })
       if (!alive) return
       if (_event === 'SIGNED_OUT') { setSession(null); setLoading(false); return }
       if (s) { setSession(s); setLoading(false) }
     })
-    return () => { alive = false; subscription.unsubscribe() }
-  }, [])
+    return () => {
+      alive = false
+      mountedRef.current = false
+      profileLoadCoordinator.unmount()
+      subscription.unsubscribe()
+    }
+  }, [profileLoadCoordinator, supabase])
 
   useEffect(() => {
     if (!session) return
-    getRole(session.user.id, session.access_token).then(role => {
+    const uid = session.user.id
+    let alive = true
+    setRoleChecked(false)
+    setUserRole(null)
+    getRole(uid, session.access_token).then(role => {
+      if (!alive || session.user.id !== uid) return
       if (!role) { setRoleChecked(true); return }
       setUserRole(role)
       setRoleChecked(true)
     })
+    return () => { alive = false }
   }, [session])
 
   useEffect(() => {
-    if (!session || initialFetchDone.current) return
+    const uid = session?.user?.id ?? null
+    if (!uid) {
+      activeUserRef.current = null
+      profileLoadCoordinator.switchUser(null)
+      initialFetchDone.current = false
+      fetchAllComplete.current = false
+      setProfileLoadStatus('idle')
+      return
+    }
+    if (activeUserRef.current !== uid) {
+      activeUserRef.current = uid
+      profileLoadCoordinator.switchUser(uid)
+      initialFetchDone.current = false
+      fetchAllComplete.current = false
+      confirmedProfileUserRef.current = null
+      onboardingRedirectUserRef.current = null
+      setProfile(null)
+      setProfileLoadStatus('loading')
+    }
+    if (initialFetchDone.current) return
     initialFetchDone.current = true
-    fetchAll()
-  }, [session])
+    fetchAll(false, uid)
+  // The user id is the sole trigger; fetchAll is intentionally not a render dependency.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id])
 
   // Scroll-to-top disabled: each tab slide now has its own scroll container
   // (rail architecture, S1 swipe nav). Slides keep their position on tab switch.
@@ -130,29 +173,52 @@ export default function useClientDashboard() {
   // }, [activeTab])
 
   /* ── Data fetching (with cache) ── */
-  async function fetchAll(forceRefresh = false) {
-    const uid = session?.user?.id
+  async function fetchAll(forceRefresh = false, requestedUserId?: string) {
+    const uid = requestedUserId ?? session?.user?.id
     if (!uid) return
+    const request = profileLoadCoordinator.begin(uid)
+    if (!request) return
+    const isCurrentRequest = () => profileLoadCoordinator.isCurrent(request)
+    const hasConfirmedProfile = () => confirmedProfileUserRef.current === uid
     const today = new Date().toISOString().split('T')[0]
 
-    // Try cache first (only on initial load, not forced refreshes)
-    if (!forceRefresh) {
-      const cached = cache.get(`dashboard_${uid}`)
-      if (cached) {
-        applyFetchedData(cached.profileData, cached.weightsData, cached.sessData, cached.measureData, cached.photosData, cached.coachProgData, cached.coachMealData)
-        setSessionDates(cached.sessionDatesData || [])
-        setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
-        resolveCoachLink(uid)
-        const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
-        setPlanningDays(planningProgram?.days || null)
-        await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
-        analyticsHook.fetchAnalyticsData(uid)
-        fetchAllComplete.current = true
+    try {
+      // A cache is usable only when both its envelope and profile belong to the active identity.
+      if (!forceRefresh) {
+        const cached = cache.get(`dashboard_${uid}`)
+        if (isDashboardCacheOwnedBy(cached, uid)) {
+          applyFetchedData(cached.profileData, cached.weightsData || [], cached.sessData || [], cached.measureData || [], cached.photosData || [], cached.coachProgData, cached.coachMealData)
+          setSessionDates(cached.sessionDatesData || [])
+          setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
+          await resolveCoachLink(uid)
+          if (!isCurrentRequest()) return
+          const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
+          setPlanningDays(planningProgram?.days || null)
+          await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
+          if (!isCurrentRequest()) return
+          analyticsHook.fetchAnalyticsData(uid)
+          fetchAllComplete.current = true
+          confirmedProfileUserRef.current = uid
+          setProfileLoadStatus('ready')
+          return
+        }
+        if (cached) cache.remove(`dashboard_${uid}`)
+      }
+
+      if (!hasConfirmedProfile()) setProfileLoadStatus('loading')
+      const profileExistence = await profileRepository.findById(uid)
+      if (!isCurrentRequest()) return
+      const decision = decideProfileRead(profileExistence, hasConfirmedProfile())
+      if (decision.status !== 'ready' || !profileExistence.ok) {
+        setProfileLoadStatus(decision.status)
+        if (decision.redirectToOnboarding && onboardingRedirectUserRef.current !== uid) {
+          onboardingRedirectUserRef.current = uid
+          router.replace('/onboarding-v2')
+        }
         return
       }
-    }
 
-    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes, sessionDatesRes] = await Promise.all([
+      const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes, sessionDatesRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
@@ -168,9 +234,14 @@ export default function useClientDashboard() {
       supabase.from('custom_programs').select('*').eq('user_id', uid).eq('is_active', true).maybeSingle(),
       supabase.from('workout_sessions').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('completed', true),
       supabase.from('workout_sessions').select('created_at').eq('user_id', uid).eq('completed', true).order('created_at', { ascending: false }).limit(400),
-    ])
+      ])
 
-    if (!profRes.data) { router.replace('/onboarding-v2'); return }
+      if (!isCurrentRequest()) return
+      // The repository alone decides absence. A failed aggregate profile read is recoverable.
+      if (profRes.error || !profRes.data) {
+        setProfileLoadStatus(hasConfirmedProfile() ? 'ready' : 'error')
+        return
+      }
     // If role is missing but user_metadata has it (trigger guard_profile_sensitive_columns blocks client role updates), fix via RPC
     const metaRole = session?.user?.user_metadata?.role
     if (!profRes.data.role && metaRole) {
@@ -238,7 +309,7 @@ export default function useClientDashboard() {
     setCompletedThisWeek(cwMap)
     setNextSession(suggestNextSession(coachProgData, lcMap))
 
-    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null, sessionDatesData: sessionDatesRes?.data || [], hasTrainedBeforeVal: (trainedCountRes?.count ?? 0) > 0 }, 5 * 60 * 1000)
+    cache.set(`dashboard_${uid}`, { ownerUserId: uid, profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null, sessionDatesData: sessionDatesRes?.data || [], hasTrainedBeforeVal: (trainedCountRes?.count ?? 0) > 0 }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
     setHasTrainedBefore((trainedCountRes?.count ?? 0) > 0)
@@ -250,7 +321,21 @@ export default function useClientDashboard() {
     await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
     analyticsHook.fetchAnalyticsData(uid)
     await resolveCoachLink(uid)
+    if (!isCurrentRequest()) return
     fetchAllComplete.current = true
+    confirmedProfileUserRef.current = uid
+    setProfileLoadStatus('ready')
+    } catch {
+      if (isCurrentRequest()) setProfileLoadStatus(hasConfirmedProfile() ? 'ready' : 'error')
+    } finally {
+      profileLoadCoordinator.finish(request)
+    }
+  }
+
+  function retryProfileLoad() {
+    const uid = session?.user?.id
+    if (!uid || profileLoadCoordinator.isLoading(uid)) return
+    void fetchAll(true, uid)
   }
 
   function applyFetchedData(profileData: any, weightsData: any[], sessData: any[], measureData: any[], photosData: any[], coachProgData: any, coachMealData: any) {
@@ -275,12 +360,14 @@ export default function useClientDashboard() {
 
   async function resolveCoachLink(uid: string) {
     const { data: coachLink } = await supabase.from('coach_clients').select('coach_id').eq('client_id', uid).eq('status', 'active').maybeSingle()
+    if (!mountedRef.current || activeUserRef.current !== uid) return
     if (coachLink?.coach_id) {
       setCoachId(coachLink.coach_id)
       return
     }
 
     const response = await fetch('/api/coach/default-assignment', { method: 'POST' })
+    if (!mountedRef.current || activeUserRef.current !== uid) return
     if (response.ok) {
       const payload = await response.json()
       if (payload?.data?.coachId && payload.data.isDefault === true) {
@@ -589,6 +676,7 @@ export default function useClientDashboard() {
   return {
     // Auth / loading
     mounted, session, loading, roleChecked, userRole, router, supabase,
+    profileLoadStatus, retryProfileLoad,
     // Profile / data
     profile, measurements, progressPhotos, wSessions,
     coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,

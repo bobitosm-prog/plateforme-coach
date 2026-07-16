@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { AnimatePresence, motion, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import {
   Home, Dumbbell, UtensilsCrossed, TrendingUp, Sparkles,
@@ -289,7 +290,7 @@ export default function CoachApp() {
   }, [h.session?.user?.id, h.supabase])
 
   /* ── Loading splash ── */
-  if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
+  if (!h.mounted || h.loading || (h.session && !h.roleChecked) || (h.session && h.profileLoadStatus === 'loading' && !h.profile)) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0D0B08', gap: 24 }}>
       <img src="/logo-moovx.png" alt="MoovX" width={80} height={80} style={{ borderRadius: 20, filter: 'drop-shadow(0 0 30px rgba(212,168,67,0.3))' }} />
       <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#D4A843', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -301,6 +302,24 @@ export default function CoachApp() {
     h.router.push('/login')
     return null
   }
+
+  /* ── Profile read failure: never infer onboarding from an infrastructure/RLS error ── */
+  if (h.profileLoadStatus === 'error') return (
+    <div role="alert" data-testid="profile-load-error" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', padding: 24, textAlign: 'center', background: '#0D0B08', color: '#F8FAFC', fontFamily: FONT_BODY }}>
+      <Image src="/logo-moovx.png" alt="MoovX" width={72} height={72} style={{ borderRadius: 18, marginBottom: 24 }} />
+      <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', letterSpacing: 2, margin: '0 0 12px' }}>PROFIL INDISPONIBLE</h1>
+      <p style={{ color: TEXT_MUTED, lineHeight: 1.6, maxWidth: 420, margin: '0 0 24px' }}>
+        Nous n’avons pas pu charger ton profil. Ta session est conservée et aucune donnée n’a été modifiée.
+      </p>
+      <button type="button" onClick={h.retryProfileLoad} style={{ minHeight: 44, padding: '0 22px', border: `1px solid ${GOLD}`, borderRadius: 12, background: GOLD, color: '#0D0B08', fontFamily: FONT_ALT, fontWeight: 800, letterSpacing: 1, cursor: 'pointer' }}>
+        RÉESSAYER
+      </button>
+    </div>
+  )
+
+  // The repository confirmed absence and the router is replacing this page.
+  // Render no dashboard/paywall while the onboarding navigation settles.
+  if (h.profileLoadStatus === 'not_found') return null
 
   /* ── Coach role → render coach dashboard directly (no redirect) ── */
   if (h.userRole === 'coach') return <CoachDashboard initialSession={h.session} />

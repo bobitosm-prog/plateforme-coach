@@ -44,8 +44,12 @@ Injecter un client admin ne prouve aucune autorisation. L'appelant doit établir
 
 Les mutations sont séparées dans `subscription/authority.ts`, module `server-only`. `createSubscriptionAuthorityRepository` accepte uniquement les quatre champs canoniques et doit recevoir un client privilégié après autorisation. Il n'utilise aucune colonne divergente comme `subscription_price`.
 
-## Préparation de `useClientDashboard`
+## Chargement de profil dans `useClientDashboard`
 
-La prochaine tranche remplacera uniquement sa lecture initiale profil afin de distinguer erreur de lecture et absence. Avant bascule, des tests caractériseront profil complété, profil absent, erreur réseau/RLS et onboarding. Les autres accès du hook restent hors périmètre et les dix migrations représentatives demeurent une tâche séparée.
+La décision d'existence du profil passe désormais par `createProfileRepository(...).findById`. Seul le résultat `not_found`, produit par une lecture valide sans ligne, autorise la redirection vers `/onboarding-v2`. Une erreur réseau, RLS ou Supabase produit l'état récupérable `error`, conserve la session et affiche une page plein écran avec une action de nouvelle tentative. Le chargement agrégé historique reste en place : cette tranche ne migre aucune autre requête du dashboard.
+
+Le cycle explicite est `idle → loading → ready | not_found | error`. Une seule lecture est active par utilisateur; les réponses d'une identité précédente ou reçues après démontage sont ignorées. Une nouvelle tentative force la lecture serveur sans boucle automatique. Si un profil utilisable a déjà été confirmé, l'échec d'un rafraîchissement ne remplace pas l'écran courant par une erreur.
+
+Le cache dashboard porte `ownerUserId` et le `profileData.id` doit correspondre à l'identité active. Les anciens caches sans propriétaire et les caches croisés sont rejetés. Le cache ne peut jamais provoquer une redirection onboarding.
 
 Les tests unitaires mockent le client injecté. Le test SQL local utilise les [personas partagés](TEST_FIXTURES.md), vérifie profil propre, profil absent, isolation RLS, invited et lifetime, puis annule toute la transaction.
