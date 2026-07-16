@@ -1,28 +1,18 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createIdentityRepository } from '@/lib/repositories/identity'
+import { createProfileRepository } from '@/lib/repositories/profile'
 
 const COOKIE_NAME = 'NEXT_LOCALE'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 export async function POST() {
   try {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
-    )
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('preferred_locale')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    const locale = profile?.preferred_locale
+    const supabase = await createSupabaseServerClient()
+    const identity = await createIdentityRepository(supabase).getCurrent()
+    if (!identity.ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const profile = await createProfileRepository(supabase).findById(identity.data.id)
+    const locale = profile.ok ? profile.data.preferred_locale : null
     if (!locale || !['fr', 'en', 'de'].includes(locale)) {
       return NextResponse.json({ success: true, locale: null })
     }

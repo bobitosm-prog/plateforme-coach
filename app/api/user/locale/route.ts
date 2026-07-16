@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createIdentityRepository } from '@/lib/repositories/identity'
+import { createProfileRepository } from '@/lib/repositories/profile'
 
 const SUPPORTED_LOCALES = ['fr', 'en', 'de'] as const
 const COOKIE_NAME = 'NEXT_LOCALE'
@@ -14,22 +15,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid locale' }, { status: 400 })
     }
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
-    )
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const supabase = await createSupabaseServerClient()
+    const identity = await createIdentityRepository(supabase).getCurrent()
+    if (!identity.ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const update = await createProfileRepository(supabase).updateSafe(identity.data.id, { preferred_locale: locale })
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ preferred_locale: locale })
-      .eq('id', user.id)
-
-    if (updateError) {
-      console.error('[locale] DB update failed:', updateError.message)
+    if (!update.ok && update.kind === 'failure') {
+      console.error('[locale] DB update failed')
       return NextResponse.json({ error: 'Failed to update locale' }, { status: 500 })
     }
 

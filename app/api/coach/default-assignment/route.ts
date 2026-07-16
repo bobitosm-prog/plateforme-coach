@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { assignConfiguredDefaultCoach } from '@/lib/coach-relations/default-assignment'
 
 export async function POST(request: Request) {
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   if (!url || !key) return NextResponse.json({ success: false, error: { code: 'SERVER_CONFIG_INVALID' } }, { status: 503 })
 
   try {
-    const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
+    const admin = createSupabaseAdminClient()
     const assignment = await assignConfiguredDefaultCoach(admin, user.id, process.env.DEFAULT_COACH_EMAIL)
     return NextResponse.json({ success: true, data: assignment })
   } catch {

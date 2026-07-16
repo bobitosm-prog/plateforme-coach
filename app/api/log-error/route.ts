@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createIdentityRepository } from '@/lib/repositories/identity'
 import { checkRateLimit } from '../../../lib/rate-limit'
 
 const VALID_LEVELS = new Set(['info', 'warning', 'error', 'critical'])
@@ -24,20 +24,17 @@ export async function POST(req: NextRequest) {
     const details = body?.details ? String(body.details).slice(0, 2000) : null
 
     // Auth client (anon key + cookies) — auth optional (pre-login errors)
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => cookieStore.getAll() } }
-    )
+    const supabase = await createSupabaseServerClient()
 
     // Derive user_id server-side only (never from body — anti-spoofing)
     let userId: string | null = null
     let userEmail: string | null = null
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      userId = user?.id ?? null
-      userEmail = user?.email ?? null
+      const identity = await createIdentityRepository(supabase).getCurrent()
+      if (identity.ok) {
+        userId = identity.data.id
+        userEmail = identity.data.email
+      }
     } catch {}
 
     // INSERT via RLS policy app_logs_insert_safe (user_id NULL or auth.uid())
@@ -49,9 +46,9 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
+  } catch (e: unknown) {
     // Log server-side only — never leak internal details to client
-    console.error('[log-error]', e?.message)
+    console.error('[log-error]', e instanceof Error ? e.message : 'unknown')
     return NextResponse.json({ ok: false }, { status: 500 })
   }
 }

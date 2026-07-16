@@ -8,7 +8,7 @@ L'audit de `app`, `lib`, `tests` et `scripts` compte 76 créations dans 76 fichi
 
 Les incohérences observées sont : clients souvent non typés, lecture d'environnement répétée, conventions cookies recopiées, service-role construite dans plusieurs routes/crons, clients navigateur tantôt globaux tantôt recréés, et mélange fréquent entre client session et client privilégié.
 
-Cette tranche ne migre aucun de ces usages. Les exports historiques `supabase`, `createSupabaseRouteClient` et `supabaseAdmin` restent compatibles pendant la transition.
+La première tranche représentative a depuis migré exactement dix sites applicatifs : quatre browser, quatre server et deux admin. Le compteur comparable hors factories canoniques passe de 65 à 55 constructions directes, réparties dans 48 fichiers. Le périmètre et les preuves sont détaillés dans [`SUPABASE_ACCESS_MIGRATION.md`](SUPABASE_ACCESS_MIGRATION.md). Les exports historiques `supabase`, `createSupabaseRouteClient` et `supabaseAdmin` restent compatibles pendant la transition.
 
 ## Quel client utiliser ?
 
@@ -61,8 +61,8 @@ Posséder la service-role n'est jamais une preuve d'autorisation. La route doit 
 - Les gardes localhost restent spécifiques aux fixtures/scripts, pas à la production.
 - Les exports legacy gardent temporairement leur surface large pour ne pas propager les divergences de schéma connues dans les routes avant leur migration.
 
-## Migration future
+## Migration progressive
 
-Les créations existantes seront migrées par tranches : caractérisation, remplacement par la factory appropriée, suppression de la lecture d'environnement locale, typecheck tables/vues/RPC, puis tests RLS/E2E. Les dix accès représentatifs et les repositories sont des tâches distinctes. Un client session ne devient jamais admin par migration mécanique.
+Les créations restantes seront migrées par tranches : caractérisation, remplacement par la factory appropriée, suppression de la lecture d'environnement locale, typecheck tables/vues/RPC, puis tests RLS/E2E. Un client session ne devient jamais admin par migration mécanique.
 
 La stratégie locale est décrite dans [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md). Les frontières de données injectées sont documentées dans [`SUPABASE_REPOSITORIES.md`](SUPABASE_REPOSITORIES.md).

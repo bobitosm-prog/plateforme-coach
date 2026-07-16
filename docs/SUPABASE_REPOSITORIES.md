@@ -53,3 +53,7 @@ Le cycle explicite est `idle → loading → ready | not_found | error`. Une seu
 Le cache dashboard porte `ownerUserId` et le `profileData.id` doit correspondre à l'identité active. Les anciens caches sans propriétaire et les caches croisés sont rejetés. Le cache ne peut jamais provoquer une redirection onboarding.
 
 Les tests unitaires mockent le client injecté. Le test SQL local utilise les [personas partagés](TEST_FIXTURES.md), vérifie profil propre, profil absent, isolation RLS, invited et lifetime, puis annule toute la transaction.
+
+## Premiers consommateurs serveur
+
+Les routes `POST /api/user/sync-locale` et `POST /api/user/locale` sont les premiers consommateurs server réels. Elles composent la factory session, le repository identité, puis le repository profil. La lecture retourne une locale valide ou `null` sans confondre absence et panne; l'écriture passe par `updateSafe` et ne peut typer que `preferred_locale`. Les statuts HTTP et cookies historiques restent inchangés. Le lot complet des dix sites est documenté dans [`SUPABASE_ACCESS_MIGRATION.md`](SUPABASE_ACCESS_MIGRATION.md).

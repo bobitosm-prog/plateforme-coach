@@ -1,5 +1,5 @@
 'use client'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -7,7 +7,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, GOLD, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../lib/design-tokens'
 
-const supabase = createBrowserClient((process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(), (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim())
+const supabase = getSupabaseBrowserClient()
 
 const GoogleIcon = () => <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
 const AppleIcon = () => <svg width="16" height="19" viewBox="0 0 16 19" fill="white"><path d="M15.462 6.498c-.098.063-1.828 1.05-1.828 3.218 0 2.508 2.202 3.396 2.268 3.418-.011.042-.351 1.207-1.163 2.384-.713 1.035-1.456 2.068-2.585 2.068s-1.422-.657-2.727-.657c-1.273 0-1.724.679-2.761.679s-1.741-.955-2.585-2.116C3.06 14.052 2.17 11.839 2.17 9.748c0-3.374 2.191-5.163 4.35-5.163 1.147 0 2.103.753 2.826.753.69 0 1.767-.8 3.078-.8.497 0 2.283.044 3.038 1.96zM10.737.94C11.286.294 11.676-.352 11.676-.352s-.03 0-.03.002c.003.003-.617.258-1.166.912-.504.598-.946 1.258-.946 1.929 0 .085.008.171.024.252.016.082.038.152.038.152s.035.002.035.002c.003 0 .654-.22 1.106-.957z"/></svg>

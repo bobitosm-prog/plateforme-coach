@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createIdentityRepository } from '@/lib/repositories/identity'
 import { checkRateLimit, checkAiQuota } from '../../../lib/rate-limit'
 
 export async function GET(req: NextRequest) {
@@ -9,16 +9,11 @@ export async function GET(req: NextRequest) {
   if (!rl.allowed) return NextResponse.json({ ok: false }, { status: 429 })
 
   try {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => cookieStore.getAll() } }
-    )
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ ok: false }, { status: 401 })
+    const supabase = await createSupabaseServerClient()
+    const identity = await createIdentityRepository(supabase).getCurrent()
+    if (!identity.ok) return NextResponse.json({ ok: false }, { status: 401 })
 
-    const result = await checkAiQuota(supabase, user.id)
+    const result = await checkAiQuota(supabase, identity.data.id)
     return NextResponse.json({
       remaining: result.remaining,
       limit: result.limit,

@@ -2,10 +2,11 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
-  createClient: vi.fn(() => ({ marker: 'admin' })),
+  createAdmin: vi.fn(() => ({ marker: 'admin' })),
   assign: vi.fn(),
 }))
-vi.mock('@supabase/supabase-js', () => ({ createClient: mocks.createClient }))
+vi.mock('server-only', () => ({}))
+vi.mock('@/lib/supabase/admin', () => ({ createSupabaseAdminClient: mocks.createAdmin }))
 vi.mock('@/lib/supabase/server', () => ({
   createSupabaseRouteClient: vi.fn(async () => ({ auth: { getUser: mocks.getUser } })),
 }))
@@ -48,6 +49,7 @@ describe('default coach assignment route', () => {
     const response = await POST(request('{}'))
     expect(response.status).toBe(200)
     expect(mocks.assign).toHaveBeenCalledWith(expect.anything(), 'client-session-id', 'default@moovx.example.test')
+    expect(mocks.createAdmin).toHaveBeenCalledOnce()
   })
 
   it('fails closed when configuration or assignment is unavailable', async () => {

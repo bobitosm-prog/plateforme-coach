@@ -1,13 +1,13 @@
 'use client'
 import { useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { X, Send, Bug, Lightbulb, HelpCircle, MessageSquare, CheckCircle2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, Z_MODAL, Z_FAB } from '../../lib/design-tokens'
 import { useMyFeedback, type MyFeedbackReport } from '@/app/hooks/useMyFeedback'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 
-const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+const supabase = getSupabaseBrowserClient()
 
 interface BugReportProps {
   session: any

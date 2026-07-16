@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 13 tâches sur 18 terminées ; chargement de profil robuste aux absences réelles, erreurs Supabase et changements d'identité**
+**Statut : En cours — 14 tâches sur 18 terminées ; dix accès Supabase représentatifs migrés vers les factories et repositories canoniques**
 
 ### Pourquoi
 
@@ -277,7 +277,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 | [x] [Définir les factories Supabase browser/server/admin](docs/SUPABASE_CLIENT_FACTORIES.md) | 2 j | Élevée | Moyen | Critique | Types DB |
 | [x] [Créer les repositories profil, identité et abonnement](docs/SUPABASE_REPOSITORIES.md) | 3 j | Élevée | Élevé | Critique | Factories |
 | [x] [Distinguer l'erreur de lecture du profil de l'absence réelle de profil dans `useClientDashboard`](docs/SUPABASE_REPOSITORIES.md#chargement-de-profil-dans-useclientdashboard) | 1,5 j | Moyenne | Faible | Élevé | Contrat erreurs + repository profil |
-| [ ] Migrer 10 accès Supabase représentatifs | 3 j | Moyenne | Moyen | Élevé | Repositories |
+| [x] [Migrer 10 accès Supabase représentatifs](docs/SUPABASE_ACCESS_MIGRATION.md) | 3 j | Moyenne | Moyen | Élevé | Repositories |
 | [ ] Définir une stratégie de cache par domaine | 1 j | Élevée | Faible | Moyen | Repositories |
 | [ ] Migrer 8 routes simples vers le contrat route/service/schema | 4 j | Élevée | Moyen | Élevé | Zod + erreurs |
 | [ ] Ajouter correlation IDs et logs structurés | 1,5 j | Moyenne | Faible | Moyen | Erreurs |
@@ -746,7 +746,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 504 actifs + 3 contractuels `todo` | 🟢 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 527 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |

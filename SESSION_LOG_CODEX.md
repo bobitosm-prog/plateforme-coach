@@ -3817,3 +3817,67 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Migrer 10 accès Supabase représentatifs.
+
+## Entrée — 2026-07-16 — Dix accès Supabase représentatifs
+
+### Travail effectué
+
+- Audit mesuré des constructeurs browser, server, admin, accès directs à `profiles` et champs d'abonnement.
+- Sélection puis migration de dix sites applicatifs distincts : quatre browser, quatre routes session et deux routes admin.
+- Remplacement des constructions locales par les factories canoniques, sans supprimer les exports de compatibilité encore consommés.
+- Adoption du repository identité dans quatre routes et du repository profil dans les deux routes locale.
+- Passage de l'écriture `preferred_locale` par `updateSafe` et typage du payload d'inscription avec `TablesUpdate<'profiles'>`.
+- Ajout d'un inventaire automatisé fermé, de tests de routes et d'une documentation détaillée dans `docs/SUPABASE_ACCESS_MIGRATION.md`.
+
+### Tâches cochées
+
+- Phase 2 : « Migrer 10 accès Supabase représentatifs » — terminée.
+- Progression Phase 2 : 13/18 → 14/18 tâches.
+
+### Décisions prises
+
+- Chaque fichier sélectionné compte pour un seul site applicatif; tests, imports et documentation ne comptent jamais.
+- Les quatre sites browser utilisent le singleton partagé et n'importent aucun module server/admin.
+- Les routes session recréent un client par requête et tirent l'identité exclusivement de `auth.getUser()` via le repository.
+- Les factories admin ne sont créées qu'après authentification et contrôle de configuration; l'identifiant client vient de la session.
+- Les accès sans repository adapté restent des requêtes Supabase typées directes.
+
+### Problèmes rencontrés
+
+- Le client browser typé a refusé le dictionnaire libre utilisé par l'inscription; le payload a été resserré sur `TablesUpdate<'profiles'>` sans modifier son contenu.
+- Quatre composants browser conservent leur dette ESLint historique. La comparaison à `HEAD` montre exactement les mêmes erreurs et avertissements avant/après.
+- L'E2E invitation continue de signaler les erreurs historiques de `/api/feedback/mine` et les avertissements Next Image, sans échec du parcours ni lien avec cette tranche.
+
+### Risques ou dette restante
+
+- 55 constructeurs legacy restent dans 48 fichiers.
+- 87 accès directs à `profiles` et 170 occurrences de champs d'abonnement restent à traiter par tranches.
+- Les divergences `payments`, Stripe Connect, `coach_bio`, `cgu_accepted_at` et `subscription_price` restent ouvertes.
+- Les exports `createSupabaseRouteClient` et `supabaseAdmin` restent nécessaires aux consommateurs non migrés.
+
+### Tests exécutés
+
+- Tests ciblés : 8 fichiers et 58 assertions vertes.
+- Suite complète : 45 fichiers, 527 tests actifs verts et 3 `todo`.
+- TypeScript vert; ESLint vert sur les routes et tests modifiés, et aucune nouvelle erreur sur les quatre composants browser legacy.
+- Types Supabase canoniques conformes; intégration repositories SQL verte.
+- Matrice RLS/PostgREST complète verte, sans écart connu.
+- E2E invitation : 2 tests verts en 21,9 s; E2E default coach : 1 test vert en 8,4 s.
+- Recherche browser : aucune service-role, factory admin ou dépendance `server-only` dans les quatre sites migrés.
+- `git diff --check` vert lors de la validation finale.
+
+### Mesures avant/après
+
+- Constructeurs legacy directs : 65 → 55.
+- Fichiers avec constructeur legacy : 58 → 48.
+- Accès directs à `profiles` : 89 → 87.
+- Tests actifs : 504 → 527.
+- Tâches Phase 2 terminées : 13/18 → 14/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Définir une stratégie de cache par domaine.

@@ -1,6 +1,6 @@
 'use client'
 
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { Eye, EyeOff } from 'lucide-react'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -13,6 +13,7 @@ import {
 
 const STORAGE_KEY = 'moovx_coach_invitation'
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/
+const supabase = getSupabaseBrowserClient()
 
 type JoinState =
   | 'checking'
@@ -33,10 +34,6 @@ function JoinContent() {
   const t = useTranslations('auth.join')
   const params = useSearchParams()
   const router = useRouter()
-  const supabase = useRef(createBrowserClient(
-    (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
-    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim(),
-  )).current
   const tokenRef = useRef<string | null>(null)
   const started = useRef(false)
   const [state, setState] = useState<JoinState>('checking')
