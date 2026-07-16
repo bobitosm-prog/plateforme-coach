@@ -2,6 +2,8 @@
 
 Les types de base MoovX sont générés exclusivement depuis le schéma `public` de la stack Supabase locale reconstruite par les migrations versionnées. Le fichier [database.types.ts](../lib/supabase/database.types.ts) est un artefact généré : il ne doit jamais être corrigé ou complété manuellement.
 
+Les frontières qui instancient les clients typés sont documentées dans [`SUPABASE_CLIENT_FACTORIES.md`](SUPABASE_CLIENT_FACTORIES.md).
+
 ## Commandes
 
 ```bash

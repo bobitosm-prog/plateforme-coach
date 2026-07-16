@@ -1,9 +1,7 @@
 import 'server-only'
-import { createClient } from '@supabase/supabase-js'
-
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante dans .env')
-}
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/types'
+import { getSupabaseAdminEnv } from '@/lib/supabase/env'
 
 /**
  * Client Supabase admin — BYPASSE TOUTES LES RLS.
@@ -14,13 +12,17 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
  * À utiliser UNIQUEMENT dans les route handlers admin,
  * APRÈS vérification de l'identité admin via verifyAdmin().
  */
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
+export function createSupabaseAdminClient(): SupabaseClient<Database> {
+  const { url, serviceRoleKey } = getSupabaseAdminEnv()
+  return createClient<Database>(url, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
+      detectSessionInUrl: false,
     },
-  }
-)
+  })
+}
+
+// Compatibility export: keep the historical broad surface until each admin route
+// is migrated against the generated schema and its documented schema gaps.
+export const supabaseAdmin: SupabaseClient = createSupabaseAdminClient()

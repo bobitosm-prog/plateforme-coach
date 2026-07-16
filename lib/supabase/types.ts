@@ -8,6 +8,12 @@ export type {
 } from './database.types'
 
 import type { Database } from './database.types'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+export type DatabaseClient = SupabaseClient<Database>
+export type BrowserSupabaseClient = DatabaseClient
+export type ServerSupabaseClient = DatabaseClient
+export type AdminSupabaseClient = DatabaseClient
 
 type PublicSchema = Database['public']
 

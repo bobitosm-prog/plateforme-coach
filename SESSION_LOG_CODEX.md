@@ -3649,3 +3649,57 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Définir les factories Supabase browser/server/admin.
+
+## Entrée — 2026-07-16 — Factories Supabase browser, server et admin
+
+### Travail effectué
+
+- Audit de 76 créations Supabase : 25 browser, 26 server session et 25 clients SDK, réparties dans 76 fichiers.
+- Création des frontières typées `createSupabaseBrowserClient`, `getSupabaseBrowserClient`, `createSupabaseServerClient` et `createSupabaseAdminClient`.
+- Centralisation de la configuration serveur expurgée et séparation stricte du graphe browser.
+- Conservation des exports legacy pour éviter toute migration de route ou propagation prématurée des divergences de schéma.
+- Tests des configurations, singleton, cookies, isolation par requête, options Auth admin, imports et absence de réseau.
+- Documentation dans `docs/SUPABASE_CLIENT_FACTORIES.md`.
+
+### Tâches cochées
+
+- Phase 2 : « Définir les factories Supabase browser/server/admin » — terminée.
+- Progression Phase 2 : 10/18 → 11/18 tâches.
+
+### Décisions prises
+
+- Browser singleton explicite; server nouvelle instance par requête; admin nouvelle instance par appel.
+- Les modules admin/env sont `server-only`; le module browser ne référence aucune configuration privée.
+- L'admin n'est jamais une preuve d'autorisation et ne reçoit aucune identité en argument.
+- Les exports historiques restent larges jusqu'à migration individuelle des routes contre le schéma généré.
+
+### Problèmes rencontrés
+
+- Le premier typecheck strict des exports legacy a exposé les divergences déjà documentées de colonnes admin/feedback/Stripe. Les nouvelles factories restent typées, tandis que les wrappers legacy conservent temporairement leur surface compatible.
+
+### Risques ou dette restante
+
+- 23 fichiers browser, 25 fichiers server et 21 fichiers service-role applicatifs restent dispersés.
+- Les wrappers legacy larges doivent disparaître après migration et correction des écarts de schéma.
+- Aucun repository n'est créé dans cette tranche.
+
+### Tests exécutés
+
+- Tests ciblés factories et types : 12 assertions vertes.
+- Suite complète : 39 fichiers, 472 tests actifs verts et 3 `todo`.
+- TypeScript et ESLint ciblé verts; types Supabase conformes au schéma local canonique.
+- Graphes d'import, empreintes de tout `app/`, liens internes et `git diff --check` verts lors de la validation finale.
+
+### Mesures avant/après
+
+- Factories centrales typées : 0 → 3 frontières, 4 API publiques.
+- Tests actifs : 463 → 472.
+- Tâches Phase 2 terminées : 10/18 → 11/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer les repositories profil, identité et abonnement.

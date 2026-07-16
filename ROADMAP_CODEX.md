@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 10 tâches sur 18 terminées ; frontière Zod → erreur HTTP typée, sûre et documentée, sans migration de route anticipée**
+**Statut : En cours — 11 tâches sur 18 terminées ; factories Supabase browser/server/admin typées, testées et documentées avec exports legacy compatibles**
 
 ### Pourquoi
 
@@ -274,7 +274,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 | [x] [Définir le contrat commun de réponse API](docs/API_RESPONSE_CONTRACT.md) | 1 j | Moyenne | Moyen | Élevé | — |
 | [x] [Définir la taxonomie d'erreurs](docs/API_ERROR_TAXONOMY.md) | 1 j | Moyenne | Faible | Élevé | Contrat API |
 | [x] [Créer le helper commun Zod → erreur HTTP](docs/API_VALIDATION.md) | 1,5 j | Moyenne | Faible | Élevé | Contrat API |
-| [ ] Définir les factories Supabase browser/server/admin | 2 j | Élevée | Moyen | Critique | Types DB |
+| [x] [Définir les factories Supabase browser/server/admin](docs/SUPABASE_CLIENT_FACTORIES.md) | 2 j | Élevée | Moyen | Critique | Types DB |
 | [ ] Créer les repositories profil, identité et abonnement | 3 j | Élevée | Élevé | Critique | Factories |
 | [ ] Distinguer l'erreur de lecture du profil de l'absence réelle de profil dans `useClientDashboard` | 1,5 j | Moyenne | Faible | Élevé | Contrat erreurs + repository profil |
 | [ ] Migrer 10 accès Supabase représentatifs | 3 j | Moyenne | Moyen | Élevé | Repositories |
@@ -746,7 +746,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 463 actifs + 3 contractuels `todo` | 🟢 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 472 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
