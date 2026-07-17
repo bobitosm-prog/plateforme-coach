@@ -23,6 +23,7 @@ import { createTrainingProgramRepository, createTrainingSessionRepository } from
 import type { ProfileLoadStatus } from '../../lib/client-dashboard/profile-load-state'
 import { createSessionProfileLoader } from '../../lib/client-dashboard/session-profile-loader'
 import { createTrainingDashboardLoader } from '../../lib/client-dashboard/training-dashboard-loader'
+import { createNutritionMeasurementsLoader, createNutritionMeasurementsReaders } from '../../lib/client-dashboard/nutrition-measurements-loader'
 import { resolveLegacyDashboardAccess } from '../../lib/billing/legacy'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
@@ -101,6 +102,9 @@ export default function useClientDashboard() {
     programRepository: createTrainingProgramRepository(supabase),
     sessionRepository: createTrainingSessionRepository(supabase),
   })).current
+  const nutritionMeasurementsLoader = useRef(createNutritionMeasurementsLoader(
+    createNutritionMeasurementsReaders(supabase),
+  )).current
 
   // --- Sub-hooks ---
   const userId = session?.user?.id
@@ -194,8 +198,6 @@ export default function useClientDashboard() {
     if (!profileLoad) return
     const isCurrentRequest = () => profileLoad.isCurrent()
     const hasConfirmedProfile = () => confirmedProfileUserRef.current === uid
-    const today = new Date().toISOString().split('T')[0]
-
     try {
       if (!hasConfirmedProfile()) setProfileLoadStatus('loading')
       const sessionProfile = await profileLoad.load({
@@ -234,19 +236,19 @@ export default function useClientDashboard() {
         return
       }
 
-      const [trainingRes, profRes, weightsRes, , measureRes, photosRes, coachMealRes, diagRes] = await Promise.all([
+      const [trainingRes, nutritionMeasurementsRes, profRes, diagRes] = await Promise.all([
         trainingDashboardLoader.load(uid),
+        nutritionMeasurementsLoader.load(uid),
         supabase.from('profiles').select('*').eq('id', uid).single(),
-        supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
-        supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
-        supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
-        supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
-        supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('weekly_diagnostics').select('*').eq('user_id', uid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
       ])
 
       if (!isCurrentRequest()) return
       if (!trainingRes.ok) {
+        setProfileLoadStatus(hasConfirmedProfile() ? 'ready' : 'error')
+        return
+      }
+      if (!nutritionMeasurementsRes.ok) {
         setProfileLoadStatus(hasConfirmedProfile() ? 'ready' : 'error')
         return
       }
@@ -298,14 +300,14 @@ export default function useClientDashboard() {
     }
 
     const profileData = profRes.data
-    const weightsData = weightsRes.data || []
+    const weightsData = nutritionMeasurementsRes.data.weightHistory
     const sessData = trainingRes.data.workoutSessions
-    const measureData = measureRes.data || []
-    const photosData = photosRes.data || []
+    const measureData = nutritionMeasurementsRes.data.measurements
+    const photosData = nutritionMeasurementsRes.data.progressPhotos
     const coachProgData = trainingRes.data.coachProgram
     clientProgramIdRef.current = trainingRes.data.assignedProgram?.id ?? null
     coachOfProgramIdRef.current = trainingRes.data.assignedProgram?.coach_id ?? null
-    const coachMealData = coachMealRes.data?.plan || null
+    const coachMealData = nutritionMeasurementsRes.data.coachMealPlan
 
     // Build last-completed map for session cards
     const lcMap = new Map<number, string>()

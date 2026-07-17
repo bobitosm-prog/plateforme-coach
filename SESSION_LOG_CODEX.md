@@ -5262,3 +5262,71 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire nutrition et mesures de `useClientDashboard`.
+
+## Entrée — 2026-07-17 — Extraction nutrition/mesures du dashboard client
+
+### Travail effectué
+
+- Audit des lectures nutrition, poids, mensurations, photos de progression, objectifs macro/caloriques et plans alimentaires du dashboard client.
+- Création de `createNutritionMeasurementsReaders`, quatre readers Supabase injectables avec projections explicites et limites identiques au chargement legacy.
+- Création de `createNutritionMeasurementsLoader`, frontière testable distinguant absence de données et erreur récupérable expurgée.
+- Délégation depuis `useClientDashboard` du poids, des mensurations, des photos de progression et du dernier plan alimentaire coach.
+- Retrait de la lecture initiale `daily_food_logs` dont le résultat était jeté ; les consommateurs Nutrition spécialisés conservent leur propre chargement du journal.
+- Conservation des clés et formes du cache dashboard existant ainsi que des loaders session/profil et Training.
+- Ajout de tests unitaires et statiques pour données complètes, absence, erreur, scope client, ordre, projections, bornes, non-mutation et imports interdits.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire nutrition et mesures de `useClientDashboard` » — terminée.
+- Progression Phase 3 : 7/27 → 8/27 tâches.
+
+### Décisions prises
+
+- La tranche utilise des readers internes injectables plutôt que de généraliser prématurément quatre repositories de domaine sans contrats de mutation stabilisés.
+- L'identifiant client est fourni après vérification de session ; il borne les requêtes mais ne constitue jamais à lui seul une autorité et la RLS reste active.
+- Les projections et limites legacy sont conservées : 30 poids par date ascendante, 10 mensurations descendantes, 20 photos descendantes et le dernier plan coach.
+- Les objectifs calories/macros restent issus du profil déjà chargé ; aucune seconde source de vérité Nutrition n'est créée.
+- Une absence valide retourne des listes vides ou `null`; une erreur Supabase produit uniquement un type borné et les sources concernées, sans message brut.
+- Les écritures de poids, mesures et photos ainsi que les écrans Nutrition/Progression restent hors périmètre.
+
+### Problèmes rencontrés
+
+- La requête `daily_food_logs` du chargement initial ne possédait aucun consommateur ; elle a été supprimée plutôt que reproduite dans la nouvelle frontière.
+- Plusieurs composants Nutrition et Progression continuent d'accéder directement aux mêmes tables et restent hors de cette extraction.
+- ESLint complet de `useClientDashboard` signale toujours 33 erreurs `no-explicit-any` et 2 warnings d'imports inutilisés historiques ; aucun nouvel `any` n'a été ajouté.
+- L'E2E conserve les warnings historiques Next.js sur les qualités d'images et Supabase sur `getSession`.
+
+### Risques ou dette restante
+
+- `useClientDashboard` reste à 727 lignes et conserve profil agrégé, diagnostic, coach link, analytics, handlers et mutations de plusieurs domaines.
+- Les mutations nutrition/mesures n'utilisent pas encore de repositories ou schémas d'entrée communs.
+- Les matrices RLS Nutrition/Progression et l'exposition aux relations coach inactives doivent rester surveillées lors des futurs travaux de domaine.
+- `NutritionTab`, `ProgressTab`, `HomeTab` et les hooks analytics effectuent encore des lectures Supabase directes qui ne doivent pas être déplacées sans caractérisation.
+
+### Tests exécutés
+
+- Tests ciblés loaders dashboard session/profil, Training et nutrition/mesures : 31/31 verts.
+- Suite Vitest complète : 71 fichiers, 761 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur le loader et ses tests : vert.
+- ESLint du hook : dette historique inchangée, 33 erreurs `any` et 2 warnings ; aucun nouvel `any` dans le diff.
+- E2E default-coach Chromium local : 1/1 vert en 9,8 s, un worker.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, migration, policy RLS, composant UI ou scénario E2E modifié.
+
+### Mesures avant/après
+
+- Frontières de chargement nutrition/mesures dashboard : 0 → 1.
+- Readers injectables bornés : 0 → 4.
+- Lectures directes nutrition/mesures retirées de `fetchAll` : 5, dont une sans consommateur.
+- Tests actifs globaux : 750 → 761.
+- Tâches Phase 3 terminées : 7/27 → 8/27.
+- Progression globale : 50/138 → 51/138 tâches, soit environ 37 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Réduire la façade `useClientDashboard` sous 250 lignes.

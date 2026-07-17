@@ -56,7 +56,7 @@ Seul le résultat `not_found`, produit par une lecture valide sans ligne,
 autorise la redirection vers `/onboarding-v2`. Une session absente, une erreur
 Auth, réseau, RLS ou Supabase produit un état récupérable sans redirection. Le
 chargement agrégé historique reste en place : cette tranche ne migre aucune
-autre requête du dashboard.
+autre décision liée au profil du dashboard.
 
 Le cycle explicite est `idle → loading → ready | not_found | error`. Une seule lecture est active par utilisateur; les réponses d'une identité précédente ou reçues après démontage sont ignorées. Une nouvelle tentative force l'identité et la lecture serveur sans boucle automatique. Si un profil utilisable a déjà été confirmé, l'échec d'un rafraîchissement ne remplace pas l'écran courant par une erreur.
 
@@ -71,6 +71,25 @@ programmes et séances par `createTrainingDashboardLoader`; les mutations et les
 autres consommateurs Training restent en coexistence legacy.
 
 Les tests unitaires mockent le client injecté. Le test SQL local utilise les [personas partagés](TEST_FIXTURES.md), vérifie profil propre, profil absent, isolation RLS, invited et lifetime, puis annule toute la transaction.
+
+## Nutrition et mesures du dashboard client
+
+`createNutritionMeasurementsLoader` compose quatre readers injectables et
+bornés pour le poids, les mensurations, les photos de progression et le dernier
+plan alimentaire coach. Les projections sont explicites et conservent les
+formes legacy utilisées par `useClientDashboard` : 30 poids ascendants, 10
+mesures descendantes, 20 photos descendantes et un plan coach au plus.
+
+L'identifiant fourni au loader doit provenir de la session déjà vérifiée ; il
+borne les requêtes mais ne remplace ni l'autorité Auth ni la RLS. Une absence
+confirmée produit des listes vides ou un plan `null`, tandis qu'une panne est
+retournée sous forme expurgée et récupérable. La requête initiale
+`daily_food_logs`, dont le résultat n'était pas consommé, a été retirée ; le
+journal quotidien reste chargé et muté par ses consommateurs Nutrition dédiés.
+
+Les écritures de poids, mesures et photos restent dans le hook legacy. Cette
+tranche ne crée volontairement pas de repositories de mutation et ne modifie ni
+les policies RLS ni les composants Nutrition/Progression.
 
 ## Premiers consommateurs serveur
 
