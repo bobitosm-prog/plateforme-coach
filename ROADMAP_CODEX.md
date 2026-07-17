@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 15 tâches sur 18 terminées ; stratégie de cache par domaine documentée et validée, sans migration de consommateurs**
+**Statut : En cours — 17 tâches sur 18 terminées ; correlation IDs et logs structurés appliqués aux huit routes simples**
 
 ### Pourquoi
 
@@ -279,8 +279,8 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 | [x] [Distinguer l'erreur de lecture du profil de l'absence réelle de profil dans `useClientDashboard`](docs/SUPABASE_REPOSITORIES.md#chargement-de-profil-dans-useclientdashboard) | 1,5 j | Moyenne | Faible | Élevé | Contrat erreurs + repository profil |
 | [x] [Migrer 10 accès Supabase représentatifs](docs/SUPABASE_ACCESS_MIGRATION.md) | 3 j | Moyenne | Moyen | Élevé | Repositories |
 | [x] [Définir une stratégie de cache par domaine](docs/CACHE_STRATEGY.md) | 1 j | Élevée | Faible | Moyen | Repositories |
-| [ ] Migrer 8 routes simples vers le contrat route/service/schema | 4 j | Élevée | Moyen | Élevé | Zod + erreurs |
-| [ ] Ajouter correlation IDs et logs structurés | 1,5 j | Moyenne | Faible | Moyen | Erreurs |
+| [x] [Migrer 8 routes simples vers le contrat route/service/schema](docs/API_SIMPLE_ROUTE_MIGRATION.md) | 4 j | Élevée | Moyen | Élevé | Zod + erreurs |
+| [x] [Ajouter correlation IDs et logs structurés](docs/API_OBSERVABILITY.md) | 1,5 j | Moyenne | Faible | Moyen | Erreurs |
 | [ ] Créer les premiers ADR et le guide de contribution | 1,5 j | Faible | Faible | Moyen | Conventions stabilisées |
 
 ### Travaux parallélisables

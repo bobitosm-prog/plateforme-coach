@@ -1,26 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { createIdentityRepository } from '@/lib/repositories/identity'
-import { checkRateLimit, checkAiQuota } from '../../../lib/rate-limit'
+import { createApiRouteObservability } from '@/lib/api/route-observability'
+import { getAiQuota } from './service'
 
 export async function GET(req: NextRequest) {
+  const observe = createApiRouteObservability(req, {
+    event: 'AI_QUOTA_REQUEST', domain: 'ai_quota', operation: 'GET /api/ai-quota',
+  })
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const rl = checkRateLimit(`ai-quota:${ip}`, 30, 60000)
-  if (!rl.allowed) return NextResponse.json({ ok: false }, { status: 429 })
-
-  try {
-    const supabase = await createSupabaseServerClient()
-    const identity = await createIdentityRepository(supabase).getCurrent()
-    if (!identity.ok) return NextResponse.json({ ok: false }, { status: 401 })
-
-    const result = await checkAiQuota(supabase, identity.data.id)
-    return NextResponse.json({
-      remaining: result.remaining,
-      limit: result.limit,
-      resetIn: result.resetIn,
-      days: result.resetIn > 0 ? Math.ceil(result.resetIn / 86400) : 0,
-    })
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 500 })
-  }
+  const result = await getAiQuota({ ip })
+  if (result.ok) return observe.complete(NextResponse.json(result.data), { outcome: 'success', reason: 'COMPLETED' })
+  const status = result.code === 'RATE_LIMITED' ? 429 : result.code === 'AUTH_REQUIRED' ? 401 : 500
+  return observe.complete(NextResponse.json({ ok: false }, { status }), {
+    outcome: status >= 500 ? 'failed' : 'rejected', reason: result.code,
+  })
 }

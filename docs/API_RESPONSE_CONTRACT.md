@@ -1,5 +1,9 @@
 # Contrat commun de réponse API
 
+La première tranche de huit routes en coexistence est inventoriée dans [`API_SIMPLE_ROUTE_MIGRATION.md`](API_SIMPLE_ROUTE_MIGRATION.md). Leurs services emploient la taxonomie commune, mais leurs frontières HTTP conservent temporairement les formes legacy requises par les consommateurs.
+
+Le contrat commun de correlation ID et de log de frontière est décrit dans [`API_OBSERVABILITY.md`](API_OBSERVABILITY.md). `resolveCorrelationId` reste stable pour un même objet `Request`, afin que le corps `ApiResponse`, l'en-tête et le log partagent toujours le même identifiant.
+
 Ce document définit le format cible des réponses HTTP JSON de MoovX. Il est additif : aucune route ni aucun consommateur n'est migré dans cette tranche. Chaque migration conservera l'ancien contrat pendant au moins une release, route par route, avec tests du producteur et de ses consommateurs.
 
 ## État mesuré au 15 juillet 2026

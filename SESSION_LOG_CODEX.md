@@ -3939,3 +3939,121 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Migrer 8 routes simples vers le contrat route/service/schema.
+
+## Entrée — 2026-07-17 — Huit routes simples vers route/service/schema
+
+### Travail effectué
+
+- Audit de l'ensemble des routes `app/api`, de leur taille, de leurs consommateurs et de leurs tests existants.
+- Sélection fermée de huit routes sans toucher à Stripe, invitations, push, chat Athena ou aux flux E2E lourds.
+- Extraction de huit services typés et de trois schémas Zod pour les entrées JSON.
+- Réduction des `route.ts` à la validation HTTP, la délégation et l'adaptation des réponses historiques.
+- Ajout d'un inventaire statique exécutable, de tests de contrats et de la documentation `docs/API_SIMPLE_ROUTE_MIGRATION.md`.
+
+### Tâches cochées
+
+- Phase 2 : « Migrer 8 routes simples vers le contrat route/service/schema » — terminée sous réserve des validations finales consignées ci-dessous.
+- Progression Phase 2 : 15/18 → 16/18 tâches.
+
+### Décisions prises
+
+- Les huit routes sont quota IA, synchronisation de locale, mise à jour de locale, lecture feedback, marquage feedback lu, Web Vitals, journal client et diagnostic hebdomadaire.
+- Les services retournent des codes de la taxonomie commune; les routes conservent les réponses legacy consommées actuellement.
+- Les schémas Zod tolèrent le Content-Type historique et les clés supplémentaires lorsque les anciens handlers les ignoraient.
+- L'identité reste déterminée côté serveur via le repository; aucun identifiant navigateur n'est une autorité.
+- Les routes feedback restent sur le wrapper session de compatibilité, soumis à RLS, en raison d'une divergence du schéma généré; aucun service-role n'est introduit.
+
+### Problèmes rencontrés
+
+- Les types Supabase générés de `bug_reports` ne contiennent pas plusieurs colonnes feedback utilisées par l'application. Le wrapper session large existant est conservé localement au lieu d'inventer le schéma.
+- Le contrat `ApiResponse` ne peut pas envelopper immédiatement ces réponses sans casser leurs consommateurs; une coexistence explicite est documentée.
+
+### Risques ou dette restante
+
+- Les erreurs de persistance feedback continuent d'exposer le message historique en `500` pour compatibilité.
+- Les consumers doivent être migrés avant une future bascule des réponses vers l'enveloppe commune.
+- Aucun repository spécialisé feedback ou diagnostic n'a été créé dans cette tranche bornée.
+- Les correlation IDs et journaux structurés communs restent la prochaine tâche officielle.
+
+### Tests exécutés
+
+- Tests ciblés des huit routes : 3 fichiers et 30 assertions vertes.
+- Suite complète : 49 fichiers, 563 tests actifs verts et 3 `todo`.
+- TypeScript vert; ESLint ciblé vert sur tous les fichiers TypeScript modifiés.
+- Inventaire statique vert : exactement huit routes uniques, huit services, trois schémas et aucune frontière critique exclue.
+- `git diff --check`, validation des liens internes et contrôle des fichiers verts lors de la validation finale.
+
+### Mesures avant/après
+
+- Routes utilisant le contrat route/service/schema : environ 0 → 8 routes inventoriées dans cette tranche.
+- Services colocalisés ajoutés : 0 → 8.
+- Schémas Zod colocalisés ajoutés : 0 → 3, uniquement pour les routes avec entrée JSON.
+- Constructeurs Supabase legacy directs : 55 → 54, dans 47 fichiers, grâce au diagnostic hebdomadaire.
+- Tâches Phase 2 terminées : 15/18 → 16/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Ajouter correlation IDs et logs structurés.
+
+## Entrée — 2026-07-17 — Correlation IDs et logs structurés des routes simples
+
+### Travail effectué
+
+- Audit de `x-request-id`, `createSecurityAudit`, des helpers `ApiResponse` et des `console.*` sur les huit routes simples.
+- Stabilisation de `resolveCorrelationId` pour un même objet `Request`, y compris lorsque l'en-tête entrant est invalide.
+- Création de `createApiRouteObservability`, writer JSON borné avec résultats success, rejected, failed et skipped.
+- Instrumentation exclusive des huit routes simples, sans modifier leurs consommateurs, corps ou statuts.
+- Suppression des huit logs ad hoc présents dans ces routes/services, dont le log Web Vitals contenant le chemin navigateur.
+- Ajout de tests contractuels, d'un inventaire statique fermé et de `docs/API_OBSERVABILITY.md`.
+
+### Tâches cochées
+
+- Phase 2 : « Ajouter correlation IDs et logs structurés » — terminée sous réserve des validations finales consignées ci-dessous.
+- Progression Phase 2 : 16/18 → 17/18 tâches.
+
+### Décisions prises
+
+- Un objet `Request` possède un unique correlation ID mémorisé dans un `WeakMap`; aucune donnée de requête n'est conservée après sa collecte.
+- Toutes les réponses, y compris les réponses legacy sans enveloppe, reçoivent `x-request-id`.
+- Chaque observateur écrit au maximum un log JSON, même si plusieurs complétions sont tentées.
+- Les clés et valeurs sensibles sont supprimées plutôt que masquées partiellement.
+- Les raisons réutilisent la taxonomie API pour validation, auth, limites, persistance et erreurs internes; les succès/skips utilisent des codes stables contrôlés.
+
+### Problèmes rencontrés
+
+- Le commit de la tranche précédente annoncé par l'utilisateur n'était pas présent : HEAD restait `289376e` et les modifications route/service/schema étaient encore non commitées. Elles ont été préservées et cette tranche a été construite dessus sans commit.
+- Web Vitals journalisait auparavant le chemin navigateur; ce champ est désormais exclu du log structuré.
+
+### Risques ou dette restante
+
+- Les routes hors des huit frontières gardent leurs logs et correlation IDs historiques.
+- Les logs internes du générateur de diagnostic hebdomadaire ne sont pas migrés dans cette tranche.
+- Aucun backend d'agrégation, métrique ou alerte de logs n'est ajouté.
+- Les erreurs feedback conservent encore leur corps public legacy, même si le log structuré n'enregistre jamais le message interne.
+
+### Tests exécutés
+
+- Tests ciblés correlation/logs et huit routes : 7 fichiers et 63 assertions vertes.
+- Suite complète : 51 fichiers, 570 tests actifs verts et 3 `todo`.
+- TypeScript vert; ESLint ciblé vert sur tous les fichiers TypeScript modifiés par cette tranche.
+- Inventaire statique vert : exactement huit routes instrumentées et aucun `console.*` ad hoc dans leurs frontières/services.
+- `git diff --check` et validation des liens internes vertes lors de la validation finale.
+
+### Mesures avant/après
+
+- Routes simples avec `x-request-id` cohérent : 0/8 → 8/8.
+- `console.*` ad hoc dans les huit routes/services : 8 → 0.
+- Routes simples avec un log JSON borné et unique : 0/8 → 8/8.
+- Tâches Phase 2 terminées : 16/18 → 17/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer les premiers ADR et le guide de contribution.

@@ -29,14 +29,19 @@ export interface SecurityAuditRecord {
 const CORRELATION_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$/
 const SAFE_NAME_PATTERN = /^[A-Z][A-Z0-9_]{2,63}$/
 const BLOCKED_CONTEXT_KEY = /(token|secret|signature|cookie|session|email|body|payload|url|subscription|authorization|hash|key)/i
+const REQUEST_CORRELATION_IDS = new WeakMap<Request, string>()
 
 export function isValidCorrelationId(value: string | null): value is string {
   return typeof value === 'string' && CORRELATION_ID_PATTERN.test(value)
 }
 
 export function resolveCorrelationId(request: Request): string {
+  const resolved = REQUEST_CORRELATION_IDS.get(request)
+  if (resolved) return resolved
   const incoming = request.headers.get('x-request-id')
-  return isValidCorrelationId(incoming) ? incoming : randomUUID()
+  const correlationId = isValidCorrelationId(incoming) ? incoming : randomUUID()
+  REQUEST_CORRELATION_IDS.set(request, correlationId)
+  return correlationId
 }
 
 function safeContext(input: SecurityAuditEvent['context']) {

@@ -1,4 +1,8 @@
 import { NextRequest } from 'next/server'
+import { validateJsonBody } from '@/lib/api/validation'
+import { createApiRouteObservability } from '@/lib/api/route-observability'
+import { webVitalSchema } from './schema'
+import { recordWebVital } from './service'
 
 /**
  * POST /api/vitals — Real User Monitoring for Core Web Vitals
@@ -6,25 +10,17 @@ import { NextRequest } from 'next/server'
  * No PII collected. Logged to Vercel stdout (visible in Vercel logs dashboard).
  */
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
-    const { name, value, id, path } = body
-
-    if (!name || value === undefined) {
-      return new Response(null, { status: 400 })
-    }
-
-    // Log to stdout — visible in Vercel Functions logs
-    console.log('[web-vital]', JSON.stringify({
-      name,
-      value: Math.round(value),
-      id,
-      path,
-      ts: Date.now(),
-    }))
-
-    return new Response(null, { status: 204 })
-  } catch {
-    return new Response(null, { status: 400 })
+  const observe = createApiRouteObservability(req, {
+    event: 'WEB_VITAL_REQUEST', domain: 'vitals', operation: 'POST /api/vitals',
+  })
+  const validation = await validateJsonBody(req, webVitalSchema, { requireJsonContentType: false })
+  if (!validation.ok) {
+    return observe.complete(new Response(null, { status: 400 }), {
+      outcome: 'rejected', reason: 'VALIDATION_ERROR',
+    })
   }
+  const metric = recordWebVital(validation.data)
+  return observe.complete(new Response(null, { status: 204 }), {
+    outcome: 'success', reason: 'COMPLETED', context: { metric: metric.metric, value: metric.roundedValue },
+  })
 }

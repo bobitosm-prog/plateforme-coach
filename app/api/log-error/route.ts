@@ -1,54 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { createIdentityRepository } from '@/lib/repositories/identity'
-import { checkRateLimit } from '../../../lib/rate-limit'
+import { validateJsonBody } from '@/lib/api/validation'
+import { createApiRouteObservability } from '@/lib/api/route-observability'
+import { clientLogSchema } from './schema'
+import { acceptClientLogRequest, persistClientLog } from './service'
 
-const VALID_LEVELS = new Set(['info', 'warning', 'error', 'critical'])
+async function legacyValidationStatus(response: Response): Promise<number> {
+  const body = await response.json()
+  const code = body?.error?.details?.issues?.[0]?.code
+  return code === 'malformed_json' || code === 'body_required' ? 500 : 400
+}
 
 export async function POST(req: NextRequest) {
-  // Rate limit all callers (10 req/min/IP) to prevent spam
+  const observe = createApiRouteObservability(req, {
+    event: 'CLIENT_LOG_REQUEST', domain: 'client_log', operation: 'POST /api/log-error',
+  })
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const rl = checkRateLimit(`log-error:${ip}`, 10, 60000)
-  if (!rl.allowed) return NextResponse.json({ ok: false }, { status: 429 })
-
-  try {
-    const body = await req.json()
-    const rawLevel = body?.level
-    const rawMessage = body?.message
-    if (!rawMessage) return NextResponse.json({ ok: false }, { status: 400 })
-
-    // Validate & bound inputs (client may lie)
-    const level = VALID_LEVELS.has(rawLevel) ? rawLevel : 'error'
-    const message = String(rawMessage).slice(0, 500)
-    const page_url = body?.page_url ? String(body.page_url).slice(0, 500) : null
-    const details = body?.details ? String(body.details).slice(0, 2000) : null
-
-    // Auth client (anon key + cookies) — auth optional (pre-login errors)
-    const supabase = await createSupabaseServerClient()
-
-    // Derive user_id server-side only (never from body — anti-spoofing)
-    let userId: string | null = null
-    let userEmail: string | null = null
-    try {
-      const identity = await createIdentityRepository(supabase).getCurrent()
-      if (identity.ok) {
-        userId = identity.data.id
-        userEmail = identity.data.email
-      }
-    } catch {}
-
-    // INSERT via RLS policy app_logs_insert_safe (user_id NULL or auth.uid())
-    await supabase.from('app_logs').insert({
-      level, message, details,
-      user_id: userId,
-      user_email: userEmail,
-      page_url,
+  if (!acceptClientLogRequest(ip)) {
+    return observe.complete(NextResponse.json({ ok: false }, { status: 429 }), {
+      outcome: 'rejected', reason: 'RATE_LIMITED',
     })
-
-    return NextResponse.json({ ok: true })
-  } catch (e: unknown) {
-    // Log server-side only — never leak internal details to client
-    console.error('[log-error]', e instanceof Error ? e.message : 'unknown')
-    return NextResponse.json({ ok: false }, { status: 500 })
   }
+  const validation = await validateJsonBody(req, clientLogSchema, { requireJsonContentType: false })
+  if (!validation.ok) {
+    const status = await legacyValidationStatus(validation.response)
+    return observe.complete(NextResponse.json({ ok: false }, { status }), {
+      outcome: status >= 500 ? 'failed' : 'rejected',
+      reason: status >= 500 ? 'INTERNAL_ERROR' : 'VALIDATION_ERROR',
+    })
+  }
+  const result = await persistClientLog(validation.data)
+  if (result.ok) {
+    return observe.complete(NextResponse.json({ ok: true }), { outcome: 'success', reason: 'COMPLETED' })
+  }
+  return observe.complete(NextResponse.json({ ok: false }, { status: 500 }), {
+    outcome: 'failed', reason: result.code,
+  })
 }

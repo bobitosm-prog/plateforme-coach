@@ -10,10 +10,10 @@ const migratedSites = [
   { file: 'app/register-client/RegisterClientContent.tsx', boundary: 'getSupabaseBrowserClient' },
   { file: 'app/components/BugReport.tsx', boundary: 'getSupabaseBrowserClient' },
   { file: 'app/join/JoinPageContent.tsx', boundary: 'getSupabaseBrowserClient' },
-  { file: 'app/api/user/sync-locale/route.ts', boundary: 'createSupabaseServerClient' },
-  { file: 'app/api/user/locale/route.ts', boundary: 'createSupabaseServerClient' },
-  { file: 'app/api/log-error/route.ts', boundary: 'createSupabaseServerClient' },
-  { file: 'app/api/ai-quota/route.ts', boundary: 'createSupabaseServerClient' },
+  { file: 'app/api/user/sync-locale/service.ts', boundary: 'createSupabaseServerClient' },
+  { file: 'app/api/user/locale/service.ts', boundary: 'createSupabaseServerClient' },
+  { file: 'app/api/log-error/service.ts', boundary: 'createSupabaseServerClient' },
+  { file: 'app/api/ai-quota/service.ts', boundary: 'createSupabaseServerClient' },
   { file: 'app/api/coach/default-assignment/route.ts', boundary: 'createSupabaseAdminClient' },
   { file: 'app/api/coach/disconnect/route.ts', boundary: 'createSupabaseAdminClient' },
 ] as const
@@ -43,12 +43,12 @@ describe('representative Supabase access migration inventory', () => {
     }
   })
 
-  it('reduces legacy application constructors from 65 to 55', () => {
+  it('keeps the current legacy application constructor count at 54', () => {
     const files = [...walk(path.join(root, 'app')), ...walk(path.join(root, 'lib'))]
       .filter(file => /\.(?:ts|tsx)$/.test(file))
       .filter(file => !/lib\/supabase\/(?:browser|server|admin)\.ts$/.test(file))
     const count = files.reduce((total, file) => total + (fs.readFileSync(file, 'utf8').match(new RegExp(legacyConstructor.source, 'g'))?.length ?? 0), 0)
-    expect(count).toBe(55)
+    expect(count).toBe(54)
   })
 })
 

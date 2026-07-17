@@ -21,6 +21,8 @@ import { POST as updateLocale } from '../../app/api/user/locale/route'
 import { POST as logError } from '../../app/api/log-error/route'
 import { GET as aiQuota } from '../../app/api/ai-quota/route'
 
+const routeRequest = (path: string, init?: RequestInit) => new Request(`http://localhost${path}`, init)
+
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.identity.mockResolvedValue({ ok: true, kind: 'authenticated', data: { id: 'session-user', email: 'user@example.test' } })
@@ -34,7 +36,7 @@ beforeEach(() => {
 
 describe('migrated session routes', () => {
   it('reads locale through session identity and profile repository', async () => {
-    const response = await syncLocale()
+    const response = await syncLocale(routeRequest('/api/user/sync-locale', { method: 'POST' }))
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ success: true, locale: 'de' })
     expect(mocks.findProfile).toHaveBeenCalledWith('session-user')
@@ -42,9 +44,9 @@ describe('migrated session routes', () => {
 
   it('keeps absent and failed profile reads neutral and expurgated', async () => {
     mocks.findProfile.mockResolvedValueOnce({ ok: false, kind: 'not_found' })
-    expect(await (await syncLocale()).json()).toEqual({ success: true, locale: null })
+    expect(await (await syncLocale(routeRequest('/api/user/sync-locale', { method: 'POST' }))).json()).toEqual({ success: true, locale: null })
     mocks.findProfile.mockResolvedValueOnce({ ok: false, kind: 'failure', error: { kind: 'forbidden', contextCode: '42501' } })
-    expect(await (await syncLocale()).json()).toEqual({ success: true, locale: null })
+    expect(await (await syncLocale(routeRequest('/api/user/sync-locale', { method: 'POST' }))).json()).toEqual({ success: true, locale: null })
   })
 
   it('updates only the session profile through the safe repository mutation', async () => {
@@ -52,6 +54,14 @@ describe('migrated session routes', () => {
     const response = await updateLocale(request as never)
     expect(response.status).toBe(200)
     expect(mocks.updateProfile).toHaveBeenCalledWith('session-user', { preferred_locale: 'fr' })
+  })
+
+  it('preserves malformed locale JSON as a historical server error', async () => {
+    const response = await updateLocale(new Request('http://localhost/api/user/locale', {
+      method: 'POST', body: '{',
+    }) as never)
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({ error: 'Server error' })
   })
 
   it('preserves authorization and hides repository failures', async () => {
@@ -75,6 +85,19 @@ describe('migrated session routes', () => {
     const request = new Request('http://localhost/api/log-error', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ level: 'error', message: 'synthetic', user_id: 'forged' }) })
     expect((await logError(request as never)).status).toBe(200)
     expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({ user_id: 'session-user', user_email: 'user@example.test' }))
+  })
+
+  it('rate-limits logs before parsing and preserves malformed JSON as 500', async () => {
+    mocks.checkRateLimit.mockReturnValueOnce({ allowed: false })
+    const limited = await logError(new Request('http://localhost/api/log-error', {
+      method: 'POST', body: '{',
+    }) as never)
+    expect(limited.status).toBe(429)
+    mocks.checkRateLimit.mockReturnValueOnce({ allowed: true })
+    const malformed = await logError(new Request('http://localhost/api/log-error', {
+      method: 'POST', body: '{',
+    }) as never)
+    expect(malformed.status).toBe(500)
   })
 
   it('checks AI quota for the repository session identity', async () => {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { createApiRouteObservability } from '@/lib/api/route-observability'
+import { markMyFeedbackRead } from './service'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,33 +8,27 @@ export const dynamic = 'force-dynamic'
  * POST /api/feedback/mark-all-read
  * Marque toutes les reponses admin du user connecte comme lues.
  */
-export async function POST() {
-  try {
-    const supabase = await createSupabaseRouteClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
-
-    const { data, error } = await supabase
-      .from('bug_reports')
-      .update({ read_by_user: true })
-      .eq('user_id', user.id)
-      .eq('read_by_user', false)
-      .not('admin_reply', 'is', null)
-      .select('id')
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      success: true,
-      markedCount: data?.length || 0,
+export async function POST(request: Request) {
+  const observe = createApiRouteObservability(request, {
+    event: 'FEEDBACK_MARK_READ_REQUEST', domain: 'feedback', operation: 'POST /api/feedback/mark-all-read',
+  })
+  const result = await markMyFeedbackRead()
+  if (result.ok) {
+    return observe.complete(NextResponse.json({ success: true, markedCount: result.markedCount }), {
+      outcome: 'success', reason: 'COMPLETED', context: { marked_count: result.markedCount },
     })
-  } catch (err) {
-    console.error('[feedback/mark-all-read]', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
+  if (result.code === 'AUTH_REQUIRED') {
+    return observe.complete(NextResponse.json({ error: 'Not authenticated' }, { status: 401 }), {
+      outcome: 'rejected', reason: result.code,
+    })
+  }
+  if (result.code === 'PERSISTENCE_FAILED') {
+    return observe.complete(NextResponse.json({ error: result.internalMessage }, { status: 500 }), {
+      outcome: 'failed', reason: result.code,
+    })
+  }
+  return observe.complete(NextResponse.json({ error: 'Internal error' }, { status: 500 }), {
+    outcome: 'failed', reason: result.code,
+  })
 }

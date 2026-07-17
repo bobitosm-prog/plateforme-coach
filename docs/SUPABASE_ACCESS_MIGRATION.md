@@ -25,7 +25,7 @@ L'inventaire automatisé parcourt `app/` et `lib/`, exclut uniquement les trois 
 
 | Mesure | Avant | Après |
 |---|---:|---:|
-| Constructeurs legacy directs | 65 | 55 |
+| Constructeurs legacy directs | 65 | 55 dans la tranche initiale, 54 après migration des routes simples |
 | Fichiers contenant ces constructeurs | 58 | 48 |
 | Accès directs `.from('profiles')` | 89 | 87 |
 | Occurrences de champs abonnement | 170 | 170 |
@@ -43,4 +43,4 @@ Le test `supabase-access-migration.test.ts` porte la liste fermée des dix fichi
 
 ## Accès restant à migrer
 
-Il reste 55 constructions legacy dans 48 fichiers, 87 accès directs à `profiles` et 170 occurrences de champs d'abonnement. Les exports de compatibilité restent nécessaires. Les divergences `payments`, Stripe Connect, `coach_bio`, `cgu_accepted_at` et `subscription_price` ne sont ni corrigées ni ajoutées aux types dans cette tranche.
+Il reste 54 constructions legacy dans 47 fichiers après l'extraction ultérieure du service de diagnostic hebdomadaire, 87 accès directs à `profiles` et 170 occurrences de champs d'abonnement. Les exports de compatibilité restent nécessaires. Les divergences `payments`, Stripe Connect, `coach_bio`, `cgu_accepted_at` et `subscription_price` ne sont ni corrigées ni ajoutées aux types dans cette tranche.

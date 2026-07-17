@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { createApiRouteObservability } from '@/lib/api/route-observability'
+import { readMyFeedback } from './service'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,41 +8,27 @@ export const dynamic = 'force-dynamic'
  * GET /api/feedback/mine
  * Retourne les bug_reports du user connecte (via RLS Supabase).
  */
-export async function GET() {
-  try {
-    const supabase = await createSupabaseRouteClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
-
-    const { data, error } = await supabase
-      .from('bug_reports')
-      .select(`
-        id, type, title, description, status, priority,
-        admin_reply, replied_at, replied_by, read_by_user,
-        screenshot_url, page_url,
-        created_at, updated_at
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    const unreadCount = (data || []).filter(r =>
-      r.admin_reply && r.read_by_user === false
-    ).length
-
-    return NextResponse.json({
-      reports: data || [],
-      count: data?.length || 0,
-      unreadCount,
+export async function GET(request: Request) {
+  const observe = createApiRouteObservability(request, {
+    event: 'FEEDBACK_READ_REQUEST', domain: 'feedback', operation: 'GET /api/feedback/mine',
+  })
+  const result = await readMyFeedback()
+  if (result.ok) {
+    return observe.complete(NextResponse.json({ reports: result.reports, count: result.count, unreadCount: result.unreadCount }), {
+      outcome: 'success', reason: 'COMPLETED', context: { result_count: result.count, unread_count: result.unreadCount },
     })
-  } catch (err) {
-    console.error('[feedback/mine GET]', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
+  if (result.code === 'AUTH_REQUIRED') {
+    return observe.complete(NextResponse.json({ error: 'Not authenticated' }, { status: 401 }), {
+      outcome: 'rejected', reason: result.code,
+    })
+  }
+  if (result.code === 'PERSISTENCE_FAILED') {
+    return observe.complete(NextResponse.json({ error: result.internalMessage }, { status: 500 }), {
+      outcome: 'failed', reason: result.code,
+    })
+  }
+  return observe.complete(NextResponse.json({ error: 'Internal error' }, { status: 500 }), {
+    outcome: 'failed', reason: result.code,
+  })
 }
