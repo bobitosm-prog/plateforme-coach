@@ -1,155 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createSecurityAudit } from '@/lib/security/audit-log'
+import {
+  CheckoutServiceError,
+  createCoachCheckout,
+  createStripeCheckoutPort,
+  type CoachCheckoutRepository,
+} from '@/lib/billing/checkout'
 
-function createStripeClient(secretKey: string) {
-  const endpoint = process.env.STRIPE_E2E_BASE_URL
-  if (!endpoint) return new Stripe(secretKey)
-  if (process.env.MOOVX_E2E !== '1') throw new Error('Stripe E2E endpoint requires MOOVX_E2E=1')
-  const url = new URL(endpoint)
-  if (url.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(url.hostname) || url.pathname !== '/') {
-    throw new Error('Stripe E2E endpoint must be a local HTTP origin')
+function coachError(error: CheckoutServiceError) {
+  switch (error.code) {
+    case 'INVALID_REQUEST': return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    case 'PROFILE_NOT_FOUND': return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    case 'STRIPE_NOT_CONFIGURED': return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
+    case 'SERVER_MISCONFIGURED': return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+    case 'ROLE_FORBIDDEN':
+    case 'RELATION_FORBIDDEN': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    case 'COACH_NOT_FOUND': return NextResponse.json({ error: 'Coach not found' }, { status: 404 })
+    case 'COACH_STRIPE_MISSING': return NextResponse.json({ error: "Le coach n'a pas encore configuré Stripe" }, { status: 400 })
+    case 'RATE_INVALID': return NextResponse.json({ error: 'Le tarif doit être entre 30 et 500 CHF.' }, { status: 400 })
+    default: return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
   }
-  return new Stripe(secretKey, { host: url.hostname, port: Number(url.port), protocol: 'http' })
 }
 
 export async function POST(req: NextRequest) {
   const audit = createSecurityAudit(req)
-  // Auth check
   const cookieStore = await cookies()
-  const supabaseAuth = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } }
-  )
+  const supabaseAuth = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { cookies: { getAll: () => cookieStore.getAll() } })
   const { data: { user } } = await supabaseAuth.auth.getUser()
   if (!user) return audit.reject(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: 'AUTH_REQUIRED', status: 401 })
 
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
-    }
-
+    const secret = process.env.STRIPE_SECRET_KEY || ''
+    if (!secret) throw new CheckoutServiceError('STRIPE_NOT_CONFIGURED')
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceKey) {
-      return audit.reject(NextResponse.json({ error: 'Server misconfigured' }, { status: 500 }), { event: 'COACH_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'failed', reason: 'SERVER_MISCONFIGURED', status: 500 })
-    }
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceKey
-    )
-
-    const body = await req.json()
-    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length > 0) {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
-    }
-
-    const { data: callerProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    if (!callerProfile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    if (callerProfile.role !== 'client') {
-      return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: 'ROLE_FORBIDDEN', status: 403 })
-    }
-
-    const { data: relation } = await supabaseAdmin
-      .from('coach_clients')
-      .select('coach_id')
-      .eq('client_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle()
-    if (!relation?.coach_id) return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: 'RELATION_FORBIDDEN', status: 403 })
-    const clientId = user.id
-    const coachId = relation.coach_id
-
-    // Fetch coach profile
-    const { data: coach } = await supabaseAdmin
-      .from('profiles')
-      .select('role, stripe_account_id, coach_monthly_rate, full_name, email')
-      .eq('id', coachId)
-      .single()
-
-    if (!coach) return NextResponse.json({ error: 'Coach not found' }, { status: 404 })
-    if (coach.role !== 'coach') return audit.reject(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: 'ROLE_FORBIDDEN', status: 403 })
-    if (!coach.stripe_account_id) {
-      return NextResponse.json({ error: "Le coach n'a pas encore configuré Stripe" }, { status: 400 })
-    }
-
-    const MIN_COACH_RATE = 30
-    const MAX_COACH_RATE = 500
-    const rawRate = coach.coach_monthly_rate || 50
-    if (
-      typeof rawRate !== 'number' ||
-      !Number.isFinite(rawRate) ||
-      rawRate < MIN_COACH_RATE ||
-      rawRate > MAX_COACH_RATE
-    ) {
-      return NextResponse.json(
-        { error: `Le tarif doit être entre ${MIN_COACH_RATE} et ${MAX_COACH_RATE} CHF.` },
-        { status: 400 }
-      )
-    }
-    const rate = Math.round(rawRate * 100) / 100
-    const amountCentimes = Math.round(rate * 100)
-
-    // Fetch client
-    const { data: client } = await supabaseAdmin
-      .from('profiles')
-      .select('email, full_name, stripe_customer_id')
-      .eq('id', clientId)
-      .single()
-
-    if (!client) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    const stripe = createStripeClient(process.env.STRIPE_SECRET_KEY.trim())
-
-    // Get or create Stripe customer
-    let customerId = client?.stripe_customer_id
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: client?.email || undefined,
-        name: client?.full_name || undefined,
-        metadata: { userId: clientId, coachId },
-      })
-      customerId = customer.id
-      await supabaseAdmin.from('profiles').update({ stripe_customer_id: customerId }).eq('id', clientId)
-    }
-
-    // Create checkout session with transfer to coach + idempotency key
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
-    const idempotencyKey = `coach-checkout-${clientId}-${coachId}-${Date.now()}`
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'subscription',
-      customer: customerId,
-      line_items: [{
-        price_data: {
-          currency: 'chf',
-          product_data: {
-            name: `Coaching ${coach.full_name || 'MoovX'}`,
-            description: `Abonnement mensuel coaching fitness avec ${coach.full_name || 'votre coach'}`,
-          },
-          unit_amount: amountCentimes,
-          recurring: { interval: 'month' },
-        },
-        quantity: 1,
-      }],
-      subscription_data: {
-        application_fee_percent: 3,
-        transfer_data: { destination: coach.stripe_account_id },
-        metadata: { clientId, coachId, subType: 'coach_monthly', type: 'coach_subscription' },
+    if (!serviceKey) throw new CheckoutServiceError('SERVER_MISCONFIGURED')
+    const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
+    const body: unknown = await req.json()
+    const repository: CoachCheckoutRepository = {
+      async findCallerProfile(clientId) {
+        const { data } = await admin.from('profiles').select('role').eq('id', clientId).single()
+        return data
       },
-      success_url: `${appUrl}/?payment=success`,
-      cancel_url: `${appUrl}/?payment=canceled`,
-      metadata: { clientId, coachId, subType: 'coach_monthly', type: 'coach_subscription' },
-    }, { idempotencyKey })
-
-    return NextResponse.json({ url: session.url })
-  } catch {
+      async findUniqueActiveCoachId(clientId) {
+        const { data } = await admin.from('coach_clients').select('coach_id').eq('client_id', clientId).eq('status', 'active').maybeSingle()
+        return data?.coach_id || null
+      },
+      async findCoach(coachId) {
+        const { data } = await admin.from('profiles').select('role, stripe_account_id, coach_monthly_rate, full_name').eq('id', coachId).single()
+        return data ? { role: data.role, stripeAccountId: data.stripe_account_id, monthlyRate: data.coach_monthly_rate, fullName: data.full_name } : null
+      },
+      async findClient(clientId) {
+        const { data } = await admin.from('profiles').select('email, full_name, stripe_customer_id').eq('id', clientId).single()
+        return data ? { email: data.email, fullName: data.full_name, stripeCustomerId: data.stripe_customer_id } : null
+      },
+      async updateStripeCustomerId(clientId, customerId) {
+        await admin.from('profiles').update({ stripe_customer_id: customerId }).eq('id', clientId)
+      },
+    }
+    const result = await createCoachCheckout({
+      clientId: user.id,
+      body,
+      stripeConfigured: Boolean(secret),
+      stripe: () => createStripeCheckoutPort(secret.trim()),
+      repository,
+      appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch',
+    })
+    return NextResponse.json({ url: result.url })
+  } catch (error) {
+    if (error instanceof CheckoutServiceError) {
+      const response = coachError(error)
+      if (error.code === 'ROLE_FORBIDDEN' || error.code === 'RELATION_FORBIDDEN') return audit.reject(response, { event: 'COACH_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'rejected', reason: error.code, status: 403 })
+      if (error.code === 'SERVER_MISCONFIGURED') return audit.reject(response, { event: 'COACH_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'failed', reason: 'SERVER_MISCONFIGURED', status: 500 })
+      return response
+    }
     return audit.reject(NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 }), { event: 'COACH_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/coach-checkout', outcome: 'failed', reason: 'CHECKOUT_FAILED', status: 500 })
   }
 }

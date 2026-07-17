@@ -59,6 +59,10 @@ export class ProfileLoadCoordinator {
     return this.mounted && this.activeUserId === userId && this.inFlight
   }
 
+  mount(): void {
+    this.mounted = true
+  }
+
   unmount(): void {
     this.mounted = false
     this.version += 1

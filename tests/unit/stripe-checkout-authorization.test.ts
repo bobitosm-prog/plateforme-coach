@@ -110,6 +110,7 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
   it.each([
     ['clientId', FOREIGN_ID],
     ['coachId', FOREIGN_ID],
+    ['stripeAccountId', 'acct_foreign'],
   ])('returns 400 when foreign %s is injected', async (key, value) => {
     const response = await POST(request({ planId: 'client_monthly', [key]: value }))
     expect(response.status).toBe(400)

@@ -454,7 +454,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 2 tâches sur 10 terminées ; paiement, abonnement et accès produit séparés dans un noyau typé avec adaptateurs legacy**
+**Statut : En cours — 3 tâches sur 10 terminées ; service Checkout extrait, cycle Strict Mode corrigé et checkouts plateforme/coach verts en E2E local**
 
 ### Pourquoi
 
@@ -466,7 +466,7 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 |---|---:|---|---|---|---|
 | [x] [Définir le modèle métier Billing](docs/BILLING_DOMAIN_MODEL.md) | 2 j | Élevée | Faible | Critique | Phases 1–2 |
 | [x] [Séparer paiement, abonnement et accès produit](docs/BILLING_ACCESS_MODEL.md) | 2,5 j | Élevée | Élevé | Critique | Modèle Billing |
-| [ ] Extraire le service Checkout | 2,5 j | Élevée | Élevé | Critique | Tests Stripe |
+| [x] [Extraire le service Checkout](docs/BILLING_CHECKOUT_SERVICE.md) | 2,5 j | Élevée | Élevé | Critique | Tests Stripe |
 | [ ] Extraire le service Stripe Connect | 2 j | Élevée | Élevé | Critique | Tests Connect |
 | [ ] Extraire les handlers métier du webhook | 3 j | Élevée | Élevé | Critique | Modèle Billing |
 | [ ] Centraliser metadata et idempotence | 2 j | Élevée | Moyen | Élevé | Services Stripe |
@@ -741,7 +741,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈25 % (35/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈26 % (36/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |

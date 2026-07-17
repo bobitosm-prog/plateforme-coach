@@ -16,7 +16,9 @@ describe('useClientDashboard profile loading boundary', () => {
   it('guards stale, concurrent, and unmounted requests', () => {
     expect(hook).toContain('profileLoadCoordinator.begin(uid)')
     expect(hook).toContain('profileLoadCoordinator.isCurrent(request)')
+    expect(hook).toContain('profileLoadCoordinator.mount()')
     expect(hook).toContain('profileLoadCoordinator.unmount()')
+    expect(hook.indexOf('profileLoadCoordinator.mount()')).toBeLessThan(hook.indexOf('supabase.auth.getSession()'))
   })
 
   it('exposes a full-screen retry boundary before dashboard content', () => {

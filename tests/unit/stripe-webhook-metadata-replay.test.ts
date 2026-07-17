@@ -1,7 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { buildCoachMetadata, buildPlatformMetadata, resolvePlatformPlan } from '../../lib/billing/checkout'
 
 const mocks = vi.hoisted(() => {
   const constructEvent = vi.fn()
@@ -248,10 +247,12 @@ describe('POST /api/stripe/webhook — checkout metadata behavior', () => {
   })
 
   it('documents that both secured checkout producers emit the metadata keys consumed by the webhook', () => {
-    const platform = readFileSync(resolve(process.cwd(), 'app/api/stripe/checkout/route.ts'), 'utf8')
-    const coach = readFileSync(resolve(process.cwd(), 'app/api/stripe/coach-checkout/route.ts'), 'utf8')
-    expect(platform).toContain("clientId: user.id, planId: resolvedPlanId, coachId: 'platform', subType: plan.subType")
-    expect(coach).toContain("metadata: { clientId, coachId, subType: 'coach_monthly', type: 'coach_subscription' }")
+    expect(buildPlatformMetadata(CLIENT_ID, resolvePlatformPlan('client_monthly'))).toEqual({
+      clientId: CLIENT_ID, planId: 'client_monthly', coachId: 'platform', subType: 'client_monthly',
+    })
+    expect(buildCoachMetadata(CLIENT_ID, COACH_ID)).toEqual({
+      clientId: CLIENT_ID, coachId: COACH_ID, subType: 'coach_monthly', type: 'coach_subscription',
+    })
   })
 })
 

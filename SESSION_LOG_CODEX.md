@@ -4242,3 +4242,125 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire le service Checkout.
+
+## Entrée — 2026-07-17 — Extraction du service Checkout (validation incomplète)
+
+### Travail effectué
+
+- Audit des responsabilités, contrats legacy, tests unitaires et parcours E2E des checkouts plateforme et coach.
+- Extraction de `lib/billing/checkout` avec catalogue fermé, validateurs, constructeurs purs de metadata/paramètres Stripe, ports minimaux et orchestrateurs plateforme/coach.
+- Réduction des deux routes aux frontières HTTP, authentification, adaptateurs Supabase et mapping d'erreurs legacy.
+- Ajout de tests purs du service et renforcement des tests d'injection et de relation active ambiguë.
+- Adaptation du test de compatibilité webhook pour vérifier les constructeurs de metadata sans modifier le webhook.
+- Documentation du contrat dans `docs/BILLING_CHECKOUT_SERVICE.md`.
+
+### Tâches cochées
+
+- Aucune. « Extraire le service Checkout » reste ouverte tant que le parcours E2E plateforme requis ne passe pas.
+- Progression Phase 6 inchangée : 2/10 tâches.
+
+### Décisions prises
+
+- Les routes restent seules responsables de la session HTTP et de la traduction exacte vers les réponses legacy.
+- Les repositories et le port Stripe sont injectés dans le service ; aucune dépendance réseau n'entre dans ses tests purs.
+- Les identités et comptes Connect sont toujours relus côté serveur ; les corps injectant une autorité sont refusés avant Stripe.
+- Le package racine `lib/billing` ne réexporte pas l'adaptateur Stripe serveur afin de préserver la frontière avec les consommateurs client.
+- Le webhook reste inchangé et reçoit les mêmes metadata.
+
+### Problèmes rencontrés
+
+- Le parcours E2E plateforme échoue avant tout appel checkout : après connexion, le dashboard reste sur l'état de chargement et le paywall n'est jamais monté.
+- Le diagnostic PostgREST confirme que l'authentification et les premières lectures de profil réussissent, mais la lecture complète coordonnée n'est jamais lancée.
+- La cause identifiée est antérieure à cette tranche : le nettoyage initial de l'effet sous React Strict Mode appelle `ProfileLoadCoordinator.unmount()`, puis le même coordinateur n'est jamais réarmé. Corriger ce comportement modifierait `useClientDashboard` et le domaine de chargement de profil hors du périmètre Checkout.
+- Next/Supabase modifient le fichier temporaire suivi `supabase/.temp/cli-latest` pendant les validations locales ; ce résidu doit être restauré avant livraison.
+
+### Risques ou dette restante
+
+- La tâche Checkout ne peut pas être cochée sans un E2E plateforme vert après décision explicite sur le correctif du coordinateur.
+- Les clés d'idempotence à base de temps, les écritures Stripe/Supabase non transactionnelles et la réconciliation restent ouvertes.
+- Le customer coach peut encore être créé chez Stripe avant l'échec de sa persistance locale.
+
+### Tests exécutés
+
+- Tests ciblés service/routes/webhook : 4 fichiers, 66 assertions vertes.
+- Suite complète `npm test` : 53 fichiers, 620 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur les routes, le service et les tests modifiés : vert.
+- E2E checkout coach : 1 parcours vert en 16,5 s.
+- E2E checkout plateforme : échec reproductible avant checkout sur l'attente du paywall ; aucun appel Stripe authentifié observé.
+- Le webhook et `supabase/migrations` ne sont pas modifiés.
+
+### Mesures avant/après
+
+- Routes contenant l'orchestration Checkout : 2 → 0.
+- Services Checkout testables : 0 → 2 orchestrateurs derrière 1 module.
+- Tâches Phase 6 terminées : inchangé, 2/10.
+- Progression globale : inchangée, 35/138 tâches, soit environ 25 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Décider si le correctif borné du cycle de vie de `ProfileLoadCoordinator` est autorisé, puis relancer l'E2E checkout plateforme avant de clôturer l'extraction Checkout.
+
+## Entrée — 2026-07-17 — Clôture de l'extraction Checkout
+
+### Travail effectué
+
+- Caractérisation du cycle setup-cleanup-setup de React Strict Mode dans les tests du coordinateur de chargement de profil.
+- Ajout d'un réarmement explicite `mount()` au `ProfileLoadCoordinator`, appelé au début de l'effet d'authentification de `useClientDashboard`.
+- Conservation de l'invalidation de version dans `unmount()` afin que les réponses antérieures au nettoyage ou au changement d'identité restent obsolètes.
+- Revalidation complète du service Checkout, des contrats de route, du webhook inchangé et des deux parcours E2E locaux.
+- Mise à jour de `docs/BILLING_CHECKOUT_SERVICE.md` et clôture de la tâche Phase 6.
+
+### Tâches cochées
+
+- Phase 6 : « Extraire le service Checkout » — terminée.
+- Progression Phase 6 : 2/10 → 3/10 tâches.
+
+### Décisions prises
+
+- `mount()` modifie uniquement le drapeau de cycle de vie ; il ne change ni utilisateur actif, ni version, ni état métier.
+- `unmount()` continue d'incrémenter la version et d'annuler l'état en vol, ce qui empêche toute réponse obsolète d'être appliquée.
+- Le correctif ne modifie ni la logique paywall, ni les décisions profil absent/erreur, ni la portée du cache.
+- Les routes Checkout, metadata, URLs, plans, prix et réponses publiques restent inchangés après l'extraction.
+
+### Problèmes rencontrés
+
+- Le lint complet de `useClientDashboard.ts` expose toujours ses 33 erreurs `no-explicit-any` et 2 warnings historiques. La seule ligne ajoutée est l'appel typé `profileLoadCoordinator.mount()` ; tous les nouveaux fichiers et tests sont lintés sans erreur.
+- Les exécutions Next locales réécrivent temporairement `supabase/.temp/cli-latest`, résidu restauré avant validation finale.
+
+### Risques ou dette restante
+
+- Les clés d'idempotence Checkout reposent toujours sur l'heure courante.
+- La création Stripe et les écritures Supabase associées ne sont pas transactionnelles et nécessitent la future réconciliation.
+- La création d'un customer coach peut précéder un échec de persistance locale.
+- L'avertissement Supabase sur l'usage de l'objet issu de `getSession()` dans le dashboard reste hors de cette tranche.
+
+### Tests exécutés
+
+- Tests ciblés profil et Checkout : 6 fichiers, 88 assertions vertes.
+- Suite complète `npm test` : 53 fichiers, 622 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur le coordinateur, les routes, le service et les tests : vert.
+- Dette lint historique de `useClientDashboard.ts` mesurée séparément : 33 erreurs et 2 warnings inchangés.
+- E2E checkout plateforme : vert en 21,7 s.
+- E2E checkout coach : vert en 15,6 s.
+- Webhook et migrations SQL inchangés.
+
+### Mesures avant/après
+
+- Cycle Strict Mode supporté explicitement : non → oui.
+- E2E Checkout verts : coach uniquement → plateforme et coach.
+- Tâches Phase 6 terminées : 2/10 → 3/10.
+- Progression globale : 35/138 → 36/138 tâches, soit environ 26 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire le service Stripe Connect.

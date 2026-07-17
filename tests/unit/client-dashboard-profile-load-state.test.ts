@@ -92,4 +92,35 @@ describe('profile load request coordinator', () => {
     expect(coordinator.isCurrent(request)).toBe(false)
     expect(coordinator.begin('client-1')).toBeNull()
   })
+
+  it('supports the Strict Mode setup-cleanup-setup cycle without reviving stale work', () => {
+    const coordinator = new ProfileLoadCoordinator()
+    coordinator.mount()
+    coordinator.switchUser('client-1')
+    const staleRequest = coordinator.begin('client-1')!
+
+    coordinator.unmount()
+    coordinator.mount()
+
+    expect(coordinator.isCurrent(staleRequest)).toBe(false)
+    const remountedRequest = coordinator.begin('client-1')
+    expect(remountedRequest).not.toBeNull()
+    expect(coordinator.begin('client-1')).toBeNull()
+    coordinator.finish(remountedRequest!)
+    expect(coordinator.isLoading('client-1')).toBe(false)
+  })
+
+  it('keeps a previous identity response stale after remount and user change', () => {
+    const coordinator = new ProfileLoadCoordinator()
+    coordinator.switchUser('client-1')
+    const oldRequest = coordinator.begin('client-1')!
+
+    coordinator.unmount()
+    coordinator.mount()
+    coordinator.switchUser('client-2')
+
+    expect(coordinator.isCurrent(oldRequest)).toBe(false)
+    expect(coordinator.begin('client-1')).toBeNull()
+    expect(coordinator.begin('client-2')).not.toBeNull()
+  })
 })

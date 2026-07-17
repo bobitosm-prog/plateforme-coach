@@ -104,6 +104,7 @@ export default function useClientDashboard() {
 
   /* ── Auth ── */
   useEffect(() => {
+    profileLoadCoordinator.mount()
     setMounted(true)
     mountedRef.current = true
     let alive = true
