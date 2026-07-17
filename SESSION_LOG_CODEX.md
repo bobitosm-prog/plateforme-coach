@@ -4673,3 +4673,71 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Réduire les routes Stripe à des adaptateurs HTTP.
+
+## Entrée — 2026-07-17 — Routes Stripe réduites à des adaptateurs HTTP
+
+### Travail effectué
+
+- Audit des six routes Stripe publiques/admin : taille, auth, validation, accès Supabase, création Stripe, mapping legacy et logs.
+- Extraction des repositories Checkout plateforme et coach hors des routes, avec création service-role toujours bornée au serveur et paresseuse pour le checkout plateforme.
+- Extraction du repository de claim `stripe_account_id` du flux Connect ; la lecture du profil et le contrôle coach restent dans la route avant service-role.
+- Extraction du protocole durable webhook (claim, replay, dispatch et finalisation) dans `lib/billing/webhook/delivery.ts`, tout en conservant raw body et signature dans la route.
+- Extraction de la création historique des deux produits et quatre prix vers `lib/billing/products` sans rendre `setup-products` artificiellement idempotent.
+- Conservation sans modification de `check-account`, déjà conforme comme adaptateur de 36 lignes.
+- Ajout d'un inventaire statique des six routes et de tests purs du service produits.
+- Documentation des frontières, mesures, compatibilités et limites dans `docs/BILLING_HTTP_ADAPTERS.md`.
+
+### Tâches cochées
+
+- Phase 6 : « Réduire les routes Stripe à des adaptateurs HTTP » — terminée.
+- Progression Phase 6 : 8/10 → 9/10 tâches.
+
+### Décisions prises
+
+- Authentification, contrôle d'autorité préalable, parsing HTTP, signature Stripe et mapping des réponses legacy restent dans les routes.
+- Les requêtes métier et mutations Supabase sont portées par des repositories injectés, sauf les lectures de profil Connect soumises à la session/RLS qui établissent l'autorité avant service-role.
+- Le webhook conserve `req.text()` et `webhooks.constructEvent` dans la frontière HTTP ; seul le cycle durable post-signature est extrait.
+- `setup-products` conserve exactement ses prix, produits, réponse et comportement non idempotent historique.
+- Aucun contrat ApiResponse commun n'est imposé à ces routes tant que leurs consommateurs dépendent des formes legacy.
+
+### Problèmes rencontrés
+
+- Le lancement Next E2E annonce une mise à jour de `tsconfig.json` pour `.next-e2e`, mais aucune différence suivie n'est restée après les scénarios.
+- `connect` atteint exactement le seuil cible de 80 lignes car son contrôle d'autorité serveur et son mapping d'erreurs restent volontairement explicites.
+
+### Risques ou dette restante
+
+- Le mapping d'erreurs reste spécifique à chaque route pour préserver les contrats publics historiques.
+- `setup-products` demeure non idempotent et doit être traité dans une tranche dédiée si cette route reste nécessaire opérationnellement.
+- Les mutations multi-tables du webhook ne sont pas transactionnelles.
+- Le cycle de vie complet des abonnements, remboursements et annulations reste à documenter.
+
+### Tests exécutés
+
+- Tests Stripe/Billing ciblés : 11 fichiers, 122 assertions vertes.
+- Claims webhook PostgreSQL séquentiels et réellement concurrents : verts.
+- E2E checkout plateforme : vert, 1 scénario en 16,8 s.
+- E2E checkout coach : vert, 1 scénario en 14,6 s.
+- Suite complète `npm test` : 61 fichiers, 684 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur routes, services, repositories et tests modifiés : vert.
+- `git diff --check` vert.
+- Contrôle documentaire : liens internes valides.
+- Contrôle de périmètre : aucune migration SQL, policy RLS, metadata, clé d'idempotence, URL, prix ou E2E modifié.
+
+### Mesures avant/après
+
+- Routes auditées : 6/6.
+- Routes effectivement allégées : 5 ; route déjà conforme inchangée : 1 (`check-account`).
+- Taille cumulée des six routes : 451 → 312 lignes.
+- Routes au-dessus de 80 lignes : 4 → 0.
+- Tâches Phase 6 terminées : 8/10 → 9/10.
+- Progression globale : 41/138 → 42/138 tâches, soit environ 30 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Documenter le cycle de vie des abonnements.

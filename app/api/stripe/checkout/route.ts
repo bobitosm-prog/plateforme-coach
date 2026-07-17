@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createSupabaseRouteClient } from '@/lib/supabase/server'
 import { createSecurityAudit } from '@/lib/security/audit-log'
 import {
   CheckoutServiceError,
   createPlatformCheckout,
+  createPlatformCheckoutRepository,
   createStripeCheckoutPort,
-  type PlatformCheckoutRepository,
   type PlatformPlanId,
 } from '@/lib/billing/checkout'
 
@@ -32,27 +31,12 @@ export async function POST(req: NextRequest) {
     if (!user) return audit.reject(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), { event: 'PLATFORM_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'rejected', reason: 'AUTH_REQUIRED', status: 401 })
 
     const body: unknown = await req.json()
-    let admin: SupabaseClient | null = null
-    const getAdmin = () => {
-      if (admin) return admin
-      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-      if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY required for Stripe checkout')
-      admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
-      return admin
-    }
-    const repository: PlatformCheckoutRepository = {
-      async findProfile(userId) {
-        const { data } = await supabaseAuth.from('profiles').select('role').eq('id', userId).single()
-        return data
-      },
-      async findPlatformConnectAccount() {
-        const { data } = await getAdmin().from('profiles').select('stripe_account_id, stripe_onboarding_complete').eq('email', OWNER_EMAIL).maybeSingle()
-        return data?.stripe_account_id && data.stripe_onboarding_complete ? data.stripe_account_id : null
-      },
-      async insertPendingPayment(payment) {
-        await getAdmin().from('payments').insert(payment)
-      },
-    }
+    const repository = createPlatformCheckoutRepository({
+      auth: supabaseAuth,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      ownerEmail: OWNER_EMAIL,
+    })
     const secret = process.env.STRIPE_SECRET_KEY || ''
     const prices: Partial<Record<PlatformPlanId, string | undefined>> = {
       client_monthly: process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY,

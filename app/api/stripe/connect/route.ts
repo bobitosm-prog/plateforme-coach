@@ -5,10 +5,10 @@ import { createSecurityAudit } from '@/lib/security/audit-log'
 import {
   ConnectServiceError,
   assertCoachAuthority,
+  createConnectRepository,
   createConnectOnboarding,
   createStripeConnectPort,
   readRequestedCoachId,
-  type ConnectRepository,
 } from '@/lib/billing/connect'
 
 function connectError(error: ConnectServiceError) {
@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return audit.reject(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), { event: 'STRIPE_CONNECT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/connect', outcome: 'rejected', reason: 'AUTH_REQUIRED', status: 401 })
     }
-
     const requestedCoachId = readRequestedCoachId(await req.json())
     if (requestedCoachId !== user.id) throw new ConnectServiceError('IDENTITY_MISMATCH')
     const { data: rawProfile, error: profileError } = await supabaseAuth
@@ -57,16 +56,7 @@ export async function POST(req: NextRequest) {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!serviceKey) throw new ConnectServiceError('SERVER_MISCONFIGURED')
     const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
-    const repository: ConnectRepository = {
-      async findAccountId(coachId) {
-        const { data } = await admin.from('profiles').select('stripe_account_id').eq('id', coachId).single()
-        return data?.stripe_account_id || null
-      },
-      async claimAccountId(coachId, accountId) {
-        const { data } = await admin.from('profiles').update({ stripe_account_id: accountId }).eq('id', coachId).is('stripe_account_id', null).select('stripe_account_id').maybeSingle()
-        return data?.stripe_account_id || null
-      },
-    }
+    const repository = createConnectRepository(admin)
     const result = await createConnectOnboarding({
       coachId: user.id,
       profileEmail: profile.email,

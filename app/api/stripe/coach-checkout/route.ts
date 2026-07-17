@@ -5,9 +5,9 @@ import { cookies } from 'next/headers'
 import { createSecurityAudit } from '@/lib/security/audit-log'
 import {
   CheckoutServiceError,
+  createCoachCheckoutRepository,
   createCoachCheckout,
   createStripeCheckoutPort,
-  type CoachCheckoutRepository,
 } from '@/lib/billing/checkout'
 
 function coachError(error: CheckoutServiceError) {
@@ -39,27 +39,7 @@ export async function POST(req: NextRequest) {
     if (!serviceKey) throw new CheckoutServiceError('SERVER_MISCONFIGURED')
     const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
     const body: unknown = await req.json()
-    const repository: CoachCheckoutRepository = {
-      async findCallerProfile(clientId) {
-        const { data } = await admin.from('profiles').select('role').eq('id', clientId).single()
-        return data
-      },
-      async findUniqueActiveCoachId(clientId) {
-        const { data } = await admin.from('coach_clients').select('coach_id').eq('client_id', clientId).eq('status', 'active').maybeSingle()
-        return data?.coach_id || null
-      },
-      async findCoach(coachId) {
-        const { data } = await admin.from('profiles').select('role, stripe_account_id, coach_monthly_rate, full_name').eq('id', coachId).single()
-        return data ? { role: data.role, stripeAccountId: data.stripe_account_id, monthlyRate: data.coach_monthly_rate, fullName: data.full_name } : null
-      },
-      async findClient(clientId) {
-        const { data } = await admin.from('profiles').select('email, full_name, stripe_customer_id').eq('id', clientId).single()
-        return data ? { email: data.email, fullName: data.full_name, stripeCustomerId: data.stripe_customer_id } : null
-      },
-      async updateStripeCustomerId(clientId, customerId) {
-        await admin.from('profiles').update({ stripe_customer_id: customerId }).eq('id', clientId)
-      },
-    }
+    const repository = createCoachCheckoutRepository(admin)
     const result = await createCoachCheckout({
       clientId: user.id,
       body,
