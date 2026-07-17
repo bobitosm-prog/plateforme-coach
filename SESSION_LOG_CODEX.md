@@ -4364,3 +4364,64 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire le service Stripe Connect.
+
+## Entrée — 2026-07-17 — Extraction du service Stripe Connect
+
+### Travail effectué
+
+- Audit de la création/réutilisation du compte Express, des liens d'onboarding, de la lecture de statut, des consommateurs coach, du checkout coach, du webhook et des champs Connect du profil.
+- Création de `lib/billing/connect` avec contrats, décisions d'autorité, orchestration onboarding/statut et adaptateur Stripe expurgeant les erreurs fournisseur.
+- Réduction de `/api/stripe/connect` à l'authentification, la validation d'identité, le contrôle du rôle, les adaptateurs Supabase et le mapping HTTP legacy.
+- Migration de `/api/stripe/check-account` vers la factory Supabase serveur et relecture de `stripe_account_id` depuis le profil coach authentifié.
+- Ajout de tests purs du service, de tests de route statut et de scénarios Connect supplémentaires pour profil absent et erreur Stripe sensible.
+- Documentation du contrat dans `docs/BILLING_CONNECT_SERVICE.md` et mise à jour de l'inventaire des constructions Supabase legacy.
+
+### Tâches cochées
+
+- Phase 6 : « Extraire le service Stripe Connect » — terminée.
+- Progression Phase 6 : 3/10 → 4/10 tâches.
+
+### Décisions prises
+
+- Le `coachId` du body reste accepté pour compatibilité mais doit égaler l'identité obtenue par `auth.getUser()` ; `email`, `existingAccountId` et `accountId` navigateur sont ignorés comme autorités.
+- Le client service-role n'est créé qu'après authentification, égalité d'identité, lecture du profil et validation du rôle coach.
+- Le compte existant du profil est prioritaire ; l'écriture conditionnelle et la relecture gèrent une création concurrente sans écraser le gagnant.
+- La lecture de statut utilise exclusivement `profiles.stripe_account_id` côté serveur.
+- Les erreurs Stripe deviennent `PROVIDER_ERROR` et ne renvoient jamais le message fournisseur.
+
+### Problèmes rencontrés
+
+- Le compteur statique des constructions Supabase legacy est passé de 54 à 53 après migration de `check-account`; son test et sa documentation ont été ajustés.
+- `stripe_onboarding_complete` reste utilisé par le webhook et les interfaces sans exister dans les migrations ou types canoniques, contrairement à `stripe_account_id`.
+
+### Risques ou dette restante
+
+- Les consommateurs coach recopient encore historiquement certains champs Connect depuis le navigateur après retour Stripe ; ces écritures ne sont pas une autorité et restent à retirer dans une tranche dédiée.
+- Création du compte Stripe et persistance Supabase ne sont pas transactionnelles malgré idempotence et garde concurrente.
+- Aucun E2E dédié à l'onboarding Connect n'exerce le fournisseur réel ; les E2E checkout utilisent un compte Connect synthétique déjà configuré.
+- La vérification de statut n'atteste pas à elle seule l'autorisation de facturer un client ni l'existence d'une relation active.
+
+### Tests exécutés
+
+- Tests ciblés Connect et checkout coach : 5 fichiers, 56 assertions vertes.
+- Suite complète `npm test` : 55 fichiers, 641 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur les deux routes, le service et les tests : vert.
+- `git diff --check` vert.
+- Contrôle de périmètre : webhook, migrations SQL et RLS inchangés ; checkout coach non modifié, donc E2E non requis dans cette tranche.
+
+### Mesures avant/après
+
+- Routes contenant l'orchestration Connect : 2 → 0.
+- Services Connect testables : 0 → 2 opérations derrière un port commun.
+- Constructions Supabase legacy suivies : 54 → 53.
+- Tâches Phase 6 terminées : 3/10 → 4/10.
+- Progression globale : 36/138 → 37/138 tâches, soit environ 27 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire les handlers métier du webhook.

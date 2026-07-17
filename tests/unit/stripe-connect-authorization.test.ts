@@ -172,6 +172,18 @@ describe('POST /api/stripe/connect — authorization', () => {
     expectNoExternalMutation()
   })
 
+  it('returns a controlled profile error before service-role or Stripe access', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mocks.authProfileSingle.mockResolvedValue({ data: null, error: { message: 'synthetic profile failure' } })
+
+    const response = await POST(request({ coachId: OWNER_ID }))
+
+    expect(response.status).toBe(403)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('PROFILE_UNAVAILABLE')
+    await expect(response.json()).resolves.toEqual({ error: 'Profile not found' })
+    expectNoExternalMutation()
+  })
+
   it('ignores a foreign existingAccountId and creates an account using the server-side email', async () => {
     authenticatedAs(OWNER_ID, 'session@example.test')
     profileAs('coach', null, 'trusted-profile@example.test')
@@ -232,5 +244,19 @@ describe('POST /api/stripe/connect — authorization', () => {
     expect(response.status).toBe(500)
     await expect(response.json()).resolves.toEqual({ error: 'Stripe non configuré' })
     expectNoExternalMutation()
+  })
+
+  it('maps a Stripe failure without leaking provider details', async () => {
+    mocks.accountsCreate.mockRejectedValue(new Error('sk_live_sensitive signed up for Connect'))
+
+    const response = await POST(request({ coachId: OWNER_ID }))
+
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body).toEqual({
+      error: 'Erreur Stripe Connect',
+      setup_url: 'https://dashboard.stripe.com/connect',
+    })
+    expect(JSON.stringify(body)).not.toContain('sk_live_sensitive')
   })
 })

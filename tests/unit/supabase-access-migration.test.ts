@@ -43,12 +43,12 @@ describe('representative Supabase access migration inventory', () => {
     }
   })
 
-  it('keeps the current legacy application constructor count at 54', () => {
+  it('keeps the current legacy application constructor count at 53', () => {
     const files = [...walk(path.join(root, 'app')), ...walk(path.join(root, 'lib'))]
       .filter(file => /\.(?:ts|tsx)$/.test(file))
       .filter(file => !/lib\/supabase\/(?:browser|server|admin)\.ts$/.test(file))
     const count = files.reduce((total, file) => total + (fs.readFileSync(file, 'utf8').match(new RegExp(legacyConstructor.source, 'g'))?.length ?? 0), 0)
-    expect(count).toBe(54)
+    expect(count).toBe(53)
   })
 })
 

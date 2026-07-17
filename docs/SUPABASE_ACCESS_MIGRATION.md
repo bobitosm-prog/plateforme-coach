@@ -43,4 +43,4 @@ Le test `supabase-access-migration.test.ts` porte la liste fermée des dix fichi
 
 ## Accès restant à migrer
 
-Il reste 54 constructions legacy dans 47 fichiers après l'extraction ultérieure du service de diagnostic hebdomadaire, 87 accès directs à `profiles` et 170 occurrences de champs d'abonnement. Les exports de compatibilité restent nécessaires. Les divergences `payments`, Stripe Connect, `coach_bio`, `cgu_accepted_at` et `subscription_price` ne sont ni corrigées ni ajoutées aux types dans cette tranche.
+Il reste 53 constructions legacy après la migration de `check-account` vers la factory serveur lors de l'extraction Stripe Connect, 87 accès directs à `profiles` et 170 occurrences de champs d'abonnement selon le dernier inventaire complet. Les exports de compatibilité restent nécessaires. Les divergences `payments`, Stripe Connect, `coach_bio`, `cgu_accepted_at` et `subscription_price` ne sont ni corrigées ni ajoutées aux types dans cette tranche.
