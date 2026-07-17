@@ -37,6 +37,7 @@ describe('current cache inventory guard', () => {
 
   it('keeps the client dashboard envelope symmetric and user-checked', () => {
     const dashboard = read('app/hooks/useClientDashboard.ts')
+    const sessionProfileLoader = read('lib/client-dashboard/session-profile-loader.ts')
     for (const field of [
       'profileData',
       'weightsData',
@@ -52,7 +53,8 @@ describe('current cache inventory guard', () => {
       expect(dashboard).toContain(field)
     }
     expect(dashboard).toContain('ownerUserId: uid')
-    expect(dashboard).toContain('isDashboardCacheOwnedBy')
+    expect(sessionProfileLoader).toContain('isDashboardCacheOwnedBy')
+    expect(sessionProfileLoader).toContain('identityRepository.getCurrent()')
     expect(dashboard).toContain('5 * 60 * 1000')
   })
 

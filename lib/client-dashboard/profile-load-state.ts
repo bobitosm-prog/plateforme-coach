@@ -7,7 +7,7 @@ export type ProfileReadDecision =
   | { status: 'not_found'; redirectToOnboarding: true }
   | { status: 'error'; redirectToOnboarding: false }
 
-interface DashboardCacheValue {
+export interface DashboardCacheValue {
   ownerUserId: string
   profileData: Record<string, unknown> & { id: string }
   weightsData?: unknown[]

@@ -46,9 +46,19 @@ Les mutations sont séparées dans `subscription/authority.ts`, module `server-o
 
 ## Chargement de profil dans `useClientDashboard`
 
-La décision d'existence du profil passe désormais par `createProfileRepository(...).findById`. Seul le résultat `not_found`, produit par une lecture valide sans ligne, autorise la redirection vers `/onboarding-v2`. Une erreur réseau, RLS ou Supabase produit l'état récupérable `error`, conserve la session et affiche une page plein écran avec une action de nouvelle tentative. Le chargement agrégé historique reste en place : cette tranche ne migre aucune autre requête du dashboard.
+La frontière `createSessionProfileLoader` compose désormais les repositories
+identité et profil, le cache dashboard et `ProfileLoadCoordinator`. Elle vérifie
+l'identité authentifiée avec `auth.getUser()` avant d'accepter le cache ou de
+lire le profil. Le hook conserve uniquement la session réactive nécessaire au
+rendu et délègue la décision d'existence à cette frontière.
 
-Le cycle explicite est `idle → loading → ready | not_found | error`. Une seule lecture est active par utilisateur; les réponses d'une identité précédente ou reçues après démontage sont ignorées. Une nouvelle tentative force la lecture serveur sans boucle automatique. Si un profil utilisable a déjà été confirmé, l'échec d'un rafraîchissement ne remplace pas l'écran courant par une erreur.
+Seul le résultat `not_found`, produit par une lecture valide sans ligne,
+autorise la redirection vers `/onboarding-v2`. Une session absente, une erreur
+Auth, réseau, RLS ou Supabase produit un état récupérable sans redirection. Le
+chargement agrégé historique reste en place : cette tranche ne migre aucune
+autre requête du dashboard.
+
+Le cycle explicite est `idle → loading → ready | not_found | error`. Une seule lecture est active par utilisateur; les réponses d'une identité précédente ou reçues après démontage sont ignorées. Une nouvelle tentative force l'identité et la lecture serveur sans boucle automatique. Si un profil utilisable a déjà été confirmé, l'échec d'un rafraîchissement ne remplace pas l'écran courant par une erreur.
 
 Le cache dashboard porte `ownerUserId` et le `profileData.id` doit correspondre à l'identité active. Les anciens caches sans propriétaire et les caches croisés sont rejetés. Le cache ne peut jamais provoquer une redirection onboarding.
 

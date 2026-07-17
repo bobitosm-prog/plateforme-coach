@@ -5130,3 +5130,68 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire session/profil de `useClientDashboard`.
+
+## Entrée — 2026-07-17 — Extraction session/profil du dashboard client
+
+### Travail effectué
+
+- Audit du cycle Auth/session, du profil, du cache owner-scoped, des redirections onboarding, du retry, du chargement agrégé et des accès Supabase directs de `useClientDashboard`.
+- Création de `createSessionProfileLoader`, frontière injectable composant repositories identité/profil, cache et `ProfileLoadCoordinator`.
+- Déplacement hors du hook de la vérification `auth.getUser()`, de l'acceptation/invalidation du cache, de la décision profil présent/absent/erreur et de la détection des réponses obsolètes.
+- Conservation dans le hook de la session réactive, de l'application des données agrégées et des états UI existants.
+- Adaptation des gardes statiques de chargement profil et de stratégie cache.
+- Ajout de tests unitaires pour identité vérifiée, session absente, profil trouvé/absent, erreur, profil confirmé conservé, cache croisé, réponse obsolète, retry, concurrence et cycle Strict Mode.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire session/profil de `useClientDashboard` » — terminée.
+- Progression Phase 3 : 5/27 → 6/27 tâches.
+
+### Décisions prises
+
+- Une session réactive issue de `getSession` reste nécessaire au hook, mais aucune lecture profil/cache ne démarre avant confirmation de l'identité par `IdentityRepository.getCurrent()` (`auth.getUser`).
+- Un écart entre l'identité vérifiée et l'utilisateur demandé rend la réponse obsolète ; il ne déclenche ni requête profil ni redirection.
+- Le coordinateur reste détenu par la frontière extraite et son lease demeure actif jusqu'à la fin du chargement agrégé, afin de protéger aussi les effets asynchrones suivants.
+- Une session absente ou une panne Auth est récupérable et ne peut jamais être interprétée comme un profil absent.
+- Le cache n'est accepté que si `ownerUserId` et `profileData.id` correspondent à l'identité vérifiée ; un cache legacy ou croisé est supprimé.
+- La lecture agrégée et les accès Training/Nutrition restent hors périmètre de cette tranche.
+
+### Problèmes rencontrés
+
+- Le test d'inventaire cache attendait encore l'appel `isDashboardCacheOwnedBy` directement dans le hook ; il a été adapté pour vérifier la nouvelle frontière.
+- ESLint complet du hook expose toujours 33 erreurs `no-explicit-any` et 2 warnings d'imports inutilisés historiques ; les nouveaux fichiers et tests sont verts et aucun nouvel `any` n'a été ajouté.
+- L'E2E signale les warnings Next.js historiques sur les qualités d'images et l'avertissement Supabase lié à `getSession`; la frontière profil utilise désormais explicitement `getUser` avant lecture.
+
+### Risques ou dette restante
+
+- Le hook reste volumineux et conserve le chargement agrégé direct, dont un `profiles.select('*')` utilisé pour hydrater les champs dashboard après confirmation d'existence.
+- Programmes, séances, nutrition, mesures, coach link et analytics restent orchestrés directement dans `fetchAll`.
+- Les logs Auth client historiques contiennent encore des détails de navigation et ne sont pas traités dans cette tranche.
+- La dette TypeScript `any` et les imports inutilisés du hook devront être réduits au fil des extractions spécialisées.
+
+### Tests exécutés
+
+- Tests ciblés session/profil/dashboard/cache : 29 tests verts avant suite complète.
+- Suite Vitest complète : 67 fichiers, 740 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur la nouvelle frontière, le coordinateur et les tests : vert.
+- ESLint du hook : aucune nouvelle dette, 33 erreurs `any` et 2 warnings historiques toujours présents.
+- E2E default-coach Chromium local : 1/1 vert en 9,0 s, un worker.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, migration, policy RLS ou scénario E2E modifié.
+
+### Mesures avant/après
+
+- Frontières session/profil testables : 0 → 1.
+- Cas unitaires ajoutés : 7.
+- Tests actifs globaux : 733 → 740.
+- Tâches Phase 3 terminées : 5/27 → 6/27.
+- Progression globale : 48/138 → 49/138 tâches, soit environ 36 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire programmes et séances de `useClientDashboard`.

@@ -18,8 +18,10 @@ import { projectRestDates } from '../../lib/project-rest-days'
 import { checkAndUnlockBadges, type Badge } from '../../lib/check-badges'
 import { addXP, updateStreak } from '../../lib/gamification'
 import { getSupabaseBrowserClient } from '../../lib/supabase/browser'
+import { createIdentityRepository } from '../../lib/repositories/identity'
 import { createProfileRepository } from '../../lib/repositories/profile'
-import { decideProfileRead, isDashboardCacheOwnedBy, ProfileLoadCoordinator, type ProfileLoadStatus } from '../../lib/client-dashboard/profile-load-state'
+import type { ProfileLoadStatus } from '../../lib/client-dashboard/profile-load-state'
+import { createSessionProfileLoader } from '../../lib/client-dashboard/session-profile-loader'
 import { resolveLegacyDashboardAccess } from '../../lib/billing/legacy'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
@@ -75,7 +77,6 @@ export default function useClientDashboard() {
   const fetchAllComplete = useRef(false)
   const mountedRef = useRef(false)
   const activeUserRef = useRef<string | null>(null)
-  const profileLoadCoordinator = useRef(new ProfileLoadCoordinator()).current
   const confirmedProfileUserRef = useRef<string | null>(null)
   const onboardingRedirectUserRef = useRef<string | null>(null)
   const clientProgramIdRef = useRef<string | null>(null)
@@ -88,7 +89,13 @@ export default function useClientDashboard() {
   // intentionally loose until its individual data accesses are migrated.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = useRef(getSupabaseBrowserClient()).current
+  const identityRepository = useRef(createIdentityRepository(supabase)).current
   const profileRepository = useRef(createProfileRepository(supabase)).current
+  const sessionProfileLoader = useRef(createSessionProfileLoader({
+    identityRepository,
+    profileRepository,
+    cache,
+  })).current
 
   // --- Sub-hooks ---
   const userId = session?.user?.id
@@ -104,7 +111,7 @@ export default function useClientDashboard() {
 
   /* ── Auth ── */
   useEffect(() => {
-    profileLoadCoordinator.mount()
+    sessionProfileLoader.mount()
     setMounted(true)
     mountedRef.current = true
     let alive = true
@@ -121,10 +128,10 @@ export default function useClientDashboard() {
     return () => {
       alive = false
       mountedRef.current = false
-      profileLoadCoordinator.unmount()
+      sessionProfileLoader.unmount()
       subscription.unsubscribe()
     }
-  }, [profileLoadCoordinator, supabase])
+  }, [sessionProfileLoader, supabase])
 
   useEffect(() => {
     if (!session) return
@@ -145,7 +152,7 @@ export default function useClientDashboard() {
     const uid = session?.user?.id ?? null
     if (!uid) {
       activeUserRef.current = null
-      profileLoadCoordinator.switchUser(null)
+      sessionProfileLoader.switchUser(null)
       initialFetchDone.current = false
       fetchAllComplete.current = false
       setProfileLoadStatus('idle')
@@ -153,7 +160,7 @@ export default function useClientDashboard() {
     }
     if (activeUserRef.current !== uid) {
       activeUserRef.current = uid
-      profileLoadCoordinator.switchUser(uid)
+      sessionProfileLoader.switchUser(uid)
       initialFetchDone.current = false
       fetchAllComplete.current = false
       confirmedProfileUserRef.current = null
@@ -178,42 +185,44 @@ export default function useClientDashboard() {
   async function fetchAll(forceRefresh = false, requestedUserId?: string) {
     const uid = requestedUserId ?? session?.user?.id
     if (!uid) return
-    const request = profileLoadCoordinator.begin(uid)
-    if (!request) return
-    const isCurrentRequest = () => profileLoadCoordinator.isCurrent(request)
+    const profileLoad = sessionProfileLoader.begin(uid)
+    if (!profileLoad) return
+    const isCurrentRequest = () => profileLoad.isCurrent()
     const hasConfirmedProfile = () => confirmedProfileUserRef.current === uid
     const today = new Date().toISOString().split('T')[0]
 
     try {
-      // A cache is usable only when both its envelope and profile belong to the active identity.
-      if (!forceRefresh) {
-        const cached = cache.get(`dashboard_${uid}`)
-        if (isDashboardCacheOwnedBy(cached, uid)) {
-          applyFetchedData(cached.profileData, cached.weightsData || [], cached.sessData || [], cached.measureData || [], cached.photosData || [], cached.coachProgData, cached.coachMealData)
-          setSessionDates(cached.sessionDatesData || [])
-          setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
-          await resolveCoachLink(uid)
-          if (!isCurrentRequest()) return
-          const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
-          setPlanningDays(planningProgram?.days || null)
-          await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
-          if (!isCurrentRequest()) return
-          analyticsHook.fetchAnalyticsData(uid)
-          fetchAllComplete.current = true
-          confirmedProfileUserRef.current = uid
-          setProfileLoadStatus('ready')
-          return
-        }
-        if (cached) cache.remove(`dashboard_${uid}`)
+      if (!hasConfirmedProfile()) setProfileLoadStatus('loading')
+      const sessionProfile = await profileLoad.load({
+        forceRefresh,
+        hasConfirmedProfile: hasConfirmedProfile(),
+      })
+      if (!isCurrentRequest() || sessionProfile.kind === 'stale') return
+
+      if (sessionProfile.kind === 'cache') {
+        const cached = sessionProfile.cached
+        applyFetchedData(cached.profileData, cached.weightsData || [], cached.sessData || [], cached.measureData || [], cached.photosData || [], cached.coachProgData, cached.coachMealData)
+        setSessionDates(cached.sessionDatesData || [])
+        setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
+        await resolveCoachLink(uid)
+        if (!isCurrentRequest()) return
+        const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
+        setPlanningDays(planningProgram?.days || null)
+        await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
+        if (!isCurrentRequest()) return
+        analyticsHook.fetchAnalyticsData(uid)
+        fetchAllComplete.current = true
+        confirmedProfileUserRef.current = uid
+        setProfileLoadStatus('ready')
+        return
       }
 
-      if (!hasConfirmedProfile()) setProfileLoadStatus('loading')
-      const profileExistence = await profileRepository.findById(uid)
-      if (!isCurrentRequest()) return
-      const decision = decideProfileRead(profileExistence, hasConfirmedProfile())
-      if (decision.status !== 'ready' || !profileExistence.ok) {
-        setProfileLoadStatus(decision.status)
-        if (decision.redirectToOnboarding && onboardingRedirectUserRef.current !== uid) {
+      if (sessionProfile.kind !== 'profile') {
+        const status: ProfileLoadStatus = sessionProfile.kind === 'not_found'
+          ? 'not_found'
+          : sessionProfile.kind === 'retained' ? 'ready' : 'error'
+        setProfileLoadStatus(status)
+        if (sessionProfile.kind === 'not_found' && onboardingRedirectUserRef.current !== uid) {
           onboardingRedirectUserRef.current = uid
           router.replace('/onboarding-v2')
         }
@@ -330,13 +339,13 @@ export default function useClientDashboard() {
     } catch {
       if (isCurrentRequest()) setProfileLoadStatus(hasConfirmedProfile() ? 'ready' : 'error')
     } finally {
-      profileLoadCoordinator.finish(request)
+      profileLoad.finish()
     }
   }
 
   function retryProfileLoad() {
     const uid = session?.user?.id
-    if (!uid || profileLoadCoordinator.isLoading(uid)) return
+    if (!uid || sessionProfileLoader.isLoading(uid)) return
     void fetchAll(true, uid)
   }
 
