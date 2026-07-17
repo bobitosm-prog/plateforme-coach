@@ -3881,3 +3881,61 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Définir une stratégie de cache par domaine.
+
+## Entrée — 2026-07-16 — Stratégie de cache par domaine
+
+### Travail effectué
+
+- Audit des stockages navigateur, caches mémoire, cookies, directives HTTP/Next et comportement du service worker, sans modifier les consommateurs.
+- Formalisation du cache dashboard client actuel : clé, propriétaire, enveloppe de données, TTL de cinq minutes, symétrie lecture/écriture, rafraîchissement forcé et invalidations existantes.
+- Création d'un registre déclaratif TypeScript couvrant douze domaines, indépendant de React et Supabase.
+- Ajout des contrats de clé versionnée, enveloppe utilisateur, fraîcheur/rétention, cache négatif et horloge injectable.
+- Documentation de la cible, des règles de sécurité, de l'adoption progressive et des écarts legacy dans `docs/CACHE_STRATEGY.md`.
+
+### Tâches cochées
+
+- Phase 2 : « Définir une stratégie de cache par domaine » — terminée.
+- Progression Phase 2 : 14/18 → 15/18 tâches.
+
+### Décisions prises
+
+- Un cache n'est jamais une autorité pour l'identité, le rôle, l'abonnement, une relation coach/client, un paiement ou un accès produit.
+- Les domaines critiques ne peuvent pas persister dans les stockages navigateur.
+- Toute donnée privée persistante doit être versionnée, liée à l'utilisateur et purgée au logout comme au changement d'identité.
+- Une erreur réseau, RLS ou fournisseur ne peut jamais alimenter un cache négatif.
+- Le registre décrit la cible mais ne remplace pas `lib/cache.ts` et ne migre aucun consommateur dans cette tranche documentaire/contractuelle.
+
+### Problèmes rencontrés
+
+- Le jeton d'invitation est encore conservé temporairement en `sessionStorage`, contrairement au contrat cible.
+- Plusieurs brouillons et clés locales ne portent ni propriétaire ni version; certaines n'ont pas d'expiration explicite.
+- Le cache dashboard possède déjà une vérification propriétaire et un TTL, mais pas de version de schéma ni de séparation fraîcheur/rétention.
+- Le service worker ne fournit actuellement aucun cache offline et purge Cache Storage à l'activation.
+
+### Risques ou dette restante
+
+- Le registre n'est pas encore consommé par le code applicatif; les écarts restent donc réels jusqu'aux migrations ciblées.
+- Le cache des URL signées et les états mémoire coach/messaging devront être spécialisés après stabilisation de leurs repositories.
+- L'adoption d'un cache public service worker exige encore un inventaire des ressources, des budgets et des tests offline.
+- Les TTL proposés sont des bornes initiales à mesurer, pas des objectifs de performance garantis.
+
+### Tests exécutés
+
+- Tests ciblés du registre et de l'inventaire statique : 13 assertions vertes.
+- Suite complète : 47 fichiers, 540 tests actifs verts et 3 `todo`.
+- TypeScript vert; ESLint ciblé vert sur le registre et ses tests.
+- Validation des liens internes et `git diff --check` vertes lors de la validation finale.
+
+### Mesures avant/après
+
+- Domaines possédant un contrat central : 0 → 12.
+- Mécanismes inventoriés : 12 occurrences `sessionStorage`, 29 `localStorage`, 18 appels helper, 2 appels Cache Storage et 19 directives HTTP/Next explicites.
+- Tâches Phase 2 terminées : 14/18 → 15/18.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Migrer 8 routes simples vers le contrat route/service/schema.

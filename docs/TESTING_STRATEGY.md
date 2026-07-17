@@ -2,6 +2,8 @@
 
 > État mesuré le 15 juillet 2026 après intégration de la suite E2E critique canonique de Phase 2. Cette stratégie décrit le dépôt réel puis la cible. Aucun test ne doit contacter la production.
 
+Les invariants de cache (TTL, propriétaire, version, autorité et invalidation) et l'inventaire statique du legacy sont décrits dans [`CACHE_STRATEGY.md`](CACHE_STRATEGY.md).
+
 ## 1. Pyramide réelle et vocabulaire
 
 Un **niveau technique** indique quelles couches et quels processus sont exécutés. « Contrat », « caractérisation », « régression », « hostile » ou « concurrence » indiquent le **but** d'un test, pas un niveau supplémentaire : un test de contrat peut être unitaire, PostgreSQL ou E2E selon les frontières qu'il traverse.
