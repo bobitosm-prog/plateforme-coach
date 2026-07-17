@@ -454,7 +454,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 7 tâches sur 10 terminées ; services Stripe extraits, contrats centralisés et premier audit de réconciliation Stripe/base read-only disponible**
+**Statut : En cours — 8 tâches sur 10 terminées ; services Stripe extraits, contrats centralisés, audit de réconciliation read-only et protections replay/concurrence/ordre testées**
 
 ### Pourquoi
 
@@ -471,7 +471,7 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 | [x] [Extraire les handlers métier du webhook](docs/BILLING_WEBHOOK_HANDLERS.md) | 3 j | Élevée | Élevé | Critique | Modèle Billing |
 | [x] [Centraliser metadata et idempotence](docs/BILLING_STRIPE_CONTRACTS.md) | 2 j | Élevée | Moyen | Élevé | Services Stripe |
 | [x] [Créer la réconciliation Stripe/base](docs/BILLING_RECONCILIATION.md) | 3 j | Élevée | Élevé | Critique | Services Billing |
-| [ ] Tester replay, concurrence et événements désordonnés | 3 j | Élevée | Faible | Critique | Mocks Stripe |
+| [x] [Tester replay, concurrence et événements désordonnés](docs/BILLING_WEBHOOK_ORDERING.md) | 3 j | Élevée | Faible | Critique | Mocks Stripe |
 | [ ] Réduire les routes Stripe à des adaptateurs HTTP | 2 j | Moyenne | Moyen | Élevé | Services complets |
 | [ ] Documenter le cycle de vie des abonnements | 1 j | Moyenne | Faible | Élevé | Modèle final |
 
@@ -741,7 +741,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈29 % (40/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈30 % (41/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |

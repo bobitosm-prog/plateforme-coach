@@ -28,10 +28,10 @@ Le service traite actuellement :
 
 | Événement | Relecture Stripe | Décision métier |
 |---|---|---|
-| `checkout.session.completed` | Checkout Session avec subscription | Valide les metadata, le rôle, la propriété du paiement ou la relation coach active, puis active l'abonnement et finalise le paiement local. |
-| `customer.subscription.updated` | Subscription | Répercute le statut sur le profil identifié par le customer serveur. |
-| `invoice.payment_succeeded` | Invoice avec subscription | Renouvelle la période vérifiée et enregistre le paiement idempotent. |
-| `customer.subscription.deleted` | Subscription | Annule l'abonnement et retire sa référence Stripe. |
+| `checkout.session.completed` | Checkout Session puis Subscription | Valide les metadata, le rôle, la propriété du paiement ou la relation coach active. Le paiement est finalisé, mais l'accès n'est accordé que si la subscription relue est `active` ou `trialing`. |
+| `customer.subscription.updated` | Subscription | Répercute le statut seulement sur le profil identifié par le couple customer/subscription serveur. |
+| `invoice.payment_succeeded` | Invoice puis Subscription | Enregistre le paiement idempotent. La période n'est renouvelée que pour la subscription courante si elle est `active` ou `trialing`. |
+| `customer.subscription.deleted` | Subscription | Annule uniquement la subscription qui fait encore autorité sur le profil et retire sa référence Stripe. |
 | `account.updated` | Objet signé de l'événement | Marque l'onboarding Connect terminé seulement si charges et payouts sont actifs. |
 
 Le parsing suit le [contrat Stripe central](BILLING_STRIPE_CONTRACTS.md) dans [`lib/stripe/metadata.ts`](../lib/stripe/metadata.ts). Les metadata de checkout ne suffisent jamais seules : elles sont confrontées au profil, au rôle, au paiement préparé côté serveur ou à une relation coach/client active.
@@ -51,6 +51,9 @@ Les journaux de la route ne contiennent que le type d'événement et, si nécess
 - `npx vitest run tests/unit/billing-webhook-handlers.test.ts` : décisions pures et ports du service ;
 - `npx vitest run tests/unit/stripe-webhook-metadata-replay.test.ts` : contrat HTTP, metadata, replay, concurrence et finalisation ;
 - `psql postgresql://postgres:postgres@127.0.0.1:55322/postgres -v ON_ERROR_STOP=1 -f tests/integration/stripe-webhook-claims.sql` : claim durable sur Supabase local.
+- `MOOVX_TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres bash tests/integration/stripe-webhook-concurrency.sh` : deux claims PostgreSQL réellement concurrents.
+
+Les garanties de replay, concurrence et livraison désordonnée sont détaillées dans [le contrat d'ordre des webhooks](BILLING_WEBHOOK_ORDERING.md).
 
 ## Limites et dette
 

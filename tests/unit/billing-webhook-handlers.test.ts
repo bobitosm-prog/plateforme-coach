@@ -20,7 +20,7 @@ function event(type: Stripe.Event.Type, object: Record<string, unknown>, id = 'e
 function dependencies() {
   const stripe: WebhookStripePort = {
     retrieveCheckoutSession: vi.fn(),
-    retrieveSubscription: vi.fn(),
+    retrieveSubscription: vi.fn(async id => ({ id, customer: 'cus_client', status: 'active' } as unknown as Stripe.Subscription)),
     retrieveInvoice: vi.fn(),
   }
   const repository: WebhookBillingRepository = {
@@ -28,8 +28,8 @@ function dependencies() {
     hasActiveCoachRelation: vi.fn(),
     findPlatformPaymentOwner: vi.fn(),
     updateProfileById: vi.fn(),
-    updateProfilesByCustomer: vi.fn(),
-    findProfileByCustomer: vi.fn(),
+    updateSubscriptionByAuthority: vi.fn(),
+    findProfileBySubscription: vi.fn(),
     updateProfileByConnectAccount: vi.fn(),
     upsertPayment: vi.fn(),
     markPaymentPaid: vi.fn(),
@@ -107,12 +107,16 @@ describe('Billing webhook handlers', () => {
     const deps = dependencies()
     vi.mocked(deps.stripe.retrieveSubscription).mockResolvedValue({ id: 'sub_1', customer: 'cus_1', status: 'past_due' } as unknown as Stripe.Subscription)
     await processWebhookEvent(event('customer.subscription.updated', { id: 'sub_1' }), deps)
-    expect(deps.repository.updateProfilesByCustomer).toHaveBeenCalledWith('cus_1', { subscription_status: 'past_due' })
+    expect(deps.repository.updateSubscriptionByAuthority).toHaveBeenCalledWith('cus_1', 'sub_1', { subscription_status: 'past_due' })
 
     vi.mocked(deps.stripe.retrieveInvoice).mockResolvedValue({
       id: 'in_1', customer: 'cus_1', billing_reason: 'subscription_cycle', amount_paid: 9900, currency: 'chf',
+      parent: { subscription_details: { subscription: 'sub_1' } },
     } as unknown as Stripe.Invoice)
-    vi.mocked(deps.repository.findProfileByCustomer).mockResolvedValue({ id: CLIENT_ID, subscriptionType: 'client_yearly' })
+    vi.mocked(deps.repository.findProfileBySubscription).mockResolvedValue({ id: CLIENT_ID, subscriptionType: 'client_yearly' })
+    vi.mocked(deps.stripe.retrieveSubscription).mockResolvedValueOnce({
+      id: 'sub_1', customer: 'cus_1', status: 'active',
+    } as unknown as Stripe.Subscription)
     await processWebhookEvent(event('invoice.payment_succeeded', { id: 'in_1' }, 'evt_invoice'), deps)
     expect(deps.repository.updateProfileById).toHaveBeenCalledWith(CLIENT_ID, expect.objectContaining({ subscription_status: 'active' }))
     expect(deps.repository.upsertPayment).toHaveBeenCalledWith(expect.objectContaining({ stripe_event_id: 'evt_invoice', amount: 99 }))
@@ -122,7 +126,7 @@ describe('Billing webhook handlers', () => {
     const deps = dependencies()
     vi.mocked(deps.stripe.retrieveSubscription).mockResolvedValue({ id: 'sub_1', customer: 'cus_1' } as unknown as Stripe.Subscription)
     await processWebhookEvent(event('customer.subscription.deleted', { id: 'sub_1' }), deps)
-    expect(deps.repository.updateProfilesByCustomer).toHaveBeenCalledWith('cus_1', {
+    expect(deps.repository.updateSubscriptionByAuthority).toHaveBeenCalledWith('cus_1', 'sub_1', {
       subscription_status: 'canceled', stripe_subscription_id: null,
     })
 

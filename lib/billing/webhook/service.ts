@@ -32,8 +32,8 @@ export interface WebhookBillingRepository {
   hasActiveCoachRelation(clientId: string, coachId: string): Promise<boolean>
   findPlatformPaymentOwner(sessionId: string): Promise<{ clientId: string; coachId: string | null } | null>
   updateProfileById(clientId: string, updates: Record<string, unknown>): Promise<void>
-  updateProfilesByCustomer(customerId: string, updates: Record<string, unknown>): Promise<void>
-  findProfileByCustomer(customerId: string): Promise<{ id: string; subscriptionType: string | null } | null>
+  updateSubscriptionByAuthority(customerId: string, subscriptionId: string, updates: Record<string, unknown>): Promise<void>
+  findProfileBySubscription(customerId: string, subscriptionId: string): Promise<{ id: string; subscriptionType: string | null } | null>
   updateProfileByConnectAccount(accountId: string, updates: Record<string, unknown>): Promise<void>
   upsertPayment(payment: Record<string, unknown>): Promise<void>
   markPaymentPaid(sessionId: string, paidAt: string): Promise<void>
@@ -46,6 +46,15 @@ export interface WebhookHandlerDependencies {
 }
 
 const daysAfter = (now: Date, days: number) => new Date(now.getTime() + days * 24 * 60 * 60 * 1000).toISOString()
+const grantsSubscriptionAccess = (status: Stripe.Subscription.Status) => status === 'active' || status === 'trialing'
+
+function subscriptionId(value: string | Stripe.Subscription | null): string | null {
+  return typeof value === 'string' ? value : value?.id || null
+}
+
+function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+  return subscriptionId(invoice.parent?.subscription_details?.subscription || null)
+}
 
 async function handleCheckoutCompleted(event: Stripe.Event, deps: WebhookHandlerDependencies) {
   const session = await deps.stripe.retrieveCheckoutSession((event.data.object as Stripe.Checkout.Session).id)
@@ -72,14 +81,23 @@ async function handleCheckoutCompleted(event: Stripe.Event, deps: WebhookHandler
   }
 
   const now = (deps.now || (() => new Date()))()
+  const checkoutSubscriptionId = subscriptionId(session.subscription)
+  let subscriptionGrantsAccess = true
+  if (subType !== 'client_lifetime') {
+    if (!checkoutSubscriptionId) throw new WebhookHandlerError('Checkout subscription authority missing')
+    const currentSubscription = await deps.stripe.retrieveSubscription(checkoutSubscriptionId)
+    subscriptionGrantsAccess = grantsSubscriptionAccess(currentSubscription.status)
+  }
   if (isCoachSubscription && coachId) {
-    await deps.repository.updateProfileById(clientId, {
-      stripe_customer_id: session.customer as string || null,
-      subscription_status: 'active',
-      subscription_type: 'coach_paid',
-      stripe_subscription_id: session.subscription as string || null,
-      subscription_end_date: daysAfter(now, 30),
-    })
+    if (subscriptionGrantsAccess) {
+      await deps.repository.updateProfileById(clientId, {
+        stripe_customer_id: session.customer as string || null,
+        subscription_status: 'active',
+        subscription_type: 'coach_paid',
+        stripe_subscription_id: checkoutSubscriptionId,
+        subscription_end_date: daysAfter(now, 30),
+      })
+    }
     await deps.repository.upsertPayment({
       client_id: clientId,
       coach_id: coachId,
@@ -99,13 +117,15 @@ async function handleCheckoutCompleted(event: Stripe.Event, deps: WebhookHandler
     if (subType === 'client_lifetime') {
       updates.subscription_status = 'lifetime'
       updates.subscription_end_date = null
-    } else {
+    } else if (subscriptionGrantsAccess) {
       updates.subscription_status = 'active'
       updates.subscription_end_date = daysAfter(now, subType === 'client_yearly' ? 365 : 30)
-      updates.stripe_subscription_id = session.subscription as string || null
+      updates.stripe_subscription_id = checkoutSubscriptionId
     }
     if (subType === 'coach_monthly') updates.coach_subscription_active = true
-    await deps.repository.updateProfileById(clientId, updates)
+    if (subType === 'client_lifetime' || subscriptionGrantsAccess) {
+      await deps.repository.updateProfileById(clientId, updates)
+    }
   }
   await deps.repository.markPaymentPaid(session.id, now.toISOString())
 }
@@ -114,20 +134,25 @@ async function handleSubscriptionUpdated(event: Stripe.Event, deps: WebhookHandl
   const subscription = await deps.stripe.retrieveSubscription((event.data.object as Stripe.Subscription).id)
   if (!subscription.customer) return
   const status = subscription.status === 'active' ? 'active' : subscription.status === 'past_due' ? 'past_due' : subscription.status
-  await deps.repository.updateProfilesByCustomer(subscription.customer as string, { subscription_status: status })
+  await deps.repository.updateSubscriptionByAuthority(subscription.customer as string, subscription.id, { subscription_status: status })
 }
 
 async function handleInvoicePaid(event: Stripe.Event, deps: WebhookHandlerDependencies) {
   const invoice = await deps.stripe.retrieveInvoice((event.data.object as Stripe.Invoice).id)
   if (invoice.billing_reason !== 'subscription_cycle' || !invoice.customer) return
-  const client = await deps.repository.findProfileByCustomer(invoice.customer as string)
+  const currentSubscriptionId = invoiceSubscriptionId(invoice)
+  if (!currentSubscriptionId) throw new WebhookHandlerError('Invoice subscription authority missing')
+  const currentSubscription = await deps.stripe.retrieveSubscription(currentSubscriptionId)
+  const client = await deps.repository.findProfileBySubscription(invoice.customer as string, currentSubscriptionId)
   if (!client) return
   const now = (deps.now || (() => new Date()))()
   const interval = client.subscriptionType === 'client_yearly' ? 365 : 30
-  await deps.repository.updateProfileById(client.id, {
-    subscription_status: 'active',
-    subscription_end_date: daysAfter(now, interval),
-  })
+  if (grantsSubscriptionAccess(currentSubscription.status)) {
+    await deps.repository.updateProfileById(client.id, {
+      subscription_status: 'active',
+      subscription_end_date: daysAfter(now, interval),
+    })
+  }
   await deps.repository.upsertPayment({
     client_id: client.id,
     amount: (invoice.amount_paid || 0) / 100,
@@ -142,7 +167,7 @@ async function handleInvoicePaid(event: Stripe.Event, deps: WebhookHandlerDepend
 async function handleSubscriptionDeleted(event: Stripe.Event, deps: WebhookHandlerDependencies) {
   const subscription = await deps.stripe.retrieveSubscription((event.data.object as Stripe.Subscription).id)
   if (!subscription.customer) return
-  await deps.repository.updateProfilesByCustomer(subscription.customer as string, {
+  await deps.repository.updateSubscriptionByAuthority(subscription.customer as string, subscription.id, {
     subscription_status: 'canceled',
     stripe_subscription_id: null,
   })

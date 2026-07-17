@@ -27,12 +27,14 @@ export function createWebhookBillingRepository(supabase: SupabaseClient): Webhoo
       const result = await supabase.from('profiles').update(updates).eq('id', clientId)
       assertDb(result, 'profile update')
     },
-    async updateProfilesByCustomer(customerId, updates) {
-      const result = await supabase.from('profiles').update(updates).eq('stripe_customer_id', customerId)
+    async updateSubscriptionByAuthority(customerId, subscriptionId, updates) {
+      const result = await supabase.from('profiles').update(updates)
+        .eq('stripe_customer_id', customerId).eq('stripe_subscription_id', subscriptionId)
       assertDb(result, 'subscription profile update')
     },
-    async findProfileByCustomer(customerId) {
-      const { data, error } = await supabase.from('profiles').select('id, subscription_type').eq('stripe_customer_id', customerId).maybeSingle()
+    async findProfileBySubscription(customerId, subscriptionId) {
+      const { data, error } = await supabase.from('profiles').select('id, subscription_type')
+        .eq('stripe_customer_id', customerId).eq('stripe_subscription_id', subscriptionId).maybeSingle()
       assertDb({ error }, 'renewal profile lookup')
       return data ? { id: data.id, subscriptionType: data.subscription_type } : null
     },

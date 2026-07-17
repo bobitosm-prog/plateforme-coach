@@ -20,10 +20,12 @@ const mocks = vi.hoisted(() => {
   const dedupInsert = vi.fn()
   const webhookEventUpdateEq = vi.fn()
   const webhookEventUpdate = vi.fn(() => ({ eq: webhookEventUpdateEq }))
-  const profileUpdateEq = vi.fn()
+  const profileUpdateSecondEq = vi.fn()
+  const profileUpdateEq = vi.fn(() => ({ error: null, eq: profileUpdateSecondEq }))
   const profileUpdate = vi.fn(() => ({ eq: profileUpdateEq }))
   const profileMaybeSingle = vi.fn()
-  const profileSelectEq = vi.fn(() => ({ maybeSingle: profileMaybeSingle }))
+  const profileSelectSecondEq = vi.fn(() => ({ maybeSingle: profileMaybeSingle }))
+  const profileSelectEq = vi.fn(() => ({ maybeSingle: profileMaybeSingle, eq: profileSelectSecondEq }))
   const profileSelect = vi.fn(() => ({ eq: profileSelectEq }))
   const paymentInsert = vi.fn()
   const paymentUpsert = vi.fn()
@@ -58,6 +60,7 @@ const mocks = vi.hoisted(() => {
     webhookEventUpdateEq,
     profileUpdate,
     profileUpdateEq,
+    profileUpdateSecondEq,
     profileMaybeSingle,
     paymentInsert,
     paymentUpsert,
@@ -141,11 +144,15 @@ beforeEach(() => {
   mocks.dedupInsert.mockResolvedValue({ error: null })
   mocks.checkoutRetrieve.mockResolvedValue(session())
   mocks.subscriptionRetrieve.mockResolvedValue({ id: 'sub_1', customer: 'cus_1', status: 'active' })
-  mocks.invoiceRetrieve.mockResolvedValue({ id: 'in_1', billing_reason: 'subscription_cycle', customer: 'cus_1', amount_paid: 1000, currency: 'chf' })
+  mocks.invoiceRetrieve.mockResolvedValue({
+    id: 'in_1', billing_reason: 'subscription_cycle', customer: 'cus_1', amount_paid: 1000, currency: 'chf',
+    parent: { subscription_details: { subscription: 'sub_1' } },
+  })
   mocks.profileMaybeSingle.mockResolvedValue({ data: { id: CLIENT_ID, role: 'client', subscription_type: 'client_monthly' }, error: null })
   mocks.paymentMaybeSingle.mockResolvedValue({ data: { client_id: CLIENT_ID, coach_id: null }, error: null })
   mocks.relationMaybeSingle.mockResolvedValue({ data: { coach_id: COACH_ID }, error: null })
-  mocks.profileUpdateEq.mockResolvedValue({ error: null })
+  mocks.profileUpdateEq.mockReturnValue({ error: null, eq: mocks.profileUpdateSecondEq })
+  mocks.profileUpdateSecondEq.mockResolvedValue({ error: null })
   mocks.paymentInsert.mockResolvedValue({ error: null })
   mocks.paymentUpsert.mockResolvedValue({ error: null })
   mocks.paymentUpdateEq.mockResolvedValue({ error: null })

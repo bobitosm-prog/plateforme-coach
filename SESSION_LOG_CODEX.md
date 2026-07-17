@@ -4609,3 +4609,67 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Tester replay, concurrence et événements désordonnés.
+
+## Entrée — 2026-07-17 — Replay, concurrence et événements Stripe désordonnés
+
+### Travail effectué
+
+- Audit des garanties existantes de claim durable, replay `failed`, finalisation tardive et déduplication par `event.id`/`stripe_event_id`.
+- Ajout d'un test PostgreSQL avec deux connexions réellement concurrentes réclamant le même événement et nettoyage systématique des données synthétiques.
+- Ajout de scénarios métier stateful couvrant une ancienne mise à jour, une ancienne suppression, une invoice tardive et un checkout tardif.
+- Restriction des mutations d'abonnement au couple d'autorité serveur `(stripe_customer_id, stripe_subscription_id)` au lieu du customer seul.
+- Relecture de la subscription courante avant tout octroi ou renouvellement d'accès ; seuls `active` et `trialing` accordent l'accès.
+- Séparation explicite du fait financier et de l'accès : une invoice ou un checkout tardif peut être enregistré sans réactiver une subscription annulée.
+- Documentation du contrat, des commandes et des limites dans `docs/BILLING_WEBHOOK_ORDERING.md`, avec mise à jour du document des handlers.
+
+### Tâches cochées
+
+- Phase 6 : « Tester replay, concurrence et événements désordonnés » — terminée.
+- Progression Phase 6 : 7/10 → 8/10 tâches.
+
+### Décisions prises
+
+- L'autorité d'une mutation subscription est le couple customer/subscription relu depuis Stripe et confronté au profil courant.
+- L'ordre de livraison n'est pas déduit d'un horodatage global inexistant ; un ancien objet ne peut agir sur une subscription de remplacement.
+- Une observation de paiement n'accorde jamais à elle seule un accès produit.
+- Une invoice sans référence de subscription vérifiable échoue de manière retentable au lieu de rechercher un bénéficiaire par customer seul.
+- Le protocole de claim reste dans la route/RPC ; le service métier ne duplique pas l'idempotence durable.
+
+### Problèmes rencontrés
+
+- Les handlers subscription et invoice retrouvaient auparavant les profils par customer seul : un événement ancien pouvait écraser l'état d'une nouvelle subscription.
+- Le premier lancement PostgreSQL depuis le sandbox ne pouvait pas ouvrir la connexion locale ; la commande autorisée sur Supabase local a ensuite validé le scénario.
+
+### Risques ou dette restante
+
+- Les mutations profil/paiement d'un même événement ne sont toujours pas transactionnelles.
+- Refunds, disputes et plusieurs variantes d'invoices restent hors du périmètre supporté.
+- Une invoice legacy sans autorité subscription devient retentable et doit être diagnostiquée par la réconciliation.
+- La suite couvre les types de webhook actuellement supportés, pas un ordre global que Stripe ne garantit pas entre tous les objets.
+
+### Tests exécutés
+
+- Tests webhook ciblés : 3 fichiers, 34 assertions vertes.
+- Claims PostgreSQL séquentiels : `tests/integration/stripe-webhook-claims.sql` vert.
+- Claims PostgreSQL réellement concurrents : `tests/integration/stripe-webhook-concurrency.sh` vert, exactement un `claimed`, un `already_processing` et une ligne durable avant nettoyage.
+- Suite complète `npm test` : 59 fichiers, 676 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur service, repository et tests modifiés : vert.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune migration, policy RLS, route Checkout/Connect ou contrat HTTP public modifié.
+
+### Mesures avant/après
+
+- Test de claim réellement parallèle : absent → présent.
+- Mutations subscription filtrées par customer seul : 2 → 0.
+- Scénarios d'ordre métier stateful dédiés : 0 → 4.
+- Tâches Phase 6 terminées : 7/10 → 8/10.
+- Progression globale : 40/138 → 41/138 tâches, soit environ 30 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Réduire les routes Stripe à des adaptateurs HTTP.
