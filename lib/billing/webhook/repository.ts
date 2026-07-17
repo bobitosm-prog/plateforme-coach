@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { WebhookBillingRepository } from './service'
+import { STRIPE_EVENT_ID_CONFLICT_TARGET } from '@/lib/billing/idempotency'
 
 function assertDb(result: { error?: { message?: string } | null }, operation: string) {
   if (result.error) throw new Error(`${operation}: ${result.error.message || 'database error'}`)
@@ -40,7 +41,7 @@ export function createWebhookBillingRepository(supabase: SupabaseClient): Webhoo
       assertDb(result, 'Stripe account profile update')
     },
     async upsertPayment(payment) {
-      const result = await supabase.from('payments').upsert(payment, { onConflict: 'stripe_event_id', ignoreDuplicates: true })
+      const result = await supabase.from('payments').upsert(payment, { onConflict: STRIPE_EVENT_ID_CONFLICT_TARGET, ignoreDuplicates: true })
       assertDb(result, 'payment upsert')
     },
     async markPaymentPaid(sessionId, paidAt) {

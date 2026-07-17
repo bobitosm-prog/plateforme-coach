@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   CheckoutServiceError,
-  buildCoachMetadata,
-  buildPlatformMetadata,
   createCoachCheckout,
   createPlatformCheckout,
   resolvePlatformPlan,
@@ -12,6 +10,7 @@ import {
   type PlatformCheckoutRepository,
   type StripeCheckoutPort,
 } from '../../lib/billing/checkout'
+import { buildCoachCheckoutMetadata, buildPlatformCheckoutMetadata } from '../../lib/stripe/metadata'
 
 const CLIENT_ID = '00000000-0000-4000-8000-000000000001'
 const COACH_ID = '00000000-0000-4000-8000-000000000002'
@@ -66,10 +65,10 @@ describe('Billing Checkout validation and metadata', () => {
   it('requires an empty coach body and preserves webhook-compatible metadata', () => {
     expect(validateCoachCheckoutBody({})).toBeUndefined()
     expect(() => validateCoachCheckoutBody({ clientId: 'foreign' })).toThrowError(CheckoutServiceError)
-    expect(buildPlatformMetadata(CLIENT_ID, resolvePlatformPlan('client_yearly'))).toEqual({
+    expect(buildPlatformCheckoutMetadata(CLIENT_ID, resolvePlatformPlan('client_yearly').id)).toEqual({
       clientId: CLIENT_ID, planId: 'client_yearly', coachId: 'platform', subType: 'client_yearly',
     })
-    expect(buildCoachMetadata(CLIENT_ID, COACH_ID)).toEqual({
+    expect(buildCoachCheckoutMetadata(CLIENT_ID, COACH_ID)).toEqual({
       clientId: CLIENT_ID, coachId: COACH_ID, subType: 'coach_monthly', type: 'coach_subscription',
     })
   })

@@ -1,4 +1,11 @@
 import type Stripe from 'stripe'
+import {
+  buildCoachCheckoutMetadata,
+  buildCoachCustomerMetadata,
+  buildPlatformCheckoutMetadata,
+  buildSubscriptionMetadata,
+} from '@/lib/stripe/metadata'
+import { buildCoachCheckoutIdempotencyKey, buildPlatformCheckoutIdempotencyKey } from '@/lib/billing/idempotency'
 
 export type PlatformPlanId = 'client_monthly' | 'client_yearly' | 'client_lifetime' | 'coach_monthly'
 
@@ -97,14 +104,6 @@ export function resolvePlatformPlan(planId: string): PlatformPlan {
   return plan
 }
 
-export function buildPlatformMetadata(userId: string, plan: PlatformPlan) {
-  return { clientId: userId, planId: plan.id, coachId: 'platform', subType: plan.id }
-}
-
-export function buildCoachMetadata(clientId: string, coachId: string) {
-  return { clientId, coachId, subType: 'coach_monthly', type: 'coach_subscription' }
-}
-
 export function buildPlatformSessionParams(input: {
   userId: string
   plan: PlatformPlan
@@ -114,7 +113,7 @@ export function buildPlatformSessionParams(input: {
 }): Stripe.Checkout.SessionCreateParams {
   const { userId, plan, priceId, appUrl, destinationAccountId } = input
   const isCoachPlan = plan.id === 'coach_monthly'
-  const metadata = buildPlatformMetadata(userId, plan)
+  const metadata = buildPlatformCheckoutMetadata(userId, plan.id)
   const params: Stripe.Checkout.SessionCreateParams = {
     payment_method_types: ['card'],
     mode: plan.mode,
@@ -125,7 +124,7 @@ export function buildPlatformSessionParams(input: {
   }
 
   if (plan.mode === 'subscription') {
-    params.subscription_data = { metadata: { clientId: userId, subType: plan.id } }
+    params.subscription_data = { metadata: buildSubscriptionMetadata(userId, plan.id) }
   }
   if (destinationAccountId && plan.mode === 'subscription') {
     params.subscription_data = {
@@ -136,7 +135,7 @@ export function buildPlatformSessionParams(input: {
   if (destinationAccountId && plan.mode === 'payment') {
     params.payment_intent_data = {
       transfer_data: { destination: destinationAccountId },
-      metadata: { clientId: userId, subType: plan.id },
+      metadata: buildSubscriptionMetadata(userId, plan.id),
     }
   }
   return params
@@ -152,7 +151,7 @@ export function buildCoachSessionParams(input: {
   appUrl: string
 }): Stripe.Checkout.SessionCreateParams {
   const coachName = input.coachName || 'MoovX'
-  const metadata = buildCoachMetadata(input.clientId, input.coachId)
+  const metadata = buildCoachCheckoutMetadata(input.clientId, input.coachId)
   return {
     payment_method_types: ['card'],
     mode: 'subscription',
@@ -207,7 +206,7 @@ export async function createPlatformCheckout(input: {
     priceId,
     appUrl: input.appUrl,
     destinationAccountId,
-  }), `checkout-${input.userId}-${plan.id}-${(input.nowMs || Date.now)()}`)
+  }), buildPlatformCheckoutIdempotencyKey(input.userId, plan.id, (input.nowMs || Date.now)()))
 
   await input.repository.insertPendingPayment({
     coach_id: null,
@@ -258,7 +257,7 @@ export async function createCoachCheckout(input: {
     const customer = await stripe.createCustomer({
       email: client.email || undefined,
       name: client.fullName || undefined,
-      metadata: { userId: input.clientId, coachId },
+      metadata: buildCoachCustomerMetadata(input.clientId, coachId),
     })
     customerId = customer.id
     await input.repository.updateStripeCustomerId(input.clientId, customerId)
@@ -272,6 +271,6 @@ export async function createCoachCheckout(input: {
     coachStripeAccountId: coach.stripeAccountId,
     amountCentimes,
     appUrl: input.appUrl,
-  }), `coach-checkout-${input.clientId}-${coachId}-${(input.nowMs || Date.now)()}`)
+  }), buildCoachCheckoutIdempotencyKey(input.clientId, coachId, (input.nowMs || Date.now)()))
   return { url: session.url }
 }

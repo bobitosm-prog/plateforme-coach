@@ -34,7 +34,7 @@ Le service traite actuellement :
 | `customer.subscription.deleted` | Subscription | Annule l'abonnement et retire sa référence Stripe. |
 | `account.updated` | Objet signé de l'événement | Marque l'onboarding Connect terminé seulement si charges et payouts sont actifs. |
 
-Le parsing reste centralisé dans [`lib/stripe/metadata.ts`](../lib/stripe/metadata.ts). Les metadata de checkout ne suffisent jamais seules : elles sont confrontées au profil, au rôle, au paiement préparé côté serveur ou à une relation coach/client active.
+Le parsing suit le [contrat Stripe central](BILLING_STRIPE_CONTRACTS.md) dans [`lib/stripe/metadata.ts`](../lib/stripe/metadata.ts). Les metadata de checkout ne suffisent jamais seules : elles sont confrontées au profil, au rôle, au paiement préparé côté serveur ou à une relation coach/client active.
 
 ## Idempotence et absence de double mutation
 
@@ -57,4 +57,4 @@ Les journaux de la route ne contiennent que le type d'événement et, si nécess
 - Les mutations de profil et paiement d'un même événement ne sont pas transactionnelles ; la réconciliation Billing reste nécessaire.
 - La finalisation persiste encore un message d'erreur borné par le contrat historique ; elle ne doit jamais devenir une source de logs contenant un payload fournisseur.
 - `account.updated` utilise l'objet signé plutôt qu'une relecture `accounts.retrieve`, conformément au comportement existant.
-- La centralisation complète des metadata et de l'idempotence est la prochaine tranche de Phase 6.
+- Les clés Checkout restent temporelles et ne représentent pas encore une commande métier durable.

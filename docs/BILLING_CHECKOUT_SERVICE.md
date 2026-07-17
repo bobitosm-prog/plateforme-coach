@@ -24,7 +24,7 @@ Les routes conservent le parsing HTTP, l'authentification serveur, les adaptateu
 
 - validation des deux corps de requête ;
 - résolution du plan plateforme et du rôle compatible ;
-- construction des metadata plateforme et coach ;
+- construction des metadata plateforme et coach via le [contrat Stripe central](BILLING_STRIPE_CONTRACTS.md) ;
 - construction des paramètres de session Stripe, URLs et transfert Connect compris.
 
 ### Orchestration testable
@@ -44,7 +44,7 @@ Les accès Supabase et Stripe sont injectés par des ports minimaux. Le service 
 
 ## Limites ouvertes
 
-- Les clés d'idempotence incluent toujours l'heure courante et ne représentent pas encore une commande métier durable.
+- Les clés d'idempotence restent centralisées mais incluent toujours l'heure courante et ne représentent pas encore une commande métier durable.
 - La création du customer Stripe et sa persistance locale ne sont pas transactionnelles.
 - L'écriture `payments` plateforme reste postérieure à Stripe et nécessite la future réconciliation en cas d'échec Supabase.
 - Le cycle de vie du coordinateur de chargement du dashboard a été corrigé de façon bornée pour supporter le setup-cleanup-setup de React Strict Mode. Les E2E plateforme et coach atteignent désormais les frontières Checkout locales et sont verts.

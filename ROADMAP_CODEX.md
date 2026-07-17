@@ -454,7 +454,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 5 tâches sur 10 terminées ; services Checkout, Stripe Connect et handlers métier webhook extraits avec autorités serveur, replay durable et contrats legacy testés**
+**Statut : En cours — 6 tâches sur 10 terminées ; services Stripe extraits, metadata canoniques et règles d'idempotence centralisées avec contrats legacy testés**
 
 ### Pourquoi
 
@@ -469,7 +469,7 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 | [x] [Extraire le service Checkout](docs/BILLING_CHECKOUT_SERVICE.md) | 2,5 j | Élevée | Élevé | Critique | Tests Stripe |
 | [x] [Extraire le service Stripe Connect](docs/BILLING_CONNECT_SERVICE.md) | 2 j | Élevée | Élevé | Critique | Tests Connect |
 | [x] [Extraire les handlers métier du webhook](docs/BILLING_WEBHOOK_HANDLERS.md) | 3 j | Élevée | Élevé | Critique | Modèle Billing |
-| [ ] Centraliser metadata et idempotence | 2 j | Élevée | Moyen | Élevé | Services Stripe |
+| [x] [Centraliser metadata et idempotence](docs/BILLING_STRIPE_CONTRACTS.md) | 2 j | Élevée | Moyen | Élevé | Services Stripe |
 | [ ] Créer la réconciliation Stripe/base | 3 j | Élevée | Élevé | Critique | Services Billing |
 | [ ] Tester replay, concurrence et événements désordonnés | 3 j | Élevée | Faible | Critique | Mocks Stripe |
 | [ ] Réduire les routes Stripe à des adaptateurs HTTP | 2 j | Moyenne | Moyen | Élevé | Services complets |
@@ -741,7 +741,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈28 % (38/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈28 % (39/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |

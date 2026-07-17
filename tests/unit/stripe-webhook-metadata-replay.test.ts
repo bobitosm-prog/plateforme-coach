@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
-import { buildCoachMetadata, buildPlatformMetadata, resolvePlatformPlan } from '../../lib/billing/checkout'
+import { resolvePlatformPlan } from '../../lib/billing/checkout'
+import { buildCoachCheckoutMetadata, buildPlatformCheckoutMetadata } from '../../lib/stripe/metadata'
 
 const mocks = vi.hoisted(() => {
   const constructEvent = vi.fn()
@@ -247,10 +248,10 @@ describe('POST /api/stripe/webhook — checkout metadata behavior', () => {
   })
 
   it('documents that both secured checkout producers emit the metadata keys consumed by the webhook', () => {
-    expect(buildPlatformMetadata(CLIENT_ID, resolvePlatformPlan('client_monthly'))).toEqual({
+    expect(buildPlatformCheckoutMetadata(CLIENT_ID, resolvePlatformPlan('client_monthly').id)).toEqual({
       clientId: CLIENT_ID, planId: 'client_monthly', coachId: 'platform', subType: 'client_monthly',
     })
-    expect(buildCoachMetadata(CLIENT_ID, COACH_ID)).toEqual({
+    expect(buildCoachCheckoutMetadata(CLIENT_ID, COACH_ID)).toEqual({
       clientId: CLIENT_ID, coachId: COACH_ID, subType: 'coach_monthly', type: 'coach_subscription',
     })
   })

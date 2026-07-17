@@ -6,7 +6,7 @@ const serviceKey = process.env.SERVICE_ROLE_KEY!
 const stripeUrl = 'http://127.0.0.1:55326'
 const password = 'Local-E2E-Password-42!'
 
-type StripeRequest = { method: string; path: string; params: Record<string, string> }
+type StripeRequest = { method: string; path: string; params: Record<string, string>; idempotencyKey: string | null }
 
 async function createClientFixture(admin: SupabaseClient, email: string) {
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { role: 'client' } })
@@ -88,6 +88,7 @@ test('checkout plateforme local: identité serveur, paywall et refus avant Strip
     const calls = await stripeRequests()
     expect(calls).toHaveLength(1)
     expect(calls[0]).toMatchObject({ method: 'POST', path: '/v1/checkout/sessions' })
+    expect(calls[0].idempotencyKey).toMatch(new RegExp(`^checkout-${firstId}-client_monthly-\\d+$`))
     expect(calls[0].params).toMatchObject({
       mode: 'subscription', 'line_items[0][price]': 'price_local_client_monthly',
       success_url: 'http://127.0.0.1:3210/?payment=success', cancel_url: 'http://127.0.0.1:3210/?payment=cancel',

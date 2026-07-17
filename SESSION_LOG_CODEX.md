@@ -4484,3 +4484,66 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Centraliser metadata et idempotence.
+
+## Entrée — 2026-07-17 — Centralisation des metadata Stripe et de l'idempotence Billing
+
+### Travail effectué
+
+- Audit des producteurs et consommateurs de metadata dans Checkout, Webhook, tests, faux Stripe local et documentation.
+- Centralisation des builders plateforme, coach, subscription et customer, des clés canoniques et du parseur strict dans `lib/stripe/metadata.ts`.
+- Création de `lib/billing/idempotency.ts` pour les clés Checkout, les résultats de claim webhook et la cible de conflit `stripe_event_id`.
+- Migration des services Checkout et Webhook vers ces contrats sans modifier les valeurs envoyées à Stripe ni les réponses publiques.
+- Renforcement du faux Stripe et des deux E2E pour observer et vérifier l'en-tête d'idempotence des Checkout Sessions.
+- Documentation du contrat et de ses limites dans `docs/BILLING_STRIPE_CONTRACTS.md`.
+
+### Tâches cochées
+
+- Phase 6 : « Centraliser metadata et idempotence » — terminée.
+- Progression Phase 6 : 5/10 → 6/10 tâches.
+
+### Décisions prises
+
+- Les metadata de checkout acceptent exactement un contrat plateforme ou coach ; toute clé manquante, additionnelle ou incompatible est refusée.
+- Les noms legacy `clientId`, `coachId`, `planId`, `subType` et `type` ainsi que toutes leurs valeurs restent inchangés.
+- Les clés Checkout temporelles sont centralisées sans prétendre fournir une idempotence métier durable.
+- `event_id` reste l'autorité du claim durable ; `payments.stripe_event_id` reste la cible de conflit des écritures idempotentes.
+- Les metadata ne remplacent jamais les vérifications serveur du profil, du rôle, du paiement ou de la relation active.
+
+### Problèmes rencontrés
+
+- Le SDK Stripe produit une clé automatique pour la création Customer ; elle ne fait pas partie du contrat Billing MoovX. L'E2E vérifie uniquement la clé explicite de la Checkout Session.
+- Les premiers tests directs des handlers utilisaient une forme plateforme partielle ; ils ont été migrés vers le builder canonique.
+
+### Risques ou dette restante
+
+- Deux clics à des millisecondes différentes produisent toujours deux clés Checkout distinctes.
+- La création Stripe et l'écriture locale du paiement plateforme ne sont pas transactionnelles.
+- Les mutations multiples d'un handler webhook nécessitent toujours une réconciliation Stripe/base.
+- Les metadata Connect sont un contrat séparé et restent hors de cette tranche.
+
+### Tests exécutés
+
+- Tests metadata/idempotence, Checkout et Webhook ciblés : 6 fichiers, 84 assertions vertes.
+- Contrôle standalone metadata centralisé : 9/9 cas verts, sans réimplémentation locale.
+- Suite complète `npm test` : 57 fichiers, 659 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur les contrats, services, route, faux fournisseur, E2E et tests : vert.
+- E2E checkout plateforme vert en 23,7 s avec clé `checkout-{userId}-{planId}-{nowMs}` vérifiée.
+- E2E checkout coach vert en 24,2 s avec clé `coach-checkout-{clientId}-{coachId}-{nowMs}` vérifiée.
+- `git diff --check` vert ; aucune migration SQL modifiée.
+
+### Mesures avant/après
+
+- Builders de metadata Checkout dispersés : 2 dans le service → 0 hors module central.
+- Formats de clés Checkout assemblés inline : 2 → 0.
+- Contrats invalides avec clés inconnues acceptés : oui → non.
+- Tâches Phase 6 terminées : 5/10 → 6/10.
+- Progression globale : 38/138 → 39/138 tâches, soit environ 28 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer la réconciliation Stripe/base.

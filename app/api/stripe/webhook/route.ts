@@ -9,6 +9,7 @@ import {
   createWebhookStripePort,
   processWebhookEvent,
 } from '@/lib/billing/webhook'
+import { WEBHOOK_CLAIM_OUTCOMES, isCompletedWebhookClaim } from '@/lib/billing/idempotency'
 
 function getStripe() { return new Stripe(process.env.STRIPE_SECRET_KEY!) }
 function getServiceSupabase() {
@@ -48,13 +49,13 @@ export async function POST(req: NextRequest) {
     p_event_type: event.type,
     p_payload: event.data.object,
   })
-  if (claimError || claim === 'claim_failed' || !claim) {
+  if (claimError || claim === WEBHOOK_CLAIM_OUTCOMES.claimFailed || !claim) {
     return NextResponse.json({ error: 'Webhook reservation failed' }, { status: 503 })
   }
-  if (claim === 'already_success' || claim === 'already_skipped') {
+  if (isCompletedWebhookClaim(claim)) {
     return audit.reject(NextResponse.json({ received: true, duplicate: true }), { event: 'STRIPE_WEBHOOK_REPLAY_SKIPPED', domain: 'stripe', operation: 'claim_webhook', outcome: 'skipped', reason: 'WEBHOOK_ALREADY_PROCESSED', status: 200, context: { event_type: event.type } })
   }
-  if (claim === 'already_processing') {
+  if (claim === WEBHOOK_CLAIM_OUTCOMES.alreadyProcessing) {
     return audit.reject(NextResponse.json({ error: 'Webhook already processing' }, { status: 409 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'claim_webhook', outcome: 'rejected', reason: 'WEBHOOK_ALREADY_PROCESSING', status: 409, context: { event_type: event.type } })
   }
 

@@ -6,7 +6,7 @@ const supabaseUrl = process.env.API_URL!
 const serviceKey = process.env.SERVICE_ROLE_KEY!
 const stripeUrl = 'http://127.0.0.1:55326'
 const password = 'Local-E2E-Password-42!'
-type StripeCall = { path: string; params: Record<string, string> }
+type StripeCall = { path: string; params: Record<string, string>; idempotencyKey: string | null }
 
 async function login(page: Page, email: string) {
   await page.goto('/login?next=/'); await page.locator('input[type="email"]').fill(email); await page.locator('input[type="password"]').fill(password)
@@ -79,6 +79,7 @@ test('checkout coach: relation active, Connect local et isolation serveur', asyn
 
     const stripeCalls = await calls()
     expect(stripeCalls.map(call => call.path)).toEqual(['/v1/customers', '/v1/checkout/sessions'])
+    expect(stripeCalls[1].idempotencyKey).toMatch(new RegExp(`^coach-checkout-${clientId}-${coachId}-\\d+$`))
     expect(stripeCalls[0].params).toMatchObject({ 'metadata[userId]': clientId, 'metadata[coachId]': coachId })
     expect(stripeCalls[1].params).toMatchObject({
       mode: 'subscription', 'line_items[0][price_data][currency]': 'chf', 'line_items[0][price_data][unit_amount]': '7500',

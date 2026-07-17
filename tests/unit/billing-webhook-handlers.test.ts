@@ -6,6 +6,7 @@ import {
   type WebhookBillingRepository,
   type WebhookStripePort,
 } from '@/lib/billing/webhook'
+import { buildPlatformCheckoutMetadata } from '@/lib/stripe/metadata'
 
 const NOW = new Date('2026-07-17T12:00:00.000Z')
 const CLIENT_ID = '11111111-1111-4111-8111-111111111111'
@@ -43,7 +44,7 @@ describe('Billing webhook handlers', () => {
     const deps = dependencies()
     vi.mocked(deps.stripe.retrieveCheckoutSession).mockResolvedValue({
       id: 'cs_platform', customer: 'cus_client', subscription: 'sub_client', amount_total: 4900,
-      metadata: { clientId: CLIENT_ID, subType: 'client_monthly' },
+      metadata: buildPlatformCheckoutMetadata(CLIENT_ID, 'client_monthly'),
     } as unknown as Stripe.Checkout.Session)
     vi.mocked(deps.repository.findBeneficiary).mockResolvedValue({ id: CLIENT_ID, role: 'client' })
     vi.mocked(deps.repository.findPlatformPaymentOwner).mockResolvedValue({ clientId: CLIENT_ID, coachId: null })
@@ -89,7 +90,7 @@ describe('Billing webhook handlers', () => {
   it('rejects foreign payment ownership and incompatible offers', async () => {
     const deps = dependencies()
     vi.mocked(deps.stripe.retrieveCheckoutSession).mockResolvedValue({
-      id: 'cs_platform', metadata: { clientId: CLIENT_ID, subType: 'client_monthly' },
+      id: 'cs_platform', metadata: buildPlatformCheckoutMetadata(CLIENT_ID, 'client_monthly'),
     } as unknown as Stripe.Checkout.Session)
     vi.mocked(deps.repository.findBeneficiary).mockResolvedValue({ id: CLIENT_ID, role: 'client' })
     vi.mocked(deps.repository.findPlatformPaymentOwner).mockResolvedValue({ clientId: OTHER_CLIENT_ID, coachId: null })

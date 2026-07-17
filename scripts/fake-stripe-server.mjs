@@ -26,7 +26,12 @@ const server = createServer((request, response) => {
   request.on('data', chunk => { body += chunk })
   request.on('end', () => {
     const params = Object.fromEntries(new URLSearchParams(body))
-    requests.push({ method: request.method, path: request.url, params })
+    requests.push({
+      method: request.method,
+      path: request.url,
+      params,
+      idempotencyKey: request.headers['idempotency-key'] || null,
+    })
     if (failure) return json(response, 500, { error: { type: 'api_error', message: 'Local Stripe failure' } })
     if (request.url === '/v1/customers') return json(response, 200, { id: `cus_test_local_${requests.length}`, object: 'customer' })
     const id = `cs_test_local_${requests.length}`
