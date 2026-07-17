@@ -1,5 +1,6 @@
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/result'
+import { resolveLegacyRepositoryAccess } from '@/lib/billing/legacy'
 
 const SUBSCRIPTION_PROJECTION = 'id,subscription_type,subscription_status,subscription_end_date,trial_ends_at' as const
 export type SubscriptionFields = Pick<Tables<'profiles'>,
@@ -10,18 +11,8 @@ export interface SubscriptionState extends SubscriptionFields {
   access: 'invited' | 'lifetime' | 'active' | 'inactive'
 }
 
-function timeState(value: string | null, now: Date): SubscriptionState['trial'] {
-  if (!value) return 'none'
-  const timestamp = Date.parse(value)
-  if (!Number.isFinite(timestamp)) return 'invalid'
-  return timestamp > now.getTime() ? 'active' : 'expired'
-}
-
 export function normalizeSubscription(row: SubscriptionFields, now: Date): SubscriptionState {
-  const trial = timeState(row.trial_ends_at, now)
-  const access = row.subscription_type === 'invited' ? 'invited'
-    : row.subscription_type === 'lifetime' || row.subscription_status === 'lifetime' ? 'lifetime'
-      : row.subscription_status === 'active' || trial === 'active' ? 'active' : 'inactive'
+  const { access, trial } = resolveLegacyRepositoryAccess(row, now)
   return { ...row, trial, access }
 }
 

@@ -4177,3 +4177,68 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Séparer paiement, abonnement et accès produit.
+
+## Entrée — 2026-07-17 — Séparation paiement, abonnement et accès produit
+
+### Travail effectué
+
+- Audit des décisions d'accès et lectures Billing dans `app/` et `lib/`, ainsi que des routes Stripe, migrations et tests existants.
+- Création d'un noyau pur `lib/billing` distinguant `PaymentState`, `SubscriptionState`, `ProductAccessState`, produits, entitlements et subscriptions plateforme/coach.
+- Ajout de décisions pures pour succès financier, période d'abonnement vérifiée, entitlement actif, accès produit et accès coach/client avec scope d'identité.
+- Création d'adaptateurs legacy séparés pour les projections du dashboard et du repository abonnement.
+- Intégration bornée des adaptateurs dans `useClientDashboard` et `lib/repositories/subscription`, sans modifier leurs sorties publiques.
+- Ajout de `docs/BILLING_ACCESS_MODEL.md` et d'une matrice de décision explicite.
+
+### Tâches cochées
+
+- Phase 6 : « Séparer paiement, abonnement et accès produit » — terminée après tests ciblés et suite complète.
+- Progression Phase 6 : 1/10 → 2/10 tâches.
+
+### Décisions prises
+
+- Un paiement `paid` isolé renvoie `PAYMENT_NOT_AUTHORITY` et n'accorde aucun accès durable.
+- Une subscription canonique doit être active, correspondre au produit et posséder une période vérifiée courante.
+- Un entitlement actif est une autorité distincte du paiement et de la subscription.
+- L'accès coach exige en plus une relation active et des scopes client/coach identiques.
+- Les subscriptions plateforme et coach sont des unions discriminées indépendantes.
+- Tout état inconnu, remboursement, annulation ou période non vérifiée est refusé par défaut.
+- Les comportements legacy restent derrière des adaptateurs nommés jusqu'au calcul parallèle et à la migration des consommateurs.
+
+### Problèmes rencontrés
+
+- L'audit compte 139 occurrences liées aux abonnements/essais, 67 aux paiements et 38 aux relations dans `app/` et `lib/`; une migration globale aurait dépassé cette tranche.
+- Le lint complet de `useClientDashboard.ts` expose 33 erreurs `no-explicit-any` et 2 warnings préexistants. Le nouveau noyau, le repository modifié et les tests sont lintés sans erreur; les deux lignes d'intégration du hook n'ajoutent aucun `any` ni avertissement.
+- Les projections dashboard et repository n'avaient pas exactement les mêmes règles d'essai; elles restent donc deux adaptateurs explicites plutôt qu'une fusion fonctionnelle risquée.
+
+### Risques ou dette restante
+
+- Aucun entitlement n'est encore persisté et aucun consumer ne lit le modèle canonique depuis Supabase.
+- Les routes Stripe et le webhook utilisent toujours directement les champs legacy de `profiles` et `payments`.
+- Les permissions `invited` restent distribuées dans plusieurs composants et routes.
+- Le statut `active` sans date continue d'ouvrir le dashboard via l'adaptateur legacy, contrairement au modèle canonique fail-closed.
+- Les divergences de colonnes Billing et la réconciliation Stripe/base restent ouvertes.
+
+### Tests exécutés
+
+- Tests ciblés Billing, repository et frontière dashboard : 3 fichiers, 51 assertions vertes.
+- Suite complète `npm test` : 52 fichiers, 606 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé vert sur `lib/billing`, le repository abonnement et le test Billing; dette historique du hook mesurée séparément.
+- `git diff --check`, validation des liens et contrôles de périmètre verts lors de la validation finale.
+- Aucun test Stripe ciblé supplémentaire requis : aucune route Stripe n'a été modifiée; leurs tests passent dans la suite complète.
+
+### Mesures avant/après
+
+- Noyaux Billing typés : 0 → 1 module pur composé de 3 fichiers.
+- Décisions d'accès canoniques : 0 → 5 fonctions pures principales.
+- Projections legacy isolées : 0 → 2 adaptateurs explicitement testés.
+- Tâches Phase 6 terminées : 1/10 → 2/10.
+- Progression globale : 34/138 → 35/138 tâches, soit environ 25 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire le service Checkout.

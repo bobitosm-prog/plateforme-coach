@@ -20,6 +20,7 @@ import { addXP, updateStreak } from '../../lib/gamification'
 import { getSupabaseBrowserClient } from '../../lib/supabase/browser'
 import { createProfileRepository } from '../../lib/repositories/profile'
 import { decideProfileRead, isDashboardCacheOwnedBy, ProfileLoadCoordinator, type ProfileLoadStatus } from '../../lib/client-dashboard/profile-load-state'
+import { resolveLegacyDashboardAccess } from '../../lib/billing/legacy'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 export type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'compte' | 'profil' | 'messages' | 'coachIA' | 'feedback' | 'preferences' | 'account_section' | 'goals'
@@ -596,34 +597,9 @@ export default function useClientDashboard() {
   const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
 
-  const hasPaidSub = (() => {
-    if (!profile) return false
-
-    // Bypass priority: subscription_type is the source of truth for
-    // lifetime/invited accounts. This protects against subscription_status
-    // being temporarily desynced (e.g. Stripe webhook missed an event).
-    if (profile.subscription_type === 'lifetime') return true
-    if (profile.subscription_type === 'invited') return true
-
-    // Beta : accès gratuit limité dans le temps (campagne). REQUIERT une date de fin.
-    if (profile.subscription_type === 'beta') {
-      if (!profile.subscription_end_date) return false
-      return new Date(profile.subscription_end_date) > new Date()
-    }
-
-    // Fallback: subscription_status (for older profiles or status-driven flows)
-    const st = profile.subscription_status
-    if (st === 'lifetime' || st === 'invited') return true
-    if (st === 'beta') {
-      if (!profile.subscription_end_date) return false
-      return new Date(profile.subscription_end_date) > new Date()
-    }
-    if (st === 'active') {
-      if (!profile.subscription_end_date) return true
-      return new Date(profile.subscription_end_date) > new Date()
-    }
-    return false
-  })()
+  // Compatibility projection only. Payment, subscription and product access are
+  // distinct in lib/billing; this adapter preserves the existing dashboard rules.
+  const hasPaidSub = !!profile && resolveLegacyDashboardAccess(profile, new Date()).allowed
 
   const isExempt = !!profile && (profile.email === OWNER_EMAIL || profile.email === ADMIN_EMAIL)
   const isInvited = profile?.subscription_type === 'invited'
