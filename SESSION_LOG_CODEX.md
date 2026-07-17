@@ -4927,3 +4927,71 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer les adaptateurs legacy ↔ canonique.
+
+## Entrée — 2026-07-17 — Adaptateurs Training legacy vers canonique
+
+### Travail effectué
+
+- Création d'un modèle TypeScript pur minimal dans `lib/training/model.ts`, limité aux objets nécessaires pour tester les conversions.
+- Implémentation d'adaptateurs read-only dans `lib/training/adapters` pour les huit formats legacy contractuels : modèle coach, deux affectations client, programme personnel, deux imports, historique workout et marqueur de complétion.
+- Ajout de projections complémentaires pour la sortie IA structurée, le calendrier legacy et les records personnels.
+- Conversion explicite des exercices catalogue/custom/legacy, prescriptions de répétitions/AMRAP/durée/distance, repos, séries, jours, séances, affectations et exécutions.
+- Ajout d'une union `AdapterResult` distinguant `converted` de `legacyUnsupported`, avec warnings structurés et champs non mappés.
+- Ajout de fixtures synthétiques locales et de tests de conversion, ordre, provenance, ownership, warnings, isolation, immutabilité et architecture pure.
+- Création de `docs/TRAINING_LEGACY_ADAPTERS.md` pour documenter l'API, les décisions de mapping, les pertes et les limites.
+
+### Tâches cochées
+
+- Phase 3 : « Créer les adaptateurs legacy ↔ canonique » — terminée.
+- Progression Phase 3 : 2/27 → 3/27 tâches.
+
+### Décisions prises
+
+- Les huit identifiants de formats documentés sont exposés par `CORE_LEGACY_FORMATS` et vérifiés par test.
+- Calendrier, sortie IA et record sont des projections complémentaires ; ils ne remplacent pas les huit formats persistés du contrat initial.
+- Un owner coach est obligatoire pour un template coach ; un owner client est obligatoire pour un programme personnel, IA ou importé.
+- Une référence catalogue/custom explicite est conservée ; un nom seul devient une référence legacy avec warning, jamais un rapprochement catalogue inventé.
+- Une contradiction d'identité, une cible incompréhensible, un jour ambigu ou une forme inconnue produit `legacyUnsupported`.
+- L'absence de repos produit `none` avec warning plutôt qu'une valeur par défaut silencieuse.
+- Les adaptateurs ne sont branchés à aucun écran, hook, route ou repository dans cette tranche.
+
+### Problèmes rencontrés
+
+- Les imports Strong/Hevy arrivent déjà agrégés par l'ancien parseur : les charges et répétitions par série originales ne peuvent pas être reconstruites.
+- Les phases `p1/p2/p3`, la durée globale, la planification et l'avancement hebdomadaire n'ont pas encore de règle de conversion suffisamment caractérisée.
+- Les identifiants déterministes des objets imbriqués servent aux comparaisons mais ne sont pas encore une stratégie UUID persistée.
+
+### Risques ou dette restante
+
+- Les fixtures synthétiques ne mesurent pas la fréquence réelle des variantes en environnement dédié.
+- Les adaptateurs ne possèdent pas encore de schémas Zod distincts à leurs frontières.
+- Aucun repository, double lecture ou feature flag Training n'utilise encore ces conversions.
+- `completed_sessions`, calendrier et records restent sans lien canonique résolu vers une exécution lorsque la source legacy ne le fournit pas.
+- Les matrices RLS coach/client Training et les E2E d'affectation/exécution restent à créer.
+
+### Tests exécutés
+
+- Tests ciblés adaptateurs/statiques : 12/12 verts.
+- Suite Vitest complète : 63 fichiers, 696 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur le modèle, les adaptateurs, fixtures et tests : vert.
+- `git diff --check` vert.
+- Vérification des liens internes : verte.
+- Contrôle statique : aucun import React, Next, Supabase, navigateur ou `app/`, aucun appel réseau et aucune écriture base dans le module.
+- Contrôle de périmètre : aucun fichier `app/`, route, E2E, migration ou policy RLS modifié.
+
+### Mesures avant/après
+
+- Formats legacy centraux avec adaptateur testé : 0 → 8.
+- Projections complémentaires pures : 0 → 3.
+- Tests unitaires/statiques ajoutés : 12.
+- Tâches Phase 3 terminées : 2/27 → 3/27.
+- Progression globale : 45/138 → 46/138 tâches, soit environ 33 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Renforcer les tests de progression et normalisation.

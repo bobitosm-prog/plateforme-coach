@@ -312,7 +312,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 **Durée cible : 8 à 12 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 3 ouverte — 2 tâches sur 27 ; formats cartographiés et modèle canonique défini, adaptateurs legacy à créer**
+**Statut : Phase 3 ouverte — 3 tâches sur 27 ; modèle canonique et adaptateurs legacy purs disponibles, tests de progression à renforcer**
 
 ### Pourquoi
 
@@ -324,7 +324,7 @@ L'entraînement est le cœur du produit et contient les composants les plus volu
 |---|---:|---|---|---|---|
 | [x] [Cartographier les formats de programme existants](docs/TRAINING_FORMATS_INVENTORY.md) | 1,5 j | Élevée | Faible | Élevé | Phase 2 |
 | [x] [Définir le modèle Training canonique](docs/TRAINING_CANONICAL_MODEL.md) | 2 j | Élevée | Moyen | Critique | Cartographie |
-| [ ] Créer les adaptateurs legacy ↔ canonique | 3 j | Élevée | Élevé | Critique | Modèle canonique |
+| [x] [Créer les adaptateurs legacy ↔ canonique](docs/TRAINING_LEGACY_ADAPTERS.md) | 3 j | Élevée | Élevé | Critique | Modèle canonique |
 | [ ] Renforcer les tests de progression et normalisation | 2 j | Moyenne | Faible | Élevé | Modèle canonique |
 | [ ] Créer les repositories programmes, séances et exercices | 3 j | Élevée | Moyen | Élevé | Phase 2 |
 | [ ] Extraire session/profil de `useClientDashboard` | 1,5 j | Moyenne | Moyen | Moyen | Repositories |
@@ -743,7 +743,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈33 % (45/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈33 % (46/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |
