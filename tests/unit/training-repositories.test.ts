@@ -5,10 +5,12 @@ import {
   ASSIGNED_PROGRAM_PROJECTION,
   CATALOG_EXERCISE_PROJECTION,
   COACH_PROGRAM_PROJECTION,
+  COMPLETED_WORKOUT_DATE_PROJECTION,
   COMPLETION_PROJECTION,
   CUSTOM_EXERCISE_PROJECTION,
   PERSONAL_PROGRAM_PROJECTION,
   PERSONAL_RECORD_PROJECTION,
+  DASHBOARD_WORKOUT_SESSION_PROJECTION,
   WORKOUT_SESSION_PROJECTION,
   createTrainingExerciseRepository,
   createTrainingProgramRepository,
@@ -52,6 +54,10 @@ describe('Training repositories', () => {
     expect(mock.from).toHaveBeenLastCalledWith('custom_programs')
     expect(mock.chain.select).toHaveBeenLastCalledWith(PERSONAL_PROGRAM_PROJECTION)
     expect(mock.chain.eq).toHaveBeenCalledWith('user_id', 'client-session-id')
+
+    await repository.findActivePersonalProgramForClient('client-session-id')
+    expect(mock.chain.select).toHaveBeenLastCalledWith(PERSONAL_PROGRAM_PROJECTION)
+    expect(mock.chain.eq).toHaveBeenCalledWith('is_active', true)
   })
 
   it('finds a coach program by both id and owner, and distinguishes absence', async () => {
@@ -75,6 +81,10 @@ describe('Training repositories', () => {
     expect(mock.chain.select).toHaveBeenLastCalledWith(WORKOUT_SESSION_PROJECTION)
     expect(mock.chain.eq).toHaveBeenCalledWith('user_id', 'client-id')
 
+    await repository.listDashboardWorkoutSessions('client-id')
+    expect(mock.chain.select).toHaveBeenLastCalledWith(DASHBOARD_WORKOUT_SESSION_PROJECTION)
+    expect(mock.chain.limit).toHaveBeenCalledWith(90)
+
     await repository.listCompletionsForClient('client-id')
     expect(mock.chain.select).toHaveBeenLastCalledWith(COMPLETION_PROJECTION)
     expect(mock.chain.eq).toHaveBeenCalledWith('client_id', 'client-id')
@@ -85,6 +95,13 @@ describe('Training repositories', () => {
     await repository.listPersonalRecordsForClient('client-id')
     expect(mock.chain.select).toHaveBeenLastCalledWith(PERSONAL_RECORD_PROJECTION)
     expect(mock.chain.eq).toHaveBeenCalledWith('user_id', 'client-id')
+
+    await repository.hasCompletedWorkout('client-id')
+    expect(mock.chain.select).toHaveBeenLastCalledWith('id', { count: 'exact', head: true })
+
+    await repository.listCompletedWorkoutDates('client-id')
+    expect(mock.chain.select).toHaveBeenLastCalledWith(COMPLETED_WORKOUT_DATE_PROJECTION)
+    expect(mock.chain.limit).toHaveBeenCalledWith(400)
   })
 
   it('bounds catalog reads, scopes custom exercises and supports a safe search', async () => {

@@ -11,7 +11,6 @@ import useAnalytics from './useAnalytics'
 import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
-import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
 import { suggestNextSession, SuggestedSession } from '../../lib/suggestNextSession'
 import { computeStreak } from '../../lib/streak'
 import { projectRestDates } from '../../lib/project-rest-days'
@@ -20,8 +19,10 @@ import { addXP, updateStreak } from '../../lib/gamification'
 import { getSupabaseBrowserClient } from '../../lib/supabase/browser'
 import { createIdentityRepository } from '../../lib/repositories/identity'
 import { createProfileRepository } from '../../lib/repositories/profile'
+import { createTrainingProgramRepository, createTrainingSessionRepository } from '../../lib/repositories/training'
 import type { ProfileLoadStatus } from '../../lib/client-dashboard/profile-load-state'
 import { createSessionProfileLoader } from '../../lib/client-dashboard/session-profile-loader'
+import { createTrainingDashboardLoader } from '../../lib/client-dashboard/training-dashboard-loader'
 import { resolveLegacyDashboardAccess } from '../../lib/billing/legacy'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
@@ -95,6 +96,10 @@ export default function useClientDashboard() {
     identityRepository,
     profileRepository,
     cache,
+  })).current
+  const trainingDashboardLoader = useRef(createTrainingDashboardLoader({
+    programRepository: createTrainingProgramRepository(supabase),
+    sessionRepository: createTrainingSessionRepository(supabase),
   })).current
 
   // --- Sub-hooks ---
@@ -229,25 +234,22 @@ export default function useClientDashboard() {
         return
       }
 
-      const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes, sessionDatesRes] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', uid).single(),
-      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
-      supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
-      supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(90),
-      supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
-      supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
-      supabase.from('training_programs').select('*').eq('is_template', true).limit(50),
-      supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).maybeSingle(),
-      supabase.from('client_programs').select('id, program, coach_id').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('completed_sessions').select('session_index, session_name, completed_at').eq('client_id', uid).order('completed_at', { ascending: false }).limit(50),
-      supabase.from('weekly_diagnostics').select('*').eq('user_id', uid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('custom_programs').select('*').eq('user_id', uid).eq('is_active', true).maybeSingle(),
-      supabase.from('workout_sessions').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('completed', true),
-      supabase.from('workout_sessions').select('created_at').eq('user_id', uid).eq('completed', true).order('created_at', { ascending: false }).limit(400),
+      const [trainingRes, profRes, weightsRes, , measureRes, photosRes, coachMealRes, diagRes] = await Promise.all([
+        trainingDashboardLoader.load(uid),
+        supabase.from('profiles').select('*').eq('id', uid).single(),
+        supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
+        supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
+        supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
+        supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
+        supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('weekly_diagnostics').select('*').eq('user_id', uid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
       ])
 
       if (!isCurrentRequest()) return
+      if (!trainingRes.ok) {
+        setProfileLoadStatus(hasConfirmedProfile() ? 'ready' : 'error')
+        return
+      }
       // The repository alone decides absence. A failed aggregate profile read is recoverable.
       if (profRes.error || !profRes.data) {
         setProfileLoadStatus(hasConfirmedProfile() ? 'ready' : 'error')
@@ -297,12 +299,12 @@ export default function useClientDashboard() {
 
     const profileData = profRes.data
     const weightsData = weightsRes.data || []
-    const sessData = sessRes.data || []
+    const sessData = trainingRes.data.workoutSessions
     const measureData = measureRes.data || []
     const photosData = photosRes.data || []
-    const coachProgData = normalizeCoachProgram(coachProgRes.data?.program)
-    clientProgramIdRef.current = coachProgRes.data?.id ?? null
-    coachOfProgramIdRef.current = coachProgRes.data?.coach_id ?? null
+    const coachProgData = trainingRes.data.coachProgram
+    clientProgramIdRef.current = trainingRes.data.assignedProgram?.id ?? null
+    coachOfProgramIdRef.current = trainingRes.data.assignedProgram?.coach_id ?? null
     const coachMealData = coachMealRes.data?.plan || null
 
     // Build last-completed map for session cards
@@ -312,7 +314,8 @@ export default function useClientDashboard() {
     startOfWeek.setDate(startOfWeek.getDate() - (dow - 1))
     startOfWeek.setHours(0, 0, 0, 0)
     const cwMap = new Map<number, string>()
-    for (const cs of (completedSessionsRes.data || [])) {
+    for (const cs of trainingRes.data.completions) {
+      if (!cs.completed_at) continue
       if (!lcMap.has(cs.session_index)) lcMap.set(cs.session_index, cs.completed_at)
       if (new Date(cs.completed_at) >= startOfWeek) cwMap.set(cs.session_index, cs.completed_at)
     }
@@ -320,14 +323,16 @@ export default function useClientDashboard() {
     setCompletedThisWeek(cwMap)
     setNextSession(suggestNextSession(coachProgData, lcMap))
 
-    cache.set(`dashboard_${uid}`, { ownerUserId: uid, profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null, sessionDatesData: sessionDatesRes?.data || [], hasTrainedBeforeVal: (trainedCountRes?.count ?? 0) > 0 }, 5 * 60 * 1000)
+    cache.set(`dashboard_${uid}`, { ownerUserId: uid, profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: trainingRes.data.activePersonalProgram, sessionDatesData: trainingRes.data.sessionDates, hasTrainedBeforeVal: trainingRes.data.hasTrainedBefore }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
-    setHasTrainedBefore((trainedCountRes?.count ?? 0) > 0)
-    setSessionDates(sessionDatesRes?.data || [])
+    setHasTrainedBefore(trainingRes.data.hasTrainedBefore)
+    setSessionDates(trainingRes.data.sessionDates)
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
-    const customProg = customProgRes?.data || null
-    const planningProgram = customProg || coachToDays(coachProgData)
+    const customProg = trainingRes.data.activePersonalProgram
+    const planningProgram = customProg && Array.isArray(customProg.days)
+      ? { ...customProg, days: customProg.days }
+      : coachToDays(coachProgData)
     setPlanningDays(planningProgram?.days || null)
     await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
     analyticsHook.fetchAnalyticsData(uid)

@@ -5195,3 +5195,70 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire programmes et séances de `useClientDashboard`.
+
+## Entrée — 2026-07-17 — Extraction programmes/séances du dashboard client
+
+### Travail effectué
+
+- Audit des lectures Training de `useClientDashboard` : affectations coach, programme personnel actif, séances et séries, complétions, existence d'un entraînement et dates d'historique.
+- Création de `createTrainingDashboardLoader`, frontière injectable composant les repositories programmes et séances sans construire de client Supabase.
+- Ajout de projections explicites et bornées pour le programme personnel actif, les séances dashboard avec séries, l'existence d'une séance terminée et les dates d'entraînement.
+- Délégation du chargement Training initial depuis `useClientDashboard`, en conservant les formes legacy attendues par l'interface et le cache owner-scoped existant.
+- Suppression du chargement initial de deux lectures Training inutilisées (`training_programs` templates et `user_programs`) sans modifier les handlers ou mutations restants.
+- Ajout de tests unitaires et statiques pour le succès, l'absence de données, les erreurs expurgées, le scope client vérifié, l'ordre, les bornes, les complétions, les records et l'absence de mutation.
+- Documentation du premier consommateur applicatif des repositories Training et des limites maintenues hors périmètre.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire programmes et séances de `useClientDashboard` » — terminée.
+- Progression Phase 3 : 6/27 → 7/27 tâches.
+
+### Décisions prises
+
+- Le loader reçoit uniquement un identifiant client déjà vérifié et des repositories injectés ; cet identifiant borne les requêtes mais ne remplace jamais l'autorité de la session ou de la RLS.
+- Les données restent dans les formes legacy consommées par le dashboard ; seul le snapshot coach passe par l'adaptateur borné `normalizeCoachProgram`, sans bascule générale vers le modèle canonique.
+- Une absence confirmée produit des valeurs vides distinctes d'une erreur repository récupérable ; les messages Supabase bruts ne remontent pas au hook.
+- Les lectures sont bornées à 90 séances, 50 complétions et 400 dates afin d'éviter un chargement dashboard non limité.
+- Les records personnels restent accessibles par une méthode dédiée du loader et sont chargés par le flux analytics existant afin d'éviter une requête initiale dupliquée.
+- Le calendrier planifié, les mutations Training et les autres domaines du dashboard restent volontairement hors de cette tranche.
+
+### Problèmes rencontrés
+
+- Le schéma généré ne décrit pas toutes les colonnes runtime historiques utilisées par le dashboard, notamment certaines dates de séance ; les projections restent donc bornées aux contrats réellement observés.
+- `workout_sessions` et `completed_sessions` demeurent deux historiques distincts sans identité canonique commune.
+- ESLint complet de `useClientDashboard` signale toujours 33 erreurs `no-explicit-any` et 2 warnings d'imports inutilisés historiques ; aucun nouvel `any` n'a été introduit par l'extraction.
+
+### Risques ou dette restante
+
+- `useClientDashboard` reste à 725 lignes et conserve les chargements nutrition, mesures, photos, diagnostic, coach et analytics ainsi que plusieurs mutations Training directes.
+- Les matrices RLS Training détaillées et la validation Zod des snapshots JSON legacy restent à construire.
+- La planification calendrier et l'unification des historiques devront disposer de contrats dédiés avant leur migration.
+- Les deux lectures supprimées étaient sans consommateur dans le chargement initial ; une caractérisation UI plus large restera nécessaire avant le futur découpage de `TrainingTab`.
+
+### Tests exécutés
+
+- Tests ciblés loaders dashboard et repositories Training : 26/26 verts.
+- Suite Vitest complète : 69 fichiers, 750 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur le loader, les repositories et les tests : vert.
+- ESLint du hook : dette historique inchangée, 33 erreurs `any` et 2 warnings ; aucun nouvel `any` dans le diff.
+- E2E default-coach Chromium local : 1/1 vert en 10,5 s, un worker.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, migration, policy RLS ou scénario E2E modifié.
+
+### Mesures avant/après
+
+- Méthodes de repositories Training : 12 → 16.
+- Frontières de chargement Training dashboard : 0 → 1.
+- Lectures Supabase Training directes retirées du chargement initial du hook : 7.
+- Tests actifs globaux : 740 → 750.
+- Tâches Phase 3 terminées : 6/27 → 7/27.
+- Progression globale : 49/138 → 50/138 tâches, soit environ 36 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire nutrition et mesures de `useClientDashboard`.

@@ -27,7 +27,8 @@ validation des schémas d'entrée, de l'identité serveur et des matrices RLS.
 - `listCoachPrograms(coachUserId)` sur `training_programs` ;
 - `findProgramByIdForOwner(programId, coachUserId)` avec double filtre id/owner ;
 - `listAssignedProgramsForClient(clientUserId)` sur `client_programs` ;
-- `listPersonalProgramsForClient(clientUserId)` sur `custom_programs`.
+- `listPersonalProgramsForClient(clientUserId)` sur `custom_programs` ;
+- `findActivePersonalProgramForClient(clientUserId)` avec absence explicite.
 
 Les champs JSON `program`, `days` et `phases` restent du `Json` Supabase. Le
 repository ne prétend pas qu'ils sont canoniques : l'appelant devra utiliser
@@ -38,10 +39,13 @@ les [adaptateurs legacy](TRAINING_LEGACY_ADAPTERS.md).
 `createTrainingSessionRepository(client)` couvre :
 
 - `listWorkoutSessionsForClient(clientUserId)` ;
+- `listDashboardWorkoutSessions(clientUserId)`, avec séries imbriquées et limite 90 ;
 - `findSessionById(sessionId, clientUserId)` ;
 - `listCompletionsForClient(clientUserId)` ;
 - `listCompletionsForProgram(clientUserId, programId)` ;
-- `listPersonalRecordsForClient(clientUserId)`.
+- `listPersonalRecordsForClient(clientUserId)` ;
+- `hasCompletedWorkout(clientUserId)` ;
+- `listCompletedWorkoutDates(clientUserId)`, limitée à 400 dates.
 
 `workout_sessions` et `completed_sessions` restent deux historiques distincts.
 Il n'existe pas de table canonique de séances prescrites : elles sont imbriquées
@@ -115,3 +119,25 @@ if (result.ok) {
 
 L'intégration applicative est explicitement reportée aux tâches d'extraction de
 `useClientDashboard` et des domaines Training suivants.
+
+## Premier consommateur dashboard
+
+`createTrainingDashboardLoader` est la première composition applicative de ces
+repositories. Elle charge pour un identifiant client déjà vérifié :
+
+- la dernière affectation coach, normalisée dans la forme legacy attendue par
+  le dashboard sans muter le snapshot source ;
+- le programme personnel actif ;
+- les 90 dernières séances avec leurs séries ;
+- les 50 dernières complétions d'affectation ;
+- l'existence d'un entraînement et les 400 dates récentes non nulles.
+
+Les erreurs sont ramenées à un `kind` borné et à une liste de sources ; aucun
+message Supabase brut n'est propagé. Une absence confirmée produit des tableaux
+vides ou `null`, distincts d'une panne récupérable. La lecture des records est
+également exposée par la frontière mais reste appelée par l'analytics existant,
+afin de ne pas dupliquer la requête dans le chargement initial.
+
+Le calendrier planifié, les mutations de fin de séance et les handlers de
+programme restent hors de cette extraction. Ils seront migrés avec leurs
+contrats propres.

@@ -66,7 +66,9 @@ Le cache dashboard porte `ownerUserId` et le `profileData.id` doit correspondre 
 
 Le contrat initial est documenté dans [`TRAINING_REPOSITORIES.md`](TRAINING_REPOSITORIES.md).
 Il couvre programmes, séances, complétions, records et exercices avec des
-projections explicites, sans être encore branché dans l'application.
+projections explicites. `useClientDashboard` compose désormais les repositories
+programmes et séances par `createTrainingDashboardLoader`; les mutations et les
+autres consommateurs Training restent en coexistence legacy.
 
 Les tests unitaires mockent le client injecté. Le test SQL local utilise les [personas partagés](TEST_FIXTURES.md), vérifie profil propre, profil absent, isolation RLS, invited et lifetime, puis annule toute la transaction.
 

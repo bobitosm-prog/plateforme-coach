@@ -39,6 +39,13 @@ export function createTrainingProgramRepository(client: DatabaseClient) {
         .eq('user_id', clientUserId).order('updated_at', { ascending: false })
       return error ? repositoryFailure(error) : { ok: true, data: data ?? [] }
     },
+
+    async findActivePersonalProgramForClient(clientUserId: string): Promise<RepositoryResult<PersonalProgramRow>> {
+      const { data, error } = await client.from('custom_programs').select(PERSONAL_PROGRAM_PROJECTION)
+        .eq('user_id', clientUserId).eq('is_active', true).maybeSingle()
+      if (error) return repositoryFailure(error)
+      return data ? { ok: true, data } : { ok: false, kind: 'not_found' }
+    },
   }
 }
 
