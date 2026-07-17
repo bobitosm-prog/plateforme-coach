@@ -454,6 +454,8 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
+**Statut : En cours — 1 tâche sur 10 terminée ; modèle métier Billing et stratégie de coexistence legacy formalisés**
+
 ### Pourquoi
 
 La facturation est un domaine critique et évoluera avec les offres, commissions, renouvellements et réconciliations.
@@ -462,7 +464,7 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
-| [ ] Définir le modèle métier Billing | 2 j | Élevée | Faible | Critique | Phases 1–2 |
+| [x] [Définir le modèle métier Billing](docs/BILLING_DOMAIN_MODEL.md) | 2 j | Élevée | Faible | Critique | Phases 1–2 |
 | [ ] Séparer paiement, abonnement et accès produit | 2,5 j | Élevée | Élevé | Critique | Modèle Billing |
 | [ ] Extraire le service Checkout | 2,5 j | Élevée | Élevé | Critique | Tests Stripe |
 | [ ] Extraire le service Stripe Connect | 2 j | Élevée | Élevé | Critique | Tests Connect |
@@ -739,7 +741,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈24 % (33/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈25 % (34/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |

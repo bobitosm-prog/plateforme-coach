@@ -4115,3 +4115,65 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Définir le modèle métier Billing.
+
+## Entrée — 2026-07-17 — Modèle métier Billing
+
+### Travail effectué
+
+- Audit des quatre routes Stripe demandées, des migrations `payments`, `commissions`, `stripe_webhook_events`, `profiles` et `coach_clients`, des types Supabase générés et des tests Stripe/E2E checkout.
+- Cartographie des acteurs, objets, autorités et frontières actuelles du Billing MoovX.
+- Définition des machines d'état pour abonnements plateforme/coach, paiements, entitlements et événements webhook, avec annulation et remboursement explicitement séparés.
+- Création de `docs/BILLING_DOMAIN_MODEL.md` avec invariants, état courant, écarts, modèle cible et migration progressive.
+- Création de l'ADR 0005 pour acter la séparation entre contrat financier, droit produit et relation coach/client.
+
+### Tâches cochées
+
+- Phase 6 : « Définir le modèle métier Billing » — terminée après audit et validations documentaires.
+- Progression Phase 6 : 0/10 → 1/10 tâche.
+
+### Décisions prises
+
+- Checkout, subscription, payment et entitlement sont quatre objets distincts.
+- Les subscriptions `platform` et `coach_service` peuvent coexister et ne se remplacent pas.
+- Un paiement n'accorde jamais seul un accès et ne crée ou n'active jamais une relation coach/client.
+- `invited`, `beta` et `lifetime` sont des sources ou durées d'entitlement, pas des états interchangeables d'un abonnement Stripe.
+- Les événements Stripe sont recoupés puis traduits en événements métier ; ils ne constituent pas directement l'autorité produit.
+- La cible sera introduite par expand/backfill/calcul parallèle/comparaison/bascule/contract avec maintien des projections legacy.
+
+### Problèmes rencontrés
+
+- Les types générés de `payments` n'exposent pas `description`, `stripe_checkout_session_id` ni `paid_at`, pourtant utilisés par les routes et dashboards.
+- `profiles.stripe_onboarding_complete`, `coach_subscription_active` et `subscription_price` sont utilisés par du code courant mais absents des types générés et des migrations canoniques trouvées.
+- Le nom `coach_monthly` représente actuellement deux contrats différents selon la route et les metadata.
+
+### Risques ou dette restante
+
+- Les créations Stripe et mutations locales ne sont pas transactionnelles ; un échec partiel requiert une future réconciliation.
+- `profiles.subscription_*` mélange encore abonnement, essai, invitation, lifetime et accès coach.
+- Les clés d'idempotence checkout incluent l'heure courante et ne représentent pas une commande métier stable.
+- `setup-products` reste non idempotent.
+- `commissions` n'est reliée à aucun paiement et aucun producteur courant n'a été trouvé.
+- Le webhook ne couvre pas encore échec de paiement, remboursement, chargeback ou tous les ordres d'événements.
+- Les E2E Stripe locaux ne certifient pas la sémantique complète du fournisseur.
+
+### Tests exécutés
+
+- Aucun test applicatif ajouté ou requis : cette tranche formalise un modèle sans imposer un schéma inexistant.
+- Validation des liens Markdown internes des nouveaux documents et de l'index ADR.
+- `git diff --check` vert lors de la validation finale.
+- Contrôle de périmètre : aucun changement dans `app/`, `lib/`, `supabase/migrations`, `tests/` ou `e2e/`.
+
+### Mesures avant/après
+
+- Modèles Billing centraux documentés : 0 → 1.
+- ADR Billing : 0 → 1 (ADR total : 4 → 5).
+- Tâches Phase 6 terminées : 0/10 → 1/10.
+- Progression globale : 33/138 → 34/138 tâches, soit environ 25 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Séparer paiement, abonnement et accès produit.
