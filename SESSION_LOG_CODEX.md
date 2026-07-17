@@ -4425,3 +4425,62 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire les handlers métier du webhook.
+
+## Entrée — 2026-07-17 — Extraction des handlers métier du webhook Stripe
+
+### Travail effectué
+
+- Audit de la signature, du claim atomique, des états durables, des relectures Stripe, de la validation des metadata, des mutations Billing et du mapping HTTP du webhook.
+- Extraction des cinq handlers supportés dans `lib/billing/webhook`, derrière un port Stripe et un repository Supabase testables.
+- Conservation dans la route de la lecture du corps brut, de la vérification de signature, du claim/replay, du classement `skipped`, de la finalisation durable et du mapping HTTP legacy.
+- Ajout de tests unitaires directs pour les checkouts plateforme/coach, les metadata invalides, la propriété serveur, les abonnements, renouvellements, annulations et l'onboarding Connect.
+- Documentation de la frontière, de l'idempotence et des limites dans `docs/BILLING_WEBHOOK_HANDLERS.md`.
+
+### Tâches cochées
+
+- Phase 6 : « Extraire les handlers métier du webhook » — terminée.
+- Progression Phase 6 : 4/10 → 5/10 tâches.
+
+### Décisions prises
+
+- Le claim et la finalisation restent hors du service métier afin de préserver une seule autorité durable autour de `event.id`.
+- Les Checkout Sessions, Subscriptions et Invoices restent relus depuis Stripe avant mutation ; `account.updated` conserve l'objet signé existant.
+- Les metadata ne sont jamais une autorité isolée : profil, rôle, paiement préparé ou relation coach active sont vérifiés côté serveur.
+- Une erreur de lecture PostgreSQL lors d'un renouvellement devient un échec retentable au lieu d'être confondue avec un profil absent.
+
+### Problèmes rencontrés
+
+- Les UUID synthétiques initiaux de la nouvelle suite ne respectaient pas le contrat strict de metadata ; ils ont été remplacés par des UUID de test valides.
+- Aucun changement de migration n'était nécessaire : les RPC de claim/finalisation existantes restent l'autorité de concurrence.
+
+### Risques ou dette restante
+
+- Les mutations profil/paiement d'un événement ne sont pas transactionnelles et nécessitent toujours une réconciliation Billing.
+- Le message d'échec durable historique doit rester borné et ne jamais accueillir un payload fournisseur.
+- La centralisation complète des metadata et de l'idempotence reste à réaliser.
+
+### Tests exécutés
+
+- Tests webhook ciblés : 2 fichiers, 30 assertions vertes.
+- Tests Stripe checkout/webhook de compatibilité : 4 fichiers, 66 assertions vertes avant ajout de la suite service.
+- Intégration PostgreSQL `stripe-webhook-claims.sql` verte avec transaction annulée et aucun résidu.
+- Suite complète `npm test` : 56 fichiers, 647 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur la route, le service et les tests : vert.
+- `git diff --check` vert.
+- Contrôle de périmètre : migrations, Checkout et Connect inchangés.
+
+### Mesures avant/après
+
+- Handlers métier inline dans la route : 5 → 0.
+- Handlers métier testables derrière des ports : 0 → 5.
+- Tâches Phase 6 terminées : 4/10 → 5/10.
+- Progression globale : 37/138 → 38/138 tâches, soit environ 28 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Centraliser metadata et idempotence.
