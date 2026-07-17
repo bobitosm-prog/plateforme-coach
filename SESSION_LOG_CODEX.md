@@ -4547,3 +4547,65 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer la réconciliation Stripe/base.
+
+## Entrée — 2026-07-17 — Premier audit de réconciliation Stripe/base
+
+### Travail effectué
+
+- Audit des événements webhook durables, paiements, autorités Stripe des profils, flux Checkout/Connect et frontières admin existantes.
+- Création de `lib/billing/reconciliation` avec types explicites, service d'audit pur, repository local read-only et port Stripe normalisé.
+- Détection des claims `failed` ou `processing` anciens, paiements manquants ou incohérents, customers/subscriptions divergents, checkouts sans webhook et comptes Connect incomplets.
+- Ajout de références opaques, limites de volume, rapport partiel sur panne fournisseur et refus de propager toute erreur Stripe brute.
+- Aucun endpoint ajouté : l'audit reste une primitive serveur injectable sans correction automatique.
+- Documentation du périmètre, des recommandations et des limites dans `docs/BILLING_RECONCILIATION.md`.
+
+### Tâches cochées
+
+- Phase 6 : « Créer la réconciliation Stripe/base » — terminée.
+- Progression Phase 6 : 6/10 → 7/10 tâches.
+
+### Décisions prises
+
+- La première version est strictement read-only ; les ports n'exposent aucune méthode de mutation.
+- Les lectures sont bornées à 100 éléments par défaut et 500 au maximum ; le rapport est borné à 200 écarts par défaut et 500 au maximum.
+- Les IDs locaux et Stripe sont remplacés par des empreintes opaques dans le rapport.
+- Une absence Stripe est un écart déterministe ; une indisponibilité fournisseur rend le rapport partiel mais n'interrompt pas les autres contrôles.
+- Aucune route admin n'est créée avant de définir une procédure d'exécution, d'autorisation et de réparation explicite.
+
+### Problèmes rencontrés
+
+- Les types Supabase canoniques ne reflètent toujours pas toutes les colonnes checkout historiques de `payments`; l'adaptateur reste compatible avec le schéma réellement consommé sans introduire de migration.
+- Les créations Customer Stripe reçoivent une idempotence SDK distincte du contrat Checkout et ne servent pas d'autorité de rapprochement.
+
+### Risques ou dette restante
+
+- L'audit ne couvre qu'une fenêtre bornée et ne garantit pas l'exhaustivité historique.
+- Il ne répare, rejoue ou supprime aucun état divergent.
+- Refunds, disputes et invoices non supportés restent hors du modèle actuel.
+- Les mutations multi-tables du webhook ne sont toujours pas transactionnelles.
+- Une future commande admin devra créer service-role et Stripe uniquement après contrôle d'identité explicite.
+
+### Tests exécutés
+
+- Tests réconciliation et compatibilité webhook ciblés : 3 fichiers, 43 assertions vertes.
+- Suite complète `npm test` : 58 fichiers, 672 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur le service, les adaptateurs et les tests : vert.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route publique/admin, migration, Checkout, Webhook ou Connect modifié.
+
+### Mesures avant/après
+
+- Service de réconciliation : absent → audit read-only injectable.
+- Familles d'écarts détectées : 0 → 7 sources structurées.
+- Mutations accessibles depuis le service : 0.
+- Tâches Phase 6 terminées : 6/10 → 7/10.
+- Progression globale : 39/138 → 40/138 tâches, soit environ 29 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Tester replay, concurrence et événements désordonnés.
