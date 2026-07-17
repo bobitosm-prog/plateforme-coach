@@ -4864,3 +4864,66 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Définir le modèle Training canonique.
+
+## Entrée — 2026-07-17 — Définition du modèle Training canonique
+
+### Travail effectué
+
+- Relecture de la cartographie Training, du schéma Supabase généré, des migrations, policies, producteurs IA/import et consommateurs applicatifs.
+- Création de `docs/TRAINING_CANONICAL_MODEL.md`, contrat métier indépendant de React, Next.js et Supabase.
+- Définition des objets catalogue, programme, semaine, jour, séance prescrite, bloc, exercice prescrit, séries/repos, progression, affectation, exécution, complétion et record.
+- Formalisation des identités, ownership, provenance, unités, versions, snapshots et états canoniques.
+- Définition des invariants structurels, d'autorité et d'historique, ainsi que des erreurs fail-closed sur les formats inconnus.
+- Identification de huit adaptateurs legacy attendus et d'une stratégie expand → adaptateurs/double lecture → persistance additive → bascule progressive.
+- Documentation des repositories, services, matrices RLS et E2E nécessaires avant toute migration.
+
+### Tâches cochées
+
+- Phase 3 : « Définir le modèle Training canonique » — terminée.
+- Progression Phase 3 : 1/27 → 2/27 tâches.
+
+### Décisions prises
+
+- Le modèle canonique est d'abord un contrat documentaire ; aucun type strict n'est ajouté avant les fixtures et adaptateurs capables de prouver sa compatibilité avec les données legacy.
+- Un programme, une affectation, une séance prescrite et une exécution sont quatre objets distincts et versionnés.
+- Tout programme possède un owner explicite, y compris la plateforme ; `null` ne confère aucune autorité.
+- Les répétitions, durées, distances, charges, efforts et repos utilisent des unions discriminées et des unités canoniques.
+- Une référence d'exercice utilise un UUID catalogue/custom avec snapshot, ou une référence `legacy` explicitement isolée ; aucun rapprochement de nom silencieux.
+- Une affectation contient un snapshot et une révision : modifier un template ne réécrit pas automatiquement les affectations ni les exécutions passées.
+- Les formats inconnus sont rejetés ou mis en quarantaine, jamais complétés silencieusement.
+
+### Problèmes rencontrés
+
+- L'absence de fixtures représentatives interdit encore de démontrer qu'un type TypeScript strict accepterait honnêtement toutes les données actuelles.
+- Les concepts de séance prescrite, occurrence planifiée, exécution détaillée et marqueur de complétion sont mélangés dans les tables et composants actuels.
+- Les phases Excel/IA, les chaînes de répétitions/repos et les références par nom demandent des décisions de conversion explicites.
+
+### Risques ou dette restante
+
+- Les adaptateurs legacy et schémas Zod ne sont pas encore implémentés.
+- Aucune extraction anonymisée ne mesure la fréquence des formats ou valeurs inconnus.
+- Repositories Training, matrices RLS et E2E Training restent à créer.
+- Les quatre formats persistés, les doubles historiques et les champs hors schéma généré restent inchangés.
+- Les policies coach fondées sur un identifiant mémorisé ou une relation non explicitement active restent à caractériser et renforcer.
+
+### Tests exécutés
+
+- Aucun test applicatif exécuté : tranche documentaire sans modèle TypeScript ni changement de comportement.
+- `git diff --check` vert.
+- Vérification automatisée des liens internes du document et de la roadmap : verte.
+- Contrôle de périmètre : seuls `docs/TRAINING_CANONICAL_MODEL.md`, `ROADMAP_CODEX.md` et `SESSION_LOG_CODEX.md` sont modifiés ; aucun fichier `app/`, `lib/`, `tests/`, `e2e/` ou `supabase/migrations` touché.
+
+### Mesures avant/après
+
+- Objets métier canoniques définis : 0 → 15 familles principales.
+- Formats legacy dotés d'un identifiant d'adaptateur attendu : 0 → 8.
+- Tâches Phase 3 terminées : 1/27 → 2/27.
+- Progression globale : 44/138 → 45/138 tâches, soit environ 33 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer les adaptateurs legacy ↔ canonique.
