@@ -4057,3 +4057,61 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer les premiers ADR et le guide de contribution.
+
+## Entrée — 2026-07-17 — Premiers ADR et guide de contribution
+
+### Travail effectué
+
+- Lecture de la roadmap, de la dernière entrée de session et des contrats actuels de tests, API, Supabase, cache, RLS et rollback de Phase 1.
+- Création d'un index ADR avec format, statuts, numérotation et critères de création.
+- Création de quatre ADR acceptés sur la baseline de sécurité Phase 1, les frontières E2E locales, les frontières d'accès Supabase et les contrats des routes API.
+- Création de `docs/CONTRIBUTING.md` avec démarrage local, validations proportionnées, règles de sécurité, Supabase, API, cache, Git et suivi de session.
+- Vérification que les documents distinguent les garanties présentes des limites et dettes restantes.
+
+### Tâches cochées
+
+- Phase 2 : « Créer les premiers ADR et le guide de contribution » — terminée après validation des liens et du périmètre documentaire.
+- Progression Phase 2 : 17/18 → 18/18 tâches ; Phase 2 terminée.
+
+### Décisions prises
+
+- Un ADR utilise un numéro séquentiel sur quatre chiffres et un statut `proposed`, `accepted` ou `superseded`.
+- Les décisions actuelles sont enregistrées comme `accepted`; une évolution substantielle créera un nouvel ADR plutôt que de réécrire l'historique.
+- Les frontières E2E locales simulent les fournisseurs à leur frontière réseau et ne sont pas présentées comme une certification des services distants.
+- RLS reste l'autorité des accès utilisateur; `service_role` est réservé aux flux serveur contrôlés.
+- Le contrat API est progressif : les réponses legacy restent compatibles tant que leurs consommateurs ne sont pas migrés.
+- Le guide de contribution rend explicite l'interdiction de push, publication ou déploiement sans demande de l'utilisateur.
+
+### Problèmes rencontrés
+
+- Le `README.md` racine conserve une commande Next.js générique `npm run dev`; le guide documente la commande réellement autorisée par `package.json`, `npm run dev:webpack`, sans élargir cette tranche documentaire.
+- Aucun test applicatif n'était nécessaire pour cette tranche exclusivement documentaire.
+
+### Risques ou dette restante
+
+- Les ADR décrivent les frontières actuelles, mais ne remplacent pas les futurs modèles métier Training, Nutrition, Billing ou IA.
+- Plusieurs accès Supabase et routes API legacy restent à migrer progressivement.
+- Les E2E critiques restent limités à Chromium local et à cinq parcours.
+- La dette de lint historique et le build potentiellement bloqué par les polices externes restent explicitement documentés.
+
+### Tests exécutés
+
+- Validation de tous les liens Markdown internes des six nouveaux documents.
+- Vérification de toutes les commandes citées contre les scripts npm réels ou les binaires de validation déjà utilisés par le dépôt.
+- `git diff --check` vert.
+- Contrôle de périmètre vert : seuls `docs/`, `ROADMAP_CODEX.md` et `SESSION_LOG_CODEX.md` sont modifiés; aucun fichier dans `app/`, `lib/`, `supabase/` ou `tests/`.
+
+### Mesures avant/après
+
+- ADR versionnés : 0 → 4, plus un index et un format commun.
+- Guide de contribution MoovX : 0 → 1.
+- Tâches Phase 2 terminées : 17/18 → 18/18.
+- Progression globale mesurée : 33/138 tâches, soit environ 24 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Définir le modèle métier Billing.

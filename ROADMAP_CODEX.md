@@ -2,9 +2,9 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **12 juillet 2026**.
+> Dernière mise à jour : **17 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Phase 2 — Filet de sécurité et fondations d'architecture**.
+> Phase active : **Phase 6 — Billing et subscriptions**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 17 tâches sur 18 terminées ; correlation IDs et logs structurés appliqués aux huit routes simples**
+**Statut : Phase 2 terminée — 18 tâches sur 18 ; stratégie de tests, frontières Supabase/API, cache, observabilité, ADR et guide de contribution documentés**
 
 ### Pourquoi
 
@@ -281,7 +281,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 | [x] [Définir une stratégie de cache par domaine](docs/CACHE_STRATEGY.md) | 1 j | Élevée | Faible | Moyen | Repositories |
 | [x] [Migrer 8 routes simples vers le contrat route/service/schema](docs/API_SIMPLE_ROUTE_MIGRATION.md) | 4 j | Élevée | Moyen | Élevé | Zod + erreurs |
 | [x] [Ajouter correlation IDs et logs structurés](docs/API_OBSERVABILITY.md) | 1,5 j | Moyenne | Faible | Moyen | Erreurs |
-| [ ] Créer les premiers ADR et le guide de contribution | 1,5 j | Faible | Faible | Moyen | Conventions stabilisées |
+| [x] [Créer les premiers ADR](docs/adr/README.md) et [le guide de contribution](docs/CONTRIBUTING.md) | 1,5 j | Faible | Faible | Moyen | Conventions stabilisées |
 
 ### Travaux parallélisables
 
@@ -739,7 +739,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈5 % | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈24 % (33/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |
